@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	"github.com/kyleconroy/teesql/ast"
@@ -142,6 +143,24 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseMoveConversationStatement()
 	case TokenGet:
 		return p.parseGetConversationGroupStatement()
+	case TokenTruncate:
+		return p.parseTruncateTableStatement()
+	case TokenUse:
+		return p.parseUseStatement()
+	case TokenKill:
+		return p.parseKillStatement()
+	case TokenCheckpoint:
+		return p.parseCheckpointStatement()
+	case TokenReconfigure:
+		return p.parseReconfigureStatement()
+	case TokenShutdown:
+		return p.parseShutdownStatement()
+	case TokenSetuser:
+		return p.parseSetUserStatement()
+	case TokenLineno:
+		return p.parseLineNoStatement()
+	case TokenRaiserror:
+		return p.parseRaiseErrorStatement()
 	case TokenSemicolon:
 		p.nextToken()
 		return nil, nil
@@ -828,6 +847,12 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		}
 		return &ast.UnaryExpression{UnaryExpressionType: "Positive", Expression: expr}, nil
 	case TokenIdent:
+		// Check if it's a global variable reference (starts with @@)
+		if strings.HasPrefix(p.curTok.Literal, "@@") {
+			name := p.curTok.Literal
+			p.nextToken()
+			return &ast.GlobalVariableExpression{Name: name}, nil
+		}
 		// Check if it's a variable reference (starts with @)
 		if strings.HasPrefix(p.curTok.Literal, "@") {
 			name := p.curTok.Literal
@@ -1521,10 +1546,49 @@ func (p *Parser) parseBooleanAndExpression() (ast.BooleanExpression, error) {
 }
 
 func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) {
+	// Check for parenthesized boolean expression
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		// Parse inner boolean expression
+		inner, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		return &ast.BooleanParenthesisExpression{Expression: inner}, nil
+	}
+
 	// Parse left scalar expression
 	left, err := p.parseScalarExpression()
 	if err != nil {
 		return nil, err
+	}
+
+	// Check for IS NULL / IS NOT NULL
+	if p.curTok.Type == TokenIs {
+		p.nextToken() // consume IS
+
+		isNot := false
+		if p.curTok.Type == TokenNot {
+			isNot = true
+			p.nextToken() // consume NOT
+		}
+
+		if p.curTok.Type != TokenNull {
+			return nil, fmt.Errorf("expected NULL after IS/IS NOT, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume NULL
+
+		return &ast.BooleanIsNullExpression{
+			IsNot:      isNot,
+			Expression: left,
+		}, nil
 	}
 
 	// Check for comparison operator
@@ -3358,6 +3422,375 @@ func (p *Parser) parseGetConversationGroupStatement() (*ast.GetConversationGroup
 	return stmt, nil
 }
 
+func (p *Parser) parseTruncateTableStatement() (*ast.TruncateTableStatement, error) {
+	// Consume TRUNCATE
+	p.nextToken()
+
+	stmt := &ast.TruncateTableStatement{}
+
+	// Expect TABLE
+	if p.curTok.Type != TokenTable {
+		return nil, fmt.Errorf("expected TABLE after TRUNCATE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse table name
+	tableName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.TableName = tableName
+
+	// Check for optional WITH (PARTITIONS (...))
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+
+		// Expect (
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+
+		// Expect PARTITIONS
+		if p.curTok.Type != TokenIdent || strings.ToUpper(p.curTok.Literal) != "PARTITIONS" {
+			return nil, fmt.Errorf("expected PARTITIONS, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+
+		// Expect (
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after PARTITIONS, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+
+		// Parse partition ranges
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			pr := &ast.CompressionPartitionRange{}
+
+			// Parse From value
+			from, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			pr.From = from
+
+			// Check for TO
+			if p.curTok.Type == TokenTo {
+				p.nextToken()
+				to, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				pr.To = to
+			}
+
+			stmt.PartitionRanges = append(stmt.PartitionRanges, pr)
+
+			// Check for comma
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		// Consume closing )
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+
+		// Consume outer closing )
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseUseStatement() (*ast.UseStatement, error) {
+	// Consume USE
+	p.nextToken()
+
+	stmt := &ast.UseStatement{}
+
+	// Parse database name - can be identifier or keyword like MASTER
+	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenMaster {
+		stmt.DatabaseName = p.parseIdentifier()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseKillStatement() (*ast.KillStatement, error) {
+	// Consume KILL
+	p.nextToken()
+
+	stmt := &ast.KillStatement{}
+
+	// Parse parameter (could be integer, negative integer, or string)
+	param, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Parameter = param
+
+	// Check for WITH STATUSONLY
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if p.curTok.Type == TokenStatusonly {
+			stmt.WithStatusOnly = true
+			p.nextToken()
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCheckpointStatement() (*ast.CheckpointStatement, error) {
+	// Consume CHECKPOINT
+	p.nextToken()
+
+	stmt := &ast.CheckpointStatement{}
+
+	// Optional duration (number only)
+	if p.curTok.Type == TokenNumber {
+		duration, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Duration = duration
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseReconfigureStatement() (*ast.ReconfigureStatement, error) {
+	// Consume RECONFIGURE
+	p.nextToken()
+
+	stmt := &ast.ReconfigureStatement{}
+
+	// Check for WITH OVERRIDE
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if p.curTok.Type == TokenOverride {
+			stmt.WithOverride = true
+			p.nextToken()
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseShutdownStatement() (*ast.ShutdownStatement, error) {
+	// Consume SHUTDOWN
+	p.nextToken()
+
+	stmt := &ast.ShutdownStatement{}
+
+	// Check for WITH NOWAIT
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if p.curTok.Type == TokenNowait {
+			stmt.WithNoWait = true
+			p.nextToken()
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseSetUserStatement() (*ast.SetUserStatement, error) {
+	// Consume SETUSER
+	p.nextToken()
+
+	stmt := &ast.SetUserStatement{}
+
+	// Parse optional user name (variable or string)
+	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+		stmt.UserName = &ast.VariableReference{
+			Name: p.curTok.Literal,
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenString {
+		str, err := p.parseStringLiteral()
+		if err != nil {
+			return nil, err
+		}
+		stmt.UserName = str
+	} else if p.curTok.Type == TokenNationalString {
+		str, err := p.parseNationalStringFromToken()
+		if err != nil {
+			return nil, err
+		}
+		stmt.UserName = str
+	}
+
+	// Check for WITH NORESET
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if p.curTok.Type == TokenNoreset {
+			stmt.WithNoReset = true
+			p.nextToken()
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseLineNoStatement() (*ast.LineNoStatement, error) {
+	// Consume LINENO
+	p.nextToken()
+
+	stmt := &ast.LineNoStatement{}
+
+	// Parse line number
+	lineNo, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.LineNo = lineNo
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseRaiseErrorStatement() (*ast.RaiseErrorStatement, error) {
+	// Consume RAISERROR
+	p.nextToken()
+
+	stmt := &ast.RaiseErrorStatement{
+		RaiseErrorOptions: "None",
+	}
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after RAISERROR, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// First parameter (error message or number)
+	first, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.FirstParameter = first
+
+	// Expect ,
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after first parameter, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Second parameter (severity)
+	second, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.SecondParameter = second
+
+	// Expect ,
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after second parameter, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Third parameter (state)
+	third, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.ThirdParameter = third
+
+	// Optional additional parameters
+	for p.curTok.Type == TokenComma {
+		p.nextToken()
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.OptionalParameters = append(stmt.OptionalParameters, param)
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		var options []string
+		for {
+			optName := strings.ToUpper(p.curTok.Literal)
+			switch optName {
+			case "LOG":
+				options = append(options, "Log")
+			case "NOWAIT":
+				options = append(options, "NoWait")
+			case "SETERROR":
+				options = append(options, "SetError")
+			default:
+				return nil, fmt.Errorf("unknown RAISERROR option: %s", p.curTok.Literal)
+			}
+			p.nextToken()
+
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken()
+		}
+		sort.Strings(options)
+		stmt.RaiseErrorOptions = strings.Join(options, ", ")
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseGotoStatement() (*ast.GoToStatement, error) {
 	// Consume GOTO
 	p.nextToken()
@@ -3506,6 +3939,24 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return moveConversationStatementToJSON(s)
 	case *ast.GetConversationGroupStatement:
 		return getConversationGroupStatementToJSON(s)
+	case *ast.TruncateTableStatement:
+		return truncateTableStatementToJSON(s)
+	case *ast.UseStatement:
+		return useStatementToJSON(s)
+	case *ast.KillStatement:
+		return killStatementToJSON(s)
+	case *ast.CheckpointStatement:
+		return checkpointStatementToJSON(s)
+	case *ast.ReconfigureStatement:
+		return reconfigureStatementToJSON(s)
+	case *ast.ShutdownStatement:
+		return shutdownStatementToJSON(s)
+	case *ast.SetUserStatement:
+		return setUserStatementToJSON(s)
+	case *ast.LineNoStatement:
+		return lineNoStatementToJSON(s)
+	case *ast.RaiseErrorStatement:
+		return raiseErrorStatementToJSON(s)
 	case *ast.GoToStatement:
 		return goToStatementToJSON(s)
 	case *ast.LabelStatement:
@@ -3843,6 +4294,14 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Name"] = e.Name
 		}
 		return node
+	case *ast.GlobalVariableExpression:
+		node := jsonNode{
+			"$type": "GlobalVariableExpression",
+		}
+		if e.Name != "" {
+			node["Name"] = e.Name
+		}
+		return node
 	case *ast.NumericLiteral:
 		node := jsonNode{
 			"$type": "NumericLiteral",
@@ -4149,6 +4608,23 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		}
 		if e.SecondExpression != nil {
 			node["SecondExpression"] = booleanExpressionToJSON(e.SecondExpression)
+		}
+		return node
+	case *ast.BooleanParenthesisExpression:
+		node := jsonNode{
+			"$type": "BooleanParenthesisExpression",
+		}
+		if e.Expression != nil {
+			node["Expression"] = booleanExpressionToJSON(e.Expression)
+		}
+		return node
+	case *ast.BooleanIsNullExpression:
+		node := jsonNode{
+			"$type": "BooleanIsNullExpression",
+		}
+		node["IsNot"] = e.IsNot
+		if e.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(e.Expression)
 		}
 		return node
 	default:
@@ -5086,6 +5562,128 @@ func getConversationGroupStatementToJSON(s *ast.GetConversationGroupStatement) j
 	}
 	if s.Queue != nil {
 		node["Queue"] = schemaObjectNameToJSON(s.Queue)
+	}
+	return node
+}
+
+func truncateTableStatementToJSON(s *ast.TruncateTableStatement) jsonNode {
+	node := jsonNode{
+		"$type": "TruncateTableStatement",
+	}
+	if s.TableName != nil {
+		node["TableName"] = schemaObjectNameToJSON(s.TableName)
+	}
+	if len(s.PartitionRanges) > 0 {
+		ranges := make([]jsonNode, len(s.PartitionRanges))
+		for i, pr := range s.PartitionRanges {
+			ranges[i] = compressionPartitionRangeToJSON(pr)
+		}
+		node["PartitionRanges"] = ranges
+	}
+	return node
+}
+
+func compressionPartitionRangeToJSON(pr *ast.CompressionPartitionRange) jsonNode {
+	node := jsonNode{
+		"$type": "CompressionPartitionRange",
+	}
+	if pr.From != nil {
+		node["From"] = scalarExpressionToJSON(pr.From)
+	}
+	if pr.To != nil {
+		node["To"] = scalarExpressionToJSON(pr.To)
+	}
+	return node
+}
+
+func useStatementToJSON(s *ast.UseStatement) jsonNode {
+	node := jsonNode{
+		"$type": "UseStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	return node
+}
+
+func killStatementToJSON(s *ast.KillStatement) jsonNode {
+	node := jsonNode{
+		"$type":          "KillStatement",
+		"WithStatusOnly": s.WithStatusOnly,
+	}
+	if s.Parameter != nil {
+		node["Parameter"] = scalarExpressionToJSON(s.Parameter)
+	}
+	return node
+}
+
+func checkpointStatementToJSON(s *ast.CheckpointStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CheckpointStatement",
+	}
+	if s.Duration != nil {
+		node["Duration"] = scalarExpressionToJSON(s.Duration)
+	}
+	return node
+}
+
+func reconfigureStatementToJSON(s *ast.ReconfigureStatement) jsonNode {
+	return jsonNode{
+		"$type":        "ReconfigureStatement",
+		"WithOverride": s.WithOverride,
+	}
+}
+
+func shutdownStatementToJSON(s *ast.ShutdownStatement) jsonNode {
+	return jsonNode{
+		"$type":      "ShutdownStatement",
+		"WithNoWait": s.WithNoWait,
+	}
+}
+
+func setUserStatementToJSON(s *ast.SetUserStatement) jsonNode {
+	node := jsonNode{
+		"$type":       "SetUserStatement",
+		"WithNoReset": s.WithNoReset,
+	}
+	if s.UserName != nil {
+		node["UserName"] = scalarExpressionToJSON(s.UserName)
+	}
+	return node
+}
+
+func lineNoStatementToJSON(s *ast.LineNoStatement) jsonNode {
+	node := jsonNode{
+		"$type": "LineNoStatement",
+	}
+	if s.LineNo != nil {
+		node["LineNo"] = scalarExpressionToJSON(s.LineNo)
+	}
+	return node
+}
+
+func raiseErrorStatementToJSON(s *ast.RaiseErrorStatement) jsonNode {
+	node := jsonNode{
+		"$type": "RaiseErrorStatement",
+	}
+	if s.FirstParameter != nil {
+		node["FirstParameter"] = scalarExpressionToJSON(s.FirstParameter)
+	}
+	if s.SecondParameter != nil {
+		node["SecondParameter"] = scalarExpressionToJSON(s.SecondParameter)
+	}
+	if s.ThirdParameter != nil {
+		node["ThirdParameter"] = scalarExpressionToJSON(s.ThirdParameter)
+	}
+	if len(s.OptionalParameters) > 0 {
+		params := make([]jsonNode, len(s.OptionalParameters))
+		for i, param := range s.OptionalParameters {
+			params[i] = scalarExpressionToJSON(param)
+		}
+		node["OptionalParameters"] = params
+	}
+	if s.RaiseErrorOptions != "" {
+		node["RaiseErrorOptions"] = s.RaiseErrorOptions
 	}
 	return node
 }

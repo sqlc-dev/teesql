@@ -91,6 +91,7 @@ const (
 	TokenValues
 	TokenDefault
 	TokenNull
+	TokenIs
 	TokenExec
 	TokenExecute
 	TokenOver
@@ -157,6 +158,16 @@ const (
 	TokenMove
 	TokenConversation
 	TokenGet
+	TokenUse
+	TokenKill
+	TokenCheckpoint
+	TokenReconfigure
+	TokenOverride
+	TokenShutdown
+	TokenSetuser
+	TokenLineno
+	TokenStatusonly
+	TokenNoreset
 )
 
 // Token represents a lexical token.
@@ -513,6 +524,7 @@ var keywords = map[string]TokenType{
 	"VALUES":        TokenValues,
 	"DEFAULT":       TokenDefault,
 	"NULL":          TokenNull,
+	"IS":            TokenIs,
 	"EXEC":          TokenExec,
 	"EXECUTE":       TokenExecute,
 	"OVER":          TokenOver,
@@ -566,6 +578,16 @@ var keywords = map[string]TokenType{
 	"MOVE":          TokenMove,
 	"CONVERSATION":  TokenConversation,
 	"GET":           TokenGet,
+	"USE":           TokenUse,
+	"KILL":          TokenKill,
+	"CHECKPOINT":    TokenCheckpoint,
+	"RECONFIGURE":   TokenReconfigure,
+	"OVERRIDE":      TokenOverride,
+	"SHUTDOWN":      TokenShutdown,
+	"SETUSER":       TokenSetuser,
+	"LINENO":        TokenLineno,
+	"STATUSONLY":    TokenStatusonly,
+	"NORESET":       TokenNoreset,
 }
 
 func lookupKeyword(ident string) TokenType {
