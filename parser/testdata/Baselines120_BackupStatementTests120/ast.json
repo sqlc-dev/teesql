@@ -1,0 +1,1062 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1146
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 1146
+      },
+      "Statements": [
+        {
+          "$type": "BackupDatabaseStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 140
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 1,
+              "startColumn": 17,
+              "startOffset": 16,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 17,
+                "startOffset": 16,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Options": [
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 10,
+                "startOffset": 47,
+                "fragmentLength": 6
+              },
+              "OptionKind": "Format"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 18,
+                "startOffset": 55,
+                "fragmentLength": 11
+              },
+              "OptionKind": "Compression"
+            },
+            {
+              "$type": "BackupEncryptionOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 89,
+                "startOffset": 126,
+                "fragmentLength": 1
+              },
+              "Algorithm": "Aes128",
+              "Encryptor": {
+                "$type": "CryptoMechanism",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 84,
+                  "startOffset": 121,
+                  "fragmentLength": 5
+                },
+                "CryptoMechanismType": "Certificate",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 84,
+                    "startOffset": 121,
+                    "fragmentLength": 5
+                  },
+                  "Value": "cert1",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "OptionKind": "None"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 100,
+                "startOffset": 137,
+                "fragmentLength": 2
+              },
+              "OptionKind": "Stats",
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 100,
+                  "startOffset": 137,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            }
+          ],
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 2,
+                "startColumn": 15,
+                "startOffset": 33,
+                "fragmentLength": 4
+              },
+              "PhysicalDevice": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 15,
+                  "startOffset": 33,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "d:"
+              },
+              "DeviceType": "Disk"
+            }
+          ]
+        },
+        {
+          "$type": "BackupDatabaseStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 142,
+            "fragmentLength": 142
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 5,
+              "startColumn": 17,
+              "startOffset": 158,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 17,
+                "startOffset": 158,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Options": [
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 10,
+                "startOffset": 189,
+                "fragmentLength": 6
+              },
+              "OptionKind": "Format"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 18,
+                "startOffset": 197,
+                "fragmentLength": 11
+              },
+              "OptionKind": "Compression"
+            },
+            {
+              "$type": "BackupEncryptionOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 91,
+                "startOffset": 270,
+                "fragmentLength": 1
+              },
+              "Algorithm": "Aes192",
+              "Encryptor": {
+                "$type": "CryptoMechanism",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 84,
+                  "startOffset": 263,
+                  "fragmentLength": 7
+                },
+                "CryptoMechanismType": "Certificate",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 84,
+                    "startOffset": 263,
+                    "fragmentLength": 7
+                  },
+                  "Value": "cert1",
+                  "QuoteType": "SquareBracket"
+                }
+              },
+              "OptionKind": "None"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 102,
+                "startOffset": 281,
+                "fragmentLength": 2
+              },
+              "OptionKind": "Stats",
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 102,
+                  "startOffset": 281,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            }
+          ],
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 6,
+                "startColumn": 15,
+                "startOffset": 175,
+                "fragmentLength": 4
+              },
+              "PhysicalDevice": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 15,
+                  "startOffset": 175,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "d:"
+              },
+              "DeviceType": "Disk"
+            }
+          ]
+        },
+        {
+          "$type": "BackupDatabaseStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 286,
+            "fragmentLength": 142
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 9,
+              "startColumn": 17,
+              "startOffset": 302,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 17,
+                "startOffset": 302,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Options": [
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 10,
+                "startOffset": 333,
+                "fragmentLength": 6
+              },
+              "OptionKind": "Format"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 18,
+                "startOffset": 341,
+                "fragmentLength": 11
+              },
+              "OptionKind": "Compression"
+            },
+            {
+              "$type": "BackupEncryptionOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 91,
+                "startOffset": 414,
+                "fragmentLength": 1
+              },
+              "Algorithm": "Aes256",
+              "Encryptor": {
+                "$type": "CryptoMechanism",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 87,
+                  "startOffset": 410,
+                  "fragmentLength": 4
+                },
+                "CryptoMechanismType": "AsymmetricKey",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 87,
+                    "startOffset": 410,
+                    "fragmentLength": 4
+                  },
+                  "Value": "key1",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "OptionKind": "None"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 102,
+                "startOffset": 425,
+                "fragmentLength": 2
+              },
+              "OptionKind": "Stats",
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 102,
+                  "startOffset": 425,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            }
+          ],
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 10,
+                "startColumn": 15,
+                "startOffset": 319,
+                "fragmentLength": 4
+              },
+              "PhysicalDevice": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 15,
+                  "startOffset": 319,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "d:"
+              },
+              "DeviceType": "Disk"
+            }
+          ]
+        },
+        {
+          "$type": "BackupDatabaseStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 430,
+            "fragmentLength": 152
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 13,
+              "startColumn": 17,
+              "startOffset": 446,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 13,
+                "startColumn": 17,
+                "startOffset": 446,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Options": [
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 10,
+                "startOffset": 477,
+                "fragmentLength": 6
+              },
+              "OptionKind": "Format"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 18,
+                "startOffset": 485,
+                "fragmentLength": 11
+              },
+              "OptionKind": "Compression"
+            },
+            {
+              "$type": "BackupEncryptionOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 101,
+                "startOffset": 568,
+                "fragmentLength": 1
+              },
+              "Algorithm": "TripleDes3Key",
+              "Encryptor": {
+                "$type": "CryptoMechanism",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 95,
+                  "startOffset": 562,
+                  "fragmentLength": 6
+                },
+                "CryptoMechanismType": "AsymmetricKey",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 15,
+                    "startColumn": 95,
+                    "startOffset": 562,
+                    "fragmentLength": 6
+                  },
+                  "Value": "key1",
+                  "QuoteType": "SquareBracket"
+                }
+              },
+              "OptionKind": "None"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 112,
+                "startOffset": 579,
+                "fragmentLength": 2
+              },
+              "OptionKind": "Stats",
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 112,
+                  "startOffset": 579,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            }
+          ],
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 14,
+                "startColumn": 15,
+                "startOffset": 463,
+                "fragmentLength": 4
+              },
+              "PhysicalDevice": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 15,
+                  "startOffset": 463,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "d:"
+              },
+              "DeviceType": "Disk"
+            }
+          ]
+        },
+        {
+          "$type": "BackupTransactionLogStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 584,
+            "fragmentLength": 137
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 17,
+              "startColumn": 12,
+              "startOffset": 595,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 17,
+                "startColumn": 12,
+                "startOffset": 595,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Options": [
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 19,
+                "startColumn": 10,
+                "startOffset": 626,
+                "fragmentLength": 6
+              },
+              "OptionKind": "Format"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 19,
+                "startColumn": 18,
+                "startOffset": 634,
+                "fragmentLength": 11
+              },
+              "OptionKind": "Compression"
+            },
+            {
+              "$type": "BackupEncryptionOption",
+              "location": {
+                "startLine": 19,
+                "startColumn": 91,
+                "startOffset": 707,
+                "fragmentLength": 1
+              },
+              "Algorithm": "Aes128",
+              "Encryptor": {
+                "$type": "CryptoMechanism",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 87,
+                  "startOffset": 703,
+                  "fragmentLength": 4
+                },
+                "CryptoMechanismType": "AsymmetricKey",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 19,
+                    "startColumn": 87,
+                    "startOffset": 703,
+                    "fragmentLength": 4
+                  },
+                  "Value": "key1",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "OptionKind": "None"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 19,
+                "startColumn": 102,
+                "startOffset": 718,
+                "fragmentLength": 2
+              },
+              "OptionKind": "Stats",
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 102,
+                  "startOffset": 718,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            }
+          ],
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 18,
+                "startColumn": 15,
+                "startOffset": 612,
+                "fragmentLength": 4
+              },
+              "PhysicalDevice": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 15,
+                  "startOffset": 612,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "d:"
+              },
+              "DeviceType": "Disk"
+            }
+          ]
+        },
+        {
+          "$type": "BackupTransactionLogStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 723,
+            "fragmentLength": 139
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 21,
+              "startColumn": 12,
+              "startOffset": 734,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 21,
+                "startColumn": 12,
+                "startOffset": 734,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Options": [
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 23,
+                "startColumn": 10,
+                "startOffset": 765,
+                "fragmentLength": 6
+              },
+              "OptionKind": "Format"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 23,
+                "startColumn": 18,
+                "startOffset": 773,
+                "fragmentLength": 11
+              },
+              "OptionKind": "Compression"
+            },
+            {
+              "$type": "BackupEncryptionOption",
+              "location": {
+                "startLine": 23,
+                "startColumn": 93,
+                "startOffset": 848,
+                "fragmentLength": 1
+              },
+              "Algorithm": "Aes192",
+              "Encryptor": {
+                "$type": "CryptoMechanism",
+                "location": {
+                  "startLine": 23,
+                  "startColumn": 87,
+                  "startOffset": 842,
+                  "fragmentLength": 6
+                },
+                "CryptoMechanismType": "AsymmetricKey",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 23,
+                    "startColumn": 87,
+                    "startOffset": 842,
+                    "fragmentLength": 6
+                  },
+                  "Value": "key1",
+                  "QuoteType": "SquareBracket"
+                }
+              },
+              "OptionKind": "None"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 23,
+                "startColumn": 104,
+                "startOffset": 859,
+                "fragmentLength": 2
+              },
+              "OptionKind": "Stats",
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 23,
+                  "startColumn": 104,
+                  "startOffset": 859,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            }
+          ],
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 22,
+                "startColumn": 15,
+                "startOffset": 751,
+                "fragmentLength": 4
+              },
+              "PhysicalDevice": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 15,
+                  "startOffset": 751,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "d:"
+              },
+              "DeviceType": "Disk"
+            }
+          ]
+        },
+        {
+          "$type": "BackupTransactionLogStatement",
+          "location": {
+            "startLine": 25,
+            "startColumn": 1,
+            "startOffset": 864,
+            "fragmentLength": 135
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 25,
+              "startColumn": 12,
+              "startOffset": 875,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 25,
+                "startColumn": 12,
+                "startOffset": 875,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Options": [
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 10,
+                "startOffset": 906,
+                "fragmentLength": 6
+              },
+              "OptionKind": "Format"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 18,
+                "startOffset": 914,
+                "fragmentLength": 11
+              },
+              "OptionKind": "Compression"
+            },
+            {
+              "$type": "BackupEncryptionOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 89,
+                "startOffset": 985,
+                "fragmentLength": 1
+              },
+              "Algorithm": "Aes256",
+              "Encryptor": {
+                "$type": "CryptoMechanism",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 84,
+                  "startOffset": 980,
+                  "fragmentLength": 5
+                },
+                "CryptoMechanismType": "Certificate",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 27,
+                    "startColumn": 84,
+                    "startOffset": 980,
+                    "fragmentLength": 5
+                  },
+                  "Value": "cert1",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "OptionKind": "None"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 100,
+                "startOffset": 996,
+                "fragmentLength": 2
+              },
+              "OptionKind": "Stats",
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 100,
+                  "startOffset": 996,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            }
+          ],
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 26,
+                "startColumn": 15,
+                "startOffset": 892,
+                "fragmentLength": 4
+              },
+              "PhysicalDevice": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 26,
+                  "startColumn": 15,
+                  "startOffset": 892,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "d:"
+              },
+              "DeviceType": "Disk"
+            }
+          ]
+        },
+        {
+          "$type": "BackupTransactionLogStatement",
+          "location": {
+            "startLine": 29,
+            "startColumn": 1,
+            "startOffset": 1001,
+            "fragmentLength": 145
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 29,
+              "startColumn": 12,
+              "startOffset": 1012,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 29,
+                "startColumn": 12,
+                "startOffset": 1012,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Options": [
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 31,
+                "startColumn": 10,
+                "startOffset": 1043,
+                "fragmentLength": 6
+              },
+              "OptionKind": "Format"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 31,
+                "startColumn": 18,
+                "startOffset": 1051,
+                "fragmentLength": 11
+              },
+              "OptionKind": "Compression"
+            },
+            {
+              "$type": "BackupEncryptionOption",
+              "location": {
+                "startLine": 31,
+                "startColumn": 99,
+                "startOffset": 1132,
+                "fragmentLength": 1
+              },
+              "Algorithm": "TripleDes3Key",
+              "Encryptor": {
+                "$type": "CryptoMechanism",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 92,
+                  "startOffset": 1125,
+                  "fragmentLength": 7
+                },
+                "CryptoMechanismType": "Certificate",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 31,
+                    "startColumn": 92,
+                    "startOffset": 1125,
+                    "fragmentLength": 7
+                  },
+                  "Value": "cert1",
+                  "QuoteType": "SquareBracket"
+                }
+              },
+              "OptionKind": "None"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 31,
+                "startColumn": 110,
+                "startOffset": 1143,
+                "fragmentLength": 2
+              },
+              "OptionKind": "Stats",
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 110,
+                  "startOffset": 1143,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            }
+          ],
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 30,
+                "startColumn": 15,
+                "startOffset": 1029,
+                "fragmentLength": 4
+              },
+              "PhysicalDevice": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 30,
+                  "startColumn": 15,
+                  "startOffset": 1029,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "d:"
+              },
+              "DeviceType": "Disk"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

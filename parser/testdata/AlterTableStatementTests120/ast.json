@@ -1,0 +1,1650 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 2120
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 57,
+        "fragmentLength": 2063
+      },
+      "Statements": [
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 57,
+            "fragmentLength": 55
+          },
+          "Partition": {
+            "$type": "PartitionSpecifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 36,
+              "startOffset": 92,
+              "fragmentLength": 1
+            },
+            "Number": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 2,
+                "startColumn": 36,
+                "startOffset": 92,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "1"
+            },
+            "All": false
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 44,
+                "startOffset": 100,
+                "fragmentLength": 11
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 2,
+              "startColumn": 13,
+              "startOffset": 69,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 13,
+                "startOffset": 69,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 113,
+            "fragmentLength": 56
+          },
+          "Partition": {
+            "$type": "PartitionSpecifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 36,
+              "startOffset": 148,
+              "fragmentLength": 1
+            },
+            "Number": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 3,
+                "startColumn": 36,
+                "startOffset": 148,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "1"
+            },
+            "All": false
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 44,
+                "startOffset": 156,
+                "fragmentLength": 12
+              },
+              "OptionState": "Off",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 3,
+              "startColumn": 13,
+              "startOffset": 125,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 13,
+                "startOffset": 125,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 223,
+            "fragmentLength": 108
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 6,
+                "startColumn": 30,
+                "startOffset": 252,
+                "fragmentLength": 78
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 43,
+                  "startOffset": 265,
+                  "fragmentLength": 64
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 65,
+                      "startOffset": 287,
+                      "fragmentLength": 16
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 6,
+                        "startColumn": 80,
+                        "startOffset": 302,
+                        "fragmentLength": 1
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "0"
+                    },
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 83,
+                      "startOffset": 305,
+                      "fragmentLength": 23
+                    },
+                    "AbortAfterWait": "None",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 6,
+              "startColumn": 13,
+              "startOffset": 235,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 6,
+                "startColumn": 13,
+                "startOffset": 235,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 332,
+            "fragmentLength": 108
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 30,
+                "startOffset": 361,
+                "fragmentLength": 78
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 43,
+                  "startOffset": 374,
+                  "fragmentLength": 64
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 7,
+                      "startColumn": 65,
+                      "startOffset": 396,
+                      "fragmentLength": 16
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 7,
+                        "startColumn": 80,
+                        "startOffset": 411,
+                        "fragmentLength": 1
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "1"
+                    },
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 7,
+                      "startColumn": 83,
+                      "startOffset": 414,
+                      "fragmentLength": 23
+                    },
+                    "AbortAfterWait": "Self",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 7,
+              "startColumn": 13,
+              "startOffset": 344,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 13,
+                "startOffset": 344,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 441,
+            "fragmentLength": 112
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 30,
+                "startOffset": 470,
+                "fragmentLength": 82
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 43,
+                  "startOffset": 483,
+                  "fragmentLength": 68
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 65,
+                      "startOffset": 505,
+                      "fragmentLength": 16
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 80,
+                        "startOffset": 520,
+                        "fragmentLength": 1
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "1"
+                    },
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 83,
+                      "startOffset": 523,
+                      "fragmentLength": 27
+                    },
+                    "AbortAfterWait": "Blockers",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 8,
+              "startColumn": 13,
+              "startOffset": 453,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 13,
+                "startOffset": 453,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 554,
+            "fragmentLength": 119
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 30,
+                "startOffset": 583,
+                "fragmentLength": 89
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 43,
+                  "startOffset": 596,
+                  "fragmentLength": 75
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 65,
+                      "startOffset": 618,
+                      "fragmentLength": 27
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 9,
+                        "startColumn": 80,
+                        "startOffset": 633,
+                        "fragmentLength": 4
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "1440"
+                    },
+                    "Unit": "Minutes",
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 94,
+                      "startOffset": 647,
+                      "fragmentLength": 23
+                    },
+                    "AbortAfterWait": "None",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 9,
+              "startColumn": 13,
+              "startOffset": 566,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 13,
+                "startOffset": 566,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 674,
+            "fragmentLength": 120
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 10,
+                "startColumn": 30,
+                "startOffset": 703,
+                "fragmentLength": 90
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 43,
+                  "startOffset": 716,
+                  "fragmentLength": 76
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 65,
+                      "startOffset": 738,
+                      "fragmentLength": 28
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 10,
+                        "startColumn": 80,
+                        "startOffset": 753,
+                        "fragmentLength": 5
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "71582"
+                    },
+                    "Unit": "Minutes",
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 95,
+                      "startOffset": 768,
+                      "fragmentLength": 23
+                    },
+                    "AbortAfterWait": "Self",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 10,
+              "startColumn": 13,
+              "startOffset": 686,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 10,
+                "startColumn": 13,
+                "startOffset": 686,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 795,
+            "fragmentLength": 120
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 30,
+                "startOffset": 824,
+                "fragmentLength": 90
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 43,
+                  "startOffset": 837,
+                  "fragmentLength": 76
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 11,
+                      "startColumn": 65,
+                      "startOffset": 859,
+                      "fragmentLength": 24
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 11,
+                        "startColumn": 80,
+                        "startOffset": 874,
+                        "fragmentLength": 1
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "0"
+                    },
+                    "Unit": "Minutes",
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 11,
+                      "startColumn": 91,
+                      "startOffset": 885,
+                      "fragmentLength": 27
+                    },
+                    "AbortAfterWait": "Blockers",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 11,
+              "startColumn": 13,
+              "startOffset": 807,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 11,
+                "startColumn": 13,
+                "startOffset": 807,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 916,
+            "fragmentLength": 179
+          },
+          "IndexOptions": [
+            {
+              "$type": "IndexStateOption",
+              "location": {
+                "startLine": 12,
+                "startColumn": 30,
+                "startOffset": 945,
+                "fragmentLength": 14
+              },
+              "OptionState": "On",
+              "OptionKind": "PadIndex"
+            },
+            {
+              "$type": "IndexExpressionOption",
+              "location": {
+                "startLine": 12,
+                "startColumn": 46,
+                "startOffset": 961,
+                "fragmentLength": 15
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 12,
+                  "startColumn": 59,
+                  "startOffset": 974,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "50"
+              },
+              "OptionKind": "FillFactor"
+            },
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 12,
+                "startColumn": 63,
+                "startOffset": 978,
+                "fragmentLength": 79
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 12,
+                  "startColumn": 76,
+                  "startOffset": 991,
+                  "fragmentLength": 65
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 12,
+                      "startColumn": 98,
+                      "startOffset": 1013,
+                      "fragmentLength": 17
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 12,
+                        "startColumn": 113,
+                        "startOffset": 1028,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "60"
+                    },
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 12,
+                      "startColumn": 117,
+                      "startOffset": 1032,
+                      "fragmentLength": 23
+                    },
+                    "AbortAfterWait": "Self",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            },
+            {
+              "$type": "IndexExpressionOption",
+              "location": {
+                "startLine": 12,
+                "startColumn": 144,
+                "startOffset": 1059,
+                "fragmentLength": 10
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 12,
+                  "startColumn": 153,
+                  "startOffset": 1068,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "OptionKind": "MaxDop"
+            },
+            {
+              "$type": "DataCompressionOption",
+              "location": {
+                "startLine": 12,
+                "startColumn": 156,
+                "startOffset": 1071,
+                "fragmentLength": 23
+              },
+              "CompressionLevel": "Page",
+              "OptionKind": "DataCompression"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 12,
+              "startColumn": 13,
+              "startOffset": 928,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 12,
+                "startColumn": 13,
+                "startOffset": 928,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 15,
+            "startColumn": 1,
+            "startOffset": 1180,
+            "fragmentLength": 130
+          },
+          "Partition": {
+            "$type": "PartitionSpecifier",
+            "location": {
+              "startLine": 15,
+              "startColumn": 36,
+              "startOffset": 1215,
+              "fragmentLength": 1
+            },
+            "Number": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 15,
+                "startColumn": 36,
+                "startOffset": 1215,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "1"
+            },
+            "All": false
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 44,
+                "startOffset": 1223,
+                "fragmentLength": 86
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 57,
+                  "startOffset": 1236,
+                  "fragmentLength": 72
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 79,
+                      "startOffset": 1258,
+                      "fragmentLength": 24
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 15,
+                        "startColumn": 94,
+                        "startOffset": 1273,
+                        "fragmentLength": 1
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "0"
+                    },
+                    "Unit": "Minutes",
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 105,
+                      "startOffset": 1284,
+                      "fragmentLength": 23
+                    },
+                    "AbortAfterWait": "None",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 15,
+              "startColumn": 13,
+              "startOffset": 1192,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 15,
+                "startColumn": 13,
+                "startOffset": 1192,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 16,
+            "startColumn": 1,
+            "startOffset": 1311,
+            "fragmentLength": 134
+          },
+          "Partition": {
+            "$type": "PartitionSpecifier",
+            "location": {
+              "startLine": 16,
+              "startColumn": 36,
+              "startOffset": 1346,
+              "fragmentLength": 1
+            },
+            "Number": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 16,
+                "startColumn": 36,
+                "startOffset": 1346,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "1"
+            },
+            "All": false
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 16,
+                "startColumn": 44,
+                "startOffset": 1354,
+                "fragmentLength": 90
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 57,
+                  "startOffset": 1367,
+                  "fragmentLength": 76
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 16,
+                      "startColumn": 79,
+                      "startOffset": 1389,
+                      "fragmentLength": 28
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 16,
+                        "startColumn": 94,
+                        "startOffset": 1404,
+                        "fragmentLength": 5
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "71582"
+                    },
+                    "Unit": "Minutes",
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 16,
+                      "startColumn": 109,
+                      "startOffset": 1419,
+                      "fragmentLength": 23
+                    },
+                    "AbortAfterWait": "Self",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 16,
+              "startColumn": 13,
+              "startOffset": 1323,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 16,
+                "startColumn": 13,
+                "startOffset": 1323,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 1446,
+            "fragmentLength": 137
+          },
+          "Partition": {
+            "$type": "PartitionSpecifier",
+            "location": {
+              "startLine": 17,
+              "startColumn": 36,
+              "startOffset": 1481,
+              "fragmentLength": 1
+            },
+            "Number": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 17,
+                "startColumn": 36,
+                "startOffset": 1481,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "1"
+            },
+            "All": false
+          },
+          "IndexOptions": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 17,
+                "startColumn": 44,
+                "startOffset": 1489,
+                "fragmentLength": 93
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 57,
+                  "startOffset": 1502,
+                  "fragmentLength": 79
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 17,
+                      "startColumn": 79,
+                      "startOffset": 1524,
+                      "fragmentLength": 27
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 94,
+                        "startOffset": 1539,
+                        "fragmentLength": 4
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "1440"
+                    },
+                    "Unit": "Minutes",
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 17,
+                      "startColumn": 108,
+                      "startOffset": 1553,
+                      "fragmentLength": 27
+                    },
+                    "AbortAfterWait": "Blockers",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 17,
+              "startColumn": 13,
+              "startOffset": 1458,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 17,
+                "startColumn": 13,
+                "startOffset": 1458,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 18,
+            "startColumn": 1,
+            "startOffset": 1584,
+            "fragmentLength": 180
+          },
+          "Partition": {
+            "$type": "PartitionSpecifier",
+            "location": {
+              "startLine": 18,
+              "startColumn": 36,
+              "startOffset": 1619,
+              "fragmentLength": 1
+            },
+            "Number": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 18,
+                "startColumn": 36,
+                "startOffset": 1619,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "1"
+            },
+            "All": false
+          },
+          "IndexOptions": [
+            {
+              "$type": "IndexStateOption",
+              "location": {
+                "startLine": 18,
+                "startColumn": 44,
+                "startOffset": 1627,
+                "fragmentLength": 19
+              },
+              "OptionState": "On",
+              "OptionKind": "SortInTempDB"
+            },
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 18,
+                "startColumn": 65,
+                "startOffset": 1648,
+                "fragmentLength": 90
+              },
+              "LowPriorityLockWaitOption": {
+                "$type": "OnlineIndexLowPriorityLockWaitOption",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 78,
+                  "startOffset": 1661,
+                  "fragmentLength": 76
+                },
+                "Options": [
+                  {
+                    "$type": "LowPriorityLockWaitMaxDurationOption",
+                    "location": {
+                      "startLine": 18,
+                      "startColumn": 100,
+                      "startOffset": 1683,
+                      "fragmentLength": 24
+                    },
+                    "MaxDuration": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 18,
+                        "startColumn": 115,
+                        "startOffset": 1698,
+                        "fragmentLength": 1
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "0"
+                    },
+                    "Unit": "Minutes",
+                    "OptionKind": "MaxDuration"
+                  },
+                  {
+                    "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                    "location": {
+                      "startLine": 18,
+                      "startColumn": 126,
+                      "startOffset": 1709,
+                      "fragmentLength": 27
+                    },
+                    "AbortAfterWait": "Blockers",
+                    "OptionKind": "AbortAfterWait"
+                  }
+                ]
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            },
+            {
+              "$type": "DataCompressionOption",
+              "location": {
+                "startLine": 18,
+                "startColumn": 157,
+                "startOffset": 1740,
+                "fragmentLength": 23
+              },
+              "CompressionLevel": "Page",
+              "OptionKind": "DataCompression"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 18,
+              "startColumn": 13,
+              "startOffset": 1596,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 18,
+                "startColumn": 13,
+                "startOffset": 1596,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 1800,
+            "fragmentLength": 73
+          },
+          "IndexOptions": [
+            {
+              "$type": "IndexExpressionOption",
+              "location": {
+                "startLine": 21,
+                "startColumn": 30,
+                "startOffset": 1829,
+                "fragmentLength": 10
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 39,
+                  "startOffset": 1838,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "OptionKind": "MaxDop"
+            },
+            {
+              "$type": "DataCompressionOption",
+              "location": {
+                "startLine": 21,
+                "startColumn": 42,
+                "startOffset": 1841,
+                "fragmentLength": 30
+              },
+              "CompressionLevel": "ColumnStore",
+              "OptionKind": "DataCompression"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 21,
+              "startColumn": 13,
+              "startOffset": 1812,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 21,
+                "startColumn": 13,
+                "startOffset": 1812,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 22,
+            "startColumn": 1,
+            "startOffset": 1874,
+            "fragmentLength": 95
+          },
+          "Partition": {
+            "$type": "PartitionSpecifier",
+            "location": {
+              "startLine": 22,
+              "startColumn": 36,
+              "startOffset": 1909,
+              "fragmentLength": 1
+            },
+            "Number": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 22,
+                "startColumn": 36,
+                "startOffset": 1909,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "1"
+            },
+            "All": false
+          },
+          "IndexOptions": [
+            {
+              "$type": "IndexExpressionOption",
+              "location": {
+                "startLine": 22,
+                "startColumn": 44,
+                "startOffset": 1917,
+                "fragmentLength": 10
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 53,
+                  "startOffset": 1926,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "OptionKind": "MaxDop"
+            },
+            {
+              "$type": "DataCompressionOption",
+              "location": {
+                "startLine": 22,
+                "startColumn": 56,
+                "startOffset": 1929,
+                "fragmentLength": 38
+              },
+              "CompressionLevel": "ColumnStoreArchive",
+              "OptionKind": "DataCompression"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 22,
+              "startColumn": 13,
+              "startOffset": 1886,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 22,
+                "startColumn": 13,
+                "startOffset": 1886,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableRebuildStatement",
+          "location": {
+            "startLine": 23,
+            "startColumn": 1,
+            "startOffset": 1970,
+            "fragmentLength": 150
+          },
+          "Partition": {
+            "$type": "PartitionSpecifier",
+            "location": {
+              "startLine": 23,
+              "startColumn": 36,
+              "startOffset": 2005,
+              "fragmentLength": 3
+            },
+            "All": true
+          },
+          "IndexOptions": [
+            {
+              "$type": "DataCompressionOption",
+              "location": {
+                "startLine": 23,
+                "startColumn": 46,
+                "startOffset": 2015,
+                "fragmentLength": 47
+              },
+              "CompressionLevel": "ColumnStore",
+              "PartitionRanges": [
+                {
+                  "$type": "CompressionPartitionRange",
+                  "location": {
+                    "startLine": 23,
+                    "startColumn": 89,
+                    "startOffset": 2058,
+                    "fragmentLength": 1
+                  },
+                  "From": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 23,
+                      "startColumn": 89,
+                      "startOffset": 2058,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1"
+                  }
+                },
+                {
+                  "$type": "CompressionPartitionRange",
+                  "location": {
+                    "startLine": 23,
+                    "startColumn": 91,
+                    "startOffset": 2060,
+                    "fragmentLength": 1
+                  },
+                  "From": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 23,
+                      "startColumn": 91,
+                      "startOffset": 2060,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "3"
+                  }
+                }
+              ],
+              "OptionKind": "DataCompression"
+            },
+            {
+              "$type": "DataCompressionOption",
+              "location": {
+                "startLine": 23,
+                "startColumn": 95,
+                "startOffset": 2064,
+                "fragmentLength": 55
+              },
+              "CompressionLevel": "ColumnStoreArchive",
+              "PartitionRanges": [
+                {
+                  "$type": "CompressionPartitionRange",
+                  "location": {
+                    "startLine": 23,
+                    "startColumn": 146,
+                    "startOffset": 2115,
+                    "fragmentLength": 1
+                  },
+                  "From": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 23,
+                      "startColumn": 146,
+                      "startOffset": 2115,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  }
+                },
+                {
+                  "$type": "CompressionPartitionRange",
+                  "location": {
+                    "startLine": 23,
+                    "startColumn": 148,
+                    "startOffset": 2117,
+                    "fragmentLength": 1
+                  },
+                  "From": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 23,
+                      "startColumn": 148,
+                      "startOffset": 2117,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "4"
+                  }
+                }
+              ],
+              "OptionKind": "DataCompression"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 23,
+              "startColumn": 13,
+              "startOffset": 1982,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 23,
+                "startColumn": 13,
+                "startOffset": 1982,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

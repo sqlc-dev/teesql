@@ -1,0 +1,1045 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1215
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 338
+      },
+      "Statements": [
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 53
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 17,
+              "startOffset": 16,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 6,
+                "startOffset": 24,
+                "fragmentLength": 27
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 26,
+                  "startOffset": 44,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "basic"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "AttachMode": "None"
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 55,
+            "fragmentLength": 42
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 17,
+              "startOffset": 71,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "MaxSizeDatabaseOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 6,
+                "startOffset": 79,
+                "fragmentLength": 16
+              },
+              "MaxSize": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 16,
+                  "startOffset": 89,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "Units": "MB",
+              "OptionKind": "MaxSize"
+            }
+          ],
+          "AttachMode": "None"
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 99,
+            "fragmentLength": 76
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 17,
+              "startOffset": 115,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 6,
+                "startOffset": 123,
+                "fragmentLength": 20
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 16,
+                  "startOffset": 133,
+                  "fragmentLength": 10
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "business"
+              },
+              "OptionKind": "Edition"
+            },
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 28,
+                "startOffset": 145,
+                "fragmentLength": 28
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 48,
+                  "startOffset": 165,
+                  "fragmentLength": 8
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "shared"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "AttachMode": "None"
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 177,
+            "fragmentLength": 70
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 10,
+              "startColumn": 17,
+              "startOffset": 193,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "MaxSizeDatabaseOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 6,
+                "startOffset": 201,
+                "fragmentLength": 14
+              },
+              "MaxSize": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 16,
+                  "startOffset": 211,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "Units": "GB",
+              "OptionKind": "MaxSize"
+            },
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 22,
+                "startOffset": 217,
+                "fragmentLength": 28
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 42,
+                  "startOffset": 237,
+                  "fragmentLength": 8
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "shared"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "AttachMode": "None"
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 249,
+            "fragmentLength": 89
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 13,
+              "startColumn": 17,
+              "startOffset": 265,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "MaxSizeDatabaseOption",
+              "location": {
+                "startLine": 14,
+                "startColumn": 6,
+                "startOffset": 273,
+                "fragmentLength": 16
+              },
+              "MaxSize": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 16,
+                  "startOffset": 283,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "Units": "MB",
+              "OptionKind": "MaxSize"
+            },
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 14,
+                "startColumn": 24,
+                "startOffset": 291,
+                "fragmentLength": 15
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 34,
+                  "startOffset": 301,
+                  "fragmentLength": 5
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "web"
+              },
+              "OptionKind": "Edition"
+            },
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 14,
+                "startColumn": 41,
+                "startOffset": 308,
+                "fragmentLength": 28
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 61,
+                  "startOffset": 328,
+                  "fragmentLength": 8
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "shared"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "AttachMode": "None"
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 18,
+        "startColumn": 1,
+        "startOffset": 344,
+        "fragmentLength": 364
+      },
+      "Statements": [
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 18,
+            "startColumn": 1,
+            "startOffset": 344,
+            "fragmentLength": 59
+          },
+          "Options": [
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 19,
+                "startColumn": 13,
+                "startOffset": 374,
+                "fragmentLength": 27
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 33,
+                  "startOffset": 394,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "basic"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 18,
+              "startColumn": 16,
+              "startOffset": 359,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 405,
+            "fragmentLength": 48
+          },
+          "Options": [
+            {
+              "$type": "MaxSizeDatabaseOption",
+              "location": {
+                "startLine": 22,
+                "startColumn": 13,
+                "startOffset": 435,
+                "fragmentLength": 16
+              },
+              "MaxSize": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 23,
+                  "startOffset": 445,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "Units": "MB",
+              "OptionKind": "MaxSize"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 21,
+              "startColumn": 16,
+              "startOffset": 420,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 24,
+            "startColumn": 1,
+            "startOffset": 455,
+            "fragmentLength": 78
+          },
+          "Options": [
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 25,
+                "startColumn": 13,
+                "startOffset": 485,
+                "fragmentLength": 17
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 23,
+                  "startOffset": 495,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "basic"
+              },
+              "OptionKind": "Edition"
+            },
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 25,
+                "startColumn": 32,
+                "startOffset": 504,
+                "fragmentLength": 27
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 52,
+                  "startOffset": 524,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "basic"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 24,
+              "startColumn": 16,
+              "startOffset": 470,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 27,
+            "startColumn": 1,
+            "startOffset": 535,
+            "fragmentLength": 77
+          },
+          "Options": [
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 28,
+                "startColumn": 13,
+                "startOffset": 565,
+                "fragmentLength": 27
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 28,
+                  "startColumn": 33,
+                  "startOffset": 585,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "basic"
+              },
+              "OptionKind": "ServiceObjective"
+            },
+            {
+              "$type": "MaxSizeDatabaseOption",
+              "location": {
+                "startLine": 28,
+                "startColumn": 42,
+                "startOffset": 594,
+                "fragmentLength": 16
+              },
+              "MaxSize": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 28,
+                  "startColumn": 52,
+                  "startOffset": 604,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "Units": "MB",
+              "OptionKind": "MaxSize"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 27,
+              "startColumn": 16,
+              "startOffset": 550,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 30,
+            "startColumn": 1,
+            "startOffset": 614,
+            "fragmentLength": 94
+          },
+          "Options": [
+            {
+              "$type": "MaxSizeDatabaseOption",
+              "location": {
+                "startLine": 31,
+                "startColumn": 13,
+                "startOffset": 644,
+                "fragmentLength": 14
+              },
+              "MaxSize": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 23,
+                  "startOffset": 654,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "Units": "GB",
+              "OptionKind": "MaxSize"
+            },
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 31,
+                "startColumn": 29,
+                "startOffset": 660,
+                "fragmentLength": 17
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 39,
+                  "startOffset": 670,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "basic"
+              },
+              "OptionKind": "Edition"
+            },
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 31,
+                "startColumn": 48,
+                "startOffset": 679,
+                "fragmentLength": 27
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 68,
+                  "startOffset": 699,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "basic"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 30,
+              "startColumn": 16,
+              "startOffset": 629,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 35,
+        "startColumn": 1,
+        "startOffset": 714,
+        "fragmentLength": 160
+      },
+      "Statements": [
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 35,
+            "startColumn": 1,
+            "startOffset": 714,
+            "fragmentLength": 76
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 35,
+              "startColumn": 17,
+              "startOffset": 730,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "ElasticPoolSpecification",
+              "location": {
+                "startLine": 36,
+                "startColumn": 6,
+                "startOffset": 738,
+                "fragmentLength": 49
+              },
+              "ElasticPoolName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 36,
+                  "startColumn": 47,
+                  "startOffset": 779,
+                  "fragmentLength": 8
+                },
+                "Value": "epool1",
+                "QuoteType": "SquareBracket"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "AttachMode": "None"
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 38,
+            "startColumn": 1,
+            "startOffset": 792,
+            "fragmentLength": 82
+          },
+          "Options": [
+            {
+              "$type": "ElasticPoolSpecification",
+              "location": {
+                "startLine": 39,
+                "startColumn": 13,
+                "startOffset": 822,
+                "fragmentLength": 49
+              },
+              "ElasticPoolName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 39,
+                  "startColumn": 54,
+                  "startOffset": 863,
+                  "fragmentLength": 8
+                },
+                "Value": "epool2",
+                "QuoteType": "SquareBracket"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 38,
+              "startColumn": 16,
+              "startOffset": 807,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 43,
+        "startColumn": 1,
+        "startOffset": 880,
+        "fragmentLength": 334
+      },
+      "Statements": [
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 43,
+            "startColumn": 1,
+            "startOffset": 880,
+            "fragmentLength": 42
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 43,
+              "startColumn": 17,
+              "startOffset": 896,
+              "fragmentLength": 7
+            },
+            "Value": "d1_copy",
+            "QuoteType": "NotQuoted"
+          },
+          "AttachMode": "None",
+          "CopyOf": {
+            "$type": "MultiPartIdentifier",
+            "location": {
+              "startLine": 44,
+              "startColumn": 16,
+              "startOffset": 919,
+              "fragmentLength": 2
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 44,
+                  "startColumn": 16,
+                  "startOffset": 919,
+                  "fragmentLength": 2
+                },
+                "Value": "d1",
+                "QuoteType": "NotQuoted"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 46,
+            "startColumn": 1,
+            "startOffset": 924,
+            "fragmentLength": 80
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 46,
+              "startColumn": 17,
+              "startOffset": 940,
+              "fragmentLength": 7
+            },
+            "Value": "d2_copy",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "LiteralDatabaseOption",
+              "location": {
+                "startLine": 48,
+                "startColumn": 6,
+                "startOffset": 971,
+                "fragmentLength": 31
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 48,
+                  "startColumn": 26,
+                  "startOffset": 991,
+                  "fragmentLength": 11
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "HS_Gen5_2"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "AttachMode": "None",
+          "CopyOf": {
+            "$type": "MultiPartIdentifier",
+            "location": {
+              "startLine": 47,
+              "startColumn": 16,
+              "startOffset": 963,
+              "fragmentLength": 2
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 47,
+                  "startColumn": 16,
+                  "startOffset": 963,
+                  "fragmentLength": 2
+                },
+                "Value": "d2",
+                "QuoteType": "NotQuoted"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 50,
+            "startColumn": 1,
+            "startOffset": 1006,
+            "fragmentLength": 99
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 50,
+              "startColumn": 17,
+              "startOffset": 1022,
+              "fragmentLength": 7
+            },
+            "Value": "d3_copy",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "ElasticPoolSpecification",
+              "location": {
+                "startLine": 52,
+                "startColumn": 6,
+                "startOffset": 1053,
+                "fragmentLength": 49
+              },
+              "ElasticPoolName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 52,
+                  "startColumn": 47,
+                  "startOffset": 1094,
+                  "fragmentLength": 8
+                },
+                "Value": "epool2",
+                "QuoteType": "SquareBracket"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "AttachMode": "None",
+          "CopyOf": {
+            "$type": "MultiPartIdentifier",
+            "location": {
+              "startLine": 51,
+              "startColumn": 16,
+              "startOffset": 1045,
+              "fragmentLength": 2
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 51,
+                  "startColumn": 16,
+                  "startOffset": 1045,
+                  "fragmentLength": 2
+                },
+                "Value": "d3",
+                "QuoteType": "NotQuoted"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 54,
+            "startColumn": 1,
+            "startOffset": 1107,
+            "fragmentLength": 107
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 54,
+              "startColumn": 17,
+              "startOffset": 1123,
+              "fragmentLength": 7
+            },
+            "Value": "d4_copy",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "ElasticPoolSpecification",
+              "location": {
+                "startLine": 56,
+                "startColumn": 6,
+                "startOffset": 1162,
+                "fragmentLength": 49
+              },
+              "ElasticPoolName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 56,
+                  "startColumn": 47,
+                  "startOffset": 1203,
+                  "fragmentLength": 8
+                },
+                "Value": "epool3",
+                "QuoteType": "SquareBracket"
+              },
+              "OptionKind": "ServiceObjective"
+            }
+          ],
+          "AttachMode": "None",
+          "CopyOf": {
+            "$type": "MultiPartIdentifier",
+            "location": {
+              "startLine": 55,
+              "startColumn": 16,
+              "startOffset": 1146,
+              "fragmentLength": 10
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 55,
+                  "startColumn": 16,
+                  "startOffset": 1146,
+                  "fragmentLength": 7
+                },
+                "Value": "server1",
+                "QuoteType": "NotQuoted"
+              },
+              {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 55,
+                  "startColumn": 24,
+                  "startOffset": 1154,
+                  "fragmentLength": 2
+                },
+                "Value": "d4",
+                "QuoteType": "NotQuoted"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

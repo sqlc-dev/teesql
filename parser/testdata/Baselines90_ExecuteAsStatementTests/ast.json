@@ -1,0 +1,258 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 217
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 215
+      },
+      "Statements": [
+        {
+          "$type": "ExecuteAsStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 28
+          },
+          "WithNoRevert": false,
+          "ExecuteContext": {
+            "$type": "ExecuteContext",
+            "location": {
+              "startLine": 1,
+              "startColumn": 20,
+              "startOffset": 19,
+              "fragmentLength": 8
+            },
+            "Principal": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 1,
+                "startColumn": 20,
+                "startOffset": 19,
+                "fragmentLength": 8
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "login1"
+            },
+            "Kind": "Login"
+          }
+        },
+        {
+          "$type": "ExecuteAsStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 30,
+            "fragmentLength": 26
+          },
+          "WithNoRevert": false,
+          "ExecuteContext": {
+            "$type": "ExecuteContext",
+            "location": {
+              "startLine": 3,
+              "startColumn": 19,
+              "startOffset": 48,
+              "fragmentLength": 7
+            },
+            "Principal": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 3,
+                "startColumn": 19,
+                "startOffset": 48,
+                "fragmentLength": 7
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "user2"
+            },
+            "Kind": "User"
+          }
+        },
+        {
+          "$type": "ExecuteAsStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 58,
+            "fragmentLength": 18
+          },
+          "WithNoRevert": false,
+          "ExecuteContext": {
+            "$type": "ExecuteContext",
+            "location": {
+              "startLine": 5,
+              "startColumn": 12,
+              "startOffset": 69,
+              "fragmentLength": 6
+            },
+            "Kind": "Caller"
+          }
+        },
+        {
+          "$type": "ExecuteAsStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 78,
+            "fragmentLength": 47
+          },
+          "WithNoRevert": true,
+          "ExecuteContext": {
+            "$type": "ExecuteContext",
+            "location": {
+              "startLine": 7,
+              "startColumn": 20,
+              "startOffset": 97,
+              "fragmentLength": 8
+            },
+            "Principal": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 7,
+                "startColumn": 20,
+                "startOffset": 97,
+                "fragmentLength": 8
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "login1"
+            },
+            "Kind": "Login"
+          }
+        },
+        {
+          "$type": "ExecuteAsStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 127,
+            "fragmentLength": 51
+          },
+          "WithNoRevert": false,
+          "Cookie": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 11,
+              "startColumn": 22,
+              "startOffset": 174,
+              "fragmentLength": 3
+            },
+            "Name": "@v1"
+          },
+          "ExecuteContext": {
+            "$type": "ExecuteContext",
+            "location": {
+              "startLine": 10,
+              "startColumn": 19,
+              "startOffset": 145,
+              "fragmentLength": 7
+            },
+            "Principal": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 10,
+                "startColumn": 19,
+                "startOffset": 145,
+                "fragmentLength": 7
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "user2"
+            },
+            "Kind": "User"
+          }
+        },
+        {
+          "$type": "ExecuteAsStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 180,
+            "fragmentLength": 35
+          },
+          "WithNoRevert": false,
+          "ExecuteContext": {
+            "$type": "ExecuteContext",
+            "location": {
+              "startLine": 13,
+              "startColumn": 19,
+              "startOffset": 198,
+              "fragmentLength": 16
+            },
+            "Principal": {
+              "$type": "FunctionCall",
+              "location": {
+                "startLine": 13,
+                "startColumn": 19,
+                "startOffset": 198,
+                "fragmentLength": 16
+              },
+              "CallTarget": {
+                "$type": "MultiPartIdentifierCallTarget",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 19,
+                  "startOffset": 198,
+                  "fragmentLength": 3
+                },
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "location": {
+                    "startLine": 13,
+                    "startColumn": 19,
+                    "startOffset": 198,
+                    "fragmentLength": 3
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 13,
+                        "startColumn": 19,
+                        "startOffset": 198,
+                        "fragmentLength": 3
+                      },
+                      "Value": "dbo",
+                      "QuoteType": "NotQuoted"
+                    }
+                  ]
+                }
+              },
+              "FunctionName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 23,
+                  "startOffset": 202,
+                  "fragmentLength": 10
+                },
+                "Value": "fn_getuser",
+                "QuoteType": "NotQuoted"
+              },
+              "UniqueRowFilter": "NotSpecified",
+              "WithArrayWrapper": false
+            },
+            "Kind": "User"
+          }
+        }
+      ]
+    }
+  ]
+}

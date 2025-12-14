@@ -1,0 +1,488 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 207
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 205
+      },
+      "Statements": [
+        {
+          "$type": "WriteTextStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 30
+          },
+          "SourceParameter": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 1,
+              "startColumn": 26,
+              "startOffset": 25,
+              "fragmentLength": 4
+            },
+            "Name": "@str"
+          },
+          "Bulk": false,
+          "Column": {
+            "$type": "ColumnReferenceExpression",
+            "location": {
+              "startLine": 1,
+              "startColumn": 11,
+              "startOffset": 10,
+              "fragmentLength": 5
+            },
+            "ColumnType": "Regular",
+            "MultiPartIdentifier": {
+              "$type": "MultiPartIdentifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 11,
+                "startOffset": 10,
+                "fragmentLength": 5
+              },
+              "Count": 2,
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 11,
+                    "startOffset": 10,
+                    "fragmentLength": 2
+                  },
+                  "Value": "t1",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 14,
+                    "startOffset": 13,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          },
+          "TextId": {
+            "$type": "BinaryLiteral",
+            "location": {
+              "startLine": 1,
+              "startColumn": 17,
+              "startOffset": 16,
+              "fragmentLength": 8
+            },
+            "LiteralType": "Binary",
+            "IsLargeObject": false,
+            "Value": "0xABAA10"
+          },
+          "WithLog": false
+        },
+        {
+          "$type": "WriteTextStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 32,
+            "fragmentLength": 31
+          },
+          "SourceParameter": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 3,
+              "startColumn": 27,
+              "startOffset": 58,
+              "fragmentLength": 4
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "hi"
+          },
+          "Bulk": true,
+          "Column": {
+            "$type": "ColumnReferenceExpression",
+            "location": {
+              "startLine": 3,
+              "startColumn": 16,
+              "startOffset": 47,
+              "fragmentLength": 5
+            },
+            "ColumnType": "Regular",
+            "MultiPartIdentifier": {
+              "$type": "MultiPartIdentifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 16,
+                "startOffset": 47,
+                "fragmentLength": 5
+              },
+              "Count": 2,
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 16,
+                    "startOffset": 47,
+                    "fragmentLength": 2
+                  },
+                  "Value": "t1",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 19,
+                    "startOffset": 50,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          },
+          "TextId": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 3,
+              "startColumn": 22,
+              "startOffset": 53,
+              "fragmentLength": 4
+            },
+            "Name": "@var"
+          },
+          "WithLog": false
+        },
+        {
+          "$type": "WriteTextStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 65,
+            "fragmentLength": 39
+          },
+          "SourceParameter": {
+            "$type": "NullLiteral",
+            "location": {
+              "startLine": 6,
+              "startColumn": 14,
+              "startOffset": 99,
+              "fragmentLength": 4
+            },
+            "LiteralType": "Null",
+            "Value": "NULL"
+          },
+          "Bulk": false,
+          "Column": {
+            "$type": "ColumnReferenceExpression",
+            "location": {
+              "startLine": 5,
+              "startColumn": 11,
+              "startOffset": 75,
+              "fragmentLength": 5
+            },
+            "ColumnType": "Regular",
+            "MultiPartIdentifier": {
+              "$type": "MultiPartIdentifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 11,
+                "startOffset": 75,
+                "fragmentLength": 5
+              },
+              "Count": 2,
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 11,
+                    "startOffset": 75,
+                    "fragmentLength": 2
+                  },
+                  "Value": "t1",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 14,
+                    "startOffset": 78,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          },
+          "TextId": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 5,
+              "startColumn": 17,
+              "startOffset": 81,
+              "fragmentLength": 4
+            },
+            "Name": "@var"
+          },
+          "WithLog": true
+        },
+        {
+          "$type": "WriteTextStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 106,
+            "fragmentLength": 28
+          },
+          "SourceParameter": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 8,
+              "startColumn": 21,
+              "startOffset": 126,
+              "fragmentLength": 7
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "hello"
+          },
+          "Bulk": false,
+          "Column": {
+            "$type": "ColumnReferenceExpression",
+            "location": {
+              "startLine": 8,
+              "startColumn": 11,
+              "startOffset": 116,
+              "fragmentLength": 5
+            },
+            "ColumnType": "Regular",
+            "MultiPartIdentifier": {
+              "$type": "MultiPartIdentifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 11,
+                "startOffset": 116,
+                "fragmentLength": 5
+              },
+              "Count": 2,
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 11,
+                    "startOffset": 116,
+                    "fragmentLength": 2
+                  },
+                  "Value": "t1",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 14,
+                    "startOffset": 119,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          },
+          "TextId": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 8,
+              "startColumn": 17,
+              "startOffset": 122,
+              "fragmentLength": 3
+            },
+            "LiteralType": "Integer",
+            "Value": "100"
+          },
+          "WithLog": false
+        },
+        {
+          "$type": "WriteTextStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 136,
+            "fragmentLength": 41
+          },
+          "SourceParameter": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 11,
+              "startColumn": 14,
+              "startOffset": 168,
+              "fragmentLength": 8
+            },
+            "LiteralType": "String",
+            "IsNational": true,
+            "IsLargeObject": false,
+            "Value": "hello"
+          },
+          "Bulk": false,
+          "Column": {
+            "$type": "ColumnReferenceExpression",
+            "location": {
+              "startLine": 10,
+              "startColumn": 11,
+              "startOffset": 146,
+              "fragmentLength": 5
+            },
+            "ColumnType": "Regular",
+            "MultiPartIdentifier": {
+              "$type": "MultiPartIdentifier",
+              "location": {
+                "startLine": 10,
+                "startColumn": 11,
+                "startOffset": 146,
+                "fragmentLength": 5
+              },
+              "Count": 2,
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 11,
+                    "startOffset": 146,
+                    "fragmentLength": 2
+                  },
+                  "Value": "t1",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 14,
+                    "startOffset": 149,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          },
+          "TextId": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 10,
+              "startColumn": 17,
+              "startOffset": 152,
+              "fragmentLength": 2
+            },
+            "LiteralType": "Integer",
+            "Value": "10"
+          },
+          "WithLog": true
+        },
+        {
+          "$type": "WriteTextStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 179,
+            "fragmentLength": 26
+          },
+          "SourceParameter": {
+            "$type": "BinaryLiteral",
+            "location": {
+              "startLine": 13,
+              "startColumn": 22,
+              "startOffset": 200,
+              "fragmentLength": 4
+            },
+            "LiteralType": "Binary",
+            "IsLargeObject": false,
+            "Value": "0xFF"
+          },
+          "Bulk": false,
+          "Column": {
+            "$type": "ColumnReferenceExpression",
+            "location": {
+              "startLine": 13,
+              "startColumn": 11,
+              "startOffset": 189,
+              "fragmentLength": 5
+            },
+            "ColumnType": "Regular",
+            "MultiPartIdentifier": {
+              "$type": "MultiPartIdentifier",
+              "location": {
+                "startLine": 13,
+                "startColumn": 11,
+                "startOffset": 189,
+                "fragmentLength": 5
+              },
+              "Count": 2,
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 13,
+                    "startColumn": 11,
+                    "startOffset": 189,
+                    "fragmentLength": 2
+                  },
+                  "Value": "t1",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 13,
+                    "startColumn": 14,
+                    "startOffset": 192,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          },
+          "TextId": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 13,
+              "startColumn": 17,
+              "startOffset": 195,
+              "fragmentLength": 4
+            },
+            "Name": "@var"
+          },
+          "WithLog": false
+        }
+      ]
+    }
+  ]
+}

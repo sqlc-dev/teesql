@@ -1,0 +1,218 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 250
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 248
+      },
+      "Statements": [
+        {
+          "$type": "CreateSpatialIndexStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 72
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 22,
+              "startOffset": 21,
+              "fragmentLength": 13
+            },
+            "Value": "spatial_index",
+            "QuoteType": "NotQuoted"
+          },
+          "Object": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 1,
+              "startColumn": 39,
+              "startOffset": 38,
+              "fragmentLength": 1
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 39,
+                "startOffset": 38,
+                "fragmentLength": 1
+              },
+              "Value": "t",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SpatialColumnName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 41,
+              "startOffset": 40,
+              "fragmentLength": 5
+            },
+            "Value": "shape",
+            "QuoteType": "NotQuoted"
+          },
+          "SpatialIndexingScheme": "GeographyAutoGrid"
+        },
+        {
+          "$type": "CreateSpatialIndexStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 74,
+            "fragmentLength": 71
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 22,
+              "startOffset": 95,
+              "fragmentLength": 13
+            },
+            "Value": "spatial_index",
+            "QuoteType": "NotQuoted"
+          },
+          "Object": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 3,
+              "startColumn": 39,
+              "startOffset": 112,
+              "fragmentLength": 1
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 39,
+                "startOffset": 112,
+                "fragmentLength": 1
+              },
+              "Value": "t",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SpatialColumnName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 41,
+              "startOffset": 114,
+              "fragmentLength": 5
+            },
+            "Value": "shape",
+            "QuoteType": "NotQuoted"
+          },
+          "SpatialIndexingScheme": "GeometryAutoGrid"
+        },
+        {
+          "$type": "CreateSpatialIndexStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 147,
+            "fragmentLength": 101
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 22,
+              "startOffset": 168,
+              "fragmentLength": 13
+            },
+            "Value": "spatial_index",
+            "QuoteType": "NotQuoted"
+          },
+          "Object": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 5,
+              "startColumn": 39,
+              "startOffset": 185,
+              "fragmentLength": 1
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 39,
+                "startOffset": 185,
+                "fragmentLength": 1
+              },
+              "Value": "t",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SpatialColumnName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 41,
+              "startOffset": 187,
+              "fragmentLength": 5
+            },
+            "Value": "shape",
+            "QuoteType": "NotQuoted"
+          },
+          "SpatialIndexingScheme": "GeographyAutoGrid",
+          "SpatialIndexOptions": [
+            {
+              "$type": "SpatialIndexRegularOption",
+              "location": {
+                "startLine": 6,
+                "startColumn": 7,
+                "startOffset": 226,
+                "fragmentLength": 21
+              },
+              "Option": {
+                "$type": "DataCompressionOption",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 7,
+                  "startOffset": 226,
+                  "fragmentLength": 21
+                },
+                "CompressionLevel": "Page",
+                "OptionKind": "DataCompression"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,580 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1117
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 275
+      },
+      "Statements": [
+        {
+          "$type": "CreateServerAuditSpecificationStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 275
+          },
+          "AuditState": "NotSet",
+          "Parts": [
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 3,
+                "startColumn": 5,
+                "startOffset": 73,
+                "fragmentLength": 46
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 10,
+                  "startOffset": 78,
+                  "fragmentLength": 40
+                },
+                "Group": "SuccessfulDatabaseAuthenticationGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 4,
+                "startColumn": 5,
+                "startOffset": 125,
+                "fragmentLength": 42
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 10,
+                  "startOffset": 130,
+                  "fragmentLength": 36
+                },
+                "Group": "FailedDatabaseAuthenticationGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 5,
+                "startColumn": 5,
+                "startOffset": 173,
+                "fragmentLength": 27
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 10,
+                  "startOffset": 178,
+                  "fragmentLength": 21
+                },
+                "Group": "DatabaseLogoutGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 6,
+                "startColumn": 5,
+                "startOffset": 206,
+                "fragmentLength": 32
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 10,
+                  "startOffset": 211,
+                  "fragmentLength": 26
+                },
+                "Group": "UserChangePasswordGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 7,
+                "startColumn": 5,
+                "startOffset": 244,
+                "fragmentLength": 30
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 10,
+                  "startOffset": 249,
+                  "fragmentLength": 24
+                },
+                "Group": "UserDefinedAuditGroup"
+              }
+            }
+          ],
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 35,
+              "startOffset": 34,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 22,
+              "startOffset": 66,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 11,
+        "startColumn": 1,
+        "startOffset": 281,
+        "fragmentLength": 295
+      },
+      "Statements": [
+        {
+          "$type": "AlterServerAuditSpecificationStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 281,
+            "fragmentLength": 295
+          },
+          "AuditState": "On",
+          "Parts": [
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 13,
+                "startColumn": 5,
+                "startOffset": 353,
+                "fragmentLength": 46
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 10,
+                  "startOffset": 358,
+                  "fragmentLength": 40
+                },
+                "Group": "SuccessfulDatabaseAuthenticationGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 14,
+                "startColumn": 5,
+                "startOffset": 405,
+                "fragmentLength": 42
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 10,
+                  "startOffset": 410,
+                  "fragmentLength": 36
+                },
+                "Group": "FailedDatabaseAuthenticationGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 15,
+                "startColumn": 5,
+                "startOffset": 453,
+                "fragmentLength": 27
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 10,
+                  "startOffset": 458,
+                  "fragmentLength": 21
+                },
+                "Group": "DatabaseLogoutGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 16,
+                "startColumn": 5,
+                "startOffset": 486,
+                "fragmentLength": 32
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 10,
+                  "startOffset": 491,
+                  "fragmentLength": 26
+                },
+                "Group": "UserChangePasswordGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 17,
+                "startColumn": 5,
+                "startOffset": 524,
+                "fragmentLength": 30
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 10,
+                  "startOffset": 529,
+                  "fragmentLength": 24
+                },
+                "Group": "UserDefinedAuditGroup"
+              }
+            }
+          ],
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 11,
+              "startColumn": 34,
+              "startOffset": 314,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 12,
+              "startColumn": 22,
+              "startOffset": 346,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 22,
+        "startColumn": 1,
+        "startOffset": 582,
+        "fragmentLength": 277
+      },
+      "Statements": [
+        {
+          "$type": "CreateDatabaseAuditSpecificationStatement",
+          "location": {
+            "startLine": 22,
+            "startColumn": 1,
+            "startOffset": 582,
+            "fragmentLength": 277
+          },
+          "AuditState": "NotSet",
+          "Parts": [
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 24,
+                "startColumn": 5,
+                "startOffset": 657,
+                "fragmentLength": 46
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 10,
+                  "startOffset": 662,
+                  "fragmentLength": 40
+                },
+                "Group": "SuccessfulDatabaseAuthenticationGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 25,
+                "startColumn": 5,
+                "startOffset": 709,
+                "fragmentLength": 42
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 10,
+                  "startOffset": 714,
+                  "fragmentLength": 36
+                },
+                "Group": "FailedDatabaseAuthenticationGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 26,
+                "startColumn": 5,
+                "startOffset": 757,
+                "fragmentLength": 27
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 26,
+                  "startColumn": 10,
+                  "startOffset": 762,
+                  "fragmentLength": 21
+                },
+                "Group": "DatabaseLogoutGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 27,
+                "startColumn": 5,
+                "startOffset": 790,
+                "fragmentLength": 32
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 10,
+                  "startOffset": 795,
+                  "fragmentLength": 26
+                },
+                "Group": "UserChangePasswordGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 28,
+                "startColumn": 5,
+                "startOffset": 828,
+                "fragmentLength": 30
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 28,
+                  "startColumn": 10,
+                  "startOffset": 833,
+                  "fragmentLength": 24
+                },
+                "Group": "UserDefinedAuditGroup"
+              }
+            }
+          ],
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 22,
+              "startColumn": 37,
+              "startOffset": 618,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 23,
+              "startColumn": 22,
+              "startOffset": 650,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 32,
+        "startColumn": 1,
+        "startOffset": 865,
+        "fragmentLength": 252
+      },
+      "Statements": [
+        {
+          "$type": "AlterDatabaseAuditSpecificationStatement",
+          "location": {
+            "startLine": 32,
+            "startColumn": 1,
+            "startOffset": 865,
+            "fragmentLength": 252
+          },
+          "AuditState": "NotSet",
+          "Parts": [
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 33,
+                "startColumn": 5,
+                "startOffset": 915,
+                "fragmentLength": 46
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 33,
+                  "startColumn": 10,
+                  "startOffset": 920,
+                  "fragmentLength": 40
+                },
+                "Group": "SuccessfulDatabaseAuthenticationGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 34,
+                "startColumn": 5,
+                "startOffset": 967,
+                "fragmentLength": 42
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 34,
+                  "startColumn": 10,
+                  "startOffset": 972,
+                  "fragmentLength": 36
+                },
+                "Group": "FailedDatabaseAuthenticationGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 35,
+                "startColumn": 5,
+                "startOffset": 1015,
+                "fragmentLength": 27
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 35,
+                  "startColumn": 10,
+                  "startOffset": 1020,
+                  "fragmentLength": 21
+                },
+                "Group": "DatabaseLogoutGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 36,
+                "startColumn": 5,
+                "startOffset": 1048,
+                "fragmentLength": 32
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 36,
+                  "startColumn": 10,
+                  "startOffset": 1053,
+                  "fragmentLength": 26
+                },
+                "Group": "UserChangePasswordGroup"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 37,
+                "startColumn": 5,
+                "startOffset": 1086,
+                "fragmentLength": 30
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 37,
+                  "startColumn": 10,
+                  "startOffset": 1091,
+                  "fragmentLength": 24
+                },
+                "Group": "UserDefinedAuditGroup"
+              }
+            }
+          ],
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 32,
+              "startColumn": 36,
+              "startOffset": 900,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          }
+        }
+      ]
+    }
+  ]
+}

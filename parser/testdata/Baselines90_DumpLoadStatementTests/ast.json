@@ -1,0 +1,528 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 291
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 108
+      },
+      "Statements": [
+        {
+          "$type": "BackupDatabaseStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 37
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 1,
+              "startColumn": 17,
+              "startOffset": 16,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 17,
+                "startOffset": 16,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 2,
+                "startColumn": 8,
+                "startOffset": 26,
+                "fragmentLength": 10
+              },
+              "LogicalDevice": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 8,
+                  "startOffset": 26,
+                  "fragmentLength": 10
+                },
+                "Value": "someDevice",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 8,
+                    "startOffset": 26,
+                    "fragmentLength": 10
+                  },
+                  "Value": "someDevice",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "DeviceType": "None"
+            }
+          ]
+        },
+        {
+          "$type": "BackupDatabaseStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 39,
+            "fragmentLength": 69
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 4,
+              "startColumn": 17,
+              "startOffset": 55,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 4,
+                "startColumn": 17,
+                "startOffset": 55,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 5,
+                "startColumn": 8,
+                "startOffset": 65,
+                "fragmentLength": 11
+              },
+              "LogicalDevice": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 8,
+                  "startOffset": 65,
+                  "fragmentLength": 11
+                },
+                "Value": "@deviceName",
+                "ValueExpression": {
+                  "$type": "VariableReference",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 8,
+                    "startOffset": 65,
+                    "fragmentLength": 11
+                  },
+                  "Name": "@deviceName"
+                }
+              },
+              "DeviceType": "None"
+            },
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 5,
+                "startColumn": 28,
+                "startOffset": 85,
+                "fragmentLength": 4
+              },
+              "PhysicalDevice": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 28,
+                  "startOffset": 85,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "c:"
+              },
+              "DeviceType": "Disk"
+            },
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 5,
+                "startColumn": 41,
+                "startOffset": 98,
+                "fragmentLength": 9
+              },
+              "PhysicalDevice": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 41,
+                  "startOffset": 98,
+                  "fragmentLength": 9
+                },
+                "Name": "@tapeName"
+              },
+              "DeviceType": "Tape"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 9,
+        "startColumn": 1,
+        "startOffset": 114,
+        "fragmentLength": 32
+      },
+      "Statements": [
+        {
+          "$type": "BackupTransactionLogStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 114,
+            "fragmentLength": 32
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 9,
+              "startColumn": 12,
+              "startOffset": 125,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 12,
+                "startOffset": 125,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 10,
+                "startColumn": 8,
+                "startOffset": 135,
+                "fragmentLength": 10
+              },
+              "LogicalDevice": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 8,
+                  "startOffset": 135,
+                  "fragmentLength": 10
+                },
+                "Value": "someDevice",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 8,
+                    "startOffset": 135,
+                    "fragmentLength": 10
+                  },
+                  "Value": "someDevice",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "DeviceType": "None"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 14,
+        "startColumn": 1,
+        "startOffset": 152,
+        "fragmentLength": 32
+      },
+      "Statements": [
+        {
+          "$type": "BackupTransactionLogStatement",
+          "location": {
+            "startLine": 14,
+            "startColumn": 1,
+            "startOffset": 152,
+            "fragmentLength": 32
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 14,
+              "startColumn": 12,
+              "startOffset": 163,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 14,
+                "startColumn": 12,
+                "startOffset": 163,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 15,
+                "startColumn": 8,
+                "startOffset": 173,
+                "fragmentLength": 10
+              },
+              "LogicalDevice": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 8,
+                  "startOffset": 173,
+                  "fragmentLength": 10
+                },
+                "Value": "someDevice",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 15,
+                    "startColumn": 8,
+                    "startOffset": 173,
+                    "fragmentLength": 10
+                  },
+                  "Value": "someDevice",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "DeviceType": "None"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 19,
+        "startColumn": 1,
+        "startOffset": 190,
+        "fragmentLength": 21
+      },
+      "Statements": [
+        {
+          "$type": "RestoreStatement",
+          "location": {
+            "startLine": 19,
+            "startColumn": 1,
+            "startOffset": 190,
+            "fragmentLength": 21
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 19,
+              "startColumn": 18,
+              "startOffset": 207,
+              "fragmentLength": 3
+            },
+            "Value": "db1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 19,
+                "startColumn": 18,
+                "startOffset": 207,
+                "fragmentLength": 3
+              },
+              "Value": "db1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Kind": "Database"
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 23,
+        "startColumn": 1,
+        "startOffset": 217,
+        "fragmentLength": 34
+      },
+      "Statements": [
+        {
+          "$type": "RestoreStatement",
+          "location": {
+            "startLine": 23,
+            "startColumn": 1,
+            "startOffset": 217,
+            "fragmentLength": 34
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 23,
+              "startColumn": 13,
+              "startOffset": 229,
+              "fragmentLength": 5
+            },
+            "Value": "@var2",
+            "ValueExpression": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 23,
+                "startColumn": 13,
+                "startOffset": 229,
+                "fragmentLength": 5
+              },
+              "Name": "@var2"
+            }
+          },
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 23,
+                "startColumn": 24,
+                "startOffset": 240,
+                "fragmentLength": 10
+              },
+              "LogicalDevice": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 23,
+                  "startColumn": 24,
+                  "startOffset": 240,
+                  "fragmentLength": 10
+                },
+                "Value": "someDevice",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 23,
+                    "startColumn": 24,
+                    "startOffset": 240,
+                    "fragmentLength": 10
+                  },
+                  "Value": "someDevice",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "DeviceType": "None"
+            }
+          ],
+          "Kind": "TransactionLog"
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 27,
+        "startColumn": 1,
+        "startOffset": 257,
+        "fragmentLength": 34
+      },
+      "Statements": [
+        {
+          "$type": "RestoreStatement",
+          "location": {
+            "startLine": 27,
+            "startColumn": 1,
+            "startOffset": 257,
+            "fragmentLength": 34
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 27,
+              "startColumn": 13,
+              "startOffset": 269,
+              "fragmentLength": 5
+            },
+            "Value": "@var2",
+            "ValueExpression": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 27,
+                "startColumn": 13,
+                "startOffset": 269,
+                "fragmentLength": 5
+              },
+              "Name": "@var2"
+            }
+          },
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 27,
+                "startColumn": 24,
+                "startOffset": 280,
+                "fragmentLength": 10
+              },
+              "LogicalDevice": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 24,
+                  "startOffset": 280,
+                  "fragmentLength": 10
+                },
+                "Value": "someDevice",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 27,
+                    "startColumn": 24,
+                    "startOffset": 280,
+                    "fragmentLength": 10
+                  },
+                  "Value": "someDevice",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "DeviceType": "None"
+            }
+          ],
+          "Kind": "TransactionLog"
+        }
+      ]
+    }
+  ]
+}

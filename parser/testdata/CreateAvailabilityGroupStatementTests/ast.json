@@ -1,0 +1,781 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1145
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 662
+      },
+      "Statements": [
+        {
+          "$type": "CreateAvailabilityGroupStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 662
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 27,
+              "startOffset": 26,
+              "fragmentLength": 6
+            },
+            "Value": "group1",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "LiteralAvailabilityGroupOption",
+              "location": {
+                "startLine": 1,
+                "startColumn": 65,
+                "startOffset": 64,
+                "fragmentLength": 2
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 65,
+                  "startOffset": 64,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "OptionKind": "RequiredCopiesToCommit"
+            }
+          ],
+          "Databases": [
+            {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 14,
+                "startOffset": 82,
+                "fragmentLength": 3
+              },
+              "Value": "db1",
+              "QuoteType": "NotQuoted"
+            },
+            {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 19,
+                "startOffset": 87,
+                "fragmentLength": 3
+              },
+              "Value": "db2",
+              "QuoteType": "NotQuoted"
+            }
+          ],
+          "Replicas": [
+            {
+              "$type": "AvailabilityReplica",
+              "location": {
+                "startLine": 3,
+                "startColumn": 12,
+                "startOffset": 103,
+                "fragmentLength": 183
+              },
+              "ServerName": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 12,
+                  "startOffset": 103,
+                  "fragmentLength": 9
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "server1"
+              },
+              "Options": [
+                {
+                  "$type": "AvailabilityModeReplicaOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 47,
+                    "startOffset": 138,
+                    "fragmentLength": 18
+                  },
+                  "Value": "SynchronousCommit",
+                  "OptionKind": "AvailabilityMode"
+                },
+                {
+                  "$type": "FailoverModeReplicaOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 81,
+                    "startOffset": 172,
+                    "fragmentLength": 9
+                  },
+                  "Value": "Automatic",
+                  "OptionKind": "FailoverMode"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 105,
+                    "startOffset": 196,
+                    "fragmentLength": 15
+                  },
+                  "Value": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 105,
+                      "startOffset": 196,
+                      "fragmentLength": 15
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "TCP://1234:80"
+                  },
+                  "OptionKind": "EndpointUrl"
+                },
+                {
+                  "$type": "SecondaryRoleReplicaOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 156,
+                    "startOffset": 247,
+                    "fragmentLength": 3
+                  },
+                  "AllowConnections": "No",
+                  "OptionKind": "SecondaryRole"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 177,
+                    "startOffset": 268,
+                    "fragmentLength": 2
+                  },
+                  "Value": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 177,
+                      "startOffset": 268,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  },
+                  "OptionKind": "SessionTimeout"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 193,
+                    "startOffset": 284,
+                    "fragmentLength": 1
+                  },
+                  "Value": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 193,
+                      "startOffset": 284,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1"
+                  },
+                  "OptionKind": "ApplyDelay"
+                }
+              ]
+            },
+            {
+              "$type": "AvailabilityReplica",
+              "location": {
+                "startLine": 4,
+                "startColumn": 1,
+                "startOffset": 288,
+                "fragmentLength": 188
+              },
+              "ServerName": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 1,
+                  "startOffset": 288,
+                  "fragmentLength": 9
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "server2"
+              },
+              "Options": [
+                {
+                  "$type": "FailoverModeReplicaOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 30,
+                    "startOffset": 317,
+                    "fragmentLength": 6
+                  },
+                  "Value": "Manual",
+                  "OptionKind": "FailoverMode"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 50,
+                    "startOffset": 337,
+                    "fragmentLength": 1
+                  },
+                  "Value": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 50,
+                      "startOffset": 337,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1"
+                  },
+                  "OptionKind": "ApplyDelay"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 66,
+                    "startOffset": 353,
+                    "fragmentLength": 15
+                  },
+                  "Value": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 66,
+                      "startOffset": 353,
+                      "fragmentLength": 15
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "TCP://1234:80"
+                  },
+                  "OptionKind": "EndpointUrl"
+                },
+                {
+                  "$type": "PrimaryRoleReplicaOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 115,
+                    "startOffset": 402,
+                    "fragmentLength": 11
+                  },
+                  "AllowConnections": "ReadWrite",
+                  "OptionKind": "PrimaryRole"
+                },
+                {
+                  "$type": "AvailabilityModeReplicaOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 148,
+                    "startOffset": 435,
+                    "fragmentLength": 19
+                  },
+                  "Value": "AsynchronousCommit",
+                  "OptionKind": "AvailabilityMode"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 185,
+                    "startOffset": 472,
+                    "fragmentLength": 2
+                  },
+                  "Value": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 185,
+                      "startOffset": 472,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  },
+                  "OptionKind": "SessionTimeout"
+                }
+              ]
+            },
+            {
+              "$type": "AvailabilityReplica",
+              "location": {
+                "startLine": 5,
+                "startColumn": 1,
+                "startOffset": 478,
+                "fragmentLength": 184
+              },
+              "ServerName": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 1,
+                  "startOffset": 478,
+                  "fragmentLength": 9
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "server3"
+              },
+              "Options": [
+                {
+                  "$type": "AvailabilityModeReplicaOption",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 36,
+                    "startOffset": 513,
+                    "fragmentLength": 18
+                  },
+                  "Value": "SynchronousCommit",
+                  "OptionKind": "AvailabilityMode"
+                },
+                {
+                  "$type": "FailoverModeReplicaOption",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 70,
+                    "startOffset": 547,
+                    "fragmentLength": 9
+                  },
+                  "Value": "Automatic",
+                  "OptionKind": "FailoverMode"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 94,
+                    "startOffset": 571,
+                    "fragmentLength": 15
+                  },
+                  "Value": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 94,
+                      "startOffset": 571,
+                      "fragmentLength": 15
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "TCP://1234:80"
+                  },
+                  "OptionKind": "EndpointUrl"
+                },
+                {
+                  "$type": "SecondaryRoleReplicaOption",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 145,
+                    "startOffset": 622,
+                    "fragmentLength": 4
+                  },
+                  "AllowConnections": "All",
+                  "OptionKind": "SecondaryRole"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 167,
+                    "startOffset": 644,
+                    "fragmentLength": 2
+                  },
+                  "Value": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 167,
+                      "startOffset": 644,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  },
+                  "OptionKind": "SessionTimeout"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 183,
+                    "startOffset": 660,
+                    "fragmentLength": 1
+                  },
+                  "Value": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 183,
+                      "startOffset": 660,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1"
+                  },
+                  "OptionKind": "ApplyDelay"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 7,
+        "startColumn": 1,
+        "startOffset": 666,
+        "fragmentLength": 476
+      },
+      "Statements": [
+        {
+          "$type": "CreateAvailabilityGroupStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 666,
+            "fragmentLength": 476
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 27,
+              "startOffset": 692,
+              "fragmentLength": 6
+            },
+            "Value": "group1",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "LiteralAvailabilityGroupOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 65,
+                "startOffset": 730,
+                "fragmentLength": 2
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 65,
+                  "startOffset": 730,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "OptionKind": "RequiredCopiesToCommit"
+            }
+          ],
+          "Databases": [
+            {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 14,
+                "startOffset": 748,
+                "fragmentLength": 3
+              },
+              "Value": "db1",
+              "QuoteType": "NotQuoted"
+            },
+            {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 19,
+                "startOffset": 753,
+                "fragmentLength": 3
+              },
+              "Value": "db2",
+              "QuoteType": "NotQuoted"
+            }
+          ],
+          "Replicas": [
+            {
+              "$type": "AvailabilityReplica",
+              "location": {
+                "startLine": 9,
+                "startColumn": 12,
+                "startOffset": 769,
+                "fragmentLength": 190
+              },
+              "ServerName": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 12,
+                  "startOffset": 769,
+                  "fragmentLength": 9
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "server1"
+              },
+              "Options": [
+                {
+                  "$type": "AvailabilityModeReplicaOption",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 47,
+                    "startOffset": 804,
+                    "fragmentLength": 18
+                  },
+                  "Value": "SynchronousCommit",
+                  "OptionKind": "AvailabilityMode"
+                },
+                {
+                  "$type": "FailoverModeReplicaOption",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 81,
+                    "startOffset": 838,
+                    "fragmentLength": 9
+                  },
+                  "Value": "Automatic",
+                  "OptionKind": "FailoverMode"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 105,
+                    "startOffset": 862,
+                    "fragmentLength": 15
+                  },
+                  "Value": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 105,
+                      "startOffset": 862,
+                      "fragmentLength": 15
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "TCP://1234:80"
+                  },
+                  "OptionKind": "EndpointUrl"
+                },
+                {
+                  "$type": "SecondaryRoleReplicaOption",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 156,
+                    "startOffset": 913,
+                    "fragmentLength": 10
+                  },
+                  "AllowConnections": "ReadOnly",
+                  "OptionKind": "SecondaryRole"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 184,
+                    "startOffset": 941,
+                    "fragmentLength": 2
+                  },
+                  "Value": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 184,
+                      "startOffset": 941,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  },
+                  "OptionKind": "SessionTimeout"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 200,
+                    "startOffset": 957,
+                    "fragmentLength": 1
+                  },
+                  "Value": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 200,
+                      "startOffset": 957,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1"
+                  },
+                  "OptionKind": "ApplyDelay"
+                }
+              ]
+            },
+            {
+              "$type": "AvailabilityReplica",
+              "location": {
+                "startLine": 10,
+                "startColumn": 1,
+                "startOffset": 961,
+                "fragmentLength": 181
+              },
+              "ServerName": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 1,
+                  "startOffset": 961,
+                  "fragmentLength": 9
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "server2"
+              },
+              "Options": [
+                {
+                  "$type": "FailoverModeReplicaOption",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 30,
+                    "startOffset": 990,
+                    "fragmentLength": 6
+                  },
+                  "Value": "Manual",
+                  "OptionKind": "FailoverMode"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 50,
+                    "startOffset": 1010,
+                    "fragmentLength": 1
+                  },
+                  "Value": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 50,
+                      "startOffset": 1010,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1"
+                  },
+                  "OptionKind": "ApplyDelay"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 66,
+                    "startOffset": 1026,
+                    "fragmentLength": 15
+                  },
+                  "Value": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 66,
+                      "startOffset": 1026,
+                      "fragmentLength": 15
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "TCP://1234:80"
+                  },
+                  "OptionKind": "EndpointUrl"
+                },
+                {
+                  "$type": "PrimaryRoleReplicaOption",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 115,
+                    "startOffset": 1075,
+                    "fragmentLength": 4
+                  },
+                  "AllowConnections": "All",
+                  "OptionKind": "PrimaryRole"
+                },
+                {
+                  "$type": "AvailabilityModeReplicaOption",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 141,
+                    "startOffset": 1101,
+                    "fragmentLength": 19
+                  },
+                  "Value": "AsynchronousCommit",
+                  "OptionKind": "AvailabilityMode"
+                },
+                {
+                  "$type": "LiteralReplicaOption",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 178,
+                    "startOffset": 1138,
+                    "fragmentLength": 2
+                  },
+                  "Value": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 178,
+                      "startOffset": 1138,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  },
+                  "OptionKind": "SessionTimeout"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 65
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 64
+      },
+      "Statements": [
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 64
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 1,
+              "startColumn": 1,
+              "startOffset": 0,
+              "fragmentLength": 16
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 8,
+                  "startOffset": 7,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 2,
+                "startColumn": 1,
+                "startOffset": 9,
+                "fragmentLength": 7
+              },
+              "TableReferences": [
+                {
+                  "$type": "NamedTableReference",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 6,
+                    "startOffset": 14,
+                    "fragmentLength": 2
+                  },
+                  "SchemaObject": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 6,
+                      "startOffset": 14,
+                      "fragmentLength": 2
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 6,
+                        "startOffset": 14,
+                        "fragmentLength": 2
+                      },
+                      "Value": "t1",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          },
+          "OptimizerHints": [
+            {
+              "$type": "OptimizerHint",
+              "location": {
+                "startLine": 3,
+                "startColumn": 9,
+                "startOffset": 25,
+                "fragmentLength": 37
+              },
+              "HintKind": "IgnoreNonClusteredColumnStoreIndex"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

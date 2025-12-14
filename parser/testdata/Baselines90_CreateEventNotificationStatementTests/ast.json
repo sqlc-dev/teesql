@@ -1,0 +1,2942 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 6019
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 6019
+      },
+      "Statements": [
+        {
+          "$type": "CreateEventNotificationStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 111
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 27,
+              "startOffset": 26,
+              "fragmentLength": 8
+            },
+            "Value": "log_ddl1",
+            "QuoteType": "NotQuoted"
+          },
+          "Scope": {
+            "$type": "EventNotificationObjectScope",
+            "location": {
+              "startLine": 2,
+              "startColumn": 8,
+              "startOffset": 42,
+              "fragmentLength": 6
+            },
+            "Target": "Server"
+          },
+          "WithFanIn": false,
+          "EventTypeGroups": [
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 3,
+                "startColumn": 9,
+                "startOffset": 57,
+                "fragmentLength": 14
+              },
+              "EventType": "ObjectCreated"
+            }
+          ],
+          "BrokerService": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 4,
+              "startColumn": 16,
+              "startOffset": 87,
+              "fragmentLength": 15
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "NotifyService"
+          },
+          "BrokerInstanceSpecifier": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 4,
+              "startColumn": 33,
+              "startOffset": 104,
+              "fragmentLength": 6
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "8140"
+          }
+        },
+        {
+          "$type": "CreateEventNotificationStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 113,
+            "fragmentLength": 143
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 6,
+              "startColumn": 27,
+              "startOffset": 139,
+              "fragmentLength": 10
+            },
+            "Value": "log_ddl1",
+            "QuoteType": "SquareBracket"
+          },
+          "Scope": {
+            "$type": "EventNotificationObjectScope",
+            "location": {
+              "startLine": 7,
+              "startColumn": 8,
+              "startOffset": 157,
+              "fragmentLength": 8
+            },
+            "Target": "Database"
+          },
+          "WithFanIn": true,
+          "EventTypeGroups": [
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 9,
+                "startColumn": 9,
+                "startOffset": 190,
+                "fragmentLength": 11
+              },
+              "EventType": "AlterTable"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 9,
+                "startColumn": 22,
+                "startOffset": 203,
+                "fragmentLength": 14
+              },
+              "EventType": "ObjectCreated"
+            }
+          ],
+          "BrokerService": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 10,
+              "startColumn": 16,
+              "startOffset": 233,
+              "fragmentLength": 15
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "NotifyService"
+          },
+          "BrokerInstanceSpecifier": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 10,
+              "startColumn": 33,
+              "startOffset": 250,
+              "fragmentLength": 5
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "123"
+          }
+        },
+        {
+          "$type": "CreateEventNotificationStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 258,
+            "fragmentLength": 152
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 12,
+              "startColumn": 27,
+              "startOffset": 284,
+              "fragmentLength": 8
+            },
+            "Value": "log_ddl1",
+            "QuoteType": "NotQuoted"
+          },
+          "Scope": {
+            "$type": "EventNotificationObjectScope",
+            "location": {
+              "startLine": 13,
+              "startColumn": 14,
+              "startOffset": 306,
+              "fragmentLength": 9
+            },
+            "Target": "Queue",
+            "QueueName": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 13,
+                "startColumn": 14,
+                "startOffset": 306,
+                "fragmentLength": 9
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 14,
+                  "startOffset": 306,
+                  "fragmentLength": 9
+                },
+                "Value": "myQueue",
+                "QuoteType": "SquareBracket"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "WithFanIn": false,
+          "EventTypeGroups": [
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 14,
+                "startColumn": 9,
+                "startOffset": 324,
+                "fragmentLength": 14
+              },
+              "EventType": "ObjectCreated"
+            }
+          ],
+          "BrokerService": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 15,
+              "startColumn": 16,
+              "startOffset": 354,
+              "fragmentLength": 15
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "NotifyService"
+          },
+          "BrokerInstanceSpecifier": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 15,
+              "startColumn": 33,
+              "startOffset": 371,
+              "fragmentLength": 38
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "8140a771-3c4b-4479-8ac0-81008ab17984"
+          }
+        },
+        {
+          "$type": "CreateEventNotificationStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 412,
+            "fragmentLength": 4160
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 17,
+              "startColumn": 27,
+              "startOffset": 438,
+              "fragmentLength": 8
+            },
+            "Value": "log_ddl1",
+            "QuoteType": "NotQuoted"
+          },
+          "Scope": {
+            "$type": "EventNotificationObjectScope",
+            "location": {
+              "startLine": 18,
+              "startColumn": 8,
+              "startOffset": 454,
+              "fragmentLength": 6
+            },
+            "Target": "Server"
+          },
+          "WithFanIn": false,
+          "EventTypeGroups": [
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 9,
+                "startOffset": 469,
+                "fragmentLength": 23
+              },
+              "EventType": "CreateApplicationRole"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 34,
+                "startOffset": 494,
+                "fragmentLength": 22
+              },
+              "EventType": "AlterApplicationRole"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 58,
+                "startOffset": 518,
+                "fragmentLength": 21
+              },
+              "EventType": "DropApplicationRole"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 81,
+                "startOffset": 541,
+                "fragmentLength": 15
+              },
+              "EventType": "CreateAssembly"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 98,
+                "startOffset": 558,
+                "fragmentLength": 14
+              },
+              "EventType": "AlterAssembly"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 114,
+                "startOffset": 574,
+                "fragmentLength": 13
+              },
+              "EventType": "DropAssembly"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 129,
+                "startOffset": 589,
+                "fragmentLength": 28
+              },
+              "EventType": "AlterAuthorizationDatabase"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 159,
+                "startOffset": 619,
+                "fragmentLength": 18
+              },
+              "EventType": "CreateCertificate"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 179,
+                "startOffset": 639,
+                "fragmentLength": 17
+              },
+              "EventType": "AlterCertificate"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 198,
+                "startOffset": 658,
+                "fragmentLength": 16
+              },
+              "EventType": "DropCertificate"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 216,
+                "startOffset": 676,
+                "fragmentLength": 15
+              },
+              "EventType": "CreateContract"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 233,
+                "startOffset": 693,
+                "fragmentLength": 13
+              },
+              "EventType": "DropContract"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 248,
+                "startOffset": 708,
+                "fragmentLength": 14
+              },
+              "EventType": "GrantDatabase"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 264,
+                "startOffset": 724,
+                "fragmentLength": 13
+              },
+              "EventType": "DenyDatabase"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 279,
+                "startOffset": 739,
+                "fragmentLength": 15
+              },
+              "EventType": "RevokeDatabase"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 296,
+                "startOffset": 756,
+                "fragmentLength": 25
+              },
+              "EventType": "CreateEventNotification"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 323,
+                "startOffset": 783,
+                "fragmentLength": 23
+              },
+              "EventType": "DropEventNotification"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 348,
+                "startOffset": 808,
+                "fragmentLength": 15
+              },
+              "EventType": "CreateFunction"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 365,
+                "startOffset": 825,
+                "fragmentLength": 14
+              },
+              "EventType": "AlterFunction"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 381,
+                "startOffset": 841,
+                "fragmentLength": 13
+              },
+              "EventType": "DropFunction"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 396,
+                "startOffset": 856,
+                "fragmentLength": 12
+              },
+              "EventType": "CreateIndex"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 410,
+                "startOffset": 870,
+                "fragmentLength": 11
+              },
+              "EventType": "AlterIndex"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 423,
+                "startOffset": 883,
+                "fragmentLength": 10
+              },
+              "EventType": "DropIndex"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 435,
+                "startOffset": 895,
+                "fragmentLength": 19
+              },
+              "EventType": "CreateMessageType"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 456,
+                "startOffset": 916,
+                "fragmentLength": 18
+              },
+              "EventType": "AlterMessageType"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 476,
+                "startOffset": 936,
+                "fragmentLength": 17
+              },
+              "EventType": "DropMessageType"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 495,
+                "startOffset": 955,
+                "fragmentLength": 25
+              },
+              "EventType": "CreatePartitionFunction"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 522,
+                "startOffset": 982,
+                "fragmentLength": 24
+              },
+              "EventType": "AlterPartitionFunction"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 548,
+                "startOffset": 1008,
+                "fragmentLength": 23
+              },
+              "EventType": "DropPartitionFunction"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 573,
+                "startOffset": 1033,
+                "fragmentLength": 23
+              },
+              "EventType": "CreatePartitionScheme"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 598,
+                "startOffset": 1058,
+                "fragmentLength": 22
+              },
+              "EventType": "AlterPartitionScheme"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 622,
+                "startOffset": 1082,
+                "fragmentLength": 21
+              },
+              "EventType": "DropPartitionScheme"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 645,
+                "startOffset": 1105,
+                "fragmentLength": 16
+              },
+              "EventType": "CreateProcedure"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 663,
+                "startOffset": 1123,
+                "fragmentLength": 15
+              },
+              "EventType": "AlterProcedure"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 680,
+                "startOffset": 1140,
+                "fragmentLength": 14
+              },
+              "EventType": "DropProcedure"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 696,
+                "startOffset": 1156,
+                "fragmentLength": 12
+              },
+              "EventType": "CreateQueue"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 710,
+                "startOffset": 1170,
+                "fragmentLength": 11
+              },
+              "EventType": "AlterQueue"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 723,
+                "startOffset": 1183,
+                "fragmentLength": 10
+              },
+              "EventType": "DropQueue"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 735,
+                "startOffset": 1195,
+                "fragmentLength": 29
+              },
+              "EventType": "CreateRemoteServiceBinding"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 766,
+                "startOffset": 1226,
+                "fragmentLength": 28
+              },
+              "EventType": "AlterRemoteServiceBinding"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 796,
+                "startOffset": 1256,
+                "fragmentLength": 27
+              },
+              "EventType": "DropRemoteServiceBinding"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 825,
+                "startOffset": 1285,
+                "fragmentLength": 11
+              },
+              "EventType": "CreateRole"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 838,
+                "startOffset": 1298,
+                "fragmentLength": 10
+              },
+              "EventType": "AlterRole"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 850,
+                "startOffset": 1310,
+                "fragmentLength": 9
+              },
+              "EventType": "DropRole"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 861,
+                "startOffset": 1321,
+                "fragmentLength": 12
+              },
+              "EventType": "CreateRoute"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 875,
+                "startOffset": 1335,
+                "fragmentLength": 11
+              },
+              "EventType": "AlterRoute"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 888,
+                "startOffset": 1348,
+                "fragmentLength": 10
+              },
+              "EventType": "DropRoute"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 900,
+                "startOffset": 1360,
+                "fragmentLength": 13
+              },
+              "EventType": "CreateSchema"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 915,
+                "startOffset": 1375,
+                "fragmentLength": 12
+              },
+              "EventType": "AlterSchema"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 929,
+                "startOffset": 1389,
+                "fragmentLength": 11
+              },
+              "EventType": "DropSchema"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 942,
+                "startOffset": 1402,
+                "fragmentLength": 14
+              },
+              "EventType": "CreateService"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 958,
+                "startOffset": 1418,
+                "fragmentLength": 13
+              },
+              "EventType": "AlterService"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 973,
+                "startOffset": 1433,
+                "fragmentLength": 12
+              },
+              "EventType": "DropService"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 987,
+                "startOffset": 1447,
+                "fragmentLength": 17
+              },
+              "EventType": "CreateStatistics"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1006,
+                "startOffset": 1466,
+                "fragmentLength": 15
+              },
+              "EventType": "DropStatistics"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1023,
+                "startOffset": 1483,
+                "fragmentLength": 17
+              },
+              "EventType": "UpdateStatistics"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1042,
+                "startOffset": 1502,
+                "fragmentLength": 14
+              },
+              "EventType": "CreateSynonym"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1058,
+                "startOffset": 1518,
+                "fragmentLength": 12
+              },
+              "EventType": "DropSynonym"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1072,
+                "startOffset": 1532,
+                "fragmentLength": 12
+              },
+              "EventType": "CreateTable"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1086,
+                "startOffset": 1546,
+                "fragmentLength": 11
+              },
+              "EventType": "AlterTable"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1099,
+                "startOffset": 1559,
+                "fragmentLength": 10
+              },
+              "EventType": "DropTable"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1111,
+                "startOffset": 1571,
+                "fragmentLength": 14
+              },
+              "EventType": "CreateTrigger"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1127,
+                "startOffset": 1587,
+                "fragmentLength": 13
+              },
+              "EventType": "AlterTrigger"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1142,
+                "startOffset": 1602,
+                "fragmentLength": 12
+              },
+              "EventType": "DropTrigger"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1156,
+                "startOffset": 1616,
+                "fragmentLength": 11
+              },
+              "EventType": "CreateType"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1169,
+                "startOffset": 1629,
+                "fragmentLength": 9
+              },
+              "EventType": "DropType"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1180,
+                "startOffset": 1640,
+                "fragmentLength": 11
+              },
+              "EventType": "CreateUser"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1193,
+                "startOffset": 1653,
+                "fragmentLength": 10
+              },
+              "EventType": "AlterUser"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1205,
+                "startOffset": 1665,
+                "fragmentLength": 9
+              },
+              "EventType": "DropUser"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1216,
+                "startOffset": 1676,
+                "fragmentLength": 11
+              },
+              "EventType": "CreateView"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1229,
+                "startOffset": 1689,
+                "fragmentLength": 10
+              },
+              "EventType": "AlterView"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1241,
+                "startOffset": 1701,
+                "fragmentLength": 9
+              },
+              "EventType": "DropView"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1252,
+                "startOffset": 1712,
+                "fragmentLength": 28
+              },
+              "EventType": "CreateXmlSchemaCollection"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1282,
+                "startOffset": 1742,
+                "fragmentLength": 27
+              },
+              "EventType": "AlterXmlSchemaCollection"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1311,
+                "startOffset": 1771,
+                "fragmentLength": 26
+              },
+              "EventType": "DropXmlSchemaCollection"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1339,
+                "startOffset": 1799,
+                "fragmentLength": 26
+              },
+              "EventType": "AlterAuthorizationServer"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1367,
+                "startOffset": 1827,
+                "fragmentLength": 15
+              },
+              "EventType": "CreateDatabase"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1384,
+                "startOffset": 1844,
+                "fragmentLength": 14
+              },
+              "EventType": "AlterDatabase"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1400,
+                "startOffset": 1860,
+                "fragmentLength": 13
+              },
+              "EventType": "DropDatabase"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1415,
+                "startOffset": 1875,
+                "fragmentLength": 15
+              },
+              "EventType": "CreateEndpoint"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1432,
+                "startOffset": 1892,
+                "fragmentLength": 13
+              },
+              "EventType": "DropEndpoint"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1447,
+                "startOffset": 1907,
+                "fragmentLength": 14
+              },
+              "EventType": "AlterEndpoint"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1463,
+                "startOffset": 1923,
+                "fragmentLength": 12
+              },
+              "EventType": "CreateLogin"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1477,
+                "startOffset": 1937,
+                "fragmentLength": 11
+              },
+              "EventType": "AlterLogin"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1490,
+                "startOffset": 1950,
+                "fragmentLength": 10
+              },
+              "EventType": "DropLogin"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1502,
+                "startOffset": 1962,
+                "fragmentLength": 12
+              },
+              "EventType": "GrantServer"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1516,
+                "startOffset": 1976,
+                "fragmentLength": 11
+              },
+              "EventType": "DenyServer"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1529,
+                "startOffset": 1989,
+                "fragmentLength": 13
+              },
+              "EventType": "RevokeServer"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1544,
+                "startOffset": 2004,
+                "fragmentLength": 15
+              },
+              "EventType": "AddRoleMember"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1561,
+                "startOffset": 2021,
+                "fragmentLength": 22
+              },
+              "EventType": "AddServerRoleMember"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1585,
+                "startOffset": 2045,
+                "fragmentLength": 16
+              },
+              "EventType": "DropRoleMember"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1603,
+                "startOffset": 2063,
+                "fragmentLength": 23
+              },
+              "EventType": "DropServerRoleMember"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1628,
+                "startOffset": 2088,
+                "fragmentLength": 16
+              },
+              "EventType": "CreateXmlIndex"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1646,
+                "startOffset": 2106,
+                "fragmentLength": 16
+              },
+              "EventType": "QueueActivation"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1664,
+                "startOffset": 2124,
+                "fragmentLength": 21
+              },
+              "EventType": "BrokerQueueDisabled"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1687,
+                "startOffset": 2147,
+                "fragmentLength": 13
+              },
+              "EventType": "AssemblyLoad"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1702,
+                "startOffset": 2162,
+                "fragmentLength": 23
+              },
+              "EventType": "AuditAddDBUserEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1727,
+                "startOffset": 2187,
+                "fragmentLength": 20
+              },
+              "EventType": "AuditAddLoginEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1749,
+                "startOffset": 2209,
+                "fragmentLength": 36
+              },
+              "EventType": "AuditAddLoginToServerRoleEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1787,
+                "startOffset": 2247,
+                "fragmentLength": 33
+              },
+              "EventType": "AuditAddMemberToDBRoleEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1822,
+                "startOffset": 2282,
+                "fragmentLength": 20
+              },
+              "EventType": "AuditAddRoleEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1844,
+                "startOffset": 2304,
+                "fragmentLength": 36
+              },
+              "EventType": "AuditAppRoleChangePasswordEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1882,
+                "startOffset": 2342,
+                "fragmentLength": 26
+              },
+              "EventType": "AuditBackupRestoreEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1910,
+                "startOffset": 2370,
+                "fragmentLength": 24
+              },
+              "EventType": "AuditChangeAuditEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1936,
+                "startOffset": 2396,
+                "fragmentLength": 27
+              },
+              "EventType": "AuditChangeDatabaseOwner"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1965,
+                "startOffset": 2425,
+                "fragmentLength": 31
+              },
+              "EventType": "AuditDatabaseManagementEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 1998,
+                "startOffset": 2458,
+                "fragmentLength": 34
+              },
+              "EventType": "AuditDatabaseObjectAccessEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2034,
+                "startOffset": 2494,
+                "fragmentLength": 31
+              },
+              "EventType": "AuditDatabaseObjectGdrEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2067,
+                "startOffset": 2527,
+                "fragmentLength": 38
+              },
+              "EventType": "AuditDatabaseObjectManagementEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2107,
+                "startOffset": 2567,
+                "fragmentLength": 42
+              },
+              "EventType": "AuditDatabaseObjectTakeOwnershipEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2151,
+                "startOffset": 2611,
+                "fragmentLength": 30
+              },
+              "EventType": "AuditDatabaseOperationEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2183,
+                "startOffset": 2643,
+                "fragmentLength": 44
+              },
+              "EventType": "AuditDatabasePrincipalImpersonationEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2229,
+                "startOffset": 2689,
+                "fragmentLength": 41
+              },
+              "EventType": "AuditDatabasePrincipalManagementEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2272,
+                "startOffset": 2732,
+                "fragmentLength": 30
+              },
+              "EventType": "AuditDatabaseScopeGdrEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2304,
+                "startOffset": 2764,
+                "fragmentLength": 16
+              },
+              "EventType": "AuditDbccEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2322,
+                "startOffset": 2782,
+                "fragmentLength": 11
+              },
+              "EventType": "AuditLogin"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2335,
+                "startOffset": 2795,
+                "fragmentLength": 33
+              },
+              "EventType": "AuditLoginChangePasswordEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2370,
+                "startOffset": 2830,
+                "fragmentLength": 33
+              },
+              "EventType": "AuditLoginChangePropertyEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2405,
+                "startOffset": 2865,
+                "fragmentLength": 18
+              },
+              "EventType": "AuditLoginFailed"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2425,
+                "startOffset": 2885,
+                "fragmentLength": 21
+              },
+              "EventType": "AuditLoginGdrEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2448,
+                "startOffset": 2908,
+                "fragmentLength": 12
+              },
+              "EventType": "AuditLogout"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2462,
+                "startOffset": 2922,
+                "fragmentLength": 32
+              },
+              "EventType": "AuditSchemaObjectAccessEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2496,
+                "startOffset": 2956,
+                "fragmentLength": 29
+              },
+              "EventType": "AuditSchemaObjectGdrEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2527,
+                "startOffset": 2987,
+                "fragmentLength": 36
+              },
+              "EventType": "AuditSchemaObjectManagementEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2565,
+                "startOffset": 3025,
+                "fragmentLength": 40
+              },
+              "EventType": "AuditSchemaObjectTakeOwnershipEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2607,
+                "startOffset": 3067,
+                "fragmentLength": 30
+              },
+              "EventType": "AuditServerAlterTraceEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2639,
+                "startOffset": 3099,
+                "fragmentLength": 29
+              },
+              "EventType": "AuditServerObjectGdrEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2670,
+                "startOffset": 3130,
+                "fragmentLength": 36
+              },
+              "EventType": "AuditServerObjectManagementEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2708,
+                "startOffset": 3168,
+                "fragmentLength": 40
+              },
+              "EventType": "AuditServerObjectTakeOwnershipEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2750,
+                "startOffset": 3210,
+                "fragmentLength": 28
+              },
+              "EventType": "AuditServerOperationEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2780,
+                "startOffset": 3240,
+                "fragmentLength": 42
+              },
+              "EventType": "AuditServerPrincipalImpersonationEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2824,
+                "startOffset": 3284,
+                "fragmentLength": 39
+              },
+              "EventType": "AuditServerPrincipalManagementEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2865,
+                "startOffset": 3325,
+                "fragmentLength": 28
+              },
+              "EventType": "AuditServerScopeGdrEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2895,
+                "startOffset": 3355,
+                "fragmentLength": 22
+              },
+              "EventType": "BlockedProcessReport"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2919,
+                "startOffset": 3379,
+                "fragmentLength": 19
+              },
+              "EventType": "DataFileAutoGrow"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2940,
+                "startOffset": 3400,
+                "fragmentLength": 21
+              },
+              "EventType": "DataFileAutoShrink"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2963,
+                "startOffset": 3423,
+                "fragmentLength": 31
+              },
+              "EventType": "DatabaseMirroringStateChange"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 2996,
+                "startOffset": 3456,
+                "fragmentLength": 14
+              },
+              "EventType": "DeadlockGraph"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3012,
+                "startOffset": 3472,
+                "fragmentLength": 24
+              },
+              "EventType": "DeprecationAnnouncement"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3038,
+                "startOffset": 3498,
+                "fragmentLength": 25
+              },
+              "EventType": "DeprecationFinalSupport"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3065,
+                "startOffset": 3525,
+                "fragmentLength": 8
+              },
+              "EventType": "ErrorLog"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3075,
+                "startOffset": 3535,
+                "fragmentLength": 8
+              },
+              "EventType": "EventLog"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3085,
+                "startOffset": 3545,
+                "fragmentLength": 9
+              },
+              "EventType": "Exception"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3096,
+                "startOffset": 3556,
+                "fragmentLength": 20
+              },
+              "EventType": "ExchangeSpillEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3118,
+                "startOffset": 3578,
+                "fragmentLength": 18
+              },
+              "EventType": "ExecutionWarnings"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3138,
+                "startOffset": 3598,
+                "fragmentLength": 16
+              },
+              "EventType": "FtCrawlAborted"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3156,
+                "startOffset": 3616,
+                "fragmentLength": 16
+              },
+              "EventType": "FtCrawlStarted"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3174,
+                "startOffset": 3634,
+                "fragmentLength": 16
+              },
+              "EventType": "FtCrawlStopped"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3192,
+                "startOffset": 3652,
+                "fragmentLength": 12
+              },
+              "EventType": "HashWarning"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3206,
+                "startOffset": 3666,
+                "fragmentLength": 13
+              },
+              "EventType": "LockDeadlock"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3221,
+                "startOffset": 3681,
+                "fragmentLength": 19
+              },
+              "EventType": "LockDeadlockChain"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3242,
+                "startOffset": 3702,
+                "fragmentLength": 15
+              },
+              "EventType": "LockEscalation"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3259,
+                "startOffset": 3719,
+                "fragmentLength": 18
+              },
+              "EventType": "LogFileAutoGrow"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3279,
+                "startOffset": 3739,
+                "fragmentLength": 20
+              },
+              "EventType": "LogFileAutoShrink"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3301,
+                "startOffset": 3761,
+                "fragmentLength": 25
+              },
+              "EventType": "MissingColumnStatistics"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3328,
+                "startOffset": 3788,
+                "fragmentLength": 22
+              },
+              "EventType": "MissingJoinPredicate"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3352,
+                "startOffset": 3812,
+                "fragmentLength": 10
+              },
+              "EventType": "MountTape"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3364,
+                "startOffset": 3824,
+                "fragmentLength": 14
+              },
+              "EventType": "ObjectAltered"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3380,
+                "startOffset": 3840,
+                "fragmentLength": 14
+              },
+              "EventType": "ObjectCreated"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3396,
+                "startOffset": 3856,
+                "fragmentLength": 14
+              },
+              "EventType": "ObjectDeleted"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3412,
+                "startOffset": 3872,
+                "fragmentLength": 16
+              },
+              "EventType": "OledbCallEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3430,
+                "startOffset": 3890,
+                "fragmentLength": 20
+              },
+              "EventType": "OledbDataReadEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3452,
+                "startOffset": 3912,
+                "fragmentLength": 12
+              },
+              "EventType": "OledbErrors"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3466,
+                "startOffset": 3926,
+                "fragmentLength": 26
+              },
+              "EventType": "OledbProviderInformation"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3494,
+                "startOffset": 3954,
+                "fragmentLength": 26
+              },
+              "EventType": "OledbQueryInterfaceEvent"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3522,
+                "startOffset": 3982,
+                "fragmentLength": 12
+              },
+              "EventType": "QnDynamics"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3536,
+                "startOffset": 3996,
+                "fragmentLength": 19
+              },
+              "EventType": "QnParameterTable"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3557,
+                "startOffset": 4017,
+                "fragmentLength": 16
+              },
+              "EventType": "QnSubscription"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3575,
+                "startOffset": 4035,
+                "fragmentLength": 12
+              },
+              "EventType": "QnTemplate"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3589,
+                "startOffset": 4049,
+                "fragmentLength": 20
+              },
+              "EventType": "ServerMemoryChange"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3611,
+                "startOffset": 4071,
+                "fragmentLength": 30
+              },
+              "EventType": "ShowPlanAllForQueryCompile"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3643,
+                "startOffset": 4103,
+                "fragmentLength": 30
+              },
+              "EventType": "ShowPlanXmlForQueryCompile"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3675,
+                "startOffset": 4135,
+                "fragmentLength": 12
+              },
+              "EventType": "ShowPlanXml"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3689,
+                "startOffset": 4149,
+                "fragmentLength": 31
+              },
+              "EventType": "ShowPlanXmlStatisticsProfile"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3722,
+                "startOffset": 4182,
+                "fragmentLength": 13
+              },
+              "EventType": "SortWarnings"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3737,
+                "startOffset": 4197,
+                "fragmentLength": 14
+              },
+              "EventType": "SpCacheInsert"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3753,
+                "startOffset": 4213,
+                "fragmentLength": 12
+              },
+              "EventType": "SpCacheMiss"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3767,
+                "startOffset": 4227,
+                "fragmentLength": 14
+              },
+              "EventType": "SpCacheRemove"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3783,
+                "startOffset": 4243,
+                "fragmentLength": 12
+              },
+              "EventType": "SpRecompile"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3797,
+                "startOffset": 4257,
+                "fragmentLength": 17
+              },
+              "EventType": "SqlStmtRecompile"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3816,
+                "startOffset": 4276,
+                "fragmentLength": 16
+              },
+              "EventType": "TraceFileClose"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3834,
+                "startOffset": 4294,
+                "fragmentLength": 18
+              },
+              "EventType": "UserErrorMessage"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3854,
+                "startOffset": 4314,
+                "fragmentLength": 18
+              },
+              "EventType": "UserConfigurable0"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3874,
+                "startOffset": 4334,
+                "fragmentLength": 18
+              },
+              "EventType": "UserConfigurable1"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3894,
+                "startOffset": 4354,
+                "fragmentLength": 18
+              },
+              "EventType": "UserConfigurable2"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3914,
+                "startOffset": 4374,
+                "fragmentLength": 18
+              },
+              "EventType": "UserConfigurable3"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3934,
+                "startOffset": 4394,
+                "fragmentLength": 18
+              },
+              "EventType": "UserConfigurable4"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3954,
+                "startOffset": 4414,
+                "fragmentLength": 18
+              },
+              "EventType": "UserConfigurable5"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3974,
+                "startOffset": 4434,
+                "fragmentLength": 18
+              },
+              "EventType": "UserConfigurable6"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 3994,
+                "startOffset": 4454,
+                "fragmentLength": 18
+              },
+              "EventType": "UserConfigurable7"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 4014,
+                "startOffset": 4474,
+                "fragmentLength": 18
+              },
+              "EventType": "UserConfigurable8"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 4034,
+                "startOffset": 4494,
+                "fragmentLength": 18
+              },
+              "EventType": "UserConfigurable9"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 19,
+                "startColumn": 4054,
+                "startOffset": 4514,
+                "fragmentLength": 18
+              },
+              "EventType": "XQueryStaticType"
+            }
+          ],
+          "BrokerService": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 20,
+              "startColumn": 16,
+              "startOffset": 4548,
+              "fragmentLength": 15
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "NotifyService"
+          },
+          "BrokerInstanceSpecifier": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 20,
+              "startColumn": 33,
+              "startOffset": 4565,
+              "fragmentLength": 6
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "8140"
+          }
+        },
+        {
+          "$type": "CreateEventNotificationStatement",
+          "location": {
+            "startLine": 22,
+            "startColumn": 1,
+            "startOffset": 4574,
+            "fragmentLength": 1231
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 22,
+              "startColumn": 27,
+              "startOffset": 4600,
+              "fragmentLength": 8
+            },
+            "Value": "log_ddl1",
+            "QuoteType": "NotQuoted"
+          },
+          "Scope": {
+            "$type": "EventNotificationObjectScope",
+            "location": {
+              "startLine": 23,
+              "startColumn": 8,
+              "startOffset": 4616,
+              "fragmentLength": 6
+            },
+            "Target": "Server"
+          },
+          "WithFanIn": false,
+          "EventTypeGroups": [
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 9,
+                "startOffset": 4631,
+                "fragmentLength": 27
+              },
+              "EventGroup": "DdlApplicationRoleEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 38,
+                "startOffset": 4660,
+                "fragmentLength": 19
+              },
+              "EventGroup": "DdlAssemblyEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 59,
+                "startOffset": 4681,
+                "fragmentLength": 33
+              },
+              "EventGroup": "DdlAuthorizationDatabaseEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 94,
+                "startOffset": 4716,
+                "fragmentLength": 31
+              },
+              "EventGroup": "DdlAuthorizationServerEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 127,
+                "startOffset": 4749,
+                "fragmentLength": 22
+              },
+              "EventGroup": "DdlCertificateEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 151,
+                "startOffset": 4773,
+                "fragmentLength": 19
+              },
+              "EventGroup": "DdlContractEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 172,
+                "startOffset": 4794,
+                "fragmentLength": 25
+              },
+              "EventGroup": "DdlDatabaseLevelEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 199,
+                "startOffset": 4821,
+                "fragmentLength": 28
+              },
+              "EventGroup": "DdlDatabaseSecurityEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 229,
+                "startOffset": 4851,
+                "fragmentLength": 19
+              },
+              "EventGroup": "DdlEndpointEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 250,
+                "startOffset": 4872,
+                "fragmentLength": 29
+              },
+              "EventGroup": "DdlEventNotificationEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 281,
+                "startOffset": 4903,
+                "fragmentLength": 19
+              },
+              "EventGroup": "DdlFunctionEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 302,
+                "startOffset": 4924,
+                "fragmentLength": 23
+              },
+              "EventGroup": "DdlGdrDatabaseEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 327,
+                "startOffset": 4949,
+                "fragmentLength": 21
+              },
+              "EventGroup": "DdlGdrServerEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 350,
+                "startOffset": 4972,
+                "fragmentLength": 16
+              },
+              "EventGroup": "DdlIndexEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 368,
+                "startOffset": 4990,
+                "fragmentLength": 16
+              },
+              "EventGroup": "DdlLoginEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 386,
+                "startOffset": 5008,
+                "fragmentLength": 23
+              },
+              "EventGroup": "DdlMessageTypeEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 411,
+                "startOffset": 5033,
+                "fragmentLength": 20
+              },
+              "EventGroup": "DdlPartitionEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 433,
+                "startOffset": 5055,
+                "fragmentLength": 29
+              },
+              "EventGroup": "DdlPartitionFunctionEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 464,
+                "startOffset": 5086,
+                "fragmentLength": 27
+              },
+              "EventGroup": "DdlPartitionSchemeEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 493,
+                "startOffset": 5115,
+                "fragmentLength": 20
+              },
+              "EventGroup": "DdlProcedureEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 515,
+                "startOffset": 5137,
+                "fragmentLength": 16
+              },
+              "EventGroup": "DdlQueueEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 533,
+                "startOffset": 5155,
+                "fragmentLength": 33
+              },
+              "EventGroup": "DdlRemoteServiceBindingEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 568,
+                "startOffset": 5190,
+                "fragmentLength": 15
+              },
+              "EventGroup": "DdlRoleEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 585,
+                "startOffset": 5207,
+                "fragmentLength": 16
+              },
+              "EventGroup": "DdlRouteEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 603,
+                "startOffset": 5225,
+                "fragmentLength": 17
+              },
+              "EventGroup": "DdlSchemaEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 622,
+                "startOffset": 5244,
+                "fragmentLength": 23
+              },
+              "EventGroup": "DdlServerLevelEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 647,
+                "startOffset": 5269,
+                "fragmentLength": 26
+              },
+              "EventGroup": "DdlServerSecurityEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 675,
+                "startOffset": 5297,
+                "fragmentLength": 18
+              },
+              "EventGroup": "DdlServiceEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 695,
+                "startOffset": 5317,
+                "fragmentLength": 14
+              },
+              "EventGroup": "DdlSsbEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 711,
+                "startOffset": 5333,
+                "fragmentLength": 21
+              },
+              "EventGroup": "DdlStatisticsEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 734,
+                "startOffset": 5356,
+                "fragmentLength": 18
+              },
+              "EventGroup": "DdlSynonymEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 754,
+                "startOffset": 5376,
+                "fragmentLength": 16
+              },
+              "EventGroup": "DdlTableEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 772,
+                "startOffset": 5394,
+                "fragmentLength": 21
+              },
+              "EventGroup": "DdlTableViewEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 795,
+                "startOffset": 5417,
+                "fragmentLength": 18
+              },
+              "EventGroup": "DdlTriggerEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 815,
+                "startOffset": 5437,
+                "fragmentLength": 15
+              },
+              "EventGroup": "DdlTypeEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 832,
+                "startOffset": 5454,
+                "fragmentLength": 15
+              },
+              "EventGroup": "DdlUserEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 849,
+                "startOffset": 5471,
+                "fragmentLength": 15
+              },
+              "EventGroup": "DdlViewEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 866,
+                "startOffset": 5488,
+                "fragmentLength": 32
+              },
+              "EventGroup": "DdlXmlSchemaCollectionEvents"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 900,
+                "startOffset": 5522,
+                "fragmentLength": 7
+              },
+              "EventGroup": "TrcClr"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 909,
+                "startOffset": 5531,
+                "fragmentLength": 12
+              },
+              "EventGroup": "TrcDatabase"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 923,
+                "startOffset": 5545,
+                "fragmentLength": 15
+              },
+              "EventGroup": "TrcDeprecation"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 940,
+                "startOffset": 5562,
+                "fragmentLength": 23
+              },
+              "EventGroup": "TrcErrorsAndWarnings"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 965,
+                "startOffset": 5587,
+                "fragmentLength": 13
+              },
+              "EventGroup": "TrcFullText"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 980,
+                "startOffset": 5602,
+                "fragmentLength": 9
+              },
+              "EventGroup": "TrcLocks"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 991,
+                "startOffset": 5613,
+                "fragmentLength": 11
+              },
+              "EventGroup": "TrcObjects"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 1004,
+                "startOffset": 5626,
+                "fragmentLength": 9
+              },
+              "EventGroup": "TrcOledb"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 1015,
+                "startOffset": 5637,
+                "fragmentLength": 15
+              },
+              "EventGroup": "TrcPerformance"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 1032,
+                "startOffset": 5654,
+                "fragmentLength": 23
+              },
+              "EventGroup": "TrcQueryNotifications"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 1057,
+                "startOffset": 5679,
+                "fragmentLength": 18
+              },
+              "EventGroup": "TrcSecurityAudit"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 1077,
+                "startOffset": 5699,
+                "fragmentLength": 10
+              },
+              "EventGroup": "TrcServer"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 1089,
+                "startOffset": 5711,
+                "fragmentLength": 21
+              },
+              "EventGroup": "TrcStoredProcedures"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 1112,
+                "startOffset": 5734,
+                "fragmentLength": 8
+              },
+              "EventGroup": "TrcTSql"
+            },
+            {
+              "$type": "EventGroupContainer",
+              "location": {
+                "startLine": 24,
+                "startColumn": 1122,
+                "startOffset": 5744,
+                "fragmentLength": 21
+              },
+              "EventGroup": "TrcUserConfigurable"
+            }
+          ],
+          "BrokerService": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 25,
+              "startColumn": 16,
+              "startOffset": 5781,
+              "fragmentLength": 15
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "NotifyService"
+          },
+          "BrokerInstanceSpecifier": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 25,
+              "startColumn": 33,
+              "startOffset": 5798,
+              "fragmentLength": 6
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "8140"
+          }
+        },
+        {
+          "$type": "CreateEventNotificationStatement",
+          "location": {
+            "startLine": 27,
+            "startColumn": 1,
+            "startOffset": 5807,
+            "fragmentLength": 212
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 27,
+              "startColumn": 27,
+              "startOffset": 5833,
+              "fragmentLength": 26
+            },
+            "Value": "CreateDatabaseNotification",
+            "QuoteType": "NotQuoted"
+          },
+          "Scope": {
+            "$type": "EventNotificationObjectScope",
+            "location": {
+              "startLine": 28,
+              "startColumn": 8,
+              "startOffset": 5867,
+              "fragmentLength": 6
+            },
+            "Target": "Server"
+          },
+          "WithFanIn": false,
+          "EventTypeGroups": [
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 29,
+                "startColumn": 9,
+                "startOffset": 5882,
+                "fragmentLength": 12
+              },
+              "EventType": "QnDynamics"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 29,
+                "startColumn": 23,
+                "startOffset": 5896,
+                "fragmentLength": 19
+              },
+              "EventType": "QnParameterTable"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 29,
+                "startColumn": 44,
+                "startOffset": 5917,
+                "fragmentLength": 16
+              },
+              "EventType": "QnSubscription"
+            },
+            {
+              "$type": "EventTypeContainer",
+              "location": {
+                "startLine": 29,
+                "startColumn": 62,
+                "startOffset": 5935,
+                "fragmentLength": 12
+              },
+              "EventType": "QnTemplate"
+            }
+          ],
+          "BrokerService": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 30,
+              "startColumn": 16,
+              "startOffset": 5963,
+              "fragmentLength": 15
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "NotifyService"
+          },
+          "BrokerInstanceSpecifier": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 30,
+              "startColumn": 33,
+              "startOffset": 5980,
+              "fragmentLength": 38
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "8140a771-3c4b-4479-8ac0-81008ab17984"
+          }
+        }
+      ]
+    }
+  ]
+}

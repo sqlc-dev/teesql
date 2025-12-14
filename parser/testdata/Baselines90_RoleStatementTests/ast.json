@@ -1,0 +1,124 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 100
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 58
+      },
+      "Statements": [
+        {
+          "$type": "CreateRoleStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 15
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 13,
+              "startOffset": 12,
+              "fragmentLength": 2
+            },
+            "Value": "r1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "CreateRoleStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 17,
+            "fragmentLength": 41
+          },
+          "Owner": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 19,
+              "startOffset": 52,
+              "fragmentLength": 5
+            },
+            "Value": "dbo",
+            "QuoteType": "SquareBracket"
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 13,
+              "startOffset": 29,
+              "fragmentLength": 4
+            },
+            "Value": "r1",
+            "QuoteType": "SquareBracket"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 8,
+        "startColumn": 1,
+        "startOffset": 64,
+        "fragmentLength": 34
+      },
+      "Statements": [
+        {
+          "$type": "AlterRoleStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 64,
+            "fragmentLength": 34
+          },
+          "Action": {
+            "$type": "RenameAlterRoleAction",
+            "location": {
+              "startLine": 8,
+              "startColumn": 20,
+              "startOffset": 83,
+              "fragmentLength": 14
+            },
+            "NewName": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 27,
+                "startOffset": 90,
+                "fragmentLength": 7
+              },
+              "Value": "newName",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 8,
+              "startColumn": 12,
+              "startOffset": 75,
+              "fragmentLength": 2
+            },
+            "Value": "r1",
+            "QuoteType": "NotQuoted"
+          }
+        }
+      ]
+    }
+  ]
+}

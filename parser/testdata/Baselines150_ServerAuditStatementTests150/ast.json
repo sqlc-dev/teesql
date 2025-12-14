@@ -1,0 +1,988 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1194
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 672
+      },
+      "Statements": [
+        {
+          "$type": "CreateServerAuditStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 50
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 21,
+              "startOffset": 20,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 1,
+              "startColumn": 24,
+              "startOffset": 23,
+              "fragmentLength": 26
+            },
+            "TargetKind": "File",
+            "TargetOptions": [
+              {
+                "$type": "LiteralAuditTargetOption",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 33,
+                  "startOffset": 32,
+                  "fragmentLength": 16
+                },
+                "Value": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 44,
+                    "startOffset": 43,
+                    "fragmentLength": 5
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "aaa"
+                },
+                "OptionKind": "FilePath"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "CreateServerAuditStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 52,
+            "fragmentLength": 45
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 21,
+              "startOffset": 72,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 3,
+              "startColumn": 24,
+              "startOffset": 75,
+              "fragmentLength": 21
+            },
+            "TargetKind": "Url",
+            "TargetOptions": [
+              {
+                "$type": "LiteralAuditTargetOption",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 32,
+                  "startOffset": 83,
+                  "fragmentLength": 12
+                },
+                "Value": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 39,
+                    "startOffset": 90,
+                    "fragmentLength": 5
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "aaa"
+                },
+                "OptionKind": "Path"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "CreateServerAuditStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 99,
+            "fragmentLength": 140
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 21,
+              "startOffset": 119,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 5,
+              "startColumn": 24,
+              "startOffset": 122,
+              "fragmentLength": 92
+            },
+            "TargetKind": "File",
+            "TargetOptions": [
+              {
+                "$type": "LiteralAuditTargetOption",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 33,
+                  "startOffset": 131,
+                  "fragmentLength": 16
+                },
+                "Value": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 44,
+                    "startOffset": 142,
+                    "fragmentLength": 5
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "aaa"
+                },
+                "OptionKind": "FilePath"
+              },
+              {
+                "$type": "MaxSizeAuditTargetOption",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 51,
+                  "startOffset": 149,
+                  "fragmentLength": 15
+                },
+                "IsUnlimited": false,
+                "Size": {
+                  "$type": "IntegerLiteral",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 61,
+                    "startOffset": 159,
+                    "fragmentLength": 2
+                  },
+                  "LiteralType": "Integer",
+                  "Value": "10"
+                },
+                "Unit": "MB",
+                "OptionKind": "MaxSize"
+              },
+              {
+                "$type": "MaxRolloverFilesAuditTargetOption",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 68,
+                  "startOffset": 166,
+                  "fragmentLength": 22
+                },
+                "Value": {
+                  "$type": "IntegerLiteral",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 89,
+                    "startOffset": 187,
+                    "fragmentLength": 1
+                  },
+                  "LiteralType": "Integer",
+                  "Value": "1"
+                },
+                "IsUnlimited": false,
+                "OptionKind": "MaxRolloverFiles"
+              },
+              {
+                "$type": "OnOffAuditTargetOption",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 92,
+                  "startOffset": 190,
+                  "fragmentLength": 23
+                },
+                "Value": "On",
+                "OptionKind": "ReserveDiskSpace"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "QueueDelayAuditOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 123,
+                "startOffset": 221,
+                "fragmentLength": 16
+              },
+              "Delay": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 137,
+                  "startOffset": 235,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "OptionKind": "QueueDelay"
+            }
+          ]
+        },
+        {
+          "$type": "CreateServerAuditStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 241,
+            "fragmentLength": 90
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 21,
+              "startOffset": 261,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 7,
+              "startColumn": 24,
+              "startOffset": 264,
+              "fragmentLength": 42
+            },
+            "TargetKind": "Url",
+            "TargetOptions": [
+              {
+                "$type": "LiteralAuditTargetOption",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 32,
+                  "startOffset": 272,
+                  "fragmentLength": 12
+                },
+                "Value": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 39,
+                    "startOffset": 279,
+                    "fragmentLength": 5
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "aaa"
+                },
+                "OptionKind": "Path"
+              },
+              {
+                "$type": "RetentionDaysAuditTargetOption",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 46,
+                  "startOffset": 286,
+                  "fragmentLength": 19
+                },
+                "Days": {
+                  "$type": "IntegerLiteral",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 63,
+                    "startOffset": 303,
+                    "fragmentLength": 2
+                  },
+                  "LiteralType": "Integer",
+                  "Value": "13"
+                },
+                "OptionKind": "RetentionDays"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "QueueDelayAuditOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 73,
+                "startOffset": 313,
+                "fragmentLength": 16
+              },
+              "Delay": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 87,
+                  "startOffset": 327,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "OptionKind": "QueueDelay"
+            }
+          ]
+        },
+        {
+          "$type": "CreateServerAuditStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 333,
+            "fragmentLength": 144
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 9,
+              "startColumn": 21,
+              "startOffset": 353,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 9,
+              "startColumn": 24,
+              "startOffset": 356,
+              "fragmentLength": 15
+            },
+            "TargetKind": "SecurityLog"
+          },
+          "Options": [
+            {
+              "$type": "OnFailureAuditOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 46,
+                "startOffset": 378,
+                "fragmentLength": 21
+              },
+              "OnFailureAction": "Continue",
+              "OptionKind": "OnFailure"
+            },
+            {
+              "$type": "OnFailureAuditOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 69,
+                "startOffset": 401,
+                "fragmentLength": 21
+              },
+              "OnFailureAction": "Shutdown",
+              "OptionKind": "OnFailure"
+            },
+            {
+              "$type": "AuditGuidAuditOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 92,
+                "startOffset": 424,
+                "fragmentLength": 51
+              },
+              "Guid": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 105,
+                  "startOffset": 437,
+                  "fragmentLength": 38
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "ca761232-ed42-11ce-bacd-00aa0057b223"
+              },
+              "OptionKind": "AuditGuid"
+            }
+          ]
+        },
+        {
+          "$type": "CreateServerAuditStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 479,
+            "fragmentLength": 43
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 11,
+              "startColumn": 21,
+              "startOffset": 499,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 11,
+              "startColumn": 24,
+              "startOffset": 502,
+              "fragmentLength": 19
+            },
+            "TargetKind": "ExternalMonitor"
+          }
+        },
+        {
+          "$type": "CreateServerAuditStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 524,
+            "fragmentLength": 148
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 13,
+              "startColumn": 21,
+              "startOffset": 544,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 13,
+              "startColumn": 24,
+              "startOffset": 547,
+              "fragmentLength": 19
+            },
+            "TargetKind": "ExternalMonitor"
+          },
+          "Options": [
+            {
+              "$type": "OnFailureAuditOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 50,
+                "startOffset": 573,
+                "fragmentLength": 21
+              },
+              "OnFailureAction": "Continue",
+              "OptionKind": "OnFailure"
+            },
+            {
+              "$type": "OnFailureAuditOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 73,
+                "startOffset": 596,
+                "fragmentLength": 21
+              },
+              "OnFailureAction": "Shutdown",
+              "OptionKind": "OnFailure"
+            },
+            {
+              "$type": "AuditGuidAuditOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 96,
+                "startOffset": 619,
+                "fragmentLength": 51
+              },
+              "Guid": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 109,
+                  "startOffset": 632,
+                  "fragmentLength": 38
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "ca761232-ed42-11ce-bacd-00aa0057b223"
+              },
+              "OptionKind": "AuditGuid"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 17,
+        "startColumn": 1,
+        "startOffset": 678,
+        "fragmentLength": 487
+      },
+      "Statements": [
+        {
+          "$type": "AlterServerAuditStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 678,
+            "fragmentLength": 47
+          },
+          "RemoveWhere": false,
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 17,
+              "startColumn": 20,
+              "startOffset": 697,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 17,
+              "startColumn": 23,
+              "startOffset": 700,
+              "fragmentLength": 24
+            },
+            "TargetKind": "File",
+            "TargetOptions": [
+              {
+                "$type": "MaxSizeAuditTargetOption",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 32,
+                  "startOffset": 709,
+                  "fragmentLength": 14
+                },
+                "IsUnlimited": false,
+                "Size": {
+                  "$type": "IntegerLiteral",
+                  "location": {
+                    "startLine": 17,
+                    "startColumn": 42,
+                    "startOffset": 719,
+                    "fragmentLength": 1
+                  },
+                  "LiteralType": "Integer",
+                  "Value": "5"
+                },
+                "Unit": "GB",
+                "OptionKind": "MaxSize"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterServerAuditStatement",
+          "location": {
+            "startLine": 19,
+            "startColumn": 1,
+            "startOffset": 727,
+            "fragmentLength": 51
+          },
+          "RemoveWhere": false,
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 19,
+              "startColumn": 20,
+              "startOffset": 746,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 19,
+              "startColumn": 23,
+              "startOffset": 749,
+              "fragmentLength": 28
+            },
+            "TargetKind": "Url",
+            "TargetOptions": [
+              {
+                "$type": "RetentionDaysAuditTargetOption",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 31,
+                  "startOffset": 757,
+                  "fragmentLength": 19
+                },
+                "Days": {
+                  "$type": "IntegerLiteral",
+                  "location": {
+                    "startLine": 19,
+                    "startColumn": 48,
+                    "startOffset": 774,
+                    "fragmentLength": 2
+                  },
+                  "LiteralType": "Integer",
+                  "Value": "13"
+                },
+                "OptionKind": "RetentionDays"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterServerAuditStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 780,
+            "fragmentLength": 144
+          },
+          "RemoveWhere": false,
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 21,
+              "startColumn": 20,
+              "startOffset": 799,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 21,
+              "startColumn": 23,
+              "startOffset": 802,
+              "fragmentLength": 121
+            },
+            "TargetKind": "File",
+            "TargetOptions": [
+              {
+                "$type": "MaxSizeAuditTargetOption",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 32,
+                  "startOffset": 811,
+                  "fragmentLength": 15
+                },
+                "IsUnlimited": false,
+                "Size": {
+                  "$type": "IntegerLiteral",
+                  "location": {
+                    "startLine": 21,
+                    "startColumn": 42,
+                    "startOffset": 821,
+                    "fragmentLength": 2
+                  },
+                  "LiteralType": "Integer",
+                  "Value": "15"
+                },
+                "Unit": "TB",
+                "OptionKind": "MaxSize"
+              },
+              {
+                "$type": "MaxSizeAuditTargetOption",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 49,
+                  "startOffset": 828,
+                  "fragmentLength": 7
+                },
+                "IsUnlimited": true,
+                "Unit": "Unspecified",
+                "OptionKind": "MaxSize"
+              },
+              {
+                "$type": "LiteralAuditTargetOption",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 70,
+                  "startOffset": 849,
+                  "fragmentLength": 16
+                },
+                "Value": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 21,
+                    "startColumn": 81,
+                    "startOffset": 860,
+                    "fragmentLength": 5
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "ccc"
+                },
+                "OptionKind": "FilePath"
+              },
+              {
+                "$type": "MaxRolloverFilesAuditTargetOption",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 88,
+                  "startOffset": 867,
+                  "fragmentLength": 30
+                },
+                "IsUnlimited": true,
+                "OptionKind": "MaxRolloverFiles"
+              },
+              {
+                "$type": "OnOffAuditTargetOption",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 120,
+                  "startOffset": 899,
+                  "fragmentLength": 23
+                },
+                "Value": "On",
+                "OptionKind": "ReserveDiskSpace"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterServerAuditStatement",
+          "location": {
+            "startLine": 23,
+            "startColumn": 1,
+            "startOffset": 926,
+            "fragmentLength": 65
+          },
+          "RemoveWhere": false,
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 23,
+              "startColumn": 20,
+              "startOffset": 945,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 23,
+              "startColumn": 23,
+              "startOffset": 948,
+              "fragmentLength": 18
+            },
+            "TargetKind": "ApplicationLog"
+          },
+          "Options": [
+            {
+              "$type": "QueueDelayAuditOption",
+              "location": {
+                "startLine": 23,
+                "startColumn": 48,
+                "startOffset": 973,
+                "fragmentLength": 16
+              },
+              "Delay": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 23,
+                  "startColumn": 62,
+                  "startOffset": 987,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "30"
+              },
+              "OptionKind": "QueueDelay"
+            }
+          ]
+        },
+        {
+          "$type": "AlterServerAuditStatement",
+          "location": {
+            "startLine": 25,
+            "startColumn": 1,
+            "startOffset": 993,
+            "fragmentLength": 42
+          },
+          "RemoveWhere": false,
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 25,
+              "startColumn": 20,
+              "startOffset": 1012,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditTarget": {
+            "$type": "AuditTarget",
+            "location": {
+              "startLine": 25,
+              "startColumn": 23,
+              "startOffset": 1015,
+              "fragmentLength": 19
+            },
+            "TargetKind": "ExternalMonitor"
+          }
+        },
+        {
+          "$type": "AlterServerAuditStatement",
+          "location": {
+            "startLine": 27,
+            "startColumn": 1,
+            "startOffset": 1037,
+            "fragmentLength": 87
+          },
+          "RemoveWhere": false,
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 27,
+              "startColumn": 20,
+              "startOffset": 1056,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "StateAuditOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 29,
+                "startOffset": 1065,
+                "fragmentLength": 11
+              },
+              "Value": "Off",
+              "OptionKind": "State"
+            },
+            {
+              "$type": "OnFailureAuditOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 42,
+                "startOffset": 1078,
+                "fragmentLength": 21
+              },
+              "OnFailureAction": "Shutdown",
+              "OptionKind": "OnFailure"
+            },
+            {
+              "$type": "OnFailureAuditOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 65,
+                "startOffset": 1101,
+                "fragmentLength": 21
+              },
+              "OnFailureAction": "Continue",
+              "OptionKind": "OnFailure"
+            }
+          ]
+        },
+        {
+          "$type": "AlterServerAuditStatement",
+          "location": {
+            "startLine": 29,
+            "startColumn": 1,
+            "startOffset": 1126,
+            "fragmentLength": 39
+          },
+          "NewName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 29,
+              "startColumn": 37,
+              "startOffset": 1162,
+              "fragmentLength": 2
+            },
+            "Value": "a2",
+            "QuoteType": "NotQuoted"
+          },
+          "RemoveWhere": false,
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 29,
+              "startColumn": 20,
+              "startOffset": 1145,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 33,
+        "startColumn": 1,
+        "startOffset": 1171,
+        "fragmentLength": 21
+      },
+      "Statements": [
+        {
+          "$type": "DropServerAuditStatement",
+          "location": {
+            "startLine": 33,
+            "startColumn": 1,
+            "startOffset": 1171,
+            "fragmentLength": 21
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 33,
+              "startColumn": 19,
+              "startOffset": 1189,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          },
+          "IsIfExists": false
+        }
+      ]
+    }
+  ]
+}

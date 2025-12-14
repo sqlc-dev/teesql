@@ -1,0 +1,220 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 377
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 377
+      },
+      "Statements": [
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 102
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 17,
+              "startOffset": 16,
+              "fragmentLength": 2
+            },
+            "Value": "db",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "IdentifierDatabaseOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 10,
+                "startOffset": 65,
+                "fragmentLength": 36
+              },
+              "Value": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 30,
+                  "startOffset": 85,
+                  "fragmentLength": 16
+                },
+                "Value": "DATABASE_DEFAULT",
+                "QuoteType": "NotQuoted"
+              },
+              "OptionKind": "CatalogCollation"
+            }
+          ],
+          "AttachMode": "None",
+          "Collation": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 28,
+              "startOffset": 27,
+              "fragmentLength": 28
+            },
+            "Value": "SQL_Latin1_General_CP1_CI_AS",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 104,
+            "fragmentLength": 171
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 17,
+              "startOffset": 120,
+              "fragmentLength": 2
+            },
+            "Value": "db",
+            "QuoteType": "NotQuoted"
+          },
+          "Containment": {
+            "$type": "ContainmentDatabaseOption",
+            "location": {
+              "startLine": 4,
+              "startColumn": 20,
+              "startOffset": 123,
+              "fragmentLength": 18
+            },
+            "Value": "None",
+            "OptionKind": "Containment"
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 10,
+                "startOffset": 193,
+                "fragmentLength": 26
+              },
+              "OptionState": "On",
+              "OptionKind": "TransformNoiseWords"
+            },
+            {
+              "$type": "IdentifierDatabaseOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 38,
+                "startOffset": 221,
+                "fragmentLength": 36
+              },
+              "Value": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 58,
+                  "startOffset": 241,
+                  "fragmentLength": 16
+                },
+                "Value": "DATABASE_DEFAULT",
+                "QuoteType": "NotQuoted"
+              },
+              "OptionKind": "CatalogCollation"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 76,
+                "startOffset": 259,
+                "fragmentLength": 15
+              },
+              "OptionState": "Off",
+              "OptionKind": "DBChaining"
+            }
+          ],
+          "AttachMode": "None",
+          "Collation": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 47,
+              "startOffset": 150,
+              "fragmentLength": 33
+            },
+            "Value": "Latin1_General_100_CI_AS_KS_WS_SC",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 277,
+            "fragmentLength": 100
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 17,
+              "startOffset": 293,
+              "fragmentLength": 2
+            },
+            "Value": "db",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "IdentifierDatabaseOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 10,
+                "startOffset": 305,
+                "fragmentLength": 48
+              },
+              "Value": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 30,
+                  "startOffset": 325,
+                  "fragmentLength": 28
+                },
+                "Value": "SQL_Latin1_General_CP1_CI_AS",
+                "QuoteType": "NotQuoted"
+              },
+              "OptionKind": "CatalogCollation"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 60,
+                "startOffset": 355,
+                "fragmentLength": 21
+              },
+              "OptionState": "Off",
+              "OptionKind": "NestedTriggers"
+            }
+          ],
+          "AttachMode": "None"
+        }
+      ]
+    }
+  ]
+}

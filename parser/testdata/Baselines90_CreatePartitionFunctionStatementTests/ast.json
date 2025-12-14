@@ -1,0 +1,226 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 203
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 201
+      },
+      "Statements": [
+        {
+          "$type": "CreatePartitionFunctionStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 90
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 27,
+              "startOffset": 26,
+              "fragmentLength": 10
+            },
+            "Value": "myRangePF1",
+            "QuoteType": "NotQuoted"
+          },
+          "ParameterType": {
+            "$type": "PartitionParameterType",
+            "location": {
+              "startLine": 1,
+              "startColumn": 38,
+              "startOffset": 37,
+              "fragmentLength": 3
+            },
+            "DataType": {
+              "$type": "SqlDataTypeReference",
+              "location": {
+                "startLine": 1,
+                "startColumn": 38,
+                "startOffset": 37,
+                "fragmentLength": 3
+              },
+              "SqlDataTypeOption": "Int",
+              "Name": {
+                "$type": "SchemaObjectName",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 38,
+                  "startOffset": 37,
+                  "fragmentLength": 3
+                },
+                "BaseIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 38,
+                    "startOffset": 37,
+                    "fragmentLength": 3
+                  },
+                  "Value": "INT",
+                  "QuoteType": "NotQuoted"
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$ref": "Identifier"
+                  }
+                ]
+              }
+            }
+          },
+          "Range": "Left",
+          "BoundaryValues": [
+            {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 3,
+                "startColumn": 17,
+                "startOffset": 76,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "1"
+            },
+            {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 3,
+                "startColumn": 20,
+                "startOffset": 79,
+                "fragmentLength": 3
+              },
+              "LiteralType": "Integer",
+              "Value": "100"
+            },
+            {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 3,
+                "startColumn": 25,
+                "startOffset": 84,
+                "fragmentLength": 4
+              },
+              "LiteralType": "Integer",
+              "Value": "1000"
+            }
+          ]
+        },
+        {
+          "$type": "CreatePartitionFunctionStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 92,
+            "fragmentLength": 109
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 27,
+              "startOffset": 118,
+              "fragmentLength": 10
+            },
+            "Value": "myRangePF1",
+            "QuoteType": "NotQuoted"
+          },
+          "ParameterType": {
+            "$type": "PartitionParameterType",
+            "location": {
+              "startLine": 5,
+              "startColumn": 38,
+              "startOffset": 129,
+              "fragmentLength": 32
+            },
+            "DataType": {
+              "$type": "SqlDataTypeReference",
+              "location": {
+                "startLine": 5,
+                "startColumn": 38,
+                "startOffset": 129,
+                "fragmentLength": 9
+              },
+              "SqlDataTypeOption": "Char",
+              "Parameters": [
+                {
+                  "$type": "IntegerLiteral",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 44,
+                    "startOffset": 135,
+                    "fragmentLength": 2
+                  },
+                  "LiteralType": "Integer",
+                  "Value": "10"
+                }
+              ],
+              "Name": {
+                "$type": "SchemaObjectName",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 38,
+                  "startOffset": 129,
+                  "fragmentLength": 4
+                },
+                "BaseIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 38,
+                    "startOffset": 129,
+                    "fragmentLength": 4
+                  },
+                  "Value": "CHAR",
+                  "QuoteType": "NotQuoted"
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$ref": "Identifier"
+                  }
+                ]
+              }
+            },
+            "Collation": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 56,
+                "startOffset": 147,
+                "fragmentLength": 14
+              },
+              "Value": "Estonian_CS_AS",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Range": "Right",
+          "BoundaryValues": [
+            {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 7,
+                "startColumn": 17,
+                "startOffset": 198,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

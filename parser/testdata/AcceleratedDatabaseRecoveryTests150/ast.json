@@ -1,0 +1,92 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 124
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 123
+      },
+      "Statements": [
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 60
+          },
+          "Options": [
+            {
+              "$type": "AcceleratedDatabaseRecoveryDatabaseOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 5,
+                "startOffset": 25,
+                "fragmentLength": 34
+              },
+              "OptionState": "On",
+              "OptionKind": "AcceleratedDatabaseRecovery"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 16,
+              "startOffset": 15,
+              "fragmentLength": 4
+            },
+            "Value": "aedb",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 62,
+            "fragmentLength": 61
+          },
+          "Options": [
+            {
+              "$type": "AcceleratedDatabaseRecoveryDatabaseOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 5,
+                "startOffset": 87,
+                "fragmentLength": 35
+              },
+              "OptionState": "Off",
+              "OptionKind": "AcceleratedDatabaseRecovery"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 16,
+              "startOffset": 77,
+              "fragmentLength": 4
+            },
+            "Value": "aedb",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        }
+      ]
+    }
+  ]
+}

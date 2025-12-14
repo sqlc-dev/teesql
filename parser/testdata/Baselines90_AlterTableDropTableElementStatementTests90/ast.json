@@ -1,0 +1,395 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 253
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 108
+      },
+      "Statements": [
+        {
+          "$type": "AlterTableDropTableElementStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 108
+          },
+          "AlterTableDropTableElements": [
+            {
+              "$type": "AlterTableDropTableElement",
+              "location": {
+                "startLine": 1,
+                "startColumn": 32,
+                "startOffset": 31,
+                "fragmentLength": 48
+              },
+              "TableElementType": "Constraint",
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 32,
+                  "startOffset": 31,
+                  "fragmentLength": 3
+                },
+                "Value": "cs1",
+                "QuoteType": "NotQuoted"
+              },
+              "DropClusteredConstraintOptions": [
+                {
+                  "$type": "DropClusteredConstraintStateOption",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 20,
+                    "startOffset": 54,
+                    "fragmentLength": 3
+                  },
+                  "OptionState": "Off",
+                  "OptionKind": "Online"
+                },
+                {
+                  "$type": "DropClusteredConstraintMoveOption",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 33,
+                    "startOffset": 67,
+                    "fragmentLength": 11
+                  },
+                  "OptionValue": {
+                    "$type": "FileGroupOrPartitionScheme",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 33,
+                      "startOffset": 67,
+                      "fragmentLength": 11
+                    },
+                    "Name": {
+                      "$type": "IdentifierOrValueExpression",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 33,
+                        "startOffset": 67,
+                        "fragmentLength": 11
+                      },
+                      "Value": "myFilegroup",
+                      "Identifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 33,
+                          "startOffset": 67,
+                          "fragmentLength": 11
+                        },
+                        "Value": "myFilegroup",
+                        "QuoteType": "NotQuoted"
+                      }
+                    }
+                  },
+                  "OptionKind": "MoveTo"
+                }
+              ],
+              "IsIfExists": false
+            },
+            {
+              "$type": "AlterTableDropTableElement",
+              "location": {
+                "startLine": 2,
+                "startColumn": 47,
+                "startOffset": 81,
+                "fragmentLength": 26
+              },
+              "TableElementType": "NotSpecified",
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 47,
+                  "startOffset": 81,
+                  "fragmentLength": 3
+                },
+                "Value": "cs2",
+                "QuoteType": "NotQuoted"
+              },
+              "DropClusteredConstraintOptions": [
+                {
+                  "$type": "DropClusteredConstraintValueOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 20,
+                    "startOffset": 104,
+                    "fragmentLength": 2
+                  },
+                  "OptionValue": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 20,
+                      "startOffset": 104,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "21"
+                  },
+                  "OptionKind": "MaxDop"
+                }
+              ],
+              "IsIfExists": false
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 1,
+              "startColumn": 13,
+              "startOffset": 12,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 13,
+                "startOffset": 12,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 7,
+        "startColumn": 1,
+        "startOffset": 114,
+        "fragmentLength": 137
+      },
+      "Statements": [
+        {
+          "$type": "AlterTableDropTableElementStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 114,
+            "fragmentLength": 137
+          },
+          "AlterTableDropTableElements": [
+            {
+              "$type": "AlterTableDropTableElement",
+              "location": {
+                "startLine": 7,
+                "startColumn": 28,
+                "startOffset": 141,
+                "fragmentLength": 2
+              },
+              "TableElementType": "Column",
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 28,
+                  "startOffset": 141,
+                  "fragmentLength": 2
+                },
+                "Value": "c1",
+                "QuoteType": "NotQuoted"
+              },
+              "IsIfExists": false
+            },
+            {
+              "$type": "AlterTableDropTableElement",
+              "location": {
+                "startLine": 7,
+                "startColumn": 43,
+                "startOffset": 156,
+                "fragmentLength": 26
+              },
+              "TableElementType": "Constraint",
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 43,
+                  "startOffset": 156,
+                  "fragmentLength": 3
+                },
+                "Value": "c21",
+                "QuoteType": "NotQuoted"
+              },
+              "DropClusteredConstraintOptions": [
+                {
+                  "$type": "DropClusteredConstraintStateOption",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 20,
+                    "startOffset": 179,
+                    "fragmentLength": 2
+                  },
+                  "OptionState": "On",
+                  "OptionKind": "Online"
+                }
+              ],
+              "IsIfExists": false
+            },
+            {
+              "$type": "AlterTableDropTableElement",
+              "location": {
+                "startLine": 8,
+                "startColumn": 25,
+                "startOffset": 184,
+                "fragmentLength": 66
+              },
+              "TableElementType": "NotSpecified",
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 25,
+                  "startOffset": 184,
+                  "fragmentLength": 3
+                },
+                "Value": "cs1",
+                "QuoteType": "NotQuoted"
+              },
+              "DropClusteredConstraintOptions": [
+                {
+                  "$type": "DropClusteredConstraintMoveOption",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 19,
+                    "startOffset": 206,
+                    "fragmentLength": 16
+                  },
+                  "OptionValue": {
+                    "$type": "FileGroupOrPartitionScheme",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 19,
+                      "startOffset": 206,
+                      "fragmentLength": 16
+                    },
+                    "Name": {
+                      "$type": "IdentifierOrValueExpression",
+                      "location": {
+                        "startLine": 9,
+                        "startColumn": 19,
+                        "startOffset": 206,
+                        "fragmentLength": 9
+                      },
+                      "Value": "default",
+                      "ValueExpression": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 9,
+                          "startColumn": 19,
+                          "startOffset": 206,
+                          "fragmentLength": 9
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "default"
+                      }
+                    },
+                    "PartitionSchemeColumns": [
+                      {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 9,
+                          "startColumn": 30,
+                          "startOffset": 217,
+                          "fragmentLength": 4
+                        },
+                        "Value": "col1",
+                        "QuoteType": "NotQuoted"
+                      }
+                    ]
+                  },
+                  "OptionKind": "MoveTo"
+                },
+                {
+                  "$type": "DropClusteredConstraintStateOption",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 46,
+                    "startOffset": 233,
+                    "fragmentLength": 3
+                  },
+                  "OptionState": "Off",
+                  "OptionKind": "Online"
+                },
+                {
+                  "$type": "DropClusteredConstraintValueOption",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 60,
+                    "startOffset": 247,
+                    "fragmentLength": 2
+                  },
+                  "OptionValue": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 60,
+                      "startOffset": 247,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "21"
+                  },
+                  "OptionKind": "MaxDop"
+                }
+              ],
+              "IsIfExists": false
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 7,
+              "startColumn": 13,
+              "startOffset": 126,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 13,
+                "startOffset": 126,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

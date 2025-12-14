@@ -1,0 +1,894 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1090
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 516
+      },
+      "Statements": [
+        {
+          "$type": "CreateResourcePoolStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 58
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 22,
+              "startOffset": 21,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "ResourcePoolParameters": [
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 1,
+                "startColumn": 55,
+                "startOffset": 54,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 55,
+                  "startOffset": 54,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CreateResourcePoolStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 60,
+            "fragmentLength": 83
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 22,
+              "startOffset": 81,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "ResourcePoolParameters": [
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 3,
+                "startColumn": 55,
+                "startOffset": 114,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 55,
+                  "startOffset": 114,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 3,
+                "startColumn": 80,
+                "startOffset": 139,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 80,
+                  "startOffset": 139,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CreateResourcePoolStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 145,
+            "fragmentLength": 130
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 22,
+              "startOffset": 166,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "ResourcePoolParameters": [
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 5,
+                "startColumn": 55,
+                "startOffset": 199,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 55,
+                  "startOffset": 199,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 5,
+                "startColumn": 77,
+                "startOffset": 221,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 77,
+                  "startOffset": 221,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 5,
+                "startColumn": 102,
+                "startOffset": 246,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 102,
+                  "startOffset": 246,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 5,
+                "startColumn": 127,
+                "startOffset": 271,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 127,
+                  "startOffset": 271,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "50"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CreateResourcePoolStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 277,
+            "fragmentLength": 154
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 22,
+              "startOffset": 298,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "ResourcePoolParameters": [
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 55,
+                "startOffset": 331,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 55,
+                  "startOffset": 331,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 77,
+                "startOffset": 353,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 77,
+                  "startOffset": 353,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 102,
+                "startOffset": 378,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 102,
+                  "startOffset": 378,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 127,
+                "startOffset": 403,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 127,
+                  "startOffset": 403,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "50"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 152,
+                "startOffset": 428,
+                "fragmentLength": 1
+              },
+              "ParameterType": "MinMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 152,
+                  "startOffset": 428,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "5"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CreateResourcePoolStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 433,
+            "fragmentLength": 83
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 9,
+              "startColumn": 22,
+              "startOffset": 454,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "ResourcePoolParameters": [
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 9,
+                "startColumn": 55,
+                "startOffset": 487,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 55,
+                  "startOffset": 487,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 9,
+                "startColumn": 80,
+                "startOffset": 512,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 80,
+                  "startOffset": 512,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "30"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 12,
+        "startColumn": 1,
+        "startOffset": 521,
+        "fragmentLength": 536
+      },
+      "Statements": [
+        {
+          "$type": "AlterResourcePoolStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 521,
+            "fragmentLength": 82
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 12,
+              "startColumn": 21,
+              "startOffset": 541,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "ResourcePoolParameters": [
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 12,
+                "startColumn": 54,
+                "startOffset": 574,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 12,
+                  "startColumn": 54,
+                  "startOffset": 574,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 12,
+                "startColumn": 79,
+                "startOffset": 599,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 12,
+                  "startColumn": 79,
+                  "startOffset": 599,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "30"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "AlterResourcePoolStatement",
+          "location": {
+            "startLine": 14,
+            "startColumn": 1,
+            "startOffset": 605,
+            "fragmentLength": 82
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 14,
+              "startColumn": 21,
+              "startOffset": 625,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "ResourcePoolParameters": [
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 14,
+                "startColumn": 54,
+                "startOffset": 658,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 54,
+                  "startOffset": 658,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 14,
+                "startColumn": 79,
+                "startOffset": 683,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 79,
+                  "startOffset": 683,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "AlterResourcePoolStatement",
+          "location": {
+            "startLine": 16,
+            "startColumn": 1,
+            "startOffset": 689,
+            "fragmentLength": 129
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 16,
+              "startColumn": 21,
+              "startOffset": 709,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "ResourcePoolParameters": [
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 16,
+                "startColumn": 54,
+                "startOffset": 742,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 54,
+                  "startOffset": 742,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 16,
+                "startColumn": 76,
+                "startOffset": 764,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 76,
+                  "startOffset": 764,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 16,
+                "startColumn": 101,
+                "startOffset": 789,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 101,
+                  "startOffset": 789,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 16,
+                "startColumn": 126,
+                "startOffset": 814,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 126,
+                  "startOffset": 814,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "50"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "AlterResourcePoolStatement",
+          "location": {
+            "startLine": 18,
+            "startColumn": 1,
+            "startOffset": 820,
+            "fragmentLength": 153
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 18,
+              "startColumn": 21,
+              "startOffset": 840,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "ResourcePoolParameters": [
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 18,
+                "startColumn": 54,
+                "startOffset": 873,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 54,
+                  "startOffset": 873,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 18,
+                "startColumn": 76,
+                "startOffset": 895,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 76,
+                  "startOffset": 895,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 18,
+                "startColumn": 101,
+                "startOffset": 920,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 101,
+                  "startOffset": 920,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 18,
+                "startColumn": 126,
+                "startOffset": 945,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 126,
+                  "startOffset": 945,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "50"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 18,
+                "startColumn": 151,
+                "startOffset": 970,
+                "fragmentLength": 1
+              },
+              "ParameterType": "MinMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 151,
+                  "startOffset": 970,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "5"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "AlterResourcePoolStatement",
+          "location": {
+            "startLine": 20,
+            "startColumn": 1,
+            "startOffset": 975,
+            "fragmentLength": 82
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 20,
+              "startColumn": 21,
+              "startOffset": 995,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "ResourcePoolParameters": [
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 20,
+                "startColumn": 54,
+                "startOffset": 1028,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MinCpuPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 20,
+                  "startColumn": 54,
+                  "startOffset": 1028,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "ResourcePoolParameter",
+              "location": {
+                "startLine": 20,
+                "startColumn": 79,
+                "startOffset": 1053,
+                "fragmentLength": 2
+              },
+              "ParameterType": "MaxMemoryPercent",
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 20,
+                  "startColumn": 79,
+                  "startOffset": 1053,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "30"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 23,
+        "startColumn": 1,
+        "startOffset": 1062,
+        "fragmentLength": 28
+      },
+      "Statements": [
+        {
+          "$type": "DropResourcePoolStatement",
+          "location": {
+            "startLine": 23,
+            "startColumn": 1,
+            "startOffset": 1062,
+            "fragmentLength": 28
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 23,
+              "startColumn": 20,
+              "startOffset": 1081,
+              "fragmentLength": 8
+            },
+            "Value": "res_pool",
+            "QuoteType": "NotQuoted"
+          },
+          "IsIfExists": false
+        }
+      ]
+    }
+  ]
+}

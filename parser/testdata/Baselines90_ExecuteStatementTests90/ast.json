@@ -1,0 +1,292 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 231
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 143
+      },
+      "Statements": [
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 143
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 1,
+              "startColumn": 1,
+              "startOffset": 0,
+              "fragmentLength": 142
+            },
+            "LinkedServer": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 54,
+                "startOffset": 130,
+                "fragmentLength": 12
+              },
+              "Value": "SeattleSales",
+              "QuoteType": "NotQuoted"
+            },
+            "ExecuteContext": {
+              "$type": "ExecuteContext",
+              "location": {
+                "startLine": 3,
+                "startColumn": 36,
+                "startOffset": 112,
+                "fragmentLength": 14
+              },
+              "Principal": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 43,
+                  "startOffset": 119,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "User1"
+              },
+              "Kind": "User"
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableStringList",
+              "location": {
+                "startLine": 1,
+                "startColumn": 10,
+                "startOffset": 9,
+                "fragmentLength": 98
+              },
+              "Strings": [
+                {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 10,
+                    "startOffset": 9,
+                    "fragmentLength": 93
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "SELECT ProductID, Name \n    FROM AdventureWorks.Production.Product\n    WHERE ProductID = ? "
+                }
+              ],
+              "Parameters": [
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 28,
+                    "startOffset": 104,
+                    "fragmentLength": 3
+                  },
+                  "ParameterValue": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 28,
+                      "startOffset": 104,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "952"
+                  },
+                  "IsOutput": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 7,
+        "startColumn": 1,
+        "startOffset": 149,
+        "fragmentLength": 80
+      },
+      "Statements": [
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 149,
+            "fragmentLength": 28
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 7,
+              "startColumn": 1,
+              "startOffset": 149,
+              "fragmentLength": 27
+            },
+            "ExecuteContext": {
+              "$type": "ExecuteContext",
+              "location": {
+                "startLine": 7,
+                "startColumn": 23,
+                "startOffset": 171,
+                "fragmentLength": 5
+              },
+              "Kind": "Login"
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableStringList",
+              "location": {
+                "startLine": 7,
+                "startColumn": 10,
+                "startOffset": 158,
+                "fragmentLength": 8
+              },
+              "Strings": [
+                {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 10,
+                    "startOffset": 158,
+                    "fragmentLength": 8
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "select"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 179,
+            "fragmentLength": 50
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 9,
+              "startColumn": 1,
+              "startOffset": 179,
+              "fragmentLength": 49
+            },
+            "ExecuteContext": {
+              "$type": "ExecuteContext",
+              "location": {
+                "startLine": 9,
+                "startColumn": 45,
+                "startOffset": 223,
+                "fragmentLength": 5
+              },
+              "Kind": "Login"
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableStringList",
+              "location": {
+                "startLine": 9,
+                "startColumn": 10,
+                "startOffset": 188,
+                "fragmentLength": 30
+              },
+              "Strings": [
+                {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 10,
+                    "startOffset": 188,
+                    "fragmentLength": 8
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "select"
+                },
+                {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 21,
+                    "startOffset": 199,
+                    "fragmentLength": 12
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": " * from t1"
+                }
+              ],
+              "Parameters": [
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 35,
+                    "startOffset": 213,
+                    "fragmentLength": 1
+                  },
+                  "ParameterValue": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 35,
+                      "startOffset": 213,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "5"
+                  },
+                  "IsOutput": false
+                },
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 38,
+                    "startOffset": 216,
+                    "fragmentLength": 2
+                  },
+                  "ParameterValue": {
+                    "$type": "VariableReference",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 38,
+                      "startOffset": 216,
+                      "fragmentLength": 2
+                    },
+                    "Name": "@a"
+                  },
+                  "IsOutput": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

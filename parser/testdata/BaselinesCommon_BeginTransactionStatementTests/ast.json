@@ -1,0 +1,324 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 455
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 453
+      },
+      "Statements": [
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 18
+          },
+          "Distributed": false,
+          "MarkDefined": false
+        },
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 20,
+            "fragmentLength": 18
+          },
+          "Distributed": false,
+          "MarkDefined": false
+        },
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 40,
+            "fragmentLength": 32
+          },
+          "Distributed": false,
+          "MarkDefined": false,
+          "Name": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 5,
+              "startColumn": 19,
+              "startOffset": 58,
+              "fragmentLength": 13
+            },
+            "Value": "myTransaction",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 19,
+                "startOffset": 58,
+                "fragmentLength": 13
+              },
+              "Value": "myTransaction",
+              "QuoteType": "NotQuoted"
+            }
+          }
+        },
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 74,
+            "fragmentLength": 30
+          },
+          "Distributed": true,
+          "MarkDefined": false
+        },
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 106,
+            "fragmentLength": 44
+          },
+          "Distributed": true,
+          "MarkDefined": false,
+          "Name": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 9,
+              "startColumn": 31,
+              "startOffset": 136,
+              "fragmentLength": 13
+            },
+            "Value": "myTransaction",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 31,
+                "startOffset": 136,
+                "fragmentLength": 13
+              },
+              "Value": "myTransaction",
+              "QuoteType": "NotQuoted"
+            }
+          }
+        },
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 152,
+            "fragmentLength": 32
+          },
+          "Distributed": false,
+          "MarkDefined": false,
+          "Name": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 11,
+              "startColumn": 19,
+              "startOffset": 170,
+              "fragmentLength": 13
+            },
+            "Value": "@tranVariable",
+            "ValueExpression": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 11,
+                "startColumn": 19,
+                "startOffset": 170,
+                "fragmentLength": 13
+              },
+              "Name": "@tranVariable"
+            }
+          }
+        },
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 186,
+            "fragmentLength": 32
+          },
+          "Distributed": false,
+          "MarkDefined": true
+        },
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 16,
+            "startColumn": 1,
+            "startOffset": 220,
+            "fragmentLength": 46
+          },
+          "Distributed": false,
+          "MarkDefined": true,
+          "Name": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 16,
+              "startColumn": 19,
+              "startOffset": 238,
+              "fragmentLength": 13
+            },
+            "Value": "myTransaction",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 16,
+                "startColumn": 19,
+                "startOffset": 238,
+                "fragmentLength": 13
+              },
+              "Value": "myTransaction",
+              "QuoteType": "NotQuoted"
+            }
+          }
+        },
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 19,
+            "startColumn": 1,
+            "startOffset": 268,
+            "fragmentLength": 59
+          },
+          "Distributed": false,
+          "MarkDefined": true,
+          "MarkDescription": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 20,
+              "startColumn": 15,
+              "startOffset": 314,
+              "fragmentLength": 12
+            },
+            "LiteralType": "String",
+            "IsNational": true,
+            "IsLargeObject": false,
+            "Value": "some tran"
+          },
+          "Name": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 19,
+              "startColumn": 19,
+              "startOffset": 286,
+              "fragmentLength": 13
+            },
+            "Value": "@tranVariable",
+            "ValueExpression": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 19,
+                "startColumn": 19,
+                "startOffset": 286,
+                "fragmentLength": 13
+              },
+              "Name": "@tranVariable"
+            }
+          }
+        },
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 22,
+            "startColumn": 1,
+            "startOffset": 329,
+            "fragmentLength": 62
+          },
+          "Distributed": false,
+          "MarkDefined": true,
+          "MarkDescription": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 23,
+              "startColumn": 15,
+              "startOffset": 375,
+              "fragmentLength": 15
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "ascii literal"
+          },
+          "Name": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 22,
+              "startColumn": 19,
+              "startOffset": 347,
+              "fragmentLength": 13
+            },
+            "Value": "myTransaction",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 22,
+                "startColumn": 19,
+                "startOffset": 347,
+                "fragmentLength": 13
+              },
+              "Value": "myTransaction",
+              "QuoteType": "NotQuoted"
+            }
+          }
+        },
+        {
+          "$type": "BeginTransactionStatement",
+          "location": {
+            "startLine": 25,
+            "startColumn": 1,
+            "startOffset": 393,
+            "fragmentLength": 60
+          },
+          "Distributed": false,
+          "MarkDefined": true,
+          "MarkDescription": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 26,
+              "startColumn": 15,
+              "startOffset": 439,
+              "fragmentLength": 13
+            },
+            "Name": "@descVariable"
+          },
+          "Name": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 25,
+              "startColumn": 19,
+              "startOffset": 411,
+              "fragmentLength": 13
+            },
+            "Value": "myTransaction",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 25,
+                "startColumn": 19,
+                "startOffset": 411,
+                "fragmentLength": 13
+              },
+              "Value": "myTransaction",
+              "QuoteType": "NotQuoted"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,451 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 379
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 17,
+        "fragmentLength": 215
+      },
+      "Statements": [
+        {
+          "$type": "AlterServiceStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 17,
+            "fragmentLength": 32
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 15,
+              "startOffset": 31,
+              "fragmentLength": 2
+            },
+            "Value": "s1",
+            "QuoteType": "NotQuoted"
+          },
+          "QueueName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 2,
+              "startColumn": 27,
+              "startOffset": 43,
+              "fragmentLength": 6
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 27,
+                "startOffset": 43,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 31,
+                "startOffset": 47,
+                "fragmentLength": 2
+              },
+              "Value": "q1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterServiceStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 50,
+            "fragmentLength": 69
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 15,
+              "startOffset": 64,
+              "fragmentLength": 2
+            },
+            "Value": "s1",
+            "QuoteType": "NotQuoted"
+          },
+          "ServiceContracts": [
+            {
+              "$type": "ServiceContract",
+              "location": {
+                "startLine": 3,
+                "startColumn": 19,
+                "startOffset": 68,
+                "fragmentLength": 15
+              },
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 32,
+                  "startOffset": 81,
+                  "fragmentLength": 2
+                },
+                "Value": "c1",
+                "QuoteType": "NotQuoted"
+              },
+              "Action": "Add"
+            },
+            {
+              "$type": "ServiceContract",
+              "location": {
+                "startLine": 3,
+                "startColumn": 36,
+                "startOffset": 85,
+                "fragmentLength": 16
+              },
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 50,
+                  "startOffset": 99,
+                  "fragmentLength": 2
+                },
+                "Value": "c2",
+                "QuoteType": "NotQuoted"
+              },
+              "Action": "Drop"
+            },
+            {
+              "$type": "ServiceContract",
+              "location": {
+                "startLine": 3,
+                "startColumn": 54,
+                "startOffset": 103,
+                "fragmentLength": 15
+              },
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 67,
+                  "startOffset": 116,
+                  "fragmentLength": 2
+                },
+                "Value": "c3",
+                "QuoteType": "NotQuoted"
+              },
+              "Action": "Add"
+            }
+          ]
+        },
+        {
+          "$type": "AlterServiceStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 120,
+            "fragmentLength": 112
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 15,
+              "startOffset": 134,
+              "fragmentLength": 32
+            },
+            "Value": "//Adventure-Works.com/Expenses",
+            "QuoteType": "SquareBracket"
+          },
+          "ServiceContracts": [
+            {
+              "$type": "ServiceContract",
+              "location": {
+                "startLine": 4,
+                "startColumn": 49,
+                "startOffset": 168,
+                "fragmentLength": 63
+              },
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 62,
+                  "startOffset": 181,
+                  "fragmentLength": 50
+                },
+                "Value": "//Adventure-Works.com/Expenses/ExpenseProcessing",
+                "QuoteType": "SquareBracket"
+              },
+              "Action": "Add"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 7,
+        "startColumn": 1,
+        "startOffset": 254,
+        "fragmentLength": 125
+      },
+      "Statements": [
+        {
+          "$type": "CreateServiceStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 254,
+            "fragmentLength": 47
+          },
+          "Owner": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 33,
+              "startOffset": 286,
+              "fragmentLength": 3
+            },
+            "Value": "zzz",
+            "QuoteType": "NotQuoted"
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 16,
+              "startOffset": 269,
+              "fragmentLength": 2
+            },
+            "Value": "s1",
+            "QuoteType": "NotQuoted"
+          },
+          "QueueName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 7,
+              "startColumn": 46,
+              "startOffset": 299,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 46,
+                "startOffset": 299,
+                "fragmentLength": 2
+              },
+              "Value": "q1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "CreateServiceStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 302,
+            "fragmentLength": 42
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 8,
+              "startColumn": 16,
+              "startOffset": 317,
+              "fragmentLength": 2
+            },
+            "Value": "s1",
+            "QuoteType": "NotQuoted"
+          },
+          "QueueName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 8,
+              "startColumn": 28,
+              "startOffset": 329,
+              "fragmentLength": 6
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 28,
+                "startOffset": 329,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 32,
+                "startOffset": 333,
+                "fragmentLength": 2
+              },
+              "Value": "q1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "ServiceContracts": [
+            {
+              "$type": "ServiceContract",
+              "location": {
+                "startLine": 8,
+                "startColumn": 36,
+                "startOffset": 337,
+                "fragmentLength": 2
+              },
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 36,
+                  "startOffset": 337,
+                  "fragmentLength": 2
+                },
+                "Value": "c1",
+                "QuoteType": "NotQuoted"
+              },
+              "Action": "None"
+            },
+            {
+              "$type": "ServiceContract",
+              "location": {
+                "startLine": 8,
+                "startColumn": 40,
+                "startOffset": 341,
+                "fragmentLength": 2
+              },
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 40,
+                  "startOffset": 341,
+                  "fragmentLength": 2
+                },
+                "Value": "c2",
+                "QuoteType": "NotQuoted"
+              },
+              "Action": "None"
+            }
+          ]
+        },
+        {
+          "$type": "CreateServiceStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 345,
+            "fragmentLength": 34
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 9,
+              "startColumn": 16,
+              "startOffset": 360,
+              "fragmentLength": 2
+            },
+            "Value": "s1",
+            "QuoteType": "NotQuoted"
+          },
+          "QueueName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 9,
+              "startColumn": 28,
+              "startOffset": 372,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 28,
+                "startOffset": 372,
+                "fragmentLength": 2
+              },
+              "Value": "q1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "ServiceContracts": [
+            {
+              "$type": "ServiceContract",
+              "location": {
+                "startLine": 9,
+                "startColumn": 32,
+                "startOffset": 376,
+                "fragmentLength": 2
+              },
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 32,
+                  "startOffset": 376,
+                  "fragmentLength": 2
+                },
+                "Value": "c1",
+                "QuoteType": "NotQuoted"
+              },
+              "Action": "None"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

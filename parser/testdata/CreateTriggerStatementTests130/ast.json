@@ -1,0 +1,145 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 125
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 22,
+        "fragmentLength": 103
+      },
+      "Statements": [
+        {
+          "$type": "CreateTriggerStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 22,
+            "fragmentLength": 103
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 2,
+              "startColumn": 16,
+              "startOffset": 37,
+              "fragmentLength": 6
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 16,
+                "startOffset": 37,
+                "fragmentLength": 6
+              },
+              "Value": "test",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "TriggerObject": {
+            "$type": "TriggerObject",
+            "location": {
+              "startLine": 3,
+              "startColumn": 8,
+              "startOffset": 51,
+              "fragmentLength": 8
+            },
+            "TriggerScope": "Database"
+          },
+          "TriggerType": "After",
+          "TriggerActions": [
+            {
+              "$type": "TriggerAction",
+              "location": {
+                "startLine": 4,
+                "startColumn": 11,
+                "startOffset": 70,
+                "fragmentLength": 6
+              },
+              "TriggerActionType": "Event",
+              "EventTypeGroup": {
+                "$type": "EventTypeContainer",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 11,
+                  "startOffset": 70,
+                  "fragmentLength": 6
+                },
+                "EventType": "Rename"
+              }
+            }
+          ],
+          "WithAppend": false,
+          "IsNotForReplication": false,
+          "StatementList": {
+            "$type": "StatementList",
+            "location": {
+              "startLine": 5,
+              "startColumn": 8,
+              "startOffset": 84,
+              "fragmentLength": 41
+            },
+            "Statements": [
+              {
+                "$type": "BeginEndBlockStatement",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 8,
+                  "startOffset": 84,
+                  "fragmentLength": 41
+                },
+                "StatementList": {
+                  "$type": "StatementList",
+                  "location": {
+                    "startLine": -1,
+                    "startColumn": -1,
+                    "startOffset": -1,
+                    "fragmentLength": -1
+                  },
+                  "Statements": [
+                    {
+                      "$type": "PrintStatement",
+                      "location": {
+                        "startLine": 6,
+                        "startColumn": 12,
+                        "startOffset": 101,
+                        "fragmentLength": 13
+                      },
+                      "Expression": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 6,
+                          "startColumn": 18,
+                          "startOffset": 107,
+                          "fragmentLength": 6
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "Test"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

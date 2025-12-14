@@ -1,0 +1,1882 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1308
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 1308
+      },
+      "Statements": [
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 70
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 1,
+              "startColumn": 1,
+              "startOffset": 0,
+              "fragmentLength": 69
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 8,
+                  "startOffset": 7,
+                  "fragmentLength": 62
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 8,
+                    "startOffset": 7,
+                    "fragmentLength": 62
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 1,
+                      "startColumn": 8,
+                      "startOffset": 7,
+                      "fragmentLength": 5
+                    },
+                    "Value": "LTRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 1,
+                        "startColumn": 14,
+                        "startOffset": 13,
+                        "fragmentLength": 55
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "     Five spaces are at the beginning of this string."
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "WithArrayWrapper": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "DeclareVariableStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 72,
+            "fragmentLength": 40
+          },
+          "Declarations": [
+            {
+              "$type": "DeclareVariableElement",
+              "location": {
+                "startLine": 3,
+                "startColumn": 9,
+                "startOffset": 80,
+                "fragmentLength": 31
+              },
+              "VariableName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 9,
+                  "startOffset": 80,
+                  "fragmentLength": 15
+                },
+                "Value": "@string_to_trim",
+                "QuoteType": "NotQuoted"
+              },
+              "DataType": {
+                "$type": "SqlDataTypeReference",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 28,
+                  "startOffset": 99,
+                  "fragmentLength": 12
+                },
+                "SqlDataTypeOption": "VarChar",
+                "Parameters": [
+                  {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 37,
+                      "startOffset": 108,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "60"
+                  }
+                ],
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 28,
+                    "startOffset": 99,
+                    "fragmentLength": 7
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 28,
+                      "startOffset": 99,
+                      "fragmentLength": 7
+                    },
+                    "Value": "VARCHAR",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "SetVariableStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 114,
+            "fragmentLength": 78
+          },
+          "Variable": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 5,
+              "startColumn": 5,
+              "startOffset": 118,
+              "fragmentLength": 15
+            },
+            "Name": "@string_to_trim"
+          },
+          "SeparatorType": "NotSpecified",
+          "FunctionCallExists": false,
+          "Expression": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 5,
+              "startColumn": 23,
+              "startOffset": 136,
+              "fragmentLength": 55
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "     Five spaces are at the beginning of this string."
+          },
+          "AssignmentKind": "Equals"
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 194,
+            "fragmentLength": 95
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 7,
+              "startColumn": 1,
+              "startOffset": 194,
+              "fragmentLength": 94
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 8,
+                  "startOffset": 201,
+                  "fragmentLength": 36
+                },
+                "Expression": {
+                  "$type": "VariableReference",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 8,
+                    "startOffset": 201,
+                    "fragmentLength": 15
+                  },
+                  "Name": "@string_to_trim"
+                },
+                "ColumnName": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 27,
+                    "startOffset": 220,
+                    "fragmentLength": 17
+                  },
+                  "Value": "Original string",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 7,
+                      "startColumn": 27,
+                      "startOffset": 220,
+                      "fragmentLength": 17
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "Original string"
+                  }
+                }
+              },
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 8,
+                  "startOffset": 246,
+                  "fragmentLength": 42
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 8,
+                    "startOffset": 246,
+                    "fragmentLength": 22
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 8,
+                      "startOffset": 246,
+                      "fragmentLength": 5
+                    },
+                    "Value": "LTRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "VariableReference",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 14,
+                        "startOffset": 252,
+                        "fragmentLength": 15
+                      },
+                      "Name": "@string_to_trim"
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "WithArrayWrapper": false
+                },
+                "ColumnName": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 34,
+                    "startOffset": 272,
+                    "fragmentLength": 16
+                  },
+                  "Value": "Without spaces",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 34,
+                      "startOffset": 272,
+                      "fragmentLength": 16
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "Without spaces"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 291,
+            "fragmentLength": 32
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 10,
+              "startColumn": 1,
+              "startOffset": 291,
+              "fragmentLength": 31
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 8,
+                  "startOffset": 298,
+                  "fragmentLength": 24
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 8,
+                    "startOffset": 298,
+                    "fragmentLength": 24
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 8,
+                      "startOffset": 298,
+                      "fragmentLength": 5
+                    },
+                    "Value": "LTRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 10,
+                        "startColumn": 14,
+                        "startOffset": 304,
+                        "fragmentLength": 9
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "123abc."
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 10,
+                        "startColumn": 25,
+                        "startOffset": 315,
+                        "fragmentLength": 6
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "123."
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "WithArrayWrapper": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 325,
+            "fragmentLength": 44
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 12,
+              "startColumn": 1,
+              "startOffset": 325,
+              "fragmentLength": 43
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 12,
+                  "startColumn": 8,
+                  "startOffset": 332,
+                  "fragmentLength": 36
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 12,
+                    "startColumn": 8,
+                    "startOffset": 332,
+                    "fragmentLength": 36
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 12,
+                      "startColumn": 8,
+                      "startOffset": 332,
+                      "fragmentLength": 5
+                    },
+                    "Value": "RTRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 12,
+                        "startColumn": 14,
+                        "startOffset": 338,
+                        "fragmentLength": 29
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "Removes trailing spaces.   "
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "WithArrayWrapper": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "DeclareVariableStatement",
+          "location": {
+            "startLine": 14,
+            "startColumn": 1,
+            "startOffset": 371,
+            "fragmentLength": 40
+          },
+          "Declarations": [
+            {
+              "$type": "DeclareVariableElement",
+              "location": {
+                "startLine": 14,
+                "startColumn": 9,
+                "startOffset": 379,
+                "fragmentLength": 31
+              },
+              "VariableName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 9,
+                  "startOffset": 379,
+                  "fragmentLength": 15
+                },
+                "Value": "@string_to_trim",
+                "QuoteType": "NotQuoted"
+              },
+              "DataType": {
+                "$type": "SqlDataTypeReference",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 28,
+                  "startOffset": 398,
+                  "fragmentLength": 12
+                },
+                "SqlDataTypeOption": "VarChar",
+                "Parameters": [
+                  {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 37,
+                      "startOffset": 407,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "60"
+                  }
+                ],
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 28,
+                    "startOffset": 398,
+                    "fragmentLength": 7
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 28,
+                      "startOffset": 398,
+                      "fragmentLength": 7
+                    },
+                    "Value": "VARCHAR",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "SetVariableStatement",
+          "location": {
+            "startLine": 16,
+            "startColumn": 1,
+            "startOffset": 413,
+            "fragmentLength": 79
+          },
+          "Variable": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 16,
+              "startColumn": 5,
+              "startOffset": 417,
+              "fragmentLength": 15
+            },
+            "Name": "@string_to_trim"
+          },
+          "SeparatorType": "NotSpecified",
+          "FunctionCallExists": false,
+          "Expression": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 16,
+              "startColumn": 23,
+              "startOffset": 435,
+              "fragmentLength": 56
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "Four spaces are after the period in this sentence.    "
+          },
+          "AssignmentKind": "Equals"
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 18,
+            "startColumn": 1,
+            "startOffset": 494,
+            "fragmentLength": 41
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 18,
+              "startColumn": 1,
+              "startOffset": 494,
+              "fragmentLength": 40
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 8,
+                  "startOffset": 501,
+                  "fragmentLength": 33
+                },
+                "Expression": {
+                  "$type": "BinaryExpression",
+                  "location": {
+                    "startLine": 18,
+                    "startColumn": 8,
+                    "startOffset": 501,
+                    "fragmentLength": 33
+                  },
+                  "BinaryExpressionType": "Add",
+                  "FirstExpression": {
+                    "$type": "VariableReference",
+                    "location": {
+                      "startLine": 18,
+                      "startColumn": 8,
+                      "startOffset": 501,
+                      "fragmentLength": 15
+                    },
+                    "Name": "@string_to_trim"
+                  },
+                  "SecondExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 18,
+                      "startColumn": 26,
+                      "startOffset": 519,
+                      "fragmentLength": 15
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": " Next string."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 20,
+            "startColumn": 1,
+            "startOffset": 537,
+            "fragmentLength": 48
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 20,
+              "startColumn": 1,
+              "startOffset": 537,
+              "fragmentLength": 47
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 20,
+                  "startColumn": 8,
+                  "startOffset": 544,
+                  "fragmentLength": 40
+                },
+                "Expression": {
+                  "$type": "BinaryExpression",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 8,
+                    "startOffset": 544,
+                    "fragmentLength": 40
+                  },
+                  "BinaryExpressionType": "Add",
+                  "FirstExpression": {
+                    "$type": "FunctionCall",
+                    "location": {
+                      "startLine": 20,
+                      "startColumn": 8,
+                      "startOffset": 544,
+                      "fragmentLength": 22
+                    },
+                    "FunctionName": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 20,
+                        "startColumn": 8,
+                        "startOffset": 544,
+                        "fragmentLength": 5
+                      },
+                      "Value": "RTRIM",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Parameters": [
+                      {
+                        "$type": "VariableReference",
+                        "location": {
+                          "startLine": 20,
+                          "startColumn": 14,
+                          "startOffset": 550,
+                          "fragmentLength": 15
+                        },
+                        "Name": "@string_to_trim"
+                      }
+                    ],
+                    "UniqueRowFilter": "NotSpecified",
+                    "WithArrayWrapper": false
+                  },
+                  "SecondExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 20,
+                      "startColumn": 33,
+                      "startOffset": 569,
+                      "fragmentLength": 15
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": " Next string."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 22,
+            "startColumn": 1,
+            "startOffset": 587,
+            "fragmentLength": 33
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 22,
+              "startColumn": 1,
+              "startOffset": 587,
+              "fragmentLength": 32
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 8,
+                  "startOffset": 594,
+                  "fragmentLength": 25
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 22,
+                    "startColumn": 8,
+                    "startOffset": 594,
+                    "fragmentLength": 25
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 22,
+                      "startColumn": 8,
+                      "startOffset": 594,
+                      "fragmentLength": 5
+                    },
+                    "Value": "RTRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 22,
+                        "startColumn": 14,
+                        "startOffset": 600,
+                        "fragmentLength": 10
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": ".123abc."
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 22,
+                        "startColumn": 26,
+                        "startOffset": 612,
+                        "fragmentLength": 6
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "abc."
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "WithArrayWrapper": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 24,
+            "startColumn": 1,
+            "startOffset": 622,
+            "fragmentLength": 39
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 24,
+              "startColumn": 1,
+              "startOffset": 622,
+              "fragmentLength": 38
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 8,
+                  "startOffset": 629,
+                  "fragmentLength": 31
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 8,
+                    "startOffset": 629,
+                    "fragmentLength": 21
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 24,
+                      "startColumn": 8,
+                      "startOffset": 629,
+                      "fragmentLength": 4
+                    },
+                    "Value": "TRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 24,
+                        "startColumn": 13,
+                        "startOffset": 634,
+                        "fragmentLength": 15
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "     test    "
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "WithArrayWrapper": false
+                },
+                "ColumnName": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 33,
+                    "startOffset": 654,
+                    "fragmentLength": 6
+                  },
+                  "Value": "Result",
+                  "Identifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 24,
+                      "startColumn": 33,
+                      "startOffset": 654,
+                      "fragmentLength": 6
+                    },
+                    "Value": "Result",
+                    "QuoteType": "NotQuoted"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 26,
+            "startColumn": 1,
+            "startOffset": 663,
+            "fragmentLength": 58
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 26,
+              "startColumn": 1,
+              "startOffset": 663,
+              "fragmentLength": 57
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 26,
+                  "startColumn": 8,
+                  "startOffset": 670,
+                  "fragmentLength": 50
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 26,
+                    "startColumn": 8,
+                    "startOffset": 670,
+                    "fragmentLength": 40
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 26,
+                      "startColumn": 8,
+                      "startOffset": 670,
+                      "fragmentLength": 4
+                    },
+                    "Value": "TRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 26,
+                        "startColumn": 13,
+                        "startOffset": 675,
+                        "fragmentLength": 6
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": ".,! "
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 26,
+                        "startColumn": 25,
+                        "startOffset": 687,
+                        "fragmentLength": 22
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "     #     test    ."
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "WithArrayWrapper": false
+                },
+                "ColumnName": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 26,
+                    "startColumn": 52,
+                    "startOffset": 714,
+                    "fragmentLength": 6
+                  },
+                  "Value": "Result",
+                  "Identifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 26,
+                      "startColumn": 52,
+                      "startOffset": 714,
+                      "fragmentLength": 6
+                    },
+                    "Value": "Result",
+                    "QuoteType": "NotQuoted"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 28,
+            "startColumn": 1,
+            "startOffset": 723,
+            "fragmentLength": 68
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 28,
+              "startColumn": 1,
+              "startOffset": 723,
+              "fragmentLength": 67
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 28,
+                  "startColumn": 8,
+                  "startOffset": 730,
+                  "fragmentLength": 60
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 8,
+                    "startOffset": 730,
+                    "fragmentLength": 50
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 8,
+                      "startOffset": 730,
+                      "fragmentLength": 4
+                    },
+                    "Value": "TRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 28,
+                        "startColumn": 22,
+                        "startOffset": 744,
+                        "fragmentLength": 6
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": ".,! "
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 28,
+                        "startColumn": 34,
+                        "startOffset": 756,
+                        "fragmentLength": 23
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "     .#     test    ."
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "TrimOptions": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": -1,
+                      "startColumn": -1,
+                      "startOffset": -1,
+                      "fragmentLength": -1
+                    },
+                    "Value": "LEADING",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "WithArrayWrapper": false
+                },
+                "ColumnName": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 62,
+                    "startOffset": 784,
+                    "fragmentLength": 6
+                  },
+                  "Value": "Result",
+                  "Identifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 62,
+                      "startOffset": 784,
+                      "fragmentLength": 6
+                    },
+                    "Value": "Result",
+                    "QuoteType": "NotQuoted"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 30,
+            "startColumn": 1,
+            "startOffset": 793,
+            "fragmentLength": 69
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 30,
+              "startColumn": 1,
+              "startOffset": 793,
+              "fragmentLength": 68
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 30,
+                  "startColumn": 8,
+                  "startOffset": 800,
+                  "fragmentLength": 61
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 30,
+                    "startColumn": 8,
+                    "startOffset": 800,
+                    "fragmentLength": 51
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 30,
+                      "startColumn": 8,
+                      "startOffset": 800,
+                      "fragmentLength": 4
+                    },
+                    "Value": "TRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 30,
+                        "startColumn": 23,
+                        "startOffset": 815,
+                        "fragmentLength": 6
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": ".,! "
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 30,
+                        "startColumn": 35,
+                        "startOffset": 827,
+                        "fragmentLength": 23
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "     .#     test    ."
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "TrimOptions": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": -1,
+                      "startColumn": -1,
+                      "startOffset": -1,
+                      "fragmentLength": -1
+                    },
+                    "Value": "TRAILING",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "WithArrayWrapper": false
+                },
+                "ColumnName": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 30,
+                    "startColumn": 63,
+                    "startOffset": 855,
+                    "fragmentLength": 6
+                  },
+                  "Value": "Result",
+                  "Identifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 30,
+                      "startColumn": 63,
+                      "startOffset": 855,
+                      "fragmentLength": 6
+                    },
+                    "Value": "Result",
+                    "QuoteType": "NotQuoted"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 32,
+            "startColumn": 1,
+            "startOffset": 864,
+            "fragmentLength": 52
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 32,
+              "startColumn": 1,
+              "startOffset": 864,
+              "fragmentLength": 51
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 32,
+                  "startColumn": 8,
+                  "startOffset": 871,
+                  "fragmentLength": 44
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 32,
+                    "startColumn": 8,
+                    "startOffset": 871,
+                    "fragmentLength": 34
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 32,
+                      "startColumn": 8,
+                      "startOffset": 871,
+                      "fragmentLength": 4
+                    },
+                    "Value": "TRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 32,
+                        "startColumn": 19,
+                        "startOffset": 882,
+                        "fragmentLength": 5
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "123"
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 32,
+                        "startColumn": 30,
+                        "startOffset": 893,
+                        "fragmentLength": 11
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "123abc123"
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "TrimOptions": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": -1,
+                      "startColumn": -1,
+                      "startOffset": -1,
+                      "fragmentLength": -1
+                    },
+                    "Value": "BOTH",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "WithArrayWrapper": false
+                },
+                "ColumnName": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 32,
+                    "startColumn": 46,
+                    "startOffset": 909,
+                    "fragmentLength": 6
+                  },
+                  "Value": "Result",
+                  "Identifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 32,
+                      "startColumn": 46,
+                      "startOffset": 909,
+                      "fragmentLength": 6
+                    },
+                    "Value": "Result",
+                    "QuoteType": "NotQuoted"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "DeclareVariableStatement",
+          "location": {
+            "startLine": 34,
+            "startColumn": 1,
+            "startOffset": 918,
+            "fragmentLength": 40
+          },
+          "Declarations": [
+            {
+              "$type": "DeclareVariableElement",
+              "location": {
+                "startLine": 34,
+                "startColumn": 9,
+                "startOffset": 926,
+                "fragmentLength": 31
+              },
+              "VariableName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 34,
+                  "startColumn": 9,
+                  "startOffset": 926,
+                  "fragmentLength": 15
+                },
+                "Value": "@string_to_trim",
+                "QuoteType": "NotQuoted"
+              },
+              "DataType": {
+                "$type": "SqlDataTypeReference",
+                "location": {
+                  "startLine": 34,
+                  "startColumn": 28,
+                  "startOffset": 945,
+                  "fragmentLength": 12
+                },
+                "SqlDataTypeOption": "VarChar",
+                "Parameters": [
+                  {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 34,
+                      "startColumn": 37,
+                      "startOffset": 954,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "60"
+                  }
+                ],
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 34,
+                    "startColumn": 28,
+                    "startOffset": 945,
+                    "fragmentLength": 7
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 34,
+                      "startColumn": 28,
+                      "startOffset": 945,
+                      "fragmentLength": 7
+                    },
+                    "Value": "VARCHAR",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "SetVariableStatement",
+          "location": {
+            "startLine": 36,
+            "startColumn": 1,
+            "startOffset": 960,
+            "fragmentLength": 74
+          },
+          "Variable": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 36,
+              "startColumn": 5,
+              "startOffset": 964,
+              "fragmentLength": 15
+            },
+            "Name": "@string_to_trim"
+          },
+          "SeparatorType": "NotSpecified",
+          "FunctionCallExists": false,
+          "Expression": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 36,
+              "startColumn": 23,
+              "startOffset": 982,
+              "fragmentLength": 51
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "Four X are after the period in this sentence.XXXX"
+          },
+          "AssignmentKind": "Equals"
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 38,
+            "startColumn": 1,
+            "startOffset": 1036,
+            "fragmentLength": 144
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 38,
+              "startColumn": 1,
+              "startOffset": 1036,
+              "fragmentLength": 143
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 38,
+                  "startColumn": 8,
+                  "startOffset": 1043,
+                  "fragmentLength": 54
+                },
+                "Expression": {
+                  "$type": "BinaryExpression",
+                  "location": {
+                    "startLine": 38,
+                    "startColumn": 8,
+                    "startOffset": 1043,
+                    "fragmentLength": 33
+                  },
+                  "BinaryExpressionType": "Add",
+                  "FirstExpression": {
+                    "$type": "VariableReference",
+                    "location": {
+                      "startLine": 38,
+                      "startColumn": 8,
+                      "startOffset": 1043,
+                      "fragmentLength": 15
+                    },
+                    "Name": "@string_to_trim"
+                  },
+                  "SecondExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 38,
+                      "startColumn": 26,
+                      "startOffset": 1061,
+                      "fragmentLength": 15
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": " Next string."
+                  }
+                },
+                "ColumnName": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 38,
+                    "startColumn": 45,
+                    "startOffset": 1080,
+                    "fragmentLength": 17
+                  },
+                  "Value": "Original string",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 38,
+                      "startColumn": 45,
+                      "startOffset": 1080,
+                      "fragmentLength": 17
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "Original string"
+                  }
+                }
+              },
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 39,
+                  "startColumn": 8,
+                  "startOffset": 1106,
+                  "fragmentLength": 73
+                },
+                "Expression": {
+                  "$type": "BinaryExpression",
+                  "location": {
+                    "startLine": 39,
+                    "startColumn": 8,
+                    "startOffset": 1106,
+                    "fragmentLength": 58
+                  },
+                  "BinaryExpressionType": "Add",
+                  "FirstExpression": {
+                    "$type": "FunctionCall",
+                    "location": {
+                      "startLine": 39,
+                      "startColumn": 8,
+                      "startOffset": 1106,
+                      "fragmentLength": 40
+                    },
+                    "FunctionName": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 39,
+                        "startColumn": 8,
+                        "startOffset": 1106,
+                        "fragmentLength": 4
+                      },
+                      "Value": "TRIM",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Parameters": [
+                      {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 39,
+                          "startColumn": 23,
+                          "startOffset": 1121,
+                          "fragmentLength": 3
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "X"
+                      },
+                      {
+                        "$type": "VariableReference",
+                        "location": {
+                          "startLine": 39,
+                          "startColumn": 32,
+                          "startOffset": 1130,
+                          "fragmentLength": 15
+                        },
+                        "Name": "@string_to_trim"
+                      }
+                    ],
+                    "UniqueRowFilter": "NotSpecified",
+                    "TrimOptions": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": -1,
+                        "startColumn": -1,
+                        "startOffset": -1,
+                        "fragmentLength": -1
+                      },
+                      "Value": "TRAILING",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "WithArrayWrapper": false
+                  },
+                  "SecondExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 39,
+                      "startColumn": 51,
+                      "startOffset": 1149,
+                      "fragmentLength": 15
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": " Next string."
+                  }
+                },
+                "ColumnName": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 39,
+                    "startColumn": 70,
+                    "startOffset": 1168,
+                    "fragmentLength": 11
+                  },
+                  "Value": "Without X",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 39,
+                      "startColumn": 70,
+                      "startOffset": 1168,
+                      "fragmentLength": 11
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "Without X"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 41,
+            "startColumn": 1,
+            "startOffset": 1182,
+            "fragmentLength": 79
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 41,
+              "startColumn": 1,
+              "startOffset": 1182,
+              "fragmentLength": 78
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 41,
+                  "startColumn": 8,
+                  "startOffset": 1189,
+                  "fragmentLength": 71
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 41,
+                    "startColumn": 8,
+                    "startOffset": 1189,
+                    "fragmentLength": 71
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 41,
+                      "startColumn": 8,
+                      "startOffset": 1189,
+                      "fragmentLength": 4
+                    },
+                    "Value": "TRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "FunctionCall",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 13,
+                        "startOffset": 1194,
+                        "fragmentLength": 46
+                      },
+                      "FunctionName": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 41,
+                          "startColumn": 13,
+                          "startOffset": 1194,
+                          "fragmentLength": 5
+                        },
+                        "Value": "LTRIM",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "Parameters": [
+                        {
+                          "$type": "StringLiteral",
+                          "location": {
+                            "startLine": 41,
+                            "startColumn": 19,
+                            "startOffset": 1200,
+                            "fragmentLength": 7
+                          },
+                          "LiteralType": "String",
+                          "IsNational": false,
+                          "IsLargeObject": false,
+                          "Value": " Test"
+                        }
+                      ],
+                      "UniqueRowFilter": "NotSpecified",
+                      "WithArrayWrapper": false,
+                      "Collation": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 41,
+                          "startColumn": 36,
+                          "startOffset": 1217,
+                          "fragmentLength": 23
+                        },
+                        "Value": "Latin1_General_100_BIN2",
+                        "QuoteType": "NotQuoted"
+                      }
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 65,
+                        "startOffset": 1246,
+                        "fragmentLength": 13
+                      },
+                      "LiteralType": "String",
+                      "IsNational": true,
+                      "IsLargeObject": false,
+                      "Value": "TestString"
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "WithArrayWrapper": false
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 43,
+            "startColumn": 1,
+            "startOffset": 1263,
+            "fragmentLength": 45
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 43,
+              "startColumn": 1,
+              "startOffset": 1263,
+              "fragmentLength": 44
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 43,
+                  "startColumn": 8,
+                  "startOffset": 1270,
+                  "fragmentLength": 37
+                },
+                "Expression": {
+                  "$type": "FunctionCall",
+                  "location": {
+                    "startLine": 43,
+                    "startColumn": 8,
+                    "startOffset": 1270,
+                    "fragmentLength": 37
+                  },
+                  "FunctionName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 43,
+                      "startColumn": 8,
+                      "startOffset": 1270,
+                      "fragmentLength": 4
+                    },
+                    "Value": "TRIM",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "BinaryExpression",
+                      "location": {
+                        "startLine": 43,
+                        "startColumn": 13,
+                        "startOffset": 1275,
+                        "fragmentLength": 12
+                      },
+                      "BinaryExpressionType": "Add",
+                      "FirstExpression": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 43,
+                          "startColumn": 13,
+                          "startOffset": 1275,
+                          "fragmentLength": 6
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "Test"
+                      },
+                      "SecondExpression": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 43,
+                          "startColumn": 22,
+                          "startOffset": 1284,
+                          "fragmentLength": 3
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "S"
+                      }
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 43,
+                        "startColumn": 31,
+                        "startOffset": 1293,
+                        "fragmentLength": 13
+                      },
+                      "LiteralType": "String",
+                      "IsNational": true,
+                      "IsLargeObject": false,
+                      "Value": "TestString"
+                    }
+                  ],
+                  "UniqueRowFilter": "NotSpecified",
+                  "WithArrayWrapper": false
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

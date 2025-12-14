@@ -1,0 +1,733 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 753
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 42,
+        "fragmentLength": 710
+      },
+      "Statements": [
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 42,
+            "fragmentLength": 99
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 2,
+              "startColumn": 26,
+              "startOffset": 67,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 26,
+                "startOffset": 67,
+                "fragmentLength": 2
+              },
+              "Value": "t2",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LowPriorityLockWaitTableSwitchOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 35,
+                "startOffset": 76,
+                "fragmentLength": 64
+              },
+              "Options": [
+                {
+                  "$type": "LowPriorityLockWaitMaxDurationOption",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 57,
+                    "startOffset": 98,
+                    "fragmentLength": 16
+                  },
+                  "MaxDuration": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 72,
+                      "startOffset": 113,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "0"
+                  },
+                  "OptionKind": "MaxDuration"
+                },
+                {
+                  "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 75,
+                    "startOffset": 116,
+                    "fragmentLength": 23
+                  },
+                  "AbortAfterWait": "None",
+                  "OptionKind": "AbortAfterWait"
+                }
+              ],
+              "OptionKind": "LowPriorityLockWait"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 2,
+              "startColumn": 13,
+              "startOffset": 54,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 13,
+                "startOffset": 54,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 142,
+            "fragmentLength": 111
+          },
+          "SourcePartitionNumber": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 3,
+              "startColumn": 33,
+              "startOffset": 174,
+              "fragmentLength": 1
+            },
+            "LiteralType": "Integer",
+            "Value": "1"
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 3,
+              "startColumn": 38,
+              "startOffset": 179,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 38,
+                "startOffset": 179,
+                "fragmentLength": 2
+              },
+              "Value": "t2",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LowPriorityLockWaitTableSwitchOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 47,
+                "startOffset": 188,
+                "fragmentLength": 64
+              },
+              "Options": [
+                {
+                  "$type": "LowPriorityLockWaitMaxDurationOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 69,
+                    "startOffset": 210,
+                    "fragmentLength": 16
+                  },
+                  "MaxDuration": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 84,
+                      "startOffset": 225,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1"
+                  },
+                  "OptionKind": "MaxDuration"
+                },
+                {
+                  "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 87,
+                    "startOffset": 228,
+                    "fragmentLength": 23
+                  },
+                  "AbortAfterWait": "Self",
+                  "OptionKind": "AbortAfterWait"
+                }
+              ],
+              "OptionKind": "LowPriorityLockWait"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 3,
+              "startColumn": 13,
+              "startOffset": 154,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 13,
+                "startOffset": 154,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 254,
+            "fragmentLength": 127
+          },
+          "SourcePartitionNumber": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 4,
+              "startColumn": 33,
+              "startOffset": 286,
+              "fragmentLength": 1
+            },
+            "LiteralType": "Integer",
+            "Value": "1"
+          },
+          "TargetPartitionNumber": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 4,
+              "startColumn": 51,
+              "startOffset": 304,
+              "fragmentLength": 1
+            },
+            "LiteralType": "Integer",
+            "Value": "1"
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 4,
+              "startColumn": 38,
+              "startOffset": 291,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 4,
+                "startColumn": 38,
+                "startOffset": 291,
+                "fragmentLength": 2
+              },
+              "Value": "t2",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LowPriorityLockWaitTableSwitchOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 59,
+                "startOffset": 312,
+                "fragmentLength": 68
+              },
+              "Options": [
+                {
+                  "$type": "LowPriorityLockWaitMaxDurationOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 81,
+                    "startOffset": 334,
+                    "fragmentLength": 16
+                  },
+                  "MaxDuration": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 96,
+                      "startOffset": 349,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1"
+                  },
+                  "OptionKind": "MaxDuration"
+                },
+                {
+                  "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 99,
+                    "startOffset": 352,
+                    "fragmentLength": 27
+                  },
+                  "AbortAfterWait": "Blockers",
+                  "OptionKind": "AbortAfterWait"
+                }
+              ],
+              "OptionKind": "LowPriorityLockWait"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 4,
+              "startColumn": 13,
+              "startOffset": 266,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 4,
+                "startColumn": 13,
+                "startOffset": 266,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 382,
+            "fragmentLength": 110
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 5,
+              "startColumn": 26,
+              "startOffset": 407,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 26,
+                "startOffset": 407,
+                "fragmentLength": 2
+              },
+              "Value": "t2",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LowPriorityLockWaitTableSwitchOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 35,
+                "startOffset": 416,
+                "fragmentLength": 75
+              },
+              "Options": [
+                {
+                  "$type": "LowPriorityLockWaitMaxDurationOption",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 57,
+                    "startOffset": 438,
+                    "fragmentLength": 27
+                  },
+                  "MaxDuration": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 72,
+                      "startOffset": 453,
+                      "fragmentLength": 4
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1440"
+                  },
+                  "Unit": "Minutes",
+                  "OptionKind": "MaxDuration"
+                },
+                {
+                  "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 86,
+                    "startOffset": 467,
+                    "fragmentLength": 23
+                  },
+                  "AbortAfterWait": "None",
+                  "OptionKind": "AbortAfterWait"
+                }
+              ],
+              "OptionKind": "LowPriorityLockWait"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 5,
+              "startColumn": 13,
+              "startOffset": 394,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 13,
+                "startOffset": 394,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 493,
+            "fragmentLength": 123
+          },
+          "SourcePartitionNumber": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 6,
+              "startColumn": 33,
+              "startOffset": 525,
+              "fragmentLength": 1
+            },
+            "LiteralType": "Integer",
+            "Value": "1"
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 6,
+              "startColumn": 38,
+              "startOffset": 530,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 6,
+                "startColumn": 38,
+                "startOffset": 530,
+                "fragmentLength": 2
+              },
+              "Value": "t2",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LowPriorityLockWaitTableSwitchOption",
+              "location": {
+                "startLine": 6,
+                "startColumn": 47,
+                "startOffset": 539,
+                "fragmentLength": 76
+              },
+              "Options": [
+                {
+                  "$type": "LowPriorityLockWaitMaxDurationOption",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 69,
+                    "startOffset": 561,
+                    "fragmentLength": 28
+                  },
+                  "MaxDuration": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 84,
+                      "startOffset": 576,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "71582"
+                  },
+                  "Unit": "Minutes",
+                  "OptionKind": "MaxDuration"
+                },
+                {
+                  "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 99,
+                    "startOffset": 591,
+                    "fragmentLength": 23
+                  },
+                  "AbortAfterWait": "Self",
+                  "OptionKind": "AbortAfterWait"
+                }
+              ],
+              "OptionKind": "LowPriorityLockWait"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 6,
+              "startColumn": 13,
+              "startOffset": 505,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 6,
+                "startColumn": 13,
+                "startOffset": 505,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 617,
+            "fragmentLength": 135
+          },
+          "SourcePartitionNumber": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 7,
+              "startColumn": 33,
+              "startOffset": 649,
+              "fragmentLength": 1
+            },
+            "LiteralType": "Integer",
+            "Value": "1"
+          },
+          "TargetPartitionNumber": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 7,
+              "startColumn": 51,
+              "startOffset": 667,
+              "fragmentLength": 1
+            },
+            "LiteralType": "Integer",
+            "Value": "1"
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 7,
+              "startColumn": 38,
+              "startOffset": 654,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 38,
+                "startOffset": 654,
+                "fragmentLength": 2
+              },
+              "Value": "t2",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LowPriorityLockWaitTableSwitchOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 59,
+                "startOffset": 675,
+                "fragmentLength": 76
+              },
+              "Options": [
+                {
+                  "$type": "LowPriorityLockWaitMaxDurationOption",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 81,
+                    "startOffset": 697,
+                    "fragmentLength": 24
+                  },
+                  "MaxDuration": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 7,
+                      "startColumn": 96,
+                      "startOffset": 712,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "0"
+                  },
+                  "Unit": "Minutes",
+                  "OptionKind": "MaxDuration"
+                },
+                {
+                  "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 107,
+                    "startOffset": 723,
+                    "fragmentLength": 27
+                  },
+                  "AbortAfterWait": "Blockers",
+                  "OptionKind": "AbortAfterWait"
+                }
+              ],
+              "OptionKind": "LowPriorityLockWait"
+            }
+          ],
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 7,
+              "startColumn": 13,
+              "startOffset": 629,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 13,
+                "startOffset": 629,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

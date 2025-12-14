@@ -1,0 +1,2632 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1733
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 27,
+        "fragmentLength": 1704
+      },
+      "Statements": [
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 27,
+            "fragmentLength": 38
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 2,
+              "startColumn": 29,
+              "startOffset": 55,
+              "fragmentLength": 10
+            },
+            "Value": "dataFile",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 2,
+                "startColumn": 29,
+                "startOffset": 55,
+                "fragmentLength": 10
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "dataFile"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 2,
+              "startColumn": 13,
+              "startOffset": 39,
+              "fragmentLength": 10
+            },
+            "DatabaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 13,
+                "startOffset": 39,
+                "fragmentLength": 3
+              },
+              "Value": "db1",
+              "QuoteType": "NotQuoted"
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 17,
+                "startOffset": 43,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 21,
+                "startOffset": 47,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 3,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 66,
+            "fragmentLength": 32
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 3,
+              "startColumn": 25,
+              "startOffset": 90,
+              "fragmentLength": 8
+            },
+            "Value": "someFile",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 25,
+                "startOffset": 90,
+                "fragmentLength": 8
+              },
+              "Value": "someFile",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 3,
+              "startColumn": 13,
+              "startOffset": 78,
+              "fragmentLength": 6
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 13,
+                "startOffset": 78,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 17,
+                "startOffset": 82,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 99,
+            "fragmentLength": 22
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 4,
+              "startColumn": 21,
+              "startOffset": 119,
+              "fragmentLength": 2
+            },
+            "Value": "11",
+            "ValueExpression": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 4,
+                "startColumn": 21,
+                "startOffset": 119,
+                "fragmentLength": 2
+              },
+              "LiteralType": "Integer",
+              "Value": "11"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 4,
+              "startColumn": 13,
+              "startOffset": 111,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 4,
+                "startColumn": 13,
+                "startOffset": 111,
+                "fragmentLength": 2
+              },
+              "Value": "v1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 151,
+            "fragmentLength": 104
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 7,
+              "startColumn": 21,
+              "startOffset": 171,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 7,
+                "startColumn": 21,
+                "startOffset": 171,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 7,
+              "startColumn": 13,
+              "startOffset": 163,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 13,
+                "startOffset": 163,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 32,
+                "startOffset": 182,
+                "fragmentLength": 14
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 44,
+                  "startOffset": 194,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "OptionKind": "BatchSize"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 48,
+                "startOffset": 198,
+                "fragmentLength": 17
+              },
+              "OptionKind": "CheckConstraints"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 67,
+                "startOffset": 217,
+                "fragmentLength": 14
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 78,
+                  "startOffset": 228,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "866"
+              },
+              "OptionKind": "CodePage"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 83,
+                "startOffset": 233,
+                "fragmentLength": 21
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 98,
+                  "startOffset": 248,
+                  "fragmentLength": 6
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "char"
+              },
+              "OptionKind": "DataFileType"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 256,
+            "fragmentLength": 106
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 8,
+              "startColumn": 21,
+              "startOffset": 276,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 8,
+                "startColumn": 21,
+                "startOffset": 276,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 8,
+              "startColumn": 13,
+              "startOffset": 268,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 13,
+                "startOffset": 268,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 32,
+                "startOffset": 287,
+                "fragmentLength": 14
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 44,
+                  "startOffset": 299,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "OptionKind": "BatchSize"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 48,
+                "startOffset": 303,
+                "fragmentLength": 17
+              },
+              "OptionKind": "CheckConstraints"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 67,
+                "startOffset": 322,
+                "fragmentLength": 16
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 78,
+                  "startOffset": 333,
+                  "fragmentLength": 5
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "866"
+              },
+              "OptionKind": "CodePage"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 85,
+                "startOffset": 340,
+                "fragmentLength": 21
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 100,
+                  "startOffset": 355,
+                  "fragmentLength": 6
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "char"
+              },
+              "OptionKind": "DataFileType"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 363,
+            "fragmentLength": 108
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 9,
+              "startColumn": 21,
+              "startOffset": 383,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 9,
+                "startColumn": 21,
+                "startOffset": 383,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 9,
+              "startColumn": 13,
+              "startOffset": 375,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 13,
+                "startOffset": 375,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 32,
+                "startOffset": 394,
+                "fragmentLength": 14
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 44,
+                  "startOffset": 406,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "OptionKind": "BatchSize"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 48,
+                "startOffset": 410,
+                "fragmentLength": 17
+              },
+              "OptionKind": "CheckConstraints"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 67,
+                "startOffset": 429,
+                "fragmentLength": 18
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 78,
+                  "startOffset": 440,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "65001"
+              },
+              "OptionKind": "CodePage"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 87,
+                "startOffset": 449,
+                "fragmentLength": 21
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 102,
+                  "startOffset": 464,
+                  "fragmentLength": 6
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "char"
+              },
+              "OptionKind": "DataFileType"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 472,
+            "fragmentLength": 96
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 10,
+              "startColumn": 21,
+              "startOffset": 492,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 10,
+                "startColumn": 21,
+                "startOffset": 492,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 10,
+              "startColumn": 13,
+              "startOffset": 484,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 10,
+                "startColumn": 13,
+                "startOffset": 484,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 10,
+                "startColumn": 32,
+                "startOffset": 503,
+                "fragmentLength": 16
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 43,
+                  "startOffset": 514,
+                  "fragmentLength": 5
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "ACP"
+              },
+              "OptionKind": "CodePage"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 10,
+                "startColumn": 50,
+                "startOffset": 521,
+                "fragmentLength": 23
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 65,
+                  "startOffset": 536,
+                  "fragmentLength": 8
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "native"
+              },
+              "OptionKind": "DataFileType"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 10,
+                "startColumn": 75,
+                "startOffset": 546,
+                "fragmentLength": 21
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 93,
+                  "startOffset": 564,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": ":"
+              },
+              "OptionKind": "FieldTerminator"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 569,
+            "fragmentLength": 89
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 11,
+              "startColumn": 21,
+              "startOffset": 589,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 11,
+                "startColumn": 21,
+                "startOffset": 589,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 11,
+              "startColumn": 13,
+              "startOffset": 581,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 11,
+                "startColumn": 13,
+                "startOffset": 581,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 32,
+                "startOffset": 600,
+                "fragmentLength": 16
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 43,
+                  "startOffset": 611,
+                  "fragmentLength": 5
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "OEM"
+              },
+              "OptionKind": "CodePage"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 50,
+                "startOffset": 618,
+                "fragmentLength": 25
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 65,
+                  "startOffset": 633,
+                  "fragmentLength": 10
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "widechar"
+              },
+              "OptionKind": "DataFileType"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 77,
+                "startOffset": 645,
+                "fragmentLength": 12
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 88,
+                  "startOffset": 656,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "5"
+              },
+              "OptionKind": "FirstRow"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 659,
+            "fragmentLength": 103
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 12,
+              "startColumn": 21,
+              "startOffset": 679,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 12,
+                "startColumn": 21,
+                "startOffset": 679,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 12,
+              "startColumn": 13,
+              "startOffset": 671,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 12,
+                "startColumn": 13,
+                "startOffset": 671,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 12,
+                "startColumn": 32,
+                "startOffset": 690,
+                "fragmentLength": 16
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 12,
+                  "startColumn": 43,
+                  "startOffset": 701,
+                  "fragmentLength": 5
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "RAW"
+              },
+              "OptionKind": "CodePage"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 12,
+                "startColumn": 50,
+                "startOffset": 708,
+                "fragmentLength": 27
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 12,
+                  "startColumn": 65,
+                  "startOffset": 723,
+                  "fragmentLength": 12
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "widenative"
+              },
+              "OptionKind": "DataFileType"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 12,
+                "startColumn": 79,
+                "startOffset": 737,
+                "fragmentLength": 13
+              },
+              "OptionKind": "FireTriggers"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 12,
+                "startColumn": 94,
+                "startOffset": 752,
+                "fragmentLength": 9
+              },
+              "OptionKind": "KeepNulls"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 763,
+            "fragmentLength": 108
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 13,
+              "startColumn": 21,
+              "startOffset": 783,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 13,
+                "startColumn": 21,
+                "startOffset": 783,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 13,
+              "startColumn": 13,
+              "startOffset": 775,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 13,
+                "startColumn": 13,
+                "startOffset": 775,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 32,
+                "startOffset": 794,
+                "fragmentLength": 23
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 45,
+                  "startOffset": 807,
+                  "fragmentLength": 10
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "SomeFile"
+              },
+              "OptionKind": "FormatFile"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 57,
+                "startOffset": 819,
+                "fragmentLength": 12
+              },
+              "OptionKind": "KeepIdentity"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 71,
+                "startOffset": 833,
+                "fragmentLength": 23
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 93,
+                  "startOffset": 855,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "OptionKind": "KilobytesPerBatch"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 96,
+                "startOffset": 858,
+                "fragmentLength": 12
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 106,
+                  "startOffset": 868,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "OptionKind": "LastRow"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 14,
+            "startColumn": 1,
+            "startOffset": 872,
+            "fragmentLength": 113
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 14,
+              "startColumn": 21,
+              "startOffset": 892,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 14,
+                "startColumn": 21,
+                "startOffset": 892,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 14,
+              "startColumn": 13,
+              "startOffset": 884,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 14,
+                "startColumn": 13,
+                "startOffset": 884,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 14,
+                "startColumn": 32,
+                "startOffset": 903,
+                "fragmentLength": 13
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 44,
+                  "startOffset": 915,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "0"
+              },
+              "OptionKind": "MaxErrors"
+            },
+            {
+              "$type": "OrderBulkInsertOption",
+              "location": {
+                "startLine": 14,
+                "startColumn": 47,
+                "startOffset": 918,
+                "fragmentLength": 34
+              },
+              "Columns": [
+                {
+                  "$type": "ColumnWithSortOrder",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 54,
+                    "startOffset": 925,
+                    "fragmentLength": 13
+                  },
+                  "Column": {
+                    "$type": "ColumnReferenceExpression",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 54,
+                      "startOffset": 925,
+                      "fragmentLength": 9
+                    },
+                    "ColumnType": "Regular",
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "location": {
+                        "startLine": 14,
+                        "startColumn": 54,
+                        "startOffset": 925,
+                        "fragmentLength": 9
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 14,
+                            "startColumn": 54,
+                            "startOffset": 925,
+                            "fragmentLength": 9
+                          },
+                          "Value": "timestamp",
+                          "QuoteType": "NotQuoted"
+                        }
+                      ]
+                    }
+                  },
+                  "SortOrder": "Ascending"
+                },
+                {
+                  "$type": "ColumnWithSortOrder",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 69,
+                    "startOffset": 940,
+                    "fragmentLength": 7
+                  },
+                  "Column": {
+                    "$type": "ColumnReferenceExpression",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 69,
+                      "startOffset": 940,
+                      "fragmentLength": 2
+                    },
+                    "ColumnType": "Regular",
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "location": {
+                        "startLine": 14,
+                        "startColumn": 69,
+                        "startOffset": 940,
+                        "fragmentLength": 2
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 14,
+                            "startColumn": 69,
+                            "startOffset": 940,
+                            "fragmentLength": 2
+                          },
+                          "Value": "t1",
+                          "QuoteType": "NotQuoted"
+                        }
+                      ]
+                    }
+                  },
+                  "SortOrder": "Descending"
+                },
+                {
+                  "$type": "ColumnWithSortOrder",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 78,
+                    "startOffset": 949,
+                    "fragmentLength": 2
+                  },
+                  "Column": {
+                    "$type": "ColumnReferenceExpression",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 78,
+                      "startOffset": 949,
+                      "fragmentLength": 2
+                    },
+                    "ColumnType": "Regular",
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "location": {
+                        "startLine": 14,
+                        "startColumn": 78,
+                        "startOffset": 949,
+                        "fragmentLength": 2
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 14,
+                            "startColumn": 78,
+                            "startOffset": 949,
+                            "fragmentLength": 2
+                          },
+                          "Value": "t2",
+                          "QuoteType": "NotQuoted"
+                        }
+                      ]
+                    }
+                  },
+                  "SortOrder": "NotSpecified"
+                }
+              ],
+              "IsUnique": false,
+              "OptionKind": "Order"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 14,
+                "startColumn": 83,
+                "startOffset": 954,
+                "fragmentLength": 30
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 98,
+                  "startOffset": 969,
+                  "fragmentLength": 15
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "widechar_ansi"
+              },
+              "OptionKind": "DataFileType"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 15,
+            "startColumn": 1,
+            "startOffset": 986,
+            "fragmentLength": 102
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 15,
+              "startColumn": 21,
+              "startOffset": 1006,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 15,
+                "startColumn": 21,
+                "startOffset": 1006,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 15,
+              "startColumn": 13,
+              "startOffset": 998,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 15,
+                "startColumn": 13,
+                "startOffset": 998,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "OrderBulkInsertOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 32,
+                "startOffset": 1017,
+                "fragmentLength": 10
+              },
+              "Columns": [
+                {
+                  "$type": "ColumnWithSortOrder",
+                  "location": {
+                    "startLine": 15,
+                    "startColumn": 39,
+                    "startOffset": 1024,
+                    "fragmentLength": 2
+                  },
+                  "Column": {
+                    "$type": "ColumnReferenceExpression",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 39,
+                      "startOffset": 1024,
+                      "fragmentLength": 2
+                    },
+                    "ColumnType": "Regular",
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "location": {
+                        "startLine": 15,
+                        "startColumn": 39,
+                        "startOffset": 1024,
+                        "fragmentLength": 2
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 15,
+                            "startColumn": 39,
+                            "startOffset": 1024,
+                            "fragmentLength": 2
+                          },
+                          "Value": "t1",
+                          "QuoteType": "NotQuoted"
+                        }
+                      ]
+                    }
+                  },
+                  "SortOrder": "NotSpecified"
+                }
+              ],
+              "IsUnique": false,
+              "OptionKind": "Order"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 44,
+                "startOffset": 1029,
+                "fragmentLength": 19
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 60,
+                  "startOffset": 1045,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "!"
+              },
+              "OptionKind": "RowTerminator"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 65,
+                "startOffset": 1050,
+                "fragmentLength": 7
+              },
+              "OptionKind": "TabLock"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 74,
+                "startOffset": 1059,
+                "fragmentLength": 28
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 89,
+                  "startOffset": 1074,
+                  "fragmentLength": 13
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "dts_buffers"
+              },
+              "OptionKind": "DataFileType"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 16,
+            "startColumn": 1,
+            "startOffset": 1089,
+            "fragmentLength": 62
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 16,
+              "startColumn": 21,
+              "startOffset": 1109,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 16,
+                "startColumn": 21,
+                "startOffset": 1109,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 16,
+              "startColumn": 13,
+              "startOffset": 1101,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 16,
+                "startColumn": 13,
+                "startOffset": 1101,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 16,
+                "startColumn": 32,
+                "startOffset": 1120,
+                "fragmentLength": 17
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 42,
+                  "startOffset": 1130,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "file1"
+              },
+              "OptionKind": "ErrorFile"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 16,
+                "startColumn": 51,
+                "startOffset": 1139,
+                "fragmentLength": 11
+              },
+              "OptionKind": "NoTriggers"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 1152,
+            "fragmentLength": 50
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 17,
+              "startColumn": 21,
+              "startOffset": 1172,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 17,
+                "startColumn": 21,
+                "startOffset": 1172,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 17,
+              "startColumn": 13,
+              "startOffset": 1164,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 17,
+                "startColumn": 13,
+                "startOffset": 1164,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 17,
+                "startColumn": 32,
+                "startOffset": 1183,
+                "fragmentLength": 18
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 49,
+                  "startOffset": 1200,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "OptionKind": "RowsPerBatch"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 18,
+            "startColumn": 1,
+            "startOffset": 1203,
+            "fragmentLength": 54
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 18,
+              "startColumn": 21,
+              "startOffset": 1223,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 18,
+                "startColumn": 21,
+                "startOffset": 1223,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 18,
+              "startColumn": 13,
+              "startOffset": 1215,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 18,
+                "startColumn": 13,
+                "startOffset": 1215,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 18,
+                "startColumn": 32,
+                "startOffset": 1234,
+                "fragmentLength": 22
+              },
+              "Value": {
+                "$type": "NumericLiteral",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 49,
+                  "startOffset": 1251,
+                  "fragmentLength": 5
+                },
+                "LiteralType": "Numeric",
+                "Value": "100.0"
+              },
+              "OptionKind": "RowsPerBatch"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 19,
+            "startColumn": 1,
+            "startOffset": 1258,
+            "fragmentLength": 46
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 19,
+              "startColumn": 21,
+              "startOffset": 1278,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 19,
+                "startColumn": 21,
+                "startOffset": 1278,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 19,
+              "startColumn": 13,
+              "startOffset": 1270,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 19,
+                "startColumn": 13,
+                "startOffset": 1270,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 19,
+                "startColumn": 32,
+                "startOffset": 1289,
+                "fragmentLength": 14
+              },
+              "OptionKind": "IncludeHidden"
+            }
+          ]
+        },
+        {
+          "$type": "BulkInsertStatement",
+          "location": {
+            "startLine": 20,
+            "startColumn": 1,
+            "startOffset": 1305,
+            "fragmentLength": 68
+          },
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 20,
+              "startColumn": 21,
+              "startOffset": 1325,
+              "fragmentLength": 4
+            },
+            "Value": "f1",
+            "ValueExpression": {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 20,
+                "startColumn": 21,
+                "startOffset": 1325,
+                "fragmentLength": 4
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "f1"
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 20,
+              "startColumn": 13,
+              "startOffset": 1317,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 20,
+                "startColumn": 13,
+                "startOffset": 1317,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 20,
+                "startColumn": 32,
+                "startOffset": 1336,
+                "fragmentLength": 14
+              },
+              "OptionKind": "IncludeHidden"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 20,
+                "startColumn": 48,
+                "startOffset": 1352,
+                "fragmentLength": 20
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 20,
+                  "startColumn": 65,
+                  "startOffset": 1369,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "OptionKind": "RowsPerBatch"
+            }
+          ]
+        },
+        {
+          "$type": "InsertBulkStatement",
+          "location": {
+            "startLine": 23,
+            "startColumn": 1,
+            "startOffset": 1402,
+            "fragmentLength": 23
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 23,
+              "startColumn": 14,
+              "startOffset": 1415,
+              "fragmentLength": 10
+            },
+            "DatabaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 23,
+                "startColumn": 14,
+                "startOffset": 1415,
+                "fragmentLength": 3
+              },
+              "Value": "db1",
+              "QuoteType": "NotQuoted"
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 23,
+                "startColumn": 18,
+                "startOffset": 1419,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 23,
+                "startColumn": 22,
+                "startOffset": 1423,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 3,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "InsertBulkStatement",
+          "location": {
+            "startLine": 24,
+            "startColumn": 1,
+            "startOffset": 1427,
+            "fragmentLength": 56
+          },
+          "ColumnDefinitions": [
+            {
+              "$type": "InsertBulkColumnDefinition",
+              "location": {
+                "startLine": 24,
+                "startColumn": 21,
+                "startOffset": 1447,
+                "fragmentLength": 15
+              },
+              "Column": {
+                "$type": "ColumnDefinitionBase",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 21,
+                  "startOffset": 1447,
+                  "fragmentLength": 6
+                },
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 21,
+                    "startOffset": 1447,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 24,
+                    "startOffset": 1450,
+                    "fragmentLength": 3
+                  },
+                  "SqlDataTypeOption": "Int",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 24,
+                      "startColumn": 24,
+                      "startOffset": 1450,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 24,
+                        "startColumn": 24,
+                        "startOffset": 1450,
+                        "fragmentLength": 3
+                      },
+                      "Value": "int",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              "NullNotNull": "NotNull"
+            },
+            {
+              "$type": "InsertBulkColumnDefinition",
+              "location": {
+                "startLine": 24,
+                "startColumn": 38,
+                "startOffset": 1464,
+                "fragmentLength": 7
+              },
+              "Column": {
+                "$type": "ColumnDefinitionBase",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 38,
+                  "startOffset": 1464,
+                  "fragmentLength": 7
+                },
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 38,
+                    "startOffset": 1464,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c2",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 41,
+                    "startOffset": 1467,
+                    "fragmentLength": 4
+                  },
+                  "SqlDataTypeOption": "Char",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 24,
+                      "startColumn": 41,
+                      "startOffset": 1467,
+                      "fragmentLength": 4
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 24,
+                        "startColumn": 41,
+                        "startOffset": 1467,
+                        "fragmentLength": 4
+                      },
+                      "Value": "char",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              "NullNotNull": "NotSpecified"
+            },
+            {
+              "$type": "InsertBulkColumnDefinition",
+              "location": {
+                "startLine": 24,
+                "startColumn": 47,
+                "startOffset": 1473,
+                "fragmentLength": 9
+              },
+              "Column": {
+                "$type": "ColumnDefinitionBase",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 47,
+                  "startOffset": 1473,
+                  "fragmentLength": 9
+                },
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 47,
+                    "startOffset": 1473,
+                    "fragmentLength": 9
+                  },
+                  "Value": "TIMESTAMP",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "NullNotNull": "NotSpecified"
+            }
+          ],
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 24,
+              "startColumn": 13,
+              "startOffset": 1439,
+              "fragmentLength": 6
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 24,
+                "startColumn": 13,
+                "startOffset": 1439,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 24,
+                "startColumn": 17,
+                "startOffset": 1443,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "InsertBulkStatement",
+          "location": {
+            "startLine": 25,
+            "startColumn": 1,
+            "startOffset": 1484,
+            "fragmentLength": 28
+          },
+          "ColumnDefinitions": [
+            {
+              "$type": "InsertBulkColumnDefinition",
+              "location": {
+                "startLine": 25,
+                "startColumn": 17,
+                "startOffset": 1500,
+                "fragmentLength": 11
+              },
+              "Column": {
+                "$type": "ColumnDefinitionBase",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 17,
+                  "startOffset": 1500,
+                  "fragmentLength": 6
+                },
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 25,
+                    "startColumn": 17,
+                    "startOffset": 1500,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 25,
+                    "startColumn": 20,
+                    "startOffset": 1503,
+                    "fragmentLength": 3
+                  },
+                  "SqlDataTypeOption": "Int",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 25,
+                      "startColumn": 20,
+                      "startOffset": 1503,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 25,
+                        "startColumn": 20,
+                        "startOffset": 1503,
+                        "fragmentLength": 3
+                      },
+                      "Value": "int",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              "NullNotNull": "Null"
+            }
+          ],
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 25,
+              "startColumn": 13,
+              "startOffset": 1496,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 25,
+                "startColumn": 13,
+                "startOffset": 1496,
+                "fragmentLength": 2
+              },
+              "Value": "v1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "InsertBulkStatement",
+          "location": {
+            "startLine": 28,
+            "startColumn": 1,
+            "startOffset": 1542,
+            "fragmentLength": 32
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 28,
+              "startColumn": 13,
+              "startOffset": 1554,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 28,
+                "startColumn": 13,
+                "startOffset": 1554,
+                "fragmentLength": 2
+              },
+              "Value": "v1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "OrderBulkInsertOption",
+              "location": {
+                "startLine": 28,
+                "startColumn": 22,
+                "startOffset": 1563,
+                "fragmentLength": 10
+              },
+              "Columns": [
+                {
+                  "$type": "ColumnWithSortOrder",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 29,
+                    "startOffset": 1570,
+                    "fragmentLength": 2
+                  },
+                  "Column": {
+                    "$type": "ColumnReferenceExpression",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 29,
+                      "startOffset": 1570,
+                      "fragmentLength": 2
+                    },
+                    "ColumnType": "Regular",
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "location": {
+                        "startLine": 28,
+                        "startColumn": 29,
+                        "startOffset": 1570,
+                        "fragmentLength": 2
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 28,
+                            "startColumn": 29,
+                            "startOffset": 1570,
+                            "fragmentLength": 2
+                          },
+                          "Value": "t1",
+                          "QuoteType": "NotQuoted"
+                        }
+                      ]
+                    }
+                  },
+                  "SortOrder": "NotSpecified"
+                }
+              ],
+              "IsUnique": false,
+              "OptionKind": "Order"
+            }
+          ]
+        },
+        {
+          "$type": "InsertBulkStatement",
+          "location": {
+            "startLine": 29,
+            "startColumn": 1,
+            "startOffset": 1575,
+            "fragmentLength": 87
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 29,
+              "startColumn": 13,
+              "startOffset": 1587,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 29,
+                "startColumn": 13,
+                "startOffset": 1587,
+                "fragmentLength": 2
+              },
+              "Value": "v1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 29,
+                "startColumn": 22,
+                "startOffset": 1596,
+                "fragmentLength": 17
+              },
+              "OptionKind": "CheckConstraints"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 29,
+                "startColumn": 41,
+                "startOffset": 1615,
+                "fragmentLength": 13
+              },
+              "OptionKind": "FireTriggers"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 29,
+                "startColumn": 56,
+                "startOffset": 1630,
+                "fragmentLength": 9
+              },
+              "OptionKind": "KeepNulls"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 29,
+                "startColumn": 67,
+                "startOffset": 1641,
+                "fragmentLength": 7
+              },
+              "OptionKind": "TabLock"
+            },
+            {
+              "$type": "BulkInsertOption",
+              "location": {
+                "startLine": 29,
+                "startColumn": 76,
+                "startOffset": 1650,
+                "fragmentLength": 11
+              },
+              "OptionKind": "NoTriggers"
+            }
+          ]
+        },
+        {
+          "$type": "InsertBulkStatement",
+          "location": {
+            "startLine": 30,
+            "startColumn": 1,
+            "startOffset": 1663,
+            "fragmentLength": 68
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 30,
+              "startColumn": 13,
+              "startOffset": 1675,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 30,
+                "startColumn": 13,
+                "startOffset": 1675,
+                "fragmentLength": 2
+              },
+              "Value": "v1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 30,
+                "startColumn": 22,
+                "startOffset": 1684,
+                "fragmentLength": 20
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 30,
+                  "startColumn": 39,
+                  "startOffset": 1701,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "OptionKind": "RowsPerBatch"
+            },
+            {
+              "$type": "LiteralBulkInsertOption",
+              "location": {
+                "startLine": 30,
+                "startColumn": 44,
+                "startOffset": 1706,
+                "fragmentLength": 24
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 30,
+                  "startColumn": 66,
+                  "startOffset": 1728,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "64"
+              },
+              "OptionKind": "KilobytesPerBatch"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

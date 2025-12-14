@@ -1,0 +1,379 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 407
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 294
+      },
+      "Statements": [
+        {
+          "$type": "CreateUserStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 118
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 13,
+              "startOffset": 12,
+              "fragmentLength": 14
+            },
+            "Value": "contained_user",
+            "QuoteType": "NotQuoted"
+          },
+          "UserOptions": [
+            {
+              "$type": "LiteralPrincipalOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 10,
+                "startOffset": 36,
+                "fragmentLength": 16
+              },
+              "Value": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 21,
+                  "startOffset": 47,
+                  "fragmentLength": 5
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "foo"
+              },
+              "OptionKind": "Password"
+            },
+            {
+              "$type": "LiteralPrincipalOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 28,
+                "startOffset": 54,
+                "fragmentLength": 23
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 47,
+                  "startOffset": 73,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "Integer",
+                "Value": "1033"
+              },
+              "OptionKind": "DefaultLanguage"
+            },
+            {
+              "$type": "IdentifierPrincipalOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 70,
+                "startOffset": 96,
+                "fragmentLength": 3
+              },
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 70,
+                  "startOffset": 96,
+                  "fragmentLength": 3
+                },
+                "Value": "dbo",
+                "QuoteType": "NotQuoted"
+              },
+              "OptionKind": "DefaultSchema"
+            },
+            {
+              "$type": "LiteralPrincipalOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 75,
+                "startOffset": 101,
+                "fragmentLength": 16
+              },
+              "Value": {
+                "$type": "BinaryLiteral",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 81,
+                  "startOffset": 107,
+                  "fragmentLength": 10
+                },
+                "LiteralType": "Binary",
+                "IsLargeObject": false,
+                "Value": "0xdeadbeef"
+              },
+              "OptionKind": "Sid"
+            }
+          ]
+        },
+        {
+          "$type": "AlterUserStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 120,
+            "fragmentLength": 99
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 12,
+              "startOffset": 131,
+              "fragmentLength": 14
+            },
+            "Value": "contained_user",
+            "QuoteType": "NotQuoted"
+          },
+          "UserOptions": [
+            {
+              "$type": "PasswordAlterPrincipalOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 10,
+                "startOffset": 155,
+                "fragmentLength": 16
+              },
+              "Password": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 21,
+                  "startOffset": 166,
+                  "fragmentLength": 5
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "foo"
+              },
+              "MustChange": false,
+              "Unlock": false,
+              "Hashed": false,
+              "OptionKind": "Password"
+            },
+            {
+              "$type": "IdentifierPrincipalOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 28,
+                "startOffset": 173,
+                "fragmentLength": 23
+              },
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 47,
+                  "startOffset": 192,
+                  "fragmentLength": 4
+                },
+                "Value": "none",
+                "QuoteType": "NotQuoted"
+              },
+              "OptionKind": "DefaultLanguage"
+            },
+            {
+              "$type": "IdentifierPrincipalOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 53,
+                "startOffset": 198,
+                "fragmentLength": 20
+              },
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 70,
+                  "startOffset": 215,
+                  "fragmentLength": 3
+                },
+                "Value": "dbo",
+                "QuoteType": "NotQuoted"
+              },
+              "OptionKind": "DefaultSchema"
+            }
+          ]
+        },
+        {
+          "$type": "AlterUserStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 221,
+            "fragmentLength": 73
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 12,
+              "startOffset": 232,
+              "fragmentLength": 14
+            },
+            "Value": "contained_user",
+            "QuoteType": "NotQuoted"
+          },
+          "UserOptions": [
+            {
+              "$type": "PasswordAlterPrincipalOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 10,
+                "startOffset": 256,
+                "fragmentLength": 37
+              },
+              "Password": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 21,
+                  "startOffset": 267,
+                  "fragmentLength": 5
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "foo"
+              },
+              "OldPassword": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 42,
+                  "startOffset": 288,
+                  "fragmentLength": 5
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "old"
+              },
+              "MustChange": false,
+              "Unlock": false,
+              "Hashed": false,
+              "OptionKind": "Password"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 12,
+        "startColumn": 1,
+        "startOffset": 300,
+        "fragmentLength": 107
+      },
+      "Statements": [
+        {
+          "$type": "CreateUserStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 300,
+            "fragmentLength": 57
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 12,
+              "startColumn": 13,
+              "startOffset": 312,
+              "fragmentLength": 13
+            },
+            "Value": "domain\\user",
+            "QuoteType": "SquareBracket"
+          },
+          "UserOptions": [
+            {
+              "$type": "LiteralPrincipalOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 10,
+                "startOffset": 335,
+                "fragmentLength": 21
+              },
+              "Value": {
+                "$type": "NullLiteral",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 27,
+                  "startOffset": 352,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "Null",
+                "Value": "NULL"
+              },
+              "OptionKind": "DefaultSchema"
+            }
+          ]
+        },
+        {
+          "$type": "AlterUserStatement",
+          "location": {
+            "startLine": 15,
+            "startColumn": 1,
+            "startOffset": 359,
+            "fragmentLength": 48
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 15,
+              "startColumn": 12,
+              "startOffset": 370,
+              "fragmentLength": 5
+            },
+            "Value": "user1",
+            "QuoteType": "NotQuoted"
+          },
+          "UserOptions": [
+            {
+              "$type": "LiteralPrincipalOption",
+              "location": {
+                "startLine": 16,
+                "startColumn": 27,
+                "startOffset": 402,
+                "fragmentLength": 4
+              },
+              "Value": {
+                "$type": "NullLiteral",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 27,
+                  "startOffset": 402,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "Null",
+                "Value": "NULL"
+              },
+              "OptionKind": "DefaultSchema"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 163
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 34,
+        "fragmentLength": 52
+      },
+      "Statements": [
+        {
+          "$type": "WaitForStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 34,
+            "fragmentLength": 52
+          },
+          "WaitForOption": "Statement",
+          "Timeout": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 2,
+              "startColumn": 48,
+              "startOffset": 81,
+              "fragmentLength": 5
+            },
+            "LiteralType": "Integer",
+            "Value": "60000"
+          },
+          "Statement": {
+            "$type": "ReceiveStatement",
+            "location": {
+              "startLine": 2,
+              "startColumn": 10,
+              "startOffset": 43,
+              "fragmentLength": 27
+            },
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 18,
+                  "startOffset": 51,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "Queue": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 2,
+                "startColumn": 25,
+                "startOffset": 58,
+                "fragmentLength": 12
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 25,
+                  "startOffset": 58,
+                  "fragmentLength": 12
+                },
+                "Value": "ExpenseQueue",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            },
+            "IsConversationGroupIdWhere": false
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 4,
+        "startColumn": 1,
+        "startOffset": 90,
+        "fragmentLength": 73
+      },
+      "Statements": [
+        {
+          "$type": "WaitForStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 90,
+            "fragmentLength": 73
+          },
+          "WaitForOption": "Statement",
+          "Statement": {
+            "$type": "GetConversationGroupStatement",
+            "location": {
+              "startLine": 4,
+              "startColumn": 10,
+              "startOffset": 99,
+              "fragmentLength": 63
+            },
+            "GroupId": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 4,
+                "startColumn": 33,
+                "startOffset": 122,
+                "fragmentLength": 22
+              },
+              "Name": "@conversation_group_id"
+            },
+            "Queue": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 4,
+                "startColumn": 61,
+                "startOffset": 150,
+                "fragmentLength": 12
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 61,
+                  "startOffset": 150,
+                  "fragmentLength": 12
+                },
+                "Value": "ExpenseQueue",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

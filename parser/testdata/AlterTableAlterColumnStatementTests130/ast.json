@@ -1,0 +1,3582 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 5532
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 3,
+        "startColumn": 1,
+        "startOffset": 30,
+        "fragmentLength": 5400
+      },
+      "Statements": [
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 30,
+            "fragmentLength": 76
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 33,
+              "startOffset": 62,
+              "fragmentLength": 11
+            },
+            "Value": "my column",
+            "QuoteType": "SquareBracket"
+          },
+          "AlterTableAlterColumnOption": "AddRowGuidCol",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 66,
+                "startOffset": 95,
+                "fragmentLength": 9
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 3,
+              "startColumn": 13,
+              "startOffset": 42,
+              "fragmentLength": 6
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 13,
+                "startOffset": 42,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 17,
+                "startOffset": 46,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 164,
+            "fragmentLength": 77
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 33,
+              "startOffset": 196,
+              "fragmentLength": 11
+            },
+            "Value": "my column",
+            "QuoteType": "SquareBracket"
+          },
+          "AlterTableAlterColumnOption": "AddRowGuidCol",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 66,
+                "startOffset": 229,
+                "fragmentLength": 10
+              },
+              "OptionState": "Off",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 5,
+              "startColumn": 13,
+              "startOffset": 176,
+              "fragmentLength": 6
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 13,
+                "startOffset": 176,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 17,
+                "startOffset": 180,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 300,
+            "fragmentLength": 84
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 49,
+              "startOffset": 348,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "AlterTableAlterColumnOption": "DropRowGuidCol",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 74,
+                "startOffset": 373,
+                "fragmentLength": 9
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 7,
+              "startColumn": 13,
+              "startOffset": 312,
+              "fragmentLength": 22
+            },
+            "DatabaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 13,
+                "startOffset": 312,
+                "fragmentLength": 8
+              },
+              "Value": "tempdb",
+              "QuoteType": "SquareBracket"
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 22,
+                "startOffset": 321,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 26,
+                "startOffset": 325,
+                "fragmentLength": 9
+              },
+              "Value": "table 2",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 3,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 445,
+            "fragmentLength": 85
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 9,
+              "startColumn": 49,
+              "startOffset": 493,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "AlterTableAlterColumnOption": "DropRowGuidCol",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 74,
+                "startOffset": 518,
+                "fragmentLength": 10
+              },
+              "OptionState": "Off",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 9,
+              "startColumn": 13,
+              "startOffset": 457,
+              "fragmentLength": 22
+            },
+            "DatabaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 13,
+                "startOffset": 457,
+                "fragmentLength": 8
+              },
+              "Value": "tempdb",
+              "QuoteType": "SquareBracket"
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 22,
+                "startOffset": 466,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 26,
+                "startOffset": 470,
+                "fragmentLength": 9
+              },
+              "Value": "table 2",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 3,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 592,
+            "fragmentLength": 52
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 11,
+              "startColumn": 29,
+              "startOffset": 620,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 11,
+              "startColumn": 32,
+              "startOffset": 623,
+              "fragmentLength": 3
+            },
+            "SqlDataTypeOption": "Int",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 11,
+                "startColumn": 32,
+                "startOffset": 623,
+                "fragmentLength": 3
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 32,
+                  "startOffset": 623,
+                  "fragmentLength": 3
+                },
+                "Value": "int",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 42,
+                "startOffset": 633,
+                "fragmentLength": 9
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 11,
+              "startColumn": 13,
+              "startOffset": 604,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 11,
+                "startColumn": 13,
+                "startOffset": 604,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 688,
+            "fragmentLength": 53
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 13,
+              "startColumn": 29,
+              "startOffset": 716,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 13,
+              "startColumn": 32,
+              "startOffset": 719,
+              "fragmentLength": 3
+            },
+            "SqlDataTypeOption": "Int",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 13,
+                "startColumn": 32,
+                "startOffset": 719,
+                "fragmentLength": 3
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 32,
+                  "startOffset": 719,
+                  "fragmentLength": 3
+                },
+                "Value": "int",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 42,
+                "startOffset": 729,
+                "fragmentLength": 10
+              },
+              "OptionState": "Off",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 13,
+              "startColumn": 13,
+              "startOffset": 700,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 13,
+                "startColumn": 13,
+                "startOffset": 700,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 15,
+            "startColumn": 1,
+            "startOffset": 786,
+            "fragmentLength": 82
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 15,
+              "startColumn": 29,
+              "startOffset": 814,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 15,
+              "startColumn": 32,
+              "startOffset": 817,
+              "fragmentLength": 11
+            },
+            "SqlDataTypeOption": "VarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 40,
+                  "startOffset": 825,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 15,
+                "startColumn": 32,
+                "startOffset": 817,
+                "fragmentLength": 7
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 32,
+                  "startOffset": 817,
+                  "fragmentLength": 7
+                },
+                "Value": "varchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 72,
+                "startOffset": 857,
+                "fragmentLength": 9
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "Collation": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 15,
+              "startColumn": 52,
+              "startOffset": 837,
+              "fragmentLength": 13
+            },
+            "Value": "SomeCollation",
+            "QuoteType": "NotQuoted"
+          },
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 15,
+              "startColumn": 13,
+              "startOffset": 798,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 15,
+                "startColumn": 13,
+                "startOffset": 798,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 903,
+            "fragmentLength": 83
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 17,
+              "startColumn": 29,
+              "startOffset": 931,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 17,
+              "startColumn": 32,
+              "startOffset": 934,
+              "fragmentLength": 11
+            },
+            "SqlDataTypeOption": "VarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 40,
+                  "startOffset": 942,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 17,
+                "startColumn": 32,
+                "startOffset": 934,
+                "fragmentLength": 7
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 32,
+                  "startOffset": 934,
+                  "fragmentLength": 7
+                },
+                "Value": "varchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 17,
+                "startColumn": 72,
+                "startOffset": 974,
+                "fragmentLength": 10
+              },
+              "OptionState": "Off",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "Collation": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 17,
+              "startColumn": 52,
+              "startOffset": 954,
+              "fragmentLength": 13
+            },
+            "Value": "SomeCollation",
+            "QuoteType": "NotQuoted"
+          },
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 17,
+              "startColumn": 13,
+              "startOffset": 915,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 17,
+                "startColumn": 13,
+                "startOffset": 915,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 19,
+            "startColumn": 1,
+            "startOffset": 1023,
+            "fragmentLength": 87
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 19,
+              "startColumn": 29,
+              "startOffset": 1051,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 19,
+              "startColumn": 32,
+              "startOffset": 1054,
+              "fragmentLength": 11
+            },
+            "SqlDataTypeOption": "VarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 40,
+                  "startOffset": 1062,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 19,
+                "startColumn": 32,
+                "startOffset": 1054,
+                "fragmentLength": 7
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 32,
+                  "startOffset": 1054,
+                  "fragmentLength": 7
+                },
+                "Value": "varchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "Null",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 19,
+                "startColumn": 77,
+                "startOffset": 1099,
+                "fragmentLength": 9
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "Collation": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 19,
+              "startColumn": 52,
+              "startOffset": 1074,
+              "fragmentLength": 13
+            },
+            "Value": "SomeCollation",
+            "QuoteType": "NotQuoted"
+          },
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 19,
+              "startColumn": 13,
+              "startOffset": 1035,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 19,
+                "startColumn": 13,
+                "startOffset": 1035,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 1152,
+            "fragmentLength": 88
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 21,
+              "startColumn": 29,
+              "startOffset": 1180,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 21,
+              "startColumn": 32,
+              "startOffset": 1183,
+              "fragmentLength": 11
+            },
+            "SqlDataTypeOption": "VarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 40,
+                  "startOffset": 1191,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 21,
+                "startColumn": 32,
+                "startOffset": 1183,
+                "fragmentLength": 7
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 32,
+                  "startOffset": 1183,
+                  "fragmentLength": 7
+                },
+                "Value": "varchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "Null",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 21,
+                "startColumn": 77,
+                "startOffset": 1228,
+                "fragmentLength": 10
+              },
+              "OptionState": "Off",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "Collation": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 21,
+              "startColumn": 52,
+              "startOffset": 1203,
+              "fragmentLength": 13
+            },
+            "Value": "SomeCollation",
+            "QuoteType": "NotQuoted"
+          },
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 21,
+              "startColumn": 13,
+              "startOffset": 1164,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 21,
+                "startColumn": 13,
+                "startOffset": 1164,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 23,
+            "startColumn": 1,
+            "startOffset": 1283,
+            "fragmentLength": 57
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 23,
+              "startColumn": 29,
+              "startOffset": 1311,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 23,
+              "startColumn": 32,
+              "startOffset": 1314,
+              "fragmentLength": 3
+            },
+            "SqlDataTypeOption": "Int",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 23,
+                "startColumn": 32,
+                "startOffset": 1314,
+                "fragmentLength": 3
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 23,
+                  "startColumn": 32,
+                  "startOffset": 1314,
+                  "fragmentLength": 3
+                },
+                "Value": "int",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "Null",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 23,
+                "startColumn": 47,
+                "startOffset": 1329,
+                "fragmentLength": 9
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 23,
+              "startColumn": 13,
+              "startOffset": 1295,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 23,
+                "startColumn": 13,
+                "startOffset": 1295,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 25,
+            "startColumn": 1,
+            "startOffset": 1370,
+            "fragmentLength": 58
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 25,
+              "startColumn": 29,
+              "startOffset": 1398,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 25,
+              "startColumn": 32,
+              "startOffset": 1401,
+              "fragmentLength": 3
+            },
+            "SqlDataTypeOption": "Int",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 25,
+                "startColumn": 32,
+                "startOffset": 1401,
+                "fragmentLength": 3
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 32,
+                  "startOffset": 1401,
+                  "fragmentLength": 3
+                },
+                "Value": "int",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "Null",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 25,
+                "startColumn": 47,
+                "startOffset": 1416,
+                "fragmentLength": 10
+              },
+              "OptionState": "Off",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 25,
+              "startColumn": 13,
+              "startOffset": 1382,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 25,
+                "startColumn": 13,
+                "startOffset": 1382,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 27,
+            "startColumn": 1,
+            "startOffset": 1459,
+            "fragmentLength": 61
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 27,
+              "startColumn": 29,
+              "startOffset": 1487,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 27,
+              "startColumn": 32,
+              "startOffset": 1490,
+              "fragmentLength": 3
+            },
+            "SqlDataTypeOption": "Int",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 27,
+                "startColumn": 32,
+                "startOffset": 1490,
+                "fragmentLength": 3
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 32,
+                  "startOffset": 1490,
+                  "fragmentLength": 3
+                },
+                "Value": "int",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NotNull",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 51,
+                "startOffset": 1509,
+                "fragmentLength": 9
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 27,
+              "startColumn": 13,
+              "startOffset": 1471,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 27,
+                "startColumn": 13,
+                "startOffset": 1471,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 29,
+            "startColumn": 1,
+            "startOffset": 1554,
+            "fragmentLength": 62
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 29,
+              "startColumn": 29,
+              "startOffset": 1582,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 29,
+              "startColumn": 32,
+              "startOffset": 1585,
+              "fragmentLength": 3
+            },
+            "SqlDataTypeOption": "Int",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 29,
+                "startColumn": 32,
+                "startOffset": 1585,
+                "fragmentLength": 3
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 29,
+                  "startColumn": 32,
+                  "startOffset": 1585,
+                  "fragmentLength": 3
+                },
+                "Value": "int",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NotNull",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 29,
+                "startColumn": 51,
+                "startOffset": 1604,
+                "fragmentLength": 10
+              },
+              "OptionState": "Off",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 29,
+              "startColumn": 13,
+              "startOffset": 1566,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 29,
+                "startColumn": 13,
+                "startOffset": 1566,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 31,
+            "startColumn": 1,
+            "startOffset": 1651,
+            "fragmentLength": 72
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 31,
+              "startColumn": 29,
+              "startOffset": 1679,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "AlterTableAlterColumnOption": "AddNotForReplication",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 31,
+                "startColumn": 62,
+                "startOffset": 1712,
+                "fragmentLength": 9
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 31,
+              "startColumn": 13,
+              "startOffset": 1663,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 31,
+                "startColumn": 13,
+                "startOffset": 1663,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 33,
+            "startColumn": 1,
+            "startOffset": 1772,
+            "fragmentLength": 73
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 33,
+              "startColumn": 29,
+              "startOffset": 1800,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "AlterTableAlterColumnOption": "AddNotForReplication",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 33,
+                "startColumn": 62,
+                "startOffset": 1833,
+                "fragmentLength": 10
+              },
+              "OptionState": "Off",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 33,
+              "startColumn": 13,
+              "startOffset": 1784,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 33,
+                "startColumn": 13,
+                "startOffset": 1784,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 35,
+            "startColumn": 1,
+            "startOffset": 1895,
+            "fragmentLength": 73
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 35,
+              "startColumn": 29,
+              "startOffset": 1923,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "AlterTableAlterColumnOption": "DropNotForReplication",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 35,
+                "startColumn": 63,
+                "startOffset": 1957,
+                "fragmentLength": 9
+              },
+              "OptionState": "On",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 35,
+              "startColumn": 13,
+              "startOffset": 1907,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 35,
+                "startColumn": 13,
+                "startOffset": 1907,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 37,
+            "startColumn": 1,
+            "startOffset": 2018,
+            "fragmentLength": 74
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 37,
+              "startColumn": 29,
+              "startOffset": 2046,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "AlterTableAlterColumnOption": "DropNotForReplication",
+          "Options": [
+            {
+              "$type": "OnlineIndexOption",
+              "location": {
+                "startLine": 37,
+                "startColumn": 63,
+                "startOffset": 2080,
+                "fragmentLength": 10
+              },
+              "OptionState": "Off",
+              "OptionKind": "Online"
+            }
+          ],
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 37,
+              "startColumn": 13,
+              "startOffset": 2030,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 37,
+                "startColumn": 13,
+                "startOffset": 2030,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 39,
+            "startColumn": 1,
+            "startOffset": 2143,
+            "fragmentLength": 72
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 39,
+              "startColumn": 29,
+              "startOffset": 2171,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "AlterTableAlterColumnOption": "AddMaskingFunction",
+          "IsHidden": false,
+          "IsMasked": true,
+          "MaskingFunction": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 39,
+              "startColumn": 60,
+              "startOffset": 2202,
+              "fragmentLength": 11
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "default()"
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 39,
+              "startColumn": 13,
+              "startOffset": 2155,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 39,
+                "startColumn": 13,
+                "startOffset": 2155,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 41,
+            "startColumn": 1,
+            "startOffset": 2264,
+            "fragmentLength": 43
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 41,
+              "startColumn": 29,
+              "startOffset": 2292,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "AlterTableAlterColumnOption": "DropMaskingFunction",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 41,
+              "startColumn": 13,
+              "startOffset": 2276,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 41,
+                "startColumn": 13,
+                "startOffset": 2276,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 43,
+            "startColumn": 1,
+            "startOffset": 2359,
+            "fragmentLength": 92
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 43,
+              "startColumn": 29,
+              "startOffset": 2387,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 43,
+              "startColumn": 32,
+              "startOffset": 2390,
+              "fragmentLength": 11
+            },
+            "SqlDataTypeOption": "VarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 43,
+                  "startColumn": 40,
+                  "startOffset": 2398,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 43,
+                "startColumn": 32,
+                "startOffset": 2390,
+                "fragmentLength": 7
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 43,
+                  "startColumn": 32,
+                  "startOffset": 2390,
+                  "fragmentLength": 7
+                },
+                "Value": "VARCHAR",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "IsHidden": false,
+          "IsMasked": true,
+          "MaskingFunction": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 43,
+              "startColumn": 68,
+              "startOffset": 2426,
+              "fragmentLength": 23
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "partial(3, \u0022XXXX\u0022, 4)"
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 43,
+              "startColumn": 13,
+              "startOffset": 2371,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 43,
+                "startColumn": 13,
+                "startOffset": 2371,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 45,
+            "startColumn": 1,
+            "startOffset": 2513,
+            "fragmentLength": 42
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 45,
+              "startColumn": 29,
+              "startOffset": 2541,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "AlterTableAlterColumnOption": "AddHidden",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 45,
+              "startColumn": 13,
+              "startOffset": 2525,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 45,
+                "startColumn": 13,
+                "startOffset": 2525,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 47,
+            "startColumn": 1,
+            "startOffset": 2613,
+            "fragmentLength": 43
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 47,
+              "startColumn": 29,
+              "startOffset": 2641,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "AlterTableAlterColumnOption": "DropHidden",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 47,
+              "startColumn": 13,
+              "startOffset": 2625,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 47,
+                "startColumn": 13,
+                "startOffset": 2625,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 49,
+            "startColumn": 1,
+            "startOffset": 2717,
+            "fragmentLength": 81
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 49,
+              "startColumn": 29,
+              "startOffset": 2745,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 49,
+              "startColumn": 32,
+              "startOffset": 2748,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "VarBinary",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 49,
+                  "startColumn": 42,
+                  "startOffset": 2758,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "85"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 49,
+                "startColumn": 32,
+                "startOffset": 2748,
+                "fragmentLength": 9
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 49,
+                  "startColumn": 32,
+                  "startOffset": 2748,
+                  "fragmentLength": 9
+                },
+                "Value": "varbinary",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "GeneratedAlways": "UserIdStart",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 49,
+              "startColumn": 13,
+              "startOffset": 2729,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 49,
+                "startColumn": 13,
+                "startOffset": 2729,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 51,
+            "startColumn": 1,
+            "startOffset": 2869,
+            "fragmentLength": 79
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 51,
+              "startColumn": 29,
+              "startOffset": 2897,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 51,
+              "startColumn": 32,
+              "startOffset": 2900,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "VarBinary",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 51,
+                  "startColumn": 42,
+                  "startOffset": 2910,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "85"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 51,
+                "startColumn": 32,
+                "startOffset": 2900,
+                "fragmentLength": 9
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 51,
+                  "startColumn": 32,
+                  "startOffset": 2900,
+                  "fragmentLength": 9
+                },
+                "Value": "varbinary",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "GeneratedAlways": "UserIdEnd",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 51,
+              "startColumn": 13,
+              "startOffset": 2881,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 51,
+                "startColumn": 13,
+                "startOffset": 2881,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 53,
+            "startColumn": 1,
+            "startOffset": 3017,
+            "fragmentLength": 83
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 53,
+              "startColumn": 29,
+              "startOffset": 3045,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 53,
+              "startColumn": 32,
+              "startOffset": 3048,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "NVarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 53,
+                  "startColumn": 41,
+                  "startOffset": 3057,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "128"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 53,
+                "startColumn": 32,
+                "startOffset": 3048,
+                "fragmentLength": 8
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 53,
+                  "startColumn": 32,
+                  "startOffset": 3048,
+                  "fragmentLength": 8
+                },
+                "Value": "nvarchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "GeneratedAlways": "UserNameStart",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 53,
+              "startColumn": 13,
+              "startOffset": 3029,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 53,
+                "startColumn": 13,
+                "startOffset": 3029,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 55,
+            "startColumn": 1,
+            "startOffset": 3173,
+            "fragmentLength": 81
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 55,
+              "startColumn": 29,
+              "startOffset": 3201,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 55,
+              "startColumn": 32,
+              "startOffset": 3204,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "NVarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 55,
+                  "startColumn": 41,
+                  "startOffset": 3213,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "128"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 55,
+                "startColumn": 32,
+                "startOffset": 3204,
+                "fragmentLength": 8
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 55,
+                  "startColumn": 32,
+                  "startOffset": 3204,
+                  "fragmentLength": 8
+                },
+                "Value": "nvarchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "GeneratedAlways": "UserNameEnd",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 55,
+              "startColumn": 13,
+              "startOffset": 3185,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 55,
+                "startColumn": 13,
+                "startOffset": 3185,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 57,
+            "startColumn": 1,
+            "startOffset": 3325,
+            "fragmentLength": 88
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 57,
+              "startColumn": 29,
+              "startOffset": 3353,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 57,
+              "startColumn": 32,
+              "startOffset": 3356,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "VarBinary",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 57,
+                  "startColumn": 42,
+                  "startOffset": 3366,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "85"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 57,
+                "startColumn": 32,
+                "startOffset": 3356,
+                "fragmentLength": 9
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 57,
+                  "startColumn": 32,
+                  "startOffset": 3356,
+                  "fragmentLength": 9
+                },
+                "Value": "varbinary",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "GeneratedAlways": "UserIdStart",
+          "IsHidden": true,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 57,
+              "startColumn": 13,
+              "startOffset": 3337,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 57,
+                "startColumn": 13,
+                "startOffset": 3337,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 59,
+            "startColumn": 1,
+            "startOffset": 3505,
+            "fragmentLength": 86
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 59,
+              "startColumn": 29,
+              "startOffset": 3533,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 59,
+              "startColumn": 32,
+              "startOffset": 3536,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "VarBinary",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 59,
+                  "startColumn": 42,
+                  "startOffset": 3546,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "85"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 59,
+                "startColumn": 32,
+                "startOffset": 3536,
+                "fragmentLength": 9
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 59,
+                  "startColumn": 32,
+                  "startOffset": 3536,
+                  "fragmentLength": 9
+                },
+                "Value": "varbinary",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "GeneratedAlways": "UserIdEnd",
+          "IsHidden": true,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 59,
+              "startColumn": 13,
+              "startOffset": 3517,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 59,
+                "startColumn": 13,
+                "startOffset": 3517,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 61,
+            "startColumn": 1,
+            "startOffset": 3681,
+            "fragmentLength": 90
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 61,
+              "startColumn": 29,
+              "startOffset": 3709,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 61,
+              "startColumn": 32,
+              "startOffset": 3712,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "NVarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 61,
+                  "startColumn": 41,
+                  "startOffset": 3721,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "128"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 61,
+                "startColumn": 32,
+                "startOffset": 3712,
+                "fragmentLength": 8
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 61,
+                  "startColumn": 32,
+                  "startOffset": 3712,
+                  "fragmentLength": 8
+                },
+                "Value": "nvarchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "GeneratedAlways": "UserNameStart",
+          "IsHidden": true,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 61,
+              "startColumn": 13,
+              "startOffset": 3693,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 61,
+                "startColumn": 13,
+                "startOffset": 3693,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 63,
+            "startColumn": 1,
+            "startOffset": 3865,
+            "fragmentLength": 88
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 63,
+              "startColumn": 29,
+              "startOffset": 3893,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 63,
+              "startColumn": 32,
+              "startOffset": 3896,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "NVarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 63,
+                  "startColumn": 41,
+                  "startOffset": 3905,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "128"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 63,
+                "startColumn": 32,
+                "startOffset": 3896,
+                "fragmentLength": 8
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 63,
+                  "startColumn": 32,
+                  "startOffset": 3896,
+                  "fragmentLength": 8
+                },
+                "Value": "nvarchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "GeneratedAlways": "UserNameEnd",
+          "IsHidden": true,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 63,
+              "startColumn": 13,
+              "startOffset": 3877,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 63,
+                "startColumn": 13,
+                "startOffset": 3877,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 65,
+            "startColumn": 1,
+            "startOffset": 4045,
+            "fragmentLength": 90
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 65,
+              "startColumn": 29,
+              "startOffset": 4073,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 65,
+              "startColumn": 32,
+              "startOffset": 4076,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "VarBinary",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 65,
+                  "startColumn": 42,
+                  "startOffset": 4086,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "85"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 65,
+                "startColumn": 32,
+                "startOffset": 4076,
+                "fragmentLength": 9
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 65,
+                  "startColumn": 32,
+                  "startOffset": 4076,
+                  "fragmentLength": 9
+                },
+                "Value": "varbinary",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NotNull",
+          "GeneratedAlways": "UserIdStart",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 65,
+              "startColumn": 13,
+              "startOffset": 4057,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 65,
+                "startColumn": 13,
+                "startOffset": 4057,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 67,
+            "startColumn": 1,
+            "startOffset": 4217,
+            "fragmentLength": 88
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 67,
+              "startColumn": 29,
+              "startOffset": 4245,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 67,
+              "startColumn": 32,
+              "startOffset": 4248,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "VarBinary",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 67,
+                  "startColumn": 42,
+                  "startOffset": 4258,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "85"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 67,
+                "startColumn": 32,
+                "startOffset": 4248,
+                "fragmentLength": 9
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 67,
+                  "startColumn": 32,
+                  "startOffset": 4248,
+                  "fragmentLength": 9
+                },
+                "Value": "varbinary",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NotNull",
+          "GeneratedAlways": "UserIdEnd",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 67,
+              "startColumn": 13,
+              "startOffset": 4229,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 67,
+                "startColumn": 13,
+                "startOffset": 4229,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 69,
+            "startColumn": 1,
+            "startOffset": 4385,
+            "fragmentLength": 92
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 69,
+              "startColumn": 29,
+              "startOffset": 4413,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 69,
+              "startColumn": 32,
+              "startOffset": 4416,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "NVarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 69,
+                  "startColumn": 41,
+                  "startOffset": 4425,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "128"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 69,
+                "startColumn": 32,
+                "startOffset": 4416,
+                "fragmentLength": 8
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 69,
+                  "startColumn": 32,
+                  "startOffset": 4416,
+                  "fragmentLength": 8
+                },
+                "Value": "nvarchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NotNull",
+          "GeneratedAlways": "UserNameStart",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 69,
+              "startColumn": 13,
+              "startOffset": 4397,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 69,
+                "startColumn": 13,
+                "startOffset": 4397,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 71,
+            "startColumn": 1,
+            "startOffset": 4561,
+            "fragmentLength": 90
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 71,
+              "startColumn": 29,
+              "startOffset": 4589,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 71,
+              "startColumn": 32,
+              "startOffset": 4592,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "NVarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 71,
+                  "startColumn": 41,
+                  "startOffset": 4601,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "128"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 71,
+                "startColumn": 32,
+                "startOffset": 4592,
+                "fragmentLength": 8
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 71,
+                  "startColumn": 32,
+                  "startOffset": 4592,
+                  "fragmentLength": 8
+                },
+                "Value": "nvarchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NotNull",
+          "GeneratedAlways": "UserNameEnd",
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 71,
+              "startColumn": 13,
+              "startOffset": 4573,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 71,
+                "startColumn": 13,
+                "startOffset": 4573,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 73,
+            "startColumn": 1,
+            "startOffset": 4733,
+            "fragmentLength": 97
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 73,
+              "startColumn": 29,
+              "startOffset": 4761,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 73,
+              "startColumn": 32,
+              "startOffset": 4764,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "VarBinary",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 73,
+                  "startColumn": 42,
+                  "startOffset": 4774,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "85"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 73,
+                "startColumn": 32,
+                "startOffset": 4764,
+                "fragmentLength": 9
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 73,
+                  "startColumn": 32,
+                  "startOffset": 4764,
+                  "fragmentLength": 9
+                },
+                "Value": "varbinary",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NotNull",
+          "GeneratedAlways": "UserIdStart",
+          "IsHidden": true,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 73,
+              "startColumn": 13,
+              "startOffset": 4745,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 73,
+                "startColumn": 13,
+                "startOffset": 4745,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 75,
+            "startColumn": 1,
+            "startOffset": 4933,
+            "fragmentLength": 95
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 75,
+              "startColumn": 29,
+              "startOffset": 4961,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 75,
+              "startColumn": 32,
+              "startOffset": 4964,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "VarBinary",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 75,
+                  "startColumn": 42,
+                  "startOffset": 4974,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "85"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 75,
+                "startColumn": 32,
+                "startOffset": 4964,
+                "fragmentLength": 9
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 75,
+                  "startColumn": 32,
+                  "startOffset": 4964,
+                  "fragmentLength": 9
+                },
+                "Value": "varbinary",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NotNull",
+          "GeneratedAlways": "UserIdEnd",
+          "IsHidden": true,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 75,
+              "startColumn": 13,
+              "startOffset": 4945,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 75,
+                "startColumn": 13,
+                "startOffset": 4945,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 77,
+            "startColumn": 1,
+            "startOffset": 5129,
+            "fragmentLength": 99
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 77,
+              "startColumn": 29,
+              "startOffset": 5157,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 77,
+              "startColumn": 32,
+              "startOffset": 5160,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "NVarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 77,
+                  "startColumn": 41,
+                  "startOffset": 5169,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "128"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 77,
+                "startColumn": 32,
+                "startOffset": 5160,
+                "fragmentLength": 8
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 77,
+                  "startColumn": 32,
+                  "startOffset": 5160,
+                  "fragmentLength": 8
+                },
+                "Value": "nvarchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NotNull",
+          "GeneratedAlways": "UserNameStart",
+          "IsHidden": true,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 77,
+              "startColumn": 13,
+              "startOffset": 5141,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 77,
+                "startColumn": 13,
+                "startOffset": 5141,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "location": {
+            "startLine": 79,
+            "startColumn": 1,
+            "startOffset": 5333,
+            "fragmentLength": 97
+          },
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 79,
+              "startColumn": 29,
+              "startOffset": 5361,
+              "fragmentLength": 2
+            },
+            "Value": "c1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 79,
+              "startColumn": 32,
+              "startOffset": 5364,
+              "fragmentLength": 13
+            },
+            "SqlDataTypeOption": "NVarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 79,
+                  "startColumn": 41,
+                  "startOffset": 5373,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "128"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 79,
+                "startColumn": 32,
+                "startOffset": 5364,
+                "fragmentLength": 8
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 79,
+                  "startColumn": 32,
+                  "startOffset": 5364,
+                  "fragmentLength": 8
+                },
+                "Value": "nvarchar",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "AlterTableAlterColumnOption": "NotNull",
+          "GeneratedAlways": "UserNameEnd",
+          "IsHidden": true,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 79,
+              "startColumn": 13,
+              "startOffset": 5345,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 79,
+                "startColumn": 13,
+                "startOffset": 5345,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

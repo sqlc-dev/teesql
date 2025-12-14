@@ -1,0 +1,174 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 260
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 62
+      },
+      "Statements": [
+        {
+          "$type": "CreateCryptographicProviderStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 62
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 31,
+              "startOffset": 30,
+              "fragmentLength": 3
+            },
+            "Value": "cp1",
+            "QuoteType": "NotQuoted"
+          },
+          "File": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 2,
+              "startColumn": 17,
+              "startOffset": 50,
+              "fragmentLength": 11
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "c:\\v1.dll"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 6,
+        "startColumn": 1,
+        "startOffset": 68,
+        "fragmentLength": 154
+      },
+      "Statements": [
+        {
+          "$type": "AlterCryptographicProviderStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 68,
+            "fragmentLength": 61
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 6,
+              "startColumn": 30,
+              "startOffset": 97,
+              "fragmentLength": 3
+            },
+            "Value": "cp1",
+            "QuoteType": "NotQuoted"
+          },
+          "Option": "None",
+          "File": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 7,
+              "startColumn": 17,
+              "startOffset": 117,
+              "fragmentLength": 11
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "c:\\v1.dll"
+          }
+        },
+        {
+          "$type": "AlterCryptographicProviderStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 131,
+            "fragmentLength": 44
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 9,
+              "startColumn": 30,
+              "startOffset": 160,
+              "fragmentLength": 3
+            },
+            "Value": "cp1",
+            "QuoteType": "NotQuoted"
+          },
+          "Option": "Enable"
+        },
+        {
+          "$type": "AlterCryptographicProviderStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 177,
+            "fragmentLength": 45
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 12,
+              "startColumn": 30,
+              "startOffset": 206,
+              "fragmentLength": 3
+            },
+            "Value": "cp1",
+            "QuoteType": "NotQuoted"
+          },
+          "Option": "Disable"
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 17,
+        "startColumn": 1,
+        "startOffset": 228,
+        "fragmentLength": 32
+      },
+      "Statements": [
+        {
+          "$type": "DropCryptographicProviderStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 228,
+            "fragmentLength": 32
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 17,
+              "startColumn": 29,
+              "startOffset": 256,
+              "fragmentLength": 3
+            },
+            "Value": "cp1",
+            "QuoteType": "NotQuoted"
+          },
+          "IsIfExists": false
+        }
+      ]
+    }
+  ]
+}

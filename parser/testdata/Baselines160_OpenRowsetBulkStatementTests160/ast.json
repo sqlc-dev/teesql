@@ -1,0 +1,2028 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1371
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 1371
+      },
+      "Statements": [
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 242
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 1,
+              "startColumn": 1,
+              "startOffset": 0,
+              "fragmentLength": 241
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 8,
+                  "startOffset": 7,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 2,
+                "startColumn": 1,
+                "startOffset": 9,
+                "fragmentLength": 232
+              },
+              "TableReferences": [
+                {
+                  "$type": "OpenRowsetCosmos",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 6,
+                    "startOffset": 14,
+                    "fragmentLength": 227
+                  },
+                  "Options": [
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 3,
+                        "startColumn": 6,
+                        "startOffset": 32,
+                        "fragmentLength": 21
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 3,
+                          "startColumn": 17,
+                          "startOffset": 43,
+                          "fragmentLength": 10
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "CosmosDB"
+                      },
+                      "OptionKind": "Provider"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 3,
+                        "startColumn": 29,
+                        "startOffset": 55,
+                        "fragmentLength": 66
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 3,
+                          "startColumn": 42,
+                          "startOffset": 68,
+                          "fragmentLength": 53
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "Account=synapselink-cosmosdb-sqlsample;Database=db1"
+                      },
+                      "OptionKind": "Connection"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 3,
+                        "startColumn": 97,
+                        "startOffset": 123,
+                        "fragmentLength": 12
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 3,
+                          "startColumn": 106,
+                          "startOffset": 132,
+                          "fragmentLength": 3
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "a"
+                      },
+                      "OptionKind": "Object"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 3,
+                        "startColumn": 111,
+                        "startOffset": 137,
+                        "fragmentLength": 27
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 3,
+                          "startColumn": 124,
+                          "startOffset": 150,
+                          "fragmentLength": 14
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "MyCredential"
+                      },
+                      "OptionKind": "Credential"
+                    }
+                  ],
+                  "WithColumns": [
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 4,
+                        "startColumn": 12,
+                        "startOffset": 177,
+                        "fragmentLength": 21
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 4,
+                          "startColumn": 12,
+                          "startOffset": 177,
+                          "fragmentLength": 8
+                        },
+                        "Value": "date_rep",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 4,
+                          "startColumn": 21,
+                          "startOffset": 186,
+                          "fragmentLength": 12
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 4,
+                              "startColumn": 30,
+                              "startOffset": 195,
+                              "fragmentLength": 2
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "20"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 4,
+                            "startColumn": 21,
+                            "startOffset": 186,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 4,
+                              "startColumn": 21,
+                              "startOffset": 186,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 4,
+                        "startColumn": 35,
+                        "startOffset": 200,
+                        "fragmentLength": 12
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 4,
+                          "startColumn": 35,
+                          "startOffset": 200,
+                          "fragmentLength": 5
+                        },
+                        "Value": "cases",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 4,
+                          "startColumn": 41,
+                          "startOffset": 206,
+                          "fragmentLength": 6
+                        },
+                        "SqlDataTypeOption": "BigInt",
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 4,
+                            "startColumn": 41,
+                            "startOffset": 206,
+                            "fragmentLength": 6
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 4,
+                              "startColumn": 41,
+                              "startOffset": 206,
+                              "fragmentLength": 6
+                            },
+                            "Value": "BIGINT",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 4,
+                        "startColumn": 49,
+                        "startOffset": 214,
+                        "fragmentLength": 18
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 4,
+                          "startColumn": 49,
+                          "startOffset": 214,
+                          "fragmentLength": 6
+                        },
+                        "Value": "geo_id",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 4,
+                          "startColumn": 56,
+                          "startOffset": 221,
+                          "fragmentLength": 11
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 4,
+                              "startColumn": 65,
+                              "startOffset": 230,
+                              "fragmentLength": 1
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "6"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 4,
+                            "startColumn": 56,
+                            "startOffset": 221,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 4,
+                              "startColumn": 56,
+                              "startOffset": 221,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 72,
+                      "startOffset": 237,
+                      "fragmentLength": 4
+                    },
+                    "Value": "rows",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 244,
+            "fragmentLength": 189
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 6,
+              "startColumn": 1,
+              "startOffset": 244,
+              "fragmentLength": 188
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 8,
+                  "startOffset": 251,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 7,
+                "startColumn": 1,
+                "startOffset": 253,
+                "fragmentLength": 179
+              },
+              "TableReferences": [
+                {
+                  "$type": "OpenRowsetCosmos",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 6,
+                    "startOffset": 258,
+                    "fragmentLength": 174
+                  },
+                  "Options": [
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 6,
+                        "startOffset": 276,
+                        "fragmentLength": 21
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 8,
+                          "startColumn": 17,
+                          "startOffset": 287,
+                          "fragmentLength": 10
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "CosmosDB"
+                      },
+                      "OptionKind": "Provider"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 29,
+                        "startOffset": 299,
+                        "fragmentLength": 66
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 8,
+                          "startColumn": 42,
+                          "startOffset": 312,
+                          "fragmentLength": 53
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "Account=synapselink-cosmosdb-sqlsample;Database=db2"
+                      },
+                      "OptionKind": "Connection"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 97,
+                        "startOffset": 367,
+                        "fragmentLength": 12
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 8,
+                          "startColumn": 106,
+                          "startOffset": 376,
+                          "fragmentLength": 3
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "b"
+                      },
+                      "OptionKind": "Object"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 111,
+                        "startOffset": 381,
+                        "fragmentLength": 42
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 8,
+                          "startColumn": 124,
+                          "startOffset": 394,
+                          "fragmentLength": 29
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "MyCosmosDbAccountCredential"
+                      },
+                      "OptionKind": "Credential"
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 158,
+                      "startOffset": 428,
+                      "fragmentLength": 4
+                    },
+                    "Value": "rows",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 435,
+            "fragmentLength": 239
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 10,
+              "startColumn": 1,
+              "startOffset": 435,
+              "fragmentLength": 238
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 8,
+                  "startOffset": 442,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 11,
+                "startColumn": 1,
+                "startOffset": 444,
+                "fragmentLength": 229
+              },
+              "TableReferences": [
+                {
+                  "$type": "OpenRowsetCosmos",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 6,
+                    "startOffset": 449,
+                    "fragmentLength": 224
+                  },
+                  "Options": [
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 12,
+                        "startColumn": 6,
+                        "startOffset": 467,
+                        "fragmentLength": 21
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 12,
+                          "startColumn": 17,
+                          "startOffset": 478,
+                          "fragmentLength": 10
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "CosmosDB"
+                      },
+                      "OptionKind": "Provider"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 12,
+                        "startColumn": 29,
+                        "startOffset": 490,
+                        "fragmentLength": 66
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 12,
+                          "startColumn": 42,
+                          "startOffset": 503,
+                          "fragmentLength": 53
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "Account=synapselink-cosmosdb-sqlsample;Database=db3"
+                      },
+                      "OptionKind": "Connection"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 12,
+                        "startColumn": 97,
+                        "startOffset": 558,
+                        "fragmentLength": 14
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 12,
+                          "startColumn": 106,
+                          "startOffset": 567,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "c d"
+                      },
+                      "OptionKind": "Object"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 12,
+                        "startColumn": 113,
+                        "startOffset": 574,
+                        "fragmentLength": 42
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 12,
+                          "startColumn": 133,
+                          "startOffset": 594,
+                          "fragmentLength": 22
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "My Server Credential"
+                      },
+                      "OptionKind": "Server_Credential"
+                    }
+                  ],
+                  "WithColumns": [
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 13,
+                        "startColumn": 12,
+                        "startOffset": 629,
+                        "fragmentLength": 21
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 13,
+                          "startColumn": 12,
+                          "startOffset": 629,
+                          "fragmentLength": 8
+                        },
+                        "Value": "date_rep",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 13,
+                          "startColumn": 21,
+                          "startOffset": 638,
+                          "fragmentLength": 12
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 13,
+                              "startColumn": 30,
+                              "startOffset": 647,
+                              "fragmentLength": 2
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "20"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 13,
+                            "startColumn": 21,
+                            "startOffset": 638,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 13,
+                              "startColumn": 21,
+                              "startOffset": 638,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 13,
+                        "startColumn": 35,
+                        "startOffset": 652,
+                        "fragmentLength": 12
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 13,
+                          "startColumn": 35,
+                          "startOffset": 652,
+                          "fragmentLength": 5
+                        },
+                        "Value": "cases",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 13,
+                          "startColumn": 41,
+                          "startOffset": 658,
+                          "fragmentLength": 6
+                        },
+                        "SqlDataTypeOption": "BigInt",
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 13,
+                            "startColumn": 41,
+                            "startOffset": 658,
+                            "fragmentLength": 6
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 13,
+                              "startColumn": 41,
+                              "startOffset": 658,
+                              "fragmentLength": 6
+                            },
+                            "Value": "BIGINT",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 13,
+                      "startColumn": 52,
+                      "startOffset": 669,
+                      "fragmentLength": 4
+                    },
+                    "Value": "rows",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 15,
+            "startColumn": 1,
+            "startOffset": 676,
+            "fragmentLength": 199
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 15,
+              "startColumn": 1,
+              "startOffset": 676,
+              "fragmentLength": 198
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 8,
+                  "startOffset": 683,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 16,
+                "startColumn": 1,
+                "startOffset": 685,
+                "fragmentLength": 189
+              },
+              "TableReferences": [
+                {
+                  "$type": "OpenRowsetCosmos",
+                  "location": {
+                    "startLine": 16,
+                    "startColumn": 6,
+                    "startOffset": 690,
+                    "fragmentLength": 184
+                  },
+                  "Options": [
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 6,
+                        "startOffset": 708,
+                        "fragmentLength": 21
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 17,
+                          "startOffset": 719,
+                          "fragmentLength": 10
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "CosmosDB"
+                      },
+                      "OptionKind": "Provider"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 29,
+                        "startOffset": 731,
+                        "fragmentLength": 67
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 42,
+                          "startOffset": 744,
+                          "fragmentLength": 54
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "Account=synapselink-cosmosdb-sqlsample;Database=mydb"
+                      },
+                      "OptionKind": "Connection"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 98,
+                        "startOffset": 800,
+                        "fragmentLength": 17
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 107,
+                          "startOffset": 809,
+                          "fragmentLength": 8
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "object"
+                      },
+                      "OptionKind": "Object"
+                    }
+                  ],
+                  "WithColumns": [
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 18,
+                        "startColumn": 12,
+                        "startOffset": 830,
+                        "fragmentLength": 21
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 18,
+                          "startColumn": 12,
+                          "startOffset": 830,
+                          "fragmentLength": 8
+                        },
+                        "Value": "date_rep",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 18,
+                          "startColumn": 21,
+                          "startOffset": 839,
+                          "fragmentLength": 12
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 18,
+                              "startColumn": 30,
+                              "startOffset": 848,
+                              "fragmentLength": 2
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "20"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 18,
+                            "startColumn": 21,
+                            "startOffset": 839,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 18,
+                              "startColumn": 21,
+                              "startOffset": 839,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 18,
+                        "startColumn": 35,
+                        "startOffset": 853,
+                        "fragmentLength": 12
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 18,
+                          "startColumn": 35,
+                          "startOffset": 853,
+                          "fragmentLength": 5
+                        },
+                        "Value": "cases",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 18,
+                          "startColumn": 41,
+                          "startOffset": 859,
+                          "fragmentLength": 6
+                        },
+                        "SqlDataTypeOption": "BigInt",
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 18,
+                            "startColumn": 41,
+                            "startOffset": 859,
+                            "fragmentLength": 6
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 18,
+                              "startColumn": 41,
+                              "startOffset": 859,
+                              "fragmentLength": 6
+                            },
+                            "Value": "BIGINT",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 18,
+                      "startColumn": 52,
+                      "startOffset": 870,
+                      "fragmentLength": 4
+                    },
+                    "Value": "rows",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 20,
+            "startColumn": 1,
+            "startOffset": 877,
+            "fragmentLength": 143
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 20,
+              "startColumn": 1,
+              "startOffset": 877,
+              "fragmentLength": 142
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 20,
+                  "startColumn": 8,
+                  "startOffset": 884,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 21,
+                "startColumn": 1,
+                "startOffset": 886,
+                "fragmentLength": 133
+              },
+              "TableReferences": [
+                {
+                  "$type": "OpenRowsetCosmos",
+                  "location": {
+                    "startLine": 21,
+                    "startColumn": 6,
+                    "startOffset": 891,
+                    "fragmentLength": 128
+                  },
+                  "Options": [
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 22,
+                        "startColumn": 6,
+                        "startOffset": 909,
+                        "fragmentLength": 21
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 22,
+                          "startColumn": 17,
+                          "startOffset": 920,
+                          "fragmentLength": 10
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "CosmosDB"
+                      },
+                      "OptionKind": "Provider"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 22,
+                        "startColumn": 29,
+                        "startOffset": 932,
+                        "fragmentLength": 67
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 22,
+                          "startColumn": 42,
+                          "startOffset": 945,
+                          "fragmentLength": 54
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "Account=synapselink-cosmosdb-sqlsample;Database=mydb"
+                      },
+                      "OptionKind": "Connection"
+                    },
+                    {
+                      "$type": "LiteralOpenRowsetCosmosOption",
+                      "location": {
+                        "startLine": 22,
+                        "startColumn": 98,
+                        "startOffset": 1001,
+                        "fragmentLength": 17
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 22,
+                          "startColumn": 107,
+                          "startOffset": 1010,
+                          "fragmentLength": 8
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "object"
+                      },
+                      "OptionKind": "Object"
+                    }
+                  ],
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 24,
+            "startColumn": 1,
+            "startOffset": 1022,
+            "fragmentLength": 101
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 24,
+              "startColumn": 1,
+              "startOffset": 1022,
+              "fragmentLength": 100
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "TopRowFilter": {
+              "$type": "TopRowFilter",
+              "location": {
+                "startLine": 24,
+                "startColumn": 8,
+                "startOffset": 1029,
+                "fragmentLength": 7
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 12,
+                  "startOffset": 1033,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "Percent": false,
+              "WithTies": false
+            },
+            "SelectElements": [
+              {
+                "$type": "SelectScalarExpression",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 16,
+                  "startOffset": 1037,
+                  "fragmentLength": 6
+                },
+                "Expression": {
+                  "$type": "ColumnReferenceExpression",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 16,
+                    "startOffset": 1037,
+                    "fragmentLength": 6
+                  },
+                  "ColumnType": "Regular",
+                  "MultiPartIdentifier": {
+                    "$type": "MultiPartIdentifier",
+                    "location": {
+                      "startLine": 24,
+                      "startColumn": 16,
+                      "startOffset": 1037,
+                      "fragmentLength": 6
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 24,
+                          "startColumn": 16,
+                          "startOffset": 1037,
+                          "fragmentLength": 6
+                        },
+                        "Value": "UserID",
+                        "QuoteType": "NotQuoted"
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 25,
+                "startColumn": 1,
+                "startOffset": 1044,
+                "fragmentLength": 78
+              },
+              "TableReferences": [
+                {
+                  "$type": "BulkOpenRowset",
+                  "location": {
+                    "startLine": 25,
+                    "startColumn": 6,
+                    "startOffset": 1049,
+                    "fragmentLength": 73
+                  },
+                  "DataFiles": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 25,
+                        "startColumn": 23,
+                        "startOffset": 1066,
+                        "fragmentLength": 6
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "path"
+                    }
+                  ],
+                  "Options": [
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 25,
+                        "startColumn": 31,
+                        "startOffset": 1074,
+                        "fragmentLength": 18
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 25,
+                          "startColumn": 40,
+                          "startOffset": 1083,
+                          "fragmentLength": 9
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "SStream"
+                      },
+                      "OptionKind": "DataFileFormat"
+                    },
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 25,
+                        "startColumn": 51,
+                        "startOffset": 1094,
+                        "fragmentLength": 22
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 25,
+                          "startColumn": 68,
+                          "startOffset": 1111,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "2.0"
+                      },
+                      "OptionKind": "ParserVersion"
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 25,
+                      "startColumn": 78,
+                      "startOffset": 1121,
+                      "fragmentLength": 1
+                    },
+                    "Value": "a",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 27,
+            "startColumn": 1,
+            "startOffset": 1125,
+            "fragmentLength": 139
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 27,
+              "startColumn": 1,
+              "startOffset": 1125,
+              "fragmentLength": 138
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "TopRowFilter": {
+              "$type": "TopRowFilter",
+              "location": {
+                "startLine": 27,
+                "startColumn": 8,
+                "startOffset": 1132,
+                "fragmentLength": 6
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 12,
+                  "startOffset": 1136,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "Percent": false,
+              "WithTies": false
+            },
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 15,
+                  "startOffset": 1139,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 28,
+                "startColumn": 1,
+                "startOffset": 1141,
+                "fragmentLength": 122
+              },
+              "TableReferences": [
+                {
+                  "$type": "OpenRowsetTableReference",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 6,
+                    "startOffset": 1146,
+                    "fragmentLength": 117
+                  },
+                  "ProviderName": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 18,
+                      "startOffset": 1158,
+                      "fragmentLength": 10
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "CosmosDB"
+                  },
+                  "ProviderString": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 30,
+                      "startOffset": 1170,
+                      "fragmentLength": 7
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "Accnt"
+                  },
+                  "Object": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 39,
+                      "startOffset": 1179,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 28,
+                        "startColumn": 39,
+                        "startOffset": 1179,
+                        "fragmentLength": 7
+                      },
+                      "Value": "myTable",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "WithColumns": [
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 29,
+                        "startColumn": 12,
+                        "startOffset": 1199,
+                        "fragmentLength": 21
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 29,
+                          "startColumn": 12,
+                          "startOffset": 1199,
+                          "fragmentLength": 8
+                        },
+                        "Value": "date_rep",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 29,
+                          "startColumn": 21,
+                          "startOffset": 1208,
+                          "fragmentLength": 12
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 29,
+                              "startColumn": 30,
+                              "startOffset": 1217,
+                              "fragmentLength": 2
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "20"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 29,
+                            "startColumn": 21,
+                            "startOffset": 1208,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 29,
+                              "startColumn": 21,
+                              "startOffset": 1208,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 29,
+                        "startColumn": 35,
+                        "startOffset": 1222,
+                        "fragmentLength": 12
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 29,
+                          "startColumn": 35,
+                          "startOffset": 1222,
+                          "fragmentLength": 5
+                        },
+                        "Value": "cases",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 29,
+                          "startColumn": 41,
+                          "startOffset": 1228,
+                          "fragmentLength": 6
+                        },
+                        "SqlDataTypeOption": "BigInt",
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 29,
+                            "startColumn": 41,
+                            "startOffset": 1228,
+                            "fragmentLength": 6
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 29,
+                              "startColumn": 41,
+                              "startOffset": 1228,
+                              "fragmentLength": 6
+                            },
+                            "Value": "BIGINT",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 29,
+                        "startColumn": 49,
+                        "startOffset": 1236,
+                        "fragmentLength": 18
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 29,
+                          "startColumn": 49,
+                          "startOffset": 1236,
+                          "fragmentLength": 6
+                        },
+                        "Value": "geo_id",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 29,
+                          "startColumn": 56,
+                          "startOffset": 1243,
+                          "fragmentLength": 11
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 29,
+                              "startColumn": 65,
+                              "startOffset": 1252,
+                              "fragmentLength": 1
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "6"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 29,
+                            "startColumn": 56,
+                            "startOffset": 1243,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 29,
+                              "startColumn": 56,
+                              "startOffset": 1243,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 29,
+                      "startColumn": 72,
+                      "startOffset": 1259,
+                      "fragmentLength": 4
+                    },
+                    "Value": "rows",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 31,
+            "startColumn": 1,
+            "startOffset": 1266,
+            "fragmentLength": 105
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 31,
+              "startColumn": 1,
+              "startOffset": 1266,
+              "fragmentLength": 104
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "TopRowFilter": {
+              "$type": "TopRowFilter",
+              "location": {
+                "startLine": 31,
+                "startColumn": 8,
+                "startOffset": 1273,
+                "fragmentLength": 6
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 12,
+                  "startOffset": 1277,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "Percent": false,
+              "WithTies": false
+            },
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 15,
+                  "startOffset": 1280,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 32,
+                "startColumn": 1,
+                "startOffset": 1282,
+                "fragmentLength": 88
+              },
+              "TableReferences": [
+                {
+                  "$type": "OpenRowsetTableReference",
+                  "location": {
+                    "startLine": 32,
+                    "startColumn": 6,
+                    "startOffset": 1287,
+                    "fragmentLength": 83
+                  },
+                  "ProviderName": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 32,
+                      "startColumn": 18,
+                      "startOffset": 1299,
+                      "fragmentLength": 10
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "CosmosDB"
+                  },
+                  "ProviderString": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 32,
+                      "startColumn": 30,
+                      "startOffset": 1311,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "x"
+                  },
+                  "Object": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 32,
+                      "startColumn": 35,
+                      "startOffset": 1316,
+                      "fragmentLength": 1
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 32,
+                        "startColumn": 35,
+                        "startOffset": 1316,
+                        "fragmentLength": 1
+                      },
+                      "Value": "t",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "WithColumns": [
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 33,
+                        "startColumn": 12,
+                        "startOffset": 1330,
+                        "fragmentLength": 14
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 33,
+                          "startColumn": 12,
+                          "startOffset": 1330,
+                          "fragmentLength": 1
+                        },
+                        "Value": "a",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 33,
+                          "startColumn": 14,
+                          "startOffset": 1332,
+                          "fragmentLength": 12
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 33,
+                              "startColumn": 23,
+                              "startOffset": 1341,
+                              "fragmentLength": 2
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "20"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 33,
+                            "startColumn": 14,
+                            "startOffset": 1332,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 33,
+                              "startColumn": 14,
+                              "startOffset": 1332,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 33,
+                        "startColumn": 28,
+                        "startOffset": 1346,
+                        "fragmentLength": 8
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 33,
+                          "startColumn": 28,
+                          "startOffset": 1346,
+                          "fragmentLength": 1
+                        },
+                        "Value": "b",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 33,
+                          "startColumn": 30,
+                          "startOffset": 1348,
+                          "fragmentLength": 6
+                        },
+                        "SqlDataTypeOption": "BigInt",
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 33,
+                            "startColumn": 30,
+                            "startOffset": 1348,
+                            "fragmentLength": 6
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 33,
+                              "startColumn": 30,
+                              "startOffset": 1348,
+                              "fragmentLength": 6
+                            },
+                            "Value": "BIGINT",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 33,
+                        "startColumn": 38,
+                        "startOffset": 1356,
+                        "fragmentLength": 13
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 33,
+                          "startColumn": 38,
+                          "startOffset": 1356,
+                          "fragmentLength": 1
+                        },
+                        "Value": "c",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 33,
+                          "startColumn": 40,
+                          "startOffset": 1358,
+                          "fragmentLength": 11
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 33,
+                              "startColumn": 49,
+                              "startOffset": 1367,
+                              "fragmentLength": 1
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "6"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 33,
+                            "startColumn": 40,
+                            "startOffset": 1358,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 33,
+                              "startColumn": 40,
+                              "startOffset": 1358,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

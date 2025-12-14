@@ -1,0 +1,594 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 314
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 312
+      },
+      "Statements": [
+        {
+          "$type": "OpenCursorStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 18
+          },
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 1,
+              "startColumn": 6,
+              "startOffset": 5,
+              "fragmentLength": 12
+            },
+            "IsGlobal": false,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 1,
+                "startColumn": 6,
+                "startOffset": 5,
+                "fragmentLength": 12
+              },
+              "Value": "authorcursor",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 6,
+                  "startOffset": 5,
+                  "fragmentLength": 12
+                },
+                "Value": "authorcursor",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          }
+        },
+        {
+          "$type": "CloseCursorStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 20,
+            "fragmentLength": 16
+          },
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 3,
+              "startColumn": 14,
+              "startOffset": 33,
+              "fragmentLength": 2
+            },
+            "IsGlobal": true,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 3,
+                "startColumn": 14,
+                "startOffset": 33,
+                "fragmentLength": 2
+              },
+              "Value": "c1",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 14,
+                  "startOffset": 33,
+                  "fragmentLength": 2
+                },
+                "Value": "c1",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          }
+        },
+        {
+          "$type": "DeallocateCursorStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 38,
+            "fragmentLength": 22
+          },
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 5,
+              "startColumn": 12,
+              "startOffset": 49,
+              "fragmentLength": 10
+            },
+            "IsGlobal": false,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 5,
+                "startColumn": 12,
+                "startOffset": 49,
+                "fragmentLength": 10
+              },
+              "Value": "@cursorVar",
+              "ValueExpression": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 12,
+                  "startOffset": 49,
+                  "fragmentLength": 10
+                },
+                "Name": "@cursorVar"
+              }
+            }
+          }
+        },
+        {
+          "$type": "FetchCursorStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 62,
+            "fragmentLength": 57
+          },
+          "FetchType": {
+            "$type": "FetchType",
+            "location": {
+              "startLine": -1,
+              "startColumn": -1,
+              "startOffset": -1,
+              "fragmentLength": -1
+            },
+            "Orientation": "Next"
+          },
+          "IntoVariables": [
+            {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 7,
+                "startColumn": 37,
+                "startOffset": 98,
+                "fragmentLength": 9
+              },
+              "Name": "@au_lname"
+            },
+            {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 7,
+                "startColumn": 48,
+                "startOffset": 109,
+                "fragmentLength": 9
+              },
+              "Name": "@au_fname"
+            }
+          ],
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 7,
+              "startColumn": 17,
+              "startOffset": 78,
+              "fragmentLength": 14
+            },
+            "IsGlobal": false,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 7,
+                "startColumn": 17,
+                "startOffset": 78,
+                "fragmentLength": 14
+              },
+              "Value": "authors_cursor",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 17,
+                  "startOffset": 78,
+                  "fragmentLength": 14
+                },
+                "Value": "authors_cursor",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          }
+        },
+        {
+          "$type": "FetchCursorStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 121,
+            "fragmentLength": 32
+          },
+          "FetchType": {
+            "$type": "FetchType",
+            "location": {
+              "startLine": 9,
+              "startColumn": 16,
+              "startOffset": 136,
+              "fragmentLength": 1
+            },
+            "Orientation": "Absolute",
+            "RowOffset": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 9,
+                "startColumn": 16,
+                "startOffset": 136,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "2"
+            }
+          },
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 9,
+              "startColumn": 30,
+              "startOffset": 150,
+              "fragmentLength": 2
+            },
+            "IsGlobal": true,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 9,
+                "startColumn": 30,
+                "startOffset": 150,
+                "fragmentLength": 2
+              },
+              "Value": "ac",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 30,
+                  "startOffset": 150,
+                  "fragmentLength": 2
+                },
+                "Value": "ac",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          }
+        },
+        {
+          "$type": "FetchCursorStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 155,
+            "fragmentLength": 32
+          },
+          "FetchType": {
+            "$type": "FetchType",
+            "location": {
+              "startLine": 11,
+              "startColumn": 16,
+              "startOffset": 170,
+              "fragmentLength": 8
+            },
+            "Orientation": "Absolute",
+            "RowOffset": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 11,
+                "startColumn": 16,
+                "startOffset": 170,
+                "fragmentLength": 8
+              },
+              "Name": "@someVar"
+            }
+          },
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 11,
+              "startColumn": 30,
+              "startOffset": 184,
+              "fragmentLength": 2
+            },
+            "IsGlobal": false,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 11,
+                "startColumn": 30,
+                "startOffset": 184,
+                "fragmentLength": 2
+              },
+              "Value": "ac",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 30,
+                  "startOffset": 184,
+                  "fragmentLength": 2
+                },
+                "Value": "ac",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          }
+        },
+        {
+          "$type": "FetchCursorStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 189,
+            "fragmentLength": 35
+          },
+          "FetchType": {
+            "$type": "FetchType",
+            "location": {
+              "startLine": 13,
+              "startColumn": 16,
+              "startOffset": 204,
+              "fragmentLength": 2
+            },
+            "Orientation": "Relative",
+            "RowOffset": {
+              "$type": "UnaryExpression",
+              "location": {
+                "startLine": 13,
+                "startColumn": 16,
+                "startOffset": 204,
+                "fragmentLength": 2
+              },
+              "UnaryExpressionType": "Negative",
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 17,
+                  "startOffset": 205,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              }
+            }
+          },
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 13,
+              "startColumn": 24,
+              "startOffset": 212,
+              "fragmentLength": 11
+            },
+            "IsGlobal": false,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 13,
+                "startColumn": 24,
+                "startOffset": 212,
+                "fragmentLength": 11
+              },
+              "Value": "@cursorVar2",
+              "ValueExpression": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 24,
+                  "startOffset": 212,
+                  "fragmentLength": 11
+                },
+                "Name": "@cursorVar2"
+              }
+            }
+          }
+        },
+        {
+          "$type": "FetchCursorStatement",
+          "location": {
+            "startLine": 15,
+            "startColumn": 1,
+            "startOffset": 226,
+            "fragmentLength": 21
+          },
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 15,
+              "startColumn": 7,
+              "startOffset": 232,
+              "fragmentLength": 14
+            },
+            "IsGlobal": false,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 15,
+                "startColumn": 7,
+                "startOffset": 232,
+                "fragmentLength": 14
+              },
+              "Value": "authors_cursor",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 7,
+                  "startOffset": 232,
+                  "fragmentLength": 14
+                },
+                "Value": "authors_cursor",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          }
+        },
+        {
+          "$type": "FetchCursorStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 249,
+            "fragmentLength": 20
+          },
+          "FetchType": {
+            "$type": "FetchType",
+            "location": {
+              "startLine": -1,
+              "startColumn": -1,
+              "startOffset": -1,
+              "fragmentLength": -1
+            },
+            "Orientation": "Prior"
+          },
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 17,
+              "startColumn": 18,
+              "startOffset": 266,
+              "fragmentLength": 2
+            },
+            "IsGlobal": false,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 17,
+                "startColumn": 18,
+                "startOffset": 266,
+                "fragmentLength": 2
+              },
+              "Value": "ac",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 18,
+                  "startOffset": 266,
+                  "fragmentLength": 2
+                },
+                "Value": "ac",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          }
+        },
+        {
+          "$type": "FetchCursorStatement",
+          "location": {
+            "startLine": 19,
+            "startColumn": 1,
+            "startOffset": 271,
+            "fragmentLength": 20
+          },
+          "FetchType": {
+            "$type": "FetchType",
+            "location": {
+              "startLine": -1,
+              "startColumn": -1,
+              "startOffset": -1,
+              "fragmentLength": -1
+            },
+            "Orientation": "First"
+          },
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 19,
+              "startColumn": 18,
+              "startOffset": 288,
+              "fragmentLength": 2
+            },
+            "IsGlobal": false,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 19,
+                "startColumn": 18,
+                "startOffset": 288,
+                "fragmentLength": 2
+              },
+              "Value": "ac",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 18,
+                  "startOffset": 288,
+                  "fragmentLength": 2
+                },
+                "Value": "ac",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          }
+        },
+        {
+          "$type": "FetchCursorStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 293,
+            "fragmentLength": 19
+          },
+          "FetchType": {
+            "$type": "FetchType",
+            "location": {
+              "startLine": -1,
+              "startColumn": -1,
+              "startOffset": -1,
+              "fragmentLength": -1
+            },
+            "Orientation": "Last"
+          },
+          "Cursor": {
+            "$type": "CursorId",
+            "location": {
+              "startLine": 21,
+              "startColumn": 17,
+              "startOffset": 309,
+              "fragmentLength": 2
+            },
+            "IsGlobal": false,
+            "Name": {
+              "$type": "IdentifierOrValueExpression",
+              "location": {
+                "startLine": 21,
+                "startColumn": 17,
+                "startOffset": 309,
+                "fragmentLength": 2
+              },
+              "Value": "ac",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 17,
+                  "startOffset": 309,
+                  "fragmentLength": 2
+                },
+                "Value": "ac",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

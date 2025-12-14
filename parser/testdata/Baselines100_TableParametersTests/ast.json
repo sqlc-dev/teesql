@@ -1,0 +1,859 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 341
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 58
+      },
+      "Statements": [
+        {
+          "$type": "CreateTypeTableStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 58
+          },
+          "Definition": {
+            "$type": "TableDefinition",
+            "location": {
+              "startLine": 2,
+              "startColumn": 5,
+              "startOffset": 38,
+              "fragmentLength": 18
+            },
+            "ColumnDefinitions": [
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 5,
+                  "startOffset": 38,
+                  "fragmentLength": 18
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "UniqueConstraintDefinition",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 12,
+                      "startOffset": 45,
+                      "fragmentLength": 11
+                    },
+                    "IsPrimaryKey": true
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 5,
+                    "startOffset": 38,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 8,
+                    "startOffset": 41,
+                    "fragmentLength": 3
+                  },
+                  "SqlDataTypeOption": "Int",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 8,
+                      "startOffset": 41,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 8,
+                        "startOffset": 41,
+                        "fragmentLength": 3
+                      },
+                      "Value": "INT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 1,
+              "startColumn": 13,
+              "startOffset": 12,
+              "fragmentLength": 10
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 13,
+                "startOffset": 12,
+                "fragmentLength": 10
+              },
+              "Value": "tableType1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 6,
+        "startColumn": 1,
+        "startOffset": 64,
+        "fragmentLength": 92
+      },
+      "Statements": [
+        {
+          "$type": "CreateTypeTableStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 64,
+            "fragmentLength": 92
+          },
+          "Definition": {
+            "$type": "TableDefinition",
+            "location": {
+              "startLine": 7,
+              "startColumn": 5,
+              "startOffset": 102,
+              "fragmentLength": 52
+            },
+            "ColumnDefinitions": [
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 5,
+                  "startOffset": 102,
+                  "fragmentLength": 6
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 5,
+                    "startOffset": 102,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 8,
+                    "startOffset": 105,
+                    "fragmentLength": 3
+                  },
+                  "SqlDataTypeOption": "Int",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 7,
+                      "startColumn": 8,
+                      "startOffset": 105,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 7,
+                        "startColumn": 8,
+                        "startOffset": 105,
+                        "fragmentLength": 3
+                      },
+                      "Value": "INT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 5,
+                  "startOffset": 114,
+                  "fragmentLength": 19
+                },
+                "ComputedColumnExpression": {
+                  "$type": "ColumnReferenceExpression",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 12,
+                    "startOffset": 121,
+                    "fragmentLength": 2
+                  },
+                  "ColumnType": "Regular",
+                  "MultiPartIdentifier": {
+                    "$type": "MultiPartIdentifier",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 12,
+                      "startOffset": 121,
+                      "fragmentLength": 2
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 8,
+                          "startColumn": 12,
+                          "startOffset": 121,
+                          "fragmentLength": 2
+                        },
+                        "Value": "c1",
+                        "QuoteType": "NotQuoted"
+                      }
+                    ]
+                  }
+                },
+                "IsPersisted": true,
+                "IsRowGuidCol": false,
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 5,
+                    "startOffset": 114,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c2",
+                  "QuoteType": "NotQuoted"
+                }
+              }
+            ],
+            "TableConstraints": [
+              {
+                "$type": "UniqueConstraintDefinition",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 5,
+                  "startOffset": 139,
+                  "fragmentLength": 15
+                },
+                "IsPrimaryKey": false,
+                "Columns": [
+                  {
+                    "$type": "ColumnWithSortOrder",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 13,
+                      "startOffset": 147,
+                      "fragmentLength": 2
+                    },
+                    "Column": {
+                      "$type": "ColumnReferenceExpression",
+                      "location": {
+                        "startLine": 9,
+                        "startColumn": 13,
+                        "startOffset": 147,
+                        "fragmentLength": 2
+                      },
+                      "ColumnType": "Regular",
+                      "MultiPartIdentifier": {
+                        "$type": "MultiPartIdentifier",
+                        "location": {
+                          "startLine": 9,
+                          "startColumn": 13,
+                          "startOffset": 147,
+                          "fragmentLength": 2
+                        },
+                        "Count": 1,
+                        "Identifiers": [
+                          {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 9,
+                              "startColumn": 13,
+                              "startOffset": 147,
+                              "fragmentLength": 2
+                            },
+                            "Value": "c1",
+                            "QuoteType": "NotQuoted"
+                          }
+                        ]
+                      }
+                    },
+                    "SortOrder": "NotSpecified"
+                  },
+                  {
+                    "$type": "ColumnWithSortOrder",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 17,
+                      "startOffset": 151,
+                      "fragmentLength": 2
+                    },
+                    "Column": {
+                      "$type": "ColumnReferenceExpression",
+                      "location": {
+                        "startLine": 9,
+                        "startColumn": 17,
+                        "startOffset": 151,
+                        "fragmentLength": 2
+                      },
+                      "ColumnType": "Regular",
+                      "MultiPartIdentifier": {
+                        "$type": "MultiPartIdentifier",
+                        "location": {
+                          "startLine": 9,
+                          "startColumn": 17,
+                          "startOffset": 151,
+                          "fragmentLength": 2
+                        },
+                        "Count": 1,
+                        "Identifiers": [
+                          {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 9,
+                              "startColumn": 17,
+                              "startOffset": 151,
+                              "fragmentLength": 2
+                            },
+                            "Value": "c2",
+                            "QuoteType": "NotQuoted"
+                          }
+                        ]
+                      }
+                    },
+                    "SortOrder": "NotSpecified"
+                  }
+                ]
+              }
+            ]
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 6,
+              "startColumn": 13,
+              "startOffset": 76,
+              "fragmentLength": 10
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 6,
+                "startColumn": 13,
+                "startOffset": 76,
+                "fragmentLength": 10
+              },
+              "Value": "tableType2",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 13,
+        "startColumn": 1,
+        "startOffset": 162,
+        "fragmentLength": 65
+      },
+      "Statements": [
+        {
+          "$type": "CreateProcedureStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 162,
+            "fragmentLength": 65
+          },
+          "ProcedureReference": {
+            "$type": "ProcedureReference",
+            "location": {
+              "startLine": 13,
+              "startColumn": 18,
+              "startOffset": 179,
+              "fragmentLength": 2
+            },
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 13,
+                "startColumn": 18,
+                "startOffset": 179,
+                "fragmentLength": 2
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 18,
+                  "startOffset": 179,
+                  "fragmentLength": 2
+                },
+                "Value": "P1",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "IsForReplication": false,
+          "Parameters": [
+            {
+              "$type": "ProcedureParameter",
+              "location": {
+                "startLine": 14,
+                "startColumn": 1,
+                "startOffset": 182,
+                "fragmentLength": 23
+              },
+              "IsVarying": false,
+              "Modifier": "ReadOnly",
+              "VariableName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 1,
+                  "startOffset": 182,
+                  "fragmentLength": 3
+                },
+                "Value": "@p1",
+                "QuoteType": "NotQuoted"
+              },
+              "DataType": {
+                "$type": "UserDataTypeReference",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 5,
+                  "startOffset": 186,
+                  "fragmentLength": 10
+                },
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 5,
+                    "startOffset": 186,
+                    "fragmentLength": 10
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 5,
+                      "startOffset": 186,
+                      "fragmentLength": 10
+                    },
+                    "Value": "tableType1",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "StatementList": {
+            "$type": "StatementList",
+            "location": {
+              "startLine": 16,
+              "startColumn": 1,
+              "startOffset": 209,
+              "fragmentLength": 18
+            },
+            "Statements": [
+              {
+                "$type": "SelectStatement",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 1,
+                  "startOffset": 209,
+                  "fragmentLength": 18
+                },
+                "QueryExpression": {
+                  "$type": "QuerySpecification",
+                  "location": {
+                    "startLine": 16,
+                    "startColumn": 1,
+                    "startOffset": 209,
+                    "fragmentLength": 17
+                  },
+                  "UniqueRowFilter": "NotSpecified",
+                  "SelectElements": [
+                    {
+                      "$type": "SelectStarExpression",
+                      "location": {
+                        "startLine": 16,
+                        "startColumn": 8,
+                        "startOffset": 216,
+                        "fragmentLength": 1
+                      }
+                    }
+                  ],
+                  "FromClause": {
+                    "$type": "FromClause",
+                    "location": {
+                      "startLine": 17,
+                      "startColumn": 1,
+                      "startOffset": 218,
+                      "fragmentLength": 8
+                    },
+                    "TableReferences": [
+                      {
+                        "$type": "VariableTableReference",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 6,
+                          "startOffset": 223,
+                          "fragmentLength": 3
+                        },
+                        "Variable": {
+                          "$type": "VariableReference",
+                          "location": {
+                            "startLine": 17,
+                            "startColumn": 6,
+                            "startOffset": 223,
+                            "fragmentLength": 3
+                          },
+                          "Name": "@p1"
+                        },
+                        "ForPath": false
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 21,
+        "startColumn": 1,
+        "startOffset": 233,
+        "fragmentLength": 108
+      },
+      "Statements": [
+        {
+          "$type": "CreateFunctionStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 233,
+            "fragmentLength": 108
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 21,
+              "startColumn": 17,
+              "startOffset": 249,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 21,
+                "startColumn": 17,
+                "startOffset": 249,
+                "fragmentLength": 2
+              },
+              "Value": "F1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "ReturnType": {
+            "$type": "ScalarFunctionReturnType",
+            "location": {
+              "startLine": 23,
+              "startColumn": 9,
+              "startOffset": 311,
+              "fragmentLength": 3
+            },
+            "DataType": {
+              "$type": "SqlDataTypeReference",
+              "location": {
+                "startLine": 23,
+                "startColumn": 9,
+                "startOffset": 311,
+                "fragmentLength": 3
+              },
+              "SqlDataTypeOption": "Int",
+              "Name": {
+                "$type": "SchemaObjectName",
+                "location": {
+                  "startLine": 23,
+                  "startColumn": 9,
+                  "startOffset": 311,
+                  "fragmentLength": 3
+                },
+                "BaseIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 23,
+                    "startColumn": 9,
+                    "startOffset": 311,
+                    "fragmentLength": 3
+                  },
+                  "Value": "INT",
+                  "QuoteType": "NotQuoted"
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$ref": "Identifier"
+                  }
+                ]
+              }
+            }
+          },
+          "Parameters": [
+            {
+              "$type": "ProcedureParameter",
+              "location": {
+                "startLine": 22,
+                "startColumn": 2,
+                "startOffset": 253,
+                "fragmentLength": 23
+              },
+              "IsVarying": false,
+              "Modifier": "ReadOnly",
+              "VariableName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 2,
+                  "startOffset": 253,
+                  "fragmentLength": 3
+                },
+                "Value": "@p1",
+                "QuoteType": "NotQuoted"
+              },
+              "DataType": {
+                "$type": "UserDataTypeReference",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 6,
+                  "startOffset": 257,
+                  "fragmentLength": 10
+                },
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 22,
+                    "startColumn": 6,
+                    "startOffset": 257,
+                    "fragmentLength": 10
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 22,
+                      "startColumn": 6,
+                      "startOffset": 257,
+                      "fragmentLength": 10
+                    },
+                    "Value": "tableType1",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "$type": "ProcedureParameter",
+              "location": {
+                "startLine": 22,
+                "startColumn": 27,
+                "startOffset": 278,
+                "fragmentLength": 23
+              },
+              "IsVarying": false,
+              "Modifier": "ReadOnly",
+              "VariableName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 27,
+                  "startOffset": 278,
+                  "fragmentLength": 3
+                },
+                "Value": "@p2",
+                "QuoteType": "NotQuoted"
+              },
+              "DataType": {
+                "$type": "UserDataTypeReference",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 31,
+                  "startOffset": 282,
+                  "fragmentLength": 10
+                },
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 22,
+                    "startColumn": 31,
+                    "startOffset": 282,
+                    "fragmentLength": 10
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 22,
+                      "startColumn": 31,
+                      "startOffset": 282,
+                      "fragmentLength": 10
+                    },
+                    "Value": "tableType2",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "StatementList": {
+            "$type": "StatementList",
+            "location": {
+              "startLine": 25,
+              "startColumn": 1,
+              "startOffset": 318,
+              "fragmentLength": 23
+            },
+            "Statements": [
+              {
+                "$type": "BeginEndBlockStatement",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 1,
+                  "startOffset": 318,
+                  "fragmentLength": 23
+                },
+                "StatementList": {
+                  "$type": "StatementList",
+                  "location": {
+                    "startLine": -1,
+                    "startColumn": -1,
+                    "startOffset": -1,
+                    "fragmentLength": -1
+                  },
+                  "Statements": [
+                    {
+                      "$type": "ReturnStatement",
+                      "location": {
+                        "startLine": 26,
+                        "startColumn": 5,
+                        "startOffset": 328,
+                        "fragmentLength": 9
+                      },
+                      "Expression": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 26,
+                          "startColumn": 12,
+                          "startOffset": 335,
+                          "fragmentLength": 1
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "1"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

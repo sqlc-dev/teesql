@@ -1,0 +1,160 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 376
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 38
+      },
+      "Statements": [
+        {
+          "$type": "SetRowCountStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 16
+          },
+          "NumberRows": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 1,
+              "startColumn": 14,
+              "startOffset": 13,
+              "fragmentLength": 2
+            },
+            "LiteralType": "Integer",
+            "Value": "10"
+          }
+        },
+        {
+          "$type": "SetRowCountStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 18,
+            "fragmentLength": 20
+          },
+          "NumberRows": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 3,
+              "startColumn": 14,
+              "startOffset": 31,
+              "fragmentLength": 6
+            },
+            "Name": "@myVar"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 7,
+        "startColumn": 1,
+        "startOffset": 44,
+        "fragmentLength": 184
+      },
+      "Statements": [
+        {
+          "$type": "PredicateSetStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 44,
+            "fragmentLength": 55
+          },
+          "Options": "ConcatNullYieldsNull, CursorCloseOnCommit",
+          "IsOn": true
+        },
+        {
+          "$type": "PredicateSetStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 101,
+            "fragmentLength": 54
+          },
+          "Options": "ArithAbort, NumericRoundAbort, AnsiDefaults",
+          "IsOn": false
+        },
+        {
+          "$type": "SetStatisticsStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 157,
+            "fragmentLength": 36
+          },
+          "Options": "IO, Profile, Time",
+          "IsOn": true
+        },
+        {
+          "$type": "SetStatisticsStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 195,
+            "fragmentLength": 33
+          },
+          "Options": "Profile, Time",
+          "IsOn": false
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 17,
+        "startColumn": 1,
+        "startOffset": 234,
+        "fragmentLength": 142
+      },
+      "Statements": [
+        {
+          "$type": "SetOffsetsStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 234,
+            "fragmentLength": 89
+          },
+          "Options": "Select, From, Order, Compute, Table, Procedure, Execute, Statement, Param",
+          "IsOn": true
+        },
+        {
+          "$type": "SetOffsetsStatement",
+          "location": {
+            "startLine": 19,
+            "startColumn": 1,
+            "startOffset": 325,
+            "fragmentLength": 28
+          },
+          "Options": "From, Order",
+          "IsOn": false
+        },
+        {
+          "$type": "SetOffsetsStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 355,
+            "fragmentLength": 21
+          },
+          "Options": "Param",
+          "IsOn": true
+        }
+      ]
+    }
+  ]
+}

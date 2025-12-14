@@ -1,0 +1,4312 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 4147
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 4147
+      },
+      "Statements": [
+        {
+          "$type": "CopyStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 207
+          },
+          "From": [
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 1,
+                "startColumn": 32,
+                "startOffset": 31,
+                "fragmentLength": 87
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://contosoretaildw.blob.core.windows.net/contosoretaildw-tables/FactOnlineSales/"
+            }
+          ],
+          "Into": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 1,
+              "startColumn": 11,
+              "startOffset": 10,
+              "fragmentLength": 15
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 11,
+                "startOffset": 10,
+                "fragmentLength": 15
+              },
+              "Value": "FactOnlineSales",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 22,
+                "startOffset": 149,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 22,
+                  "startOffset": 149,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 22,
+                    "startOffset": 149,
+                    "fragmentLength": 3
+                  },
+                  "Value": "|",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 22,
+                      "startOffset": 149,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "|"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 17,
+                "startOffset": 171,
+                "fragmentLength": 5
+              },
+              "Kind": "DateFormat",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 17,
+                  "startOffset": 171,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 17,
+                    "startOffset": 171,
+                    "fragmentLength": 5
+                  },
+                  "Value": "ymd",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 17,
+                      "startOffset": 171,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ymd"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 20,
+                "startOffset": 198,
+                "fragmentLength": 6
+              },
+              "Kind": "RowTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 20,
+                  "startOffset": 198,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 20,
+                    "startOffset": 198,
+                    "fragmentLength": 6
+                  },
+                  "Value": "0x0A",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 20,
+                      "startOffset": 198,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "0x0A"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CopyStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 210,
+            "fragmentLength": 115
+          },
+          "From": [
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 8,
+                "startColumn": 40,
+                "startOffset": 249,
+                "fragmentLength": 76
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://unsecureaccount.blob.core.windows.net/customerdatasets/linitem.csv"
+            }
+          ],
+          "Into": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 8,
+              "startColumn": 11,
+              "startOffset": 220,
+              "fragmentLength": 23
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 11,
+                "startOffset": 220,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 15,
+                "startOffset": 224,
+                "fragmentLength": 19
+              },
+              "Value": "FactOnlineSalesv1",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "CopyStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 327,
+            "fragmentLength": 432
+          },
+          "From": [
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 11,
+                "startColumn": 6,
+                "startOffset": 350,
+                "fragmentLength": 79
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://loadingtest.blob.core.windows.net/customerdatasets/sastest/test_1.txt"
+            }
+          ],
+          "Into": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 10,
+              "startColumn": 11,
+              "startOffset": 337,
+              "fragmentLength": 6
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 10,
+                "startColumn": 11,
+                "startOffset": 337,
+                "fragmentLength": 6
+              },
+              "Value": "test_1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 17,
+                "startOffset": 455,
+                "fragmentLength": 5
+              },
+              "Kind": "File_Type",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 17,
+                  "startOffset": 455,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 13,
+                    "startColumn": 17,
+                    "startOffset": 455,
+                    "fragmentLength": 5
+                  },
+                  "Value": "CSV",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 13,
+                      "startColumn": 17,
+                      "startOffset": 455,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "CSV"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 14,
+                "startColumn": 29,
+                "startOffset": 491,
+                "fragmentLength": 52
+              },
+              "Kind": "Credential",
+              "Value": {
+                "$type": "CopyCredentialOption",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 29,
+                  "startOffset": 491,
+                  "fragmentLength": 52
+                },
+                "Identity": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 29,
+                    "startOffset": 491,
+                    "fragmentLength": 25
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "Shared Access Signature"
+                },
+                "Secret": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 63,
+                    "startOffset": 525,
+                    "fragmentLength": 18
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "\u003CYour_SAS_Token\u003E"
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 18,
+                "startOffset": 564,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldQuote",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 18,
+                  "startOffset": 564,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 15,
+                    "startColumn": 18,
+                    "startOffset": 564,
+                    "fragmentLength": 3
+                  },
+                  "Value": "\u0022",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 18,
+                      "startOffset": 564,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "\u0022"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 16,
+                "startColumn": 22,
+                "startOffset": 591,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 22,
+                  "startOffset": 591,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 16,
+                    "startColumn": 22,
+                    "startOffset": 591,
+                    "fragmentLength": 3
+                  },
+                  "Value": ";",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 16,
+                      "startColumn": 22,
+                      "startOffset": 591,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": ";"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 17,
+                "startColumn": 20,
+                "startOffset": 616,
+                "fragmentLength": 6
+              },
+              "Kind": "RowTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 20,
+                  "startOffset": 616,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 17,
+                    "startColumn": 20,
+                    "startOffset": 616,
+                    "fragmentLength": 6
+                  },
+                  "Value": "0X0A",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 17,
+                      "startColumn": 20,
+                      "startOffset": 616,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "0X0A"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 18,
+                "startColumn": 16,
+                "startOffset": 640,
+                "fragmentLength": 6
+              },
+              "Kind": "Encoding",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 16,
+                  "startOffset": 640,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 18,
+                    "startColumn": 16,
+                    "startOffset": 640,
+                    "fragmentLength": 6
+                  },
+                  "Value": "UTF8",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 18,
+                      "startColumn": 16,
+                      "startOffset": 640,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "UTF8"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 19,
+                "startColumn": 18,
+                "startOffset": 666,
+                "fragmentLength": 5
+              },
+              "Kind": "DateFormat",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 18,
+                  "startOffset": 666,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 19,
+                    "startColumn": 18,
+                    "startOffset": 666,
+                    "fragmentLength": 5
+                  },
+                  "Value": "ymd",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 19,
+                      "startColumn": 18,
+                      "startOffset": 666,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ymd"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 20,
+                "startColumn": 17,
+                "startOffset": 690,
+                "fragmentLength": 2
+              },
+              "Kind": "MaxErrors",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 20,
+                  "startColumn": 17,
+                  "startOffset": 690,
+                  "fragmentLength": 2
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 17,
+                    "startOffset": 690,
+                    "fragmentLength": 2
+                  },
+                  "Value": "10",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 20,
+                      "startColumn": 17,
+                      "startOffset": 690,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 21,
+                "startColumn": 17,
+                "startOffset": 711,
+                "fragmentLength": 24
+              },
+              "Kind": "ErrorFile",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 17,
+                  "startOffset": 711,
+                  "fragmentLength": 24
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 21,
+                    "startColumn": 17,
+                    "startOffset": 711,
+                    "fragmentLength": 24
+                  },
+                  "Value": "/sastest/errorsfolder/",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 21,
+                      "startColumn": 17,
+                      "startOffset": 711,
+                      "fragmentLength": 24
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "/sastest/errorsfolder/"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 22,
+                "startColumn": 16,
+                "startOffset": 752,
+                "fragmentLength": 1
+              },
+              "Kind": "FirstRow",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 16,
+                  "startOffset": 752,
+                  "fragmentLength": 1
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 22,
+                    "startColumn": 16,
+                    "startOffset": 752,
+                    "fragmentLength": 1
+                  },
+                  "Value": "2",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 22,
+                      "startColumn": 16,
+                      "startOffset": 752,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CopyStatement",
+          "location": {
+            "startLine": 25,
+            "startColumn": 1,
+            "startOffset": 762,
+            "fragmentLength": 460
+          },
+          "From": [
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 26,
+                "startColumn": 6,
+                "startOffset": 784,
+                "fragmentLength": 79
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://loadingtest.blob.core.windows.net/customerdatasets/sastest/test_2.txt"
+            }
+          ],
+          "Into": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 25,
+              "startColumn": 11,
+              "startOffset": 772,
+              "fragmentLength": 6
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 25,
+                "startColumn": 11,
+                "startOffset": 772,
+                "fragmentLength": 6
+              },
+              "Value": "test_2",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 28,
+                "startColumn": 17,
+                "startOffset": 889,
+                "fragmentLength": 5
+              },
+              "Kind": "File_Type",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 28,
+                  "startColumn": 17,
+                  "startOffset": 889,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 17,
+                    "startOffset": 889,
+                    "fragmentLength": 5
+                  },
+                  "Value": "CSV",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 17,
+                      "startOffset": 889,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "CSV"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 29,
+                "startColumn": 23,
+                "startOffset": 919,
+                "fragmentLength": 4
+              },
+              "Kind": "Identity_Insert",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 29,
+                  "startColumn": 23,
+                  "startOffset": 919,
+                  "fragmentLength": 4
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 29,
+                    "startColumn": 23,
+                    "startOffset": 919,
+                    "fragmentLength": 4
+                  },
+                  "Value": "ON",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 29,
+                      "startColumn": 23,
+                      "startOffset": 919,
+                      "fragmentLength": 4
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ON"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 30,
+                "startColumn": 30,
+                "startOffset": 954,
+                "fragmentLength": 53
+              },
+              "Kind": "Credential",
+              "Value": {
+                "$type": "CopyCredentialOption",
+                "location": {
+                  "startLine": 30,
+                  "startColumn": 30,
+                  "startOffset": 954,
+                  "fragmentLength": 53
+                },
+                "Identity": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 30,
+                    "startColumn": 30,
+                    "startOffset": 954,
+                    "fragmentLength": 25
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "Shared Access Signature"
+                },
+                "Secret": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 30,
+                    "startColumn": 65,
+                    "startOffset": 989,
+                    "fragmentLength": 18
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "\u003CYour_SAS_Token\u003E"
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 31,
+                "startColumn": 18,
+                "startOffset": 1028,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldQuote",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 18,
+                  "startOffset": 1028,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 31,
+                    "startColumn": 18,
+                    "startOffset": 1028,
+                    "fragmentLength": 3
+                  },
+                  "Value": "\u0022",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 31,
+                      "startColumn": 18,
+                      "startOffset": 1028,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "\u0022"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 32,
+                "startColumn": 16,
+                "startOffset": 1049,
+                "fragmentLength": 1
+              },
+              "Kind": "FirstRow",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 32,
+                  "startColumn": 16,
+                  "startOffset": 1049,
+                  "fragmentLength": 1
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 32,
+                    "startColumn": 16,
+                    "startOffset": 1049,
+                    "fragmentLength": 1
+                  },
+                  "Value": "2",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 32,
+                      "startColumn": 16,
+                      "startOffset": 1049,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 33,
+                "startColumn": 22,
+                "startOffset": 1073,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 33,
+                  "startColumn": 22,
+                  "startOffset": 1073,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 33,
+                    "startColumn": 22,
+                    "startOffset": 1073,
+                    "fragmentLength": 3
+                  },
+                  "Value": ";",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 33,
+                      "startColumn": 22,
+                      "startOffset": 1073,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": ";"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 34,
+                "startColumn": 19,
+                "startOffset": 1097,
+                "fragmentLength": 6
+              },
+              "Kind": "RowTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 34,
+                  "startColumn": 19,
+                  "startOffset": 1097,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 34,
+                    "startColumn": 19,
+                    "startOffset": 1097,
+                    "fragmentLength": 6
+                  },
+                  "Value": "0X0A",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 34,
+                      "startColumn": 19,
+                      "startOffset": 1097,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "0X0A"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 35,
+                "startColumn": 16,
+                "startOffset": 1121,
+                "fragmentLength": 6
+              },
+              "Kind": "Encoding",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 35,
+                  "startColumn": 16,
+                  "startOffset": 1121,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 35,
+                    "startColumn": 16,
+                    "startOffset": 1121,
+                    "fragmentLength": 6
+                  },
+                  "Value": "UTF8",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 35,
+                      "startColumn": 16,
+                      "startOffset": 1121,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "UTF8"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 36,
+                "startColumn": 18,
+                "startOffset": 1147,
+                "fragmentLength": 5
+              },
+              "Kind": "DateFormat",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 36,
+                  "startColumn": 18,
+                  "startOffset": 1147,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 36,
+                    "startColumn": 18,
+                    "startOffset": 1147,
+                    "fragmentLength": 5
+                  },
+                  "Value": "ymd",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 36,
+                      "startColumn": 18,
+                      "startOffset": 1147,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ymd"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 37,
+                "startColumn": 17,
+                "startOffset": 1171,
+                "fragmentLength": 2
+              },
+              "Kind": "MaxErrors",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 37,
+                  "startColumn": 17,
+                  "startOffset": 1171,
+                  "fragmentLength": 2
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 37,
+                    "startColumn": 17,
+                    "startOffset": 1171,
+                    "fragmentLength": 2
+                  },
+                  "Value": "10",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 37,
+                      "startColumn": 17,
+                      "startOffset": 1171,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 38,
+                "startColumn": 17,
+                "startOffset": 1192,
+                "fragmentLength": 24
+              },
+              "Kind": "ErrorFile",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 38,
+                  "startColumn": 17,
+                  "startOffset": 1192,
+                  "fragmentLength": 24
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 38,
+                    "startColumn": 17,
+                    "startOffset": 1192,
+                    "fragmentLength": 24
+                  },
+                  "Value": "/sastest/errorsfolder/",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 38,
+                      "startColumn": 17,
+                      "startOffset": 1192,
+                      "fragmentLength": 24
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "/sastest/errorsfolder/"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CopyStatement",
+          "location": {
+            "startLine": 41,
+            "startColumn": 1,
+            "startOffset": 1225,
+            "fragmentLength": 520
+          },
+          "From": [
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 42,
+                "startColumn": 6,
+                "startOffset": 1303,
+                "fragmentLength": 79
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://loadingtest.blob.core.windows.net/customerdatasets/sastest/test_3.txt"
+            }
+          ],
+          "Into": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 41,
+              "startColumn": 11,
+              "startOffset": 1235,
+              "fragmentLength": 6
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 41,
+                "startColumn": 11,
+                "startOffset": 1235,
+                "fragmentLength": 6
+              },
+              "Value": "test_3",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 41,
+                "startColumn": 18,
+                "startOffset": 1242,
+                "fragmentLength": 54
+              },
+              "Kind": "ColumnOptions",
+              "Value": {
+                "$type": "ListTypeCopyOption",
+                "location": {
+                  "startLine": 41,
+                  "startColumn": 18,
+                  "startOffset": 1242,
+                  "fragmentLength": 54
+                },
+                "Options": [
+                  {
+                    "$type": "CopyColumnOption",
+                    "location": {
+                      "startLine": 41,
+                      "startColumn": 18,
+                      "startOffset": 1242,
+                      "fragmentLength": 33
+                    },
+                    "ColumnName": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 18,
+                        "startOffset": 1242,
+                        "fragmentLength": 7
+                      },
+                      "Value": "Col_one",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "DefaultValue": {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 34,
+                        "startOffset": 1258,
+                        "fragmentLength": 15
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "stringdefault"
+                    },
+                    "FieldNumber": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 50,
+                        "startOffset": 1274,
+                        "fragmentLength": 1
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "1"
+                    }
+                  },
+                  {
+                    "$type": "CopyColumnOption",
+                    "location": {
+                      "startLine": 41,
+                      "startColumn": 53,
+                      "startOffset": 1277,
+                      "fragmentLength": 19
+                    },
+                    "ColumnName": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 53,
+                        "startOffset": 1277,
+                        "fragmentLength": 7
+                      },
+                      "Value": "Col_two",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "DefaultValue": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 69,
+                        "startOffset": 1293,
+                        "fragmentLength": 1
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "1"
+                    },
+                    "FieldNumber": {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 71,
+                        "startOffset": 1295,
+                        "fragmentLength": 1
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "3"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 44,
+                "startColumn": 17,
+                "startOffset": 1408,
+                "fragmentLength": 5
+              },
+              "Kind": "File_Type",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 44,
+                  "startColumn": 17,
+                  "startOffset": 1408,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 44,
+                    "startColumn": 17,
+                    "startOffset": 1408,
+                    "fragmentLength": 5
+                  },
+                  "Value": "CSV",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 44,
+                      "startColumn": 17,
+                      "startOffset": 1408,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "CSV"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 45,
+                "startColumn": 23,
+                "startOffset": 1438,
+                "fragmentLength": 5
+              },
+              "Kind": "Identity_Insert",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 45,
+                  "startColumn": 23,
+                  "startOffset": 1438,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 45,
+                    "startColumn": 23,
+                    "startOffset": 1438,
+                    "fragmentLength": 5
+                  },
+                  "Value": "OFF",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 45,
+                      "startColumn": 23,
+                      "startOffset": 1438,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "OFF"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 46,
+                "startColumn": 30,
+                "startOffset": 1474,
+                "fragmentLength": 53
+              },
+              "Kind": "Credential",
+              "Value": {
+                "$type": "CopyCredentialOption",
+                "location": {
+                  "startLine": 46,
+                  "startColumn": 30,
+                  "startOffset": 1474,
+                  "fragmentLength": 53
+                },
+                "Identity": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 46,
+                    "startColumn": 30,
+                    "startOffset": 1474,
+                    "fragmentLength": 25
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "Shared Access Signature"
+                },
+                "Secret": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 46,
+                    "startColumn": 65,
+                    "startOffset": 1509,
+                    "fragmentLength": 18
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "\u003CYour_SAS_Token\u003E"
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 47,
+                "startColumn": 18,
+                "startOffset": 1548,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldQuote",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 47,
+                  "startColumn": 18,
+                  "startOffset": 1548,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 47,
+                    "startColumn": 18,
+                    "startOffset": 1548,
+                    "fragmentLength": 3
+                  },
+                  "Value": "\u0022",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 47,
+                      "startColumn": 18,
+                      "startOffset": 1548,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "\u0022"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 48,
+                "startColumn": 16,
+                "startOffset": 1569,
+                "fragmentLength": 1
+              },
+              "Kind": "FirstRow",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 48,
+                  "startColumn": 16,
+                  "startOffset": 1569,
+                  "fragmentLength": 1
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 48,
+                    "startColumn": 16,
+                    "startOffset": 1569,
+                    "fragmentLength": 1
+                  },
+                  "Value": "2",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 48,
+                      "startColumn": 16,
+                      "startOffset": 1569,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 49,
+                "startColumn": 23,
+                "startOffset": 1594,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 49,
+                  "startColumn": 23,
+                  "startOffset": 1594,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 49,
+                    "startColumn": 23,
+                    "startOffset": 1594,
+                    "fragmentLength": 3
+                  },
+                  "Value": ";",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 49,
+                      "startColumn": 23,
+                      "startOffset": 1594,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": ";"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 50,
+                "startColumn": 21,
+                "startOffset": 1620,
+                "fragmentLength": 6
+              },
+              "Kind": "RowTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 50,
+                  "startColumn": 21,
+                  "startOffset": 1620,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 50,
+                    "startColumn": 21,
+                    "startOffset": 1620,
+                    "fragmentLength": 6
+                  },
+                  "Value": "0X0A",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 50,
+                      "startColumn": 21,
+                      "startOffset": 1620,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "0X0A"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 51,
+                "startColumn": 16,
+                "startOffset": 1644,
+                "fragmentLength": 6
+              },
+              "Kind": "Encoding",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 51,
+                  "startColumn": 16,
+                  "startOffset": 1644,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 51,
+                    "startColumn": 16,
+                    "startOffset": 1644,
+                    "fragmentLength": 6
+                  },
+                  "Value": "UTF8",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 51,
+                      "startColumn": 16,
+                      "startOffset": 1644,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "UTF8"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 52,
+                "startColumn": 18,
+                "startOffset": 1670,
+                "fragmentLength": 5
+              },
+              "Kind": "DateFormat",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 52,
+                  "startColumn": 18,
+                  "startOffset": 1670,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 52,
+                    "startColumn": 18,
+                    "startOffset": 1670,
+                    "fragmentLength": 5
+                  },
+                  "Value": "ymd",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 52,
+                      "startColumn": 18,
+                      "startOffset": 1670,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ymd"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 53,
+                "startColumn": 17,
+                "startOffset": 1694,
+                "fragmentLength": 2
+              },
+              "Kind": "MaxErrors",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 53,
+                  "startColumn": 17,
+                  "startOffset": 1694,
+                  "fragmentLength": 2
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 53,
+                    "startColumn": 17,
+                    "startOffset": 1694,
+                    "fragmentLength": 2
+                  },
+                  "Value": "10",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 53,
+                      "startColumn": 17,
+                      "startOffset": 1694,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 54,
+                "startColumn": 17,
+                "startOffset": 1715,
+                "fragmentLength": 24
+              },
+              "Kind": "ErrorFile",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 54,
+                  "startColumn": 17,
+                  "startOffset": 1715,
+                  "fragmentLength": 24
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 54,
+                    "startColumn": 17,
+                    "startOffset": 1715,
+                    "fragmentLength": 24
+                  },
+                  "Value": "/sastest/errorsfolder/",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 54,
+                      "startColumn": 17,
+                      "startOffset": 1715,
+                      "fragmentLength": 24
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "/sastest/errorsfolder/"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CopyStatement",
+          "location": {
+            "startLine": 57,
+            "startColumn": 1,
+            "startOffset": 1747,
+            "fragmentLength": 233
+          },
+          "From": [
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 58,
+                "startColumn": 6,
+                "startOffset": 1769,
+                "fragmentLength": 82
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://polybasewasb.blob.core.windows.net/customerdatasets/parquet/test.parquet"
+            }
+          ],
+          "Into": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 57,
+              "startColumn": 11,
+              "startOffset": 1757,
+              "fragmentLength": 6
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 57,
+                "startColumn": 11,
+                "startOffset": 1757,
+                "fragmentLength": 6
+              },
+              "Value": "test_4",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 60,
+                "startColumn": 18,
+                "startOffset": 1878,
+                "fragmentLength": 9
+              },
+              "Kind": "File_Type",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 60,
+                  "startColumn": 18,
+                  "startOffset": 1878,
+                  "fragmentLength": 9
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 60,
+                    "startColumn": 18,
+                    "startOffset": 1878,
+                    "fragmentLength": 9
+                  },
+                  "Value": "PARQUET",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 60,
+                      "startColumn": 18,
+                      "startOffset": 1878,
+                      "fragmentLength": 9
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "PARQUET"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 61,
+                "startColumn": 31,
+                "startOffset": 1919,
+                "fragmentLength": 53
+              },
+              "Kind": "Credential",
+              "Value": {
+                "$type": "CopyCredentialOption",
+                "location": {
+                  "startLine": 61,
+                  "startColumn": 31,
+                  "startOffset": 1919,
+                  "fragmentLength": 53
+                },
+                "Identity": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 61,
+                    "startColumn": 31,
+                    "startOffset": 1919,
+                    "fragmentLength": 25
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "Shared Access Signature"
+                },
+                "Secret": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 61,
+                    "startColumn": 66,
+                    "startOffset": 1954,
+                    "fragmentLength": 18
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "\u003CYour_SAS_Token\u003E"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CopyStatement",
+          "location": {
+            "startLine": 64,
+            "startColumn": 1,
+            "startOffset": 1982,
+            "fragmentLength": 524
+          },
+          "From": [
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 65,
+                "startColumn": 6,
+                "startOffset": 2004,
+                "fragmentLength": 79
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://loadingtest.blob.core.windows.net/customerdatasets/sastest/test_5.txt"
+            }
+          ],
+          "Into": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 64,
+              "startColumn": 11,
+              "startOffset": 1992,
+              "fragmentLength": 6
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 64,
+                "startColumn": 11,
+                "startOffset": 1992,
+                "fragmentLength": 6
+              },
+              "Value": "test_5",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 67,
+                "startColumn": 17,
+                "startOffset": 2109,
+                "fragmentLength": 9
+              },
+              "Kind": "File_Type",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 67,
+                  "startColumn": 17,
+                  "startOffset": 2109,
+                  "fragmentLength": 9
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 67,
+                    "startColumn": 17,
+                    "startOffset": 2109,
+                    "fragmentLength": 9
+                  },
+                  "Value": "PARQUET",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 67,
+                      "startColumn": 17,
+                      "startOffset": 2109,
+                      "fragmentLength": 9
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "PARQUET"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 68,
+                "startColumn": 19,
+                "startOffset": 2139,
+                "fragmentLength": 10
+              },
+              "Kind": "File_Format",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 68,
+                  "startColumn": 19,
+                  "startOffset": 2139,
+                  "fragmentLength": 10
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 68,
+                    "startColumn": 19,
+                    "startOffset": 2139,
+                    "fragmentLength": 10
+                  },
+                  "Value": "fileformat",
+                  "Identifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 68,
+                      "startColumn": 19,
+                      "startOffset": 2139,
+                      "fragmentLength": 10
+                    },
+                    "Value": "fileformat",
+                    "QuoteType": "NotQuoted"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 69,
+                "startColumn": 23,
+                "startOffset": 2174,
+                "fragmentLength": 4
+              },
+              "Kind": "Identity_Insert",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 69,
+                  "startColumn": 23,
+                  "startOffset": 2174,
+                  "fragmentLength": 4
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 69,
+                    "startColumn": 23,
+                    "startOffset": 2174,
+                    "fragmentLength": 4
+                  },
+                  "Value": "ON",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 69,
+                      "startColumn": 23,
+                      "startOffset": 2174,
+                      "fragmentLength": 4
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ON"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 70,
+                "startColumn": 30,
+                "startOffset": 2209,
+                "fragmentLength": 53
+              },
+              "Kind": "Credential",
+              "Value": {
+                "$type": "CopyCredentialOption",
+                "location": {
+                  "startLine": 70,
+                  "startColumn": 30,
+                  "startOffset": 2209,
+                  "fragmentLength": 53
+                },
+                "Identity": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 70,
+                    "startColumn": 30,
+                    "startOffset": 2209,
+                    "fragmentLength": 25
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "Shared Access Signature"
+                },
+                "Secret": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 70,
+                    "startColumn": 65,
+                    "startOffset": 2244,
+                    "fragmentLength": 18
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "\u003CYour_SAS_Token\u003E"
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 71,
+                "startColumn": 18,
+                "startOffset": 2283,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldQuote",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 71,
+                  "startColumn": 18,
+                  "startOffset": 2283,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 71,
+                    "startColumn": 18,
+                    "startOffset": 2283,
+                    "fragmentLength": 3
+                  },
+                  "Value": "\u0022",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 71,
+                      "startColumn": 18,
+                      "startOffset": 2283,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "\u0022"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 72,
+                "startColumn": 16,
+                "startOffset": 2304,
+                "fragmentLength": 1
+              },
+              "Kind": "FirstRow",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 72,
+                  "startColumn": 16,
+                  "startOffset": 2304,
+                  "fragmentLength": 1
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 72,
+                    "startColumn": 16,
+                    "startOffset": 2304,
+                    "fragmentLength": 1
+                  },
+                  "Value": "2",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 72,
+                      "startColumn": 16,
+                      "startOffset": 2304,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 73,
+                "startColumn": 23,
+                "startOffset": 2329,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 73,
+                  "startColumn": 23,
+                  "startOffset": 2329,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 73,
+                    "startColumn": 23,
+                    "startOffset": 2329,
+                    "fragmentLength": 3
+                  },
+                  "Value": ";",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 73,
+                      "startColumn": 23,
+                      "startOffset": 2329,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": ";"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 74,
+                "startColumn": 21,
+                "startOffset": 2355,
+                "fragmentLength": 6
+              },
+              "Kind": "RowTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 74,
+                  "startColumn": 21,
+                  "startOffset": 2355,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 74,
+                    "startColumn": 21,
+                    "startOffset": 2355,
+                    "fragmentLength": 6
+                  },
+                  "Value": "0X0A",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 74,
+                      "startColumn": 21,
+                      "startOffset": 2355,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "0X0A"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 75,
+                "startColumn": 16,
+                "startOffset": 2379,
+                "fragmentLength": 6
+              },
+              "Kind": "Encoding",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 75,
+                  "startColumn": 16,
+                  "startOffset": 2379,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 75,
+                    "startColumn": 16,
+                    "startOffset": 2379,
+                    "fragmentLength": 6
+                  },
+                  "Value": "UTF8",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 75,
+                      "startColumn": 16,
+                      "startOffset": 2379,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "UTF8"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 76,
+                "startColumn": 18,
+                "startOffset": 2405,
+                "fragmentLength": 5
+              },
+              "Kind": "DateFormat",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 76,
+                  "startColumn": 18,
+                  "startOffset": 2405,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 76,
+                    "startColumn": 18,
+                    "startOffset": 2405,
+                    "fragmentLength": 5
+                  },
+                  "Value": "ymd",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 76,
+                      "startColumn": 18,
+                      "startOffset": 2405,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ymd"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 77,
+                "startColumn": 17,
+                "startOffset": 2429,
+                "fragmentLength": 2
+              },
+              "Kind": "MaxErrors",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 77,
+                  "startColumn": 17,
+                  "startOffset": 2429,
+                  "fragmentLength": 2
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 77,
+                    "startColumn": 17,
+                    "startOffset": 2429,
+                    "fragmentLength": 2
+                  },
+                  "Value": "10",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 77,
+                      "startColumn": 17,
+                      "startOffset": 2429,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 78,
+                "startColumn": 19,
+                "startOffset": 2452,
+                "fragmentLength": 6
+              },
+              "Kind": "Compression",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 78,
+                  "startColumn": 19,
+                  "startOffset": 2452,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 78,
+                    "startColumn": 19,
+                    "startOffset": 2452,
+                    "fragmentLength": 6
+                  },
+                  "Value": "GZIP",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 78,
+                      "startColumn": 19,
+                      "startOffset": 2452,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "GZIP"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 79,
+                "startColumn": 17,
+                "startOffset": 2476,
+                "fragmentLength": 24
+              },
+              "Kind": "ErrorFile",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 79,
+                  "startColumn": 17,
+                  "startOffset": 2476,
+                  "fragmentLength": 24
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 79,
+                    "startColumn": 17,
+                    "startOffset": 2476,
+                    "fragmentLength": 24
+                  },
+                  "Value": "/sastest/errorsfolder/",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 79,
+                      "startColumn": 17,
+                      "startOffset": 2476,
+                      "fragmentLength": 24
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "/sastest/errorsfolder/"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CopyStatement",
+          "location": {
+            "startLine": 82,
+            "startColumn": 1,
+            "startOffset": 2509,
+            "fragmentLength": 592
+          },
+          "From": [
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 83,
+                "startColumn": 6,
+                "startOffset": 2531,
+                "fragmentLength": 79
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://loadingtest.blob.core.windows.net/customerdatasets/sastest/test_6.txt"
+            }
+          ],
+          "Into": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 82,
+              "startColumn": 11,
+              "startOffset": 2519,
+              "fragmentLength": 6
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 82,
+                "startColumn": 11,
+                "startOffset": 2519,
+                "fragmentLength": 6
+              },
+              "Value": "test_6",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 85,
+                "startColumn": 17,
+                "startOffset": 2636,
+                "fragmentLength": 5
+              },
+              "Kind": "File_Type",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 85,
+                  "startColumn": 17,
+                  "startOffset": 2636,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 85,
+                    "startColumn": 17,
+                    "startOffset": 2636,
+                    "fragmentLength": 5
+                  },
+                  "Value": "ORC",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 85,
+                      "startColumn": 17,
+                      "startOffset": 2636,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ORC"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 86,
+                "startColumn": 23,
+                "startOffset": 2666,
+                "fragmentLength": 4
+              },
+              "Kind": "Identity_Insert",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 86,
+                  "startColumn": 23,
+                  "startOffset": 2666,
+                  "fragmentLength": 4
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 86,
+                    "startColumn": 23,
+                    "startOffset": 2666,
+                    "fragmentLength": 4
+                  },
+                  "Value": "ON",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 86,
+                      "startColumn": 23,
+                      "startOffset": 2666,
+                      "fragmentLength": 4
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ON"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 87,
+                "startColumn": 30,
+                "startOffset": 2701,
+                "fragmentLength": 53
+              },
+              "Kind": "Credential",
+              "Value": {
+                "$type": "CopyCredentialOption",
+                "location": {
+                  "startLine": 87,
+                  "startColumn": 30,
+                  "startOffset": 2701,
+                  "fragmentLength": 53
+                },
+                "Identity": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 87,
+                    "startColumn": 30,
+                    "startOffset": 2701,
+                    "fragmentLength": 25
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "Shared Access Signature"
+                },
+                "Secret": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 87,
+                    "startColumn": 65,
+                    "startOffset": 2736,
+                    "fragmentLength": 18
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "\u003CYour_SAS_Token\u003E"
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 88,
+                "startColumn": 18,
+                "startOffset": 2775,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldQuote",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 88,
+                  "startColumn": 18,
+                  "startOffset": 2775,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 88,
+                    "startColumn": 18,
+                    "startOffset": 2775,
+                    "fragmentLength": 3
+                  },
+                  "Value": "\u0022",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 88,
+                      "startColumn": 18,
+                      "startOffset": 2775,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "\u0022"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 89,
+                "startColumn": 16,
+                "startOffset": 2796,
+                "fragmentLength": 1
+              },
+              "Kind": "FirstRow",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 89,
+                  "startColumn": 16,
+                  "startOffset": 2796,
+                  "fragmentLength": 1
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 89,
+                    "startColumn": 16,
+                    "startOffset": 2796,
+                    "fragmentLength": 1
+                  },
+                  "Value": "2",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 89,
+                      "startColumn": 16,
+                      "startOffset": 2796,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 90,
+                "startColumn": 23,
+                "startOffset": 2821,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 90,
+                  "startColumn": 23,
+                  "startOffset": 2821,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 90,
+                    "startColumn": 23,
+                    "startOffset": 2821,
+                    "fragmentLength": 3
+                  },
+                  "Value": ";",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 90,
+                      "startColumn": 23,
+                      "startOffset": 2821,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": ";"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 91,
+                "startColumn": 21,
+                "startOffset": 2847,
+                "fragmentLength": 6
+              },
+              "Kind": "RowTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 91,
+                  "startColumn": 21,
+                  "startOffset": 2847,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 91,
+                    "startColumn": 21,
+                    "startOffset": 2847,
+                    "fragmentLength": 6
+                  },
+                  "Value": "0X0A",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 91,
+                      "startColumn": 21,
+                      "startOffset": 2847,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "0X0A"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 92,
+                "startColumn": 16,
+                "startOffset": 2871,
+                "fragmentLength": 6
+              },
+              "Kind": "Encoding",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 92,
+                  "startColumn": 16,
+                  "startOffset": 2871,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 92,
+                    "startColumn": 16,
+                    "startOffset": 2871,
+                    "fragmentLength": 6
+                  },
+                  "Value": "UTF8",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 92,
+                      "startColumn": 16,
+                      "startOffset": 2871,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "UTF8"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 93,
+                "startColumn": 18,
+                "startOffset": 2897,
+                "fragmentLength": 5
+              },
+              "Kind": "DateFormat",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 93,
+                  "startColumn": 18,
+                  "startOffset": 2897,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 93,
+                    "startColumn": 18,
+                    "startOffset": 2897,
+                    "fragmentLength": 5
+                  },
+                  "Value": "ymd",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 93,
+                      "startColumn": 18,
+                      "startOffset": 2897,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ymd"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 94,
+                "startColumn": 17,
+                "startOffset": 2921,
+                "fragmentLength": 2
+              },
+              "Kind": "MaxErrors",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 94,
+                  "startColumn": 17,
+                  "startOffset": 2921,
+                  "fragmentLength": 2
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 94,
+                    "startColumn": 17,
+                    "startOffset": 2921,
+                    "fragmentLength": 2
+                  },
+                  "Value": "10",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 94,
+                      "startColumn": 17,
+                      "startOffset": 2921,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 95,
+                "startColumn": 17,
+                "startOffset": 2942,
+                "fragmentLength": 24
+              },
+              "Kind": "ErrorFile",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 95,
+                  "startColumn": 17,
+                  "startOffset": 2942,
+                  "fragmentLength": 24
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 95,
+                    "startColumn": 17,
+                    "startOffset": 2942,
+                    "fragmentLength": 24
+                  },
+                  "Value": "/sastest/errorsfolder/",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 95,
+                      "startColumn": 17,
+                      "startOffset": 2942,
+                      "fragmentLength": 24
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "/sastest/errorsfolder/"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 96,
+                "startColumn": 19,
+                "startOffset": 2986,
+                "fragmentLength": 14
+              },
+              "Kind": "Compression",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 96,
+                  "startColumn": 19,
+                  "startOffset": 2986,
+                  "fragmentLength": 14
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 96,
+                    "startColumn": 19,
+                    "startOffset": 2986,
+                    "fragmentLength": 14
+                  },
+                  "Value": "DefaultCodec",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 96,
+                      "startColumn": 19,
+                      "startOffset": 2986,
+                      "fragmentLength": 14
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "DefaultCodec"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 97,
+                "startColumn": 40,
+                "startOffset": 3041,
+                "fragmentLength": 53
+              },
+              "Kind": "ErrorFileCredential",
+              "Value": {
+                "$type": "CopyCredentialOption",
+                "location": {
+                  "startLine": 97,
+                  "startColumn": 40,
+                  "startOffset": 3041,
+                  "fragmentLength": 53
+                },
+                "Identity": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 97,
+                    "startColumn": 40,
+                    "startOffset": 3041,
+                    "fragmentLength": 25
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "Shared Access Signature"
+                },
+                "Secret": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 97,
+                    "startColumn": 75,
+                    "startOffset": 3076,
+                    "fragmentLength": 18
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "\u003CYour_SAS_Token\u003E"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CopyStatement",
+          "location": {
+            "startLine": 100,
+            "startColumn": 1,
+            "startOffset": 3103,
+            "fragmentLength": 580
+          },
+          "From": [
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 101,
+                "startColumn": 6,
+                "startOffset": 3134,
+                "fragmentLength": 79
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://loadingtest.blob.core.windows.net/customerdatasets/sastest/test_3.txt"
+            },
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 102,
+                "startColumn": 1,
+                "startOffset": 3215,
+                "fragmentLength": 79
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://loadingtest.blob.core.windows.net/customerdatasets/sastest/test_4.txt"
+            }
+          ],
+          "Into": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 100,
+              "startColumn": 11,
+              "startOffset": 3113,
+              "fragmentLength": 15
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 100,
+                "startColumn": 11,
+                "startOffset": 3113,
+                "fragmentLength": 15
+              },
+              "Value": "FactOnlineSales",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 104,
+                "startColumn": 17,
+                "startOffset": 3319,
+                "fragmentLength": 5
+              },
+              "Kind": "File_Type",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 104,
+                  "startColumn": 17,
+                  "startOffset": 3319,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 104,
+                    "startColumn": 17,
+                    "startOffset": 3319,
+                    "fragmentLength": 5
+                  },
+                  "Value": "CSV",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 104,
+                      "startColumn": 17,
+                      "startOffset": 3319,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "CSV"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 105,
+                "startColumn": 23,
+                "startOffset": 3349,
+                "fragmentLength": 4
+              },
+              "Kind": "Identity_Insert",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 105,
+                  "startColumn": 23,
+                  "startOffset": 3349,
+                  "fragmentLength": 4
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 105,
+                    "startColumn": 23,
+                    "startOffset": 3349,
+                    "fragmentLength": 4
+                  },
+                  "Value": "ON",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 105,
+                      "startColumn": 23,
+                      "startOffset": 3349,
+                      "fragmentLength": 4
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ON"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 106,
+                "startColumn": 30,
+                "startOffset": 3384,
+                "fragmentLength": 53
+              },
+              "Kind": "Credential",
+              "Value": {
+                "$type": "CopyCredentialOption",
+                "location": {
+                  "startLine": 106,
+                  "startColumn": 30,
+                  "startOffset": 3384,
+                  "fragmentLength": 53
+                },
+                "Identity": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 106,
+                    "startColumn": 30,
+                    "startOffset": 3384,
+                    "fragmentLength": 25
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "Shared Access Signature"
+                },
+                "Secret": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 106,
+                    "startColumn": 65,
+                    "startOffset": 3419,
+                    "fragmentLength": 18
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "\u003CYour_SAS_Token\u003E"
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 107,
+                "startColumn": 18,
+                "startOffset": 3458,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldQuote",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 107,
+                  "startColumn": 18,
+                  "startOffset": 3458,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 107,
+                    "startColumn": 18,
+                    "startOffset": 3458,
+                    "fragmentLength": 3
+                  },
+                  "Value": "\u0022",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 107,
+                      "startColumn": 18,
+                      "startOffset": 3458,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "\u0022"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 108,
+                "startColumn": 16,
+                "startOffset": 3479,
+                "fragmentLength": 1
+              },
+              "Kind": "FirstRow",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 108,
+                  "startColumn": 16,
+                  "startOffset": 3479,
+                  "fragmentLength": 1
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 108,
+                    "startColumn": 16,
+                    "startOffset": 3479,
+                    "fragmentLength": 1
+                  },
+                  "Value": "2",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 108,
+                      "startColumn": 16,
+                      "startOffset": 3479,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 109,
+                "startColumn": 23,
+                "startOffset": 3504,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 109,
+                  "startColumn": 23,
+                  "startOffset": 3504,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 109,
+                    "startColumn": 23,
+                    "startOffset": 3504,
+                    "fragmentLength": 3
+                  },
+                  "Value": ";",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 109,
+                      "startColumn": 23,
+                      "startOffset": 3504,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": ";"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 110,
+                "startColumn": 21,
+                "startOffset": 3530,
+                "fragmentLength": 6
+              },
+              "Kind": "RowTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 110,
+                  "startColumn": 21,
+                  "startOffset": 3530,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 110,
+                    "startColumn": 21,
+                    "startOffset": 3530,
+                    "fragmentLength": 6
+                  },
+                  "Value": "0X0A",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 110,
+                      "startColumn": 21,
+                      "startOffset": 3530,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "0X0A"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 111,
+                "startColumn": 16,
+                "startOffset": 3554,
+                "fragmentLength": 6
+              },
+              "Kind": "Encoding",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 111,
+                  "startColumn": 16,
+                  "startOffset": 3554,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 111,
+                    "startColumn": 16,
+                    "startOffset": 3554,
+                    "fragmentLength": 6
+                  },
+                  "Value": "UTF8",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 111,
+                      "startColumn": 16,
+                      "startOffset": 3554,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "UTF8"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 112,
+                "startColumn": 18,
+                "startOffset": 3580,
+                "fragmentLength": 5
+              },
+              "Kind": "DateFormat",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 112,
+                  "startColumn": 18,
+                  "startOffset": 3580,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 112,
+                    "startColumn": 18,
+                    "startOffset": 3580,
+                    "fragmentLength": 5
+                  },
+                  "Value": "dmy",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 112,
+                      "startColumn": 18,
+                      "startOffset": 3580,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "dmy"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 113,
+                "startColumn": 17,
+                "startOffset": 3604,
+                "fragmentLength": 2
+              },
+              "Kind": "MaxErrors",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 113,
+                  "startColumn": 17,
+                  "startOffset": 3604,
+                  "fragmentLength": 2
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 113,
+                    "startColumn": 17,
+                    "startOffset": 3604,
+                    "fragmentLength": 2
+                  },
+                  "Value": "10",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 113,
+                      "startColumn": 17,
+                      "startOffset": 3604,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 114,
+                "startColumn": 19,
+                "startOffset": 3627,
+                "fragmentLength": 8
+              },
+              "Kind": "Compression",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 114,
+                  "startColumn": 19,
+                  "startOffset": 3627,
+                  "fragmentLength": 8
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 114,
+                    "startColumn": 19,
+                    "startOffset": 3627,
+                    "fragmentLength": 8
+                  },
+                  "Value": "Snappy",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 114,
+                      "startColumn": 19,
+                      "startOffset": 3627,
+                      "fragmentLength": 8
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "Snappy"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 115,
+                "startColumn": 17,
+                "startOffset": 3653,
+                "fragmentLength": 24
+              },
+              "Kind": "ErrorFile",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 115,
+                  "startColumn": 17,
+                  "startOffset": 3653,
+                  "fragmentLength": 24
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 115,
+                    "startColumn": 17,
+                    "startOffset": 3653,
+                    "fragmentLength": 24
+                  },
+                  "Value": "/sastest/errorsfolder/",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 115,
+                      "startColumn": 17,
+                      "startOffset": 3653,
+                      "fragmentLength": 24
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "/sastest/errorsfolder/"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CopyStatement",
+          "location": {
+            "startLine": 118,
+            "startColumn": 1,
+            "startOffset": 3686,
+            "fragmentLength": 461
+          },
+          "From": [
+            {
+              "$type": "StringLiteral",
+              "location": {
+                "startLine": 119,
+                "startColumn": 6,
+                "startOffset": 3717,
+                "fragmentLength": 79
+              },
+              "LiteralType": "String",
+              "IsNational": false,
+              "IsLargeObject": false,
+              "Value": "https://loadingtest.blob.core.windows.net/customerdatasets/sastest/test_3.txt"
+            }
+          ],
+          "Into": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 118,
+              "startColumn": 11,
+              "startOffset": 3696,
+              "fragmentLength": 15
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 118,
+                "startColumn": 11,
+                "startOffset": 3696,
+                "fragmentLength": 15
+              },
+              "Value": "FactOnlineSales",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Options": [
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 121,
+                "startColumn": 17,
+                "startOffset": 3821,
+                "fragmentLength": 5
+              },
+              "Kind": "File_Type",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 121,
+                  "startColumn": 17,
+                  "startOffset": 3821,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 121,
+                    "startColumn": 17,
+                    "startOffset": 3821,
+                    "fragmentLength": 5
+                  },
+                  "Value": "CSV",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 121,
+                      "startColumn": 17,
+                      "startOffset": 3821,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "CSV"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 122,
+                "startColumn": 23,
+                "startOffset": 3851,
+                "fragmentLength": 4
+              },
+              "Kind": "Identity_Insert",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 122,
+                  "startColumn": 23,
+                  "startOffset": 3851,
+                  "fragmentLength": 4
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 122,
+                    "startColumn": 23,
+                    "startOffset": 3851,
+                    "fragmentLength": 4
+                  },
+                  "Value": "ON",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 122,
+                      "startColumn": 23,
+                      "startOffset": 3851,
+                      "fragmentLength": 4
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "ON"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 123,
+                "startColumn": 30,
+                "startOffset": 3886,
+                "fragmentLength": 18
+              },
+              "Kind": "Credential",
+              "Value": {
+                "$type": "CopyCredentialOption",
+                "location": {
+                  "startLine": 123,
+                  "startColumn": 30,
+                  "startOffset": 3886,
+                  "fragmentLength": 18
+                },
+                "Identity": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 123,
+                    "startColumn": 30,
+                    "startOffset": 3886,
+                    "fragmentLength": 18
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "MANAGED IDENTITY"
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 124,
+                "startColumn": 18,
+                "startOffset": 3924,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldQuote",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 124,
+                  "startColumn": 18,
+                  "startOffset": 3924,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 124,
+                    "startColumn": 18,
+                    "startOffset": 3924,
+                    "fragmentLength": 3
+                  },
+                  "Value": "\u0022",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 124,
+                      "startColumn": 18,
+                      "startOffset": 3924,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "\u0022"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 125,
+                "startColumn": 16,
+                "startOffset": 3945,
+                "fragmentLength": 1
+              },
+              "Kind": "FirstRow",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 125,
+                  "startColumn": 16,
+                  "startOffset": 3945,
+                  "fragmentLength": 1
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 125,
+                    "startColumn": 16,
+                    "startOffset": 3945,
+                    "fragmentLength": 1
+                  },
+                  "Value": "2",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 125,
+                      "startColumn": 16,
+                      "startOffset": 3945,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 126,
+                "startColumn": 23,
+                "startOffset": 3970,
+                "fragmentLength": 3
+              },
+              "Kind": "FieldTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 126,
+                  "startColumn": 23,
+                  "startOffset": 3970,
+                  "fragmentLength": 3
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 126,
+                    "startColumn": 23,
+                    "startOffset": 3970,
+                    "fragmentLength": 3
+                  },
+                  "Value": ";",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 126,
+                      "startColumn": 23,
+                      "startOffset": 3970,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": ";"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 127,
+                "startColumn": 21,
+                "startOffset": 3996,
+                "fragmentLength": 6
+              },
+              "Kind": "RowTerminator",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 127,
+                  "startColumn": 21,
+                  "startOffset": 3996,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 127,
+                    "startColumn": 21,
+                    "startOffset": 3996,
+                    "fragmentLength": 6
+                  },
+                  "Value": "0X0A",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 127,
+                      "startColumn": 21,
+                      "startOffset": 3996,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "0X0A"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 128,
+                "startColumn": 16,
+                "startOffset": 4020,
+                "fragmentLength": 6
+              },
+              "Kind": "Encoding",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 128,
+                  "startColumn": 16,
+                  "startOffset": 4020,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 128,
+                    "startColumn": 16,
+                    "startOffset": 4020,
+                    "fragmentLength": 6
+                  },
+                  "Value": "UTF8",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 128,
+                      "startColumn": 16,
+                      "startOffset": 4020,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "UTF8"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 129,
+                "startColumn": 18,
+                "startOffset": 4046,
+                "fragmentLength": 5
+              },
+              "Kind": "DateFormat",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 129,
+                  "startColumn": 18,
+                  "startOffset": 4046,
+                  "fragmentLength": 5
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 129,
+                    "startColumn": 18,
+                    "startOffset": 4046,
+                    "fragmentLength": 5
+                  },
+                  "Value": "dmy",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 129,
+                      "startColumn": 18,
+                      "startOffset": 4046,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "dmy"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 130,
+                "startColumn": 17,
+                "startOffset": 4070,
+                "fragmentLength": 2
+              },
+              "Kind": "MaxErrors",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 130,
+                  "startColumn": 17,
+                  "startOffset": 4070,
+                  "fragmentLength": 2
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 130,
+                    "startColumn": 17,
+                    "startOffset": 4070,
+                    "fragmentLength": 2
+                  },
+                  "Value": "10",
+                  "ValueExpression": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 130,
+                      "startColumn": 17,
+                      "startOffset": 4070,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 131,
+                "startColumn": 19,
+                "startOffset": 4093,
+                "fragmentLength": 6
+              },
+              "Kind": "Compression",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 131,
+                  "startColumn": 19,
+                  "startOffset": 4093,
+                  "fragmentLength": 6
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 131,
+                    "startColumn": 19,
+                    "startOffset": 4093,
+                    "fragmentLength": 6
+                  },
+                  "Value": "GZIP",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 131,
+                      "startColumn": 19,
+                      "startOffset": 4093,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "GZIP"
+                  }
+                }
+              }
+            },
+            {
+              "$type": "CopyOption",
+              "location": {
+                "startLine": 132,
+                "startColumn": 17,
+                "startOffset": 4117,
+                "fragmentLength": 24
+              },
+              "Kind": "ErrorFile",
+              "Value": {
+                "$type": "SingleValueTypeCopyOption",
+                "location": {
+                  "startLine": 132,
+                  "startColumn": 17,
+                  "startOffset": 4117,
+                  "fragmentLength": 24
+                },
+                "SingleValue": {
+                  "$type": "IdentifierOrValueExpression",
+                  "location": {
+                    "startLine": 132,
+                    "startColumn": 17,
+                    "startOffset": 4117,
+                    "fragmentLength": 24
+                  },
+                  "Value": "/sastest/errorsfolder/",
+                  "ValueExpression": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 132,
+                      "startColumn": 17,
+                      "startOffset": 4117,
+                      "fragmentLength": 24
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "/sastest/errorsfolder/"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

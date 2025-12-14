@@ -1,0 +1,530 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 720
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 61
+      },
+      "Statements": [
+        {
+          "$type": "AlterDatabaseAddFileGroupStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 61
+          },
+          "FileGroup": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 19,
+              "startOffset": 37,
+              "fragmentLength": 3
+            },
+            "Value": "fg1",
+            "QuoteType": "NotQuoted"
+          },
+          "ContainsFileStream": true,
+          "ContainsMemoryOptimizedData": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 16,
+              "startOffset": 15,
+              "fragmentLength": 3
+            },
+            "Value": "db1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 6,
+        "startColumn": 1,
+        "startOffset": 67,
+        "fragmentLength": 653
+      },
+      "Statements": [
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 67,
+            "fragmentLength": 265
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 6,
+              "startColumn": 17,
+              "startOffset": 83,
+              "fragmentLength": 3
+            },
+            "Value": "db1",
+            "QuoteType": "NotQuoted"
+          },
+          "FileGroups": [
+            {
+              "$type": "FileGroupDefinition",
+              "location": {
+                "startLine": -1,
+                "startColumn": -1,
+                "startOffset": -1,
+                "fragmentLength": -1
+              },
+              "FileDeclarations": [
+                {
+                  "$type": "FileDeclaration",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 5,
+                    "startOffset": 99,
+                    "fragmentLength": 36
+                  },
+                  "Options": [
+                    {
+                      "$type": "NameFileDeclarationOption",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 13,
+                        "startOffset": 107,
+                        "fragmentLength": 9
+                      },
+                      "LogicalFileName": {
+                        "$type": "IdentifierOrValueExpression",
+                        "location": {
+                          "startLine": 8,
+                          "startColumn": 20,
+                          "startOffset": 114,
+                          "fragmentLength": 2
+                        },
+                        "Value": "z1",
+                        "Identifier": {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 8,
+                            "startColumn": 20,
+                            "startOffset": 114,
+                            "fragmentLength": 2
+                          },
+                          "Value": "z1",
+                          "QuoteType": "NotQuoted"
+                        }
+                      },
+                      "IsNewName": false,
+                      "OptionKind": "Name"
+                    },
+                    {
+                      "$type": "FileNameFileDeclarationOption",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 24,
+                        "startOffset": 118,
+                        "fragmentLength": 16
+                      },
+                      "OSFileName": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 8,
+                          "startColumn": 35,
+                          "startOffset": 129,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "qqq"
+                      },
+                      "OptionKind": "FileName"
+                    }
+                  ],
+                  "IsPrimary": true
+                }
+              ],
+              "IsDefault": false,
+              "ContainsFileStream": false,
+              "ContainsMemoryOptimizedData": false
+            },
+            {
+              "$type": "FileGroupDefinition",
+              "location": {
+                "startLine": 9,
+                "startColumn": 5,
+                "startOffset": 142,
+                "fragmentLength": 89
+              },
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 15,
+                  "startOffset": 152,
+                  "fragmentLength": 16
+                },
+                "Value": "FileStreamPhotos",
+                "QuoteType": "NotQuoted"
+              },
+              "FileDeclarations": [
+                {
+                  "$type": "FileDeclaration",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 59,
+                    "startOffset": 196,
+                    "fragmentLength": 35
+                  },
+                  "Options": [
+                    {
+                      "$type": "NameFileDeclarationOption",
+                      "location": {
+                        "startLine": 9,
+                        "startColumn": 60,
+                        "startOffset": 197,
+                        "fragmentLength": 15
+                      },
+                      "LogicalFileName": {
+                        "$type": "IdentifierOrValueExpression",
+                        "location": {
+                          "startLine": 9,
+                          "startColumn": 67,
+                          "startOffset": 204,
+                          "fragmentLength": 8
+                        },
+                        "Value": "FSPhotos",
+                        "Identifier": {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 9,
+                            "startColumn": 67,
+                            "startOffset": 204,
+                            "fragmentLength": 8
+                          },
+                          "Value": "FSPhotos",
+                          "QuoteType": "NotQuoted"
+                        }
+                      },
+                      "IsNewName": false,
+                      "OptionKind": "Name"
+                    },
+                    {
+                      "$type": "FileNameFileDeclarationOption",
+                      "location": {
+                        "startLine": 9,
+                        "startColumn": 77,
+                        "startOffset": 214,
+                        "fragmentLength": 16
+                      },
+                      "OSFileName": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 9,
+                          "startColumn": 88,
+                          "startOffset": 225,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "aaa"
+                      },
+                      "OptionKind": "FileName"
+                    }
+                  ],
+                  "IsPrimary": false
+                }
+              ],
+              "IsDefault": true,
+              "ContainsFileStream": true,
+              "ContainsMemoryOptimizedData": false
+            },
+            {
+              "$type": "FileGroupDefinition",
+              "location": {
+                "startLine": 10,
+                "startColumn": 5,
+                "startOffset": 238,
+                "fragmentLength": 93
+              },
+              "Name": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 15,
+                  "startOffset": 248,
+                  "fragmentLength": 18
+                },
+                "Value": "FileStreamResumes2",
+                "QuoteType": "NotQuoted"
+              },
+              "FileDeclarations": [
+                {
+                  "$type": "FileDeclaration",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 53,
+                    "startOffset": 286,
+                    "fragmentLength": 45
+                  },
+                  "Options": [
+                    {
+                      "$type": "NameFileDeclarationOption",
+                      "location": {
+                        "startLine": 10,
+                        "startColumn": 54,
+                        "startOffset": 287,
+                        "fragmentLength": 25
+                      },
+                      "LogicalFileName": {
+                        "$type": "IdentifierOrValueExpression",
+                        "location": {
+                          "startLine": 10,
+                          "startColumn": 61,
+                          "startOffset": 294,
+                          "fragmentLength": 18
+                        },
+                        "Value": "FileStreamResumes2",
+                        "Identifier": {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 10,
+                            "startColumn": 61,
+                            "startOffset": 294,
+                            "fragmentLength": 18
+                          },
+                          "Value": "FileStreamResumes2",
+                          "QuoteType": "NotQuoted"
+                        }
+                      },
+                      "IsNewName": false,
+                      "OptionKind": "Name"
+                    },
+                    {
+                      "$type": "FileNameFileDeclarationOption",
+                      "location": {
+                        "startLine": 10,
+                        "startColumn": 81,
+                        "startOffset": 314,
+                        "fragmentLength": 16
+                      },
+                      "OSFileName": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 10,
+                          "startColumn": 92,
+                          "startOffset": 325,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "ddd"
+                      },
+                      "OptionKind": "FileName"
+                    }
+                  ],
+                  "IsPrimary": false
+                }
+              ],
+              "IsDefault": false,
+              "ContainsFileStream": true,
+              "ContainsMemoryOptimizedData": false
+            }
+          ],
+          "AttachMode": "None"
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 334,
+            "fragmentLength": 91
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 12,
+              "startColumn": 17,
+              "startOffset": 350,
+              "fragmentLength": 13
+            },
+            "Value": "MyOptionsTest",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 10,
+                "startOffset": 394,
+                "fragmentLength": 14
+              },
+              "OptionState": "On",
+              "OptionKind": "Trustworthy"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 26,
+                "startOffset": 410,
+                "fragmentLength": 14
+              },
+              "OptionState": "On",
+              "OptionKind": "DBChaining"
+            }
+          ],
+          "AttachMode": "None",
+          "Collation": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 12,
+              "startColumn": 39,
+              "startOffset": 372,
+              "fragmentLength": 12
+            },
+            "Value": "French_CI_AI",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "location": {
+            "startLine": 15,
+            "startColumn": 1,
+            "startOffset": 427,
+            "fragmentLength": 293
+          },
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 15,
+              "startColumn": 17,
+              "startOffset": 443,
+              "fragmentLength": 14
+            },
+            "Value": "AdventureWorks",
+            "QuoteType": "NotQuoted"
+          },
+          "FileGroups": [
+            {
+              "$type": "FileGroupDefinition",
+              "location": {
+                "startLine": -1,
+                "startColumn": -1,
+                "startOffset": -1,
+                "fragmentLength": -1
+              },
+              "FileDeclarations": [
+                {
+                  "$type": "FileDeclaration",
+                  "location": {
+                    "startLine": 17,
+                    "startColumn": 5,
+                    "startOffset": 470,
+                    "fragmentLength": 107
+                  },
+                  "Options": [
+                    {
+                      "$type": "FileNameFileDeclarationOption",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 6,
+                        "startOffset": 471,
+                        "fragmentLength": 105
+                      },
+                      "OSFileName": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 17,
+                          "startOffset": 482,
+                          "fragmentLength": 94
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "c:\\Program Files\\Microsoft SQL Server\\MSSQL10.MSSQLSERVER\\MSSQL\\Data\\AdventureWorks_Data.mdf"
+                      },
+                      "OptionKind": "FileName"
+                    }
+                  ],
+                  "IsPrimary": false
+                },
+                {
+                  "$type": "FileDeclaration",
+                  "location": {
+                    "startLine": 17,
+                    "startColumn": 114,
+                    "startOffset": 579,
+                    "fragmentLength": 106
+                  },
+                  "Options": [
+                    {
+                      "$type": "FileNameFileDeclarationOption",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 115,
+                        "startOffset": 580,
+                        "fragmentLength": 104
+                      },
+                      "OSFileName": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 126,
+                          "startOffset": 591,
+                          "fragmentLength": 93
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "c:\\Program Files\\Microsoft SQL Server\\MSSQL10.MSSQLSERVER\\MSSQL\\Data\\AdventureWorks_log.ldf"
+                      },
+                      "OptionKind": "FileName"
+                    }
+                  ],
+                  "IsPrimary": false
+                }
+              ],
+              "IsDefault": false,
+              "ContainsFileStream": false,
+              "ContainsMemoryOptimizedData": false
+            }
+          ],
+          "Options": [
+            {
+              "$type": "DatabaseOption",
+              "location": {
+                "startLine": 18,
+                "startColumn": 10,
+                "startOffset": 706,
+                "fragmentLength": 13
+              },
+              "OptionKind": "EnableBroker"
+            }
+          ],
+          "AttachMode": "Attach"
+        }
+      ]
+    }
+  ]
+}

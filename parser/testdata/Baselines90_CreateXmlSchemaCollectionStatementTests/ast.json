@@ -1,0 +1,140 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 146
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 73
+      },
+      "Statements": [
+        {
+          "$type": "CreateXmlSchemaCollectionStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 73
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 1,
+              "startColumn": 30,
+              "startOffset": 29,
+              "fragmentLength": 16
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 30,
+                "startOffset": 29,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 34,
+                "startOffset": 33,
+                "fragmentLength": 12
+              },
+              "Value": "MyCollection",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Expression": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 2,
+              "startColumn": 8,
+              "startOffset": 53,
+              "fragmentLength": 19
+            },
+            "Name": "@MySchemaCollection"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 6,
+        "startColumn": 1,
+        "startOffset": 79,
+        "fragmentLength": 65
+      },
+      "Statements": [
+        {
+          "$type": "CreateXmlSchemaCollectionStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 79,
+            "fragmentLength": 65
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 6,
+              "startColumn": 30,
+              "startOffset": 108,
+              "fragmentLength": 12
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 6,
+                "startColumn": 30,
+                "startOffset": 108,
+                "fragmentLength": 12
+              },
+              "Value": "MyCollection",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Expression": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 7,
+              "startColumn": 8,
+              "startOffset": 128,
+              "fragmentLength": 15
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "Some xml text"
+          }
+        }
+      ]
+    }
+  ]
+}
