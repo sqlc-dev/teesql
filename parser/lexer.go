@@ -154,6 +154,8 @@ const (
 	TokenRaiserror
 	TokenTruncate
 	TokenColon
+	TokenMove
+	TokenConversation
 )
 
 // Token represents a lexical token.
@@ -560,6 +562,8 @@ var keywords = map[string]TokenType{
 	"PASSWORD":      TokenPassword,
 	"RAISERROR":     TokenRaiserror,
 	"TRUNCATE":      TokenTruncate,
+	"MOVE":          TokenMove,
+	"CONVERSATION":  TokenConversation,
 }
 
 func lookupKeyword(ident string) TokenType {

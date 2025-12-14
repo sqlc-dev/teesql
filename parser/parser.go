@@ -138,6 +138,8 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseWaitForStatement()
 	case TokenGoto:
 		return p.parseGotoStatement()
+	case TokenMove:
+		return p.parseMoveConversationStatement()
 	case TokenSemicolon:
 		p.nextToken()
 		return nil, nil
@@ -2415,8 +2417,14 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 		optionName := strings.ToUpper(p.curTok.Literal)
 		var setOpt ast.SetOptions
 		switch optionName {
+		case "ANSI_DEFAULTS":
+			setOpt = ast.SetOptionsAnsiDefaults
 		case "ANSI_NULLS":
 			setOpt = ast.SetOptionsAnsiNulls
+		case "ANSI_NULL_DFLT_OFF":
+			setOpt = ast.SetOptionsAnsiNullDfltOff
+		case "ANSI_NULL_DFLT_ON":
+			setOpt = ast.SetOptionsAnsiNullDfltOn
 		case "ANSI_PADDING":
 			setOpt = ast.SetOptionsAnsiPadding
 		case "ANSI_WARNINGS":
@@ -2439,6 +2447,8 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 			setOpt = ast.SetOptionsNoCount
 		case "NOEXEC":
 			setOpt = ast.SetOptionsNoExec
+		case "NO_BROWSETABLE":
+			setOpt = ast.SetOptionsNoBrowsetable
 		case "NUMERIC_ROUNDABORT":
 			setOpt = ast.SetOptionsNumericRoundAbort
 		case "PARSEONLY":
@@ -2453,14 +2463,40 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 			setOpt = ast.SetOptionsShowplanText
 		case "SHOWPLAN_XML":
 			setOpt = ast.SetOptionsShowplanXml
-		case "STATISTICS_IO":
-			setOpt = ast.SetOptionsStatisticsIo
-		case "STATISTICS_PROFILE":
-			setOpt = ast.SetOptionsStatisticsProfile
-		case "STATISTICS_TIME":
-			setOpt = ast.SetOptionsStatisticsTime
-		case "STATISTICS_XML":
-			setOpt = ast.SetOptionsStatisticsXml
+		case "STATISTICS":
+			// Handle SET STATISTICS IO/PROFILE/TIME/XML - returns SetStatisticsStatement
+			p.nextToken() // consume STATISTICS
+			var statOpt ast.SetOptions
+			if p.curTok.Type == TokenTime {
+				statOpt = ast.SetOptionsTime
+			} else if p.curTok.Type == TokenIdent {
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "IO":
+					statOpt = ast.SetOptionsIO
+				case "PROFILE":
+					statOpt = ast.SetOptionsProfile
+				case "XML":
+					statOpt = ast.SetOptionsStatisticsXml
+				}
+			}
+			if statOpt != "" {
+				p.nextToken() // consume the statistic option
+				isOn := false
+				if p.curTok.Type == TokenOn || (p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ON") {
+					isOn = true
+					p.nextToken()
+				} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OFF" {
+					isOn = false
+					p.nextToken()
+				}
+				if p.curTok.Type == TokenSemicolon {
+					p.nextToken()
+				}
+				return &ast.SetStatisticsStatement{
+					Options: statOpt,
+					IsOn:    isOn,
+				}, nil
+			}
 		case "XACT_ABORT":
 			setOpt = ast.SetOptionsXactAbort
 		}
@@ -3220,6 +3256,52 @@ func (p *Parser) parseWaitForStatement() (*ast.WaitForStatement, error) {
 	return stmt, nil
 }
 
+func (p *Parser) parseMoveConversationStatement() (*ast.MoveConversationStatement, error) {
+	// Consume MOVE
+	p.nextToken()
+
+	stmt := &ast.MoveConversationStatement{}
+
+	// Expect CONVERSATION
+	if p.curTok.Type != TokenConversation {
+		return nil, fmt.Errorf("expected CONVERSATION after MOVE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse the conversation handle (variable reference)
+	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+		stmt.Conversation = &ast.VariableReference{
+			Name: p.curTok.Literal,
+		}
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected variable reference for conversation handle, got %s", p.curTok.Literal)
+	}
+
+	// Expect TO
+	if p.curTok.Type != TokenTo {
+		return nil, fmt.Errorf("expected TO, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse the group id (variable reference)
+	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+		stmt.Group = &ast.VariableReference{
+			Name: p.curTok.Literal,
+		}
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected variable reference for conversation group, got %s", p.curTok.Literal)
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseGotoStatement() (*ast.GoToStatement, error) {
 	// Consume GOTO
 	p.nextToken()
@@ -3352,6 +3434,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return grantStatementToJSON(s)
 	case *ast.PredicateSetStatement:
 		return predicateSetStatementToJSON(s)
+	case *ast.SetStatisticsStatement:
+		return setStatisticsStatementToJSON(s)
 	case *ast.CommitTransactionStatement:
 		return commitTransactionStatementToJSON(s)
 	case *ast.RollbackTransactionStatement:
@@ -3362,6 +3446,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return beginTransactionStatementToJSON(s)
 	case *ast.WaitForStatement:
 		return waitForStatementToJSON(s)
+	case *ast.MoveConversationStatement:
+		return moveConversationStatementToJSON(s)
 	case *ast.GoToStatement:
 		return goToStatementToJSON(s)
 	case *ast.LabelStatement:
@@ -4852,6 +4938,14 @@ func predicateSetStatementToJSON(s *ast.PredicateSetStatement) jsonNode {
 	}
 }
 
+func setStatisticsStatementToJSON(s *ast.SetStatisticsStatement) jsonNode {
+	return jsonNode{
+		"$type":   "SetStatisticsStatement",
+		"Options": string(s.Options),
+		"IsOn":    s.IsOn,
+	}
+}
+
 func commitTransactionStatementToJSON(s *ast.CommitTransactionStatement) jsonNode {
 	node := jsonNode{
 		"$type":                   "CommitTransactionStatement",
@@ -4908,6 +5002,19 @@ func waitForStatementToJSON(s *ast.WaitForStatement) jsonNode {
 	}
 	if s.Timeout != nil {
 		node["Timeout"] = scalarExpressionToJSON(s.Timeout)
+	}
+	return node
+}
+
+func moveConversationStatementToJSON(s *ast.MoveConversationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "MoveConversationStatement",
+	}
+	if s.Conversation != nil {
+		node["Conversation"] = scalarExpressionToJSON(s.Conversation)
+	}
+	if s.Group != nil {
+		node["Group"] = scalarExpressionToJSON(s.Group)
 	}
 	return node
 }
