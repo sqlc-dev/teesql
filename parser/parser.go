@@ -880,8 +880,20 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 	case TokenLBrace:
 		return p.parseOdbcLiteral()
 	case TokenLParen:
-		// Parenthesized expression or subquery
+		// Parenthesized expression or scalar subquery
 		p.nextToken()
+		// Check if it's a scalar subquery (starts with SELECT)
+		if p.curTok.Type == TokenSelect {
+			qe, err := p.parseQueryExpression()
+			if err != nil {
+				return nil, err
+			}
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+			return &ast.ScalarSubquery{QueryExpression: qe}, nil
+		}
 		expr, err := p.parseScalarExpression()
 		if err != nil {
 			return nil, err
@@ -4367,6 +4379,14 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		}
 		if e.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(e.Expression)
+		}
+		return node
+	case *ast.ScalarSubquery:
+		node := jsonNode{
+			"$type": "ScalarSubquery",
+		}
+		if e.QueryExpression != nil {
+			node["QueryExpression"] = queryExpressionToJSON(e.QueryExpression)
 		}
 		return node
 	default:
