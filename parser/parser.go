@@ -88,12 +88,257 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 	switch p.curTok.Type {
 	case TokenSelect:
 		return p.parseSelectStatement()
+	case TokenPrint:
+		return p.parsePrintStatement()
+	case TokenThrow:
+		return p.parseThrowStatement()
+	case TokenAlter:
+		return p.parseAlterStatement()
+	case TokenRevert:
+		return p.parseRevertStatement()
+	case TokenDrop:
+		return p.parseDropStatement()
 	case TokenSemicolon:
 		p.nextToken()
 		return nil, nil
 	default:
 		return nil, fmt.Errorf("unexpected token: %s", p.curTok.Literal)
 	}
+}
+
+func (p *Parser) parseRevertStatement() (*ast.RevertStatement, error) {
+	// Consume REVERT
+	p.nextToken()
+
+	stmt := &ast.RevertStatement{}
+
+	// Check for WITH COOKIE = expression
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		if p.curTok.Type != TokenCookie {
+			return nil, fmt.Errorf("expected COOKIE after WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume COOKIE
+
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after COOKIE, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume =
+
+		cookie, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Cookie = cookie
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropStatement() (ast.Statement, error) {
+	// Consume DROP
+	p.nextToken()
+
+	// Check what type of DROP statement this is
+	if p.curTok.Type == TokenDatabase {
+		return p.parseDropDatabaseScopedStatement()
+	}
+
+	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseDropDatabaseScopedStatement() (ast.Statement, error) {
+	// Consume DATABASE
+	p.nextToken()
+
+	if p.curTok.Type != TokenScoped {
+		return nil, fmt.Errorf("expected SCOPED after DATABASE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume SCOPED
+
+	if p.curTok.Type == TokenCredential {
+		return p.parseDropCredentialStatement(true)
+	}
+
+	return nil, fmt.Errorf("unexpected token after SCOPED: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseDropCredentialStatement(isDatabaseScoped bool) (*ast.DropCredentialStatement, error) {
+	// Consume CREDENTIAL
+	p.nextToken()
+
+	stmt := &ast.DropCredentialStatement{
+		IsDatabaseScoped: isDatabaseScoped,
+		IsIfExists:       false,
+	}
+
+	// Parse credential name
+	if p.curTok.Type != TokenIdent {
+		return nil, fmt.Errorf("expected identifier, got %s", p.curTok.Literal)
+	}
+
+	stmt.Name = &ast.Identifier{
+		Value:     p.curTok.Literal,
+		QuoteType: "NotQuoted",
+	}
+	p.nextToken()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterStatement() (ast.Statement, error) {
+	// Consume ALTER
+	p.nextToken()
+
+	// Check what type of ALTER statement this is
+	if p.curTok.Type == TokenTable {
+		return p.parseAlterTableStatement()
+	}
+
+	return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
+	// Consume TABLE
+	p.nextToken()
+
+	// Parse table name
+	tableName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check what kind of ALTER TABLE statement this is
+	if p.curTok.Type == TokenDrop {
+		return p.parseAlterTableDropStatement(tableName)
+	}
+
+	return nil, fmt.Errorf("unexpected token in ALTER TABLE: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableDropTableElementStatement, error) {
+	// Consume DROP
+	p.nextToken()
+
+	stmt := &ast.AlterTableDropTableElementStatement{
+		SchemaObjectName: tableName,
+	}
+
+	// Parse the element type and name
+	var elementType string
+	switch p.curTok.Type {
+	case TokenIndex:
+		elementType = "Index"
+		p.nextToken()
+	default:
+		return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
+	}
+
+	// Parse the element name
+	if p.curTok.Type != TokenIdent {
+		return nil, fmt.Errorf("expected identifier after %s, got %s", elementType, p.curTok.Literal)
+	}
+
+	element := &ast.AlterTableDropTableElement{
+		TableElementType: elementType,
+		Name: &ast.Identifier{
+			Value:     p.curTok.Literal,
+			QuoteType: "NotQuoted",
+		},
+		IsIfExists: false,
+	}
+	p.nextToken()
+
+	stmt.AlterTableDropTableElements = append(stmt.AlterTableDropTableElements, element)
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parsePrintStatement() (*ast.PrintStatement, error) {
+	// Consume PRINT
+	p.nextToken()
+
+	// Parse expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return &ast.PrintStatement{Expression: expr}, nil
+}
+
+func (p *Parser) parseThrowStatement() (*ast.ThrowStatement, error) {
+	// Consume THROW
+	p.nextToken()
+
+	stmt := &ast.ThrowStatement{}
+
+	// THROW can be used without arguments (re-throw)
+	if p.curTok.Type == TokenSemicolon || p.curTok.Type == TokenEOF ||
+		p.curTok.Type == TokenSelect || p.curTok.Type == TokenPrint || p.curTok.Type == TokenThrow {
+		return stmt, nil
+	}
+
+	// Parse error number
+	errNum, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.ErrorNumber = errNum
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected comma after error number, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse message
+	msg, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Message = msg
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected comma after message, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse state
+	state, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.State = state
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
@@ -202,16 +447,83 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 }
 
 func (p *Parser) parseScalarExpression() (ast.ScalarExpression, error) {
-	// For now, only handle column references and identifiers
-	if p.curTok.Type == TokenIdent {
-		return p.parseColumnReference()
+	return p.parseAdditiveExpression()
+}
+
+func (p *Parser) parseAdditiveExpression() (ast.ScalarExpression, error) {
+	left, err := p.parsePrimaryExpression()
+	if err != nil {
+		return nil, err
 	}
-	if p.curTok.Type == TokenNumber {
+
+	for p.curTok.Type == TokenPlus || p.curTok.Type == TokenMinus {
+		var opType string
+		if p.curTok.Type == TokenPlus {
+			opType = "Add"
+		} else {
+			opType = "Subtract"
+		}
+		p.nextToken()
+
+		right, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BinaryExpression{
+			BinaryExpressionType: opType,
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
+}
+
+func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
+	switch p.curTok.Type {
+	case TokenIdent:
+		// Check if it's a variable reference (starts with @)
+		if strings.HasPrefix(p.curTok.Literal, "@") {
+			name := p.curTok.Literal
+			p.nextToken()
+			return &ast.VariableReference{Name: name}, nil
+		}
+		return p.parseColumnReference()
+	case TokenNumber:
 		val := p.curTok.Literal
 		p.nextToken()
 		return &ast.IntegerLiteral{LiteralType: "Integer", Value: val}, nil
+	case TokenString:
+		return p.parseStringLiteral()
+	default:
+		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	}
-	return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
+	raw := p.curTok.Literal
+	p.nextToken()
+
+	// Remove surrounding quotes and handle escaped quotes
+	if len(raw) >= 2 && raw[0] == '\'' && raw[len(raw)-1] == '\'' {
+		inner := raw[1 : len(raw)-1]
+		// Replace escaped quotes
+		value := strings.ReplaceAll(inner, "''", "'")
+		return &ast.StringLiteral{
+			LiteralType:   "String",
+			IsNational:    false,
+			IsLargeObject: false,
+			Value:         value,
+		}, nil
+	}
+
+	return &ast.StringLiteral{
+		LiteralType:   "String",
+		IsNational:    false,
+		IsLargeObject: false,
+		Value:         raw,
+	}, nil
 }
 
 func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) {
@@ -431,9 +743,98 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 	switch s := stmt.(type) {
 	case *ast.SelectStatement:
 		return selectStatementToJSON(s)
+	case *ast.PrintStatement:
+		return printStatementToJSON(s)
+	case *ast.ThrowStatement:
+		return throwStatementToJSON(s)
+	case *ast.AlterTableDropTableElementStatement:
+		return alterTableDropTableElementStatementToJSON(s)
+	case *ast.RevertStatement:
+		return revertStatementToJSON(s)
+	case *ast.DropCredentialStatement:
+		return dropCredentialStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
+}
+
+func revertStatementToJSON(s *ast.RevertStatement) jsonNode {
+	node := jsonNode{
+		"$type": "RevertStatement",
+	}
+	if s.Cookie != nil {
+		node["Cookie"] = scalarExpressionToJSON(s.Cookie)
+	}
+	return node
+}
+
+func dropCredentialStatementToJSON(s *ast.DropCredentialStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropCredentialStatement",
+	}
+	node["IsDatabaseScoped"] = s.IsDatabaseScoped
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func alterTableDropTableElementStatementToJSON(s *ast.AlterTableDropTableElementStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterTableDropTableElementStatement",
+	}
+	if len(s.AlterTableDropTableElements) > 0 {
+		elements := make([]jsonNode, len(s.AlterTableDropTableElements))
+		for i, e := range s.AlterTableDropTableElements {
+			elements[i] = alterTableDropTableElementToJSON(e)
+		}
+		node["AlterTableDropTableElements"] = elements
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func alterTableDropTableElementToJSON(e *ast.AlterTableDropTableElement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterTableDropTableElement",
+	}
+	if e.TableElementType != "" {
+		node["TableElementType"] = e.TableElementType
+	}
+	if e.Name != nil {
+		node["Name"] = identifierToJSON(e.Name)
+	}
+	node["IsIfExists"] = e.IsIfExists
+	return node
+}
+
+func printStatementToJSON(s *ast.PrintStatement) jsonNode {
+	node := jsonNode{
+		"$type": "PrintStatement",
+	}
+	if s.Expression != nil {
+		node["Expression"] = scalarExpressionToJSON(s.Expression)
+	}
+	return node
+}
+
+func throwStatementToJSON(s *ast.ThrowStatement) jsonNode {
+	node := jsonNode{
+		"$type": "ThrowStatement",
+	}
+	if s.ErrorNumber != nil {
+		node["ErrorNumber"] = scalarExpressionToJSON(s.ErrorNumber)
+	}
+	if s.Message != nil {
+		node["Message"] = scalarExpressionToJSON(s.Message)
+	}
+	if s.State != nil {
+		node["State"] = scalarExpressionToJSON(s.State)
+	}
+	return node
 }
 
 func selectStatementToJSON(s *ast.SelectStatement) jsonNode {
@@ -561,12 +962,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.LiteralType != "" {
 			node["LiteralType"] = e.LiteralType
 		}
-		if e.IsNational {
-			node["IsNational"] = e.IsNational
-		}
-		if e.IsLargeObject {
-			node["IsLargeObject"] = e.IsLargeObject
-		}
+		// Always include IsNational and IsLargeObject
+		node["IsNational"] = e.IsNational
+		node["IsLargeObject"] = e.IsLargeObject
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
@@ -590,6 +988,28 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		}
 		if e.WithArrayWrapper {
 			node["WithArrayWrapper"] = e.WithArrayWrapper
+		}
+		return node
+	case *ast.BinaryExpression:
+		node := jsonNode{
+			"$type": "BinaryExpression",
+		}
+		if e.BinaryExpressionType != "" {
+			node["BinaryExpressionType"] = e.BinaryExpressionType
+		}
+		if e.FirstExpression != nil {
+			node["FirstExpression"] = scalarExpressionToJSON(e.FirstExpression)
+		}
+		if e.SecondExpression != nil {
+			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
+		}
+		return node
+	case *ast.VariableReference:
+		node := jsonNode{
+			"$type": "VariableReference",
+		}
+		if e.Name != "" {
+			node["Name"] = e.Name
 		}
 		return node
 	default:

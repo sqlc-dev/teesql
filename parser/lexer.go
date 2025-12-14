@@ -38,6 +38,18 @@ const (
 	TokenOption
 	TokenAll
 	TokenDistinct
+	TokenPrint
+	TokenThrow
+	TokenAlter
+	TokenTable
+	TokenDrop
+	TokenIndex
+	TokenRevert
+	TokenWith
+	TokenCookie
+	TokenDatabase
+	TokenScoped
+	TokenCredential
 )
 
 // Token represents a lexical token.
@@ -281,6 +293,18 @@ var keywords = map[string]TokenType{
 	"OPTION":   TokenOption,
 	"ALL":      TokenAll,
 	"DISTINCT": TokenDistinct,
+	"PRINT":    TokenPrint,
+	"THROW":    TokenThrow,
+	"ALTER":    TokenAlter,
+	"TABLE":    TokenTable,
+	"DROP":       TokenDrop,
+	"INDEX":      TokenIndex,
+	"REVERT":     TokenRevert,
+	"WITH":       TokenWith,
+	"COOKIE":     TokenCookie,
+	"DATABASE":   TokenDatabase,
+	"SCOPED":     TokenScoped,
+	"CREDENTIAL": TokenCredential,
 }
 
 func lookupKeyword(ident string) TokenType {
