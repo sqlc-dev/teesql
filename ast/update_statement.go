@@ -3,7 +3,7 @@ package ast
 // UpdateStatement represents an UPDATE statement.
 type UpdateStatement struct {
 	UpdateSpecification *UpdateSpecification `json:"UpdateSpecification,omitempty"`
-	OptimizerHints      []*OptimizerHint     `json:"OptimizerHints,omitempty"`
+	OptimizerHints      []OptimizerHintBase  `json:"OptimizerHints,omitempty"`
 }
 
 func (u *UpdateStatement) node()      {}

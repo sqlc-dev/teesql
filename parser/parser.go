@@ -1179,7 +1179,7 @@ func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
 	return son, nil
 }
 
-func (p *Parser) parseOptionClause() ([]*ast.OptimizerHint, error) {
+func (p *Parser) parseOptionClause() ([]ast.OptimizerHintBase, error) {
 	// Consume OPTION
 	if p.curTok.Type != TokenOption {
 		return nil, fmt.Errorf("expected OPTION, got %s", p.curTok.Literal)
@@ -1192,14 +1192,28 @@ func (p *Parser) parseOptionClause() ([]*ast.OptimizerHint, error) {
 	}
 	p.nextToken()
 
-	var hints []*ast.OptimizerHint
+	var hints []ast.OptimizerHintBase
 
 	// Parse hints
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-		if p.curTok.Type == TokenIdent {
+		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLabel {
 			hintKind := convertHintKind(p.curTok.Literal)
-			hints = append(hints, &ast.OptimizerHint{HintKind: hintKind})
 			p.nextToken()
+
+			// Check if this is a literal hint (LABEL = value, etc.)
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+				value, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				hints = append(hints, &ast.LiteralOptimizerHint{
+					HintKind: hintKind,
+					Value:    value,
+				})
+			} else {
+				hints = append(hints, &ast.OptimizerHint{HintKind: hintKind})
+			}
 		} else if p.curTok.Type == TokenComma {
 			p.nextToken()
 		} else {
@@ -1220,6 +1234,32 @@ func convertHintKind(hint string) string {
 	// Map common hint names
 	hintMap := map[string]string{
 		"IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX": "IgnoreNonClusteredColumnStoreIndex",
+		"LABEL":                        "Label",
+		"MAX_GRANT_PERCENT":            "MaxGrantPercent",
+		"MIN_GRANT_PERCENT":            "MinGrantPercent",
+		"NO_PERFORMANCE_SPOOL":         "NoPerformanceSpool",
+		"PARAMETERIZATION":             "Parameterization",
+		"RECOMPILE":                    "Recompile",
+		"MAXRECURSION":                 "MaxRecursion",
+		"KEEPFIXED":                    "KeepFixed",
+		"KEEP":                         "Keep",
+		"EXPAND":                       "Expand",
+		"VIEWS":                        "Views",
+		"HASH":                         "Hash",
+		"ORDER":                        "Order",
+		"GROUP":                        "Group",
+		"MERGE":                        "Merge",
+		"CONCAT":                       "Concat",
+		"UNION":                        "Union",
+		"LOOP":                         "Loop",
+		"JOIN":                         "Join",
+		"FAST":                         "Fast",
+		"FORCE":                        "Force",
+		"ROBUST":                       "Robust",
+		"PLAN":                         "Plan",
+		"USE":                          "Use",
+		"SIMPLE":                       "Simple",
+		"FORCED":                       "Forced",
 	}
 	upper := strings.ToUpper(hint)
 	if mapped, ok := hintMap[upper]; ok {
@@ -3361,14 +3401,30 @@ func selectStatementToJSON(s *ast.SelectStatement) jsonNode {
 	return node
 }
 
-func optimizerHintToJSON(h *ast.OptimizerHint) jsonNode {
-	node := jsonNode{
-		"$type": "OptimizerHint",
+func optimizerHintToJSON(h ast.OptimizerHintBase) jsonNode {
+	switch hint := h.(type) {
+	case *ast.OptimizerHint:
+		node := jsonNode{
+			"$type": "OptimizerHint",
+		}
+		if hint.HintKind != "" {
+			node["HintKind"] = hint.HintKind
+		}
+		return node
+	case *ast.LiteralOptimizerHint:
+		node := jsonNode{
+			"$type": "LiteralOptimizerHint",
+		}
+		if hint.Value != nil {
+			node["Value"] = scalarExpressionToJSON(hint.Value)
+		}
+		if hint.HintKind != "" {
+			node["HintKind"] = hint.HintKind
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownOptimizerHint"}
 	}
-	if h.HintKind != "" {
-		node["HintKind"] = h.HintKind
-	}
-	return node
 }
 
 func queryExpressionToJSON(qe ast.QueryExpression) jsonNode {
@@ -4516,6 +4572,19 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 	}
 	col.DataType = dataType
 
+	// Parse optional NULL/NOT NULL constraint
+	if p.curTok.Type == TokenNot {
+		p.nextToken() // consume NOT
+		if p.curTok.Type != TokenNull {
+			return nil, fmt.Errorf("expected NULL after NOT, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume NULL
+		col.Constraints = append(col.Constraints, &ast.NullableConstraintDefinition{Nullable: false})
+	} else if p.curTok.Type == TokenNull {
+		p.nextToken() // consume NULL
+		col.Constraints = append(col.Constraints, &ast.NullableConstraintDefinition{Nullable: true})
+	}
+
 	return col, nil
 }
 
@@ -4619,10 +4688,29 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 		"IsMasked":         c.IsMasked,
 		"ColumnIdentifier": identifierToJSON(c.ColumnIdentifier),
 	}
+	if len(c.Constraints) > 0 {
+		constraints := make([]jsonNode, len(c.Constraints))
+		for i, constraint := range c.Constraints {
+			constraints[i] = constraintDefinitionToJSON(constraint)
+		}
+		node["Constraints"] = constraints
+	}
 	if c.DataType != nil {
 		node["DataType"] = dataTypeReferenceToJSON(c.DataType)
 	}
 	return node
+}
+
+func constraintDefinitionToJSON(c ast.ConstraintDefinition) jsonNode {
+	switch constraint := c.(type) {
+	case *ast.NullableConstraintDefinition:
+		return jsonNode{
+			"$type":    "NullableConstraintDefinition",
+			"Nullable": constraint.Nullable,
+		}
+	default:
+		return jsonNode{"$type": "UnknownConstraint"}
+	}
 }
 
 func dataTypeReferenceToJSON(d ast.DataTypeReference) jsonNode {
