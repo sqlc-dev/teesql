@@ -1582,6 +1582,13 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		return nil, err
 	}
 
+	// Check for NOT before IN/LIKE/BETWEEN
+	notDefined := false
+	if p.curTok.Type == TokenNot {
+		notDefined = true
+		p.nextToken() // consume NOT
+	}
+
 	// Check for IS NULL / IS NOT NULL
 	if p.curTok.Type == TokenIs {
 		p.nextToken() // consume IS
@@ -1601,6 +1608,114 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			IsNot:      isNot,
 			Expression: left,
 		}, nil
+	}
+
+	// Check for IN expression
+	if p.curTok.Type == TokenIn {
+		p.nextToken() // consume IN
+
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after IN, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Check if it's a subquery or value list
+		if p.curTok.Type == TokenSelect {
+			subquery, err := p.parseQueryExpression()
+			if err != nil {
+				return nil, err
+			}
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+			return &ast.BooleanInExpression{
+				Expression: left,
+				NotDefined: notDefined,
+				Subquery:   subquery,
+			}, nil
+		}
+
+		// Parse value list
+		var values []ast.ScalarExpression
+		for {
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			values = append(values, val)
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume ,
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+		return &ast.BooleanInExpression{
+			Expression: left,
+			NotDefined: notDefined,
+			Values:     values,
+		}, nil
+	}
+
+	// Check for LIKE expression
+	if p.curTok.Type == TokenLike {
+		p.nextToken() // consume LIKE
+
+		pattern, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		var escapeExpr ast.ScalarExpression
+		if p.curTok.Type == TokenEscape {
+			p.nextToken() // consume ESCAPE
+			escapeExpr, err = p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return &ast.BooleanLikeExpression{
+			FirstExpression:  left,
+			SecondExpression: pattern,
+			EscapeExpression: escapeExpr,
+			NotDefined:       notDefined,
+		}, nil
+	}
+
+	// Check for BETWEEN expression
+	if p.curTok.Type == TokenBetween {
+		p.nextToken() // consume BETWEEN
+
+		low, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		if p.curTok.Type != TokenAnd {
+			return nil, fmt.Errorf("expected AND in BETWEEN, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume AND
+
+		high, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		return &ast.BooleanBetweenExpression{
+			FirstExpression:  left,
+			SecondExpression: low,
+			ThirdExpression:  high,
+			NotDefined:       notDefined,
+		}, nil
+	}
+
+	// If we saw NOT but didn't get IN/LIKE/BETWEEN, error
+	if notDefined {
+		return nil, fmt.Errorf("expected IN, LIKE, or BETWEEN after NOT, got %s", p.curTok.Literal)
 	}
 
 	// Check for comparison operator
@@ -4646,6 +4761,55 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(e.Expression)
 		}
+		return node
+	case *ast.BooleanInExpression:
+		node := jsonNode{
+			"$type": "BooleanInExpression",
+		}
+		if e.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(e.Expression)
+		}
+		node["NotDefined"] = e.NotDefined
+		if len(e.Values) > 0 {
+			values := make([]jsonNode, len(e.Values))
+			for i, v := range e.Values {
+				values[i] = scalarExpressionToJSON(v)
+			}
+			node["Values"] = values
+		}
+		if e.Subquery != nil {
+			node["Subquery"] = queryExpressionToJSON(e.Subquery)
+		}
+		return node
+	case *ast.BooleanLikeExpression:
+		node := jsonNode{
+			"$type": "BooleanLikeExpression",
+		}
+		if e.FirstExpression != nil {
+			node["FirstExpression"] = scalarExpressionToJSON(e.FirstExpression)
+		}
+		if e.SecondExpression != nil {
+			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
+		}
+		if e.EscapeExpression != nil {
+			node["EscapeExpression"] = scalarExpressionToJSON(e.EscapeExpression)
+		}
+		node["NotDefined"] = e.NotDefined
+		return node
+	case *ast.BooleanBetweenExpression:
+		node := jsonNode{
+			"$type": "BooleanBetweenExpression",
+		}
+		if e.FirstExpression != nil {
+			node["FirstExpression"] = scalarExpressionToJSON(e.FirstExpression)
+		}
+		if e.SecondExpression != nil {
+			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
+		}
+		if e.ThirdExpression != nil {
+			node["ThirdExpression"] = scalarExpressionToJSON(e.ThirdExpression)
+		}
+		node["NotDefined"] = e.NotDefined
 		return node
 	default:
 		return jsonNode{"$type": "UnknownBooleanExpression"}

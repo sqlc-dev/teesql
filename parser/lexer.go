@@ -92,6 +92,10 @@ const (
 	TokenDefault
 	TokenNull
 	TokenIs
+	TokenIn
+	TokenLike
+	TokenBetween
+	TokenEscape
 	TokenExec
 	TokenExecute
 	TokenOver
@@ -525,6 +529,10 @@ var keywords = map[string]TokenType{
 	"DEFAULT":       TokenDefault,
 	"NULL":          TokenNull,
 	"IS":            TokenIs,
+	"IN":            TokenIn,
+	"LIKE":          TokenLike,
+	"BETWEEN":       TokenBetween,
+	"ESCAPE":        TokenEscape,
 	"EXEC":          TokenExec,
 	"EXECUTE":       TokenExecute,
 	"OVER":          TokenOver,
