@@ -140,6 +140,8 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseGotoStatement()
 	case TokenMove:
 		return p.parseMoveConversationStatement()
+	case TokenGet:
+		return p.parseGetConversationGroupStatement()
 	case TokenSemicolon:
 		p.nextToken()
 		return nil, nil
@@ -3006,36 +3008,41 @@ func (p *Parser) parseCreateMasterKeyStatement() (*ast.CreateMasterKeyStatement,
 	}
 	p.nextToken()
 
-	// Expect ENCRYPTION
-	if p.curTok.Type != TokenEncryption {
-		return nil, fmt.Errorf("expected ENCRYPTION after KEY, got %s", p.curTok.Literal)
+	// Skip optional semicolon (for CREATE MASTER KEY;)
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+		return stmt, nil
 	}
-	p.nextToken()
 
-	// Expect BY
-	if p.curTok.Type != TokenBy {
-		return nil, fmt.Errorf("expected BY after ENCRYPTION, got %s", p.curTok.Literal)
-	}
-	p.nextToken()
+	// Check for optional ENCRYPTION BY PASSWORD clause
+	if p.curTok.Type == TokenEncryption {
+		p.nextToken()
 
-	// Expect PASSWORD
-	if p.curTok.Type != TokenPassword {
-		return nil, fmt.Errorf("expected PASSWORD after BY, got %s", p.curTok.Literal)
-	}
-	p.nextToken()
+		// Expect BY
+		if p.curTok.Type != TokenBy {
+			return nil, fmt.Errorf("expected BY after ENCRYPTION, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
 
-	// Expect =
-	if p.curTok.Type != TokenEquals {
-		return nil, fmt.Errorf("expected = after PASSWORD, got %s", p.curTok.Literal)
-	}
-	p.nextToken()
+		// Expect PASSWORD
+		if p.curTok.Type != TokenPassword {
+			return nil, fmt.Errorf("expected PASSWORD after BY, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
 
-	// Parse password expression
-	password, err := p.parseScalarExpression()
-	if err != nil {
-		return nil, err
+		// Expect =
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after PASSWORD, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+
+		// Parse password expression
+		password, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Password = password
 	}
-	stmt.Password = password
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -3302,6 +3309,55 @@ func (p *Parser) parseMoveConversationStatement() (*ast.MoveConversationStatemen
 	return stmt, nil
 }
 
+func (p *Parser) parseGetConversationGroupStatement() (*ast.GetConversationGroupStatement, error) {
+	// Consume GET
+	p.nextToken()
+
+	stmt := &ast.GetConversationGroupStatement{}
+
+	// Expect CONVERSATION
+	if p.curTok.Type != TokenConversation {
+		return nil, fmt.Errorf("expected CONVERSATION after GET, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect GROUP
+	if p.curTok.Type != TokenGroup {
+		return nil, fmt.Errorf("expected GROUP after CONVERSATION, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse the group id variable
+	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+		stmt.GroupId = &ast.VariableReference{
+			Name: p.curTok.Literal,
+		}
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected variable reference for group id, got %s", p.curTok.Literal)
+	}
+
+	// Expect FROM
+	if p.curTok.Type != TokenFrom {
+		return nil, fmt.Errorf("expected FROM, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse queue name (SchemaObjectName)
+	queue, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Queue = queue
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseGotoStatement() (*ast.GoToStatement, error) {
 	// Consume GOTO
 	p.nextToken()
@@ -3448,6 +3504,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return waitForStatementToJSON(s)
 	case *ast.MoveConversationStatement:
 		return moveConversationStatementToJSON(s)
+	case *ast.GetConversationGroupStatement:
+		return getConversationGroupStatementToJSON(s)
 	case *ast.GoToStatement:
 		return goToStatementToJSON(s)
 	case *ast.LabelStatement:
@@ -5015,6 +5073,19 @@ func moveConversationStatementToJSON(s *ast.MoveConversationStatement) jsonNode 
 	}
 	if s.Group != nil {
 		node["Group"] = scalarExpressionToJSON(s.Group)
+	}
+	return node
+}
+
+func getConversationGroupStatementToJSON(s *ast.GetConversationGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type": "GetConversationGroupStatement",
+	}
+	if s.GroupId != nil {
+		node["GroupId"] = scalarExpressionToJSON(s.GroupId)
+	}
+	if s.Queue != nil {
+		node["Queue"] = schemaObjectNameToJSON(s.Queue)
 	}
 	return node
 }

@@ -156,6 +156,7 @@ const (
 	TokenColon
 	TokenMove
 	TokenConversation
+	TokenGet
 )
 
 // Token represents a lexical token.
@@ -564,6 +565,7 @@ var keywords = map[string]TokenType{
 	"TRUNCATE":      TokenTruncate,
 	"MOVE":          TokenMove,
 	"CONVERSATION":  TokenConversation,
+	"GET":           TokenGet,
 }
 
 func lookupKeyword(ident string) TokenType {
