@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/kyleconroy/teesql/ast"
 )
@@ -22,9 +23,371 @@ func Parse(ctx context.Context, r io.Reader) (*ast.Script, error) {
 		return &ast.Script{}, nil
 	}
 
-	// TODO: Implement actual T-SQL parsing
-	// For now, this is a placeholder that returns an empty script
-	return &ast.Script{}, nil
+	p := newParser(string(data))
+	return p.parseScript()
+}
+
+// Parser holds the parsing state.
+type Parser struct {
+	lexer   *Lexer
+	curTok  Token
+	peekTok Token
+}
+
+func newParser(input string) *Parser {
+	p := &Parser{lexer: NewLexer(input)}
+	// Read two tokens to initialize curTok and peekTok
+	p.nextToken()
+	p.nextToken()
+	return p
+}
+
+func (p *Parser) nextToken() {
+	p.curTok = p.peekTok
+	p.peekTok = p.lexer.NextToken()
+}
+
+func (p *Parser) parseScript() (*ast.Script, error) {
+	script := &ast.Script{}
+
+	// Parse all batches (separated by GO)
+	batch, err := p.parseBatch()
+	if err != nil {
+		return nil, err
+	}
+	if batch != nil && len(batch.Statements) > 0 {
+		script.Batches = append(script.Batches, batch)
+	}
+
+	return script, nil
+}
+
+func (p *Parser) parseBatch() (*ast.Batch, error) {
+	batch := &ast.Batch{}
+
+	for p.curTok.Type != TokenEOF {
+		// Skip GO statements (batch separators)
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO" {
+			p.nextToken()
+			continue
+		}
+
+		stmt, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		if stmt != nil {
+			batch.Statements = append(batch.Statements, stmt)
+		}
+	}
+
+	return batch, nil
+}
+
+func (p *Parser) parseStatement() (ast.Statement, error) {
+	switch p.curTok.Type {
+	case TokenSelect:
+		return p.parseSelectStatement()
+	case TokenSemicolon:
+		p.nextToken()
+		return nil, nil
+	default:
+		return nil, fmt.Errorf("unexpected token: %s", p.curTok.Literal)
+	}
+}
+
+func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
+	stmt := &ast.SelectStatement{}
+
+	// Parse query expression
+	qe, err := p.parseQueryExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.QueryExpression = qe
+
+	// Parse optional OPTION clause
+	if p.curTok.Type == TokenOption {
+		hints, err := p.parseOptionClause()
+		if err != nil {
+			return nil, err
+		}
+		stmt.OptimizerHints = hints
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseQueryExpression() (ast.QueryExpression, error) {
+	return p.parseQuerySpecification()
+}
+
+func (p *Parser) parseQuerySpecification() (*ast.QuerySpecification, error) {
+	qs := &ast.QuerySpecification{
+		UniqueRowFilter: "NotSpecified",
+	}
+
+	// Expect SELECT
+	if p.curTok.Type != TokenSelect {
+		return nil, fmt.Errorf("expected SELECT, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for ALL or DISTINCT
+	if p.curTok.Type == TokenAll {
+		qs.UniqueRowFilter = "All"
+		p.nextToken()
+	} else if p.curTok.Type == TokenDistinct {
+		qs.UniqueRowFilter = "Distinct"
+		p.nextToken()
+	}
+
+	// Parse select elements
+	elements, err := p.parseSelectElements()
+	if err != nil {
+		return nil, err
+	}
+	qs.SelectElements = elements
+
+	// Parse optional FROM clause
+	if p.curTok.Type == TokenFrom {
+		fromClause, err := p.parseFromClause()
+		if err != nil {
+			return nil, err
+		}
+		qs.FromClause = fromClause
+	}
+
+	return qs, nil
+}
+
+func (p *Parser) parseSelectElements() ([]ast.SelectElement, error) {
+	var elements []ast.SelectElement
+
+	for {
+		elem, err := p.parseSelectElement()
+		if err != nil {
+			return nil, err
+		}
+		elements = append(elements, elem)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	return elements, nil
+}
+
+func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
+	// Check for *
+	if p.curTok.Type == TokenStar {
+		p.nextToken()
+		return &ast.SelectStarExpression{}, nil
+	}
+
+	// Otherwise parse a scalar expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.SelectScalarExpression{Expression: expr}, nil
+}
+
+func (p *Parser) parseScalarExpression() (ast.ScalarExpression, error) {
+	// For now, only handle column references and identifiers
+	if p.curTok.Type == TokenIdent {
+		return p.parseColumnReference()
+	}
+	if p.curTok.Type == TokenNumber {
+		val := p.curTok.Literal
+		p.nextToken()
+		return &ast.IntegerLiteral{LiteralType: "Integer", Value: val}, nil
+	}
+	return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) {
+	var identifiers []*ast.Identifier
+
+	for {
+		if p.curTok.Type != TokenIdent {
+			break
+		}
+
+		id := &ast.Identifier{
+			Value:     p.curTok.Literal,
+			QuoteType: "NotQuoted",
+		}
+		identifiers = append(identifiers, id)
+		p.nextToken()
+
+		if p.curTok.Type != TokenDot {
+			break
+		}
+		p.nextToken() // consume dot
+	}
+
+	return &ast.ColumnReferenceExpression{
+		ColumnType: "Regular",
+		MultiPartIdentifier: &ast.MultiPartIdentifier{
+			Count:       len(identifiers),
+			Identifiers: identifiers,
+		},
+	}, nil
+}
+
+func (p *Parser) parseFromClause() (*ast.FromClause, error) {
+	// Consume FROM
+	if p.curTok.Type != TokenFrom {
+		return nil, fmt.Errorf("expected FROM, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	fc := &ast.FromClause{}
+
+	// Parse table references
+	for {
+		ref, err := p.parseTableReference()
+		if err != nil {
+			return nil, err
+		}
+		fc.TableReferences = append(fc.TableReferences, ref)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	return fc, nil
+}
+
+func (p *Parser) parseTableReference() (ast.TableReference, error) {
+	return p.parseNamedTableReference()
+}
+
+func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
+	ref := &ast.NamedTableReference{
+		ForPath: false,
+	}
+
+	// Parse schema object name (potentially multi-part: db.schema.table)
+	son, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	ref.SchemaObject = son
+
+	// Parse optional alias (AS alias or just alias)
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		if p.curTok.Type != TokenIdent {
+			return nil, fmt.Errorf("expected identifier after AS, got %s", p.curTok.Literal)
+		}
+		ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent {
+		// Could be an alias without AS, but need to be careful not to consume keywords
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" {
+			ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+			p.nextToken()
+		}
+	}
+
+	return ref, nil
+}
+
+func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
+	var identifiers []*ast.Identifier
+
+	for {
+		if p.curTok.Type != TokenIdent {
+			break
+		}
+
+		id := &ast.Identifier{
+			Value:     p.curTok.Literal,
+			QuoteType: "NotQuoted",
+		}
+		identifiers = append(identifiers, id)
+		p.nextToken()
+
+		if p.curTok.Type != TokenDot {
+			break
+		}
+		p.nextToken() // consume dot
+	}
+
+	if len(identifiers) == 0 {
+		return nil, fmt.Errorf("expected identifier for schema object name")
+	}
+
+	// BaseIdentifier is the last identifier
+	baseId := identifiers[len(identifiers)-1]
+
+	return &ast.SchemaObjectName{
+		BaseIdentifier: baseId,
+		Count:          len(identifiers),
+		Identifiers:    identifiers,
+	}, nil
+}
+
+func (p *Parser) parseOptionClause() ([]*ast.OptimizerHint, error) {
+	// Consume OPTION
+	if p.curTok.Type != TokenOption {
+		return nil, fmt.Errorf("expected OPTION, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Consume (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected (, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	var hints []*ast.OptimizerHint
+
+	// Parse hints
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		if p.curTok.Type == TokenIdent {
+			hintKind := convertHintKind(p.curTok.Literal)
+			hints = append(hints, &ast.OptimizerHint{HintKind: hintKind})
+			p.nextToken()
+		} else if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			p.nextToken()
+		}
+	}
+
+	// Consume )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	return hints, nil
+}
+
+// convertHintKind converts hint identifiers to their canonical names
+func convertHintKind(hint string) string {
+	// Map common hint names
+	hintMap := map[string]string{
+		"IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX": "IgnoreNonClusteredColumnStoreIndex",
+	}
+	upper := strings.ToUpper(hint)
+	if mapped, ok := hintMap[upper]; ok {
+		return mapped
+	}
+	return hint
 }
 
 // jsonNode represents a generic JSON node from the AST JSON format.
@@ -79,6 +442,23 @@ func selectStatementToJSON(s *ast.SelectStatement) jsonNode {
 	}
 	if s.QueryExpression != nil {
 		node["QueryExpression"] = queryExpressionToJSON(s.QueryExpression)
+	}
+	if len(s.OptimizerHints) > 0 {
+		hints := make([]jsonNode, len(s.OptimizerHints))
+		for i, h := range s.OptimizerHints {
+			hints[i] = optimizerHintToJSON(h)
+		}
+		node["OptimizerHints"] = hints
+	}
+	return node
+}
+
+func optimizerHintToJSON(h *ast.OptimizerHint) jsonNode {
+	node := jsonNode{
+		"$type": "OptimizerHint",
+	}
+	if h.HintKind != "" {
+		node["HintKind"] = h.HintKind
 	}
 	return node
 }

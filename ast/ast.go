@@ -28,11 +28,19 @@ type Statement interface {
 
 // SelectStatement represents a SELECT statement.
 type SelectStatement struct {
-	QueryExpression QueryExpression `json:"QueryExpression,omitempty"`
+	QueryExpression QueryExpression  `json:"QueryExpression,omitempty"`
+	OptimizerHints  []*OptimizerHint `json:"OptimizerHints,omitempty"`
 }
 
 func (*SelectStatement) node()      {}
 func (*SelectStatement) statement() {}
+
+// OptimizerHint represents an optimizer hint in an OPTION clause.
+type OptimizerHint struct {
+	HintKind string `json:"HintKind,omitempty"`
+}
+
+func (*OptimizerHint) node() {}
 
 // QueryExpression is the interface for query expressions.
 type QueryExpression interface {
