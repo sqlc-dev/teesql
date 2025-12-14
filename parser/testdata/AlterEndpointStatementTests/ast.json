@@ -1,0 +1,309 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 403
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 87,
+        "fragmentLength": 316
+      },
+      "Statements": [
+        {
+          "$type": "AlterEndpointStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 87,
+            "fragmentLength": 50
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 16,
+              "startOffset": 102,
+              "fragmentLength": 2
+            },
+            "Value": "e1",
+            "QuoteType": "NotQuoted"
+          },
+          "State": "Started",
+          "Affinity": {
+            "$type": "EndpointAffinity",
+            "location": {
+              "startLine": 2,
+              "startColumn": 19,
+              "startOffset": 105,
+              "fragmentLength": 15
+            },
+            "Kind": "None"
+          },
+          "Protocol": "None",
+          "EndpointType": "NotSpecified"
+        },
+        {
+          "$type": "AlterEndpointStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 138,
+            "fragmentLength": 52
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 16,
+              "startOffset": 153,
+              "fragmentLength": 2
+            },
+            "Value": "e1",
+            "QuoteType": "NotQuoted"
+          },
+          "State": "Disabled",
+          "Affinity": {
+            "$type": "EndpointAffinity",
+            "location": {
+              "startLine": 3,
+              "startColumn": 37,
+              "startOffset": 174,
+              "fragmentLength": 16
+            },
+            "Kind": "Admin"
+          },
+          "Protocol": "None",
+          "EndpointType": "NotSpecified"
+        },
+        {
+          "$type": "AlterEndpointStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 191,
+            "fragmentLength": 66
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 16,
+              "startOffset": 206,
+              "fragmentLength": 2
+            },
+            "Value": "e1",
+            "QuoteType": "NotQuoted"
+          },
+          "State": "NotSpecified",
+          "Affinity": {
+            "$type": "EndpointAffinity",
+            "location": {
+              "startLine": 4,
+              "startColumn": 19,
+              "startOffset": 209,
+              "fragmentLength": 18
+            },
+            "Kind": "Integer",
+            "Value": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 4,
+                "startColumn": 30,
+                "startOffset": 220,
+                "fragmentLength": 7
+              },
+              "LiteralType": "Integer",
+              "Value": "1000000"
+            }
+          },
+          "Protocol": "Tcp",
+          "ProtocolOptions": [
+            {
+              "$type": "LiteralEndpointProtocolOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 62,
+                "startOffset": 252,
+                "fragmentLength": 4
+              },
+              "Value": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 62,
+                  "startOffset": 252,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "Integer",
+                "Value": "4022"
+              },
+              "Kind": "TcpListenerPort"
+            }
+          ],
+          "EndpointType": "NotSpecified"
+        },
+        {
+          "$type": "AlterEndpointStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 259,
+            "fragmentLength": 95
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 6,
+              "startColumn": 16,
+              "startOffset": 274,
+              "fragmentLength": 2
+            },
+            "Value": "e1",
+            "QuoteType": "NotQuoted"
+          },
+          "State": "NotSpecified",
+          "Protocol": "None",
+          "EndpointType": "Soap",
+          "PayloadOptions": [
+            {
+              "$type": "SoapMethod",
+              "location": {
+                "startLine": 6,
+                "startColumn": 43,
+                "startOffset": 301,
+                "fragmentLength": 17
+              },
+              "Alias": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 43,
+                  "startOffset": 301,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "m1"
+              },
+              "Action": "Add",
+              "Name": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 55,
+                  "startOffset": 313,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "n1"
+              },
+              "Format": "NotSpecified",
+              "Schema": "NotSpecified",
+              "Kind": "WebMethod"
+            },
+            {
+              "$type": "SoapMethod",
+              "location": {
+                "startLine": 6,
+                "startColumn": 78,
+                "startOffset": 336,
+                "fragmentLength": 17
+              },
+              "Alias": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 78,
+                  "startOffset": 336,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "m2"
+              },
+              "Action": "Alter",
+              "Name": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 90,
+                  "startOffset": 348,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "n2"
+              },
+              "Format": "NotSpecified",
+              "Schema": "NotSpecified",
+              "Kind": "WebMethod"
+            }
+          ]
+        },
+        {
+          "$type": "AlterEndpointStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 355,
+            "fragmentLength": 48
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 16,
+              "startOffset": 370,
+              "fragmentLength": 2
+            },
+            "Value": "e1",
+            "QuoteType": "NotQuoted"
+          },
+          "State": "NotSpecified",
+          "Protocol": "None",
+          "EndpointType": "Soap",
+          "PayloadOptions": [
+            {
+              "$type": "SoapMethod",
+              "location": {
+                "startLine": 7,
+                "startColumn": 44,
+                "startOffset": 398,
+                "fragmentLength": 4
+              },
+              "Alias": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 44,
+                  "startOffset": 398,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "m1"
+              },
+              "Action": "Drop",
+              "Format": "NotSpecified",
+              "Schema": "NotSpecified",
+              "Kind": "None"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

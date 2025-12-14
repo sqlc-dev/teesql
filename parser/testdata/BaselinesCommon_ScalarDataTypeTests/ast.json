@@ -1,0 +1,5045 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 2422
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 2422
+      },
+      "Statements": [
+        {
+          "$type": "CreateTableStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 2422
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 1,
+              "startColumn": 14,
+              "startOffset": 13,
+              "fragmentLength": 27
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 14,
+                "startOffset": 13,
+                "fragmentLength": 5
+              },
+              "Value": "dbo",
+              "QuoteType": "SquareBracket"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 20,
+                "startOffset": 19,
+                "fragmentLength": 21
+              },
+              "Value": "DatabaseDefinitions",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "AsEdge": false,
+          "AsFileTable": false,
+          "AsNode": false,
+          "Definition": {
+            "$type": "TableDefinition",
+            "location": {
+              "startLine": 2,
+              "startColumn": 5,
+              "startOffset": 47,
+              "fragmentLength": 2363
+            },
+            "ColumnDefinitions": [
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 5,
+                  "startOffset": 47,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 28,
+                      "startOffset": 70,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 5,
+                    "startOffset": 47,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 10,
+                    "startOffset": 52,
+                    "fragmentLength": 6
+                  },
+                  "SqlDataTypeOption": "BigInt",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 10,
+                      "startOffset": 52,
+                      "fragmentLength": 6
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 10,
+                        "startOffset": 52,
+                        "fragmentLength": 6
+                      },
+                      "Value": "BIGINT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 5,
+                  "startOffset": 84,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 28,
+                      "startOffset": 107,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 5,
+                    "startOffset": 84,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c2",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 10,
+                    "startOffset": 89,
+                    "fragmentLength": 3
+                  },
+                  "SqlDataTypeOption": "Int",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 10,
+                      "startOffset": 89,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 3,
+                        "startColumn": 10,
+                        "startOffset": 89,
+                        "fragmentLength": 3
+                      },
+                      "Value": "INT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 5,
+                  "startOffset": 121,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 28,
+                      "startOffset": 144,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 5,
+                    "startOffset": 121,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c2a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 10,
+                    "startOffset": 126,
+                    "fragmentLength": 3
+                  },
+                  "SqlDataTypeOption": "Int",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 10,
+                      "startOffset": 126,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 4,
+                        "startColumn": 10,
+                        "startOffset": 126,
+                        "fragmentLength": 3
+                      },
+                      "Value": "INT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 5,
+                  "startOffset": 158,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 28,
+                      "startOffset": 181,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 5,
+                    "startOffset": 158,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c3",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 10,
+                    "startOffset": 163,
+                    "fragmentLength": 8
+                  },
+                  "SqlDataTypeOption": "SmallInt",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 10,
+                      "startOffset": 163,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 5,
+                        "startColumn": 10,
+                        "startOffset": 163,
+                        "fragmentLength": 8
+                      },
+                      "Value": "SMALLINT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 5,
+                  "startOffset": 195,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 28,
+                      "startOffset": 218,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 5,
+                    "startOffset": 195,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c4",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 10,
+                    "startOffset": 200,
+                    "fragmentLength": 7
+                  },
+                  "SqlDataTypeOption": "TinyInt",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 10,
+                      "startOffset": 200,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 6,
+                        "startColumn": 10,
+                        "startOffset": 200,
+                        "fragmentLength": 7
+                      },
+                      "Value": "TINYINT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 5,
+                  "startOffset": 232,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 7,
+                      "startColumn": 28,
+                      "startOffset": 255,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 5,
+                    "startOffset": 232,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c5",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 10,
+                    "startOffset": 237,
+                    "fragmentLength": 3
+                  },
+                  "SqlDataTypeOption": "Bit",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 7,
+                      "startColumn": 10,
+                      "startOffset": 237,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 7,
+                        "startColumn": 10,
+                        "startOffset": 237,
+                        "fragmentLength": 3
+                      },
+                      "Value": "BIT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 5,
+                  "startOffset": 269,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 28,
+                      "startOffset": 292,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 5,
+                    "startOffset": 269,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c6",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 10,
+                    "startOffset": 274,
+                    "fragmentLength": 7
+                  },
+                  "SqlDataTypeOption": "Decimal",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 10,
+                      "startOffset": 274,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 10,
+                        "startOffset": 274,
+                        "fragmentLength": 7
+                      },
+                      "Value": "DECIMAL",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 5,
+                  "startOffset": 306,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 28,
+                      "startOffset": 329,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 5,
+                    "startOffset": 306,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c6a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 10,
+                    "startOffset": 311,
+                    "fragmentLength": 7
+                  },
+                  "SqlDataTypeOption": "Decimal",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 10,
+                      "startOffset": 311,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 9,
+                        "startColumn": 10,
+                        "startOffset": 311,
+                        "fragmentLength": 7
+                      },
+                      "Value": "DECIMAL",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 5,
+                  "startOffset": 343,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 28,
+                      "startOffset": 366,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 5,
+                    "startOffset": 343,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c6b",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 10,
+                    "startOffset": 348,
+                    "fragmentLength": 12
+                  },
+                  "SqlDataTypeOption": "Decimal",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 10,
+                        "startColumn": 19,
+                        "startOffset": 357,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 10,
+                      "startOffset": 348,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 10,
+                        "startColumn": 10,
+                        "startOffset": 348,
+                        "fragmentLength": 7
+                      },
+                      "Value": "DECIMAL",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 5,
+                  "startOffset": 380,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 11,
+                      "startColumn": 28,
+                      "startOffset": 403,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 5,
+                    "startOffset": 380,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c6c",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 10,
+                    "startOffset": 385,
+                    "fragmentLength": 12
+                  },
+                  "SqlDataTypeOption": "Decimal",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 11,
+                        "startColumn": 19,
+                        "startOffset": 394,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 11,
+                      "startColumn": 10,
+                      "startOffset": 385,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 11,
+                        "startColumn": 10,
+                        "startOffset": 385,
+                        "fragmentLength": 7
+                      },
+                      "Value": "DECIMAL",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 12,
+                  "startColumn": 5,
+                  "startOffset": 417,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 12,
+                      "startColumn": 28,
+                      "startOffset": 440,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 12,
+                    "startColumn": 5,
+                    "startOffset": 417,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c6d",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 12,
+                    "startColumn": 10,
+                    "startOffset": 422,
+                    "fragmentLength": 16
+                  },
+                  "SqlDataTypeOption": "Decimal",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 12,
+                        "startColumn": 19,
+                        "startOffset": 431,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    },
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 12,
+                        "startColumn": 23,
+                        "startOffset": 435,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 12,
+                      "startColumn": 10,
+                      "startOffset": 422,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 12,
+                        "startColumn": 10,
+                        "startOffset": 422,
+                        "fragmentLength": 7
+                      },
+                      "Value": "DECIMAL",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 5,
+                  "startOffset": 454,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 13,
+                      "startColumn": 28,
+                      "startOffset": 477,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 13,
+                    "startColumn": 5,
+                    "startOffset": 454,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c6e",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 13,
+                    "startColumn": 10,
+                    "startOffset": 459,
+                    "fragmentLength": 16
+                  },
+                  "SqlDataTypeOption": "Decimal",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 13,
+                        "startColumn": 19,
+                        "startOffset": 468,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    },
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 13,
+                        "startColumn": 23,
+                        "startOffset": 472,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 13,
+                      "startColumn": 10,
+                      "startOffset": 459,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 13,
+                        "startColumn": 10,
+                        "startOffset": 459,
+                        "fragmentLength": 7
+                      },
+                      "Value": "DECIMAL",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 5,
+                  "startOffset": 491,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 28,
+                      "startOffset": 514,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 5,
+                    "startOffset": 491,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c7",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 10,
+                    "startOffset": 496,
+                    "fragmentLength": 7
+                  },
+                  "SqlDataTypeOption": "Numeric",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 10,
+                      "startOffset": 496,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 14,
+                        "startColumn": 10,
+                        "startOffset": 496,
+                        "fragmentLength": 7
+                      },
+                      "Value": "NUMERIC",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 5,
+                  "startOffset": 528,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 28,
+                      "startOffset": 551,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 15,
+                    "startColumn": 5,
+                    "startOffset": 528,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c7a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 15,
+                    "startColumn": 10,
+                    "startOffset": 533,
+                    "fragmentLength": 12
+                  },
+                  "SqlDataTypeOption": "Numeric",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 15,
+                        "startColumn": 19,
+                        "startOffset": 542,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 10,
+                      "startOffset": 533,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 15,
+                        "startColumn": 10,
+                        "startOffset": 533,
+                        "fragmentLength": 7
+                      },
+                      "Value": "NUMERIC",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 5,
+                  "startOffset": 565,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 16,
+                      "startColumn": 28,
+                      "startOffset": 588,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 16,
+                    "startColumn": 5,
+                    "startOffset": 565,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c7b",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 16,
+                    "startColumn": 10,
+                    "startOffset": 570,
+                    "fragmentLength": 16
+                  },
+                  "SqlDataTypeOption": "Numeric",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 16,
+                        "startColumn": 19,
+                        "startOffset": 579,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    },
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 16,
+                        "startColumn": 23,
+                        "startOffset": 583,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 16,
+                      "startColumn": 10,
+                      "startOffset": 570,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 16,
+                        "startColumn": 10,
+                        "startOffset": 570,
+                        "fragmentLength": 7
+                      },
+                      "Value": "NUMERIC",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 5,
+                  "startOffset": 602,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 17,
+                      "startColumn": 28,
+                      "startOffset": 625,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 17,
+                    "startColumn": 5,
+                    "startOffset": 602,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c8",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 17,
+                    "startColumn": 10,
+                    "startOffset": 607,
+                    "fragmentLength": 5
+                  },
+                  "SqlDataTypeOption": "Money",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 17,
+                      "startColumn": 10,
+                      "startOffset": 607,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 10,
+                        "startOffset": 607,
+                        "fragmentLength": 5
+                      },
+                      "Value": "MONEY",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 5,
+                  "startOffset": 639,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 18,
+                      "startColumn": 28,
+                      "startOffset": 662,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 18,
+                    "startColumn": 5,
+                    "startOffset": 639,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c9",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 18,
+                    "startColumn": 10,
+                    "startOffset": 644,
+                    "fragmentLength": 10
+                  },
+                  "SqlDataTypeOption": "SmallMoney",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 18,
+                      "startColumn": 10,
+                      "startOffset": 644,
+                      "fragmentLength": 10
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 18,
+                        "startColumn": 10,
+                        "startOffset": 644,
+                        "fragmentLength": 10
+                      },
+                      "Value": "SMALLMONEY",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 5,
+                  "startOffset": 676,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 19,
+                      "startColumn": 28,
+                      "startOffset": 699,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 19,
+                    "startColumn": 5,
+                    "startOffset": 676,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c10",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 19,
+                    "startColumn": 10,
+                    "startOffset": 681,
+                    "fragmentLength": 5
+                  },
+                  "SqlDataTypeOption": "Float",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 19,
+                      "startColumn": 10,
+                      "startOffset": 681,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 19,
+                        "startColumn": 10,
+                        "startOffset": 681,
+                        "fragmentLength": 5
+                      },
+                      "Value": "FLOAT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 20,
+                  "startColumn": 5,
+                  "startOffset": 713,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 20,
+                      "startColumn": 28,
+                      "startOffset": 736,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 5,
+                    "startOffset": 713,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c10a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 10,
+                    "startOffset": 718,
+                    "fragmentLength": 10
+                  },
+                  "SqlDataTypeOption": "Float",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 20,
+                        "startColumn": 17,
+                        "startOffset": 725,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 20,
+                      "startColumn": 10,
+                      "startOffset": 718,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 20,
+                        "startColumn": 10,
+                        "startOffset": 718,
+                        "fragmentLength": 5
+                      },
+                      "Value": "FLOAT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 5,
+                  "startOffset": 750,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 21,
+                      "startColumn": 28,
+                      "startOffset": 773,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 21,
+                    "startColumn": 5,
+                    "startOffset": 750,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c11",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 21,
+                    "startColumn": 10,
+                    "startOffset": 755,
+                    "fragmentLength": 4
+                  },
+                  "SqlDataTypeOption": "Real",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 21,
+                      "startColumn": 10,
+                      "startOffset": 755,
+                      "fragmentLength": 4
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 21,
+                        "startColumn": 10,
+                        "startOffset": 755,
+                        "fragmentLength": 4
+                      },
+                      "Value": "REAL",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 5,
+                  "startOffset": 787,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 22,
+                      "startColumn": 28,
+                      "startOffset": 810,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 22,
+                    "startColumn": 5,
+                    "startOffset": 787,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c12",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 22,
+                    "startColumn": 10,
+                    "startOffset": 792,
+                    "fragmentLength": 8
+                  },
+                  "SqlDataTypeOption": "DateTime",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 22,
+                      "startColumn": 10,
+                      "startOffset": 792,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 22,
+                        "startColumn": 10,
+                        "startOffset": 792,
+                        "fragmentLength": 8
+                      },
+                      "Value": "DATETIME",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 23,
+                  "startColumn": 5,
+                  "startOffset": 824,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 23,
+                      "startColumn": 28,
+                      "startOffset": 847,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 23,
+                    "startColumn": 5,
+                    "startOffset": 824,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c13",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 23,
+                    "startColumn": 10,
+                    "startOffset": 829,
+                    "fragmentLength": 13
+                  },
+                  "SqlDataTypeOption": "SmallDateTime",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 23,
+                      "startColumn": 10,
+                      "startOffset": 829,
+                      "fragmentLength": 13
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 23,
+                        "startColumn": 10,
+                        "startOffset": 829,
+                        "fragmentLength": 13
+                      },
+                      "Value": "SMALLDATETIME",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 5,
+                  "startOffset": 861,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 24,
+                      "startColumn": 28,
+                      "startOffset": 884,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 5,
+                    "startOffset": 861,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c14",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 10,
+                    "startOffset": 866,
+                    "fragmentLength": 4
+                  },
+                  "SqlDataTypeOption": "Char",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 24,
+                      "startColumn": 10,
+                      "startOffset": 866,
+                      "fragmentLength": 4
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 24,
+                        "startColumn": 10,
+                        "startOffset": 866,
+                        "fragmentLength": 4
+                      },
+                      "Value": "CHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 5,
+                  "startOffset": 898,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 25,
+                      "startColumn": 28,
+                      "startOffset": 921,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 25,
+                    "startColumn": 5,
+                    "startOffset": 898,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c15",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 25,
+                    "startColumn": 10,
+                    "startOffset": 903,
+                    "fragmentLength": 9
+                  },
+                  "SqlDataTypeOption": "Char",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 25,
+                        "startColumn": 16,
+                        "startOffset": 909,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 25,
+                      "startColumn": 10,
+                      "startOffset": 903,
+                      "fragmentLength": 4
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 25,
+                        "startColumn": 10,
+                        "startOffset": 903,
+                        "fragmentLength": 4
+                      },
+                      "Value": "CHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 26,
+                  "startColumn": 5,
+                  "startOffset": 935,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 26,
+                      "startColumn": 28,
+                      "startOffset": 958,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 26,
+                    "startColumn": 5,
+                    "startOffset": 935,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c16",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 26,
+                    "startColumn": 10,
+                    "startOffset": 940,
+                    "fragmentLength": 7
+                  },
+                  "SqlDataTypeOption": "VarChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 26,
+                      "startColumn": 10,
+                      "startOffset": 940,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 26,
+                        "startColumn": 10,
+                        "startOffset": 940,
+                        "fragmentLength": 7
+                      },
+                      "Value": "VARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 5,
+                  "startOffset": 972,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 27,
+                      "startColumn": 28,
+                      "startOffset": 995,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 27,
+                    "startColumn": 5,
+                    "startOffset": 972,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c17",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 27,
+                    "startColumn": 10,
+                    "startOffset": 977,
+                    "fragmentLength": 12
+                  },
+                  "SqlDataTypeOption": "VarChar",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 27,
+                        "startColumn": 19,
+                        "startOffset": 986,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 27,
+                      "startColumn": 10,
+                      "startOffset": 977,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 27,
+                        "startColumn": 10,
+                        "startOffset": 977,
+                        "fragmentLength": 7
+                      },
+                      "Value": "VARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 28,
+                  "startColumn": 5,
+                  "startOffset": 1009,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 28,
+                      "startOffset": 1032,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 5,
+                    "startOffset": 1009,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c14a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 10,
+                    "startOffset": 1014,
+                    "fragmentLength": 4
+                  },
+                  "SqlDataTypeOption": "Char",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 10,
+                      "startOffset": 1014,
+                      "fragmentLength": 4
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 28,
+                        "startColumn": 10,
+                        "startOffset": 1014,
+                        "fragmentLength": 4
+                      },
+                      "Value": "CHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 29,
+                  "startColumn": 5,
+                  "startOffset": 1046,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 29,
+                      "startColumn": 28,
+                      "startOffset": 1069,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 29,
+                    "startColumn": 5,
+                    "startOffset": 1046,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c15a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 29,
+                    "startColumn": 10,
+                    "startOffset": 1051,
+                    "fragmentLength": 9
+                  },
+                  "SqlDataTypeOption": "Char",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 29,
+                        "startColumn": 16,
+                        "startOffset": 1057,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 29,
+                      "startColumn": 10,
+                      "startOffset": 1051,
+                      "fragmentLength": 4
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 29,
+                        "startColumn": 10,
+                        "startOffset": 1051,
+                        "fragmentLength": 4
+                      },
+                      "Value": "CHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 30,
+                  "startColumn": 5,
+                  "startOffset": 1083,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 30,
+                      "startColumn": 28,
+                      "startOffset": 1106,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 30,
+                    "startColumn": 5,
+                    "startOffset": 1083,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c16a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 30,
+                    "startColumn": 10,
+                    "startOffset": 1088,
+                    "fragmentLength": 7
+                  },
+                  "SqlDataTypeOption": "VarChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 30,
+                      "startColumn": 10,
+                      "startOffset": 1088,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 30,
+                        "startColumn": 10,
+                        "startOffset": 1088,
+                        "fragmentLength": 7
+                      },
+                      "Value": "VARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 5,
+                  "startOffset": 1120,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 31,
+                      "startColumn": 28,
+                      "startOffset": 1143,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 31,
+                    "startColumn": 5,
+                    "startOffset": 1120,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c17a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 31,
+                    "startColumn": 10,
+                    "startOffset": 1125,
+                    "fragmentLength": 12
+                  },
+                  "SqlDataTypeOption": "VarChar",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 31,
+                        "startColumn": 19,
+                        "startOffset": 1134,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 31,
+                      "startColumn": 10,
+                      "startOffset": 1125,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 31,
+                        "startColumn": 10,
+                        "startOffset": 1125,
+                        "fragmentLength": 7
+                      },
+                      "Value": "VARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 32,
+                  "startColumn": 5,
+                  "startOffset": 1157,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 32,
+                      "startColumn": 28,
+                      "startOffset": 1180,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 32,
+                    "startColumn": 5,
+                    "startOffset": 1157,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c18",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 32,
+                    "startColumn": 10,
+                    "startOffset": 1162,
+                    "fragmentLength": 7
+                  },
+                  "SqlDataTypeOption": "VarChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 32,
+                      "startColumn": 10,
+                      "startOffset": 1162,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 32,
+                        "startColumn": 10,
+                        "startOffset": 1162,
+                        "fragmentLength": 7
+                      },
+                      "Value": "VARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 33,
+                  "startColumn": 5,
+                  "startOffset": 1194,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 33,
+                      "startColumn": 28,
+                      "startOffset": 1217,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 33,
+                    "startColumn": 5,
+                    "startOffset": 1194,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c19",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 33,
+                    "startColumn": 10,
+                    "startOffset": 1199,
+                    "fragmentLength": 12
+                  },
+                  "SqlDataTypeOption": "VarChar",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 33,
+                        "startColumn": 19,
+                        "startOffset": 1208,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 33,
+                      "startColumn": 10,
+                      "startOffset": 1199,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 33,
+                        "startColumn": 10,
+                        "startOffset": 1199,
+                        "fragmentLength": 7
+                      },
+                      "Value": "VARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 34,
+                  "startColumn": 5,
+                  "startOffset": 1231,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 34,
+                      "startColumn": 28,
+                      "startOffset": 1254,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 34,
+                    "startColumn": 5,
+                    "startOffset": 1231,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c20",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 34,
+                    "startColumn": 10,
+                    "startOffset": 1236,
+                    "fragmentLength": 4
+                  },
+                  "SqlDataTypeOption": "Text",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 34,
+                      "startColumn": 10,
+                      "startOffset": 1236,
+                      "fragmentLength": 4
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 34,
+                        "startColumn": 10,
+                        "startOffset": 1236,
+                        "fragmentLength": 4
+                      },
+                      "Value": "TEXT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 35,
+                  "startColumn": 5,
+                  "startOffset": 1268,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 35,
+                      "startColumn": 28,
+                      "startOffset": 1291,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 35,
+                    "startColumn": 5,
+                    "startOffset": 1268,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c21",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 35,
+                    "startColumn": 10,
+                    "startOffset": 1273,
+                    "fragmentLength": 5
+                  },
+                  "SqlDataTypeOption": "NChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 35,
+                      "startColumn": 10,
+                      "startOffset": 1273,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 35,
+                        "startColumn": 10,
+                        "startOffset": 1273,
+                        "fragmentLength": 5
+                      },
+                      "Value": "NCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 36,
+                  "startColumn": 5,
+                  "startOffset": 1305,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 36,
+                      "startColumn": 28,
+                      "startOffset": 1328,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 36,
+                    "startColumn": 5,
+                    "startOffset": 1305,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c22",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 36,
+                    "startColumn": 10,
+                    "startOffset": 1310,
+                    "fragmentLength": 10
+                  },
+                  "SqlDataTypeOption": "NChar",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 36,
+                        "startColumn": 17,
+                        "startOffset": 1317,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 36,
+                      "startColumn": 10,
+                      "startOffset": 1310,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 36,
+                        "startColumn": 10,
+                        "startOffset": 1310,
+                        "fragmentLength": 5
+                      },
+                      "Value": "NCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 37,
+                  "startColumn": 5,
+                  "startOffset": 1342,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 37,
+                      "startColumn": 28,
+                      "startOffset": 1365,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 37,
+                    "startColumn": 5,
+                    "startOffset": 1342,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c21a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 37,
+                    "startColumn": 10,
+                    "startOffset": 1347,
+                    "fragmentLength": 5
+                  },
+                  "SqlDataTypeOption": "NChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 37,
+                      "startColumn": 10,
+                      "startOffset": 1347,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 37,
+                        "startColumn": 10,
+                        "startOffset": 1347,
+                        "fragmentLength": 5
+                      },
+                      "Value": "NCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 38,
+                  "startColumn": 5,
+                  "startOffset": 1379,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 38,
+                      "startColumn": 28,
+                      "startOffset": 1402,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 38,
+                    "startColumn": 5,
+                    "startOffset": 1379,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c22a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 38,
+                    "startColumn": 10,
+                    "startOffset": 1384,
+                    "fragmentLength": 10
+                  },
+                  "SqlDataTypeOption": "NChar",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 38,
+                        "startColumn": 17,
+                        "startOffset": 1391,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 38,
+                      "startColumn": 10,
+                      "startOffset": 1384,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 38,
+                        "startColumn": 10,
+                        "startOffset": 1384,
+                        "fragmentLength": 5
+                      },
+                      "Value": "NCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 39,
+                  "startColumn": 5,
+                  "startOffset": 1416,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 39,
+                      "startColumn": 28,
+                      "startOffset": 1439,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 39,
+                    "startColumn": 5,
+                    "startOffset": 1416,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c23",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 39,
+                    "startColumn": 10,
+                    "startOffset": 1421,
+                    "fragmentLength": 5
+                  },
+                  "SqlDataTypeOption": "NChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 39,
+                      "startColumn": 10,
+                      "startOffset": 1421,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 39,
+                        "startColumn": 10,
+                        "startOffset": 1421,
+                        "fragmentLength": 5
+                      },
+                      "Value": "NCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 40,
+                  "startColumn": 5,
+                  "startOffset": 1453,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 40,
+                      "startColumn": 28,
+                      "startOffset": 1476,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 40,
+                    "startColumn": 5,
+                    "startOffset": 1453,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c24",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 40,
+                    "startColumn": 10,
+                    "startOffset": 1458,
+                    "fragmentLength": 10
+                  },
+                  "SqlDataTypeOption": "NChar",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 40,
+                        "startColumn": 17,
+                        "startOffset": 1465,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 40,
+                      "startColumn": 10,
+                      "startOffset": 1458,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 40,
+                        "startColumn": 10,
+                        "startOffset": 1458,
+                        "fragmentLength": 5
+                      },
+                      "Value": "NCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 41,
+                  "startColumn": 5,
+                  "startOffset": 1490,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 41,
+                      "startColumn": 28,
+                      "startOffset": 1513,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 41,
+                    "startColumn": 5,
+                    "startOffset": 1490,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c26",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 41,
+                    "startColumn": 10,
+                    "startOffset": 1495,
+                    "fragmentLength": 8
+                  },
+                  "SqlDataTypeOption": "NVarChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 41,
+                      "startColumn": 10,
+                      "startOffset": 1495,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 10,
+                        "startOffset": 1495,
+                        "fragmentLength": 8
+                      },
+                      "Value": "NVARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 42,
+                  "startColumn": 5,
+                  "startOffset": 1527,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 42,
+                      "startColumn": 28,
+                      "startOffset": 1550,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 42,
+                    "startColumn": 5,
+                    "startOffset": 1527,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c27",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 42,
+                    "startColumn": 10,
+                    "startOffset": 1532,
+                    "fragmentLength": 13
+                  },
+                  "SqlDataTypeOption": "NVarChar",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 42,
+                        "startColumn": 20,
+                        "startOffset": 1542,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 42,
+                      "startColumn": 10,
+                      "startOffset": 1532,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 42,
+                        "startColumn": 10,
+                        "startOffset": 1532,
+                        "fragmentLength": 8
+                      },
+                      "Value": "NVARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 43,
+                  "startColumn": 5,
+                  "startOffset": 1564,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 43,
+                      "startColumn": 28,
+                      "startOffset": 1587,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 43,
+                    "startColumn": 5,
+                    "startOffset": 1564,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c26a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 43,
+                    "startColumn": 10,
+                    "startOffset": 1569,
+                    "fragmentLength": 8
+                  },
+                  "SqlDataTypeOption": "NVarChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 43,
+                      "startColumn": 10,
+                      "startOffset": 1569,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 43,
+                        "startColumn": 10,
+                        "startOffset": 1569,
+                        "fragmentLength": 8
+                      },
+                      "Value": "NVARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 44,
+                  "startColumn": 5,
+                  "startOffset": 1601,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 44,
+                      "startColumn": 28,
+                      "startOffset": 1624,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 44,
+                    "startColumn": 5,
+                    "startOffset": 1601,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c27a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 44,
+                    "startColumn": 10,
+                    "startOffset": 1606,
+                    "fragmentLength": 13
+                  },
+                  "SqlDataTypeOption": "NVarChar",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 44,
+                        "startColumn": 20,
+                        "startOffset": 1616,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 44,
+                      "startColumn": 10,
+                      "startOffset": 1606,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 44,
+                        "startColumn": 10,
+                        "startOffset": 1606,
+                        "fragmentLength": 8
+                      },
+                      "Value": "NVARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 45,
+                  "startColumn": 5,
+                  "startOffset": 1638,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 45,
+                      "startColumn": 28,
+                      "startOffset": 1661,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 45,
+                    "startColumn": 5,
+                    "startOffset": 1638,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c28",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 45,
+                    "startColumn": 10,
+                    "startOffset": 1643,
+                    "fragmentLength": 8
+                  },
+                  "SqlDataTypeOption": "NVarChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 45,
+                      "startColumn": 10,
+                      "startOffset": 1643,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 45,
+                        "startColumn": 10,
+                        "startOffset": 1643,
+                        "fragmentLength": 8
+                      },
+                      "Value": "NVARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 46,
+                  "startColumn": 5,
+                  "startOffset": 1675,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 46,
+                      "startColumn": 28,
+                      "startOffset": 1698,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 46,
+                    "startColumn": 5,
+                    "startOffset": 1675,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c29",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 46,
+                    "startColumn": 10,
+                    "startOffset": 1680,
+                    "fragmentLength": 13
+                  },
+                  "SqlDataTypeOption": "NVarChar",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 46,
+                        "startColumn": 20,
+                        "startOffset": 1690,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 46,
+                      "startColumn": 10,
+                      "startOffset": 1680,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 46,
+                        "startColumn": 10,
+                        "startOffset": 1680,
+                        "fragmentLength": 8
+                      },
+                      "Value": "NVARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 47,
+                  "startColumn": 5,
+                  "startOffset": 1712,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 47,
+                      "startColumn": 28,
+                      "startOffset": 1735,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 47,
+                    "startColumn": 5,
+                    "startOffset": 1712,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c30",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 47,
+                    "startColumn": 10,
+                    "startOffset": 1717,
+                    "fragmentLength": 5
+                  },
+                  "SqlDataTypeOption": "NText",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 47,
+                      "startColumn": 10,
+                      "startOffset": 1717,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 47,
+                        "startColumn": 10,
+                        "startOffset": 1717,
+                        "fragmentLength": 5
+                      },
+                      "Value": "NTEXT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 48,
+                  "startColumn": 5,
+                  "startOffset": 1749,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 48,
+                      "startColumn": 28,
+                      "startOffset": 1772,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 48,
+                    "startColumn": 5,
+                    "startOffset": 1749,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c31",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 48,
+                    "startColumn": 10,
+                    "startOffset": 1754,
+                    "fragmentLength": 5
+                  },
+                  "SqlDataTypeOption": "NText",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 48,
+                      "startColumn": 10,
+                      "startOffset": 1754,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 48,
+                        "startColumn": 10,
+                        "startOffset": 1754,
+                        "fragmentLength": 5
+                      },
+                      "Value": "NTEXT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 49,
+                  "startColumn": 5,
+                  "startOffset": 1786,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 49,
+                      "startColumn": 28,
+                      "startOffset": 1809,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 49,
+                    "startColumn": 5,
+                    "startOffset": 1786,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c32",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 49,
+                    "startColumn": 10,
+                    "startOffset": 1791,
+                    "fragmentLength": 6
+                  },
+                  "SqlDataTypeOption": "Binary",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 49,
+                      "startColumn": 10,
+                      "startOffset": 1791,
+                      "fragmentLength": 6
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 49,
+                        "startColumn": 10,
+                        "startOffset": 1791,
+                        "fragmentLength": 6
+                      },
+                      "Value": "BINARY",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 50,
+                  "startColumn": 5,
+                  "startOffset": 1823,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 50,
+                      "startColumn": 28,
+                      "startOffset": 1846,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 50,
+                    "startColumn": 5,
+                    "startOffset": 1823,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c32a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 50,
+                    "startColumn": 10,
+                    "startOffset": 1828,
+                    "fragmentLength": 11
+                  },
+                  "SqlDataTypeOption": "Binary",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 50,
+                        "startColumn": 18,
+                        "startOffset": 1836,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 50,
+                      "startColumn": 10,
+                      "startOffset": 1828,
+                      "fragmentLength": 6
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 50,
+                        "startColumn": 10,
+                        "startOffset": 1828,
+                        "fragmentLength": 6
+                      },
+                      "Value": "BINARY",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 51,
+                  "startColumn": 5,
+                  "startOffset": 1860,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 51,
+                      "startColumn": 28,
+                      "startOffset": 1883,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 51,
+                    "startColumn": 5,
+                    "startOffset": 1860,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c33",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 51,
+                    "startColumn": 10,
+                    "startOffset": 1865,
+                    "fragmentLength": 9
+                  },
+                  "SqlDataTypeOption": "VarBinary",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 51,
+                      "startColumn": 10,
+                      "startOffset": 1865,
+                      "fragmentLength": 9
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 51,
+                        "startColumn": 10,
+                        "startOffset": 1865,
+                        "fragmentLength": 9
+                      },
+                      "Value": "VARBINARY",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 52,
+                  "startColumn": 5,
+                  "startOffset": 1897,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 52,
+                      "startColumn": 28,
+                      "startOffset": 1920,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 52,
+                    "startColumn": 5,
+                    "startOffset": 1897,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c33a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 52,
+                    "startColumn": 10,
+                    "startOffset": 1902,
+                    "fragmentLength": 14
+                  },
+                  "SqlDataTypeOption": "VarBinary",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 52,
+                        "startColumn": 21,
+                        "startOffset": 1913,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 52,
+                      "startColumn": 10,
+                      "startOffset": 1902,
+                      "fragmentLength": 9
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 52,
+                        "startColumn": 10,
+                        "startOffset": 1902,
+                        "fragmentLength": 9
+                      },
+                      "Value": "VARBINARY",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 53,
+                  "startColumn": 5,
+                  "startOffset": 1934,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 53,
+                      "startColumn": 28,
+                      "startOffset": 1957,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 53,
+                    "startColumn": 5,
+                    "startOffset": 1934,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c34",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 53,
+                    "startColumn": 10,
+                    "startOffset": 1939,
+                    "fragmentLength": 9
+                  },
+                  "SqlDataTypeOption": "VarBinary",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 53,
+                      "startColumn": 10,
+                      "startOffset": 1939,
+                      "fragmentLength": 9
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 53,
+                        "startColumn": 10,
+                        "startOffset": 1939,
+                        "fragmentLength": 9
+                      },
+                      "Value": "VARBINARY",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 54,
+                  "startColumn": 5,
+                  "startOffset": 1971,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 54,
+                      "startColumn": 28,
+                      "startOffset": 1994,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 54,
+                    "startColumn": 5,
+                    "startOffset": 1971,
+                    "fragmentLength": 4
+                  },
+                  "Value": "c34a",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 54,
+                    "startColumn": 10,
+                    "startOffset": 1976,
+                    "fragmentLength": 14
+                  },
+                  "SqlDataTypeOption": "VarBinary",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 54,
+                        "startColumn": 21,
+                        "startOffset": 1987,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 54,
+                      "startColumn": 10,
+                      "startOffset": 1976,
+                      "fragmentLength": 9
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 54,
+                        "startColumn": 10,
+                        "startOffset": 1976,
+                        "fragmentLength": 9
+                      },
+                      "Value": "VARBINARY",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 55,
+                  "startColumn": 5,
+                  "startOffset": 2008,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 55,
+                      "startColumn": 28,
+                      "startOffset": 2031,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 55,
+                    "startColumn": 5,
+                    "startOffset": 2008,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c35",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 55,
+                    "startColumn": 10,
+                    "startOffset": 2013,
+                    "fragmentLength": 5
+                  },
+                  "SqlDataTypeOption": "Image",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 55,
+                      "startColumn": 10,
+                      "startOffset": 2013,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 55,
+                        "startColumn": 10,
+                        "startOffset": 2013,
+                        "fragmentLength": 5
+                      },
+                      "Value": "IMAGE",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 56,
+                  "startColumn": 5,
+                  "startOffset": 2045,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 56,
+                      "startColumn": 28,
+                      "startOffset": 2068,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 56,
+                    "startColumn": 5,
+                    "startOffset": 2045,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c36",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 56,
+                    "startColumn": 10,
+                    "startOffset": 2050,
+                    "fragmentLength": 11
+                  },
+                  "SqlDataTypeOption": "Sql_Variant",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 56,
+                      "startColumn": 10,
+                      "startOffset": 2050,
+                      "fragmentLength": 11
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 56,
+                        "startColumn": 10,
+                        "startOffset": 2050,
+                        "fragmentLength": 11
+                      },
+                      "Value": "SQL_VARIANT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 57,
+                  "startColumn": 5,
+                  "startOffset": 2082,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 57,
+                      "startColumn": 28,
+                      "startOffset": 2105,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 57,
+                    "startColumn": 5,
+                    "startOffset": 2082,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c37",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 57,
+                    "startColumn": 10,
+                    "startOffset": 2087,
+                    "fragmentLength": 9
+                  },
+                  "SqlDataTypeOption": "Timestamp",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 57,
+                      "startColumn": 10,
+                      "startOffset": 2087,
+                      "fragmentLength": 9
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 57,
+                        "startColumn": 10,
+                        "startOffset": 2087,
+                        "fragmentLength": 9
+                      },
+                      "Value": "TIMESTAMP",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 58,
+                  "startColumn": 5,
+                  "startOffset": 2119,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 58,
+                      "startColumn": 28,
+                      "startOffset": 2142,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 58,
+                    "startColumn": 5,
+                    "startOffset": 2119,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c38",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 58,
+                    "startColumn": 10,
+                    "startOffset": 2124,
+                    "fragmentLength": 5
+                  },
+                  "SqlDataTypeOption": "Float",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 58,
+                      "startColumn": 10,
+                      "startOffset": 2124,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 58,
+                        "startColumn": 10,
+                        "startOffset": 2124,
+                        "fragmentLength": 5
+                      },
+                      "Value": "FLOAT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 59,
+                  "startColumn": 5,
+                  "startOffset": 2156,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 59,
+                      "startColumn": 28,
+                      "startOffset": 2179,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 59,
+                    "startColumn": 5,
+                    "startOffset": 2156,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c39",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 59,
+                    "startColumn": 10,
+                    "startOffset": 2161,
+                    "fragmentLength": 10
+                  },
+                  "SqlDataTypeOption": "Float",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 59,
+                        "startColumn": 17,
+                        "startOffset": 2168,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "12"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 59,
+                      "startColumn": 10,
+                      "startOffset": 2161,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 59,
+                        "startColumn": 10,
+                        "startOffset": 2161,
+                        "fragmentLength": 5
+                      },
+                      "Value": "FLOAT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 60,
+                  "startColumn": 5,
+                  "startOffset": 2193,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 60,
+                      "startColumn": 28,
+                      "startOffset": 2216,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 60,
+                    "startColumn": 5,
+                    "startOffset": 2193,
+                    "fragmentLength": 3
+                  },
+                  "Value": "C40",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 60,
+                    "startColumn": 10,
+                    "startOffset": 2198,
+                    "fragmentLength": 10
+                  },
+                  "SqlDataTypeOption": "Rowversion",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 60,
+                      "startColumn": 10,
+                      "startOffset": 2198,
+                      "fragmentLength": 10
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 60,
+                        "startColumn": 10,
+                        "startOffset": 2198,
+                        "fragmentLength": 10
+                      },
+                      "Value": "ROWVERSION",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 61,
+                  "startColumn": 5,
+                  "startOffset": 2230,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 61,
+                      "startColumn": 28,
+                      "startOffset": 2253,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 61,
+                    "startColumn": 5,
+                    "startOffset": 2230,
+                    "fragmentLength": 3
+                  },
+                  "Value": "C41",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "UserDataTypeReference",
+                  "location": {
+                    "startLine": 61,
+                    "startColumn": 10,
+                    "startOffset": 2235,
+                    "fragmentLength": 15
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 61,
+                      "startColumn": 10,
+                      "startOffset": 2235,
+                      "fragmentLength": 15
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 61,
+                        "startColumn": 10,
+                        "startOffset": 2235,
+                        "fragmentLength": 15
+                      },
+                      "Value": "UserDefinedType",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 62,
+                  "startColumn": 5,
+                  "startOffset": 2267,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 62,
+                      "startColumn": 28,
+                      "startOffset": 2290,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 62,
+                    "startColumn": 5,
+                    "startOffset": 2267,
+                    "fragmentLength": 3
+                  },
+                  "Value": "C42",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "UserDataTypeReference",
+                  "location": {
+                    "startLine": 62,
+                    "startColumn": 10,
+                    "startOffset": 2272,
+                    "fragmentLength": 17
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 62,
+                      "startColumn": 10,
+                      "startOffset": 2272,
+                      "fragmentLength": 17
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 62,
+                        "startColumn": 10,
+                        "startOffset": 2272,
+                        "fragmentLength": 17
+                      },
+                      "Value": "UserDefinedType",
+                      "QuoteType": "SquareBracket"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 63,
+                  "startColumn": 5,
+                  "startOffset": 2304,
+                  "fragmentLength": 13
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 63,
+                    "startColumn": 5,
+                    "startOffset": 2304,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c43",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "UserDataTypeReference",
+                  "location": {
+                    "startLine": 63,
+                    "startColumn": 10,
+                    "startOffset": 2309,
+                    "fragmentLength": 8
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 63,
+                      "startColumn": 10,
+                      "startOffset": 2309,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 63,
+                        "startColumn": 10,
+                        "startOffset": 2309,
+                        "fragmentLength": 8
+                      },
+                      "Value": "mytype",
+                      "QuoteType": "SquareBracket"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 64,
+                  "startColumn": 5,
+                  "startOffset": 2332,
+                  "fragmentLength": 31
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "Constraints": [
+                  {
+                    "$type": "NullableConstraintDefinition",
+                    "location": {
+                      "startLine": 64,
+                      "startColumn": 28,
+                      "startOffset": 2355,
+                      "fragmentLength": 8
+                    },
+                    "Nullable": false
+                  }
+                ],
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 64,
+                    "startColumn": 5,
+                    "startOffset": 2332,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c49",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "XmlDataTypeReference",
+                  "location": {
+                    "startLine": 64,
+                    "startColumn": 10,
+                    "startOffset": 2337,
+                    "fragmentLength": 3
+                  },
+                  "XmlDataTypeOption": "None",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 64,
+                      "startColumn": 10,
+                      "startOffset": 2337,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 64,
+                        "startColumn": 10,
+                        "startOffset": 2337,
+                        "fragmentLength": 3
+                      },
+                      "Value": "XML",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 65,
+                  "startColumn": 5,
+                  "startOffset": 2369,
+                  "fragmentLength": 13
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 65,
+                    "startColumn": 5,
+                    "startOffset": 2369,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c59",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 65,
+                    "startColumn": 10,
+                    "startOffset": 2374,
+                    "fragmentLength": 8
+                  },
+                  "SqlDataTypeOption": "NVarChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 65,
+                      "startColumn": 10,
+                      "startOffset": 2374,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 65,
+                        "startColumn": 10,
+                        "startOffset": 2374,
+                        "fragmentLength": 8
+                      },
+                      "Value": "NVARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "$type": "ColumnDefinition",
+                "location": {
+                  "startLine": 66,
+                  "startColumn": 5,
+                  "startOffset": 2397,
+                  "fragmentLength": 13
+                },
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "IsHidden": false,
+                "IsMasked": false,
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 66,
+                    "startColumn": 5,
+                    "startOffset": 2397,
+                    "fragmentLength": 3
+                  },
+                  "Value": "c60",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 66,
+                    "startColumn": 10,
+                    "startOffset": 2402,
+                    "fragmentLength": 8
+                  },
+                  "SqlDataTypeOption": "NVarChar",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 66,
+                      "startColumn": 10,
+                      "startOffset": 2402,
+                      "fragmentLength": 8
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 66,
+                        "startColumn": 10,
+                        "startOffset": 2402,
+                        "fragmentLength": 8
+                      },
+                      "Value": "NVARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

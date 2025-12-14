@@ -1,0 +1,1117 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1586
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 1586
+      },
+      "Statements": [
+        {
+          "$type": "CreateDatabaseAuditSpecificationStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 71
+          },
+          "AuditState": "NotSet",
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 37,
+              "startOffset": 36,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 22,
+              "startOffset": 68,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "CreateDatabaseAuditSpecificationStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 73,
+            "fragmentLength": 92
+          },
+          "AuditState": "On",
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 37,
+              "startOffset": 109,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 22,
+              "startOffset": 141,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "CreateDatabaseAuditSpecificationStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 167,
+            "fragmentLength": 147
+          },
+          "AuditState": "Off",
+          "Parts": [
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 10,
+                "startColumn": 5,
+                "startOffset": 242,
+                "fragmentLength": 49
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionSpecification",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 10,
+                  "startOffset": 247,
+                  "fragmentLength": 43
+                },
+                "Actions": [
+                  {
+                    "$type": "DatabaseAuditAction",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 10,
+                      "startOffset": 247,
+                      "fragmentLength": 6
+                    },
+                    "ActionKind": "Select"
+                  },
+                  {
+                    "$type": "DatabaseAuditAction",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 18,
+                      "startOffset": 255,
+                      "fragmentLength": 6
+                    },
+                    "ActionKind": "Insert"
+                  },
+                  {
+                    "$type": "DatabaseAuditAction",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 26,
+                      "startOffset": 263,
+                      "fragmentLength": 6
+                    },
+                    "ActionKind": "Update"
+                  },
+                  {
+                    "$type": "DatabaseAuditAction",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 34,
+                      "startOffset": 271,
+                      "fragmentLength": 6
+                    },
+                    "ActionKind": "Delete"
+                  }
+                ],
+                "Principals": [
+                  {
+                    "$type": "SecurityPrincipal",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 50,
+                      "startOffset": 287,
+                      "fragmentLength": 3
+                    },
+                    "PrincipalType": "Identifier",
+                    "Identifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 10,
+                        "startColumn": 50,
+                        "startOffset": 287,
+                        "fragmentLength": 3
+                      },
+                      "Value": "dbo",
+                      "QuoteType": "NotQuoted"
+                    }
+                  }
+                ],
+                "TargetObject": {
+                  "$type": "SecurityTargetObject",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 41,
+                    "startOffset": 278,
+                    "fragmentLength": 5
+                  },
+                  "ObjectKind": "NotSpecified",
+                  "ObjectName": {
+                    "$type": "SecurityTargetObjectName",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 44,
+                      "startOffset": 281,
+                      "fragmentLength": 2
+                    },
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "location": {
+                        "startLine": 10,
+                        "startColumn": 44,
+                        "startOffset": 281,
+                        "fragmentLength": 2
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 10,
+                            "startColumn": 44,
+                            "startOffset": 281,
+                            "fragmentLength": 2
+                          },
+                          "Value": "t1",
+                          "QuoteType": "NotQuoted"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 8,
+              "startColumn": 37,
+              "startOffset": 203,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 9,
+              "startColumn": 22,
+              "startOffset": 235,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "CreateDatabaseAuditSpecificationStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 316,
+            "fragmentLength": 920
+          },
+          "AuditState": "NotSet",
+          "Parts": [
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 15,
+                "startColumn": 5,
+                "startOffset": 391,
+                "fragmentLength": 62
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionSpecification",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 10,
+                  "startOffset": 396,
+                  "fragmentLength": 56
+                },
+                "Actions": [
+                  {
+                    "$type": "DatabaseAuditAction",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 10,
+                      "startOffset": 396,
+                      "fragmentLength": 7
+                    },
+                    "ActionKind": "Execute"
+                  },
+                  {
+                    "$type": "DatabaseAuditAction",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 19,
+                      "startOffset": 405,
+                      "fragmentLength": 7
+                    },
+                    "ActionKind": "Receive"
+                  },
+                  {
+                    "$type": "DatabaseAuditAction",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 28,
+                      "startOffset": 414,
+                      "fragmentLength": 10
+                    },
+                    "ActionKind": "References"
+                  }
+                ],
+                "Principals": [
+                  {
+                    "$type": "SecurityPrincipal",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 49,
+                      "startOffset": 435,
+                      "fragmentLength": 6
+                    },
+                    "PrincipalType": "Public"
+                  },
+                  {
+                    "$type": "SecurityPrincipal",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 57,
+                      "startOffset": 443,
+                      "fragmentLength": 4
+                    },
+                    "PrincipalType": "Null"
+                  },
+                  {
+                    "$type": "SecurityPrincipal",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 63,
+                      "startOffset": 449,
+                      "fragmentLength": 3
+                    },
+                    "PrincipalType": "Identifier",
+                    "Identifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 15,
+                        "startColumn": 63,
+                        "startOffset": 449,
+                        "fragmentLength": 3
+                      },
+                      "Value": "dbo",
+                      "QuoteType": "NotQuoted"
+                    }
+                  }
+                ],
+                "TargetObject": {
+                  "$type": "SecurityTargetObject",
+                  "location": {
+                    "startLine": 15,
+                    "startColumn": 39,
+                    "startOffset": 425,
+                    "fragmentLength": 6
+                  },
+                  "ObjectKind": "NotSpecified",
+                  "ObjectName": {
+                    "$type": "SecurityTargetObjectName",
+                    "location": {
+                      "startLine": 15,
+                      "startColumn": 42,
+                      "startOffset": 428,
+                      "fragmentLength": 3
+                    },
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "location": {
+                        "startLine": 15,
+                        "startColumn": 42,
+                        "startOffset": 428,
+                        "fragmentLength": 3
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 15,
+                            "startColumn": 42,
+                            "startOffset": 428,
+                            "fragmentLength": 3
+                          },
+                          "Value": "zzz",
+                          "QuoteType": "NotQuoted"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 16,
+                "startColumn": 5,
+                "startOffset": 459,
+                "fragmentLength": 38
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 10,
+                  "startOffset": 464,
+                  "fragmentLength": 32
+                },
+                "Group": "DatabasePermissionChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 17,
+                "startColumn": 5,
+                "startOffset": 503,
+                "fragmentLength": 43
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 10,
+                  "startOffset": 508,
+                  "fragmentLength": 37
+                },
+                "Group": "SchemaObjectPermissionChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 18,
+                "startColumn": 5,
+                "startOffset": 552,
+                "fragmentLength": 39
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 10,
+                  "startOffset": 557,
+                  "fragmentLength": 33
+                },
+                "Group": "DatabaseRoleMemberChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 19,
+                "startColumn": 5,
+                "startOffset": 597,
+                "fragmentLength": 44
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 10,
+                  "startOffset": 602,
+                  "fragmentLength": 38
+                },
+                "Group": "ApplicationRoleChangePassword"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 20,
+                "startColumn": 5,
+                "startOffset": 647,
+                "fragmentLength": 32
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 20,
+                  "startColumn": 10,
+                  "startOffset": 652,
+                  "fragmentLength": 26
+                },
+                "Group": "SchemaObjectAccess"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 21,
+                "startColumn": 5,
+                "startOffset": 685,
+                "fragmentLength": 26
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 10,
+                  "startOffset": 690,
+                  "fragmentLength": 20
+                },
+                "Group": "BackupRestore"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 22,
+                "startColumn": 5,
+                "startOffset": 717,
+                "fragmentLength": 16
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 10,
+                  "startOffset": 722,
+                  "fragmentLength": 10
+                },
+                "Group": "Dbcc"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 23,
+                "startColumn": 5,
+                "startOffset": 739,
+                "fragmentLength": 24
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 23,
+                  "startColumn": 10,
+                  "startOffset": 744,
+                  "fragmentLength": 18
+                },
+                "Group": "AuditChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 24,
+                "startColumn": 5,
+                "startOffset": 769,
+                "fragmentLength": 27
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 10,
+                  "startOffset": 774,
+                  "fragmentLength": 21
+                },
+                "Group": "DatabaseChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 25,
+                "startColumn": 5,
+                "startOffset": 802,
+                "fragmentLength": 34
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 10,
+                  "startOffset": 807,
+                  "fragmentLength": 28
+                },
+                "Group": "DatabaseObjectChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 26,
+                "startColumn": 5,
+                "startOffset": 842,
+                "fragmentLength": 37
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 26,
+                  "startColumn": 10,
+                  "startOffset": 847,
+                  "fragmentLength": 31
+                },
+                "Group": "DatabasePrincipalChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 27,
+                "startColumn": 5,
+                "startOffset": 885,
+                "fragmentLength": 32
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 10,
+                  "startOffset": 890,
+                  "fragmentLength": 26
+                },
+                "Group": "SchemaObjectChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 28,
+                "startColumn": 5,
+                "startOffset": 923,
+                "fragmentLength": 44
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 28,
+                  "startColumn": 10,
+                  "startOffset": 928,
+                  "fragmentLength": 38
+                },
+                "Group": "DatabasePrincipalImpersonation"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 29,
+                "startColumn": 5,
+                "startOffset": 973,
+                "fragmentLength": 44
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 29,
+                  "startColumn": 10,
+                  "startOffset": 978,
+                  "fragmentLength": 38
+                },
+                "Group": "DatabaseObjectOwnershipChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 30,
+                "startColumn": 5,
+                "startOffset": 1023,
+                "fragmentLength": 37
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 30,
+                  "startColumn": 10,
+                  "startOffset": 1028,
+                  "fragmentLength": 31
+                },
+                "Group": "DatabaseOwnershipChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 31,
+                "startColumn": 5,
+                "startOffset": 1066,
+                "fragmentLength": 42
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 10,
+                  "startOffset": 1071,
+                  "fragmentLength": 36
+                },
+                "Group": "SchemaObjectOwnershipChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 32,
+                "startColumn": 5,
+                "startOffset": 1114,
+                "fragmentLength": 45
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 32,
+                  "startColumn": 10,
+                  "startOffset": 1119,
+                  "fragmentLength": 39
+                },
+                "Group": "DatabaseObjectPermissionChange"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 33,
+                "startColumn": 5,
+                "startOffset": 1165,
+                "fragmentLength": 30
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 33,
+                  "startColumn": 10,
+                  "startOffset": 1170,
+                  "fragmentLength": 24
+                },
+                "Group": "DatabaseOperation"
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 34,
+                "startColumn": 5,
+                "startOffset": 1201,
+                "fragmentLength": 34
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 34,
+                  "startColumn": 10,
+                  "startOffset": 1206,
+                  "fragmentLength": 28
+                },
+                "Group": "DatabaseObjectAccess"
+              }
+            }
+          ],
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 13,
+              "startColumn": 37,
+              "startOffset": 352,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 14,
+              "startColumn": 22,
+              "startOffset": 384,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "AlterDatabaseAuditSpecificationStatement",
+          "location": {
+            "startLine": 36,
+            "startColumn": 1,
+            "startOffset": 1238,
+            "fragmentLength": 46
+          },
+          "AuditState": "NotSet",
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 36,
+              "startColumn": 36,
+              "startOffset": 1273,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "AlterDatabaseAuditSpecificationStatement",
+          "location": {
+            "startLine": 38,
+            "startColumn": 1,
+            "startOffset": 1286,
+            "fragmentLength": 161
+          },
+          "AuditState": "On",
+          "Parts": [
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 40,
+                "startColumn": 5,
+                "startOffset": 1360,
+                "fragmentLength": 25
+              },
+              "IsDrop": false,
+              "Details": {
+                "$type": "AuditActionSpecification",
+                "location": {
+                  "startLine": 40,
+                  "startColumn": 10,
+                  "startOffset": 1365,
+                  "fragmentLength": 19
+                },
+                "Actions": [
+                  {
+                    "$type": "DatabaseAuditAction",
+                    "location": {
+                      "startLine": 40,
+                      "startColumn": 10,
+                      "startOffset": 1365,
+                      "fragmentLength": 6
+                    },
+                    "ActionKind": "Select"
+                  }
+                ],
+                "Principals": [
+                  {
+                    "$type": "SecurityPrincipal",
+                    "location": {
+                      "startLine": 40,
+                      "startColumn": 26,
+                      "startOffset": 1381,
+                      "fragmentLength": 3
+                    },
+                    "PrincipalType": "Identifier",
+                    "Identifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 40,
+                        "startColumn": 26,
+                        "startOffset": 1381,
+                        "fragmentLength": 3
+                      },
+                      "Value": "dbo",
+                      "QuoteType": "NotQuoted"
+                    }
+                  }
+                ],
+                "TargetObject": {
+                  "$type": "SecurityTargetObject",
+                  "location": {
+                    "startLine": 40,
+                    "startColumn": 17,
+                    "startOffset": 1372,
+                    "fragmentLength": 5
+                  },
+                  "ObjectKind": "NotSpecified",
+                  "ObjectName": {
+                    "$type": "SecurityTargetObjectName",
+                    "location": {
+                      "startLine": 40,
+                      "startColumn": 20,
+                      "startOffset": 1375,
+                      "fragmentLength": 2
+                    },
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "location": {
+                        "startLine": 40,
+                        "startColumn": 20,
+                        "startOffset": 1375,
+                        "fragmentLength": 2
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 40,
+                            "startColumn": 20,
+                            "startOffset": 1375,
+                            "fragmentLength": 2
+                          },
+                          "Value": "t1",
+                          "QuoteType": "NotQuoted"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 41,
+                "startColumn": 5,
+                "startOffset": 1391,
+                "fragmentLength": 34
+              },
+              "IsDrop": true,
+              "Details": {
+                "$type": "AuditActionSpecification",
+                "location": {
+                  "startLine": 41,
+                  "startColumn": 11,
+                  "startOffset": 1397,
+                  "fragmentLength": 27
+                },
+                "Actions": [
+                  {
+                    "$type": "DatabaseAuditAction",
+                    "location": {
+                      "startLine": 41,
+                      "startColumn": 11,
+                      "startOffset": 1397,
+                      "fragmentLength": 6
+                    },
+                    "ActionKind": "Insert"
+                  },
+                  {
+                    "$type": "DatabaseAuditAction",
+                    "location": {
+                      "startLine": 41,
+                      "startColumn": 19,
+                      "startOffset": 1405,
+                      "fragmentLength": 6
+                    },
+                    "ActionKind": "Update"
+                  }
+                ],
+                "Principals": [
+                  {
+                    "$type": "SecurityPrincipal",
+                    "location": {
+                      "startLine": 41,
+                      "startColumn": 35,
+                      "startOffset": 1421,
+                      "fragmentLength": 3
+                    },
+                    "PrincipalType": "Identifier",
+                    "Identifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 35,
+                        "startOffset": 1421,
+                        "fragmentLength": 3
+                      },
+                      "Value": "dbo",
+                      "QuoteType": "NotQuoted"
+                    }
+                  }
+                ],
+                "TargetObject": {
+                  "$type": "SecurityTargetObject",
+                  "location": {
+                    "startLine": 41,
+                    "startColumn": 26,
+                    "startOffset": 1412,
+                    "fragmentLength": 5
+                  },
+                  "ObjectKind": "NotSpecified",
+                  "ObjectName": {
+                    "$type": "SecurityTargetObjectName",
+                    "location": {
+                      "startLine": 41,
+                      "startColumn": 29,
+                      "startOffset": 1415,
+                      "fragmentLength": 2
+                    },
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "location": {
+                        "startLine": 41,
+                        "startColumn": 29,
+                        "startOffset": 1415,
+                        "fragmentLength": 2
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "location": {
+                            "startLine": 41,
+                            "startColumn": 29,
+                            "startOffset": 1415,
+                            "fragmentLength": 2
+                          },
+                          "Value": "t1",
+                          "QuoteType": "NotQuoted"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ],
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 38,
+              "startColumn": 36,
+              "startOffset": 1321,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          },
+          "AuditName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 39,
+              "startColumn": 22,
+              "startOffset": 1353,
+              "fragmentLength": 2
+            },
+            "Value": "a1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "AlterDatabaseAuditSpecificationStatement",
+          "location": {
+            "startLine": 44,
+            "startColumn": 1,
+            "startOffset": 1449,
+            "fragmentLength": 90
+          },
+          "AuditState": "NotSet",
+          "Parts": [
+            {
+              "$type": "AuditSpecificationPart",
+              "location": {
+                "startLine": 45,
+                "startColumn": 5,
+                "startOffset": 1499,
+                "fragmentLength": 39
+              },
+              "IsDrop": true,
+              "Details": {
+                "$type": "AuditActionGroupReference",
+                "location": {
+                  "startLine": 45,
+                  "startColumn": 11,
+                  "startOffset": 1505,
+                  "fragmentLength": 32
+                },
+                "Group": "DatabasePermissionChange"
+              }
+            }
+          ],
+          "SpecificationName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 44,
+              "startColumn": 36,
+              "startOffset": 1484,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "DropDatabaseAuditSpecificationStatement",
+          "location": {
+            "startLine": 47,
+            "startColumn": 1,
+            "startOffset": 1541,
+            "fragmentLength": 45
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 47,
+              "startColumn": 35,
+              "startOffset": 1575,
+              "fragmentLength": 10
+            },
+            "Value": "AuditSpec1",
+            "QuoteType": "NotQuoted"
+          },
+          "IsIfExists": false
+        }
+      ]
+    }
+  ]
+}

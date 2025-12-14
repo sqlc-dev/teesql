@@ -1,0 +1,162 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 249
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 29,
+        "fragmentLength": 220
+      },
+      "Statements": [
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 29,
+            "fragmentLength": 52
+          },
+          "Options": [
+            {
+              "$type": "DelayedDurabilityDatabaseOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 44,
+                "startOffset": 72,
+                "fragmentLength": 8
+              },
+              "Value": "Disabled",
+              "OptionKind": "DelayedDurability"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 16,
+              "startOffset": 44,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 82,
+            "fragmentLength": 51
+          },
+          "Options": [
+            {
+              "$type": "DelayedDurabilityDatabaseOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 44,
+                "startOffset": 125,
+                "fragmentLength": 7
+              },
+              "Value": "Allowed",
+              "OptionKind": "DelayedDurability"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 16,
+              "startOffset": 97,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 134,
+            "fragmentLength": 50
+          },
+          "Options": [
+            {
+              "$type": "DelayedDurabilityDatabaseOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 44,
+                "startOffset": 177,
+                "fragmentLength": 6
+              },
+              "Value": "Forced",
+              "OptionKind": "DelayedDurability"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 16,
+              "startOffset": 149,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 185,
+            "fragmentLength": 64
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 62,
+                "startOffset": 246,
+                "fragmentLength": 2
+              },
+              "OptionState": "On",
+              "OptionKind": "MemoryOptimizedElevateToSnapshot"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 16,
+              "startOffset": 200,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        }
+      ]
+    }
+  ]
+}

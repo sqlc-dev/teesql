@@ -1,0 +1,128 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 108
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 40
+      },
+      "Statements": [
+        {
+          "$type": "CreateUserStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 40
+          },
+          "UserLoginOption": {
+            "$type": "UserLoginOption",
+            "location": {
+              "startLine": -1,
+              "startColumn": -1,
+              "startOffset": -1,
+              "fragmentLength": -1
+            },
+            "UserLoginOptionType": "External"
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 13,
+              "startOffset": 12,
+              "fragmentLength": 5
+            },
+            "Value": "user1",
+            "QuoteType": "NotQuoted"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 5,
+        "startColumn": 1,
+        "startOffset": 46,
+        "fragmentLength": 62
+      },
+      "Statements": [
+        {
+          "$type": "CreateUserStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 46,
+            "fragmentLength": 62
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 13,
+              "startOffset": 58,
+              "fragmentLength": 5
+            },
+            "Value": "user2",
+            "QuoteType": "NotQuoted"
+          },
+          "UserOptions": [
+            {
+              "$type": "IdentifierPrincipalOption",
+              "location": {
+                "startLine": 6,
+                "startColumn": 17,
+                "startOffset": 80,
+                "fragmentLength": 1
+              },
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 17,
+                  "startOffset": 80,
+                  "fragmentLength": 1
+                },
+                "Value": "X",
+                "QuoteType": "NotQuoted"
+              },
+              "OptionKind": "Type"
+            },
+            {
+              "$type": "LiteralPrincipalOption",
+              "location": {
+                "startLine": 6,
+                "startColumn": 20,
+                "startOffset": 83,
+                "fragmentLength": 24
+              },
+              "Value": {
+                "$type": "BinaryLiteral",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 26,
+                  "startOffset": 89,
+                  "fragmentLength": 18
+                },
+                "LiteralType": "Binary",
+                "IsLargeObject": false,
+                "Value": "0x1101011010001011"
+              },
+              "OptionKind": "Sid"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

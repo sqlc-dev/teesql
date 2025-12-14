@@ -1,0 +1,257 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 600
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 598
+      },
+      "Statements": [
+        {
+          "$type": "CreateExternalDataSourceStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 129
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 29,
+              "startOffset": 28,
+              "fragmentLength": 16
+            },
+            "Value": "My Blob Source",
+            "QuoteType": "SquareBracket"
+          },
+          "DataSourceType": "BLOB_STORAGE",
+          "Location": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 4,
+              "startColumn": 16,
+              "startOffset": 96,
+              "fragmentLength": 26
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "http://anyrandomlocation"
+          }
+        },
+        {
+          "$type": "CreateExternalDataSourceStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 131,
+            "fragmentLength": 156
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 29,
+              "startOffset": 159,
+              "fragmentLength": 15
+            },
+            "Value": "MyBlobSource2",
+            "QuoteType": "SquareBracket"
+          },
+          "DataSourceType": "BLOB_STORAGE",
+          "Location": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 10,
+              "startColumn": 16,
+              "startOffset": 226,
+              "fragmentLength": 20
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "anything_goes_here"
+          },
+          "ExternalDataSourceOptions": [
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "location": {
+                "startLine": 11,
+                "startColumn": 18,
+                "startOffset": 265,
+                "fragmentLength": 15
+              },
+              "Value": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 18,
+                  "startOffset": 265,
+                  "fragmentLength": 15
+                },
+                "Value": "My Credential",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 18,
+                    "startOffset": 265,
+                    "fragmentLength": 15
+                  },
+                  "Value": "My Credential",
+                  "QuoteType": "SquareBracket"
+                }
+              },
+              "OptionKind": "Credential"
+            }
+          ]
+        },
+        {
+          "$type": "CreateExternalDataSourceStatement",
+          "location": {
+            "startLine": 14,
+            "startColumn": 1,
+            "startOffset": 289,
+            "fragmentLength": 159
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 14,
+              "startColumn": 29,
+              "startOffset": 317,
+              "fragmentLength": 18
+            },
+            "Value": "My Blob Source 2",
+            "QuoteType": "SquareBracket"
+          },
+          "DataSourceType": "BLOB_STORAGE",
+          "Location": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 17,
+              "startColumn": 16,
+              "startOffset": 387,
+              "fragmentLength": 20
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "anything_goes_here"
+          },
+          "ExternalDataSourceOptions": [
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "location": {
+                "startLine": 18,
+                "startColumn": 18,
+                "startOffset": 426,
+                "fragmentLength": 15
+              },
+              "Value": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 18,
+                  "startOffset": 426,
+                  "fragmentLength": 15
+                },
+                "Value": "My Credential",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 18,
+                    "startColumn": 18,
+                    "startOffset": 426,
+                    "fragmentLength": 15
+                  },
+                  "Value": "My Credential",
+                  "QuoteType": "SquareBracket"
+                }
+              },
+              "OptionKind": "Credential"
+            }
+          ]
+        },
+        {
+          "$type": "CreateExternalDataSourceStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 450,
+            "fragmentLength": 148
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 21,
+              "startColumn": 29,
+              "startOffset": 478,
+              "fragmentLength": 13
+            },
+            "Value": "MyBlobSource3",
+            "QuoteType": "NotQuoted"
+          },
+          "DataSourceType": "BLOB_STORAGE",
+          "Location": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 24,
+              "startColumn": 16,
+              "startOffset": 543,
+              "fragmentLength": 17
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "https://a/b/c/d"
+          },
+          "ExternalDataSourceOptions": [
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "location": {
+                "startLine": 25,
+                "startColumn": 18,
+                "startOffset": 579,
+                "fragmentLength": 12
+              },
+              "Value": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 18,
+                  "startOffset": 579,
+                  "fragmentLength": 12
+                },
+                "Value": "MyCredential",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 25,
+                    "startColumn": 18,
+                    "startOffset": 579,
+                    "fragmentLength": 12
+                  },
+                  "Value": "MyCredential",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "OptionKind": "Credential"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

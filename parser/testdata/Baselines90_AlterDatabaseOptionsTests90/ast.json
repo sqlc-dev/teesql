@@ -1,0 +1,790 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1287
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 1285
+      },
+      "Statements": [
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 36
+          },
+          "Options": [
+            {
+              "$type": "DatabaseOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 9,
+                "startOffset": 26,
+                "fragmentLength": 9
+              },
+              "OptionKind": "Emergency"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 16,
+              "startOffset": 15,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 38,
+            "fragmentLength": 66
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 21,
+                "startOffset": 76,
+                "fragmentLength": 2
+              },
+              "OptionState": "On",
+              "OptionKind": "DBChaining"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 6,
+                "startColumn": 21,
+                "startOffset": 100,
+                "fragmentLength": 3
+              },
+              "OptionState": "Off",
+              "OptionKind": "Trustworthy"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 16,
+              "startOffset": 53,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 106,
+            "fragmentLength": 66
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 21,
+                "startOffset": 144,
+                "fragmentLength": 2
+              },
+              "OptionState": "On",
+              "OptionKind": "Trustworthy"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 10,
+                "startColumn": 21,
+                "startOffset": 168,
+                "fragmentLength": 3
+              },
+              "OptionState": "Off",
+              "OptionKind": "DBChaining"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 8,
+              "startColumn": 16,
+              "startOffset": 121,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 174,
+            "fragmentLength": 59
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 38,
+                "startOffset": 229,
+                "fragmentLength": 3
+              },
+              "OptionState": "Off",
+              "OptionKind": "AutoUpdateStatisticsAsync"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 12,
+              "startColumn": 16,
+              "startOffset": 189,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 15,
+            "startColumn": 1,
+            "startOffset": 235,
+            "fragmentLength": 114
+          },
+          "Options": [
+            {
+              "$type": "PageVerifyDatabaseOption",
+              "location": {
+                "startLine": 16,
+                "startColumn": 21,
+                "startOffset": 273,
+                "fragmentLength": 8
+              },
+              "Value": "Checksum",
+              "OptionKind": "PageVerify"
+            },
+            {
+              "$type": "PageVerifyDatabaseOption",
+              "location": {
+                "startLine": 17,
+                "startColumn": 21,
+                "startOffset": 303,
+                "fragmentLength": 4
+              },
+              "Value": "None",
+              "OptionKind": "PageVerify"
+            },
+            {
+              "$type": "PageVerifyDatabaseOption",
+              "location": {
+                "startLine": 18,
+                "startColumn": 21,
+                "startOffset": 329,
+                "fragmentLength": 19
+              },
+              "Value": "TornPageDetection",
+              "OptionKind": "PageVerify"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 15,
+              "startColumn": 16,
+              "startOffset": 250,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 20,
+            "startColumn": 1,
+            "startOffset": 351,
+            "fragmentLength": 76
+          },
+          "Options": [
+            {
+              "$type": "PartnerDatabaseOption",
+              "location": {
+                "startLine": 21,
+                "startColumn": 19,
+                "startOffset": 387,
+                "fragmentLength": 13
+              },
+              "PartnerServer": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 19,
+                  "startOffset": 387,
+                  "fragmentLength": 13
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "some_server"
+              },
+              "PartnerOption": "PartnerServer",
+              "OptionKind": "Partner"
+            },
+            {
+              "$type": "PartnerDatabaseOption",
+              "location": {
+                "startLine": 22,
+                "startColumn": 17,
+                "startOffset": 418,
+                "fragmentLength": 8
+              },
+              "PartnerOption": "Failover",
+              "OptionKind": "Partner"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 20,
+              "startColumn": 16,
+              "startOffset": 366,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 24,
+            "startColumn": 1,
+            "startOffset": 429,
+            "fragmentLength": 117
+          },
+          "Options": [
+            {
+              "$type": "WitnessDatabaseOption",
+              "location": {
+                "startLine": 25,
+                "startColumn": 19,
+                "startOffset": 465,
+                "fragmentLength": 9
+              },
+              "WitnessServer": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 19,
+                  "startOffset": 465,
+                  "fragmentLength": 9
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "witness"
+              },
+              "IsOff": false,
+              "OptionKind": "Witness"
+            },
+            {
+              "$type": "PartnerDatabaseOption",
+              "location": {
+                "startLine": 26,
+                "startColumn": 17,
+                "startOffset": 492,
+                "fragmentLength": 29
+              },
+              "PartnerOption": "ForceServiceAllowDataLoss",
+              "OptionKind": "Partner"
+            },
+            {
+              "$type": "PartnerDatabaseOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 17,
+                "startOffset": 539,
+                "fragmentLength": 6
+              },
+              "PartnerOption": "Resume",
+              "OptionKind": "Partner"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 24,
+              "startColumn": 16,
+              "startOffset": 444,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 29,
+            "startColumn": 1,
+            "startOffset": 548,
+            "fragmentLength": 107
+          },
+          "Options": [
+            {
+              "$type": "DatabaseOption",
+              "location": {
+                "startLine": 30,
+                "startColumn": 9,
+                "startOffset": 574,
+                "fragmentLength": 26
+              },
+              "OptionKind": "ErrorBrokerConversations"
+            },
+            {
+              "$type": "PartnerDatabaseOption",
+              "location": {
+                "startLine": 31,
+                "startColumn": 24,
+                "startOffset": 625,
+                "fragmentLength": 4
+              },
+              "PartnerOption": "SafetyFull",
+              "OptionKind": "Partner"
+            },
+            {
+              "$type": "PartnerDatabaseOption",
+              "location": {
+                "startLine": 32,
+                "startColumn": 17,
+                "startOffset": 647,
+                "fragmentLength": 7
+              },
+              "PartnerOption": "Suspend",
+              "OptionKind": "Partner"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 29,
+              "startColumn": 16,
+              "startOffset": 563,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 34,
+            "startColumn": 1,
+            "startOffset": 657,
+            "fragmentLength": 96
+          },
+          "Options": [
+            {
+              "$type": "DatabaseOption",
+              "location": {
+                "startLine": 35,
+                "startColumn": 9,
+                "startOffset": 683,
+                "fragmentLength": 13
+              },
+              "OptionKind": "EnableBroker"
+            },
+            {
+              "$type": "PartnerDatabaseOption",
+              "location": {
+                "startLine": 36,
+                "startColumn": 24,
+                "startOffset": 721,
+                "fragmentLength": 3
+              },
+              "PartnerOption": "SafetyOff",
+              "OptionKind": "Partner"
+            },
+            {
+              "$type": "PartnerDatabaseOption",
+              "location": {
+                "startLine": 37,
+                "startColumn": 25,
+                "startOffset": 750,
+                "fragmentLength": 2
+              },
+              "PartnerOption": "Timeout",
+              "Timeout": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 37,
+                  "startColumn": 25,
+                  "startOffset": 750,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "OptionKind": "Partner"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 34,
+              "startColumn": 16,
+              "startOffset": 672,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 39,
+            "startColumn": 1,
+            "startOffset": 755,
+            "fragmentLength": 63
+          },
+          "Options": [
+            {
+              "$type": "DatabaseOption",
+              "location": {
+                "startLine": 40,
+                "startColumn": 9,
+                "startOffset": 781,
+                "fragmentLength": 14
+              },
+              "OptionKind": "DisableBroker"
+            },
+            {
+              "$type": "WitnessDatabaseOption",
+              "location": {
+                "startLine": 41,
+                "startColumn": 18,
+                "startOffset": 814,
+                "fragmentLength": 3
+              },
+              "IsOff": true,
+              "OptionKind": "Witness"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 39,
+              "startColumn": 16,
+              "startOffset": 770,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 43,
+            "startColumn": 1,
+            "startOffset": 820,
+            "fragmentLength": 37
+          },
+          "Options": [
+            {
+              "$type": "DatabaseOption",
+              "location": {
+                "startLine": 44,
+                "startColumn": 9,
+                "startOffset": 846,
+                "fragmentLength": 10
+              },
+              "OptionKind": "NewBroker"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 43,
+              "startColumn": 16,
+              "startOffset": 835,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 46,
+            "startColumn": 1,
+            "startOffset": 859,
+            "fragmentLength": 92
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 47,
+                "startColumn": 39,
+                "startOffset": 915,
+                "fragmentLength": 2
+              },
+              "OptionState": "On",
+              "OptionKind": "DateCorrelationOptimization"
+            },
+            {
+              "$type": "ParameterizationDatabaseOption",
+              "location": {
+                "startLine": 48,
+                "startColumn": 26,
+                "startOffset": 944,
+                "fragmentLength": 6
+              },
+              "IsSimple": true,
+              "OptionKind": "Parameterization"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 46,
+              "startColumn": 16,
+              "startOffset": 874,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 50,
+            "startColumn": 1,
+            "startOffset": 953,
+            "fragmentLength": 93
+          },
+          "Options": [
+            {
+              "$type": "ParameterizationDatabaseOption",
+              "location": {
+                "startLine": 51,
+                "startColumn": 26,
+                "startOffset": 996,
+                "fragmentLength": 6
+              },
+              "IsSimple": false,
+              "OptionKind": "Parameterization"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 52,
+                "startColumn": 39,
+                "startOffset": 1042,
+                "fragmentLength": 3
+              },
+              "OptionState": "Off",
+              "OptionKind": "DateCorrelationOptimization"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 50,
+              "startColumn": 16,
+              "startOffset": 968,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 54,
+            "startColumn": 1,
+            "startOffset": 1048,
+            "fragmentLength": 90
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 55,
+                "startColumn": 34,
+                "startOffset": 1099,
+                "fragmentLength": 2
+              },
+              "OptionState": "On",
+              "OptionKind": "AllowSnapshotIsolation"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 56,
+                "startColumn": 33,
+                "startOffset": 1135,
+                "fragmentLength": 2
+              },
+              "OptionState": "On",
+              "OptionKind": "ReadCommittedSnapshot"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 54,
+              "startColumn": 16,
+              "startOffset": 1063,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 58,
+            "startColumn": 1,
+            "startOffset": 1140,
+            "fragmentLength": 92
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 59,
+                "startColumn": 33,
+                "startOffset": 1190,
+                "fragmentLength": 3
+              },
+              "OptionState": "Off",
+              "OptionKind": "ReadCommittedSnapshot"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 60,
+                "startColumn": 34,
+                "startOffset": 1228,
+                "fragmentLength": 3
+              },
+              "OptionState": "Off",
+              "OptionKind": "AllowSnapshotIsolation"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 58,
+              "startColumn": 16,
+              "startOffset": 1155,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 62,
+            "startColumn": 1,
+            "startOffset": 1234,
+            "fragmentLength": 51
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 63,
+                "startColumn": 30,
+                "startOffset": 1281,
+                "fragmentLength": 3
+              },
+              "OptionState": "Off",
+              "OptionKind": "SupplementalLogging"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 62,
+              "startColumn": 16,
+              "startOffset": 1249,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        }
+      ]
+    }
+  ]
+}

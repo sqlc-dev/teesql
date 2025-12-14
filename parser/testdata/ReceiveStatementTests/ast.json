@@ -1,0 +1,690 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 430
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 428
+      },
+      "Statements": [
+        {
+          "$type": "ReceiveStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 35
+          },
+          "SelectElements": [
+            {
+              "$type": "SelectStarExpression",
+              "location": {
+                "startLine": 1,
+                "startColumn": 9,
+                "startOffset": 8,
+                "fragmentLength": 1
+              }
+            }
+          ],
+          "Queue": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 1,
+              "startColumn": 16,
+              "startOffset": 15,
+              "fragmentLength": 20
+            },
+            "DatabaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 16,
+                "startOffset": 15,
+                "fragmentLength": 3
+              },
+              "Value": "db1",
+              "QuoteType": "NotQuoted"
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 20,
+                "startOffset": 19,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 24,
+                "startOffset": 23,
+                "fragmentLength": 12
+              },
+              "Value": "ExpenseQueue",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 3,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "IsConversationGroupIdWhere": false
+        },
+        {
+          "$type": "ReceiveStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 36,
+            "fragmentLength": 85
+          },
+          "Top": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 2,
+              "startColumn": 13,
+              "startOffset": 48,
+              "fragmentLength": 1
+            },
+            "LiteralType": "Integer",
+            "Value": "1"
+          },
+          "SelectElements": [
+            {
+              "$type": "SelectScalarExpression",
+              "location": {
+                "startLine": 2,
+                "startColumn": 16,
+                "startOffset": 51,
+                "fragmentLength": 19
+              },
+              "Expression": {
+                "$type": "ColumnReferenceExpression",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 16,
+                  "startOffset": 51,
+                  "fragmentLength": 19
+                },
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 16,
+                    "startOffset": 51,
+                    "fragmentLength": 19
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 16,
+                        "startOffset": 51,
+                        "fragmentLength": 19
+                      },
+                      "Value": "conversation_handle",
+                      "QuoteType": "NotQuoted"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "$type": "SelectScalarExpression",
+              "location": {
+                "startLine": 2,
+                "startColumn": 37,
+                "startOffset": 72,
+                "fragmentLength": 17
+              },
+              "Expression": {
+                "$type": "ColumnReferenceExpression",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 37,
+                  "startOffset": 72,
+                  "fragmentLength": 17
+                },
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 37,
+                    "startOffset": 72,
+                    "fragmentLength": 17
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 37,
+                        "startOffset": 72,
+                        "fragmentLength": 17
+                      },
+                      "Value": "message_type_name",
+                      "QuoteType": "NotQuoted"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "$type": "SelectScalarExpression",
+              "location": {
+                "startLine": 2,
+                "startColumn": 56,
+                "startOffset": 91,
+                "fragmentLength": 12
+              },
+              "Expression": {
+                "$type": "ColumnReferenceExpression",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 56,
+                  "startOffset": 91,
+                  "fragmentLength": 12
+                },
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 56,
+                    "startOffset": 91,
+                    "fragmentLength": 12
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 56,
+                        "startOffset": 91,
+                        "fragmentLength": 12
+                      },
+                      "Value": "message_body",
+                      "QuoteType": "NotQuoted"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "Queue": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 2,
+              "startColumn": 74,
+              "startOffset": 109,
+              "fragmentLength": 12
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 74,
+                "startOffset": 109,
+                "fragmentLength": 12
+              },
+              "Value": "ExpenseQueue",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "IsConversationGroupIdWhere": false
+        },
+        {
+          "$type": "ReceiveStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 123,
+            "fragmentLength": 142
+          },
+          "SelectElements": [
+            {
+              "$type": "SelectSetVariable",
+              "location": {
+                "startLine": 3,
+                "startColumn": 9,
+                "startOffset": 131,
+                "fragmentLength": 8
+              },
+              "Variable": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 9,
+                  "startOffset": 131,
+                  "fragmentLength": 3
+                },
+                "Name": "@v1"
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 15,
+                  "startOffset": 137,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "AssignmentKind": "Equals"
+            },
+            {
+              "$type": "SelectScalarExpression",
+              "location": {
+                "startLine": 3,
+                "startColumn": 19,
+                "startOffset": 141,
+                "fragmentLength": 2
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 19,
+                  "startOffset": 141,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            },
+            {
+              "$type": "SelectScalarExpression",
+              "location": {
+                "startLine": 4,
+                "startColumn": 2,
+                "startOffset": 147,
+                "fragmentLength": 99
+              },
+              "Expression": {
+                "$type": "SearchedCaseExpression",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 2,
+                  "startOffset": 147,
+                  "fragmentLength": 83
+                },
+                "WhenClauses": [
+                  {
+                    "$type": "SearchedWhenClause",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 3,
+                      "startOffset": 155,
+                      "fragmentLength": 52
+                    },
+                    "WhenExpression": {
+                      "$type": "BooleanComparisonExpression",
+                      "location": {
+                        "startLine": 5,
+                        "startColumn": 8,
+                        "startOffset": 160,
+                        "fragmentLength": 16
+                      },
+                      "ComparisonType": "Equals",
+                      "FirstExpression": {
+                        "$type": "ColumnReferenceExpression",
+                        "location": {
+                          "startLine": 5,
+                          "startColumn": 8,
+                          "startOffset": 160,
+                          "fragmentLength": 10
+                        },
+                        "ColumnType": "Regular",
+                        "MultiPartIdentifier": {
+                          "$type": "MultiPartIdentifier",
+                          "location": {
+                            "startLine": 5,
+                            "startColumn": 8,
+                            "startOffset": 160,
+                            "fragmentLength": 10
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$type": "Identifier",
+                              "location": {
+                                "startLine": 5,
+                                "startColumn": 8,
+                                "startOffset": 160,
+                                "fragmentLength": 10
+                              },
+                              "Value": "validation",
+                              "QuoteType": "NotQuoted"
+                            }
+                          ]
+                        }
+                      },
+                      "SecondExpression": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 5,
+                          "startColumn": 21,
+                          "startOffset": 173,
+                          "fragmentLength": 3
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "X"
+                      }
+                    },
+                    "ThenExpression": {
+                      "$type": "CastCall",
+                      "location": {
+                        "startLine": 5,
+                        "startColumn": 30,
+                        "startOffset": 182,
+                        "fragmentLength": 25
+                      },
+                      "DataType": {
+                        "$type": "XmlDataTypeReference",
+                        "location": {
+                          "startLine": 5,
+                          "startColumn": 51,
+                          "startOffset": 203,
+                          "fragmentLength": 3
+                        },
+                        "XmlDataTypeOption": "None",
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 5,
+                            "startColumn": 51,
+                            "startOffset": 203,
+                            "fragmentLength": 3
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 5,
+                              "startColumn": 51,
+                              "startOffset": 203,
+                              "fragmentLength": 3
+                            },
+                            "Value": "XML",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      },
+                      "Parameter": {
+                        "$type": "ColumnReferenceExpression",
+                        "location": {
+                          "startLine": 5,
+                          "startColumn": 35,
+                          "startOffset": 187,
+                          "fragmentLength": 12
+                        },
+                        "ColumnType": "Regular",
+                        "MultiPartIdentifier": {
+                          "$type": "MultiPartIdentifier",
+                          "location": {
+                            "startLine": 5,
+                            "startColumn": 35,
+                            "startOffset": 187,
+                            "fragmentLength": 12
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$type": "Identifier",
+                              "location": {
+                                "startLine": 5,
+                                "startColumn": 35,
+                                "startOffset": 187,
+                                "fragmentLength": 12
+                              },
+                              "Value": "message_body",
+                              "QuoteType": "NotQuoted"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                ],
+                "ElseExpression": {
+                  "$type": "NullLiteral",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 14,
+                    "startOffset": 221,
+                    "fragmentLength": 4
+                  },
+                  "LiteralType": "Null",
+                  "Value": "NULL"
+                }
+              },
+              "ColumnName": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 9,
+                  "startOffset": 234,
+                  "fragmentLength": 12
+                },
+                "Value": "message_body",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 9,
+                    "startOffset": 234,
+                    "fragmentLength": 12
+                  },
+                  "Value": "message_body",
+                  "QuoteType": "NotQuoted"
+                }
+              }
+            }
+          ],
+          "Queue": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 8,
+              "startColumn": 6,
+              "startOffset": 253,
+              "fragmentLength": 12
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 6,
+                "startOffset": 253,
+                "fragmentLength": 12
+              },
+              "Value": "ExpenseQueue",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "IsConversationGroupIdWhere": false
+        },
+        {
+          "$type": "ReceiveStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 267,
+            "fragmentLength": 96
+          },
+          "SelectElements": [
+            {
+              "$type": "SelectStarExpression",
+              "location": {
+                "startLine": 10,
+                "startColumn": 9,
+                "startOffset": 275,
+                "fragmentLength": 1
+              }
+            }
+          ],
+          "Queue": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 10,
+              "startColumn": 16,
+              "startOffset": 282,
+              "fragmentLength": 12
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 10,
+                "startColumn": 16,
+                "startOffset": 282,
+                "fragmentLength": 12
+              },
+              "Value": "ExpenseQueue",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Into": {
+            "$type": "VariableTableReference",
+            "location": {
+              "startLine": 10,
+              "startColumn": 34,
+              "startOffset": 300,
+              "fragmentLength": 10
+            },
+            "Variable": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 10,
+                "startColumn": 34,
+                "startOffset": 300,
+                "fragmentLength": 10
+              },
+              "Name": "@procTable"
+            },
+            "ForPath": false
+          },
+          "Where": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 10,
+              "startColumn": 75,
+              "startOffset": 341,
+              "fragmentLength": 22
+            },
+            "Name": "@conversation_group_id"
+          },
+          "IsConversationGroupIdWhere": true
+        },
+        {
+          "$type": "ReceiveStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 365,
+            "fragmentLength": 63
+          },
+          "SelectElements": [
+            {
+              "$type": "SelectStarExpression",
+              "location": {
+                "startLine": 11,
+                "startColumn": 9,
+                "startOffset": 373,
+                "fragmentLength": 1
+              }
+            }
+          ],
+          "Queue": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 11,
+              "startColumn": 16,
+              "startOffset": 380,
+              "fragmentLength": 12
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 11,
+                "startColumn": 16,
+                "startOffset": 380,
+                "fragmentLength": 12
+              },
+              "Value": "ExpenseQueue",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Where": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 11,
+              "startColumn": 57,
+              "startOffset": 421,
+              "fragmentLength": 7
+            },
+            "Name": "@handle"
+          },
+          "IsConversationGroupIdWhere": false
+        }
+      ]
+    }
+  ]
+}

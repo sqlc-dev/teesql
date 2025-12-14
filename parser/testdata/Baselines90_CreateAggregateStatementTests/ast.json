@@ -1,0 +1,578 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 328
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 328
+      },
+      "Statements": [
+        {
+          "$type": "CreateAggregateStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 159
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 1,
+              "startColumn": 18,
+              "startOffset": 17,
+              "fragmentLength": 11
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 18,
+                "startOffset": 17,
+                "fragmentLength": 11
+              },
+              "Value": "Concatenate",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "AssemblyName": {
+            "$type": "AssemblyName",
+            "location": {
+              "startLine": 3,
+              "startColumn": 19,
+              "startOffset": 99,
+              "fragmentLength": 59
+            },
+            "Name": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 19,
+                "startOffset": 99,
+                "fragmentLength": 17
+              },
+              "Value": "StringUtilities",
+              "QuoteType": "SquareBracket"
+            },
+            "ClassName": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 37,
+                "startOffset": 117,
+                "fragmentLength": 41
+              },
+              "Value": "Microsoft.Samples.SqlServer.Concatenate",
+              "QuoteType": "SquareBracket"
+            }
+          },
+          "Parameters": [
+            {
+              "$type": "ProcedureParameter",
+              "location": {
+                "startLine": 1,
+                "startColumn": 30,
+                "startOffset": 29,
+                "fragmentLength": 22
+              },
+              "IsVarying": false,
+              "Modifier": "None",
+              "VariableName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 30,
+                  "startOffset": 29,
+                  "fragmentLength": 6
+                },
+                "Value": "@input",
+                "QuoteType": "NotQuoted"
+              },
+              "DataType": {
+                "$type": "SqlDataTypeReference",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 37,
+                  "startOffset": 36,
+                  "fragmentLength": 15
+                },
+                "SqlDataTypeOption": "NVarChar",
+                "Parameters": [
+                  {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 1,
+                      "startColumn": 47,
+                      "startOffset": 46,
+                      "fragmentLength": 4
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "4000"
+                  }
+                ],
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 37,
+                    "startOffset": 36,
+                    "fragmentLength": 8
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 1,
+                      "startColumn": 37,
+                      "startOffset": 36,
+                      "fragmentLength": 8
+                    },
+                    "Value": "NVARCHAR",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "ReturnType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 2,
+              "startColumn": 13,
+              "startOffset": 65,
+              "fragmentLength": 15
+            },
+            "SqlDataTypeOption": "NVarChar",
+            "Parameters": [
+              {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 23,
+                  "startOffset": 75,
+                  "fragmentLength": 4
+                },
+                "LiteralType": "Integer",
+                "Value": "4000"
+              }
+            ],
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 2,
+                "startColumn": 13,
+                "startOffset": 65,
+                "fragmentLength": 8
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 13,
+                  "startOffset": 65,
+                  "fragmentLength": 8
+                },
+                "Value": "NVARCHAR",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "CreateAggregateStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 161,
+            "fragmentLength": 83
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 5,
+              "startColumn": 18,
+              "startOffset": 178,
+              "fragmentLength": 6
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 18,
+                "startOffset": 178,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 22,
+                "startOffset": 182,
+                "fragmentLength": 2
+              },
+              "Value": "a1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "AssemblyName": {
+            "$type": "AssemblyName",
+            "location": {
+              "startLine": 7,
+              "startColumn": 19,
+              "startOffset": 231,
+              "fragmentLength": 12
+            },
+            "Name": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 19,
+                "startOffset": 231,
+                "fragmentLength": 12
+              },
+              "Value": "IntUtilities",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Parameters": [
+            {
+              "$type": "ProcedureParameter",
+              "location": {
+                "startLine": 5,
+                "startColumn": 25,
+                "startOffset": 185,
+                "fragmentLength": 10
+              },
+              "IsVarying": false,
+              "Modifier": "None",
+              "VariableName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 25,
+                  "startOffset": 185,
+                  "fragmentLength": 6
+                },
+                "Value": "@input",
+                "QuoteType": "NotQuoted"
+              },
+              "DataType": {
+                "$type": "SqlDataTypeReference",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 32,
+                  "startOffset": 192,
+                  "fragmentLength": 3
+                },
+                "SqlDataTypeOption": "Int",
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 32,
+                    "startOffset": 192,
+                    "fragmentLength": 3
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 32,
+                      "startOffset": 192,
+                      "fragmentLength": 3
+                    },
+                    "Value": "INT",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "ReturnType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 6,
+              "startColumn": 13,
+              "startOffset": 209,
+              "fragmentLength": 3
+            },
+            "SqlDataTypeOption": "Int",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 6,
+                "startColumn": 13,
+                "startOffset": 209,
+                "fragmentLength": 3
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 13,
+                  "startOffset": 209,
+                  "fragmentLength": 3
+                },
+                "Value": "INT",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "CreateAggregateStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 246,
+            "fragmentLength": 82
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 9,
+              "startColumn": 18,
+              "startOffset": 263,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 18,
+                "startOffset": 263,
+                "fragmentLength": 2
+              },
+              "Value": "a1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "AssemblyName": {
+            "$type": "AssemblyName",
+            "location": {
+              "startLine": 11,
+              "startColumn": 19,
+              "startOffset": 324,
+              "fragmentLength": 3
+            },
+            "Name": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 11,
+                "startColumn": 19,
+                "startOffset": 324,
+                "fragmentLength": 3
+              },
+              "Value": "ag1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Parameters": [
+            {
+              "$type": "ProcedureParameter",
+              "location": {
+                "startLine": 9,
+                "startColumn": 21,
+                "startOffset": 266,
+                "fragmentLength": 16
+              },
+              "IsVarying": false,
+              "Modifier": "None",
+              "VariableName": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 21,
+                  "startOffset": 266,
+                  "fragmentLength": 6
+                },
+                "Value": "@input",
+                "QuoteType": "NotQuoted"
+              },
+              "DataType": {
+                "$type": "XmlDataTypeReference",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 28,
+                  "startOffset": 273,
+                  "fragmentLength": 9
+                },
+                "XmlDataTypeOption": "None",
+                "XmlSchemaCollection": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 33,
+                    "startOffset": 278,
+                    "fragmentLength": 3
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 33,
+                      "startOffset": 278,
+                      "fragmentLength": 3
+                    },
+                    "Value": "zzz",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                },
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 9,
+                    "startColumn": 28,
+                    "startOffset": 273,
+                    "fragmentLength": 3
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 9,
+                      "startColumn": 28,
+                      "startOffset": 273,
+                      "fragmentLength": 3
+                    },
+                    "Value": "XML",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              }
+            }
+          ],
+          "ReturnType": {
+            "$type": "XmlDataTypeReference",
+            "location": {
+              "startLine": 10,
+              "startColumn": 13,
+              "startOffset": 296,
+              "fragmentLength": 9
+            },
+            "XmlDataTypeOption": "None",
+            "XmlSchemaCollection": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 10,
+                "startColumn": 18,
+                "startOffset": 301,
+                "fragmentLength": 3
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 18,
+                  "startOffset": 301,
+                  "fragmentLength": 3
+                },
+                "Value": "zzz",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            },
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 10,
+                "startColumn": 13,
+                "startOffset": 296,
+                "fragmentLength": 3
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 13,
+                  "startOffset": 296,
+                  "fragmentLength": 3
+                },
+                "Value": "XML",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

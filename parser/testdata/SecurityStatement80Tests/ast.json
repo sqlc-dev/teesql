@@ -1,0 +1,2304 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1229
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 5,
+        "startColumn": 1,
+        "startOffset": 78,
+        "fragmentLength": 1150
+      },
+      "Statements": [
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 78,
+            "fragmentLength": 30
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 5,
+                "startColumn": 7,
+                "startOffset": 84,
+                "fragmentLength": 6
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 7,
+                    "startOffset": 84,
+                    "fragmentLength": 6
+                  },
+                  "Value": "SELECT",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "SecurityTargetObject": {
+            "$type": "SecurityTargetObject",
+            "location": {
+              "startLine": 5,
+              "startColumn": 14,
+              "startOffset": 91,
+              "fragmentLength": 7
+            },
+            "ObjectKind": "NotSpecified",
+            "ObjectName": {
+              "$type": "SecurityTargetObjectName",
+              "location": {
+                "startLine": 5,
+                "startColumn": 17,
+                "startOffset": 94,
+                "fragmentLength": 4
+              },
+              "MultiPartIdentifier": {
+                "$type": "MultiPartIdentifier",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 17,
+                  "startOffset": 94,
+                  "fragmentLength": 4
+                },
+                "Count": 3,
+                "Identifiers": [
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 17,
+                      "startOffset": 94,
+                      "fragmentLength": 1
+                    },
+                    "Value": "",
+                    "QuoteType": "NotQuoted"
+                  },
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 18,
+                      "startOffset": 95,
+                      "fragmentLength": 1
+                    },
+                    "Value": "",
+                    "QuoteType": "NotQuoted"
+                  },
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 19,
+                      "startOffset": 96,
+                      "fragmentLength": 2
+                    },
+                    "Value": "t1",
+                    "QuoteType": "NotQuoted"
+                  }
+                ]
+              }
+            }
+          },
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 5,
+                "startColumn": 25,
+                "startOffset": 102,
+                "fragmentLength": 6
+              },
+              "PrincipalType": "Public"
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 109,
+            "fragmentLength": 34
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 6,
+                "startColumn": 7,
+                "startOffset": 115,
+                "fragmentLength": 6
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 7,
+                    "startOffset": 115,
+                    "fragmentLength": 6
+                  },
+                  "Value": "INSERT",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "SecurityTargetObject": {
+            "$type": "SecurityTargetObject",
+            "location": {
+              "startLine": 6,
+              "startColumn": 14,
+              "startOffset": 122,
+              "fragmentLength": 11
+            },
+            "ObjectKind": "NotSpecified",
+            "ObjectName": {
+              "$type": "SecurityTargetObjectName",
+              "location": {
+                "startLine": 6,
+                "startColumn": 17,
+                "startOffset": 125,
+                "fragmentLength": 4
+              },
+              "MultiPartIdentifier": {
+                "$type": "MultiPartIdentifier",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 17,
+                  "startOffset": 125,
+                  "fragmentLength": 4
+                },
+                "Count": 3,
+                "Identifiers": [
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 17,
+                      "startOffset": 125,
+                      "fragmentLength": 1
+                    },
+                    "Value": "",
+                    "QuoteType": "NotQuoted"
+                  },
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 18,
+                      "startOffset": 126,
+                      "fragmentLength": 1
+                    },
+                    "Value": "",
+                    "QuoteType": "NotQuoted"
+                  },
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 19,
+                      "startOffset": 127,
+                      "fragmentLength": 2
+                    },
+                    "Value": "t1",
+                    "QuoteType": "NotQuoted"
+                  }
+                ]
+              }
+            },
+            "Columns": [
+              {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 22,
+                  "startOffset": 130,
+                  "fragmentLength": 2
+                },
+                "Value": "c1",
+                "QuoteType": "NotQuoted"
+              }
+            ]
+          },
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 6,
+                "startColumn": 29,
+                "startOffset": 137,
+                "fragmentLength": 6
+              },
+              "PrincipalType": "Public"
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 144,
+            "fragmentLength": 51
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 7,
+                "startColumn": 7,
+                "startOffset": 150,
+                "fragmentLength": 14
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 7,
+                    "startOffset": 150,
+                    "fragmentLength": 3
+                  },
+                  "Value": "ALL",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 11,
+                    "startOffset": 154,
+                    "fragmentLength": 10
+                  },
+                  "Value": "PRIVILEGES",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "SecurityTargetObject": {
+            "$type": "SecurityTargetObject",
+            "location": {
+              "startLine": 7,
+              "startColumn": 22,
+              "startOffset": 165,
+              "fragmentLength": 20
+            },
+            "ObjectKind": "NotSpecified",
+            "ObjectName": {
+              "$type": "SecurityTargetObjectName",
+              "location": {
+                "startLine": 7,
+                "startColumn": 25,
+                "startOffset": 168,
+                "fragmentLength": 4
+              },
+              "MultiPartIdentifier": {
+                "$type": "MultiPartIdentifier",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 25,
+                  "startOffset": 168,
+                  "fragmentLength": 4
+                },
+                "Count": 3,
+                "Identifiers": [
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 7,
+                      "startColumn": 25,
+                      "startOffset": 168,
+                      "fragmentLength": 1
+                    },
+                    "Value": "",
+                    "QuoteType": "NotQuoted"
+                  },
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 7,
+                      "startColumn": 26,
+                      "startOffset": 169,
+                      "fragmentLength": 1
+                    },
+                    "Value": "",
+                    "QuoteType": "NotQuoted"
+                  },
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 7,
+                      "startColumn": 27,
+                      "startOffset": 170,
+                      "fragmentLength": 2
+                    },
+                    "Value": "t1",
+                    "QuoteType": "NotQuoted"
+                  }
+                ]
+              }
+            },
+            "Columns": [
+              {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 31,
+                  "startOffset": 174,
+                  "fragmentLength": 2
+                },
+                "Value": "c1",
+                "QuoteType": "NotQuoted"
+              },
+              {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 35,
+                  "startOffset": 178,
+                  "fragmentLength": 2
+                },
+                "Value": "c2",
+                "QuoteType": "NotQuoted"
+              },
+              {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 39,
+                  "startOffset": 182,
+                  "fragmentLength": 2
+                },
+                "Value": "c3",
+                "QuoteType": "NotQuoted"
+              }
+            ]
+          },
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 7,
+                "startColumn": 46,
+                "startOffset": 189,
+                "fragmentLength": 6
+              },
+              "PrincipalType": "Public"
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 196,
+            "fragmentLength": 100
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 8,
+                "startColumn": 7,
+                "startOffset": 202,
+                "fragmentLength": 3
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 7,
+                    "startOffset": 202,
+                    "fragmentLength": 3
+                  },
+                  "Value": "ALL",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 8,
+                "startColumn": 12,
+                "startOffset": 207,
+                "fragmentLength": 15
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 12,
+                    "startOffset": 207,
+                    "fragmentLength": 6
+                  },
+                  "Value": "SELECT",
+                  "QuoteType": "NotQuoted"
+                }
+              ],
+              "Columns": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 20,
+                    "startOffset": 215,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 24,
+                    "startOffset": 219,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c2",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 8,
+                "startColumn": 29,
+                "startOffset": 224,
+                "fragmentLength": 6
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 29,
+                    "startOffset": 224,
+                    "fragmentLength": 6
+                  },
+                  "Value": "INSERT",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 8,
+                "startColumn": 37,
+                "startOffset": 232,
+                "fragmentLength": 6
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 37,
+                    "startOffset": 232,
+                    "fragmentLength": 6
+                  },
+                  "Value": "DELETE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 8,
+                "startColumn": 45,
+                "startOffset": 240,
+                "fragmentLength": 6
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 45,
+                    "startOffset": 240,
+                    "fragmentLength": 6
+                  },
+                  "Value": "UPDATE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 8,
+                "startColumn": 53,
+                "startOffset": 248,
+                "fragmentLength": 4
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 53,
+                    "startOffset": 248,
+                    "fragmentLength": 4
+                  },
+                  "Value": "EXEC",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 8,
+                "startColumn": 59,
+                "startOffset": 254,
+                "fragmentLength": 7
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 59,
+                    "startOffset": 254,
+                    "fragmentLength": 7
+                  },
+                  "Value": "EXECUTE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 8,
+                "startColumn": 68,
+                "startOffset": 263,
+                "fragmentLength": 18
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 68,
+                    "startOffset": 263,
+                    "fragmentLength": 10
+                  },
+                  "Value": "REFERENCES",
+                  "QuoteType": "NotQuoted"
+                }
+              ],
+              "Columns": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 79,
+                    "startOffset": 274,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c1",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 83,
+                    "startOffset": 278,
+                    "fragmentLength": 2
+                  },
+                  "Value": "c2",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "SecurityTargetObject": {
+            "$type": "SecurityTargetObject",
+            "location": {
+              "startLine": 8,
+              "startColumn": 87,
+              "startOffset": 282,
+              "fragmentLength": 5
+            },
+            "ObjectKind": "NotSpecified",
+            "ObjectName": {
+              "$type": "SecurityTargetObjectName",
+              "location": {
+                "startLine": 8,
+                "startColumn": 90,
+                "startOffset": 285,
+                "fragmentLength": 2
+              },
+              "MultiPartIdentifier": {
+                "$type": "MultiPartIdentifier",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 90,
+                  "startOffset": 285,
+                  "fragmentLength": 2
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 90,
+                      "startOffset": 285,
+                      "fragmentLength": 2
+                    },
+                    "Value": "t2",
+                    "QuoteType": "NotQuoted"
+                  }
+                ]
+              }
+            }
+          },
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 8,
+                "startColumn": 96,
+                "startOffset": 291,
+                "fragmentLength": 5
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 96,
+                  "startOffset": 291,
+                  "fragmentLength": 5
+                },
+                "Value": "guest",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 355,
+            "fragmentLength": 43
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 11,
+                "startColumn": 7,
+                "startOffset": 361,
+                "fragmentLength": 15
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 7,
+                    "startOffset": 361,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 14,
+                    "startOffset": 368,
+                    "fragmentLength": 8
+                  },
+                  "Value": "DATABASE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 11,
+                "startColumn": 26,
+                "startOffset": 380,
+                "fragmentLength": 6
+              },
+              "PrincipalType": "Public"
+            }
+          ],
+          "AsClause": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 11,
+              "startColumn": 36,
+              "startOffset": 390,
+              "fragmentLength": 8
+            },
+            "Value": "clause",
+            "QuoteType": "SquareBracket"
+          }
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 399,
+            "fragmentLength": 31
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 12,
+                "startColumn": 7,
+                "startOffset": 405,
+                "fragmentLength": 14
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 12,
+                    "startColumn": 7,
+                    "startOffset": 405,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 12,
+                    "startColumn": 14,
+                    "startOffset": 412,
+                    "fragmentLength": 7
+                  },
+                  "Value": "DEFAULT",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 12,
+                "startColumn": 25,
+                "startOffset": 423,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 12,
+                  "startColumn": 25,
+                  "startOffset": 423,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 431,
+            "fragmentLength": 32
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 13,
+                "startColumn": 7,
+                "startOffset": 437,
+                "fragmentLength": 15
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 13,
+                    "startColumn": 7,
+                    "startOffset": 437,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 13,
+                    "startColumn": 14,
+                    "startOffset": 444,
+                    "fragmentLength": 8
+                  },
+                  "Value": "FUNCTION",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 13,
+                "startColumn": 26,
+                "startOffset": 456,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 26,
+                  "startOffset": 456,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 14,
+            "startColumn": 1,
+            "startOffset": 464,
+            "fragmentLength": 33
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 14,
+                "startColumn": 7,
+                "startOffset": 470,
+                "fragmentLength": 16
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 7,
+                    "startOffset": 470,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 14,
+                    "startOffset": 477,
+                    "fragmentLength": 9
+                  },
+                  "Value": "PROCEDURE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 14,
+                "startColumn": 27,
+                "startOffset": 490,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 27,
+                  "startOffset": 490,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 15,
+            "startColumn": 1,
+            "startOffset": 498,
+            "fragmentLength": 28
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 15,
+                "startColumn": 7,
+                "startOffset": 504,
+                "fragmentLength": 11
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 15,
+                    "startColumn": 7,
+                    "startOffset": 504,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 15,
+                    "startColumn": 14,
+                    "startOffset": 511,
+                    "fragmentLength": 4
+                  },
+                  "Value": "RULE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 15,
+                "startColumn": 22,
+                "startOffset": 519,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 22,
+                  "startOffset": 519,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 16,
+            "startColumn": 1,
+            "startOffset": 527,
+            "fragmentLength": 29
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 16,
+                "startColumn": 7,
+                "startOffset": 533,
+                "fragmentLength": 12
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 16,
+                    "startColumn": 7,
+                    "startOffset": 533,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 16,
+                    "startColumn": 14,
+                    "startOffset": 540,
+                    "fragmentLength": 5
+                  },
+                  "Value": "TABLE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 16,
+                "startColumn": 23,
+                "startOffset": 549,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 23,
+                  "startOffset": 549,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 557,
+            "fragmentLength": 28
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 17,
+                "startColumn": 7,
+                "startOffset": 563,
+                "fragmentLength": 11
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 17,
+                    "startColumn": 7,
+                    "startOffset": 563,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 17,
+                    "startColumn": 14,
+                    "startOffset": 570,
+                    "fragmentLength": 4
+                  },
+                  "Value": "VIEW",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 17,
+                "startColumn": 22,
+                "startOffset": 578,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 22,
+                  "startOffset": 578,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 18,
+            "startColumn": 1,
+            "startOffset": 586,
+            "fragmentLength": 32
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 18,
+                "startColumn": 7,
+                "startOffset": 592,
+                "fragmentLength": 15
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 18,
+                    "startColumn": 7,
+                    "startOffset": 592,
+                    "fragmentLength": 6
+                  },
+                  "Value": "BACKUP",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 18,
+                    "startColumn": 14,
+                    "startOffset": 599,
+                    "fragmentLength": 8
+                  },
+                  "Value": "DATABASE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 18,
+                "startColumn": 26,
+                "startOffset": 611,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 26,
+                  "startOffset": 611,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 19,
+            "startColumn": 1,
+            "startOffset": 619,
+            "fragmentLength": 27
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 19,
+                "startColumn": 7,
+                "startOffset": 625,
+                "fragmentLength": 10
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 19,
+                    "startColumn": 7,
+                    "startOffset": 625,
+                    "fragmentLength": 6
+                  },
+                  "Value": "BACKUP",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 19,
+                    "startColumn": 14,
+                    "startOffset": 632,
+                    "fragmentLength": 3
+                  },
+                  "Value": "LOG",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 19,
+                "startColumn": 21,
+                "startOffset": 639,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 21,
+                  "startOffset": 639,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 20,
+            "startColumn": 1,
+            "startOffset": 647,
+            "fragmentLength": 152
+          },
+          "WithGrantOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 20,
+                "startColumn": 7,
+                "startOffset": 653,
+                "fragmentLength": 15
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 7,
+                    "startOffset": 653,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 14,
+                    "startOffset": 660,
+                    "fragmentLength": 8
+                  },
+                  "Value": "DATABASE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 20,
+                "startColumn": 24,
+                "startOffset": 670,
+                "fragmentLength": 14
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 24,
+                    "startOffset": 670,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 31,
+                    "startOffset": 677,
+                    "fragmentLength": 7
+                  },
+                  "Value": "DEFAULT",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 20,
+                "startColumn": 40,
+                "startOffset": 686,
+                "fragmentLength": 15
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 40,
+                    "startOffset": 686,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 47,
+                    "startOffset": 693,
+                    "fragmentLength": 8
+                  },
+                  "Value": "FUNCTION",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 20,
+                "startColumn": 57,
+                "startOffset": 703,
+                "fragmentLength": 16
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 57,
+                    "startOffset": 703,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 64,
+                    "startOffset": 710,
+                    "fragmentLength": 9
+                  },
+                  "Value": "PROCEDURE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 20,
+                "startColumn": 75,
+                "startOffset": 721,
+                "fragmentLength": 11
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 75,
+                    "startOffset": 721,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 82,
+                    "startOffset": 728,
+                    "fragmentLength": 4
+                  },
+                  "Value": "RULE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 20,
+                "startColumn": 88,
+                "startOffset": 734,
+                "fragmentLength": 12
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 88,
+                    "startOffset": 734,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 95,
+                    "startOffset": 741,
+                    "fragmentLength": 5
+                  },
+                  "Value": "TABLE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 20,
+                "startColumn": 102,
+                "startOffset": 748,
+                "fragmentLength": 11
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 102,
+                    "startOffset": 748,
+                    "fragmentLength": 6
+                  },
+                  "Value": "CREATE",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 109,
+                    "startOffset": 755,
+                    "fragmentLength": 4
+                  },
+                  "Value": "VIEW",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 20,
+                "startColumn": 115,
+                "startOffset": 761,
+                "fragmentLength": 15
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 115,
+                    "startOffset": 761,
+                    "fragmentLength": 6
+                  },
+                  "Value": "BACKUP",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 122,
+                    "startOffset": 768,
+                    "fragmentLength": 8
+                  },
+                  "Value": "DATABASE",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            },
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 20,
+                "startColumn": 132,
+                "startOffset": 778,
+                "fragmentLength": 10
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 132,
+                    "startOffset": 778,
+                    "fragmentLength": 6
+                  },
+                  "Value": "BACKUP",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 139,
+                    "startOffset": 785,
+                    "fragmentLength": 3
+                  },
+                  "Value": "LOG",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 20,
+                "startColumn": 146,
+                "startOffset": 792,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 20,
+                  "startColumn": 146,
+                  "startOffset": 792,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 800,
+            "fragmentLength": 35
+          },
+          "WithGrantOption": true,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 21,
+                "startColumn": 7,
+                "startOffset": 806,
+                "fragmentLength": 3
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 21,
+                    "startColumn": 7,
+                    "startOffset": 806,
+                    "fragmentLength": 3
+                  },
+                  "Value": "ALL",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 21,
+                "startColumn": 14,
+                "startOffset": 813,
+                "fragmentLength": 4
+              },
+              "PrincipalType": "Null"
+            }
+          ]
+        },
+        {
+          "$type": "GrantStatement",
+          "location": {
+            "startLine": 24,
+            "startColumn": 1,
+            "startOffset": 861,
+            "fragmentLength": 43
+          },
+          "WithGrantOption": true,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 24,
+                "startColumn": 7,
+                "startOffset": 867,
+                "fragmentLength": 3
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 7,
+                    "startOffset": 867,
+                    "fragmentLength": 3
+                  },
+                  "Value": "all",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 24,
+                "startColumn": 14,
+                "startOffset": 874,
+                "fragmentLength": 6
+              },
+              "PrincipalType": "Public"
+            }
+          ],
+          "AsClause": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 24,
+              "startColumn": 42,
+              "startOffset": 902,
+              "fragmentLength": 2
+            },
+            "Value": "t1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "DenyStatement",
+          "location": {
+            "startLine": 27,
+            "startColumn": 1,
+            "startOffset": 932,
+            "fragmentLength": 25
+          },
+          "CascadeOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 27,
+                "startColumn": 6,
+                "startOffset": 937,
+                "fragmentLength": 6
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 27,
+                    "startColumn": 6,
+                    "startOffset": 937,
+                    "fragmentLength": 6
+                  },
+                  "Value": "select",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "SecurityTargetObject": {
+            "$type": "SecurityTargetObject",
+            "location": {
+              "startLine": 27,
+              "startColumn": 13,
+              "startOffset": 944,
+              "fragmentLength": 5
+            },
+            "ObjectKind": "NotSpecified",
+            "ObjectName": {
+              "$type": "SecurityTargetObjectName",
+              "location": {
+                "startLine": 27,
+                "startColumn": 16,
+                "startOffset": 947,
+                "fragmentLength": 2
+              },
+              "MultiPartIdentifier": {
+                "$type": "MultiPartIdentifier",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 16,
+                  "startOffset": 947,
+                  "fragmentLength": 2
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 27,
+                      "startColumn": 16,
+                      "startOffset": 947,
+                      "fragmentLength": 2
+                    },
+                    "Value": "t2",
+                    "QuoteType": "NotQuoted"
+                  }
+                ]
+              }
+            }
+          },
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 27,
+                "startColumn": 22,
+                "startOffset": 953,
+                "fragmentLength": 4
+              },
+              "PrincipalType": "Null"
+            }
+          ]
+        },
+        {
+          "$type": "DenyStatement",
+          "location": {
+            "startLine": 28,
+            "startColumn": 1,
+            "startOffset": 958,
+            "fragmentLength": 27
+          },
+          "CascadeOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 28,
+                "startColumn": 6,
+                "startOffset": 963,
+                "fragmentLength": 11
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 6,
+                    "startOffset": 963,
+                    "fragmentLength": 6
+                  },
+                  "Value": "create",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 13,
+                    "startOffset": 970,
+                    "fragmentLength": 4
+                  },
+                  "Value": "view",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 28,
+                "startColumn": 21,
+                "startOffset": 978,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 28,
+                  "startColumn": 21,
+                  "startOffset": 978,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "DenyStatement",
+          "location": {
+            "startLine": 29,
+            "startColumn": 1,
+            "startOffset": 986,
+            "fragmentLength": 26
+          },
+          "CascadeOption": true,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 29,
+                "startColumn": 6,
+                "startOffset": 991,
+                "fragmentLength": 3
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 29,
+                    "startColumn": 6,
+                    "startOffset": 991,
+                    "fragmentLength": 3
+                  },
+                  "Value": "all",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 29,
+                "startColumn": 13,
+                "startOffset": 998,
+                "fragmentLength": 6
+              },
+              "PrincipalType": "Public"
+            }
+          ]
+        },
+        {
+          "$type": "RevokeStatement",
+          "location": {
+            "startLine": 32,
+            "startColumn": 1,
+            "startOffset": 1042,
+            "fragmentLength": 44
+          },
+          "GrantOptionFor": true,
+          "CascadeOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 32,
+                "startColumn": 25,
+                "startOffset": 1066,
+                "fragmentLength": 6
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 32,
+                    "startColumn": 25,
+                    "startOffset": 1066,
+                    "fragmentLength": 6
+                  },
+                  "Value": "select",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "SecurityTargetObject": {
+            "$type": "SecurityTargetObject",
+            "location": {
+              "startLine": 32,
+              "startColumn": 32,
+              "startOffset": 1073,
+              "fragmentLength": 5
+            },
+            "ObjectKind": "NotSpecified",
+            "ObjectName": {
+              "$type": "SecurityTargetObjectName",
+              "location": {
+                "startLine": 32,
+                "startColumn": 35,
+                "startOffset": 1076,
+                "fragmentLength": 2
+              },
+              "MultiPartIdentifier": {
+                "$type": "MultiPartIdentifier",
+                "location": {
+                  "startLine": 32,
+                  "startColumn": 35,
+                  "startOffset": 1076,
+                  "fragmentLength": 2
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 32,
+                      "startColumn": 35,
+                      "startOffset": 1076,
+                      "fragmentLength": 2
+                    },
+                    "Value": "t2",
+                    "QuoteType": "NotQuoted"
+                  }
+                ]
+              }
+            }
+          },
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 32,
+                "startColumn": 41,
+                "startOffset": 1082,
+                "fragmentLength": 4
+              },
+              "PrincipalType": "Null"
+            }
+          ]
+        },
+        {
+          "$type": "RevokeStatement",
+          "location": {
+            "startLine": 33,
+            "startColumn": 1,
+            "startOffset": 1087,
+            "fragmentLength": 29
+          },
+          "GrantOptionFor": false,
+          "CascadeOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 33,
+                "startColumn": 8,
+                "startOffset": 1094,
+                "fragmentLength": 11
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 33,
+                    "startColumn": 8,
+                    "startOffset": 1094,
+                    "fragmentLength": 6
+                  },
+                  "Value": "create",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 33,
+                    "startColumn": 15,
+                    "startOffset": 1101,
+                    "fragmentLength": 4
+                  },
+                  "Value": "view",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 33,
+                "startColumn": 23,
+                "startOffset": 1109,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 33,
+                  "startColumn": 23,
+                  "startOffset": 1109,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "RevokeStatement",
+          "location": {
+            "startLine": 34,
+            "startColumn": 1,
+            "startOffset": 1117,
+            "fragmentLength": 40
+          },
+          "GrantOptionFor": false,
+          "CascadeOption": false,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 34,
+                "startColumn": 8,
+                "startOffset": 1124,
+                "fragmentLength": 11
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 34,
+                    "startColumn": 8,
+                    "startOffset": 1124,
+                    "fragmentLength": 6
+                  },
+                  "Value": "create",
+                  "QuoteType": "NotQuoted"
+                },
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 34,
+                    "startColumn": 15,
+                    "startOffset": 1131,
+                    "fragmentLength": 4
+                  },
+                  "Value": "view",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 34,
+                "startColumn": 25,
+                "startOffset": 1141,
+                "fragmentLength": 7
+              },
+              "PrincipalType": "Identifier",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 34,
+                  "startColumn": 25,
+                  "startOffset": 1141,
+                  "fragmentLength": 7
+                },
+                "Value": "guest",
+                "QuoteType": "SquareBracket"
+              }
+            }
+          ],
+          "AsClause": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 34,
+              "startColumn": 36,
+              "startOffset": 1152,
+              "fragmentLength": 5
+            },
+            "Value": "role1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "RevokeStatement",
+          "location": {
+            "startLine": 35,
+            "startColumn": 1,
+            "startOffset": 1158,
+            "fragmentLength": 28
+          },
+          "GrantOptionFor": false,
+          "CascadeOption": true,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 35,
+                "startColumn": 8,
+                "startOffset": 1165,
+                "fragmentLength": 3
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 35,
+                    "startColumn": 8,
+                    "startOffset": 1165,
+                    "fragmentLength": 3
+                  },
+                  "Value": "all",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 35,
+                "startColumn": 15,
+                "startOffset": 1172,
+                "fragmentLength": 6
+              },
+              "PrincipalType": "Public"
+            }
+          ]
+        },
+        {
+          "$type": "RevokeStatement",
+          "location": {
+            "startLine": 36,
+            "startColumn": 1,
+            "startOffset": 1187,
+            "fragmentLength": 41
+          },
+          "GrantOptionFor": false,
+          "CascadeOption": true,
+          "Permissions": [
+            {
+              "$type": "Permission",
+              "location": {
+                "startLine": 36,
+                "startColumn": 8,
+                "startOffset": 1194,
+                "fragmentLength": 3
+              },
+              "Identifiers": [
+                {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 36,
+                    "startColumn": 8,
+                    "startOffset": 1194,
+                    "fragmentLength": 3
+                  },
+                  "Value": "all",
+                  "QuoteType": "NotQuoted"
+                }
+              ]
+            }
+          ],
+          "Principals": [
+            {
+              "$type": "SecurityPrincipal",
+              "location": {
+                "startLine": 36,
+                "startColumn": 15,
+                "startOffset": 1201,
+                "fragmentLength": 6
+              },
+              "PrincipalType": "Public"
+            }
+          ],
+          "AsClause": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 36,
+              "startColumn": 33,
+              "startOffset": 1219,
+              "fragmentLength": 9
+            },
+            "Value": "group 2",
+            "QuoteType": "SquareBracket"
+          }
+        }
+      ]
+    }
+  ]
+}

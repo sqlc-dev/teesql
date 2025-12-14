@@ -1,0 +1,262 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 427
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 28,
+        "fragmentLength": 319
+      },
+      "Statements": [
+        {
+          "$type": "CreateSymmetricKeyStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 28,
+            "fragmentLength": 40
+          },
+          "Provider": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 39,
+              "startOffset": 66,
+              "fragmentLength": 2
+            },
+            "Value": "p1",
+            "QuoteType": "NotQuoted"
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 22,
+              "startOffset": 49,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "CreateSymmetricKeyStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 69,
+            "fragmentLength": 79
+          },
+          "KeyOptions": [
+            {
+              "$type": "CreationDispositionKeyOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 47,
+                "startOffset": 115,
+                "fragmentLength": 33
+              },
+              "IsCreateNew": true,
+              "OptionKind": "CreationDisposition"
+            }
+          ],
+          "Provider": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 39,
+              "startOffset": 107,
+              "fragmentLength": 2
+            },
+            "Value": "p1",
+            "QuoteType": "NotQuoted"
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 22,
+              "startOffset": 90,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "CreateSymmetricKeyStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 149,
+            "fragmentLength": 127
+          },
+          "KeyOptions": [
+            {
+              "$type": "ProviderKeyNameKeyOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 47,
+                "startOffset": 195,
+                "fragmentLength": 26
+              },
+              "KeyName": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 67,
+                  "startOffset": 215,
+                  "fragmentLength": 6
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "key1"
+              },
+              "OptionKind": "ProviderKeyName"
+            },
+            {
+              "$type": "AlgorithmKeyOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 75,
+                "startOffset": 223,
+                "fragmentLength": 15
+              },
+              "Algorithm": "RC4",
+              "OptionKind": "Algorithm"
+            },
+            {
+              "$type": "CreationDispositionKeyOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 92,
+                "startOffset": 240,
+                "fragmentLength": 36
+              },
+              "IsCreateNew": false,
+              "OptionKind": "CreationDisposition"
+            }
+          ],
+          "Provider": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 39,
+              "startOffset": 187,
+              "fragmentLength": 2
+            },
+            "Value": "p1",
+            "QuoteType": "NotQuoted"
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 22,
+              "startOffset": 170,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "CreateSymmetricKeyStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 278,
+            "fragmentLength": 69
+          },
+          "Provider": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 6,
+              "startColumn": 39,
+              "startOffset": 316,
+              "fragmentLength": 2
+            },
+            "Value": "p1",
+            "QuoteType": "NotQuoted"
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 6,
+              "startColumn": 22,
+              "startOffset": 299,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          },
+          "EncryptingMechanisms": [
+            {
+              "$type": "CryptoMechanism",
+              "location": {
+                "startLine": 6,
+                "startColumn": 68,
+                "startOffset": 345,
+                "fragmentLength": 2
+              },
+              "CryptoMechanismType": "Certificate",
+              "Identifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 68,
+                  "startOffset": 345,
+                  "fragmentLength": 2
+                },
+                "Value": "c1",
+                "QuoteType": "NotQuoted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 10,
+        "startColumn": 1,
+        "startOffset": 385,
+        "fragmentLength": 41
+      },
+      "Statements": [
+        {
+          "$type": "DropSymmetricKeyStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 385,
+            "fragmentLength": 41
+          },
+          "RemoveProviderKey": true,
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 10,
+              "startColumn": 20,
+              "startOffset": 404,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          },
+          "IsIfExists": false
+        }
+      ]
+    }
+  ]
+}

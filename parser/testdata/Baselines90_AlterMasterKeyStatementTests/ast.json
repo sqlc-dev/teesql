@@ -1,0 +1,134 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 360
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 358
+      },
+      "Statements": [
+        {
+          "$type": "AlterMasterKeyStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 64
+          },
+          "Option": "Regenerate",
+          "Password": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 1,
+              "startColumn": 59,
+              "startOffset": 58,
+              "fragmentLength": 5
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "pw1"
+          }
+        },
+        {
+          "$type": "AlterMasterKeyStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 66,
+            "fragmentLength": 70
+          },
+          "Option": "ForceRegenerate",
+          "Password": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 3,
+              "startColumn": 65,
+              "startOffset": 130,
+              "fragmentLength": 5
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "pw1"
+          }
+        },
+        {
+          "$type": "AlterMasterKeyStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 138,
+            "fragmentLength": 52
+          },
+          "Option": "AddEncryptionByPassword",
+          "Password": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 5,
+              "startColumn": 47,
+              "startOffset": 184,
+              "fragmentLength": 5
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "pw1"
+          }
+        },
+        {
+          "$type": "AlterMasterKeyStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 192,
+            "fragmentLength": 53
+          },
+          "Option": "DropEncryptionByPassword",
+          "Password": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 7,
+              "startColumn": 48,
+              "startOffset": 239,
+              "fragmentLength": 5
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "pw1"
+          }
+        },
+        {
+          "$type": "AlterMasterKeyStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 247,
+            "fragmentLength": 54
+          },
+          "Option": "AddEncryptionByServiceMasterKey"
+        },
+        {
+          "$type": "AlterMasterKeyStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 303,
+            "fragmentLength": 55
+          },
+          "Option": "DropEncryptionByServiceMasterKey"
+        }
+      ]
+    }
+  ]
+}

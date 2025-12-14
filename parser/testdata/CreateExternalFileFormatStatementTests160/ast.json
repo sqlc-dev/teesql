@@ -1,0 +1,101 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 183
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 183
+      },
+      "Statements": [
+        {
+          "$type": "CreateExternalFileFormatStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 66
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 29,
+              "startOffset": 28,
+              "fragmentLength": 4
+            },
+            "Value": "eff1",
+            "QuoteType": "NotQuoted"
+          },
+          "FormatType": "Delta"
+        },
+        {
+          "$type": "CreateExternalFileFormatStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 68,
+            "fragmentLength": 115
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 29,
+              "startOffset": 96,
+              "fragmentLength": 4
+            },
+            "Value": "eff2",
+            "QuoteType": "NotQuoted"
+          },
+          "FormatType": "DelimitedText",
+          "ExternalFileFormatOptions": [
+            {
+              "$type": "ExternalFileFormatContainerOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 41,
+                "startOffset": 141,
+                "fragmentLength": 39
+              },
+              "Suboptions": [
+                {
+                  "$type": "ExternalFileFormatLiteralOption",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 74,
+                    "startOffset": 174,
+                    "fragmentLength": 5
+                  },
+                  "Value": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 74,
+                      "startOffset": 174,
+                      "fragmentLength": 5
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "2.0"
+                  },
+                  "OptionKind": "ParserVersion"
+                }
+              ],
+              "OptionKind": "FormatOptions"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

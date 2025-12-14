@@ -1,0 +1,218 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 425
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 3,
+        "startColumn": 1,
+        "startOffset": 66,
+        "fragmentLength": 158
+      },
+      "Statements": [
+        {
+          "$type": "CloseSymmetricKeyStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 66,
+            "fragmentLength": 24
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 21,
+              "startOffset": 86,
+              "fragmentLength": 4
+            },
+            "Value": "key1",
+            "QuoteType": "NotQuoted"
+          },
+          "All": false
+        },
+        {
+          "$type": "CloseSymmetricKeyStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 91,
+            "fragmentLength": 24
+          },
+          "All": true
+        },
+        {
+          "$type": "CloseMasterKeyStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 136,
+            "fragmentLength": 16
+          }
+        },
+        {
+          "$type": "OpenMasterKeyStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 173,
+            "fragmentLength": 51
+          },
+          "Password": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 10,
+              "startColumn": 42,
+              "startOffset": 214,
+              "fragmentLength": 10
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "password"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 13,
+        "startColumn": 1,
+        "startOffset": 246,
+        "fragmentLength": 36
+      },
+      "Statements": [
+        {
+          "$type": "KillStatsJobStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 246,
+            "fragmentLength": 17
+          },
+          "JobId": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 13,
+              "startColumn": 16,
+              "startOffset": 261,
+              "fragmentLength": 2
+            },
+            "LiteralType": "Integer",
+            "Value": "12"
+          }
+        },
+        {
+          "$type": "KillStatsJobStatement",
+          "location": {
+            "startLine": 14,
+            "startColumn": 1,
+            "startOffset": 264,
+            "fragmentLength": 18
+          },
+          "JobId": {
+            "$type": "UnaryExpression",
+            "location": {
+              "startLine": 14,
+              "startColumn": 16,
+              "startOffset": 279,
+              "fragmentLength": 3
+            },
+            "UnaryExpressionType": "Negative",
+            "Expression": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 14,
+                "startColumn": 17,
+                "startOffset": 280,
+                "fragmentLength": 2
+              },
+              "LiteralType": "Integer",
+              "Value": "12"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 17,
+        "startColumn": 1,
+        "startOffset": 326,
+        "fragmentLength": 80
+      },
+      "Statements": [
+        {
+          "$type": "KillQueryNotificationSubscriptionStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 326,
+            "fragmentLength": 39
+          },
+          "SubscriptionId": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 17,
+              "startColumn": 38,
+              "startOffset": 363,
+              "fragmentLength": 2
+            },
+            "LiteralType": "Integer",
+            "Value": "12"
+          },
+          "All": false
+        },
+        {
+          "$type": "KillQueryNotificationSubscriptionStatement",
+          "location": {
+            "startLine": 18,
+            "startColumn": 1,
+            "startOffset": 366,
+            "fragmentLength": 40
+          },
+          "All": true
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 20,
+        "startColumn": 1,
+        "startOffset": 410,
+        "fragmentLength": 13
+      },
+      "Statements": [
+        {
+          "$type": "CheckpointStatement",
+          "location": {
+            "startLine": 20,
+            "startColumn": 1,
+            "startOffset": 410,
+            "fragmentLength": 13
+          },
+          "Duration": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 20,
+              "startColumn": 12,
+              "startOffset": 421,
+              "fragmentLength": 2
+            },
+            "LiteralType": "Integer",
+            "Value": "12"
+          }
+        }
+      ]
+    }
+  ]
+}

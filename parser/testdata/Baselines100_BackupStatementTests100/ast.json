@@ -1,0 +1,192 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 141
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 58
+      },
+      "Statements": [
+        {
+          "$type": "BackupDatabaseStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 58
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 1,
+              "startColumn": 17,
+              "startOffset": 16,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 17,
+                "startOffset": 16,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Options": [
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 10,
+                "startOffset": 46,
+                "fragmentLength": 11
+              },
+              "OptionKind": "Compression"
+            }
+          ],
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 2,
+                "startColumn": 8,
+                "startOffset": 26,
+                "fragmentLength": 10
+              },
+              "LogicalDevice": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 8,
+                  "startOffset": 26,
+                  "fragmentLength": 10
+                },
+                "Value": "someDevice",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 8,
+                    "startOffset": 26,
+                    "fragmentLength": 10
+                  },
+                  "Value": "someDevice",
+                  "QuoteType": "NotQuoted"
+                }
+              },
+              "DeviceType": "None"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 7,
+        "startColumn": 1,
+        "startOffset": 64,
+        "fragmentLength": 77
+      },
+      "Statements": [
+        {
+          "$type": "BackupDatabaseStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 64,
+            "fragmentLength": 77
+          },
+          "DatabaseName": {
+            "$type": "IdentifierOrValueExpression",
+            "location": {
+              "startLine": 7,
+              "startColumn": 17,
+              "startOffset": 80,
+              "fragmentLength": 2
+            },
+            "Value": "d1",
+            "Identifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 7,
+                "startColumn": 17,
+                "startOffset": 80,
+                "fragmentLength": 2
+              },
+              "Value": "d1",
+              "QuoteType": "NotQuoted"
+            }
+          },
+          "Options": [
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 10,
+                "startOffset": 111,
+                "fragmentLength": 13
+              },
+              "OptionKind": "StopOnError"
+            },
+            {
+              "$type": "BackupOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 25,
+                "startOffset": 126,
+                "fragmentLength": 14
+              },
+              "OptionKind": "NoCompression"
+            }
+          ],
+          "Devices": [
+            {
+              "$type": "DeviceInfo",
+              "location": {
+                "startLine": 8,
+                "startColumn": 8,
+                "startOffset": 90,
+                "fragmentLength": 11
+              },
+              "LogicalDevice": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 8,
+                  "startOffset": 90,
+                  "fragmentLength": 11
+                },
+                "Value": "@deviceName",
+                "ValueExpression": {
+                  "$type": "VariableReference",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 8,
+                    "startOffset": 90,
+                    "fragmentLength": 11
+                  },
+                  "Name": "@deviceName"
+                }
+              },
+              "DeviceType": "None"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

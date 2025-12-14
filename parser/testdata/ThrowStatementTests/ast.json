@@ -1,0 +1,114 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 40
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 40
+      },
+      "Statements": [
+        {
+          "$type": "ThrowStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 5
+          }
+        },
+        {
+          "$type": "ThrowStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 6,
+            "fragmentLength": 18
+          },
+          "ErrorNumber": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 2,
+              "startColumn": 7,
+              "startOffset": 12,
+              "fragmentLength": 2
+            },
+            "Name": "@v"
+          },
+          "Message": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 2,
+              "startColumn": 11,
+              "startOffset": 16,
+              "fragmentLength": 5
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "foo"
+          },
+          "State": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 2,
+              "startColumn": 18,
+              "startOffset": 23,
+              "fragmentLength": 1
+            },
+            "LiteralType": "Integer",
+            "Value": "1"
+          }
+        },
+        {
+          "$type": "ThrowStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 25,
+            "fragmentLength": 15
+          },
+          "ErrorNumber": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 3,
+              "startColumn": 7,
+              "startOffset": 31,
+              "fragmentLength": 1
+            },
+            "LiteralType": "Integer",
+            "Value": "1"
+          },
+          "Message": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 3,
+              "startColumn": 10,
+              "startOffset": 34,
+              "fragmentLength": 2
+            },
+            "Name": "@p"
+          },
+          "State": {
+            "$type": "VariableReference",
+            "location": {
+              "startLine": 3,
+              "startColumn": 14,
+              "startOffset": 38,
+              "fragmentLength": 2
+            },
+            "Name": "@i"
+          }
+        }
+      ]
+    }
+  ]
+}

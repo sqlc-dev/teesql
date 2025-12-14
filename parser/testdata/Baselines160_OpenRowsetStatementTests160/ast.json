@@ -1,0 +1,1892 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 2411
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 2411
+      },
+      "Statements": [
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 239
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 1,
+              "startColumn": 1,
+              "startOffset": 0,
+              "fragmentLength": 238
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 8,
+                  "startOffset": 7,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 2,
+                "startColumn": 1,
+                "startOffset": 9,
+                "fragmentLength": 229
+              },
+              "TableReferences": [
+                {
+                  "$type": "BulkOpenRowset",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 6,
+                    "startOffset": 14,
+                    "fragmentLength": 224
+                  },
+                  "DataFiles": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 23,
+                        "startOffset": 31,
+                        "fragmentLength": 81
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://sqlondemandstorage.blob.core.windows.net/csv/population/population*.csv"
+                    }
+                  ],
+                  "Options": [
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 106,
+                        "startOffset": 114,
+                        "fragmentLength": 14
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 115,
+                          "startOffset": 123,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "CSV"
+                      },
+                      "OptionKind": "DataFileFormat"
+                    },
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 122,
+                        "startOffset": 130,
+                        "fragmentLength": 12
+                      },
+                      "Value": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 133,
+                          "startOffset": 141,
+                          "fragmentLength": 1
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "1"
+                      },
+                      "OptionKind": "FirstRow"
+                    }
+                  ],
+                  "WithColumns": [
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 142,
+                        "startOffset": 150,
+                        "fragmentLength": 56
+                      },
+                      "ColumnOrdinal": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 197,
+                          "startOffset": 205,
+                          "fragmentLength": 1
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "1"
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 142,
+                          "startOffset": 150,
+                          "fragmentLength": 14
+                        },
+                        "Value": "country_code",
+                        "QuoteType": "SquareBracket"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 157,
+                          "startOffset": 165,
+                          "fragmentLength": 11
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 2,
+                              "startColumn": 166,
+                              "startOffset": 174,
+                              "fragmentLength": 1
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "5"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 2,
+                            "startColumn": 157,
+                            "startOffset": 165,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 2,
+                              "startColumn": 157,
+                              "startOffset": 165,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      },
+                      "Collation": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 177,
+                          "startOffset": 185,
+                          "fragmentLength": 19
+                        },
+                        "Value": "Latin1_General_BIN2",
+                        "QuoteType": "NotQuoted"
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 200,
+                        "startOffset": 208,
+                        "fragmentLength": 21
+                      },
+                      "ColumnOrdinal": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 220,
+                          "startOffset": 228,
+                          "fragmentLength": 1
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "4"
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 200,
+                          "startOffset": 208,
+                          "fragmentLength": 12
+                        },
+                        "Value": "population",
+                        "QuoteType": "SquareBracket"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 213,
+                          "startOffset": 221,
+                          "fragmentLength": 6
+                        },
+                        "SqlDataTypeOption": "BigInt",
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 2,
+                            "startColumn": 213,
+                            "startOffset": 221,
+                            "fragmentLength": 6
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 2,
+                              "startColumn": 213,
+                              "startOffset": 221,
+                              "fragmentLength": 6
+                            },
+                            "Value": "BIGINT",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 226,
+                      "startOffset": 234,
+                      "fragmentLength": 4
+                    },
+                    "Value": "r1",
+                    "QuoteType": "SquareBracket"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 241,
+            "fragmentLength": 205
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 4,
+              "startColumn": 1,
+              "startOffset": 241,
+              "fragmentLength": 204
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 8,
+                  "startOffset": 248,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 5,
+                "startColumn": 1,
+                "startOffset": 250,
+                "fragmentLength": 195
+              },
+              "TableReferences": [
+                {
+                  "$type": "BulkOpenRowset",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 6,
+                    "startOffset": 255,
+                    "fragmentLength": 190
+                  },
+                  "DataFiles": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 5,
+                        "startColumn": 23,
+                        "startOffset": 272,
+                        "fragmentLength": 105
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://pandemicdatalake.blob.core.windows.net/public/curated/covid-19/ecdc_cases/latest/ecdc_cases.csv"
+                    }
+                  ],
+                  "Options": [
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 5,
+                        "startColumn": 130,
+                        "startOffset": 379,
+                        "fragmentLength": 14
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 5,
+                          "startColumn": 139,
+                          "startOffset": 388,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "CSV"
+                      },
+                      "OptionKind": "DataFileFormat"
+                    },
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 5,
+                        "startColumn": 146,
+                        "startOffset": 395,
+                        "fragmentLength": 22
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 5,
+                          "startColumn": 163,
+                          "startOffset": 412,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "2.0"
+                      },
+                      "OptionKind": "ParserVersion"
+                    },
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 5,
+                        "startColumn": 170,
+                        "startOffset": 419,
+                        "fragmentLength": 10
+                      },
+                      "Value": {
+                        "$type": "IdentifierLiteral",
+                        "location": {
+                          "startLine": -1,
+                          "startColumn": -1,
+                          "startOffset": -1,
+                          "fragmentLength": -1
+                        },
+                        "LiteralType": "Identifier",
+                        "QuoteType": "NotQuoted",
+                        "Value": "TRUE"
+                      },
+                      "OptionKind": "HeaderRow"
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 192,
+                      "startOffset": 441,
+                      "fragmentLength": 4
+                    },
+                    "Value": "r2",
+                    "QuoteType": "SquareBracket"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 448,
+            "fragmentLength": 186
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 7,
+              "startColumn": 1,
+              "startOffset": 448,
+              "fragmentLength": 185
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 8,
+                  "startOffset": 455,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 8,
+                "startColumn": 1,
+                "startOffset": 457,
+                "fragmentLength": 176
+              },
+              "TableReferences": [
+                {
+                  "$type": "BulkOpenRowset",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 6,
+                    "startOffset": 462,
+                    "fragmentLength": 171
+                  },
+                  "DataFiles": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 23,
+                        "startOffset": 479,
+                        "fragmentLength": 105
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://pandemicdatalake.blob.core.windows.net/public/curated/covid-19/ecdc_cases/latest/ecdc_cases.csv"
+                    }
+                  ],
+                  "Options": [
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 130,
+                        "startOffset": 586,
+                        "fragmentLength": 14
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 8,
+                          "startColumn": 139,
+                          "startOffset": 595,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "CSV"
+                      },
+                      "OptionKind": "DataFileFormat"
+                    },
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 146,
+                        "startOffset": 602,
+                        "fragmentLength": 22
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 8,
+                          "startColumn": 163,
+                          "startOffset": 619,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "2.0"
+                      },
+                      "OptionKind": "ParserVersion"
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 173,
+                      "startOffset": 629,
+                      "fragmentLength": 4
+                    },
+                    "Value": "r3",
+                    "QuoteType": "SquareBracket"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 636,
+            "fragmentLength": 187
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 10,
+              "startColumn": 1,
+              "startOffset": 636,
+              "fragmentLength": 186
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "TopRowFilter": {
+              "$type": "TopRowFilter",
+              "location": {
+                "startLine": 10,
+                "startColumn": 8,
+                "startOffset": 643,
+                "fragmentLength": 5
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 12,
+                  "startOffset": 647,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "Percent": false,
+              "WithTies": false
+            },
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 14,
+                  "startOffset": 649,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 11,
+                "startColumn": 1,
+                "startOffset": 651,
+                "fragmentLength": 171
+              },
+              "TableReferences": [
+                {
+                  "$type": "BulkOpenRowset",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 6,
+                    "startOffset": 656,
+                    "fragmentLength": 166
+                  },
+                  "DataFiles": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 11,
+                        "startColumn": 23,
+                        "startOffset": 673,
+                        "fragmentLength": 120
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://azureopendatastorage.blob.core.windows.net/censusdatacontainer/release/us_population_county/year=20*/*.parquet"
+                    }
+                  ],
+                  "Options": [
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 11,
+                        "startColumn": 145,
+                        "startOffset": 795,
+                        "fragmentLength": 18
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 11,
+                          "startColumn": 154,
+                          "startOffset": 804,
+                          "fragmentLength": 9
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "PARQUET"
+                      },
+                      "OptionKind": "DataFileFormat"
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 11,
+                      "startColumn": 168,
+                      "startOffset": 818,
+                      "fragmentLength": 4
+                    },
+                    "Value": "r4",
+                    "QuoteType": "SquareBracket"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 825,
+            "fragmentLength": 239
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 13,
+              "startColumn": 1,
+              "startOffset": 825,
+              "fragmentLength": 238
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 8,
+                  "startOffset": 832,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 14,
+                "startColumn": 1,
+                "startOffset": 834,
+                "fragmentLength": 229
+              },
+              "TableReferences": [
+                {
+                  "$type": "BulkOpenRowset",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 6,
+                    "startOffset": 839,
+                    "fragmentLength": 224
+                  },
+                  "DataFiles": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 14,
+                        "startColumn": 23,
+                        "startOffset": 856,
+                        "fragmentLength": 81
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://sqlondemandstorage.blob.core.windows.net/csv/population/population*.csv"
+                    }
+                  ],
+                  "Options": [
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 14,
+                        "startColumn": 106,
+                        "startOffset": 939,
+                        "fragmentLength": 14
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 14,
+                          "startColumn": 115,
+                          "startOffset": 948,
+                          "fragmentLength": 5
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "CSV"
+                      },
+                      "OptionKind": "DataFileFormat"
+                    },
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 14,
+                        "startColumn": 122,
+                        "startOffset": 955,
+                        "fragmentLength": 12
+                      },
+                      "Value": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 14,
+                          "startColumn": 133,
+                          "startOffset": 966,
+                          "fragmentLength": 1
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "1"
+                      },
+                      "OptionKind": "FirstRow"
+                    }
+                  ],
+                  "WithColumns": [
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 14,
+                        "startColumn": 142,
+                        "startOffset": 975,
+                        "fragmentLength": 56
+                      },
+                      "ColumnOrdinal": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 14,
+                          "startColumn": 197,
+                          "startOffset": 1030,
+                          "fragmentLength": 1
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "1"
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 14,
+                          "startColumn": 142,
+                          "startOffset": 975,
+                          "fragmentLength": 14
+                        },
+                        "Value": "country_code",
+                        "QuoteType": "SquareBracket"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 14,
+                          "startColumn": 157,
+                          "startOffset": 990,
+                          "fragmentLength": 11
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 14,
+                              "startColumn": 166,
+                              "startOffset": 999,
+                              "fragmentLength": 1
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "5"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 14,
+                            "startColumn": 157,
+                            "startOffset": 990,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 14,
+                              "startColumn": 157,
+                              "startOffset": 990,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      },
+                      "Collation": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 14,
+                          "startColumn": 177,
+                          "startOffset": 1010,
+                          "fragmentLength": 19
+                        },
+                        "Value": "Latin1_General_BIN2",
+                        "QuoteType": "NotQuoted"
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 14,
+                        "startColumn": 200,
+                        "startOffset": 1033,
+                        "fragmentLength": 21
+                      },
+                      "ColumnOrdinal": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 14,
+                          "startColumn": 220,
+                          "startOffset": 1053,
+                          "fragmentLength": 1
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "4"
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 14,
+                          "startColumn": 200,
+                          "startOffset": 1033,
+                          "fragmentLength": 12
+                        },
+                        "Value": "population",
+                        "QuoteType": "SquareBracket"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 14,
+                          "startColumn": 213,
+                          "startOffset": 1046,
+                          "fragmentLength": 6
+                        },
+                        "SqlDataTypeOption": "BigInt",
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 14,
+                            "startColumn": 213,
+                            "startOffset": 1046,
+                            "fragmentLength": 6
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 14,
+                              "startColumn": 213,
+                              "startOffset": 1046,
+                              "fragmentLength": 6
+                            },
+                            "Value": "BIGINT",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 226,
+                      "startOffset": 1059,
+                      "fragmentLength": 4
+                    },
+                    "Value": "r6",
+                    "QuoteType": "SquareBracket"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 16,
+            "startColumn": 1,
+            "startOffset": 1066,
+            "fragmentLength": 399
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 16,
+              "startColumn": 1,
+              "startOffset": 1066,
+              "fragmentLength": 398
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "TopRowFilter": {
+              "$type": "TopRowFilter",
+              "location": {
+                "startLine": 16,
+                "startColumn": 8,
+                "startOffset": 1073,
+                "fragmentLength": 5
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 12,
+                  "startOffset": 1077,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "Percent": false,
+              "WithTies": false
+            },
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 14,
+                  "startOffset": 1079,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 17,
+                "startColumn": 1,
+                "startOffset": 1081,
+                "fragmentLength": 383
+              },
+              "TableReferences": [
+                {
+                  "$type": "BulkOpenRowset",
+                  "location": {
+                    "startLine": 17,
+                    "startColumn": 6,
+                    "startOffset": 1086,
+                    "fragmentLength": 378
+                  },
+                  "DataFiles": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 23,
+                        "startOffset": 1103,
+                        "fragmentLength": 120
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://azureopendatastorage.blob.core.windows.net/censusdatacontainer/release/us_population_county/year=20*/*.parquet"
+                    }
+                  ],
+                  "Options": [
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 145,
+                        "startOffset": 1225,
+                        "fragmentLength": 18
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 154,
+                          "startOffset": 1234,
+                          "fragmentLength": 9
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "PARQUET"
+                      },
+                      "OptionKind": "DataFileFormat"
+                    }
+                  ],
+                  "WithColumns": [
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 171,
+                        "startOffset": 1251,
+                        "fragmentLength": 24
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 171,
+                          "startOffset": 1251,
+                          "fragmentLength": 11
+                        },
+                        "Value": "stateName",
+                        "QuoteType": "SquareBracket"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 183,
+                          "startOffset": 1263,
+                          "fragmentLength": 12
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 17,
+                              "startColumn": 192,
+                              "startOffset": 1272,
+                              "fragmentLength": 2
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "50"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 17,
+                            "startColumn": 183,
+                            "startOffset": 1263,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 17,
+                              "startColumn": 183,
+                              "startOffset": 1263,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 197,
+                        "startOffset": 1277,
+                        "fragmentLength": 52
+                      },
+                      "JsonPath": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 236,
+                          "startOffset": 1316,
+                          "fragmentLength": 13
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "$.stateName"
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 197,
+                          "startOffset": 1277,
+                          "fragmentLength": 25
+                        },
+                        "Value": "stateName_explicit_path",
+                        "QuoteType": "SquareBracket"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 223,
+                          "startOffset": 1303,
+                          "fragmentLength": 12
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 17,
+                              "startColumn": 232,
+                              "startOffset": 1312,
+                              "fragmentLength": 2
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "50"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 17,
+                            "startColumn": 223,
+                            "startOffset": 1303,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 17,
+                              "startColumn": 223,
+                              "startOffset": 1303,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 251,
+                        "startOffset": 1331,
+                        "fragmentLength": 25
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 251,
+                          "startOffset": 1331,
+                          "fragmentLength": 12
+                        },
+                        "Value": "COUNTYNAME",
+                        "QuoteType": "SquareBracket"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 264,
+                          "startOffset": 1344,
+                          "fragmentLength": 12
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 17,
+                              "startColumn": 273,
+                              "startOffset": 1353,
+                              "fragmentLength": 2
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "50"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 17,
+                            "startColumn": 264,
+                            "startOffset": 1344,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 17,
+                              "startColumn": 264,
+                              "startOffset": 1344,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 278,
+                        "startOffset": 1358,
+                        "fragmentLength": 54
+                      },
+                      "JsonPath": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 318,
+                          "startOffset": 1398,
+                          "fragmentLength": 14
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "$.COUNTYNAME"
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 278,
+                          "startOffset": 1358,
+                          "fragmentLength": 26
+                        },
+                        "Value": "countyName_explicit_path",
+                        "QuoteType": "SquareBracket"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 305,
+                          "startOffset": 1385,
+                          "fragmentLength": 12
+                        },
+                        "SqlDataTypeOption": "VarChar",
+                        "Parameters": [
+                          {
+                            "$type": "IntegerLiteral",
+                            "location": {
+                              "startLine": 17,
+                              "startColumn": 314,
+                              "startOffset": 1394,
+                              "fragmentLength": 2
+                            },
+                            "LiteralType": "Integer",
+                            "Value": "50"
+                          }
+                        ],
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 17,
+                            "startColumn": 305,
+                            "startOffset": 1385,
+                            "fragmentLength": 7
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 17,
+                              "startColumn": 305,
+                              "startOffset": 1385,
+                              "fragmentLength": 7
+                            },
+                            "Value": "VARCHAR",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "$type": "OpenRowsetColumnDefinition",
+                      "location": {
+                        "startLine": 17,
+                        "startColumn": 334,
+                        "startOffset": 1414,
+                        "fragmentLength": 41
+                      },
+                      "JsonPath": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 354,
+                          "startOffset": 1434,
+                          "fragmentLength": 21
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "strict $.population"
+                      },
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 334,
+                          "startOffset": 1414,
+                          "fragmentLength": 12
+                        },
+                        "Value": "population",
+                        "QuoteType": "SquareBracket"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "location": {
+                          "startLine": 17,
+                          "startColumn": 347,
+                          "startOffset": 1427,
+                          "fragmentLength": 6
+                        },
+                        "SqlDataTypeOption": "BigInt",
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "location": {
+                            "startLine": 17,
+                            "startColumn": 347,
+                            "startOffset": 1427,
+                            "fragmentLength": 6
+                          },
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "location": {
+                              "startLine": 17,
+                              "startColumn": 347,
+                              "startOffset": 1427,
+                              "fragmentLength": 6
+                            },
+                            "Value": "BIGINT",
+                            "QuoteType": "NotQuoted"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 17,
+                      "startColumn": 380,
+                      "startOffset": 1460,
+                      "fragmentLength": 4
+                    },
+                    "Value": "r7",
+                    "QuoteType": "SquareBracket"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 19,
+            "startColumn": 1,
+            "startOffset": 1467,
+            "fragmentLength": 189
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 19,
+              "startColumn": 1,
+              "startOffset": 1467,
+              "fragmentLength": 188
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "TopRowFilter": {
+              "$type": "TopRowFilter",
+              "location": {
+                "startLine": 19,
+                "startColumn": 8,
+                "startOffset": 1474,
+                "fragmentLength": 6
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 12,
+                  "startOffset": 1478,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "Percent": false,
+              "WithTies": false
+            },
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 15,
+                  "startOffset": 1481,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 20,
+                "startColumn": 1,
+                "startOffset": 1483,
+                "fragmentLength": 172
+              },
+              "TableReferences": [
+                {
+                  "$type": "BulkOpenRowset",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 6,
+                    "startOffset": 1488,
+                    "fragmentLength": 167
+                  },
+                  "DataFiles": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 20,
+                        "startColumn": 23,
+                        "startOffset": 1505,
+                        "fragmentLength": 121
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://azureopendatastorage.blob.core.windows.net/censusdatacontainer/release/us_population_county/year=2000/*.parquet"
+                    }
+                  ],
+                  "Options": [
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 20,
+                        "startColumn": 146,
+                        "startOffset": 1628,
+                        "fragmentLength": 18
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 20,
+                          "startColumn": 155,
+                          "startOffset": 1637,
+                          "fragmentLength": 9
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "PARQUET"
+                      },
+                      "OptionKind": "DataFileFormat"
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 20,
+                      "startColumn": 169,
+                      "startOffset": 1651,
+                      "fragmentLength": 4
+                    },
+                    "Value": "r8",
+                    "QuoteType": "SquareBracket"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 22,
+            "startColumn": 1,
+            "startOffset": 1658,
+            "fragmentLength": 314
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 22,
+              "startColumn": 1,
+              "startOffset": 1658,
+              "fragmentLength": 313
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "TopRowFilter": {
+              "$type": "TopRowFilter",
+              "location": {
+                "startLine": 22,
+                "startColumn": 8,
+                "startOffset": 1665,
+                "fragmentLength": 6
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 12,
+                  "startOffset": 1669,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "Percent": false,
+              "WithTies": false
+            },
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 22,
+                  "startColumn": 15,
+                  "startOffset": 1672,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 23,
+                "startColumn": 1,
+                "startOffset": 1674,
+                "fragmentLength": 297
+              },
+              "TableReferences": [
+                {
+                  "$type": "BulkOpenRowset",
+                  "location": {
+                    "startLine": 23,
+                    "startColumn": 6,
+                    "startOffset": 1679,
+                    "fragmentLength": 292
+                  },
+                  "DataFiles": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 23,
+                        "startColumn": 24,
+                        "startOffset": 1697,
+                        "fragmentLength": 121
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://azureopendatastorage.blob.core.windows.net/censusdatacontainer/release/us_population_county/year=2000/*.parquet"
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 23,
+                        "startColumn": 147,
+                        "startOffset": 1820,
+                        "fragmentLength": 121
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://azureopendatastorage.blob.core.windows.net/censusdatacontainer/release/us_population_county/year=2010/*.parquet"
+                    }
+                  ],
+                  "Options": [
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 23,
+                        "startColumn": 271,
+                        "startOffset": 1944,
+                        "fragmentLength": 18
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 23,
+                          "startColumn": 280,
+                          "startOffset": 1953,
+                          "fragmentLength": 9
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "PARQUET"
+                      },
+                      "OptionKind": "DataFileFormat"
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 23,
+                      "startColumn": 294,
+                      "startOffset": 1967,
+                      "fragmentLength": 4
+                    },
+                    "Value": "r9",
+                    "QuoteType": "SquareBracket"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 25,
+            "startColumn": 1,
+            "startOffset": 1974,
+            "fragmentLength": 437
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 25,
+              "startColumn": 1,
+              "startOffset": 1974,
+              "fragmentLength": 436
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "TopRowFilter": {
+              "$type": "TopRowFilter",
+              "location": {
+                "startLine": 25,
+                "startColumn": 8,
+                "startOffset": 1981,
+                "fragmentLength": 6
+              },
+              "Expression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 12,
+                  "startOffset": 1985,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "Percent": false,
+              "WithTies": false
+            },
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 15,
+                  "startOffset": 1988,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 26,
+                "startColumn": 1,
+                "startOffset": 1990,
+                "fragmentLength": 420
+              },
+              "TableReferences": [
+                {
+                  "$type": "BulkOpenRowset",
+                  "location": {
+                    "startLine": 26,
+                    "startColumn": 6,
+                    "startOffset": 1995,
+                    "fragmentLength": 415
+                  },
+                  "DataFiles": [
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 26,
+                        "startColumn": 24,
+                        "startOffset": 2013,
+                        "fragmentLength": 121
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://azureopendatastorage.blob.core.windows.net/censusdatacontainer/release/us_population_county/year=2000/*.parquet"
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 26,
+                        "startColumn": 147,
+                        "startOffset": 2136,
+                        "fragmentLength": 121
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://azureopendatastorage.blob.core.windows.net/censusdatacontainer/release/us_population_county/year=2010/*.parquet"
+                    },
+                    {
+                      "$type": "StringLiteral",
+                      "location": {
+                        "startLine": 26,
+                        "startColumn": 270,
+                        "startOffset": 2259,
+                        "fragmentLength": 121
+                      },
+                      "LiteralType": "String",
+                      "IsNational": false,
+                      "IsLargeObject": false,
+                      "Value": "https://azureopendatastorage.blob.core.windows.net/censusdatacontainer/release/us_population_county/year=2008/*.parquet"
+                    }
+                  ],
+                  "Options": [
+                    {
+                      "$type": "LiteralBulkInsertOption",
+                      "location": {
+                        "startLine": 26,
+                        "startColumn": 394,
+                        "startOffset": 2383,
+                        "fragmentLength": 18
+                      },
+                      "Value": {
+                        "$type": "StringLiteral",
+                        "location": {
+                          "startLine": 26,
+                          "startColumn": 403,
+                          "startOffset": 2392,
+                          "fragmentLength": 9
+                        },
+                        "LiteralType": "String",
+                        "IsNational": false,
+                        "IsLargeObject": false,
+                        "Value": "PARQUET"
+                      },
+                      "OptionKind": "DataFileFormat"
+                    }
+                  ],
+                  "Alias": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 26,
+                      "startColumn": 417,
+                      "startOffset": 2406,
+                      "fragmentLength": 4
+                    },
+                    "Value": "r9",
+                    "QuoteType": "SquareBracket"
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

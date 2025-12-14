@@ -1,0 +1,1154 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 464
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 462
+      },
+      "Statements": [
+        {
+          "$type": "IfStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 33
+          },
+          "Predicate": {
+            "$type": "BooleanComparisonExpression",
+            "location": {
+              "startLine": 1,
+              "startColumn": 4,
+              "startOffset": 3,
+              "fragmentLength": 7
+            },
+            "ComparisonType": "GreaterThan",
+            "FirstExpression": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 1,
+                "startColumn": 4,
+                "startOffset": 3,
+                "fragmentLength": 2
+              },
+              "Name": "@a"
+            },
+            "SecondExpression": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 1,
+                "startColumn": 9,
+                "startOffset": 8,
+                "fragmentLength": 2
+              },
+              "LiteralType": "Integer",
+              "Value": "10"
+            }
+          },
+          "ThenStatement": {
+            "$type": "DeclareVariableStatement",
+            "location": {
+              "startLine": 2,
+              "startColumn": 5,
+              "startOffset": 15,
+              "fragmentLength": 18
+            },
+            "Declarations": [
+              {
+                "$type": "DeclareVariableElement",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 13,
+                  "startOffset": 23,
+                  "fragmentLength": 9
+                },
+                "VariableName": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 13,
+                    "startOffset": 23,
+                    "fragmentLength": 2
+                  },
+                  "Value": "@b",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 19,
+                    "startOffset": 29,
+                    "fragmentLength": 3
+                  },
+                  "SqlDataTypeOption": "Int",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 19,
+                      "startOffset": 29,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 19,
+                        "startOffset": 29,
+                        "fragmentLength": 3
+                      },
+                      "Value": "INT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "IfStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 35,
+            "fragmentLength": 85
+          },
+          "Predicate": {
+            "$type": "BooleanBinaryExpression",
+            "location": {
+              "startLine": 4,
+              "startColumn": 4,
+              "startOffset": 38,
+              "fragmentLength": 22
+            },
+            "BinaryExpressionType": "And",
+            "FirstExpression": {
+              "$type": "BooleanComparisonExpression",
+              "location": {
+                "startLine": 4,
+                "startColumn": 4,
+                "startOffset": 38,
+                "fragmentLength": 7
+              },
+              "ComparisonType": "GreaterThan",
+              "FirstExpression": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 4,
+                  "startOffset": 38,
+                  "fragmentLength": 2
+                },
+                "Name": "@a"
+              },
+              "SecondExpression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 9,
+                  "startOffset": 43,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            },
+            "SecondExpression": {
+              "$type": "BooleanComparisonExpression",
+              "location": {
+                "startLine": 5,
+                "startColumn": 8,
+                "startOffset": 53,
+                "fragmentLength": 7
+              },
+              "ComparisonType": "LessThan",
+              "FirstExpression": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 8,
+                  "startOffset": 53,
+                  "fragmentLength": 2
+                },
+                "Name": "@a"
+              },
+              "SecondExpression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 13,
+                  "startOffset": 58,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              }
+            }
+          },
+          "ThenStatement": {
+            "$type": "DeclareVariableStatement",
+            "location": {
+              "startLine": 6,
+              "startColumn": 5,
+              "startOffset": 65,
+              "fragmentLength": 18
+            },
+            "Declarations": [
+              {
+                "$type": "DeclareVariableElement",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 13,
+                  "startOffset": 73,
+                  "fragmentLength": 9
+                },
+                "VariableName": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 13,
+                    "startOffset": 73,
+                    "fragmentLength": 2
+                  },
+                  "Value": "@b",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 19,
+                    "startOffset": 79,
+                    "fragmentLength": 3
+                  },
+                  "SqlDataTypeOption": "Int",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 19,
+                      "startOffset": 79,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 6,
+                        "startColumn": 19,
+                        "startOffset": 79,
+                        "fragmentLength": 3
+                      },
+                      "Value": "INT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "ElseStatement": {
+            "$type": "DeclareVariableStatement",
+            "location": {
+              "startLine": 8,
+              "startColumn": 5,
+              "startOffset": 93,
+              "fragmentLength": 27
+            },
+            "Declarations": [
+              {
+                "$type": "DeclareVariableElement",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 13,
+                  "startOffset": 101,
+                  "fragmentLength": 18
+                },
+                "VariableName": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 13,
+                    "startOffset": 101,
+                    "fragmentLength": 2
+                  },
+                  "Value": "@b",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 19,
+                    "startOffset": 107,
+                    "fragmentLength": 12
+                  },
+                  "SqlDataTypeOption": "VarChar",
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 28,
+                        "startOffset": 116,
+                        "fragmentLength": 2
+                      },
+                      "LiteralType": "Integer",
+                      "Value": "10"
+                    }
+                  ],
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 8,
+                      "startColumn": 19,
+                      "startOffset": 107,
+                      "fragmentLength": 7
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 8,
+                        "startColumn": 19,
+                        "startOffset": 107,
+                        "fragmentLength": 7
+                      },
+                      "Value": "VARCHAR",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "$type": "IfStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 122,
+            "fragmentLength": 124
+          },
+          "Predicate": {
+            "$type": "BooleanComparisonExpression",
+            "location": {
+              "startLine": 10,
+              "startColumn": 4,
+              "startOffset": 125,
+              "fragmentLength": 11
+            },
+            "ComparisonType": "LessThan",
+            "FirstExpression": {
+              "$type": "BinaryExpression",
+              "location": {
+                "startLine": 10,
+                "startColumn": 4,
+                "startOffset": 125,
+                "fragmentLength": 6
+              },
+              "BinaryExpressionType": "Add",
+              "FirstExpression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 4,
+                  "startOffset": 125,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "SecondExpression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 9,
+                  "startOffset": 130,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "5"
+              }
+            },
+            "SecondExpression": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 10,
+                "startColumn": 13,
+                "startOffset": 134,
+                "fragmentLength": 2
+              },
+              "Name": "@a"
+            }
+          },
+          "ThenStatement": {
+            "$type": "DeclareVariableStatement",
+            "location": {
+              "startLine": 11,
+              "startColumn": 5,
+              "startOffset": 141,
+              "fragmentLength": 18
+            },
+            "Declarations": [
+              {
+                "$type": "DeclareVariableElement",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 13,
+                  "startOffset": 149,
+                  "fragmentLength": 9
+                },
+                "VariableName": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 13,
+                    "startOffset": 149,
+                    "fragmentLength": 2
+                  },
+                  "Value": "@b",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 19,
+                    "startOffset": 155,
+                    "fragmentLength": 3
+                  },
+                  "SqlDataTypeOption": "Int",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 11,
+                      "startColumn": 19,
+                      "startOffset": 155,
+                      "fragmentLength": 3
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 11,
+                        "startColumn": 19,
+                        "startOffset": 155,
+                        "fragmentLength": 3
+                      },
+                      "Value": "INT",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "ElseStatement": {
+            "$type": "IfStatement",
+            "location": {
+              "startLine": 13,
+              "startColumn": 5,
+              "startOffset": 169,
+              "fragmentLength": 77
+            },
+            "Predicate": {
+              "$type": "BooleanComparisonExpression",
+              "location": {
+                "startLine": 13,
+                "startColumn": 8,
+                "startOffset": 172,
+                "fragmentLength": 7
+              },
+              "ComparisonType": "LessThan",
+              "FirstExpression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 8,
+                  "startOffset": 172,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              },
+              "SecondExpression": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 13,
+                  "startOffset": 177,
+                  "fragmentLength": 2
+                },
+                "Name": "@a"
+              }
+            },
+            "ThenStatement": {
+              "$type": "DeclareVariableStatement",
+              "location": {
+                "startLine": 14,
+                "startColumn": 9,
+                "startOffset": 188,
+                "fragmentLength": 20
+              },
+              "Declarations": [
+                {
+                  "$type": "DeclareVariableElement",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 17,
+                    "startOffset": 196,
+                    "fragmentLength": 11
+                  },
+                  "VariableName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 17,
+                      "startOffset": 196,
+                      "fragmentLength": 2
+                    },
+                    "Value": "@b",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "DataType": {
+                    "$type": "SqlDataTypeReference",
+                    "location": {
+                      "startLine": 14,
+                      "startColumn": 23,
+                      "startOffset": 202,
+                      "fragmentLength": 5
+                    },
+                    "SqlDataTypeOption": "Float",
+                    "Name": {
+                      "$type": "SchemaObjectName",
+                      "location": {
+                        "startLine": 14,
+                        "startColumn": 23,
+                        "startOffset": 202,
+                        "fragmentLength": 5
+                      },
+                      "BaseIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 14,
+                          "startColumn": 23,
+                          "startOffset": 202,
+                          "fragmentLength": 5
+                        },
+                        "Value": "FLOAT",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$ref": "Identifier"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "ElseStatement": {
+              "$type": "DeclareVariableStatement",
+              "location": {
+                "startLine": 16,
+                "startColumn": 9,
+                "startOffset": 226,
+                "fragmentLength": 20
+              },
+              "Declarations": [
+                {
+                  "$type": "DeclareVariableElement",
+                  "location": {
+                    "startLine": 16,
+                    "startColumn": 17,
+                    "startOffset": 234,
+                    "fragmentLength": 11
+                  },
+                  "VariableName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 16,
+                      "startColumn": 17,
+                      "startOffset": 234,
+                      "fragmentLength": 2
+                    },
+                    "Value": "@b",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "DataType": {
+                    "$type": "SqlDataTypeReference",
+                    "location": {
+                      "startLine": 16,
+                      "startColumn": 23,
+                      "startOffset": 240,
+                      "fragmentLength": 5
+                    },
+                    "SqlDataTypeOption": "Money",
+                    "Name": {
+                      "$type": "SchemaObjectName",
+                      "location": {
+                        "startLine": 16,
+                        "startColumn": 23,
+                        "startOffset": 240,
+                        "fragmentLength": 5
+                      },
+                      "BaseIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 16,
+                          "startColumn": 23,
+                          "startOffset": 240,
+                          "fragmentLength": 5
+                        },
+                        "Value": "MONEY",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$ref": "Identifier"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "IfStatement",
+          "location": {
+            "startLine": 18,
+            "startColumn": 1,
+            "startOffset": 248,
+            "fragmentLength": 91
+          },
+          "Predicate": {
+            "$type": "BooleanComparisonExpression",
+            "location": {
+              "startLine": 18,
+              "startColumn": 4,
+              "startOffset": 251,
+              "fragmentLength": 7
+            },
+            "ComparisonType": "LessThan",
+            "FirstExpression": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 18,
+                "startColumn": 4,
+                "startOffset": 251,
+                "fragmentLength": 2
+              },
+              "Name": "@a"
+            },
+            "SecondExpression": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 18,
+                "startColumn": 9,
+                "startOffset": 256,
+                "fragmentLength": 2
+              },
+              "LiteralType": "Integer",
+              "Value": "10"
+            }
+          },
+          "ThenStatement": {
+            "$type": "IfStatement",
+            "location": {
+              "startLine": 19,
+              "startColumn": 5,
+              "startOffset": 263,
+              "fragmentLength": 76
+            },
+            "Predicate": {
+              "$type": "BooleanComparisonExpression",
+              "location": {
+                "startLine": 19,
+                "startColumn": 8,
+                "startOffset": 266,
+                "fragmentLength": 8
+              },
+              "ComparisonType": "GreaterThan",
+              "FirstExpression": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 8,
+                  "startOffset": 266,
+                  "fragmentLength": 2
+                },
+                "Name": "@a"
+              },
+              "SecondExpression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 19,
+                  "startColumn": 13,
+                  "startOffset": 271,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              }
+            },
+            "ThenStatement": {
+              "$type": "DeclareVariableStatement",
+              "location": {
+                "startLine": 20,
+                "startColumn": 9,
+                "startOffset": 283,
+                "fragmentLength": 18
+              },
+              "Declarations": [
+                {
+                  "$type": "DeclareVariableElement",
+                  "location": {
+                    "startLine": 20,
+                    "startColumn": 17,
+                    "startOffset": 291,
+                    "fragmentLength": 9
+                  },
+                  "VariableName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 20,
+                      "startColumn": 17,
+                      "startOffset": 291,
+                      "fragmentLength": 2
+                    },
+                    "Value": "@a",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "DataType": {
+                    "$type": "SqlDataTypeReference",
+                    "location": {
+                      "startLine": 20,
+                      "startColumn": 23,
+                      "startOffset": 297,
+                      "fragmentLength": 3
+                    },
+                    "SqlDataTypeOption": "Int",
+                    "Name": {
+                      "$type": "SchemaObjectName",
+                      "location": {
+                        "startLine": 20,
+                        "startColumn": 23,
+                        "startOffset": 297,
+                        "fragmentLength": 3
+                      },
+                      "BaseIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 20,
+                          "startColumn": 23,
+                          "startOffset": 297,
+                          "fragmentLength": 3
+                        },
+                        "Value": "INT",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$ref": "Identifier"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "ElseStatement": {
+              "$type": "DeclareVariableStatement",
+              "location": {
+                "startLine": 22,
+                "startColumn": 9,
+                "startOffset": 319,
+                "fragmentLength": 20
+              },
+              "Declarations": [
+                {
+                  "$type": "DeclareVariableElement",
+                  "location": {
+                    "startLine": 22,
+                    "startColumn": 17,
+                    "startOffset": 327,
+                    "fragmentLength": 11
+                  },
+                  "VariableName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 22,
+                      "startColumn": 17,
+                      "startOffset": 327,
+                      "fragmentLength": 2
+                    },
+                    "Value": "@b",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "DataType": {
+                    "$type": "SqlDataTypeReference",
+                    "location": {
+                      "startLine": 22,
+                      "startColumn": 23,
+                      "startOffset": 333,
+                      "fragmentLength": 5
+                    },
+                    "SqlDataTypeOption": "Float",
+                    "Name": {
+                      "$type": "SchemaObjectName",
+                      "location": {
+                        "startLine": 22,
+                        "startColumn": 23,
+                        "startOffset": 333,
+                        "fragmentLength": 5
+                      },
+                      "BaseIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 22,
+                          "startColumn": 23,
+                          "startOffset": 333,
+                          "fragmentLength": 5
+                        },
+                        "Value": "FLOAT",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$ref": "Identifier"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "IfStatement",
+          "location": {
+            "startLine": 24,
+            "startColumn": 1,
+            "startOffset": 341,
+            "fragmentLength": 121
+          },
+          "Predicate": {
+            "$type": "BooleanComparisonExpression",
+            "location": {
+              "startLine": 24,
+              "startColumn": 4,
+              "startOffset": 344,
+              "fragmentLength": 7
+            },
+            "ComparisonType": "LessThan",
+            "FirstExpression": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 24,
+                "startColumn": 4,
+                "startOffset": 344,
+                "fragmentLength": 2
+              },
+              "Name": "@a"
+            },
+            "SecondExpression": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 24,
+                "startColumn": 9,
+                "startOffset": 349,
+                "fragmentLength": 2
+              },
+              "LiteralType": "Integer",
+              "Value": "10"
+            }
+          },
+          "ThenStatement": {
+            "$type": "IfStatement",
+            "location": {
+              "startLine": 25,
+              "startColumn": 5,
+              "startOffset": 356,
+              "fragmentLength": 76
+            },
+            "Predicate": {
+              "$type": "BooleanComparisonExpression",
+              "location": {
+                "startLine": 25,
+                "startColumn": 8,
+                "startOffset": 359,
+                "fragmentLength": 8
+              },
+              "ComparisonType": "GreaterThan",
+              "FirstExpression": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 8,
+                  "startOffset": 359,
+                  "fragmentLength": 2
+                },
+                "Name": "@a"
+              },
+              "SecondExpression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 13,
+                  "startOffset": 364,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              }
+            },
+            "ThenStatement": {
+              "$type": "DeclareVariableStatement",
+              "location": {
+                "startLine": 26,
+                "startColumn": 9,
+                "startOffset": 376,
+                "fragmentLength": 18
+              },
+              "Declarations": [
+                {
+                  "$type": "DeclareVariableElement",
+                  "location": {
+                    "startLine": 26,
+                    "startColumn": 17,
+                    "startOffset": 384,
+                    "fragmentLength": 9
+                  },
+                  "VariableName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 26,
+                      "startColumn": 17,
+                      "startOffset": 384,
+                      "fragmentLength": 2
+                    },
+                    "Value": "@a",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "DataType": {
+                    "$type": "SqlDataTypeReference",
+                    "location": {
+                      "startLine": 26,
+                      "startColumn": 23,
+                      "startOffset": 390,
+                      "fragmentLength": 3
+                    },
+                    "SqlDataTypeOption": "Int",
+                    "Name": {
+                      "$type": "SchemaObjectName",
+                      "location": {
+                        "startLine": 26,
+                        "startColumn": 23,
+                        "startOffset": 390,
+                        "fragmentLength": 3
+                      },
+                      "BaseIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 26,
+                          "startColumn": 23,
+                          "startOffset": 390,
+                          "fragmentLength": 3
+                        },
+                        "Value": "INT",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$ref": "Identifier"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "ElseStatement": {
+              "$type": "DeclareVariableStatement",
+              "location": {
+                "startLine": 28,
+                "startColumn": 9,
+                "startOffset": 412,
+                "fragmentLength": 20
+              },
+              "Declarations": [
+                {
+                  "$type": "DeclareVariableElement",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 17,
+                    "startOffset": 420,
+                    "fragmentLength": 11
+                  },
+                  "VariableName": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 17,
+                      "startOffset": 420,
+                      "fragmentLength": 2
+                    },
+                    "Value": "@b",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "DataType": {
+                    "$type": "SqlDataTypeReference",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 23,
+                      "startOffset": 426,
+                      "fragmentLength": 5
+                    },
+                    "SqlDataTypeOption": "Float",
+                    "Name": {
+                      "$type": "SchemaObjectName",
+                      "location": {
+                        "startLine": 28,
+                        "startColumn": 23,
+                        "startOffset": 426,
+                        "fragmentLength": 5
+                      },
+                      "BaseIdentifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 28,
+                          "startColumn": 23,
+                          "startOffset": 426,
+                          "fragmentLength": 5
+                        },
+                        "Value": "FLOAT",
+                        "QuoteType": "NotQuoted"
+                      },
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$ref": "Identifier"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "ElseStatement": {
+            "$type": "DeclareVariableStatement",
+            "location": {
+              "startLine": 30,
+              "startColumn": 5,
+              "startOffset": 442,
+              "fragmentLength": 20
+            },
+            "Declarations": [
+              {
+                "$type": "DeclareVariableElement",
+                "location": {
+                  "startLine": 30,
+                  "startColumn": 13,
+                  "startOffset": 450,
+                  "fragmentLength": 11
+                },
+                "VariableName": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 30,
+                    "startColumn": 13,
+                    "startOffset": 450,
+                    "fragmentLength": 2
+                  },
+                  "Value": "@c",
+                  "QuoteType": "NotQuoted"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "location": {
+                    "startLine": 30,
+                    "startColumn": 19,
+                    "startOffset": 456,
+                    "fragmentLength": 5
+                  },
+                  "SqlDataTypeOption": "Money",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 30,
+                      "startColumn": 19,
+                      "startOffset": 456,
+                      "fragmentLength": 5
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 30,
+                        "startColumn": 19,
+                        "startOffset": 456,
+                        "fragmentLength": 5
+                      },
+                      "Value": "MONEY",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

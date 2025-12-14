@@ -1,0 +1,251 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 178
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 38
+      },
+      "Statements": [
+        {
+          "$type": "CreateFederationStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 38
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 19,
+              "startOffset": 18,
+              "fragmentLength": 2
+            },
+            "Value": "f1",
+            "QuoteType": "NotQuoted"
+          },
+          "DistributionName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 23,
+              "startOffset": 22,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          },
+          "DataType": {
+            "$type": "SqlDataTypeReference",
+            "location": {
+              "startLine": 1,
+              "startColumn": 26,
+              "startOffset": 25,
+              "fragmentLength": 6
+            },
+            "SqlDataTypeOption": "BigInt",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "location": {
+                "startLine": 1,
+                "startColumn": 26,
+                "startOffset": 25,
+                "fragmentLength": 6
+              },
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 26,
+                  "startOffset": 25,
+                  "fragmentLength": 6
+                },
+                "Value": "bigint",
+                "QuoteType": "NotQuoted"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 4,
+        "startColumn": 1,
+        "startOffset": 43,
+        "fragmentLength": 38
+      },
+      "Statements": [
+        {
+          "$type": "AlterFederationStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 43,
+            "fragmentLength": 38
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 18,
+              "startOffset": 60,
+              "fragmentLength": 2
+            },
+            "Value": "f1",
+            "QuoteType": "NotQuoted"
+          },
+          "Kind": "Split",
+          "DistributionName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 31,
+              "startOffset": 73,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          },
+          "Boundary": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 4,
+              "startColumn": 36,
+              "startOffset": 78,
+              "fragmentLength": 2
+            },
+            "LiteralType": "Integer",
+            "Value": "10"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 7,
+        "startColumn": 1,
+        "startOffset": 86,
+        "fragmentLength": 41
+      },
+      "Statements": [
+        {
+          "$type": "AlterFederationStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 86,
+            "fragmentLength": 41
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 18,
+              "startOffset": 103,
+              "fragmentLength": 2
+            },
+            "Value": "f1",
+            "QuoteType": "NotQuoted"
+          },
+          "Kind": "DropLow",
+          "DistributionName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 34,
+              "startOffset": 119,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          },
+          "Boundary": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 7,
+              "startColumn": 39,
+              "startOffset": 124,
+              "fragmentLength": 2
+            },
+            "LiteralType": "Integer",
+            "Value": "20"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 10,
+        "startColumn": 1,
+        "startOffset": 132,
+        "fragmentLength": 42
+      },
+      "Statements": [
+        {
+          "$type": "AlterFederationStatement",
+          "location": {
+            "startLine": 10,
+            "startColumn": 1,
+            "startOffset": 132,
+            "fragmentLength": 42
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 10,
+              "startColumn": 18,
+              "startOffset": 149,
+              "fragmentLength": 2
+            },
+            "Value": "f1",
+            "QuoteType": "NotQuoted"
+          },
+          "Kind": "DropHigh",
+          "DistributionName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 10,
+              "startColumn": 35,
+              "startOffset": 166,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          },
+          "Boundary": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 10,
+              "startColumn": 40,
+              "startOffset": 171,
+              "fragmentLength": 2
+            },
+            "LiteralType": "Integer",
+            "Value": "20"
+          }
+        }
+      ]
+    }
+  ]
+}

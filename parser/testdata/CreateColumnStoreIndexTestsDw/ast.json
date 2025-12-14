@@ -1,0 +1,151 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 128
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 34,
+        "fragmentLength": 94
+      },
+      "Statements": [
+        {
+          "$type": "CreateColumnStoreIndexStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 34,
+            "fragmentLength": 94
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 36,
+              "startOffset": 69,
+              "fragmentLength": 8
+            },
+            "Value": "CI_Order",
+            "QuoteType": "NotQuoted"
+          },
+          "Clustered": true,
+          "OnName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 3,
+              "startColumn": 4,
+              "startOffset": 81,
+              "fragmentLength": 20
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 4,
+                "startOffset": 81,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 8,
+                "startOffset": 85,
+                "fragmentLength": 16
+              },
+              "Value": "Table_HEAP_CCI",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "OrderedColumns": [
+            {
+              "$type": "ColumnReferenceExpression",
+              "location": {
+                "startLine": 3,
+                "startColumn": 31,
+                "startOffset": 108,
+                "fragmentLength": 8
+              },
+              "ColumnType": "Regular",
+              "MultiPartIdentifier": {
+                "$type": "MultiPartIdentifier",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 31,
+                  "startOffset": 108,
+                  "fragmentLength": 8
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 31,
+                      "startOffset": 108,
+                      "fragmentLength": 8
+                    },
+                    "Value": "column_1",
+                    "QuoteType": "NotQuoted"
+                  }
+                ]
+              }
+            },
+            {
+              "$type": "ColumnReferenceExpression",
+              "location": {
+                "startLine": 3,
+                "startColumn": 41,
+                "startOffset": 118,
+                "fragmentLength": 8
+              },
+              "ColumnType": "Regular",
+              "MultiPartIdentifier": {
+                "$type": "MultiPartIdentifier",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 41,
+                  "startOffset": 118,
+                  "fragmentLength": 8
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 3,
+                      "startColumn": 41,
+                      "startOffset": 118,
+                      "fragmentLength": 8
+                    },
+                    "Value": "column_3",
+                    "QuoteType": "NotQuoted"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,482 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 383
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 4,
+        "startColumn": 1,
+        "startOffset": 55,
+        "fragmentLength": 326
+      },
+      "Statements": [
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 55,
+            "fragmentLength": 27
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 4,
+              "startColumn": 26,
+              "startOffset": 80,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 4,
+                "startColumn": 26,
+                "startOffset": 80,
+                "fragmentLength": 2
+              },
+              "Value": "t2",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 4,
+              "startColumn": 13,
+              "startOffset": 67,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 4,
+                "startColumn": 13,
+                "startOffset": 67,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 83,
+            "fragmentLength": 34
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 5,
+              "startColumn": 26,
+              "startOffset": 108,
+              "fragmentLength": 9
+            },
+            "DatabaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 26,
+                "startOffset": 108,
+                "fragmentLength": 2
+              },
+              "Value": "db",
+              "QuoteType": "NotQuoted"
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 29,
+                "startOffset": 111,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 33,
+                "startOffset": 115,
+                "fragmentLength": 2
+              },
+              "Value": "t2",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 3,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 5,
+              "startColumn": 13,
+              "startOffset": 95,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 13,
+                "startOffset": 95,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 158,
+            "fragmentLength": 49
+          },
+          "SourcePartitionNumber": {
+            "$type": "BinaryExpression",
+            "location": {
+              "startLine": 8,
+              "startColumn": 33,
+              "startOffset": 190,
+              "fragmentLength": 5
+            },
+            "BinaryExpressionType": "Add",
+            "FirstExpression": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 8,
+                "startColumn": 33,
+                "startOffset": 190,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "2"
+            },
+            "SecondExpression": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 8,
+                "startColumn": 37,
+                "startOffset": 194,
+                "fragmentLength": 1
+              },
+              "LiteralType": "Integer",
+              "Value": "3"
+            }
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 8,
+              "startColumn": 42,
+              "startOffset": 199,
+              "fragmentLength": 8
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 42,
+                "startOffset": 199,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 46,
+                "startOffset": 203,
+                "fragmentLength": 4
+              },
+              "Value": "t3",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 8,
+              "startColumn": 13,
+              "startOffset": 170,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 8,
+                "startColumn": 13,
+                "startOffset": 170,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 248,
+            "fragmentLength": 45
+          },
+          "TargetPartitionNumber": {
+            "$type": "IntegerLiteral",
+            "location": {
+              "startLine": 11,
+              "startColumn": 45,
+              "startOffset": 292,
+              "fragmentLength": 1
+            },
+            "LiteralType": "Integer",
+            "Value": "3"
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 11,
+              "startColumn": 26,
+              "startOffset": 273,
+              "fragmentLength": 8
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 11,
+                "startColumn": 26,
+                "startOffset": 273,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 11,
+                "startColumn": 30,
+                "startOffset": 277,
+                "fragmentLength": 4
+              },
+              "Value": "t3",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 11,
+              "startColumn": 13,
+              "startOffset": 260,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 11,
+                "startColumn": 13,
+                "startOffset": 260,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "AlterTableSwitchStatement",
+          "location": {
+            "startLine": 14,
+            "startColumn": 1,
+            "startOffset": 320,
+            "fragmentLength": 61
+          },
+          "SourcePartitionNumber": {
+            "$type": "UnaryExpression",
+            "location": {
+              "startLine": 14,
+              "startColumn": 33,
+              "startOffset": 352,
+              "fragmentLength": 3
+            },
+            "UnaryExpressionType": "Negative",
+            "Expression": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 14,
+                "startColumn": 34,
+                "startOffset": 353,
+                "fragmentLength": 2
+              },
+              "LiteralType": "Integer",
+              "Value": "10"
+            }
+          },
+          "TargetPartitionNumber": {
+            "$type": "UnaryExpression",
+            "location": {
+              "startLine": 14,
+              "startColumn": 59,
+              "startOffset": 378,
+              "fragmentLength": 3
+            },
+            "UnaryExpressionType": "Positive",
+            "Expression": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 14,
+                "startColumn": 60,
+                "startOffset": 379,
+                "fragmentLength": 2
+              },
+              "LiteralType": "Integer",
+              "Value": "12"
+            }
+          },
+          "TargetTable": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 14,
+              "startColumn": 40,
+              "startOffset": 359,
+              "fragmentLength": 8
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 14,
+                "startColumn": 40,
+                "startOffset": 359,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 14,
+                "startColumn": 44,
+                "startOffset": 363,
+                "fragmentLength": 4
+              },
+              "Value": "t3",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 14,
+              "startColumn": 13,
+              "startOffset": 332,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 14,
+                "startColumn": 13,
+                "startOffset": 332,
+                "fragmentLength": 2
+              },
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

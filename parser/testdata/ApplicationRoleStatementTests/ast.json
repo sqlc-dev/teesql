@@ -1,0 +1,322 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 426
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 4,
+        "startColumn": 1,
+        "startOffset": 67,
+        "fragmentLength": 173
+      },
+      "Statements": [
+        {
+          "$type": "CreateApplicationRoleStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 67,
+            "fragmentLength": 66
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 4,
+              "startColumn": 25,
+              "startOffset": 91,
+              "fragmentLength": 15
+            },
+            "Value": "weekly_receipts",
+            "QuoteType": "NotQuoted"
+          },
+          "ApplicationRoleOptions": [
+            {
+              "$type": "ApplicationRoleOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 21,
+                "startOffset": 128,
+                "fragmentLength": 5
+              },
+              "OptionKind": "Password",
+              "Value": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 21,
+                  "startOffset": 128,
+                  "fragmentLength": 5
+                },
+                "Value": "987",
+                "ValueExpression": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 21,
+                    "startOffset": 128,
+                    "fragmentLength": 5
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "987"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "$type": "CreateApplicationRoleStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 139,
+            "fragmentLength": 101
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 25,
+              "startOffset": 163,
+              "fragmentLength": 17
+            },
+            "Value": "weekly_receipts",
+            "QuoteType": "SquareBracket"
+          },
+          "ApplicationRoleOptions": [
+            {
+              "$type": "ApplicationRoleOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 21,
+                "startOffset": 201,
+                "fragmentLength": 14
+              },
+              "OptionKind": "Password",
+              "Value": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 21,
+                  "startOffset": 201,
+                  "fragmentLength": 14
+                },
+                "Value": "PLACEHOLDER1",
+                "ValueExpression": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 21,
+                    "startOffset": 201,
+                    "fragmentLength": 14
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "PLACEHOLDER1"
+                }
+              }
+            },
+            {
+              "$type": "ApplicationRoleOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 54,
+                "startOffset": 234,
+                "fragmentLength": 5
+              },
+              "OptionKind": "DefaultSchema",
+              "Value": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 54,
+                  "startOffset": 234,
+                  "fragmentLength": 5
+                },
+                "Value": "Sales",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 54,
+                    "startOffset": 234,
+                    "fragmentLength": 5
+                  },
+                  "Value": "Sales",
+                  "QuoteType": "NotQuoted"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 12,
+        "startColumn": 1,
+        "startOffset": 282,
+        "fragmentLength": 143
+      },
+      "Statements": [
+        {
+          "$type": "AlterApplicationRoleStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 282,
+            "fragmentLength": 143
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 12,
+              "startColumn": 24,
+              "startOffset": 305,
+              "fragmentLength": 15
+            },
+            "Value": "receipts_ledger",
+            "QuoteType": "NotQuoted"
+          },
+          "ApplicationRoleOptions": [
+            {
+              "$type": "ApplicationRoleOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 17,
+                "startOffset": 338,
+                "fragmentLength": 13
+              },
+              "OptionKind": "Name",
+              "Value": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 13,
+                  "startColumn": 17,
+                  "startOffset": 338,
+                  "fragmentLength": 13
+                },
+                "Value": "weekly_ledger",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 13,
+                    "startColumn": 17,
+                    "startOffset": 338,
+                    "fragmentLength": 13
+                  },
+                  "Value": "weekly_ledger",
+                  "QuoteType": "NotQuoted"
+                }
+              }
+            },
+            {
+              "$type": "ApplicationRoleOption",
+              "location": {
+                "startLine": 14,
+                "startColumn": 16,
+                "startOffset": 369,
+                "fragmentLength": 5
+              },
+              "OptionKind": "Password",
+              "Value": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 16,
+                  "startOffset": 369,
+                  "fragmentLength": 5
+                },
+                "Value": "897",
+                "ValueExpression": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 16,
+                    "startOffset": 369,
+                    "fragmentLength": 5
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "897"
+                }
+              }
+            },
+            {
+              "$type": "ApplicationRoleOption",
+              "location": {
+                "startLine": 15,
+                "startColumn": 22,
+                "startOffset": 398,
+                "fragmentLength": 10
+              },
+              "OptionKind": "DefaultSchema",
+              "Value": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 22,
+                  "startOffset": 398,
+                  "fragmentLength": 10
+                },
+                "Value": "Production",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 15,
+                    "startColumn": 22,
+                    "startOffset": 398,
+                    "fragmentLength": 10
+                  },
+                  "Value": "Production",
+                  "QuoteType": "NotQuoted"
+                }
+              }
+            },
+            {
+              "$type": "ApplicationRoleOption",
+              "location": {
+                "startLine": 16,
+                "startColumn": 13,
+                "startOffset": 422,
+                "fragmentLength": 2
+              },
+              "OptionKind": "Login",
+              "Value": {
+                "$type": "IdentifierOrValueExpression",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 13,
+                  "startOffset": 422,
+                  "fragmentLength": 2
+                },
+                "Value": "l1",
+                "Identifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 16,
+                    "startColumn": 13,
+                    "startOffset": 422,
+                    "fragmentLength": 2
+                  },
+                  "Value": "l1",
+                  "QuoteType": "NotQuoted"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

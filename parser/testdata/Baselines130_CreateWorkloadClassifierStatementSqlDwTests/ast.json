@@ -1,0 +1,211 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 317
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 315
+      },
+      "Statements": [
+        {
+          "$type": "CreateWorkloadClassifierStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 315
+          },
+          "ClassifierName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 28,
+              "startOffset": 27,
+              "fragmentLength": 12
+            },
+            "Value": "wcAllOptions",
+            "QuoteType": "NotQuoted"
+          },
+          "Options": [
+            {
+              "$type": "ClassifierWorkloadGroupOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 13,
+                "startOffset": 64,
+                "fragmentLength": 34
+              },
+              "WorkloadGroupName": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 30,
+                  "startOffset": 81,
+                  "fragmentLength": 17
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "wgDefaultParams"
+              },
+              "OptionType": "WorkloadGroup"
+            },
+            {
+              "$type": "ClassifierMemberNameOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 13,
+                "startOffset": 112,
+                "fragmentLength": 22
+              },
+              "MemberName": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 26,
+                  "startOffset": 125,
+                  "fragmentLength": 9
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "ELTRole"
+              },
+              "OptionType": "MemberName"
+            },
+            {
+              "$type": "ClassifierWlmContextOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 13,
+                "startOffset": 148,
+                "fragmentLength": 24
+              },
+              "WlmContext": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 27,
+                  "startOffset": 162,
+                  "fragmentLength": 10
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "dim_load"
+              },
+              "OptionType": "WlmContext"
+            },
+            {
+              "$type": "ClassifierStartTimeOption",
+              "location": {
+                "startLine": 6,
+                "startColumn": 13,
+                "startOffset": 186,
+                "fragmentLength": 20
+              },
+              "Time": {
+                "$type": "WlmTimeLiteral",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 26,
+                  "startOffset": 199,
+                  "fragmentLength": 7
+                },
+                "TimeString": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 26,
+                    "startOffset": 199,
+                    "fragmentLength": 7
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "22:00"
+                }
+              },
+              "OptionType": "StartTime"
+            },
+            {
+              "$type": "ClassifierEndTimeOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 13,
+                "startOffset": 220,
+                "fragmentLength": 18
+              },
+              "Time": {
+                "$type": "WlmTimeLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 24,
+                  "startOffset": 231,
+                  "fragmentLength": 7
+                },
+                "TimeString": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 7,
+                    "startColumn": 24,
+                    "startOffset": 231,
+                    "fragmentLength": 7
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "02:00"
+                }
+              },
+              "OptionType": "EndTime"
+            },
+            {
+              "$type": "ClassifierWlmLabelOption",
+              "location": {
+                "startLine": 8,
+                "startColumn": 13,
+                "startOffset": 252,
+                "fragmentLength": 19
+              },
+              "WlmLabel": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 25,
+                  "startOffset": 264,
+                  "fragmentLength": 7
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "label"
+              },
+              "OptionType": "WlmLabel"
+            },
+            {
+              "$type": "ClassifierImportanceOption",
+              "location": {
+                "startLine": 9,
+                "startColumn": 13,
+                "startOffset": 285,
+                "fragmentLength": 10
+              },
+              "Importance": "High",
+              "OptionType": "Importance"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

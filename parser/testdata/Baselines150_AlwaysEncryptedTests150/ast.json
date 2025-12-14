@@ -1,0 +1,180 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 479
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 478
+      },
+      "Statements": [
+        {
+          "$type": "CreateColumnMasterKeyStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 293
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 26,
+              "startOffset": 25,
+              "fragmentLength": 16
+            },
+            "Value": "TceTestCert1V2",
+            "QuoteType": "SquareBracket"
+          },
+          "Parameters": [
+            {
+              "$type": "ColumnMasterKeyStoreProviderNameParameter",
+              "location": {
+                "startLine": 3,
+                "startColumn": 32,
+                "startOffset": 80,
+                "fragmentLength": 25
+              },
+              "Name": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 32,
+                  "startOffset": 80,
+                  "fragmentLength": 25
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "MSSQL_CERTIFICATE_STORE"
+              },
+              "ParameterKind": "KeyStoreProviderName"
+            },
+            {
+              "$type": "ColumnMasterKeyPathParameter",
+              "location": {
+                "startLine": 4,
+                "startColumn": 17,
+                "startOffset": 123,
+                "fragmentLength": 57
+              },
+              "Path": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 17,
+                  "startOffset": 123,
+                  "fragmentLength": 57
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "CurrentUser/My/5BCC389CAEFE46E23C784F24ECF7E449C728903F"
+              },
+              "ParameterKind": "KeyPath"
+            },
+            {
+              "$type": "ColumnMasterKeyEnclaveComputationsParameter",
+              "location": {
+                "startLine": 5,
+                "startColumn": 41,
+                "startOffset": 222,
+                "fragmentLength": 66
+              },
+              "Signature": {
+                "$type": "BinaryLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 41,
+                  "startOffset": 222,
+                  "fragmentLength": 66
+                },
+                "LiteralType": "Binary",
+                "IsLargeObject": false,
+                "Value": "0x6a7ddb27879bb941ce083d683a4ebd0a493cd217d9174743fc19b321256084a8"
+              },
+              "ParameterKind": "Signature"
+            }
+          ]
+        },
+        {
+          "$type": "CreateColumnMasterKeyStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 295,
+            "fragmentLength": 183
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 8,
+              "startColumn": 26,
+              "startOffset": 320,
+              "fragmentLength": 16
+            },
+            "Value": "TceTestCert1V3",
+            "QuoteType": "SquareBracket"
+          },
+          "Parameters": [
+            {
+              "$type": "ColumnMasterKeyStoreProviderNameParameter",
+              "location": {
+                "startLine": 10,
+                "startColumn": 32,
+                "startOffset": 375,
+                "fragmentLength": 25
+              },
+              "Name": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 10,
+                  "startColumn": 32,
+                  "startOffset": 375,
+                  "fragmentLength": 25
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "MSSQL_CERTIFICATE_STORE"
+              },
+              "ParameterKind": "KeyStoreProviderName"
+            },
+            {
+              "$type": "ColumnMasterKeyPathParameter",
+              "location": {
+                "startLine": 11,
+                "startColumn": 17,
+                "startOffset": 418,
+                "fragmentLength": 57
+              },
+              "Path": {
+                "$type": "StringLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 17,
+                  "startOffset": 418,
+                  "fragmentLength": 57
+                },
+                "LiteralType": "String",
+                "IsNational": false,
+                "IsLargeObject": false,
+                "Value": "CurrentUser/My/5BCC389CAEFE46E23C784F24ECF7E449C728903F"
+              },
+              "ParameterKind": "KeyPath"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

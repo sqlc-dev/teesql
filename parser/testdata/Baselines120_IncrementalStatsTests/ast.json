@@ -1,0 +1,752 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 758
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 758
+      },
+      "Statements": [
+        {
+          "$type": "CreateStatisticsStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 72
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 19,
+              "startOffset": 18,
+              "fragmentLength": 3
+            },
+            "Value": "foo",
+            "QuoteType": "NotQuoted"
+          },
+          "OnName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 2,
+              "startColumn": 8,
+              "startOffset": 29,
+              "fragmentLength": 3
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 8,
+                "startOffset": 29,
+                "fragmentLength": 3
+              },
+              "Value": "bar",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Columns": [
+            {
+              "$type": "ColumnReferenceExpression",
+              "location": {
+                "startLine": 2,
+                "startColumn": 12,
+                "startOffset": 33,
+                "fragmentLength": 1
+              },
+              "ColumnType": "Regular",
+              "MultiPartIdentifier": {
+                "$type": "MultiPartIdentifier",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 12,
+                  "startOffset": 33,
+                  "fragmentLength": 1
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 12,
+                      "startOffset": 33,
+                      "fragmentLength": 1
+                    },
+                    "Value": "a",
+                    "QuoteType": "NotQuoted"
+                  }
+                ]
+              }
+            }
+          ],
+          "StatisticsOptions": [
+            {
+              "$type": "StatisticsOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 10,
+                "startOffset": 45,
+                "fragmentLength": 8
+              },
+              "OptionKind": "FullScan"
+            },
+            {
+              "$type": "OnOffStatisticsOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 20,
+                "startOffset": 55,
+                "fragmentLength": 16
+              },
+              "OptionState": "On",
+              "OptionKind": "Incremental"
+            }
+          ]
+        },
+        {
+          "$type": "CreateStatisticsStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 74,
+            "fragmentLength": 82
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 19,
+              "startOffset": 92,
+              "fragmentLength": 3
+            },
+            "Value": "foo",
+            "QuoteType": "NotQuoted"
+          },
+          "OnName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 6,
+              "startColumn": 8,
+              "startOffset": 103,
+              "fragmentLength": 3
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 6,
+                "startColumn": 8,
+                "startOffset": 103,
+                "fragmentLength": 3
+              },
+              "Value": "bar",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Columns": [
+            {
+              "$type": "ColumnReferenceExpression",
+              "location": {
+                "startLine": 6,
+                "startColumn": 12,
+                "startOffset": 107,
+                "fragmentLength": 1
+              },
+              "ColumnType": "Regular",
+              "MultiPartIdentifier": {
+                "$type": "MultiPartIdentifier",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 12,
+                  "startOffset": 107,
+                  "fragmentLength": 1
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 12,
+                      "startOffset": 107,
+                      "fragmentLength": 1
+                    },
+                    "Value": "a",
+                    "QuoteType": "NotQuoted"
+                  }
+                ]
+              }
+            }
+          ],
+          "StatisticsOptions": [
+            {
+              "$type": "LiteralStatisticsOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 17,
+                "startOffset": 126,
+                "fragmentLength": 10
+              },
+              "Literal": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 17,
+                  "startOffset": 126,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "50"
+              },
+              "OptionKind": "SamplePercent"
+            },
+            {
+              "$type": "OnOffStatisticsOption",
+              "location": {
+                "startLine": 7,
+                "startColumn": 29,
+                "startOffset": 138,
+                "fragmentLength": 17
+              },
+              "OptionState": "Off",
+              "OptionKind": "Incremental"
+            }
+          ]
+        },
+        {
+          "$type": "UpdateStatisticsStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 158,
+            "fragmentLength": 104
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 9,
+              "startColumn": 19,
+              "startOffset": 176,
+              "fragmentLength": 3
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 19,
+                "startOffset": 176,
+                "fragmentLength": 3
+              },
+              "Value": "foo",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SubElements": [
+            {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 24,
+                "startOffset": 181,
+                "fragmentLength": 3
+              },
+              "Value": "bar",
+              "QuoteType": "NotQuoted"
+            }
+          ],
+          "StatisticsOptions": [
+            {
+              "$type": "StatisticsOption",
+              "location": {
+                "startLine": 10,
+                "startColumn": 10,
+                "startOffset": 195,
+                "fragmentLength": 8
+              },
+              "OptionKind": "FullScan"
+            },
+            {
+              "$type": "OnOffStatisticsOption",
+              "location": {
+                "startLine": 10,
+                "startColumn": 20,
+                "startOffset": 205,
+                "fragmentLength": 16
+              },
+              "OptionState": "On",
+              "OptionKind": "Incremental"
+            },
+            {
+              "$type": "ResampleStatisticsOption",
+              "location": {
+                "startLine": 10,
+                "startColumn": 38,
+                "startOffset": 223,
+                "fragmentLength": 38
+              },
+              "Partitions": [
+                {
+                  "$type": "StatisticsPartitionRange",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 62,
+                    "startOffset": 247,
+                    "fragmentLength": 1
+                  },
+                  "From": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 62,
+                      "startOffset": 247,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1"
+                  }
+                },
+                {
+                  "$type": "StatisticsPartitionRange",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 65,
+                    "startOffset": 250,
+                    "fragmentLength": 6
+                  },
+                  "From": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 65,
+                      "startOffset": 250,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "3"
+                  },
+                  "To": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 70,
+                      "startOffset": 255,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "7"
+                  }
+                },
+                {
+                  "$type": "StatisticsPartitionRange",
+                  "location": {
+                    "startLine": 10,
+                    "startColumn": 73,
+                    "startOffset": 258,
+                    "fragmentLength": 2
+                  },
+                  "From": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 10,
+                      "startColumn": 73,
+                      "startOffset": 258,
+                      "fragmentLength": 2
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "10"
+                  }
+                }
+              ],
+              "OptionKind": "Resample"
+            }
+          ]
+        },
+        {
+          "$type": "UpdateStatisticsStatement",
+          "location": {
+            "startLine": 12,
+            "startColumn": 1,
+            "startOffset": 264,
+            "fragmentLength": 65
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 12,
+              "startColumn": 19,
+              "startOffset": 282,
+              "fragmentLength": 3
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 12,
+                "startColumn": 19,
+                "startOffset": 282,
+                "fragmentLength": 3
+              },
+              "Value": "foo",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SubElements": [
+            {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 12,
+                "startColumn": 24,
+                "startOffset": 287,
+                "fragmentLength": 3
+              },
+              "Value": "bar",
+              "QuoteType": "NotQuoted"
+            }
+          ],
+          "StatisticsOptions": [
+            {
+              "$type": "StatisticsOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 10,
+                "startOffset": 301,
+                "fragmentLength": 8
+              },
+              "OptionKind": "FullScan"
+            },
+            {
+              "$type": "OnOffStatisticsOption",
+              "location": {
+                "startLine": 13,
+                "startColumn": 20,
+                "startOffset": 311,
+                "fragmentLength": 17
+              },
+              "OptionState": "Off",
+              "OptionKind": "Incremental"
+            }
+          ]
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 15,
+            "startColumn": 1,
+            "startOffset": 331,
+            "fragmentLength": 106
+          },
+          "Options": [
+            {
+              "$type": "AutoCreateStatisticsDatabaseOption",
+              "location": {
+                "startLine": 16,
+                "startColumn": 9,
+                "startOffset": 358,
+                "fragmentLength": 43
+              },
+              "HasIncremental": true,
+              "IncrementalState": "On",
+              "OptionState": "On",
+              "OptionKind": "AutoCreateStatistics"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 17,
+                "startColumn": 32,
+                "startOffset": 434,
+                "fragmentLength": 2
+              },
+              "OptionState": "On",
+              "OptionKind": "AutoUpdateStatistics"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 15,
+              "startColumn": 16,
+              "startOffset": 346,
+              "fragmentLength": 3
+            },
+            "Value": "foo",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "location": {
+            "startLine": 19,
+            "startColumn": 1,
+            "startOffset": 439,
+            "fragmentLength": 107
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "location": {
+                "startLine": 20,
+                "startColumn": 32,
+                "startOffset": 489,
+                "fragmentLength": 2
+              },
+              "OptionState": "On",
+              "OptionKind": "AutoUpdateStatistics"
+            },
+            {
+              "$type": "AutoCreateStatisticsDatabaseOption",
+              "location": {
+                "startLine": 21,
+                "startColumn": 9,
+                "startOffset": 501,
+                "fragmentLength": 44
+              },
+              "HasIncremental": true,
+              "IncrementalState": "Off",
+              "OptionState": "On",
+              "OptionKind": "AutoCreateStatistics"
+            }
+          ],
+          "WithManualCutover": false,
+          "DatabaseName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 19,
+              "startColumn": 16,
+              "startOffset": 454,
+              "fragmentLength": 3
+            },
+            "Value": "foo",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
+        },
+        {
+          "$type": "CreateIndexStatement",
+          "location": {
+            "startLine": 23,
+            "startColumn": 1,
+            "startOffset": 548,
+            "fragmentLength": 109
+          },
+          "Translated80SyntaxTo90": false,
+          "Unique": false,
+          "Clustered": false,
+          "Columns": [
+            {
+              "$type": "ColumnWithSortOrder",
+              "location": {
+                "startLine": 24,
+                "startColumn": 12,
+                "startOffset": 589,
+                "fragmentLength": 1
+              },
+              "Column": {
+                "$type": "ColumnReferenceExpression",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 12,
+                  "startOffset": 589,
+                  "fragmentLength": 1
+                },
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 12,
+                    "startOffset": 589,
+                    "fragmentLength": 1
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 24,
+                        "startColumn": 12,
+                        "startOffset": 589,
+                        "fragmentLength": 1
+                      },
+                      "Value": "a",
+                      "QuoteType": "NotQuoted"
+                    }
+                  ]
+                }
+              },
+              "SortOrder": "NotSpecified"
+            }
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 23,
+              "startColumn": 27,
+              "startOffset": 574,
+              "fragmentLength": 3
+            },
+            "Value": "foo",
+            "QuoteType": "NotQuoted"
+          },
+          "OnName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 24,
+              "startColumn": 8,
+              "startOffset": 585,
+              "fragmentLength": 3
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 24,
+                "startColumn": 8,
+                "startOffset": 585,
+                "fragmentLength": 3
+              },
+              "Value": "bar",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "IndexOptions": [
+            {
+              "$type": "IndexStateOption",
+              "location": {
+                "startLine": 24,
+                "startColumn": 21,
+                "startOffset": 598,
+                "fragmentLength": 27
+              },
+              "OptionState": "On",
+              "OptionKind": "StatisticsNoRecompute"
+            },
+            {
+              "$type": "IndexStateOption",
+              "location": {
+                "startLine": 24,
+                "startColumn": 50,
+                "startOffset": 627,
+                "fragmentLength": 28
+              },
+              "OptionState": "Off",
+              "OptionKind": "StatisticsIncremental"
+            }
+          ]
+        },
+        {
+          "$type": "AlterIndexStatement",
+          "location": {
+            "startLine": 26,
+            "startColumn": 1,
+            "startOffset": 659,
+            "fragmentLength": 99
+          },
+          "All": false,
+          "AlterIndexType": "Rebuild",
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 26,
+              "startColumn": 13,
+              "startOffset": 671,
+              "fragmentLength": 3
+            },
+            "Value": "foo",
+            "QuoteType": "NotQuoted"
+          },
+          "OnName": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 27,
+              "startColumn": 8,
+              "startOffset": 682,
+              "fragmentLength": 3
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 27,
+                "startColumn": 8,
+                "startOffset": 682,
+                "fragmentLength": 3
+              },
+              "Value": "bar",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "IndexOptions": [
+            {
+              "$type": "IndexStateOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 25,
+                "startOffset": 699,
+                "fragmentLength": 27
+              },
+              "OptionState": "On",
+              "OptionKind": "StatisticsNoRecompute"
+            },
+            {
+              "$type": "IndexStateOption",
+              "location": {
+                "startLine": 27,
+                "startColumn": 54,
+                "startOffset": 728,
+                "fragmentLength": 28
+              },
+              "OptionState": "Off",
+              "OptionKind": "StatisticsIncremental"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

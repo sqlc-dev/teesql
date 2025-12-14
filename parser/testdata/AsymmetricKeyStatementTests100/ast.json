@@ -1,0 +1,264 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 339
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 289
+      },
+      "Statements": [
+        {
+          "$type": "CreateAsymmetricKeyStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 62
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 23,
+              "startOffset": 22,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          },
+          "KeySource": {
+            "$type": "ProviderEncryptionSource",
+            "location": {
+              "startLine": 1,
+              "startColumn": 40,
+              "startOffset": 39,
+              "fragmentLength": 23
+            },
+            "Name": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 40,
+                "startOffset": 39,
+                "fragmentLength": 2
+              },
+              "Value": "p1",
+              "QuoteType": "NotQuoted"
+            },
+            "KeyOptions": [
+              {
+                "$type": "AlgorithmKeyOption",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 48,
+                  "startOffset": 47,
+                  "fragmentLength": 15
+                },
+                "Algorithm": "Des",
+                "OptionKind": "Algorithm"
+              }
+            ]
+          },
+          "EncryptionAlgorithm": "None"
+        },
+        {
+          "$type": "CreateAsymmetricKeyStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 63,
+            "fragmentLength": 124
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 2,
+              "startColumn": 23,
+              "startOffset": 85,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          },
+          "KeySource": {
+            "$type": "ProviderEncryptionSource",
+            "location": {
+              "startLine": 2,
+              "startColumn": 40,
+              "startOffset": 102,
+              "fragmentLength": 85
+            },
+            "Name": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 40,
+                "startOffset": 102,
+                "fragmentLength": 2
+              },
+              "Value": "p1",
+              "QuoteType": "NotQuoted"
+            },
+            "KeyOptions": [
+              {
+                "$type": "AlgorithmKeyOption",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 48,
+                  "startOffset": 110,
+                  "fragmentLength": 15
+                },
+                "Algorithm": "RC2",
+                "OptionKind": "Algorithm"
+              },
+              {
+                "$type": "ProviderKeyNameKeyOption",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 65,
+                  "startOffset": 127,
+                  "fragmentLength": 25
+                },
+                "KeyName": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 85,
+                    "startOffset": 147,
+                    "fragmentLength": 5
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "kn1"
+                },
+                "OptionKind": "ProviderKeyName"
+              },
+              {
+                "$type": "CreationDispositionKeyOption",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 92,
+                  "startOffset": 154,
+                  "fragmentLength": 33
+                },
+                "IsCreateNew": true,
+                "OptionKind": "CreationDisposition"
+              }
+            ]
+          },
+          "EncryptionAlgorithm": "None"
+        },
+        {
+          "$type": "CreateAsymmetricKeyStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 188,
+            "fragmentLength": 101
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 23,
+              "startOffset": 210,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          },
+          "KeySource": {
+            "$type": "ProviderEncryptionSource",
+            "location": {
+              "startLine": 3,
+              "startColumn": 40,
+              "startOffset": 227,
+              "fragmentLength": 23
+            },
+            "Name": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 40,
+                "startOffset": 227,
+                "fragmentLength": 2
+              },
+              "Value": "p1",
+              "QuoteType": "NotQuoted"
+            },
+            "KeyOptions": [
+              {
+                "$type": "AlgorithmKeyOption",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 48,
+                  "startOffset": 235,
+                  "fragmentLength": 15
+                },
+                "Algorithm": "Des",
+                "OptionKind": "Algorithm"
+              }
+            ]
+          },
+          "EncryptionAlgorithm": "None",
+          "Password": {
+            "$type": "StringLiteral",
+            "location": {
+              "startLine": 3,
+              "startColumn": 89,
+              "startOffset": 276,
+              "fragmentLength": 13
+            },
+            "LiteralType": "String",
+            "IsNational": false,
+            "IsLargeObject": false,
+            "Value": "PLACEHOLDER"
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 7,
+        "startColumn": 1,
+        "startOffset": 295,
+        "fragmentLength": 42
+      },
+      "Statements": [
+        {
+          "$type": "DropAsymmetricKeyStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 295,
+            "fragmentLength": 42
+          },
+          "RemoveProviderKey": true,
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 21,
+              "startOffset": 315,
+              "fragmentLength": 2
+            },
+            "Value": "k1",
+            "QuoteType": "NotQuoted"
+          },
+          "IsIfExists": false
+        }
+      ]
+    }
+  ]
+}

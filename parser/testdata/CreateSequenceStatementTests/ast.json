@@ -1,0 +1,699 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 345
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 344
+      },
+      "Statements": [
+        {
+          "$type": "CreateSequenceStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 32
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 1,
+              "startColumn": 17,
+              "startOffset": 16,
+              "fragmentLength": 16
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 17,
+                "startOffset": 16,
+                "fragmentLength": 12
+              },
+              "Value": "SOMESCHEMA",
+              "QuoteType": "SquareBracket"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 1,
+                "startColumn": 30,
+                "startOffset": 29,
+                "fragmentLength": 3
+              },
+              "Value": "S",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "CreateSequenceStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 33,
+            "fragmentLength": 48
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 2,
+              "startColumn": 17,
+              "startOffset": 49,
+              "fragmentLength": 1
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 2,
+                "startColumn": 17,
+                "startOffset": 49,
+                "fragmentLength": 1
+              },
+              "Value": "S",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SequenceOptions": [
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 19,
+                "startOffset": 51,
+                "fragmentLength": 10
+              },
+              "OptionValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 28,
+                  "startOffset": 60,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "OptionKind": "MaxValue",
+              "NoValue": false
+            },
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 30,
+                "startOffset": 62,
+                "fragmentLength": 8
+              },
+              "OptionValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 36,
+                  "startOffset": 68,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              },
+              "OptionKind": "Cache",
+              "NoValue": false
+            },
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 2,
+                "startColumn": 39,
+                "startOffset": 71,
+                "fragmentLength": 10
+              },
+              "OptionValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 48,
+                  "startOffset": 80,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "OptionKind": "MinValue",
+              "NoValue": false
+            }
+          ]
+        },
+        {
+          "$type": "CreateSequenceStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 82,
+            "fragmentLength": 45
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 3,
+              "startColumn": 17,
+              "startOffset": 98,
+              "fragmentLength": 1
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 3,
+                "startColumn": 17,
+                "startOffset": 98,
+                "fragmentLength": 1
+              },
+              "Value": "S",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SequenceOptions": [
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 19,
+                "startOffset": 100,
+                "fragmentLength": 10
+              },
+              "OptionValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 28,
+                  "startOffset": 109,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "OptionKind": "MinValue",
+              "NoValue": false
+            },
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 30,
+                "startOffset": 111,
+                "fragmentLength": 10
+              },
+              "OptionValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 39,
+                  "startOffset": 120,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "OptionKind": "MaxValue",
+              "NoValue": false
+            },
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 3,
+                "startColumn": 41,
+                "startOffset": 122,
+                "fragmentLength": 5
+              },
+              "OptionKind": "Cache",
+              "NoValue": false
+            }
+          ]
+        },
+        {
+          "$type": "CreateSequenceStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 128,
+            "fragmentLength": 94
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 4,
+              "startColumn": 17,
+              "startOffset": 144,
+              "fragmentLength": 1
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 4,
+                "startColumn": 17,
+                "startOffset": 144,
+                "fragmentLength": 1
+              },
+              "Value": "S",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SequenceOptions": [
+            {
+              "$type": "SequenceOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 19,
+                "startOffset": 146,
+                "fragmentLength": 11
+              },
+              "OptionKind": "MaxValue",
+              "NoValue": true
+            },
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 31,
+                "startOffset": 158,
+                "fragmentLength": 15
+              },
+              "OptionValue": {
+                "$type": "UnaryExpression",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 44,
+                  "startOffset": 171,
+                  "fragmentLength": 2
+                },
+                "UnaryExpressionType": "Negative",
+                "Expression": {
+                  "$type": "IntegerLiteral",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 45,
+                    "startOffset": 172,
+                    "fragmentLength": 1
+                  },
+                  "LiteralType": "Integer",
+                  "Value": "1"
+                }
+              },
+              "OptionKind": "Increment",
+              "NoValue": false
+            },
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 47,
+                "startOffset": 174,
+                "fragmentLength": 12
+              },
+              "OptionValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 58,
+                  "startOffset": 185,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "OptionKind": "Start",
+              "NoValue": false
+            },
+            {
+              "$type": "DataTypeSequenceOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 60,
+                "startOffset": 187,
+                "fragmentLength": 6
+              },
+              "DataType": {
+                "$type": "SqlDataTypeReference",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 63,
+                  "startOffset": 190,
+                  "fragmentLength": 3
+                },
+                "SqlDataTypeOption": "Int",
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 63,
+                    "startOffset": 190,
+                    "fragmentLength": 3
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 63,
+                      "startOffset": 190,
+                      "fragmentLength": 3
+                    },
+                    "Value": "INT",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              },
+              "OptionKind": "As",
+              "NoValue": false
+            },
+            {
+              "$type": "SequenceOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 67,
+                "startOffset": 194,
+                "fragmentLength": 8
+              },
+              "OptionKind": "Cache",
+              "NoValue": true
+            },
+            {
+              "$type": "SequenceOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 76,
+                "startOffset": 203,
+                "fragmentLength": 8
+              },
+              "OptionKind": "Cycle",
+              "NoValue": true
+            },
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 4,
+                "startColumn": 85,
+                "startOffset": 212,
+                "fragmentLength": 10
+              },
+              "OptionValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 94,
+                  "startOffset": 221,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "OptionKind": "MinValue",
+              "NoValue": false
+            }
+          ]
+        },
+        {
+          "$type": "CreateSequenceStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 223,
+            "fragmentLength": 93
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 5,
+              "startColumn": 17,
+              "startOffset": 239,
+              "fragmentLength": 1
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 5,
+                "startColumn": 17,
+                "startOffset": 239,
+                "fragmentLength": 1
+              },
+              "Value": "S",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SequenceOptions": [
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 19,
+                "startOffset": 241,
+                "fragmentLength": 14
+              },
+              "OptionValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 32,
+                  "startOffset": 254,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "OptionKind": "Increment",
+              "NoValue": false
+            },
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 34,
+                "startOffset": 256,
+                "fragmentLength": 5
+              },
+              "OptionKind": "Cache",
+              "NoValue": false
+            },
+            {
+              "$type": "SequenceOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 40,
+                "startOffset": 262,
+                "fragmentLength": 5
+              },
+              "OptionKind": "Cycle",
+              "NoValue": false
+            },
+            {
+              "$type": "SequenceOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 46,
+                "startOffset": 268,
+                "fragmentLength": 11
+              },
+              "OptionKind": "MinValue",
+              "NoValue": true
+            },
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 58,
+                "startOffset": 280,
+                "fragmentLength": 13
+              },
+              "OptionValue": {
+                "$type": "UnaryExpression",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 69,
+                  "startOffset": 291,
+                  "fragmentLength": 2
+                },
+                "UnaryExpressionType": "Negative",
+                "Expression": {
+                  "$type": "IntegerLiteral",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 70,
+                    "startOffset": 292,
+                    "fragmentLength": 1
+                  },
+                  "LiteralType": "Integer",
+                  "Value": "1"
+                }
+              },
+              "OptionKind": "Start",
+              "NoValue": false
+            },
+            {
+              "$type": "ScalarExpressionSequenceOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 72,
+                "startOffset": 294,
+                "fragmentLength": 10
+              },
+              "OptionValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 81,
+                  "startOffset": 303,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "OptionKind": "MaxValue",
+              "NoValue": false
+            },
+            {
+              "$type": "DataTypeSequenceOption",
+              "location": {
+                "startLine": 5,
+                "startColumn": 83,
+                "startOffset": 305,
+                "fragmentLength": 11
+              },
+              "DataType": {
+                "$type": "UserDataTypeReference",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 86,
+                  "startOffset": 308,
+                  "fragmentLength": 8
+                },
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "location": {
+                    "startLine": 5,
+                    "startColumn": 86,
+                    "startOffset": 308,
+                    "fragmentLength": 8
+                  },
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "location": {
+                      "startLine": 5,
+                      "startColumn": 86,
+                      "startOffset": 308,
+                      "fragmentLength": 8
+                    },
+                    "Value": "INTALIAS",
+                    "QuoteType": "NotQuoted"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              },
+              "OptionKind": "As",
+              "NoValue": false
+            }
+          ]
+        },
+        {
+          "$type": "CreateSequenceStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 317,
+            "fragmentLength": 27
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 6,
+              "startColumn": 17,
+              "startOffset": 333,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 6,
+                "startColumn": 17,
+                "startOffset": 333,
+                "fragmentLength": 2
+              },
+              "Value": "S1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "SequenceOptions": [
+            {
+              "$type": "SequenceOption",
+              "location": {
+                "startLine": 6,
+                "startColumn": 20,
+                "startOffset": 336,
+                "fragmentLength": 8
+              },
+              "OptionKind": "Cache",
+              "NoValue": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

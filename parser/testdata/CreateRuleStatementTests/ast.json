@@ -1,0 +1,231 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 154
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 4,
+        "startColumn": 1,
+        "startOffset": 48,
+        "fragmentLength": 30
+      },
+      "Statements": [
+        {
+          "$type": "CreateRuleStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 48,
+            "fragmentLength": 30
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 4,
+              "startColumn": 13,
+              "startOffset": 60,
+              "fragmentLength": 6
+            },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 4,
+                "startColumn": 13,
+                "startOffset": 60,
+                "fragmentLength": 3
+              },
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 4,
+                "startColumn": 17,
+                "startOffset": 64,
+                "fragmentLength": 2
+              },
+              "Value": "r1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Expression": {
+            "$type": "BooleanComparisonExpression",
+            "location": {
+              "startLine": 4,
+              "startColumn": 23,
+              "startOffset": 70,
+              "fragmentLength": 8
+            },
+            "ComparisonType": "GreaterThan",
+            "FirstExpression": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 4,
+                "startColumn": 23,
+                "startOffset": 70,
+                "fragmentLength": 3
+              },
+              "Name": "@a1"
+            },
+            "SecondExpression": {
+              "$type": "IntegerLiteral",
+              "location": {
+                "startLine": 4,
+                "startColumn": 29,
+                "startOffset": 76,
+                "fragmentLength": 2
+              },
+              "LiteralType": "Integer",
+              "Value": "10"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 9,
+        "startColumn": 1,
+        "startOffset": 101,
+        "fragmentLength": 52
+      },
+      "Statements": [
+        {
+          "$type": "CreateRuleStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 101,
+            "fragmentLength": 52
+          },
+          "Name": {
+            "$type": "SchemaObjectName",
+            "location": {
+              "startLine": 9,
+              "startColumn": 13,
+              "startOffset": 113,
+              "fragmentLength": 2
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "location": {
+                "startLine": 9,
+                "startColumn": 13,
+                "startOffset": 113,
+                "fragmentLength": 2
+              },
+              "Value": "r1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "Expression": {
+            "$type": "BooleanBinaryExpression",
+            "location": {
+              "startLine": 9,
+              "startColumn": 19,
+              "startOffset": 119,
+              "fragmentLength": 34
+            },
+            "BinaryExpressionType": "And",
+            "FirstExpression": {
+              "$type": "BooleanComparisonExpression",
+              "location": {
+                "startLine": 9,
+                "startColumn": 19,
+                "startOffset": 119,
+                "fragmentLength": 8
+              },
+              "ComparisonType": "GreaterThan",
+              "FirstExpression": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 19,
+                  "startOffset": 119,
+                  "fragmentLength": 3
+                },
+                "Name": "@a1"
+              },
+              "SecondExpression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 25,
+                  "startOffset": 125,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              }
+            },
+            "SecondExpression": {
+              "$type": "BooleanTernaryExpression",
+              "location": {
+                "startLine": 9,
+                "startColumn": 32,
+                "startOffset": 132,
+                "fragmentLength": 21
+              },
+              "TernaryExpressionType": "Between",
+              "FirstExpression": {
+                "$type": "VariableReference",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 32,
+                  "startOffset": 132,
+                  "fragmentLength": 3
+                },
+                "Name": "@a2"
+              },
+              "SecondExpression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 44,
+                  "startOffset": 144,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              },
+              "ThirdExpression": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 51,
+                  "startOffset": 151,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "39"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

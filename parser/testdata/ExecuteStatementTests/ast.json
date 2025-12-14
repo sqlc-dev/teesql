@@ -1,0 +1,1316 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 877
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 2,
+        "startColumn": 1,
+        "startOffset": 31,
+        "fragmentLength": 559
+      },
+      "Statements": [
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 31,
+            "fragmentLength": 67
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 2,
+              "startColumn": 1,
+              "startOffset": 31,
+              "fragmentLength": 66
+            },
+            "Variable": {
+              "$type": "VariableReference",
+              "location": {
+                "startLine": 2,
+                "startColumn": 9,
+                "startOffset": 39,
+                "fragmentLength": 13
+              },
+              "Name": "@returnstatus"
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableProcedureReference",
+              "location": {
+                "startLine": 2,
+                "startColumn": 25,
+                "startOffset": 55,
+                "fragmentLength": 42
+              },
+              "ProcedureReference": {
+                "$type": "ProcedureReferenceName",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 25,
+                  "startOffset": 55,
+                  "fragmentLength": 30
+                },
+                "ProcedureReference": {
+                  "$type": "ProcedureReference",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 25,
+                    "startOffset": 55,
+                    "fragmentLength": 30
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 25,
+                      "startOffset": 55,
+                      "fragmentLength": 30
+                    },
+                    "SchemaIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 25,
+                        "startOffset": 55,
+                        "fragmentLength": 3
+                      },
+                      "Value": "dbo",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 29,
+                        "startOffset": 59,
+                        "fragmentLength": 26
+                      },
+                      "Value": "ufnGetSalesOrderStatusText",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 2,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      },
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              "Parameters": [
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 56,
+                    "startOffset": 86,
+                    "fragmentLength": 11
+                  },
+                  "Variable": {
+                    "$type": "VariableReference",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 56,
+                      "startOffset": 86,
+                      "fragmentLength": 7
+                    },
+                    "Name": "@Status"
+                  },
+                  "ParameterValue": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 66,
+                      "startOffset": 96,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  },
+                  "IsOutput": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 100,
+            "fragmentLength": 56
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 4,
+              "startColumn": 1,
+              "startOffset": 100,
+              "fragmentLength": 55
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableProcedureReference",
+              "location": {
+                "startLine": 4,
+                "startColumn": 6,
+                "startOffset": 105,
+                "fragmentLength": 50
+              },
+              "ProcedureReference": {
+                "$type": "ProcedureReferenceName",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 6,
+                  "startOffset": 105,
+                  "fragmentLength": 22
+                },
+                "ProcedureReference": {
+                  "$type": "ProcedureReference",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 6,
+                    "startOffset": 105,
+                    "fragmentLength": 22
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 6,
+                      "startOffset": 105,
+                      "fragmentLength": 20
+                    },
+                    "SchemaIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 4,
+                        "startColumn": 6,
+                        "startOffset": 105,
+                        "fragmentLength": 3
+                      },
+                      "Value": "dbo",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 4,
+                        "startColumn": 10,
+                        "startOffset": 109,
+                        "fragmentLength": 16
+                      },
+                      "Value": "ProcTestDefaults",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 2,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      },
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "Number": {
+                    "$type": "IntegerLiteral",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 27,
+                      "startOffset": 126,
+                      "fragmentLength": 1
+                    },
+                    "LiteralType": "Integer",
+                    "Value": "1"
+                  }
+                }
+              },
+              "Parameters": [
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 29,
+                    "startOffset": 128,
+                    "fragmentLength": 7
+                  },
+                  "ParameterValue": {
+                    "$type": "DefaultLiteral",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 29,
+                      "startOffset": 128,
+                      "fragmentLength": 7
+                    },
+                    "LiteralType": "Default",
+                    "Value": "DEFAULT"
+                  },
+                  "IsOutput": false
+                },
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 38,
+                    "startOffset": 137,
+                    "fragmentLength": 3
+                  },
+                  "ParameterValue": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 38,
+                      "startOffset": 137,
+                      "fragmentLength": 3
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "I"
+                  },
+                  "IsOutput": false
+                },
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 43,
+                    "startOffset": 142,
+                    "fragmentLength": 13
+                  },
+                  "Variable": {
+                    "$type": "VariableReference",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 43,
+                      "startOffset": 142,
+                      "fragmentLength": 3
+                    },
+                    "Name": "@p3"
+                  },
+                  "ParameterValue": {
+                    "$type": "DefaultLiteral",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 49,
+                      "startOffset": 148,
+                      "fragmentLength": 7
+                    },
+                    "LiteralType": "Default",
+                    "Value": "DEFAULT"
+                  },
+                  "IsOutput": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 6,
+            "startColumn": 1,
+            "startOffset": 158,
+            "fragmentLength": 61
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 6,
+              "startColumn": 1,
+              "startOffset": 158,
+              "fragmentLength": 45
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableProcedureReference",
+              "location": {
+                "startLine": 6,
+                "startColumn": 6,
+                "startOffset": 163,
+                "fragmentLength": 40
+              },
+              "ProcedureReference": {
+                "$type": "ProcedureReferenceName",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 6,
+                  "startOffset": 163,
+                  "fragmentLength": 22
+                },
+                "ProcedureReference": {
+                  "$type": "ProcedureReference",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 6,
+                    "startOffset": 163,
+                    "fragmentLength": 22
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 6,
+                      "startOffset": 163,
+                      "fragmentLength": 22
+                    },
+                    "SchemaIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 6,
+                        "startColumn": 6,
+                        "startOffset": 163,
+                        "fragmentLength": 3
+                      },
+                      "Value": "dbo",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 6,
+                        "startColumn": 10,
+                        "startOffset": 167,
+                        "fragmentLength": 18
+                      },
+                      "Value": "Proc_Test_Defaults",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 2,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      },
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              "Parameters": [
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 6,
+                    "startColumn": 29,
+                    "startOffset": 186,
+                    "fragmentLength": 17
+                  },
+                  "Variable": {
+                    "$type": "VariableReference",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 29,
+                      "startOffset": 186,
+                      "fragmentLength": 3
+                    },
+                    "Name": "@p2"
+                  },
+                  "ParameterValue": {
+                    "$type": "VariableReference",
+                    "location": {
+                      "startLine": 6,
+                      "startColumn": 35,
+                      "startOffset": 192,
+                      "fragmentLength": 4
+                    },
+                    "Name": "@p10"
+                  },
+                  "IsOutput": true
+                }
+              ]
+            }
+          },
+          "Options": [
+            {
+              "$type": "ExecuteOption",
+              "location": {
+                "startLine": 6,
+                "startColumn": 52,
+                "startOffset": 209,
+                "fragmentLength": 9
+              },
+              "OptionKind": "Recompile"
+            }
+          ]
+        },
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 8,
+            "startColumn": 1,
+            "startOffset": 221,
+            "fragmentLength": 76
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 8,
+              "startColumn": 1,
+              "startOffset": 221,
+              "fragmentLength": 75
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableStringList",
+              "location": {
+                "startLine": 8,
+                "startColumn": 7,
+                "startOffset": 227,
+                "fragmentLength": 68
+              },
+              "Strings": [
+                {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 7,
+                    "startOffset": 227,
+                    "fragmentLength": 21
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "ALTER INDEX ALL ON "
+                },
+                {
+                  "$type": "VariableReference",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 31,
+                    "startOffset": 251,
+                    "fragmentLength": 11
+                  },
+                  "Name": "@schemaname"
+                },
+                {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 45,
+                    "startOffset": 265,
+                    "fragmentLength": 3
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "."
+                },
+                {
+                  "$type": "VariableReference",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 51,
+                    "startOffset": 271,
+                    "fragmentLength": 10
+                  },
+                  "Name": "@tablename"
+                },
+                {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 8,
+                    "startColumn": 64,
+                    "startOffset": 284,
+                    "fragmentLength": 11
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": " REBUILD;"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 342,
+            "fragmentLength": 30
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 11,
+              "startColumn": 1,
+              "startOffset": 342,
+              "fragmentLength": 29
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableStringList",
+              "location": {
+                "startLine": 11,
+                "startColumn": 10,
+                "startOffset": 351,
+                "fragmentLength": 19
+              },
+              "Strings": [
+                {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 10,
+                    "startOffset": 351,
+                    "fragmentLength": 9
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "SELECT "
+                },
+                {
+                  "$type": "GlobalVariableExpression",
+                  "location": {
+                    "startLine": 11,
+                    "startColumn": 22,
+                    "startOffset": 363,
+                    "fragmentLength": 7
+                  },
+                  "Name": "@@ERROR"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 14,
+            "startColumn": 1,
+            "startOffset": 418,
+            "fragmentLength": 13
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 14,
+              "startColumn": 1,
+              "startOffset": 418,
+              "fragmentLength": 13
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableProcedureReference",
+              "location": {
+                "startLine": 14,
+                "startColumn": 6,
+                "startOffset": 423,
+                "fragmentLength": 8
+              },
+              "ProcedureReference": {
+                "$type": "ProcedureReferenceName",
+                "location": {
+                  "startLine": 14,
+                  "startColumn": 6,
+                  "startOffset": 423,
+                  "fragmentLength": 8
+                },
+                "ProcedureVariable": {
+                  "$type": "VariableReference",
+                  "location": {
+                    "startLine": 14,
+                    "startColumn": 6,
+                    "startOffset": 423,
+                    "fragmentLength": 8
+                  },
+                  "Name": "@varName"
+                }
+              }
+            }
+          }
+        },
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 17,
+            "startColumn": 1,
+            "startOffset": 459,
+            "fragmentLength": 131
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 17,
+              "startColumn": 1,
+              "startOffset": 459,
+              "fragmentLength": 131
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableProcedureReference",
+              "location": {
+                "startLine": 17,
+                "startColumn": 6,
+                "startOffset": 464,
+                "fragmentLength": 126
+              },
+              "ProcedureReference": {
+                "$type": "ProcedureReferenceName",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 57,
+                  "startOffset": 547,
+                  "fragmentLength": 43
+                },
+                "ProcedureReference": {
+                  "$type": "ProcedureReference",
+                  "location": {
+                    "startLine": 18,
+                    "startColumn": 57,
+                    "startOffset": 547,
+                    "fragmentLength": 43
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 18,
+                      "startColumn": 57,
+                      "startOffset": 547,
+                      "fragmentLength": 43
+                    },
+                    "DatabaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 18,
+                        "startColumn": 57,
+                        "startOffset": 547,
+                        "fragmentLength": 14
+                      },
+                      "Value": "AdventureWorks",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "SchemaIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 18,
+                        "startColumn": 72,
+                        "startOffset": 562,
+                        "fragmentLength": 14
+                      },
+                      "Value": "HumanResources",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 18,
+                        "startColumn": 87,
+                        "startOffset": 577,
+                        "fragmentLength": 13
+                      },
+                      "Value": "SomeProcedure",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 3,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      },
+                      {
+                        "$ref": "Identifier"
+                      },
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              "AdHocDataSource": {
+                "$type": "AdHocDataSource",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 6,
+                  "startOffset": 464,
+                  "fragmentLength": 82
+                },
+                "ProviderName": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 17,
+                    "startColumn": 21,
+                    "startOffset": 479,
+                    "fragmentLength": 9
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "SQLNCLI"
+                },
+                "InitString": {
+                  "$type": "StringLiteral",
+                  "location": {
+                    "startLine": 18,
+                    "startColumn": 2,
+                    "startOffset": 492,
+                    "fragmentLength": 53
+                  },
+                  "LiteralType": "String",
+                  "IsNational": false,
+                  "IsLargeObject": false,
+                  "Value": "Data Source=London\\Payroll;Integrated Security=SSPI"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 21,
+        "startColumn": 1,
+        "startOffset": 666,
+        "fragmentLength": 33
+      },
+      "Statements": [
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 21,
+            "startColumn": 1,
+            "startOffset": 666,
+            "fragmentLength": 33
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 21,
+              "startColumn": 1,
+              "startOffset": 666,
+              "fragmentLength": 33
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableProcedureReference",
+              "location": {
+                "startLine": 21,
+                "startColumn": 1,
+                "startOffset": 666,
+                "fragmentLength": 33
+              },
+              "ProcedureReference": {
+                "$type": "ProcedureReferenceName",
+                "location": {
+                  "startLine": 21,
+                  "startColumn": 1,
+                  "startOffset": 666,
+                  "fragmentLength": 16
+                },
+                "ProcedureReference": {
+                  "$type": "ProcedureReference",
+                  "location": {
+                    "startLine": 21,
+                    "startColumn": 1,
+                    "startOffset": 666,
+                    "fragmentLength": 16
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 21,
+                      "startColumn": 1,
+                      "startOffset": 666,
+                      "fragmentLength": 16
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 21,
+                        "startColumn": 1,
+                        "startOffset": 666,
+                        "fragmentLength": 16
+                      },
+                      "Value": "sp_grantdbaccess",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              "Parameters": [
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 21,
+                    "startColumn": 18,
+                    "startOffset": 683,
+                    "fragmentLength": 16
+                  },
+                  "ParameterValue": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 21,
+                      "startColumn": 18,
+                      "startOffset": 683,
+                      "fragmentLength": 16
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "redmond\\eftqa1"
+                  },
+                  "IsOutput": false
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 24,
+        "startColumn": 1,
+        "startOffset": 704,
+        "fragmentLength": 173
+      },
+      "Statements": [
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 24,
+            "startColumn": 1,
+            "startOffset": 704,
+            "fragmentLength": 33
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 24,
+              "startColumn": 1,
+              "startOffset": 704,
+              "fragmentLength": 33
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableProcedureReference",
+              "location": {
+                "startLine": 24,
+                "startColumn": 1,
+                "startOffset": 704,
+                "fragmentLength": 33
+              },
+              "ProcedureReference": {
+                "$type": "ProcedureReferenceName",
+                "location": {
+                  "startLine": 24,
+                  "startColumn": 1,
+                  "startOffset": 704,
+                  "fragmentLength": 16
+                },
+                "ProcedureReference": {
+                  "$type": "ProcedureReference",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 1,
+                    "startOffset": 704,
+                    "fragmentLength": 16
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 24,
+                      "startColumn": 1,
+                      "startOffset": 704,
+                      "fragmentLength": 16
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 24,
+                        "startColumn": 1,
+                        "startOffset": 704,
+                        "fragmentLength": 16
+                      },
+                      "Value": "sp_grantdbaccess",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              "Parameters": [
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 24,
+                    "startColumn": 18,
+                    "startOffset": 721,
+                    "fragmentLength": 16
+                  },
+                  "ParameterValue": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 24,
+                      "startColumn": 18,
+                      "startOffset": 721,
+                      "fragmentLength": 16
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "redmond\\eftqa1"
+                  },
+                  "IsOutput": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "SelectStatement",
+          "location": {
+            "startLine": 25,
+            "startColumn": 1,
+            "startOffset": 738,
+            "fragmentLength": 16
+          },
+          "QueryExpression": {
+            "$type": "QuerySpecification",
+            "location": {
+              "startLine": 25,
+              "startColumn": 1,
+              "startOffset": 738,
+              "fragmentLength": 16
+            },
+            "UniqueRowFilter": "NotSpecified",
+            "SelectElements": [
+              {
+                "$type": "SelectStarExpression",
+                "location": {
+                  "startLine": 25,
+                  "startColumn": 8,
+                  "startOffset": 745,
+                  "fragmentLength": 1
+                }
+              }
+            ],
+            "FromClause": {
+              "$type": "FromClause",
+              "location": {
+                "startLine": 25,
+                "startColumn": 10,
+                "startOffset": 747,
+                "fragmentLength": 7
+              },
+              "TableReferences": [
+                {
+                  "$type": "NamedTableReference",
+                  "location": {
+                    "startLine": 25,
+                    "startColumn": 15,
+                    "startOffset": 752,
+                    "fragmentLength": 2
+                  },
+                  "SchemaObject": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 25,
+                      "startColumn": 15,
+                      "startOffset": 752,
+                      "fragmentLength": 2
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 25,
+                        "startColumn": 15,
+                        "startOffset": 752,
+                        "fragmentLength": 2
+                      },
+                      "Value": "t1",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "ForPath": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 28,
+            "startColumn": 1,
+            "startOffset": 796,
+            "fragmentLength": 43
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 28,
+              "startColumn": 1,
+              "startOffset": 796,
+              "fragmentLength": 42
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableProcedureReference",
+              "location": {
+                "startLine": 28,
+                "startColumn": 6,
+                "startOffset": 801,
+                "fragmentLength": 37
+              },
+              "ProcedureReference": {
+                "$type": "ProcedureReferenceName",
+                "location": {
+                  "startLine": 28,
+                  "startColumn": 6,
+                  "startOffset": 801,
+                  "fragmentLength": 10
+                },
+                "ProcedureReference": {
+                  "$type": "ProcedureReference",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 6,
+                    "startOffset": 801,
+                    "fragmentLength": 10
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 6,
+                      "startOffset": 801,
+                      "fragmentLength": 10
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 28,
+                        "startColumn": 6,
+                        "startOffset": 801,
+                        "fragmentLength": 10
+                      },
+                      "Value": "sp_addtype",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              },
+              "Parameters": [
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 17,
+                    "startOffset": 812,
+                    "fragmentLength": 8
+                  },
+                  "ParameterValue": {
+                    "$type": "IdentifierLiteral",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 17,
+                      "startOffset": 812,
+                      "fragmentLength": 8
+                    },
+                    "LiteralType": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "birthday"
+                  },
+                  "IsOutput": false
+                },
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 27,
+                    "startOffset": 822,
+                    "fragmentLength": 8
+                  },
+                  "ParameterValue": {
+                    "$type": "IdentifierLiteral",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 27,
+                      "startOffset": 822,
+                      "fragmentLength": 8
+                    },
+                    "LiteralType": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "datetime"
+                  },
+                  "IsOutput": false
+                },
+                {
+                  "$type": "ExecuteParameter",
+                  "location": {
+                    "startLine": 28,
+                    "startColumn": 37,
+                    "startOffset": 832,
+                    "fragmentLength": 6
+                  },
+                  "ParameterValue": {
+                    "$type": "StringLiteral",
+                    "location": {
+                      "startLine": 28,
+                      "startColumn": 37,
+                      "startOffset": 832,
+                      "fragmentLength": 6
+                    },
+                    "LiteralType": "String",
+                    "IsNational": false,
+                    "IsLargeObject": false,
+                    "Value": "NULL"
+                  },
+                  "IsOutput": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "$type": "ExecuteStatement",
+          "location": {
+            "startLine": 31,
+            "startColumn": 1,
+            "startOffset": 865,
+            "fragmentLength": 12
+          },
+          "ExecuteSpecification": {
+            "$type": "ExecuteSpecification",
+            "location": {
+              "startLine": 31,
+              "startColumn": 1,
+              "startOffset": 865,
+              "fragmentLength": 12
+            },
+            "ExecutableEntity": {
+              "$type": "ExecutableProcedureReference",
+              "location": {
+                "startLine": 31,
+                "startColumn": 6,
+                "startOffset": 870,
+                "fragmentLength": 7
+              },
+              "ProcedureReference": {
+                "$type": "ProcedureReferenceName",
+                "location": {
+                  "startLine": 31,
+                  "startColumn": 6,
+                  "startOffset": 870,
+                  "fragmentLength": 7
+                },
+                "ProcedureReference": {
+                  "$type": "ProcedureReference",
+                  "location": {
+                    "startLine": 31,
+                    "startColumn": 6,
+                    "startOffset": 870,
+                    "fragmentLength": 7
+                  },
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "location": {
+                      "startLine": 31,
+                      "startColumn": 6,
+                      "startOffset": 870,
+                      "fragmentLength": 7
+                    },
+                    "ServerIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 31,
+                        "startColumn": 6,
+                        "startOffset": 870,
+                        "fragmentLength": 1
+                      },
+                      "Value": "a",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "DatabaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 31,
+                        "startColumn": 8,
+                        "startOffset": 872,
+                        "fragmentLength": 1
+                      },
+                      "Value": "b",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "SchemaIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 31,
+                        "startColumn": 10,
+                        "startOffset": 874,
+                        "fragmentLength": 1
+                      },
+                      "Value": "c",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 31,
+                        "startColumn": 12,
+                        "startOffset": 876,
+                        "fragmentLength": 1
+                      },
+                      "Value": "d",
+                      "QuoteType": "NotQuoted"
+                    },
+                    "Count": 4,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      },
+                      {
+                        "$ref": "Identifier"
+                      },
+                      {
+                        "$ref": "Identifier"
+                      },
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

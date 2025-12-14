@@ -1,0 +1,825 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 680
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 679
+      },
+      "Statements": [
+        {
+          "$type": "DropIndexStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 268
+          },
+          "DropIndexClauses": [
+            {
+              "$type": "DropIndexClause",
+              "location": {
+                "startLine": 1,
+                "startColumn": 12,
+                "startOffset": 11,
+                "fragmentLength": 133
+              },
+              "Index": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 12,
+                  "startOffset": 11,
+                  "fragmentLength": 2
+                },
+                "Value": "I1",
+                "QuoteType": "NotQuoted"
+              },
+              "Object": {
+                "$type": "SchemaObjectName",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 18,
+                  "startOffset": 17,
+                  "fragmentLength": 2
+                },
+                "BaseIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 18,
+                    "startOffset": 17,
+                    "fragmentLength": 2
+                  },
+                  "Value": "T1",
+                  "QuoteType": "NotQuoted"
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$ref": "Identifier"
+                  }
+                ]
+              },
+              "Options": [
+                {
+                  "$type": "OnlineIndexOption",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 27,
+                    "startOffset": 26,
+                    "fragmentLength": 11
+                  },
+                  "OptionState": "On",
+                  "OptionKind": "Online"
+                },
+                {
+                  "$type": "MoveToDropIndexOption",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 40,
+                    "startOffset": 39,
+                    "fragmentLength": 11
+                  },
+                  "MoveTo": {
+                    "$type": "FileGroupOrPartitionScheme",
+                    "location": {
+                      "startLine": 1,
+                      "startColumn": 48,
+                      "startOffset": 47,
+                      "fragmentLength": 3
+                    },
+                    "Name": {
+                      "$type": "IdentifierOrValueExpression",
+                      "location": {
+                        "startLine": 1,
+                        "startColumn": 48,
+                        "startOffset": 47,
+                        "fragmentLength": 3
+                      },
+                      "Value": "FG1",
+                      "Identifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 1,
+                          "startColumn": 48,
+                          "startOffset": 47,
+                          "fragmentLength": 3
+                        },
+                        "Value": "FG1",
+                        "QuoteType": "NotQuoted"
+                      }
+                    }
+                  },
+                  "OptionKind": "MoveTo"
+                },
+                {
+                  "$type": "FileStreamOnDropIndexOption",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 53,
+                    "startOffset": 52,
+                    "fragmentLength": 16
+                  },
+                  "FileStreamOn": {
+                    "$type": "IdentifierOrValueExpression",
+                    "location": {
+                      "startLine": 1,
+                      "startColumn": 67,
+                      "startOffset": 66,
+                      "fragmentLength": 2
+                    },
+                    "Value": "AB",
+                    "Identifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 1,
+                        "startColumn": 67,
+                        "startOffset": 66,
+                        "fragmentLength": 2
+                      },
+                      "Value": "AB",
+                      "QuoteType": "NotQuoted"
+                    }
+                  },
+                  "OptionKind": "FileStreamOn"
+                },
+                {
+                  "$type": "WaitAtLowPriorityOption",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 71,
+                    "startOffset": 70,
+                    "fragmentLength": 73
+                  },
+                  "Options": [
+                    {
+                      "$type": "LowPriorityLockWaitMaxDurationOption",
+                      "location": {
+                        "startLine": 1,
+                        "startColumn": 93,
+                        "startOffset": 92,
+                        "fragmentLength": 25
+                      },
+                      "MaxDuration": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 1,
+                          "startColumn": 108,
+                          "startOffset": 107,
+                          "fragmentLength": 2
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "10"
+                      },
+                      "Unit": "Minutes",
+                      "OptionKind": "MaxDuration"
+                    },
+                    {
+                      "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                      "location": {
+                        "startLine": 1,
+                        "startColumn": 120,
+                        "startOffset": 119,
+                        "fragmentLength": 23
+                      },
+                      "AbortAfterWait": "None",
+                      "OptionKind": "AbortAfterWait"
+                    }
+                  ],
+                  "OptionKind": "WaitAtLowPriority"
+                }
+              ]
+            },
+            {
+              "$type": "DropIndexClause",
+              "location": {
+                "startLine": 1,
+                "startColumn": 147,
+                "startOffset": 146,
+                "fragmentLength": 121
+              },
+              "Index": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 147,
+                  "startOffset": 146,
+                  "fragmentLength": 2
+                },
+                "Value": "I2",
+                "QuoteType": "NotQuoted"
+              },
+              "Object": {
+                "$type": "SchemaObjectName",
+                "location": {
+                  "startLine": 1,
+                  "startColumn": 153,
+                  "startOffset": 152,
+                  "fragmentLength": 2
+                },
+                "BaseIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 153,
+                    "startOffset": 152,
+                    "fragmentLength": 2
+                  },
+                  "Value": "T2",
+                  "QuoteType": "NotQuoted"
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$ref": "Identifier"
+                  }
+                ]
+              },
+              "Options": [
+                {
+                  "$type": "OnlineIndexOption",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 162,
+                    "startOffset": 161,
+                    "fragmentLength": 12
+                  },
+                  "OptionState": "Off",
+                  "OptionKind": "Online"
+                },
+                {
+                  "$type": "MoveToDropIndexOption",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 176,
+                    "startOffset": 175,
+                    "fragmentLength": 16
+                  },
+                  "MoveTo": {
+                    "$type": "FileGroupOrPartitionScheme",
+                    "location": {
+                      "startLine": 1,
+                      "startColumn": 184,
+                      "startOffset": 183,
+                      "fragmentLength": 8
+                    },
+                    "Name": {
+                      "$type": "IdentifierOrValueExpression",
+                      "location": {
+                        "startLine": 1,
+                        "startColumn": 184,
+                        "startOffset": 183,
+                        "fragmentLength": 3
+                      },
+                      "Value": "FG1",
+                      "Identifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 1,
+                          "startColumn": 184,
+                          "startOffset": 183,
+                          "fragmentLength": 3
+                        },
+                        "Value": "FG1",
+                        "QuoteType": "NotQuoted"
+                      }
+                    },
+                    "PartitionSchemeColumns": [
+                      {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 1,
+                          "startColumn": 189,
+                          "startOffset": 188,
+                          "fragmentLength": 2
+                        },
+                        "Value": "C1",
+                        "QuoteType": "NotQuoted"
+                      }
+                    ]
+                  },
+                  "OptionKind": "MoveTo"
+                },
+                {
+                  "$type": "WaitAtLowPriorityOption",
+                  "location": {
+                    "startLine": 1,
+                    "startColumn": 194,
+                    "startOffset": 193,
+                    "fragmentLength": 73
+                  },
+                  "Options": [
+                    {
+                      "$type": "LowPriorityLockWaitMaxDurationOption",
+                      "location": {
+                        "startLine": 1,
+                        "startColumn": 216,
+                        "startOffset": 215,
+                        "fragmentLength": 25
+                      },
+                      "MaxDuration": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 1,
+                          "startColumn": 231,
+                          "startOffset": 230,
+                          "fragmentLength": 2
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "10"
+                      },
+                      "Unit": "Minutes",
+                      "OptionKind": "MaxDuration"
+                    },
+                    {
+                      "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                      "location": {
+                        "startLine": 1,
+                        "startColumn": 243,
+                        "startOffset": 242,
+                        "fragmentLength": 23
+                      },
+                      "AbortAfterWait": "None",
+                      "OptionKind": "AbortAfterWait"
+                    }
+                  ],
+                  "OptionKind": "WaitAtLowPriority"
+                }
+              ]
+            }
+          ],
+          "IsIfExists": false
+        },
+        {
+          "$type": "DropIndexStatement",
+          "location": {
+            "startLine": 2,
+            "startColumn": 1,
+            "startOffset": 269,
+            "fragmentLength": 151
+          },
+          "DropIndexClauses": [
+            {
+              "$type": "DropIndexClause",
+              "location": {
+                "startLine": 2,
+                "startColumn": 12,
+                "startOffset": 280,
+                "fragmentLength": 139
+              },
+              "Index": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 12,
+                  "startOffset": 280,
+                  "fragmentLength": 2
+                },
+                "Value": "I1",
+                "QuoteType": "NotQuoted"
+              },
+              "Object": {
+                "$type": "SchemaObjectName",
+                "location": {
+                  "startLine": 2,
+                  "startColumn": 18,
+                  "startOffset": 286,
+                  "fragmentLength": 2
+                },
+                "BaseIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 18,
+                    "startOffset": 286,
+                    "fragmentLength": 2
+                  },
+                  "Value": "T1",
+                  "QuoteType": "NotQuoted"
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$ref": "Identifier"
+                  }
+                ]
+              },
+              "Options": [
+                {
+                  "$type": "OnlineIndexOption",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 27,
+                    "startOffset": 295,
+                    "fragmentLength": 11
+                  },
+                  "OptionState": "On",
+                  "OptionKind": "Online"
+                },
+                {
+                  "$type": "MoveToDropIndexOption",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 40,
+                    "startOffset": 308,
+                    "fragmentLength": 11
+                  },
+                  "MoveTo": {
+                    "$type": "FileGroupOrPartitionScheme",
+                    "location": {
+                      "startLine": 2,
+                      "startColumn": 48,
+                      "startOffset": 316,
+                      "fragmentLength": 3
+                    },
+                    "Name": {
+                      "$type": "IdentifierOrValueExpression",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 48,
+                        "startOffset": 316,
+                        "fragmentLength": 3
+                      },
+                      "Value": "FG1",
+                      "Identifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 48,
+                          "startOffset": 316,
+                          "fragmentLength": 3
+                        },
+                        "Value": "FG1",
+                        "QuoteType": "NotQuoted"
+                      }
+                    }
+                  },
+                  "OptionKind": "MoveTo"
+                },
+                {
+                  "$type": "DataCompressionOption",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 53,
+                    "startOffset": 321,
+                    "fragmentLength": 22
+                  },
+                  "CompressionLevel": "Row",
+                  "OptionKind": "DataCompression"
+                },
+                {
+                  "$type": "WaitAtLowPriorityOption",
+                  "location": {
+                    "startLine": 2,
+                    "startColumn": 77,
+                    "startOffset": 345,
+                    "fragmentLength": 73
+                  },
+                  "Options": [
+                    {
+                      "$type": "LowPriorityLockWaitMaxDurationOption",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 99,
+                        "startOffset": 367,
+                        "fragmentLength": 25
+                      },
+                      "MaxDuration": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 2,
+                          "startColumn": 114,
+                          "startOffset": 382,
+                          "fragmentLength": 2
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "10"
+                      },
+                      "Unit": "Minutes",
+                      "OptionKind": "MaxDuration"
+                    },
+                    {
+                      "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                      "location": {
+                        "startLine": 2,
+                        "startColumn": 126,
+                        "startOffset": 394,
+                        "fragmentLength": 23
+                      },
+                      "AbortAfterWait": "None",
+                      "OptionKind": "AbortAfterWait"
+                    }
+                  ],
+                  "OptionKind": "WaitAtLowPriority"
+                }
+              ]
+            }
+          ],
+          "IsIfExists": false
+        },
+        {
+          "$type": "DropIndexStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 421,
+            "fragmentLength": 125
+          },
+          "DropIndexClauses": [
+            {
+              "$type": "DropIndexClause",
+              "location": {
+                "startLine": 3,
+                "startColumn": 12,
+                "startOffset": 432,
+                "fragmentLength": 113
+              },
+              "Index": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 12,
+                  "startOffset": 432,
+                  "fragmentLength": 2
+                },
+                "Value": "I1",
+                "QuoteType": "NotQuoted"
+              },
+              "Object": {
+                "$type": "SchemaObjectName",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 18,
+                  "startOffset": 438,
+                  "fragmentLength": 2
+                },
+                "BaseIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 18,
+                    "startOffset": 438,
+                    "fragmentLength": 2
+                  },
+                  "Value": "T1",
+                  "QuoteType": "NotQuoted"
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$ref": "Identifier"
+                  }
+                ]
+              },
+              "Options": [
+                {
+                  "$type": "DataCompressionOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 27,
+                    "startOffset": 447,
+                    "fragmentLength": 22
+                  },
+                  "CompressionLevel": "Row",
+                  "OptionKind": "DataCompression"
+                },
+                {
+                  "$type": "WaitAtLowPriorityOption",
+                  "location": {
+                    "startLine": 3,
+                    "startColumn": 51,
+                    "startOffset": 471,
+                    "fragmentLength": 73
+                  },
+                  "Options": [
+                    {
+                      "$type": "LowPriorityLockWaitMaxDurationOption",
+                      "location": {
+                        "startLine": 3,
+                        "startColumn": 73,
+                        "startOffset": 493,
+                        "fragmentLength": 25
+                      },
+                      "MaxDuration": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 3,
+                          "startColumn": 88,
+                          "startOffset": 508,
+                          "fragmentLength": 2
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "10"
+                      },
+                      "Unit": "Minutes",
+                      "OptionKind": "MaxDuration"
+                    },
+                    {
+                      "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                      "location": {
+                        "startLine": 3,
+                        "startColumn": 100,
+                        "startOffset": 520,
+                        "fragmentLength": 23
+                      },
+                      "AbortAfterWait": "None",
+                      "OptionKind": "AbortAfterWait"
+                    }
+                  ],
+                  "OptionKind": "WaitAtLowPriority"
+                }
+              ]
+            }
+          ],
+          "IsIfExists": false
+        },
+        {
+          "$type": "DropIndexStatement",
+          "location": {
+            "startLine": 4,
+            "startColumn": 1,
+            "startOffset": 547,
+            "fragmentLength": 132
+          },
+          "DropIndexClauses": [
+            {
+              "$type": "DropIndexClause",
+              "location": {
+                "startLine": 4,
+                "startColumn": 12,
+                "startOffset": 558,
+                "fragmentLength": 120
+              },
+              "Index": {
+                "$type": "Identifier",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 12,
+                  "startOffset": 558,
+                  "fragmentLength": 2
+                },
+                "Value": "I1",
+                "QuoteType": "NotQuoted"
+              },
+              "Object": {
+                "$type": "SchemaObjectName",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 18,
+                  "startOffset": 564,
+                  "fragmentLength": 2
+                },
+                "BaseIdentifier": {
+                  "$type": "Identifier",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 18,
+                    "startOffset": 564,
+                    "fragmentLength": 2
+                  },
+                  "Value": "T1",
+                  "QuoteType": "NotQuoted"
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$ref": "Identifier"
+                  }
+                ]
+              },
+              "Options": [
+                {
+                  "$type": "MoveToDropIndexOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 27,
+                    "startOffset": 573,
+                    "fragmentLength": 11
+                  },
+                  "MoveTo": {
+                    "$type": "FileGroupOrPartitionScheme",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 35,
+                      "startOffset": 581,
+                      "fragmentLength": 3
+                    },
+                    "Name": {
+                      "$type": "IdentifierOrValueExpression",
+                      "location": {
+                        "startLine": 4,
+                        "startColumn": 35,
+                        "startOffset": 581,
+                        "fragmentLength": 3
+                      },
+                      "Value": "FG1",
+                      "Identifier": {
+                        "$type": "Identifier",
+                        "location": {
+                          "startLine": 4,
+                          "startColumn": 35,
+                          "startOffset": 581,
+                          "fragmentLength": 3
+                        },
+                        "Value": "FG1",
+                        "QuoteType": "NotQuoted"
+                      }
+                    }
+                  },
+                  "OptionKind": "MoveTo"
+                },
+                {
+                  "$type": "FileStreamOnDropIndexOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 40,
+                    "startOffset": 586,
+                    "fragmentLength": 16
+                  },
+                  "FileStreamOn": {
+                    "$type": "IdentifierOrValueExpression",
+                    "location": {
+                      "startLine": 4,
+                      "startColumn": 54,
+                      "startOffset": 600,
+                      "fragmentLength": 2
+                    },
+                    "Value": "AB",
+                    "Identifier": {
+                      "$type": "Identifier",
+                      "location": {
+                        "startLine": 4,
+                        "startColumn": 54,
+                        "startOffset": 600,
+                        "fragmentLength": 2
+                      },
+                      "Value": "AB",
+                      "QuoteType": "NotQuoted"
+                    }
+                  },
+                  "OptionKind": "FileStreamOn"
+                },
+                {
+                  "$type": "WaitAtLowPriorityOption",
+                  "location": {
+                    "startLine": 4,
+                    "startColumn": 58,
+                    "startOffset": 604,
+                    "fragmentLength": 73
+                  },
+                  "Options": [
+                    {
+                      "$type": "LowPriorityLockWaitMaxDurationOption",
+                      "location": {
+                        "startLine": 4,
+                        "startColumn": 80,
+                        "startOffset": 626,
+                        "fragmentLength": 25
+                      },
+                      "MaxDuration": {
+                        "$type": "IntegerLiteral",
+                        "location": {
+                          "startLine": 4,
+                          "startColumn": 95,
+                          "startOffset": 641,
+                          "fragmentLength": 2
+                        },
+                        "LiteralType": "Integer",
+                        "Value": "10"
+                      },
+                      "Unit": "Minutes",
+                      "OptionKind": "MaxDuration"
+                    },
+                    {
+                      "$type": "LowPriorityLockWaitAbortAfterWaitOption",
+                      "location": {
+                        "startLine": 4,
+                        "startColumn": 107,
+                        "startOffset": 653,
+                        "fragmentLength": 23
+                      },
+                      "AbortAfterWait": "None",
+                      "OptionKind": "AbortAfterWait"
+                    }
+                  ],
+                  "OptionKind": "WaitAtLowPriority"
+                }
+              ]
+            }
+          ],
+          "IsIfExists": false
+        }
+      ]
+    }
+  ]
+}

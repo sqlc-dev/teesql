@@ -1,0 +1,606 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 821
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 821
+      },
+      "Statements": [
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 44
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 22,
+              "startOffset": 21,
+              "fragmentLength": 1
+            },
+            "Value": "g",
+            "QuoteType": "NotQuoted"
+          },
+          "ExternalPoolName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 39,
+              "startOffset": 38,
+              "fragmentLength": 5
+            },
+            "Value": "p_ext",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 3,
+            "startColumn": 1,
+            "startOffset": 46,
+            "fragmentLength": 51
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 22,
+              "startOffset": 67,
+              "fragmentLength": 1
+            },
+            "Value": "g",
+            "QuoteType": "NotQuoted"
+          },
+          "PoolName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 30,
+              "startOffset": 75,
+              "fragmentLength": 5
+            },
+            "Value": "p_int",
+            "QuoteType": "NotQuoted"
+          },
+          "ExternalPoolName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 3,
+              "startColumn": 46,
+              "startOffset": 91,
+              "fragmentLength": 5
+            },
+            "Value": "p_ext",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 5,
+            "startColumn": 1,
+            "startOffset": 99,
+            "fragmentLength": 51
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 22,
+              "startOffset": 120,
+              "fragmentLength": 1
+            },
+            "Value": "g",
+            "QuoteType": "NotQuoted"
+          },
+          "PoolName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 46,
+              "startOffset": 144,
+              "fragmentLength": 5
+            },
+            "Value": "p_int",
+            "QuoteType": "NotQuoted"
+          },
+          "ExternalPoolName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 5,
+              "startColumn": 39,
+              "startOffset": 137,
+              "fragmentLength": 5
+            },
+            "Value": "p_ext",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 7,
+            "startColumn": 1,
+            "startOffset": 152,
+            "fragmentLength": 224
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 22,
+              "startOffset": 173,
+              "fragmentLength": 1
+            },
+            "Value": "g",
+            "QuoteType": "NotQuoted"
+          },
+          "WorkloadGroupParameters": [
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 30,
+                "startOffset": 181,
+                "fragmentLength": 37
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 65,
+                  "startOffset": 216,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              },
+              "ParameterType": "RequestMaxMemoryGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupImportanceParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 69,
+                "startOffset": 220,
+                "fragmentLength": 17
+              },
+              "ParameterValue": "High",
+              "ParameterType": "Importance"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 88,
+                "startOffset": 239,
+                "fragmentLength": 12
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 98,
+                  "startOffset": 249,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              },
+              "ParameterType": "MaxDop"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 102,
+                "startOffset": 253,
+                "fragmentLength": 29
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 129,
+                  "startOffset": 280,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "ParameterType": "RequestMaxCpuTimeSec"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 133,
+                "startOffset": 284,
+                "fragmentLength": 37
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 168,
+                  "startOffset": 319,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "40"
+              },
+              "ParameterType": "RequestMemoryGrantTimeoutSec"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 172,
+                "startOffset": 323,
+                "fragmentLength": 23
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 7,
+                  "startColumn": 193,
+                  "startOffset": 344,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "ParameterType": "GroupMaxRequests"
+            }
+          ],
+          "PoolName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 219,
+              "startOffset": 370,
+              "fragmentLength": 5
+            },
+            "Value": "p_int",
+            "QuoteType": "NotQuoted"
+          },
+          "ExternalPoolName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 7,
+              "startColumn": 212,
+              "startOffset": 363,
+              "fragmentLength": 5
+            },
+            "Value": "p_ext",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 9,
+            "startColumn": 1,
+            "startOffset": 378,
+            "fragmentLength": 224
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 9,
+              "startColumn": 22,
+              "startOffset": 399,
+              "fragmentLength": 1
+            },
+            "Value": "g",
+            "QuoteType": "NotQuoted"
+          },
+          "WorkloadGroupParameters": [
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 9,
+                "startColumn": 30,
+                "startOffset": 407,
+                "fragmentLength": 37
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 65,
+                  "startOffset": 442,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              },
+              "ParameterType": "RequestMaxMemoryGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupImportanceParameter",
+              "location": {
+                "startLine": 9,
+                "startColumn": 69,
+                "startOffset": 446,
+                "fragmentLength": 17
+              },
+              "ParameterValue": "High",
+              "ParameterType": "Importance"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 9,
+                "startColumn": 88,
+                "startOffset": 465,
+                "fragmentLength": 12
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 98,
+                  "startOffset": 475,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              },
+              "ParameterType": "MaxDop"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 9,
+                "startColumn": 102,
+                "startOffset": 479,
+                "fragmentLength": 29
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 129,
+                  "startOffset": 506,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "ParameterType": "RequestMaxCpuTimeSec"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 9,
+                "startColumn": 133,
+                "startOffset": 510,
+                "fragmentLength": 37
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 168,
+                  "startOffset": 545,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "40"
+              },
+              "ParameterType": "RequestMemoryGrantTimeoutSec"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 9,
+                "startColumn": 172,
+                "startOffset": 549,
+                "fragmentLength": 23
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 9,
+                  "startColumn": 193,
+                  "startOffset": 570,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "ParameterType": "GroupMaxRequests"
+            }
+          ],
+          "PoolName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 9,
+              "startColumn": 203,
+              "startOffset": 580,
+              "fragmentLength": 5
+            },
+            "Value": "p_int",
+            "QuoteType": "NotQuoted"
+          },
+          "ExternalPoolName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 9,
+              "startColumn": 219,
+              "startOffset": 596,
+              "fragmentLength": 5
+            },
+            "Value": "p_ext",
+            "QuoteType": "NotQuoted"
+          }
+        },
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 11,
+            "startColumn": 1,
+            "startOffset": 604,
+            "fragmentLength": 217
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 11,
+              "startColumn": 22,
+              "startOffset": 625,
+              "fragmentLength": 1
+            },
+            "Value": "g",
+            "QuoteType": "NotQuoted"
+          },
+          "WorkloadGroupParameters": [
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 11,
+                "startColumn": 30,
+                "startOffset": 633,
+                "fragmentLength": 37
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 65,
+                  "startOffset": 668,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              },
+              "ParameterType": "RequestMaxMemoryGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupImportanceParameter",
+              "location": {
+                "startLine": 11,
+                "startColumn": 69,
+                "startOffset": 672,
+                "fragmentLength": 17
+              },
+              "ParameterValue": "High",
+              "ParameterType": "Importance"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 11,
+                "startColumn": 88,
+                "startOffset": 691,
+                "fragmentLength": 12
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 98,
+                  "startOffset": 701,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "20"
+              },
+              "ParameterType": "MaxDop"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 11,
+                "startColumn": 102,
+                "startOffset": 705,
+                "fragmentLength": 29
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 129,
+                  "startOffset": 732,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "ParameterType": "RequestMaxCpuTimeSec"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 11,
+                "startColumn": 133,
+                "startOffset": 736,
+                "fragmentLength": 37
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 168,
+                  "startOffset": 771,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "40"
+              },
+              "ParameterType": "RequestMemoryGrantTimeoutSec"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 11,
+                "startColumn": 172,
+                "startOffset": 775,
+                "fragmentLength": 23
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 11,
+                  "startColumn": 193,
+                  "startOffset": 796,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "10"
+              },
+              "ParameterType": "GroupMaxRequests"
+            }
+          ],
+          "ExternalPoolName": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 11,
+              "startColumn": 212,
+              "startOffset": 815,
+              "fragmentLength": 5
+            },
+            "Value": "p_ext",
+            "QuoteType": "NotQuoted"
+          }
+        }
+      ]
+    }
+  ]
+}

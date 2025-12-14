@@ -1,0 +1,852 @@
+{
+  "$type": "TSqlScript",
+  "location": {
+    "startLine": 1,
+    "startColumn": 1,
+    "startOffset": 0,
+    "fragmentLength": 1939
+  },
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 1,
+        "startColumn": 1,
+        "startOffset": 0,
+        "fragmentLength": 334
+      },
+      "Statements": [
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 1,
+            "startColumn": 1,
+            "startOffset": 0,
+            "fragmentLength": 334
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 1,
+              "startColumn": 22,
+              "startOffset": 21,
+              "fragmentLength": 24
+            },
+            "Value": "wgAllParamsImportanceLow",
+            "QuoteType": "NotQuoted"
+          },
+          "WorkloadGroupParameters": [
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 3,
+                "startColumn": 13,
+                "startOffset": 70,
+                "fragmentLength": 27
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 3,
+                  "startColumn": 39,
+                  "startOffset": 96,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "8"
+              },
+              "ParameterType": "MinPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 4,
+                "startColumn": 13,
+                "startOffset": 111,
+                "fragmentLength": 38
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 4,
+                  "startColumn": 50,
+                  "startOffset": 148,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "ParameterType": "RequestMinResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 5,
+                "startColumn": 13,
+                "startOffset": 163,
+                "fragmentLength": 29
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 5,
+                  "startColumn": 39,
+                  "startOffset": 189,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "ParameterType": "CapPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 6,
+                "startColumn": 13,
+                "startOffset": 206,
+                "fragmentLength": 40
+              },
+              "ParameterValue": {
+                "$type": "NumericLiteral",
+                "location": {
+                  "startLine": 6,
+                  "startColumn": 50,
+                  "startOffset": 243,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Numeric",
+                "Value": "3.5"
+              },
+              "ParameterType": "RequestMaxResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupImportanceParameter",
+              "location": {
+                "startLine": 7,
+                "startColumn": 13,
+                "startOffset": 260,
+                "fragmentLength": 16
+              },
+              "ParameterValue": "Low",
+              "ParameterType": "Importance"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 8,
+                "startColumn": 13,
+                "startOffset": 290,
+                "fragmentLength": 31
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 8,
+                  "startColumn": 43,
+                  "startOffset": 320,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "ParameterType": "QueryExecutionTimeoutSec"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 13,
+        "startColumn": 1,
+        "startOffset": 340,
+        "fragmentLength": 351
+      },
+      "Statements": [
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 13,
+            "startColumn": 1,
+            "startOffset": 340,
+            "fragmentLength": 351
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 13,
+              "startColumn": 22,
+              "startOffset": 361,
+              "fragmentLength": 32
+            },
+            "Value": "wgAllParamsImportanceBelowNormal",
+            "QuoteType": "NotQuoted"
+          },
+          "WorkloadGroupParameters": [
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 15,
+                "startColumn": 13,
+                "startOffset": 418,
+                "fragmentLength": 27
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 15,
+                  "startColumn": 39,
+                  "startOffset": 444,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "8"
+              },
+              "ParameterType": "MinPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 16,
+                "startColumn": 13,
+                "startOffset": 459,
+                "fragmentLength": 38
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 16,
+                  "startColumn": 50,
+                  "startOffset": 496,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "ParameterType": "RequestMinResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 17,
+                "startColumn": 13,
+                "startOffset": 511,
+                "fragmentLength": 29
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 17,
+                  "startColumn": 39,
+                  "startOffset": 537,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "ParameterType": "CapPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 18,
+                "startColumn": 13,
+                "startOffset": 554,
+                "fragmentLength": 40
+              },
+              "ParameterValue": {
+                "$type": "NumericLiteral",
+                "location": {
+                  "startLine": 18,
+                  "startColumn": 50,
+                  "startOffset": 591,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Numeric",
+                "Value": "3.5"
+              },
+              "ParameterType": "RequestMaxResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupImportanceParameter",
+              "location": {
+                "startLine": 19,
+                "startColumn": 13,
+                "startOffset": 608,
+                "fragmentLength": 25
+              },
+              "ParameterValue": "Below_Normal",
+              "ParameterType": "Importance"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 20,
+                "startColumn": 13,
+                "startOffset": 647,
+                "fragmentLength": 31
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 20,
+                  "startColumn": 43,
+                  "startOffset": 677,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "ParameterType": "QueryExecutionTimeoutSec"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 25,
+        "startColumn": 1,
+        "startOffset": 697,
+        "fragmentLength": 340
+      },
+      "Statements": [
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 25,
+            "startColumn": 1,
+            "startOffset": 697,
+            "fragmentLength": 340
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 25,
+              "startColumn": 22,
+              "startOffset": 718,
+              "fragmentLength": 27
+            },
+            "Value": "wgAllParamsImportanceNormal",
+            "QuoteType": "NotQuoted"
+          },
+          "WorkloadGroupParameters": [
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 27,
+                "startColumn": 13,
+                "startOffset": 770,
+                "fragmentLength": 27
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 27,
+                  "startColumn": 39,
+                  "startOffset": 796,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "8"
+              },
+              "ParameterType": "MinPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 28,
+                "startColumn": 13,
+                "startOffset": 811,
+                "fragmentLength": 38
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 28,
+                  "startColumn": 50,
+                  "startOffset": 848,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "ParameterType": "RequestMinResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 29,
+                "startColumn": 13,
+                "startOffset": 863,
+                "fragmentLength": 29
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 29,
+                  "startColumn": 39,
+                  "startOffset": 889,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "ParameterType": "CapPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 30,
+                "startColumn": 13,
+                "startOffset": 906,
+                "fragmentLength": 40
+              },
+              "ParameterValue": {
+                "$type": "NumericLiteral",
+                "location": {
+                  "startLine": 30,
+                  "startColumn": 50,
+                  "startOffset": 943,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Numeric",
+                "Value": "3.5"
+              },
+              "ParameterType": "RequestMaxResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupImportanceParameter",
+              "location": {
+                "startLine": 31,
+                "startColumn": 13,
+                "startOffset": 960,
+                "fragmentLength": 19
+              },
+              "ParameterValue": "Normal",
+              "ParameterType": "Importance"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 32,
+                "startColumn": 13,
+                "startOffset": 993,
+                "fragmentLength": 31
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 32,
+                  "startColumn": 43,
+                  "startOffset": 1023,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "ParameterType": "QueryExecutionTimeoutSec"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 37,
+        "startColumn": 1,
+        "startOffset": 1043,
+        "fragmentLength": 351
+      },
+      "Statements": [
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 37,
+            "startColumn": 1,
+            "startOffset": 1043,
+            "fragmentLength": 351
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 37,
+              "startColumn": 22,
+              "startOffset": 1064,
+              "fragmentLength": 32
+            },
+            "Value": "wgAllParamsImportanceAboveNormal",
+            "QuoteType": "NotQuoted"
+          },
+          "WorkloadGroupParameters": [
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 39,
+                "startColumn": 13,
+                "startOffset": 1121,
+                "fragmentLength": 27
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 39,
+                  "startColumn": 39,
+                  "startOffset": 1147,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "8"
+              },
+              "ParameterType": "MinPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 40,
+                "startColumn": 13,
+                "startOffset": 1162,
+                "fragmentLength": 38
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 40,
+                  "startColumn": 50,
+                  "startOffset": 1199,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "ParameterType": "RequestMinResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 41,
+                "startColumn": 13,
+                "startOffset": 1214,
+                "fragmentLength": 29
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 41,
+                  "startColumn": 39,
+                  "startOffset": 1240,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "ParameterType": "CapPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 42,
+                "startColumn": 13,
+                "startOffset": 1257,
+                "fragmentLength": 40
+              },
+              "ParameterValue": {
+                "$type": "NumericLiteral",
+                "location": {
+                  "startLine": 42,
+                  "startColumn": 50,
+                  "startOffset": 1294,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Numeric",
+                "Value": "3.5"
+              },
+              "ParameterType": "RequestMaxResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupImportanceParameter",
+              "location": {
+                "startLine": 43,
+                "startColumn": 13,
+                "startOffset": 1311,
+                "fragmentLength": 25
+              },
+              "ParameterValue": "Above_Normal",
+              "ParameterType": "Importance"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 44,
+                "startColumn": 13,
+                "startOffset": 1350,
+                "fragmentLength": 31
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 44,
+                  "startColumn": 43,
+                  "startOffset": 1380,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "ParameterType": "QueryExecutionTimeoutSec"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 49,
+        "startColumn": 1,
+        "startOffset": 1400,
+        "fragmentLength": 336
+      },
+      "Statements": [
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 49,
+            "startColumn": 1,
+            "startOffset": 1400,
+            "fragmentLength": 336
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 49,
+              "startColumn": 22,
+              "startOffset": 1421,
+              "fragmentLength": 25
+            },
+            "Value": "wgAllParamsImportanceHigh",
+            "QuoteType": "NotQuoted"
+          },
+          "WorkloadGroupParameters": [
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 51,
+                "startColumn": 13,
+                "startOffset": 1471,
+                "fragmentLength": 27
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 51,
+                  "startColumn": 39,
+                  "startOffset": 1497,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "8"
+              },
+              "ParameterType": "MinPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 52,
+                "startColumn": 13,
+                "startOffset": 1512,
+                "fragmentLength": 38
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 52,
+                  "startColumn": 50,
+                  "startOffset": 1549,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "ParameterType": "RequestMinResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 53,
+                "startColumn": 13,
+                "startOffset": 1564,
+                "fragmentLength": 29
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 53,
+                  "startColumn": 39,
+                  "startOffset": 1590,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Integer",
+                "Value": "100"
+              },
+              "ParameterType": "CapPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 54,
+                "startColumn": 13,
+                "startOffset": 1607,
+                "fragmentLength": 40
+              },
+              "ParameterValue": {
+                "$type": "NumericLiteral",
+                "location": {
+                  "startLine": 54,
+                  "startColumn": 50,
+                  "startOffset": 1644,
+                  "fragmentLength": 3
+                },
+                "LiteralType": "Numeric",
+                "Value": "3.5"
+              },
+              "ParameterType": "RequestMaxResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupImportanceParameter",
+              "location": {
+                "startLine": 55,
+                "startColumn": 13,
+                "startOffset": 1661,
+                "fragmentLength": 17
+              },
+              "ParameterValue": "High",
+              "ParameterType": "Importance"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 56,
+                "startColumn": 13,
+                "startOffset": 1692,
+                "fragmentLength": 31
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 56,
+                  "startColumn": 43,
+                  "startOffset": 1722,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "1"
+              },
+              "ParameterType": "QueryExecutionTimeoutSec"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "location": {
+        "startLine": 61,
+        "startColumn": 1,
+        "startOffset": 1742,
+        "fragmentLength": 195
+      },
+      "Statements": [
+        {
+          "$type": "AlterWorkloadGroupStatement",
+          "location": {
+            "startLine": 61,
+            "startColumn": 1,
+            "startOffset": 1742,
+            "fragmentLength": 195
+          },
+          "Name": {
+            "$type": "Identifier",
+            "location": {
+              "startLine": 61,
+              "startColumn": 22,
+              "startOffset": 1763,
+              "fragmentLength": 15
+            },
+            "Value": "wgDefaultParams",
+            "QuoteType": "NotQuoted"
+          },
+          "WorkloadGroupParameters": [
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 63,
+                "startColumn": 13,
+                "startOffset": 1803,
+                "fragmentLength": 27
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 63,
+                  "startColumn": 39,
+                  "startOffset": 1829,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "8"
+              },
+              "ParameterType": "MinPercentageResource"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 64,
+                "startColumn": 13,
+                "startOffset": 1844,
+                "fragmentLength": 38
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 64,
+                  "startColumn": 50,
+                  "startOffset": 1881,
+                  "fragmentLength": 1
+                },
+                "LiteralType": "Integer",
+                "Value": "2"
+              },
+              "ParameterType": "RequestMinResourceGrantPercent"
+            },
+            {
+              "$type": "WorkloadGroupResourceParameter",
+              "location": {
+                "startLine": 65,
+                "startColumn": 13,
+                "startOffset": 1896,
+                "fragmentLength": 28
+              },
+              "ParameterValue": {
+                "$type": "IntegerLiteral",
+                "location": {
+                  "startLine": 65,
+                  "startColumn": 39,
+                  "startOffset": 1922,
+                  "fragmentLength": 2
+                },
+                "LiteralType": "Integer",
+                "Value": "50"
+              },
+              "ParameterType": "CapPercentageResource"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
