@@ -51,12 +51,14 @@ func (p *Parser) parseScript() (*ast.Script, error) {
 	script := &ast.Script{}
 
 	// Parse all batches (separated by GO)
-	batch, err := p.parseBatch()
-	if err != nil {
-		return nil, err
-	}
-	if batch != nil && len(batch.Statements) > 0 {
-		script.Batches = append(script.Batches, batch)
+	for p.curTok.Type != TokenEOF {
+		batch, err := p.parseBatch()
+		if err != nil {
+			return nil, err
+		}
+		if batch != nil && len(batch.Statements) > 0 {
+			script.Batches = append(script.Batches, batch)
+		}
 	}
 
 	return script, nil
@@ -66,10 +68,10 @@ func (p *Parser) parseBatch() (*ast.Batch, error) {
 	batch := &ast.Batch{}
 
 	for p.curTok.Type != TokenEOF {
-		// Skip GO statements (batch separators)
+		// Stop at GO statements (batch separators)
 		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO" {
 			p.nextToken()
-			continue
+			break
 		}
 
 		stmt, err := p.parseStatement()
@@ -86,7 +88,7 @@ func (p *Parser) parseBatch() (*ast.Batch, error) {
 
 func (p *Parser) parseStatement() (ast.Statement, error) {
 	switch p.curTok.Type {
-	case TokenSelect:
+	case TokenSelect, TokenLParen:
 		return p.parseSelectStatement()
 	case TokenPrint:
 		return p.parsePrintStatement()
@@ -344,12 +346,13 @@ func (p *Parser) parseThrowStatement() (*ast.ThrowStatement, error) {
 func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
 	stmt := &ast.SelectStatement{}
 
-	// Parse query expression
-	qe, err := p.parseQueryExpression()
+	// Parse query expression (handles UNION, parens, etc.)
+	qe, into, err := p.parseQueryExpressionWithInto()
 	if err != nil {
 		return nil, err
 	}
 	stmt.QueryExpression = qe
+	stmt.Into = into
 
 	// Parse optional OPTION clause
 	if p.curTok.Type == TokenOption {
@@ -369,10 +372,161 @@ func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
 }
 
 func (p *Parser) parseQueryExpression() (ast.QueryExpression, error) {
-	return p.parseQuerySpecification()
+	qe, _, err := p.parseQueryExpressionWithInto()
+	return qe, err
 }
 
-func (p *Parser) parseQuerySpecification() (*ast.QuerySpecification, error) {
+func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.SchemaObjectName, error) {
+	// Parse primary query expression (could be SELECT or parenthesized)
+	left, into, err := p.parsePrimaryQueryExpression()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Track if we have any binary operations
+	hasBinaryOp := false
+
+	// Check for binary operations (UNION, EXCEPT, INTERSECT)
+	for p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect {
+		hasBinaryOp = true
+		var opType string
+		switch p.curTok.Type {
+		case TokenUnion:
+			opType = "Union"
+		case TokenExcept:
+			opType = "Except"
+		case TokenIntersect:
+			opType = "Intersect"
+		}
+		p.nextToken()
+
+		// Check for ALL
+		all := false
+		if p.curTok.Type == TokenAll {
+			all = true
+			p.nextToken()
+		}
+
+		// Parse the right side
+		right, rightInto, err := p.parsePrimaryQueryExpression()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// INTO can only appear in the first query of a UNION
+		if rightInto != nil && into == nil {
+			into = rightInto
+		}
+
+		bqe := &ast.BinaryQueryExpression{
+			BinaryQueryExpressionType: opType,
+			All:                       all,
+			FirstQueryExpression:      left,
+			SecondQueryExpression:     right,
+		}
+
+		left = bqe
+	}
+
+	// Parse ORDER BY after all UNION operations
+	if p.curTok.Type == TokenOrder {
+		obc, err := p.parseOrderByClause()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if hasBinaryOp {
+			// Attach to BinaryQueryExpression
+			if bqe, ok := left.(*ast.BinaryQueryExpression); ok {
+				bqe.OrderByClause = obc
+			}
+		} else {
+			// Attach to QuerySpecification
+			if qs, ok := left.(*ast.QuerySpecification); ok {
+				qs.OrderByClause = obc
+			}
+		}
+	}
+
+	return left, into, nil
+}
+
+func (p *Parser) parsePrimaryQueryExpression() (ast.QueryExpression, *ast.SchemaObjectName, error) {
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		qe, into, err := p.parseQueryExpressionWithInto()
+		if err != nil {
+			return nil, nil, err
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+		return &ast.QueryParenthesisExpression{QueryExpression: qe}, into, nil
+	}
+
+	return p.parseQuerySpecificationWithInto()
+}
+
+func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *ast.SchemaObjectName, error) {
+	qs, err := p.parseQuerySpecificationCore()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Check for INTO clause after SELECT elements, before FROM
+	var into *ast.SchemaObjectName
+	if p.curTok.Type == TokenInto {
+		p.nextToken() // consume INTO
+		into, err = p.parseSchemaObjectName()
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// Parse optional FROM clause
+	if p.curTok.Type == TokenFrom {
+		fromClause, err := p.parseFromClause()
+		if err != nil {
+			return nil, nil, err
+		}
+		qs.FromClause = fromClause
+	}
+
+	// Parse optional WHERE clause
+	if p.curTok.Type == TokenWhere {
+		whereClause, err := p.parseWhereClause()
+		if err != nil {
+			return nil, nil, err
+		}
+		qs.WhereClause = whereClause
+	}
+
+	// Parse optional GROUP BY clause
+	if p.curTok.Type == TokenGroup {
+		groupByClause, err := p.parseGroupByClause()
+		if err != nil {
+			return nil, nil, err
+		}
+		qs.GroupByClause = groupByClause
+	}
+
+	// Parse optional HAVING clause
+	if p.curTok.Type == TokenHaving {
+		havingClause, err := p.parseHavingClause()
+		if err != nil {
+			return nil, nil, err
+		}
+		qs.HavingClause = havingClause
+	}
+
+	// Note: ORDER BY is parsed at the top level in parseQueryExpressionWithInto
+	// to correctly handle UNION/EXCEPT/INTERSECT cases
+
+	return qs, into, nil
+}
+
+func (p *Parser) parseQuerySpecificationCore() (*ast.QuerySpecification, error) {
 	qs := &ast.QuerySpecification{
 		UniqueRowFilter: "NotSpecified",
 	}
@@ -392,6 +546,15 @@ func (p *Parser) parseQuerySpecification() (*ast.QuerySpecification, error) {
 		p.nextToken()
 	}
 
+	// Check for TOP clause
+	if p.curTok.Type == TokenTop {
+		top, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		qs.TopRowFilter = top
+	}
+
 	// Parse select elements
 	elements, err := p.parseSelectElements()
 	if err != nil {
@@ -399,16 +562,52 @@ func (p *Parser) parseQuerySpecification() (*ast.QuerySpecification, error) {
 	}
 	qs.SelectElements = elements
 
-	// Parse optional FROM clause
-	if p.curTok.Type == TokenFrom {
-		fromClause, err := p.parseFromClause()
+	return qs, nil
+}
+
+func (p *Parser) parseTopRowFilter() (*ast.TopRowFilter, error) {
+	// Consume TOP
+	p.nextToken()
+
+	top := &ast.TopRowFilter{}
+
+	// Check for parenthesized expression
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		expr, err := p.parseScalarExpression()
 		if err != nil {
 			return nil, err
 		}
-		qs.FromClause = fromClause
+		top.Expression = expr
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	} else {
+		// Parse literal expression
+		expr, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+		top.Expression = expr
 	}
 
-	return qs, nil
+	// Check for PERCENT
+	if p.curTok.Type == TokenPercent {
+		top.Percent = true
+		p.nextToken()
+	}
+
+	// Check for WITH TIES
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenTies {
+			top.WithTies = true
+			p.nextToken()
+		}
+	}
+
+	return top, nil
 }
 
 func (p *Parser) parseSelectElements() ([]ast.SelectElement, error) {
@@ -443,7 +642,54 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		return nil, err
 	}
 
-	return &ast.SelectScalarExpression{Expression: expr}, nil
+	sse := &ast.SelectScalarExpression{Expression: expr}
+
+	// Check for column alias: [alias], AS alias, or just alias
+	if p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '[' {
+		// Bracketed alias without AS
+		alias := p.parseIdentifier()
+		sse.ColumnName = &ast.IdentifierOrValueExpression{
+			Value:      alias.Value,
+			Identifier: alias,
+		}
+	} else if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		alias := p.parseIdentifier()
+		sse.ColumnName = &ast.IdentifierOrValueExpression{
+			Value:      alias.Value,
+			Identifier: alias,
+		}
+	} else if p.curTok.Type == TokenIdent {
+		// Check if this is an alias (not a keyword that starts a new clause)
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "FROM" && upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "INTO" && upper != "UNION" && upper != "EXCEPT" && upper != "INTERSECT" && upper != "GO" {
+			alias := p.parseIdentifier()
+			sse.ColumnName = &ast.IdentifierOrValueExpression{
+				Value:      alias.Value,
+				Identifier: alias,
+			}
+		}
+	}
+
+	return sse, nil
+}
+
+func (p *Parser) parseIdentifier() *ast.Identifier {
+	literal := p.curTok.Literal
+	quoteType := "NotQuoted"
+
+	// Handle bracketed identifiers
+	if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
+		quoteType = "SquareBracket"
+		literal = literal[1 : len(literal)-1]
+	}
+
+	id := &ast.Identifier{
+		Value:     literal,
+		QuoteType: quoteType,
+	}
+	p.nextToken()
+	return id
 }
 
 func (p *Parser) parseScalarExpression() (ast.ScalarExpression, error) {
@@ -493,12 +739,63 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 	case TokenNumber:
 		val := p.curTok.Literal
 		p.nextToken()
+		// Check if it's a decimal number
+		if strings.Contains(val, ".") {
+			return &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, nil
+		}
 		return &ast.IntegerLiteral{LiteralType: "Integer", Value: val}, nil
 	case TokenString:
 		return p.parseStringLiteral()
+	case TokenLBrace:
+		return p.parseOdbcLiteral()
 	default:
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	}
+}
+
+func (p *Parser) parseOdbcLiteral() (*ast.OdbcLiteral, error) {
+	// Consume {
+	p.nextToken()
+
+	// Expect "guid" identifier
+	if p.curTok.Type != TokenIdent || strings.ToLower(p.curTok.Literal) != "guid" {
+		return nil, fmt.Errorf("expected guid in ODBC literal, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for N prefix for national string
+	isNational := false
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "N" {
+		isNational = true
+		p.nextToken()
+	}
+
+	// Expect string literal
+	if p.curTok.Type != TokenString {
+		return nil, fmt.Errorf("expected string in ODBC literal, got %s", p.curTok.Literal)
+	}
+
+	raw := p.curTok.Literal
+	p.nextToken()
+
+	// Remove surrounding quotes
+	value := raw
+	if len(raw) >= 2 && raw[0] == '\'' && raw[len(raw)-1] == '\'' {
+		value = raw[1 : len(raw)-1]
+	}
+
+	// Consume }
+	if p.curTok.Type != TokenRBrace {
+		return nil, fmt.Errorf("expected } in ODBC literal, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	return &ast.OdbcLiteral{
+		LiteralType:     "Odbc",
+		OdbcLiteralType: "Guid",
+		IsNational:      isNational,
+		Value:           value,
+	}, nil
 }
 
 func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
@@ -583,7 +880,97 @@ func (p *Parser) parseFromClause() (*ast.FromClause, error) {
 }
 
 func (p *Parser) parseTableReference() (ast.TableReference, error) {
-	return p.parseNamedTableReference()
+	// Parse the base table reference
+	baseRef, err := p.parseNamedTableReference()
+	if err != nil {
+		return nil, err
+	}
+	var left ast.TableReference = baseRef
+
+	// Check for JOINs
+	for {
+		// Check for CROSS JOIN
+		if p.curTok.Type == TokenCross {
+			p.nextToken() // consume CROSS
+			if p.curTok.Type != TokenJoin {
+				return nil, fmt.Errorf("expected JOIN after CROSS, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume JOIN
+
+			right, err := p.parseNamedTableReference()
+			if err != nil {
+				return nil, err
+			}
+
+			left = &ast.UnqualifiedJoin{
+				UnqualifiedJoinType:  "CrossJoin",
+				FirstTableReference:  left,
+				SecondTableReference: right,
+			}
+			continue
+		}
+
+		// Check for qualified JOINs (INNER, LEFT, RIGHT, FULL)
+		joinType := ""
+		if p.curTok.Type == TokenInner {
+			joinType = "Inner"
+			p.nextToken()
+		} else if p.curTok.Type == TokenLeft {
+			joinType = "LeftOuter"
+			p.nextToken()
+			if p.curTok.Type == TokenOuter {
+				p.nextToken()
+			}
+		} else if p.curTok.Type == TokenRight {
+			joinType = "RightOuter"
+			p.nextToken()
+			if p.curTok.Type == TokenOuter {
+				p.nextToken()
+			}
+		} else if p.curTok.Type == TokenFull {
+			joinType = "FullOuter"
+			p.nextToken()
+			if p.curTok.Type == TokenOuter {
+				p.nextToken()
+			}
+		} else if p.curTok.Type == TokenJoin {
+			joinType = "Inner"
+		}
+
+		if joinType == "" {
+			break
+		}
+
+		if p.curTok.Type != TokenJoin {
+			return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume JOIN
+
+		right, err := p.parseNamedTableReference()
+		if err != nil {
+			return nil, err
+		}
+
+		// Parse ON clause
+		if p.curTok.Type != TokenOn {
+			return nil, fmt.Errorf("expected ON after JOIN, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ON
+
+		condition, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.QualifiedJoin{
+			QualifiedJoinType:    joinType,
+			FirstTableReference:  left,
+			SecondTableReference: right,
+			SearchCondition:      condition,
+		}
+	}
+
+	return left, nil
 }
 
 func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
@@ -622,16 +1009,23 @@ func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
 	var identifiers []*ast.Identifier
 
 	for {
+		// Handle empty parts (e.g., myDb..table means myDb.<empty>.table)
+		if p.curTok.Type == TokenDot {
+			// Add an empty identifier for the missing part
+			identifiers = append(identifiers, &ast.Identifier{
+				Value:     "",
+				QuoteType: "NotQuoted",
+			})
+			p.nextToken() // consume dot
+			continue
+		}
+
 		if p.curTok.Type != TokenIdent {
 			break
 		}
 
-		id := &ast.Identifier{
-			Value:     p.curTok.Literal,
-			QuoteType: "NotQuoted",
-		}
+		id := p.parseIdentifier()
 		identifiers = append(identifiers, id)
-		p.nextToken()
 
 		if p.curTok.Type != TokenDot {
 			break
@@ -643,14 +1037,42 @@ func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
 		return nil, fmt.Errorf("expected identifier for schema object name")
 	}
 
-	// BaseIdentifier is the last identifier
-	baseId := identifiers[len(identifiers)-1]
+	// Filter out nil identifiers for the count and assignment
+	var nonNilIdentifiers []*ast.Identifier
+	for _, id := range identifiers {
+		if id != nil {
+			nonNilIdentifiers = append(nonNilIdentifiers, id)
+		}
+	}
 
-	return &ast.SchemaObjectName{
-		BaseIdentifier: baseId,
-		Count:          len(identifiers),
-		Identifiers:    identifiers,
-	}, nil
+	son := &ast.SchemaObjectName{
+		Count:       len(identifiers),
+		Identifiers: identifiers,
+	}
+
+	// Set the appropriate identifier fields based on count
+	// server.database.schema.table (4 parts)
+	// database.schema.table (3 parts)
+	// schema.table (2 parts) - but with .., schema is nil
+	// table (1 part)
+	switch len(identifiers) {
+	case 4:
+		son.ServerIdentifier = identifiers[0]
+		son.DatabaseIdentifier = identifiers[1]
+		son.SchemaIdentifier = identifiers[2]
+		son.BaseIdentifier = identifiers[3]
+	case 3:
+		son.DatabaseIdentifier = identifiers[0]
+		son.SchemaIdentifier = identifiers[1]
+		son.BaseIdentifier = identifiers[2]
+	case 2:
+		son.SchemaIdentifier = identifiers[0]
+		son.BaseIdentifier = identifiers[1]
+	case 1:
+		son.BaseIdentifier = identifiers[0]
+	}
+
+	return son, nil
 }
 
 func (p *Parser) parseOptionClause() ([]*ast.OptimizerHint, error) {
@@ -700,6 +1122,219 @@ func convertHintKind(hint string) string {
 		return mapped
 	}
 	return hint
+}
+
+func (p *Parser) parseWhereClause() (*ast.WhereClause, error) {
+	// Consume WHERE
+	p.nextToken()
+
+	condition, err := p.parseBooleanExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.WhereClause{SearchCondition: condition}, nil
+}
+
+func (p *Parser) parseGroupByClause() (*ast.GroupByClause, error) {
+	// Consume GROUP
+	p.nextToken()
+
+	if p.curTok.Type != TokenBy {
+		return nil, fmt.Errorf("expected BY after GROUP, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume BY
+
+	gbc := &ast.GroupByClause{
+		GroupByOption: "None",
+		All:           false,
+	}
+
+	// Check for ALL
+	if p.curTok.Type == TokenAll {
+		gbc.All = true
+		p.nextToken()
+	}
+
+	// Parse grouping specifications
+	for {
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		spec := &ast.ExpressionGroupingSpecification{
+			Expression:             expr,
+			DistributedAggregation: false,
+		}
+		gbc.GroupingSpecifications = append(gbc.GroupingSpecifications, spec)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Check for WITH ROLLUP or WITH CUBE
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenRollup {
+			gbc.GroupByOption = "Rollup"
+			p.nextToken()
+		} else if p.curTok.Type == TokenCube {
+			gbc.GroupByOption = "Cube"
+			p.nextToken()
+		}
+	}
+
+	return gbc, nil
+}
+
+func (p *Parser) parseHavingClause() (*ast.HavingClause, error) {
+	// Consume HAVING
+	p.nextToken()
+
+	condition, err := p.parseBooleanExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.HavingClause{SearchCondition: condition}, nil
+}
+
+func (p *Parser) parseOrderByClause() (*ast.OrderByClause, error) {
+	// Consume ORDER
+	p.nextToken()
+
+	if p.curTok.Type != TokenBy {
+		return nil, fmt.Errorf("expected BY after ORDER, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume BY
+
+	obc := &ast.OrderByClause{}
+
+	// Parse order by elements
+	for {
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		elem := &ast.ExpressionWithSortOrder{
+			Expression: expr,
+			SortOrder:  "NotSpecified",
+		}
+
+		// Check for ASC or DESC
+		if p.curTok.Type == TokenAsc {
+			elem.SortOrder = "Ascending"
+			p.nextToken()
+		} else if p.curTok.Type == TokenDesc {
+			elem.SortOrder = "Descending"
+			p.nextToken()
+		}
+
+		obc.OrderByElements = append(obc.OrderByElements, elem)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	return obc, nil
+}
+
+func (p *Parser) parseBooleanExpression() (ast.BooleanExpression, error) {
+	return p.parseBooleanOrExpression()
+}
+
+func (p *Parser) parseBooleanOrExpression() (ast.BooleanExpression, error) {
+	left, err := p.parseBooleanAndExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.curTok.Type == TokenOr {
+		p.nextToken() // consume OR
+
+		right, err := p.parseBooleanAndExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BooleanBinaryExpression{
+			BinaryExpressionType: "Or",
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
+}
+
+func (p *Parser) parseBooleanAndExpression() (ast.BooleanExpression, error) {
+	left, err := p.parseBooleanPrimaryExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.curTok.Type == TokenAnd {
+		p.nextToken() // consume AND
+
+		right, err := p.parseBooleanPrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BooleanBinaryExpression{
+			BinaryExpressionType: "And",
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
+}
+
+func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) {
+	// Parse left scalar expression
+	left, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for comparison operator
+	var compType string
+	switch p.curTok.Type {
+	case TokenEquals:
+		compType = "Equals"
+	case TokenNotEqual:
+		compType = "NotEqualToBrackets"
+	case TokenLessThan:
+		compType = "LessThan"
+	case TokenGreaterThan:
+		compType = "GreaterThan"
+	case TokenLessOrEqual:
+		compType = "LessThanOrEqualTo"
+	case TokenGreaterOrEqual:
+		compType = "GreaterThanOrEqualTo"
+	default:
+		return nil, fmt.Errorf("expected comparison operator, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse right scalar expression
+	right, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.BooleanComparisonExpression{
+		ComparisonType:   compType,
+		FirstExpression:  left,
+		SecondExpression: right,
+	}, nil
 }
 
 // jsonNode represents a generic JSON node from the AST JSON format.
@@ -844,6 +1479,9 @@ func selectStatementToJSON(s *ast.SelectStatement) jsonNode {
 	if s.QueryExpression != nil {
 		node["QueryExpression"] = queryExpressionToJSON(s.QueryExpression)
 	}
+	if s.Into != nil {
+		node["Into"] = schemaObjectNameToJSON(s.Into)
+	}
 	if len(s.OptimizerHints) > 0 {
 		hints := make([]jsonNode, len(s.OptimizerHints))
 		for i, h := range s.OptimizerHints {
@@ -868,9 +1506,43 @@ func queryExpressionToJSON(qe ast.QueryExpression) jsonNode {
 	switch q := qe.(type) {
 	case *ast.QuerySpecification:
 		return querySpecificationToJSON(q)
+	case *ast.QueryParenthesisExpression:
+		return queryParenthesisExpressionToJSON(q)
+	case *ast.BinaryQueryExpression:
+		return binaryQueryExpressionToJSON(q)
 	default:
 		return jsonNode{"$type": "UnknownQueryExpression"}
 	}
+}
+
+func queryParenthesisExpressionToJSON(q *ast.QueryParenthesisExpression) jsonNode {
+	node := jsonNode{
+		"$type": "QueryParenthesisExpression",
+	}
+	if q.QueryExpression != nil {
+		node["QueryExpression"] = queryExpressionToJSON(q.QueryExpression)
+	}
+	return node
+}
+
+func binaryQueryExpressionToJSON(q *ast.BinaryQueryExpression) jsonNode {
+	node := jsonNode{
+		"$type": "BinaryQueryExpression",
+	}
+	if q.BinaryQueryExpressionType != "" {
+		node["BinaryQueryExpressionType"] = q.BinaryQueryExpressionType
+	}
+	node["All"] = q.All
+	if q.FirstQueryExpression != nil {
+		node["FirstQueryExpression"] = queryExpressionToJSON(q.FirstQueryExpression)
+	}
+	if q.SecondQueryExpression != nil {
+		node["SecondQueryExpression"] = queryExpressionToJSON(q.SecondQueryExpression)
+	}
+	if q.OrderByClause != nil {
+		node["OrderByClause"] = orderByClauseToJSON(q.OrderByClause)
+	}
+	return node
 }
 
 func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
@@ -879,6 +1551,9 @@ func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
 	}
 	if q.UniqueRowFilter != "" {
 		node["UniqueRowFilter"] = q.UniqueRowFilter
+	}
+	if q.TopRowFilter != nil {
+		node["TopRowFilter"] = topRowFilterToJSON(q.TopRowFilter)
 	}
 	if len(q.SelectElements) > 0 {
 		elems := make([]jsonNode, len(q.SelectElements))
@@ -902,6 +1577,18 @@ func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
 	if q.OrderByClause != nil {
 		node["OrderByClause"] = orderByClauseToJSON(q.OrderByClause)
 	}
+	return node
+}
+
+func topRowFilterToJSON(t *ast.TopRowFilter) jsonNode {
+	node := jsonNode{
+		"$type": "TopRowFilter",
+	}
+	if t.Expression != nil {
+		node["Expression"] = scalarExpressionToJSON(t.Expression)
+	}
+	node["Percent"] = t.Percent
+	node["WithTies"] = t.WithTies
 	return node
 }
 
@@ -1012,6 +1699,32 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Name"] = e.Name
 		}
 		return node
+	case *ast.NumericLiteral:
+		node := jsonNode{
+			"$type": "NumericLiteral",
+		}
+		if e.LiteralType != "" {
+			node["LiteralType"] = e.LiteralType
+		}
+		if e.Value != "" {
+			node["Value"] = e.Value
+		}
+		return node
+	case *ast.OdbcLiteral:
+		node := jsonNode{
+			"$type": "OdbcLiteral",
+		}
+		if e.LiteralType != "" {
+			node["LiteralType"] = e.LiteralType
+		}
+		if e.OdbcLiteralType != "" {
+			node["OdbcLiteralType"] = e.OdbcLiteralType
+		}
+		node["IsNational"] = e.IsNational
+		if e.Value != "" {
+			node["Value"] = e.Value
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownScalarExpression"}
 	}
@@ -1021,9 +1734,8 @@ func identifierToJSON(id *ast.Identifier) jsonNode {
 	node := jsonNode{
 		"$type": "Identifier",
 	}
-	if id.Value != "" {
-		node["Value"] = id.Value
-	}
+	// Always include Value, even if empty
+	node["Value"] = id.Value
 	if id.QuoteType != "" {
 		node["QuoteType"] = id.QuoteType
 	}
@@ -1108,6 +1820,20 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["SecondTableReference"] = tableReferenceToJSON(r.SecondTableReference)
 		}
 		return node
+	case *ast.UnqualifiedJoin:
+		node := jsonNode{
+			"$type": "UnqualifiedJoin",
+		}
+		if r.UnqualifiedJoinType != "" {
+			node["UnqualifiedJoinType"] = r.UnqualifiedJoinType
+		}
+		if r.FirstTableReference != nil {
+			node["FirstTableReference"] = tableReferenceToJSON(r.FirstTableReference)
+		}
+		if r.SecondTableReference != nil {
+			node["SecondTableReference"] = tableReferenceToJSON(r.SecondTableReference)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownTableReference"}
 	}
@@ -1117,6 +1843,15 @@ func schemaObjectNameToJSON(son *ast.SchemaObjectName) jsonNode {
 	node := jsonNode{
 		"$type": "SchemaObjectName",
 	}
+	if son.ServerIdentifier != nil {
+		node["ServerIdentifier"] = identifierToJSON(son.ServerIdentifier)
+	}
+	if son.DatabaseIdentifier != nil {
+		node["DatabaseIdentifier"] = identifierToJSON(son.DatabaseIdentifier)
+	}
+	if son.SchemaIdentifier != nil {
+		node["SchemaIdentifier"] = identifierToJSON(son.SchemaIdentifier)
+	}
 	if son.BaseIdentifier != nil {
 		node["BaseIdentifier"] = identifierToJSON(son.BaseIdentifier)
 	}
@@ -1124,10 +1859,22 @@ func schemaObjectNameToJSON(son *ast.SchemaObjectName) jsonNode {
 		node["Count"] = son.Count
 	}
 	if len(son.Identifiers) > 0 {
-		// Handle $ref for identifiers that reference the base identifier
+		// Handle $ref for identifiers that reference the named identifiers
 		ids := make([]any, len(son.Identifiers))
 		for i, id := range son.Identifiers {
-			if son.BaseIdentifier != nil && id == son.BaseIdentifier {
+			// Check if this identifier is referenced by one of the named fields
+			isRef := false
+			if son.ServerIdentifier != nil && id == son.ServerIdentifier {
+				isRef = true
+			} else if son.DatabaseIdentifier != nil && id == son.DatabaseIdentifier {
+				isRef = true
+			} else if son.SchemaIdentifier != nil && id == son.SchemaIdentifier {
+				isRef = true
+			} else if son.BaseIdentifier != nil && id == son.BaseIdentifier {
+				isRef = true
+			}
+
+			if isRef {
 				ids[i] = jsonNode{"$ref": "Identifier"}
 			} else {
 				ids[i] = identifierToJSON(id)
@@ -1190,9 +1937,8 @@ func groupByClauseToJSON(gbc *ast.GroupByClause) jsonNode {
 	if gbc.GroupByOption != "" {
 		node["GroupByOption"] = gbc.GroupByOption
 	}
-	if gbc.All {
-		node["All"] = gbc.All
-	}
+	// Always include All field
+	node["All"] = gbc.All
 	if len(gbc.GroupingSpecifications) > 0 {
 		specs := make([]jsonNode, len(gbc.GroupingSpecifications))
 		for i, spec := range gbc.GroupingSpecifications {
@@ -1209,11 +1955,10 @@ func groupingSpecificationToJSON(spec ast.GroupingSpecification) jsonNode {
 		node := jsonNode{
 			"$type": "ExpressionGroupingSpecification",
 		}
+		// Always include DistributedAggregation field
+		node["DistributedAggregation"] = s.DistributedAggregation
 		if s.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(s.Expression)
-		}
-		if s.DistributedAggregation {
-			node["DistributedAggregation"] = s.DistributedAggregation
 		}
 		return node
 	default:

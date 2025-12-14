@@ -50,6 +50,35 @@ const (
 	TokenDatabase
 	TokenScoped
 	TokenCredential
+	TokenTop
+	TokenPercent
+	TokenTies
+	TokenInto
+	TokenGroup
+	TokenBy
+	TokenHaving
+	TokenOrder
+	TokenAsc
+	TokenDesc
+	TokenUnion
+	TokenExcept
+	TokenIntersect
+	TokenCross
+	TokenJoin
+	TokenInner
+	TokenLeft
+	TokenRight
+	TokenFull
+	TokenOuter
+	TokenOn
+	TokenRollup
+	TokenCube
+	TokenNotEqual
+	TokenLessOrEqual
+	TokenGreaterOrEqual
+	TokenNot
+	TokenLBrace
+	TokenRBrace
 )
 
 // Token represents a lexical token.
@@ -136,12 +165,39 @@ func (l *Lexer) NextToken() Token {
 		tok.Literal = "="
 		l.readChar()
 	case '<':
-		tok.Type = TokenLessThan
-		tok.Literal = "<"
-		l.readChar()
+		if l.peekChar() == '>' {
+			l.readChar()
+			tok.Type = TokenNotEqual
+			tok.Literal = "<>"
+			l.readChar()
+		} else if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = TokenLessOrEqual
+			tok.Literal = "<="
+			l.readChar()
+		} else {
+			tok.Type = TokenLessThan
+			tok.Literal = "<"
+			l.readChar()
+		}
 	case '>':
-		tok.Type = TokenGreaterThan
-		tok.Literal = ">"
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = TokenGreaterOrEqual
+			tok.Literal = ">="
+			l.readChar()
+		} else {
+			tok.Type = TokenGreaterThan
+			tok.Literal = ">"
+			l.readChar()
+		}
+	case '{':
+		tok.Type = TokenLBrace
+		tok.Literal = "{"
+		l.readChar()
+	case '}':
+		tok.Type = TokenRBrace
+		tok.Literal = "}"
 		l.readChar()
 	case '+':
 		tok.Type = TokenPlus
@@ -284,19 +340,19 @@ func isDigit(ch byte) bool {
 }
 
 var keywords = map[string]TokenType{
-	"SELECT":   TokenSelect,
-	"FROM":     TokenFrom,
-	"WHERE":    TokenWhere,
-	"AND":      TokenAnd,
-	"OR":       TokenOr,
-	"AS":       TokenAs,
-	"OPTION":   TokenOption,
-	"ALL":      TokenAll,
-	"DISTINCT": TokenDistinct,
-	"PRINT":    TokenPrint,
-	"THROW":    TokenThrow,
-	"ALTER":    TokenAlter,
-	"TABLE":    TokenTable,
+	"SELECT":     TokenSelect,
+	"FROM":       TokenFrom,
+	"WHERE":      TokenWhere,
+	"AND":        TokenAnd,
+	"OR":         TokenOr,
+	"AS":         TokenAs,
+	"OPTION":     TokenOption,
+	"ALL":        TokenAll,
+	"DISTINCT":   TokenDistinct,
+	"PRINT":      TokenPrint,
+	"THROW":      TokenThrow,
+	"ALTER":      TokenAlter,
+	"TABLE":      TokenTable,
 	"DROP":       TokenDrop,
 	"INDEX":      TokenIndex,
 	"REVERT":     TokenRevert,
@@ -305,6 +361,30 @@ var keywords = map[string]TokenType{
 	"DATABASE":   TokenDatabase,
 	"SCOPED":     TokenScoped,
 	"CREDENTIAL": TokenCredential,
+	"TOP":        TokenTop,
+	"PERCENT":    TokenPercent,
+	"TIES":       TokenTies,
+	"INTO":       TokenInto,
+	"GROUP":      TokenGroup,
+	"BY":         TokenBy,
+	"HAVING":     TokenHaving,
+	"ORDER":      TokenOrder,
+	"ASC":        TokenAsc,
+	"DESC":       TokenDesc,
+	"UNION":      TokenUnion,
+	"EXCEPT":     TokenExcept,
+	"INTERSECT":  TokenIntersect,
+	"CROSS":      TokenCross,
+	"JOIN":       TokenJoin,
+	"INNER":      TokenInner,
+	"LEFT":       TokenLeft,
+	"RIGHT":      TokenRight,
+	"FULL":       TokenFull,
+	"OUTER":      TokenOuter,
+	"ON":         TokenOn,
+	"ROLLUP":     TokenRollup,
+	"CUBE":       TokenCube,
+	"NOT":        TokenNot,
 }
 
 func lookupKeyword(ident string) TokenType {
