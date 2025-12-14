@@ -1,61 +1,19 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 996
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 996
-      },
       "Statements": [
         {
           "$type": "MergeStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 129
-          },
           "MergeSpecification": {
             "$type": "MergeSpecification",
-            "location": {
-              "startLine": 1,
-              "startColumn": 1,
-              "startOffset": 0,
-              "fragmentLength": 128
-            },
             "TableReference": {
               "$type": "NamedTableReference",
-              "location": {
-                "startLine": 3,
-                "startColumn": 7,
-                "startOffset": 20,
-                "fragmentLength": 1
-              },
               "SchemaObject": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 3,
-                  "startColumn": 7,
-                  "startOffset": 20,
-                  "fragmentLength": 1
-                },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 3,
-                    "startColumn": 7,
-                    "startOffset": 20,
-                    "fragmentLength": 1
-                  },
                   "Value": "b",
                   "QuoteType": "NotQuoted"
                 },
@@ -70,58 +28,22 @@
             },
             "SearchCondition": {
               "$type": "BooleanParenthesisExpression",
-              "location": {
-                "startLine": 3,
-                "startColumn": 12,
-                "startOffset": 25,
-                "fragmentLength": 46
-              },
               "Expression": {
                 "$type": "DistinctPredicate",
-                "location": {
-                  "startLine": 3,
-                  "startColumn": 13,
-                  "startOffset": 26,
-                  "fragmentLength": 44
-                },
                 "FirstExpression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 3,
-                    "startColumn": 13,
-                    "startOffset": 26,
-                    "fragmentLength": 11
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 3,
-                      "startColumn": 13,
-                      "startOffset": 26,
-                      "fragmentLength": 11
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 3,
-                          "startColumn": 13,
-                          "startOffset": 26,
-                          "fragmentLength": 1
-                        },
                         "Value": "a",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 3,
-                          "startColumn": 15,
-                          "startOffset": 28,
-                          "fragmentLength": 9
-                        },
                         "Value": "ProductID",
                         "QuoteType": "NotQuoted"
                       }
@@ -130,42 +52,18 @@
                 },
                 "SecondExpression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 3,
-                    "startColumn": 46,
-                    "startOffset": 59,
-                    "fragmentLength": 11
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 3,
-                      "startColumn": 46,
-                      "startOffset": 59,
-                      "fragmentLength": 11
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 3,
-                          "startColumn": 46,
-                          "startOffset": 59,
-                          "fragmentLength": 1
-                        },
                         "Value": "b",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 3,
-                          "startColumn": 48,
-                          "startOffset": 61,
-                          "fragmentLength": 9
-                        },
                         "Value": "ProductID",
                         "QuoteType": "NotQuoted"
                       }
@@ -178,68 +76,26 @@
             "ActionClauses": [
               {
                 "$type": "MergeActionClause",
-                "location": {
-                  "startLine": 4,
-                  "startColumn": 19,
-                  "startOffset": 90,
-                  "fragmentLength": 38
-                },
                 "Condition": "Matched",
                 "Action": {
                   "$type": "UpdateMergeAction",
-                  "location": {
-                    "startLine": 4,
-                    "startColumn": 19,
-                    "startOffset": 90,
-                    "fragmentLength": 38
-                  },
                   "SetClauses": [
                     {
                       "$type": "AssignmentSetClause",
-                      "location": {
-                        "startLine": 5,
-                        "startColumn": 5,
-                        "startOffset": 102,
-                        "fragmentLength": 26
-                      },
                       "Column": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 5,
-                          "startColumn": 5,
-                          "startOffset": 102,
-                          "fragmentLength": 11
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 5,
-                            "startColumn": 5,
-                            "startOffset": 102,
-                            "fragmentLength": 11
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 5,
-                                "startColumn": 5,
-                                "startOffset": 102,
-                                "fragmentLength": 2
-                              },
                               "Value": "pi",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 5,
-                                "startColumn": 8,
-                                "startOffset": 105,
-                                "fragmentLength": 8
-                              },
                               "Value": "Quantity",
                               "QuoteType": "NotQuoted"
                             }
@@ -248,42 +104,18 @@
                       },
                       "NewValue": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 5,
-                          "startColumn": 19,
-                          "startOffset": 116,
-                          "fragmentLength": 12
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 5,
-                            "startColumn": 19,
-                            "startOffset": 116,
-                            "fragmentLength": 12
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 5,
-                                "startColumn": 19,
-                                "startOffset": 116,
-                                "fragmentLength": 3
-                              },
                               "Value": "src",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 5,
-                                "startColumn": 23,
-                                "startOffset": 120,
-                                "fragmentLength": 8
-                              },
                               "Value": "OrderQty",
                               "QuoteType": "NotQuoted"
                             }
@@ -298,28 +130,10 @@
             ],
             "Target": {
               "$type": "NamedTableReference",
-              "location": {
-                "startLine": 1,
-                "startColumn": 12,
-                "startOffset": 11,
-                "fragmentLength": 1
-              },
               "SchemaObject": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 1,
-                  "startColumn": 12,
-                  "startOffset": 11,
-                  "fragmentLength": 1
-                },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 1,
-                    "startColumn": 12,
-                    "startOffset": 11,
-                    "fragmentLength": 1
-                  },
                   "Value": "a",
                   "QuoteType": "NotQuoted"
                 },
@@ -336,92 +150,32 @@
         },
         {
           "$type": "MergeStatement",
-          "location": {
-            "startLine": 7,
-            "startColumn": 1,
-            "startOffset": 131,
-            "fragmentLength": 202
-          },
           "MergeSpecification": {
             "$type": "MergeSpecification",
-            "location": {
-              "startLine": 7,
-              "startColumn": 1,
-              "startOffset": 131,
-              "fragmentLength": 201
-            },
             "TableAlias": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 8,
-                "startColumn": 5,
-                "startOffset": 174,
-                "fragmentLength": 2
-              },
               "Value": "pi",
               "QuoteType": "NotQuoted"
             },
             "TableReference": {
               "$type": "QueryDerivedTable",
-              "location": {
-                "startLine": 9,
-                "startColumn": 7,
-                "startOffset": 183,
-                "fragmentLength": 39
-              },
               "QueryExpression": {
                 "$type": "QuerySpecification",
-                "location": {
-                  "startLine": 9,
-                  "startColumn": 8,
-                  "startOffset": 184,
-                  "fragmentLength": 30
-                },
                 "UniqueRowFilter": "NotSpecified",
                 "SelectElements": [
                   {
-                    "$type": "SelectStarExpression",
-                    "location": {
-                      "startLine": 9,
-                      "startColumn": 15,
-                      "startOffset": 191,
-                      "fragmentLength": 1
-                    }
+                    "$type": "SelectStarExpression"
                   }
                 ],
                 "FromClause": {
                   "$type": "FromClause",
-                  "location": {
-                    "startLine": 10,
-                    "startColumn": 8,
-                    "startOffset": 200,
-                    "fragmentLength": 14
-                  },
                   "TableReferences": [
                     {
                       "$type": "NamedTableReference",
-                      "location": {
-                        "startLine": 10,
-                        "startColumn": 13,
-                        "startOffset": 205,
-                        "fragmentLength": 9
-                      },
                       "SchemaObject": {
                         "$type": "SchemaObjectName",
-                        "location": {
-                          "startLine": 10,
-                          "startColumn": 13,
-                          "startOffset": 205,
-                          "fragmentLength": 9
-                        },
                         "BaseIdentifier": {
                           "$type": "Identifier",
-                          "location": {
-                            "startLine": 10,
-                            "startColumn": 13,
-                            "startOffset": 205,
-                            "fragmentLength": 9
-                          },
                           "Value": "someTable",
                           "QuoteType": "NotQuoted"
                         },
@@ -439,12 +193,6 @@
               },
               "Alias": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 10,
-                  "startColumn": 27,
-                  "startOffset": 219,
-                  "fragmentLength": 3
-                },
                 "Value": "src",
                 "QuoteType": "NotQuoted"
               },
@@ -452,58 +200,22 @@
             },
             "SearchCondition": {
               "$type": "BooleanParenthesisExpression",
-              "location": {
-                "startLine": 10,
-                "startColumn": 34,
-                "startOffset": 226,
-                "fragmentLength": 49
-              },
               "Expression": {
                 "$type": "DistinctPredicate",
-                "location": {
-                  "startLine": 10,
-                  "startColumn": 35,
-                  "startOffset": 227,
-                  "fragmentLength": 47
-                },
                 "FirstExpression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 10,
-                    "startColumn": 35,
-                    "startOffset": 227,
-                    "fragmentLength": 12
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 10,
-                      "startColumn": 35,
-                      "startOffset": 227,
-                      "fragmentLength": 12
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 10,
-                          "startColumn": 35,
-                          "startOffset": 227,
-                          "fragmentLength": 2
-                        },
                         "Value": "pi",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 10,
-                          "startColumn": 38,
-                          "startOffset": 230,
-                          "fragmentLength": 9
-                        },
                         "Value": "ProductID",
                         "QuoteType": "NotQuoted"
                       }
@@ -512,42 +224,18 @@
                 },
                 "SecondExpression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 10,
-                    "startColumn": 69,
-                    "startOffset": 261,
-                    "fragmentLength": 13
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 10,
-                      "startColumn": 69,
-                      "startOffset": 261,
-                      "fragmentLength": 13
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 10,
-                          "startColumn": 69,
-                          "startOffset": 261,
-                          "fragmentLength": 3
-                        },
                         "Value": "src",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 10,
-                          "startColumn": 73,
-                          "startOffset": 265,
-                          "fragmentLength": 9
-                        },
                         "Value": "ProductID",
                         "QuoteType": "NotQuoted"
                       }
@@ -560,68 +248,26 @@
             "ActionClauses": [
               {
                 "$type": "MergeActionClause",
-                "location": {
-                  "startLine": 11,
-                  "startColumn": 19,
-                  "startOffset": 294,
-                  "fragmentLength": 38
-                },
                 "Condition": "Matched",
                 "Action": {
                   "$type": "UpdateMergeAction",
-                  "location": {
-                    "startLine": 11,
-                    "startColumn": 19,
-                    "startOffset": 294,
-                    "fragmentLength": 38
-                  },
                   "SetClauses": [
                     {
                       "$type": "AssignmentSetClause",
-                      "location": {
-                        "startLine": 12,
-                        "startColumn": 5,
-                        "startOffset": 306,
-                        "fragmentLength": 26
-                      },
                       "Column": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 12,
-                          "startColumn": 5,
-                          "startOffset": 306,
-                          "fragmentLength": 11
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 12,
-                            "startColumn": 5,
-                            "startOffset": 306,
-                            "fragmentLength": 11
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 12,
-                                "startColumn": 5,
-                                "startOffset": 306,
-                                "fragmentLength": 2
-                              },
                               "Value": "pi",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 12,
-                                "startColumn": 8,
-                                "startOffset": 309,
-                                "fragmentLength": 8
-                              },
                               "Value": "Quantity",
                               "QuoteType": "NotQuoted"
                             }
@@ -630,42 +276,18 @@
                       },
                       "NewValue": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 12,
-                          "startColumn": 19,
-                          "startOffset": 320,
-                          "fragmentLength": 12
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 12,
-                            "startColumn": 19,
-                            "startOffset": 320,
-                            "fragmentLength": 12
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 12,
-                                "startColumn": 19,
-                                "startOffset": 320,
-                                "fragmentLength": 3
-                              },
                               "Value": "src",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 12,
-                                "startColumn": 23,
-                                "startOffset": 324,
-                                "fragmentLength": 8
-                              },
                               "Value": "OrderQty",
                               "QuoteType": "NotQuoted"
                             }
@@ -680,39 +302,15 @@
             ],
             "Target": {
               "$type": "NamedTableReference",
-              "location": {
-                "startLine": 7,
-                "startColumn": 12,
-                "startOffset": 142,
-                "fragmentLength": 27
-              },
               "SchemaObject": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 7,
-                  "startColumn": 12,
-                  "startOffset": 142,
-                  "fragmentLength": 27
-                },
                 "SchemaIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 7,
-                    "startColumn": 12,
-                    "startOffset": 142,
-                    "fragmentLength": 10
-                  },
                   "Value": "Production",
                   "QuoteType": "NotQuoted"
                 },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 7,
-                    "startColumn": 23,
-                    "startOffset": 153,
-                    "fragmentLength": 16
-                  },
                   "Value": "ProductInventory",
                   "QuoteType": "NotQuoted"
                 },
@@ -732,92 +330,32 @@
         },
         {
           "$type": "MergeStatement",
-          "location": {
-            "startLine": 14,
-            "startColumn": 1,
-            "startOffset": 335,
-            "fragmentLength": 175
-          },
           "MergeSpecification": {
             "$type": "MergeSpecification",
-            "location": {
-              "startLine": 14,
-              "startColumn": 1,
-              "startOffset": 335,
-              "fragmentLength": 174
-            },
             "TableAlias": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 15,
-                "startColumn": 5,
-                "startOffset": 378,
-                "fragmentLength": 2
-              },
               "Value": "pi",
               "QuoteType": "NotQuoted"
             },
             "TableReference": {
               "$type": "QueryDerivedTable",
-              "location": {
-                "startLine": 16,
-                "startColumn": 7,
-                "startOffset": 387,
-                "fragmentLength": 39
-              },
               "QueryExpression": {
                 "$type": "QuerySpecification",
-                "location": {
-                  "startLine": 16,
-                  "startColumn": 8,
-                  "startOffset": 388,
-                  "fragmentLength": 30
-                },
                 "UniqueRowFilter": "NotSpecified",
                 "SelectElements": [
                   {
-                    "$type": "SelectStarExpression",
-                    "location": {
-                      "startLine": 16,
-                      "startColumn": 15,
-                      "startOffset": 395,
-                      "fragmentLength": 1
-                    }
+                    "$type": "SelectStarExpression"
                   }
                 ],
                 "FromClause": {
                   "$type": "FromClause",
-                  "location": {
-                    "startLine": 17,
-                    "startColumn": 8,
-                    "startOffset": 404,
-                    "fragmentLength": 14
-                  },
                   "TableReferences": [
                     {
                       "$type": "NamedTableReference",
-                      "location": {
-                        "startLine": 17,
-                        "startColumn": 13,
-                        "startOffset": 409,
-                        "fragmentLength": 9
-                      },
                       "SchemaObject": {
                         "$type": "SchemaObjectName",
-                        "location": {
-                          "startLine": 17,
-                          "startColumn": 13,
-                          "startOffset": 409,
-                          "fragmentLength": 9
-                        },
                         "BaseIdentifier": {
                           "$type": "Identifier",
-                          "location": {
-                            "startLine": 17,
-                            "startColumn": 13,
-                            "startOffset": 409,
-                            "fragmentLength": 9
-                          },
                           "Value": "someTable",
                           "QuoteType": "NotQuoted"
                         },
@@ -835,12 +373,6 @@
               },
               "Alias": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 17,
-                  "startColumn": 27,
-                  "startOffset": 423,
-                  "fragmentLength": 3
-                },
                 "Value": "src",
                 "QuoteType": "NotQuoted"
               },
@@ -848,59 +380,23 @@
             },
             "SearchCondition": {
               "$type": "BooleanParenthesisExpression",
-              "location": {
-                "startLine": 17,
-                "startColumn": 34,
-                "startOffset": 430,
-                "fragmentLength": 22
-              },
               "Expression": {
                 "$type": "BooleanIsNullExpression",
-                "location": {
-                  "startLine": 17,
-                  "startColumn": 35,
-                  "startOffset": 431,
-                  "fragmentLength": 20
-                },
                 "IsNot": false,
                 "Expression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 17,
-                    "startColumn": 35,
-                    "startOffset": 431,
-                    "fragmentLength": 12
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 17,
-                      "startColumn": 35,
-                      "startOffset": 431,
-                      "fragmentLength": 12
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 17,
-                          "startColumn": 35,
-                          "startOffset": 431,
-                          "fragmentLength": 2
-                        },
                         "Value": "pi",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 17,
-                          "startColumn": 38,
-                          "startOffset": 434,
-                          "fragmentLength": 9
-                        },
                         "Value": "ProductID",
                         "QuoteType": "NotQuoted"
                       }
@@ -912,68 +408,26 @@
             "ActionClauses": [
               {
                 "$type": "MergeActionClause",
-                "location": {
-                  "startLine": 18,
-                  "startColumn": 19,
-                  "startOffset": 471,
-                  "fragmentLength": 38
-                },
                 "Condition": "Matched",
                 "Action": {
                   "$type": "UpdateMergeAction",
-                  "location": {
-                    "startLine": 18,
-                    "startColumn": 19,
-                    "startOffset": 471,
-                    "fragmentLength": 38
-                  },
                   "SetClauses": [
                     {
                       "$type": "AssignmentSetClause",
-                      "location": {
-                        "startLine": 19,
-                        "startColumn": 5,
-                        "startOffset": 483,
-                        "fragmentLength": 26
-                      },
                       "Column": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 19,
-                          "startColumn": 5,
-                          "startOffset": 483,
-                          "fragmentLength": 11
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 19,
-                            "startColumn": 5,
-                            "startOffset": 483,
-                            "fragmentLength": 11
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 19,
-                                "startColumn": 5,
-                                "startOffset": 483,
-                                "fragmentLength": 2
-                              },
                               "Value": "pi",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 19,
-                                "startColumn": 8,
-                                "startOffset": 486,
-                                "fragmentLength": 8
-                              },
                               "Value": "Quantity",
                               "QuoteType": "NotQuoted"
                             }
@@ -982,42 +436,18 @@
                       },
                       "NewValue": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 19,
-                          "startColumn": 19,
-                          "startOffset": 497,
-                          "fragmentLength": 12
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 19,
-                            "startColumn": 19,
-                            "startOffset": 497,
-                            "fragmentLength": 12
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 19,
-                                "startColumn": 19,
-                                "startOffset": 497,
-                                "fragmentLength": 3
-                              },
                               "Value": "src",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 19,
-                                "startColumn": 23,
-                                "startOffset": 501,
-                                "fragmentLength": 8
-                              },
                               "Value": "OrderQty",
                               "QuoteType": "NotQuoted"
                             }
@@ -1032,39 +462,15 @@
             ],
             "Target": {
               "$type": "NamedTableReference",
-              "location": {
-                "startLine": 14,
-                "startColumn": 12,
-                "startOffset": 346,
-                "fragmentLength": 27
-              },
               "SchemaObject": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 14,
-                  "startColumn": 12,
-                  "startOffset": 346,
-                  "fragmentLength": 27
-                },
                 "SchemaIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 14,
-                    "startColumn": 12,
-                    "startOffset": 346,
-                    "fragmentLength": 10
-                  },
                   "Value": "Production",
                   "QuoteType": "NotQuoted"
                 },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 14,
-                    "startColumn": 23,
-                    "startOffset": 357,
-                    "fragmentLength": 16
-                  },
                   "Value": "ProductInventory",
                   "QuoteType": "NotQuoted"
                 },
@@ -1084,92 +490,32 @@
         },
         {
           "$type": "MergeStatement",
-          "location": {
-            "startLine": 21,
-            "startColumn": 1,
-            "startOffset": 512,
-            "fragmentLength": 290
-          },
           "MergeSpecification": {
             "$type": "MergeSpecification",
-            "location": {
-              "startLine": 21,
-              "startColumn": 1,
-              "startOffset": 512,
-              "fragmentLength": 289
-            },
             "TableAlias": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 22,
-                "startColumn": 5,
-                "startOffset": 555,
-                "fragmentLength": 2
-              },
               "Value": "pi",
               "QuoteType": "NotQuoted"
             },
             "TableReference": {
               "$type": "QueryDerivedTable",
-              "location": {
-                "startLine": 23,
-                "startColumn": 7,
-                "startOffset": 564,
-                "fragmentLength": 39
-              },
               "QueryExpression": {
                 "$type": "QuerySpecification",
-                "location": {
-                  "startLine": 23,
-                  "startColumn": 8,
-                  "startOffset": 565,
-                  "fragmentLength": 30
-                },
                 "UniqueRowFilter": "NotSpecified",
                 "SelectElements": [
                   {
-                    "$type": "SelectStarExpression",
-                    "location": {
-                      "startLine": 23,
-                      "startColumn": 15,
-                      "startOffset": 572,
-                      "fragmentLength": 1
-                    }
+                    "$type": "SelectStarExpression"
                   }
                 ],
                 "FromClause": {
                   "$type": "FromClause",
-                  "location": {
-                    "startLine": 24,
-                    "startColumn": 8,
-                    "startOffset": 581,
-                    "fragmentLength": 14
-                  },
                   "TableReferences": [
                     {
                       "$type": "NamedTableReference",
-                      "location": {
-                        "startLine": 24,
-                        "startColumn": 13,
-                        "startOffset": 586,
-                        "fragmentLength": 9
-                      },
                       "SchemaObject": {
                         "$type": "SchemaObjectName",
-                        "location": {
-                          "startLine": 24,
-                          "startColumn": 13,
-                          "startOffset": 586,
-                          "fragmentLength": 9
-                        },
                         "BaseIdentifier": {
                           "$type": "Identifier",
-                          "location": {
-                            "startLine": 24,
-                            "startColumn": 13,
-                            "startOffset": 586,
-                            "fragmentLength": 9
-                          },
                           "Value": "someTable",
                           "QuoteType": "NotQuoted"
                         },
@@ -1187,12 +533,6 @@
               },
               "Alias": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 24,
-                  "startColumn": 27,
-                  "startOffset": 600,
-                  "fragmentLength": 3
-                },
                 "Value": "src",
                 "QuoteType": "NotQuoted"
               },
@@ -1200,58 +540,22 @@
             },
             "SearchCondition": {
               "$type": "BooleanParenthesisExpression",
-              "location": {
-                "startLine": 24,
-                "startColumn": 34,
-                "startOffset": 607,
-                "fragmentLength": 137
-              },
               "Expression": {
                 "$type": "DistinctPredicate",
-                "location": {
-                  "startLine": 24,
-                  "startColumn": 35,
-                  "startOffset": 608,
-                  "fragmentLength": 135
-                },
                 "FirstExpression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 24,
-                    "startColumn": 35,
-                    "startOffset": 608,
-                    "fragmentLength": 12
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 24,
-                      "startColumn": 35,
-                      "startOffset": 608,
-                      "fragmentLength": 12
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 24,
-                          "startColumn": 35,
-                          "startOffset": 608,
-                          "fragmentLength": 2
-                        },
                         "Value": "pi",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 24,
-                          "startColumn": 38,
-                          "startOffset": 611,
-                          "fragmentLength": 9
-                        },
                         "Value": "ProductID",
                         "QuoteType": "NotQuoted"
                       }
@@ -1260,77 +564,29 @@
                 },
                 "SecondExpression": {
                   "$type": "ScalarSubquery",
-                  "location": {
-                    "startLine": 24,
-                    "startColumn": 69,
-                    "startOffset": 642,
-                    "fragmentLength": 101
-                  },
                   "QueryExpression": {
                     "$type": "QuerySpecification",
-                    "location": {
-                      "startLine": 24,
-                      "startColumn": 70,
-                      "startOffset": 643,
-                      "fragmentLength": 99
-                    },
                     "UniqueRowFilter": "NotSpecified",
                     "SelectElements": [
                       {
                         "$type": "SelectScalarExpression",
-                        "location": {
-                          "startLine": 24,
-                          "startColumn": 77,
-                          "startOffset": 650,
-                          "fragmentLength": 14
-                        },
                         "Expression": {
                           "$type": "FunctionCall",
-                          "location": {
-                            "startLine": 24,
-                            "startColumn": 77,
-                            "startOffset": 650,
-                            "fragmentLength": 14
-                          },
                           "FunctionName": {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 24,
-                              "startColumn": 77,
-                              "startOffset": 650,
-                              "fragmentLength": 3
-                            },
                             "Value": "MAX",
                             "QuoteType": "NotQuoted"
                           },
                           "Parameters": [
                             {
                               "$type": "ColumnReferenceExpression",
-                              "location": {
-                                "startLine": 24,
-                                "startColumn": 81,
-                                "startOffset": 654,
-                                "fragmentLength": 9
-                              },
                               "ColumnType": "Regular",
                               "MultiPartIdentifier": {
                                 "$type": "MultiPartIdentifier",
-                                "location": {
-                                  "startLine": 24,
-                                  "startColumn": 81,
-                                  "startOffset": 654,
-                                  "fragmentLength": 9
-                                },
                                 "Count": 1,
                                 "Identifiers": [
                                   {
                                     "$type": "Identifier",
-                                    "location": {
-                                      "startLine": 24,
-                                      "startColumn": 81,
-                                      "startOffset": 654,
-                                      "fragmentLength": 9
-                                    },
                                     "Value": "ProductID",
                                     "QuoteType": "NotQuoted"
                                   }
@@ -1345,37 +601,13 @@
                     ],
                     "FromClause": {
                       "$type": "FromClause",
-                      "location": {
-                        "startLine": 25,
-                        "startColumn": 70,
-                        "startOffset": 734,
-                        "fragmentLength": 8
-                      },
                       "TableReferences": [
                         {
                           "$type": "NamedTableReference",
-                          "location": {
-                            "startLine": 25,
-                            "startColumn": 75,
-                            "startOffset": 739,
-                            "fragmentLength": 3
-                          },
                           "SchemaObject": {
                             "$type": "SchemaObjectName",
-                            "location": {
-                              "startLine": 25,
-                              "startColumn": 75,
-                              "startOffset": 739,
-                              "fragmentLength": 3
-                            },
                             "BaseIdentifier": {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 25,
-                                "startColumn": 75,
-                                "startOffset": 739,
-                                "fragmentLength": 3
-                              },
                               "Value": "src",
                               "QuoteType": "NotQuoted"
                             },
@@ -1398,68 +630,26 @@
             "ActionClauses": [
               {
                 "$type": "MergeActionClause",
-                "location": {
-                  "startLine": 26,
-                  "startColumn": 19,
-                  "startOffset": 763,
-                  "fragmentLength": 38
-                },
                 "Condition": "Matched",
                 "Action": {
                   "$type": "UpdateMergeAction",
-                  "location": {
-                    "startLine": 26,
-                    "startColumn": 19,
-                    "startOffset": 763,
-                    "fragmentLength": 38
-                  },
                   "SetClauses": [
                     {
                       "$type": "AssignmentSetClause",
-                      "location": {
-                        "startLine": 27,
-                        "startColumn": 5,
-                        "startOffset": 775,
-                        "fragmentLength": 26
-                      },
                       "Column": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 27,
-                          "startColumn": 5,
-                          "startOffset": 775,
-                          "fragmentLength": 11
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 27,
-                            "startColumn": 5,
-                            "startOffset": 775,
-                            "fragmentLength": 11
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 27,
-                                "startColumn": 5,
-                                "startOffset": 775,
-                                "fragmentLength": 2
-                              },
                               "Value": "pi",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 27,
-                                "startColumn": 8,
-                                "startOffset": 778,
-                                "fragmentLength": 8
-                              },
                               "Value": "Quantity",
                               "QuoteType": "NotQuoted"
                             }
@@ -1468,42 +658,18 @@
                       },
                       "NewValue": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 27,
-                          "startColumn": 19,
-                          "startOffset": 789,
-                          "fragmentLength": 12
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 27,
-                            "startColumn": 19,
-                            "startOffset": 789,
-                            "fragmentLength": 12
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 27,
-                                "startColumn": 19,
-                                "startOffset": 789,
-                                "fragmentLength": 3
-                              },
                               "Value": "src",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 27,
-                                "startColumn": 23,
-                                "startOffset": 793,
-                                "fragmentLength": 8
-                              },
                               "Value": "OrderQty",
                               "QuoteType": "NotQuoted"
                             }
@@ -1518,39 +684,15 @@
             ],
             "Target": {
               "$type": "NamedTableReference",
-              "location": {
-                "startLine": 21,
-                "startColumn": 12,
-                "startOffset": 523,
-                "fragmentLength": 27
-              },
               "SchemaObject": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 21,
-                  "startColumn": 12,
-                  "startOffset": 523,
-                  "fragmentLength": 27
-                },
                 "SchemaIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 21,
-                    "startColumn": 12,
-                    "startOffset": 523,
-                    "fragmentLength": 10
-                  },
                   "Value": "Production",
                   "QuoteType": "NotQuoted"
                 },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 21,
-                    "startColumn": 23,
-                    "startOffset": 534,
-                    "fragmentLength": 16
-                  },
                   "Value": "ProductInventory",
                   "QuoteType": "NotQuoted"
                 },
@@ -1570,92 +712,32 @@
         },
         {
           "$type": "MergeStatement",
-          "location": {
-            "startLine": 29,
-            "startColumn": 1,
-            "startOffset": 804,
-            "fragmentLength": 192
-          },
           "MergeSpecification": {
             "$type": "MergeSpecification",
-            "location": {
-              "startLine": 29,
-              "startColumn": 1,
-              "startOffset": 804,
-              "fragmentLength": 191
-            },
             "TableAlias": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 30,
-                "startColumn": 5,
-                "startOffset": 847,
-                "fragmentLength": 2
-              },
               "Value": "pi",
               "QuoteType": "NotQuoted"
             },
             "TableReference": {
               "$type": "QueryDerivedTable",
-              "location": {
-                "startLine": 31,
-                "startColumn": 7,
-                "startOffset": 856,
-                "fragmentLength": 39
-              },
               "QueryExpression": {
                 "$type": "QuerySpecification",
-                "location": {
-                  "startLine": 31,
-                  "startColumn": 8,
-                  "startOffset": 857,
-                  "fragmentLength": 30
-                },
                 "UniqueRowFilter": "NotSpecified",
                 "SelectElements": [
                   {
-                    "$type": "SelectStarExpression",
-                    "location": {
-                      "startLine": 31,
-                      "startColumn": 15,
-                      "startOffset": 864,
-                      "fragmentLength": 1
-                    }
+                    "$type": "SelectStarExpression"
                   }
                 ],
                 "FromClause": {
                   "$type": "FromClause",
-                  "location": {
-                    "startLine": 32,
-                    "startColumn": 8,
-                    "startOffset": 873,
-                    "fragmentLength": 14
-                  },
                   "TableReferences": [
                     {
                       "$type": "NamedTableReference",
-                      "location": {
-                        "startLine": 32,
-                        "startColumn": 13,
-                        "startOffset": 878,
-                        "fragmentLength": 9
-                      },
                       "SchemaObject": {
                         "$type": "SchemaObjectName",
-                        "location": {
-                          "startLine": 32,
-                          "startColumn": 13,
-                          "startOffset": 878,
-                          "fragmentLength": 9
-                        },
                         "BaseIdentifier": {
                           "$type": "Identifier",
-                          "location": {
-                            "startLine": 32,
-                            "startColumn": 13,
-                            "startOffset": 878,
-                            "fragmentLength": 9
-                          },
                           "Value": "someTable",
                           "QuoteType": "NotQuoted"
                         },
@@ -1673,12 +755,6 @@
               },
               "Alias": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 32,
-                  "startColumn": 27,
-                  "startOffset": 892,
-                  "fragmentLength": 3
-                },
                 "Value": "src",
                 "QuoteType": "NotQuoted"
               },
@@ -1686,58 +762,22 @@
             },
             "SearchCondition": {
               "$type": "BooleanParenthesisExpression",
-              "location": {
-                "startLine": 32,
-                "startColumn": 34,
-                "startOffset": 899,
-                "fragmentLength": 39
-              },
               "Expression": {
                 "$type": "DistinctPredicate",
-                "location": {
-                  "startLine": 32,
-                  "startColumn": 35,
-                  "startOffset": 900,
-                  "fragmentLength": 37
-                },
                 "FirstExpression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 32,
-                    "startColumn": 35,
-                    "startOffset": 900,
-                    "fragmentLength": 12
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 32,
-                      "startColumn": 35,
-                      "startOffset": 900,
-                      "fragmentLength": 12
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 32,
-                          "startColumn": 35,
-                          "startOffset": 900,
-                          "fragmentLength": 2
-                        },
                         "Value": "pi",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 32,
-                          "startColumn": 38,
-                          "startOffset": 903,
-                          "fragmentLength": 9
-                        },
                         "Value": "ProductID",
                         "QuoteType": "NotQuoted"
                       }
@@ -1746,12 +786,6 @@
                 },
                 "SecondExpression": {
                   "$type": "IntegerLiteral",
-                  "location": {
-                    "startLine": 32,
-                    "startColumn": 69,
-                    "startOffset": 934,
-                    "fragmentLength": 3
-                  },
                   "LiteralType": "Integer",
                   "Value": "100"
                 },
@@ -1761,68 +795,26 @@
             "ActionClauses": [
               {
                 "$type": "MergeActionClause",
-                "location": {
-                  "startLine": 33,
-                  "startColumn": 19,
-                  "startOffset": 957,
-                  "fragmentLength": 38
-                },
                 "Condition": "Matched",
                 "Action": {
                   "$type": "UpdateMergeAction",
-                  "location": {
-                    "startLine": 33,
-                    "startColumn": 19,
-                    "startOffset": 957,
-                    "fragmentLength": 38
-                  },
                   "SetClauses": [
                     {
                       "$type": "AssignmentSetClause",
-                      "location": {
-                        "startLine": 34,
-                        "startColumn": 5,
-                        "startOffset": 969,
-                        "fragmentLength": 26
-                      },
                       "Column": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 34,
-                          "startColumn": 5,
-                          "startOffset": 969,
-                          "fragmentLength": 11
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 34,
-                            "startColumn": 5,
-                            "startOffset": 969,
-                            "fragmentLength": 11
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 34,
-                                "startColumn": 5,
-                                "startOffset": 969,
-                                "fragmentLength": 2
-                              },
                               "Value": "pi",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 34,
-                                "startColumn": 8,
-                                "startOffset": 972,
-                                "fragmentLength": 8
-                              },
                               "Value": "Quantity",
                               "QuoteType": "NotQuoted"
                             }
@@ -1831,42 +823,18 @@
                       },
                       "NewValue": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 34,
-                          "startColumn": 19,
-                          "startOffset": 983,
-                          "fragmentLength": 12
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 34,
-                            "startColumn": 19,
-                            "startOffset": 983,
-                            "fragmentLength": 12
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 34,
-                                "startColumn": 19,
-                                "startOffset": 983,
-                                "fragmentLength": 3
-                              },
                               "Value": "src",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 34,
-                                "startColumn": 23,
-                                "startOffset": 987,
-                                "fragmentLength": 8
-                              },
                               "Value": "OrderQty",
                               "QuoteType": "NotQuoted"
                             }
@@ -1881,39 +849,15 @@
             ],
             "Target": {
               "$type": "NamedTableReference",
-              "location": {
-                "startLine": 29,
-                "startColumn": 12,
-                "startOffset": 815,
-                "fragmentLength": 27
-              },
               "SchemaObject": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 29,
-                  "startColumn": 12,
-                  "startOffset": 815,
-                  "fragmentLength": 27
-                },
                 "SchemaIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 29,
-                    "startColumn": 12,
-                    "startOffset": 815,
-                    "fragmentLength": 10
-                  },
                   "Value": "Production",
                   "QuoteType": "NotQuoted"
                 },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 29,
-                    "startColumn": 23,
-                    "startOffset": 826,
-                    "fragmentLength": 16
-                  },
                   "Value": "ProductInventory",
                   "QuoteType": "NotQuoted"
                 },

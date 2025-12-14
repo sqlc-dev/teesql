@@ -1,108 +1,42 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 196
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 196
-      },
       "Statements": [
         {
           "$type": "AlterServerConfigurationStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 59
-          },
           "ProcessAffinity": "CpuAuto"
         },
         {
           "$type": "AlterServerConfigurationStatement",
-          "location": {
-            "startLine": 3,
-            "startColumn": 1,
-            "startOffset": 61,
-            "fragmentLength": 67
-          },
           "ProcessAffinity": "Cpu",
           "ProcessAffinityRanges": [
             {
               "$type": "ProcessAffinityRange",
-              "location": {
-                "startLine": 3,
-                "startColumn": 55,
-                "startOffset": 115,
-                "fragmentLength": 1
-              },
               "From": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 3,
-                  "startColumn": 55,
-                  "startOffset": 115,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "1"
               }
             },
             {
               "$type": "ProcessAffinityRange",
-              "location": {
-                "startLine": 3,
-                "startColumn": 58,
-                "startOffset": 118,
-                "fragmentLength": 6
-              },
               "From": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 3,
-                  "startColumn": 58,
-                  "startOffset": 118,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "3"
               },
               "To": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 3,
-                  "startColumn": 63,
-                  "startOffset": 123,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "5"
               }
             },
             {
               "$type": "ProcessAffinityRange",
-              "location": {
-                "startLine": 3,
-                "startColumn": 66,
-                "startOffset": 126,
-                "fragmentLength": 1
-              },
               "From": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 3,
-                  "startColumn": 66,
-                  "startOffset": 126,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "8"
               }
@@ -111,41 +45,17 @@
         },
         {
           "$type": "AlterServerConfigurationStatement",
-          "location": {
-            "startLine": 5,
-            "startColumn": 1,
-            "startOffset": 130,
-            "fragmentLength": 66
-          },
           "ProcessAffinity": "NumaNode",
           "ProcessAffinityRanges": [
             {
               "$type": "ProcessAffinityRange",
-              "location": {
-                "startLine": 5,
-                "startColumn": 60,
-                "startOffset": 189,
-                "fragmentLength": 6
-              },
               "From": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 5,
-                  "startColumn": 60,
-                  "startOffset": 189,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "3"
               },
               "To": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 5,
-                  "startColumn": 65,
-                  "startOffset": 194,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "5"
               }

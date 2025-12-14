@@ -1,91 +1,37 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 562
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 562
-      },
       "Statements": [
         {
           "$type": "AlterIndexStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 78
-          },
           "All": false,
           "AlterIndexType": "Reorganize",
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 1,
-              "startColumn": 13,
-              "startOffset": 12,
-              "fragmentLength": 4
-            },
             "Value": "ind1",
             "QuoteType": "NotQuoted"
           },
           "OnName": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 2,
-              "startColumn": 8,
-              "startOffset": 24,
-              "fragmentLength": 7
-            },
             "ServerIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 2,
-                "startColumn": 8,
-                "startOffset": 24,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "DatabaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 2,
-                "startColumn": 9,
-                "startOffset": 25,
-                "fragmentLength": 2
-              },
               "Value": "db",
               "QuoteType": "NotQuoted"
             },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 2,
-                "startColumn": 12,
-                "startOffset": 28,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 2,
-                "startColumn": 13,
-                "startOffset": 29,
-                "fragmentLength": 2
-              },
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -108,12 +54,6 @@
           "IndexOptions": [
             {
               "$type": "IndexStateOption",
-              "location": {
-                "startLine": 2,
-                "startColumn": 32,
-                "startOffset": 48,
-                "fragmentLength": 28
-              },
               "OptionState": "On",
               "OptionKind": "CompressAllRowGroups"
             }
@@ -121,74 +61,32 @@
         },
         {
           "$type": "AlterIndexStatement",
-          "location": {
-            "startLine": 4,
-            "startColumn": 1,
-            "startOffset": 80,
-            "fragmentLength": 79
-          },
           "All": false,
           "AlterIndexType": "Reorganize",
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 4,
-              "startColumn": 13,
-              "startOffset": 92,
-              "fragmentLength": 4
-            },
             "Value": "ind1",
             "QuoteType": "NotQuoted"
           },
           "OnName": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 5,
-              "startColumn": 8,
-              "startOffset": 104,
-              "fragmentLength": 7
-            },
             "ServerIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 5,
-                "startColumn": 8,
-                "startOffset": 104,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "DatabaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 5,
-                "startColumn": 9,
-                "startOffset": 105,
-                "fragmentLength": 2
-              },
               "Value": "db",
               "QuoteType": "NotQuoted"
             },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 5,
-                "startColumn": 12,
-                "startOffset": 108,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 5,
-                "startColumn": 13,
-                "startOffset": 109,
-                "fragmentLength": 2
-              },
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -211,12 +109,6 @@
           "IndexOptions": [
             {
               "$type": "IndexStateOption",
-              "location": {
-                "startLine": 5,
-                "startColumn": 32,
-                "startOffset": 128,
-                "fragmentLength": 29
-              },
               "OptionState": "Off",
               "OptionKind": "CompressAllRowGroups"
             }
@@ -224,50 +116,20 @@
         },
         {
           "$type": "AlterIndexStatement",
-          "location": {
-            "startLine": 7,
-            "startColumn": 1,
-            "startOffset": 161,
-            "fragmentLength": 96
-          },
           "All": false,
           "AlterIndexType": "Reorganize",
           "Partition": {
             "$type": "PartitionSpecifier",
-            "location": {
-              "startLine": 8,
-              "startColumn": 39,
-              "startOffset": 216,
-              "fragmentLength": 5
-            },
             "Number": {
               "$type": "BinaryExpression",
-              "location": {
-                "startLine": 8,
-                "startColumn": 39,
-                "startOffset": 216,
-                "fragmentLength": 5
-              },
               "BinaryExpressionType": "Add",
               "FirstExpression": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 8,
-                  "startColumn": 39,
-                  "startOffset": 216,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "1"
               },
               "SecondExpression": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 8,
-                  "startColumn": 43,
-                  "startOffset": 220,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "2"
               }
@@ -276,64 +138,28 @@
           },
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 7,
-              "startColumn": 13,
-              "startOffset": 173,
-              "fragmentLength": 4
-            },
             "Value": "ind1",
             "QuoteType": "NotQuoted"
           },
           "OnName": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 8,
-              "startColumn": 8,
-              "startOffset": 185,
-              "fragmentLength": 7
-            },
             "ServerIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 8,
-                "startColumn": 8,
-                "startOffset": 185,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "DatabaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 8,
-                "startColumn": 9,
-                "startOffset": 186,
-                "fragmentLength": 2
-              },
               "Value": "db",
               "QuoteType": "NotQuoted"
             },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 8,
-                "startColumn": 12,
-                "startOffset": 189,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 8,
-                "startColumn": 13,
-                "startOffset": 190,
-                "fragmentLength": 2
-              },
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -356,12 +182,6 @@
           "IndexOptions": [
             {
               "$type": "IndexStateOption",
-              "location": {
-                "startLine": 8,
-                "startColumn": 50,
-                "startOffset": 227,
-                "fragmentLength": 28
-              },
               "OptionState": "On",
               "OptionKind": "CompressAllRowGroups"
             }
@@ -369,50 +189,20 @@
         },
         {
           "$type": "AlterIndexStatement",
-          "location": {
-            "startLine": 10,
-            "startColumn": 1,
-            "startOffset": 259,
-            "fragmentLength": 97
-          },
           "All": false,
           "AlterIndexType": "Reorganize",
           "Partition": {
             "$type": "PartitionSpecifier",
-            "location": {
-              "startLine": 11,
-              "startColumn": 39,
-              "startOffset": 314,
-              "fragmentLength": 5
-            },
             "Number": {
               "$type": "BinaryExpression",
-              "location": {
-                "startLine": 11,
-                "startColumn": 39,
-                "startOffset": 314,
-                "fragmentLength": 5
-              },
               "BinaryExpressionType": "Add",
               "FirstExpression": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 11,
-                  "startColumn": 39,
-                  "startOffset": 314,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "1"
               },
               "SecondExpression": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 11,
-                  "startColumn": 43,
-                  "startOffset": 318,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "2"
               }
@@ -421,64 +211,28 @@
           },
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 10,
-              "startColumn": 13,
-              "startOffset": 271,
-              "fragmentLength": 4
-            },
             "Value": "ind1",
             "QuoteType": "NotQuoted"
           },
           "OnName": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 11,
-              "startColumn": 8,
-              "startOffset": 283,
-              "fragmentLength": 7
-            },
             "ServerIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 11,
-                "startColumn": 8,
-                "startOffset": 283,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "DatabaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 11,
-                "startColumn": 9,
-                "startOffset": 284,
-                "fragmentLength": 2
-              },
               "Value": "db",
               "QuoteType": "NotQuoted"
             },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 11,
-                "startColumn": 12,
-                "startOffset": 287,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 11,
-                "startColumn": 13,
-                "startOffset": 288,
-                "fragmentLength": 2
-              },
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -501,12 +255,6 @@
           "IndexOptions": [
             {
               "$type": "IndexStateOption",
-              "location": {
-                "startLine": 11,
-                "startColumn": 50,
-                "startOffset": 325,
-                "fragmentLength": 29
-              },
               "OptionState": "Off",
               "OptionKind": "CompressAllRowGroups"
             }
@@ -514,74 +262,32 @@
         },
         {
           "$type": "AlterIndexStatement",
-          "location": {
-            "startLine": 13,
-            "startColumn": 1,
-            "startOffset": 358,
-            "fragmentLength": 67
-          },
           "All": false,
           "AlterIndexType": "Set",
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 13,
-              "startColumn": 13,
-              "startOffset": 370,
-              "fragmentLength": 4
-            },
             "Value": "ind1",
             "QuoteType": "NotQuoted"
           },
           "OnName": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 14,
-              "startColumn": 8,
-              "startOffset": 382,
-              "fragmentLength": 7
-            },
             "ServerIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 14,
-                "startColumn": 8,
-                "startOffset": 382,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "DatabaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 14,
-                "startColumn": 9,
-                "startOffset": 383,
-                "fragmentLength": 2
-              },
               "Value": "db",
               "QuoteType": "NotQuoted"
             },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 14,
-                "startColumn": 12,
-                "startOffset": 386,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 14,
-                "startColumn": 13,
-                "startOffset": 387,
-                "fragmentLength": 2
-              },
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -604,20 +310,8 @@
           "IndexOptions": [
             {
               "$type": "CompressionDelayIndexOption",
-              "location": {
-                "startLine": 14,
-                "startColumn": 21,
-                "startOffset": 395,
-                "fragmentLength": 21
-              },
               "Expression": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 14,
-                  "startColumn": 41,
-                  "startOffset": 415,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "0"
               },
@@ -628,74 +322,32 @@
         },
         {
           "$type": "AlterIndexStatement",
-          "location": {
-            "startLine": 16,
-            "startColumn": 1,
-            "startOffset": 427,
-            "fragmentLength": 61
-          },
           "All": false,
           "AlterIndexType": "Set",
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 16,
-              "startColumn": 13,
-              "startOffset": 439,
-              "fragmentLength": 4
-            },
             "Value": "ind1",
             "QuoteType": "NotQuoted"
           },
           "OnName": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 17,
-              "startColumn": 8,
-              "startOffset": 451,
-              "fragmentLength": 7
-            },
             "ServerIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 17,
-                "startColumn": 8,
-                "startOffset": 451,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "DatabaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 17,
-                "startColumn": 9,
-                "startOffset": 452,
-                "fragmentLength": 2
-              },
               "Value": "db",
               "QuoteType": "NotQuoted"
             },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 17,
-                "startColumn": 12,
-                "startOffset": 455,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 17,
-                "startColumn": 13,
-                "startOffset": 456,
-                "fragmentLength": 2
-              },
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -718,20 +370,8 @@
           "IndexOptions": [
             {
               "$type": "CompressionDelayIndexOption",
-              "location": {
-                "startLine": 17,
-                "startColumn": 21,
-                "startOffset": 464,
-                "fragmentLength": 22
-              },
               "Expression": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 17,
-                  "startColumn": 41,
-                  "startOffset": 484,
-                  "fragmentLength": 2
-                },
                 "LiteralType": "Integer",
                 "Value": "27"
               },
@@ -742,74 +382,32 @@
         },
         {
           "$type": "AlterIndexStatement",
-          "location": {
-            "startLine": 19,
-            "startColumn": 1,
-            "startOffset": 490,
-            "fragmentLength": 72
-          },
           "All": false,
           "AlterIndexType": "Set",
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 19,
-              "startColumn": 13,
-              "startOffset": 502,
-              "fragmentLength": 4
-            },
             "Value": "ind1",
             "QuoteType": "NotQuoted"
           },
           "OnName": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 20,
-              "startColumn": 8,
-              "startOffset": 514,
-              "fragmentLength": 7
-            },
             "ServerIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 20,
-                "startColumn": 8,
-                "startOffset": 514,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "DatabaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 20,
-                "startColumn": 9,
-                "startOffset": 515,
-                "fragmentLength": 2
-              },
               "Value": "db",
               "QuoteType": "NotQuoted"
             },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 20,
-                "startColumn": 12,
-                "startOffset": 518,
-                "fragmentLength": 1
-              },
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 20,
-                "startColumn": 13,
-                "startOffset": 519,
-                "fragmentLength": 2
-              },
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -832,20 +430,8 @@
           "IndexOptions": [
             {
               "$type": "CompressionDelayIndexOption",
-              "location": {
-                "startLine": 20,
-                "startColumn": 21,
-                "startOffset": 527,
-                "fragmentLength": 25
-              },
               "Expression": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 20,
-                  "startColumn": 41,
-                  "startOffset": 547,
-                  "fragmentLength": 5
-                },
                 "LiteralType": "Integer",
                 "Value": "10080"
               },

@@ -1,56 +1,20 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 477
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 111
-      },
       "Statements": [
         {
           "$type": "CreateFunctionStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 111
-          },
           "Name": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 1,
-              "startColumn": 17,
-              "startOffset": 16,
-              "fragmentLength": 17
-            },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 1,
-                "startColumn": 17,
-                "startOffset": 16,
-                "fragmentLength": 5
-              },
               "Value": "dbo",
               "QuoteType": "SquareBracket"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 1,
-                "startColumn": 23,
-                "startOffset": 22,
-                "fragmentLength": 11
-              },
               "Value": "test_udf2",
               "QuoteType": "SquareBracket"
             },
@@ -66,37 +30,13 @@
           },
           "ReturnType": {
             "$type": "ScalarFunctionReturnType",
-            "location": {
-              "startLine": 2,
-              "startColumn": 9,
-              "startOffset": 44,
-              "fragmentLength": 3
-            },
             "DataType": {
               "$type": "SqlDataTypeReference",
-              "location": {
-                "startLine": 2,
-                "startColumn": 9,
-                "startOffset": 44,
-                "fragmentLength": 3
-              },
               "SqlDataTypeOption": "Int",
               "Name": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 2,
-                  "startColumn": 9,
-                  "startOffset": 44,
-                  "fragmentLength": 3
-                },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 2,
-                    "startColumn": 9,
-                    "startOffset": 44,
-                    "fragmentLength": 3
-                  },
                   "Value": "int",
                   "QuoteType": "NotQuoted"
                 },
@@ -112,95 +52,35 @@
           "Options": [
             {
               "$type": "InlineFunctionOption",
-              "location": {
-                "startLine": 3,
-                "startColumn": 6,
-                "startOffset": 53,
-                "fragmentLength": 9
-              },
               "OptionState": "On",
               "OptionKind": "Inline"
             }
           ],
           "StatementList": {
             "$type": "StatementList",
-            "location": {
-              "startLine": 5,
-              "startColumn": 1,
-              "startOffset": 66,
-              "fragmentLength": 44
-            },
             "Statements": [
               {
                 "$type": "BeginEndBlockStatement",
-                "location": {
-                  "startLine": 5,
-                  "startColumn": 1,
-                  "startOffset": 66,
-                  "fragmentLength": 44
-                },
                 "StatementList": {
                   "$type": "StatementList",
-                  "location": {
-                    "startLine": -1,
-                    "startColumn": -1,
-                    "startOffset": -1,
-                    "fragmentLength": -1
-                  },
                   "Statements": [
                     {
                       "$type": "DeclareVariableStatement",
-                      "location": {
-                        "startLine": 5,
-                        "startColumn": 7,
-                        "startOffset": 72,
-                        "fragmentLength": 20
-                      },
                       "Declarations": [
                         {
                           "$type": "DeclareVariableElement",
-                          "location": {
-                            "startLine": 5,
-                            "startColumn": 15,
-                            "startOffset": 80,
-                            "fragmentLength": 11
-                          },
                           "VariableName": {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 5,
-                              "startColumn": 15,
-                              "startOffset": 80,
-                              "fragmentLength": 2
-                            },
                             "Value": "@v",
                             "QuoteType": "NotQuoted"
                           },
                           "DataType": {
                             "$type": "SqlDataTypeReference",
-                            "location": {
-                              "startLine": 5,
-                              "startColumn": 18,
-                              "startOffset": 83,
-                              "fragmentLength": 3
-                            },
                             "SqlDataTypeOption": "Int",
                             "Name": {
                               "$type": "SchemaObjectName",
-                              "location": {
-                                "startLine": 5,
-                                "startColumn": 18,
-                                "startOffset": 83,
-                                "fragmentLength": 3
-                              },
                               "BaseIdentifier": {
                                 "$type": "Identifier",
-                                "location": {
-                                  "startLine": 5,
-                                  "startColumn": 18,
-                                  "startOffset": 83,
-                                  "fragmentLength": 3
-                                },
                                 "Value": "int",
                                 "QuoteType": "NotQuoted"
                               },
@@ -214,12 +94,6 @@
                           },
                           "Value": {
                             "$type": "IntegerLiteral",
-                            "location": {
-                              "startLine": 5,
-                              "startColumn": 24,
-                              "startOffset": 89,
-                              "fragmentLength": 2
-                            },
                             "LiteralType": "Integer",
                             "Value": "10"
                           }
@@ -228,39 +102,15 @@
                     },
                     {
                       "$type": "ReturnStatement",
-                      "location": {
-                        "startLine": 5,
-                        "startColumn": 28,
-                        "startOffset": 93,
-                        "fragmentLength": 13
-                      },
                       "Expression": {
                         "$type": "BinaryExpression",
-                        "location": {
-                          "startLine": 5,
-                          "startColumn": 35,
-                          "startOffset": 100,
-                          "fragmentLength": 5
-                        },
                         "BinaryExpressionType": "Multiply",
                         "FirstExpression": {
                           "$type": "VariableReference",
-                          "location": {
-                            "startLine": 5,
-                            "startColumn": 35,
-                            "startOffset": 100,
-                            "fragmentLength": 2
-                          },
                           "Name": "@v"
                         },
                         "SecondExpression": {
                           "$type": "VariableReference",
-                          "location": {
-                            "startLine": 5,
-                            "startColumn": 38,
-                            "startOffset": 103,
-                            "fragmentLength": 2
-                          },
                           "Name": "@v"
                         }
                       }
@@ -275,48 +125,18 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 7,
-        "startColumn": 1,
-        "startOffset": 115,
-        "fragmentLength": 112
-      },
       "Statements": [
         {
           "$type": "CreateFunctionStatement",
-          "location": {
-            "startLine": 7,
-            "startColumn": 1,
-            "startOffset": 115,
-            "fragmentLength": 112
-          },
           "Name": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 7,
-              "startColumn": 17,
-              "startOffset": 131,
-              "fragmentLength": 17
-            },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 7,
-                "startColumn": 17,
-                "startOffset": 131,
-                "fragmentLength": 5
-              },
               "Value": "dbo",
               "QuoteType": "SquareBracket"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 7,
-                "startColumn": 23,
-                "startOffset": 137,
-                "fragmentLength": 11
-              },
               "Value": "test_udf1",
               "QuoteType": "SquareBracket"
             },
@@ -332,37 +152,13 @@
           },
           "ReturnType": {
             "$type": "ScalarFunctionReturnType",
-            "location": {
-              "startLine": 8,
-              "startColumn": 9,
-              "startOffset": 159,
-              "fragmentLength": 3
-            },
             "DataType": {
               "$type": "SqlDataTypeReference",
-              "location": {
-                "startLine": 8,
-                "startColumn": 9,
-                "startOffset": 159,
-                "fragmentLength": 3
-              },
               "SqlDataTypeOption": "Int",
               "Name": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 8,
-                  "startColumn": 9,
-                  "startOffset": 159,
-                  "fragmentLength": 3
-                },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 8,
-                    "startColumn": 9,
-                    "startOffset": 159,
-                    "fragmentLength": 3
-                  },
                   "Value": "int",
                   "QuoteType": "NotQuoted"
                 },
@@ -378,95 +174,35 @@
           "Options": [
             {
               "$type": "InlineFunctionOption",
-              "location": {
-                "startLine": 9,
-                "startColumn": 6,
-                "startOffset": 168,
-                "fragmentLength": 10
-              },
               "OptionState": "Off",
               "OptionKind": "Inline"
             }
           ],
           "StatementList": {
             "$type": "StatementList",
-            "location": {
-              "startLine": 11,
-              "startColumn": 1,
-              "startOffset": 182,
-              "fragmentLength": 44
-            },
             "Statements": [
               {
                 "$type": "BeginEndBlockStatement",
-                "location": {
-                  "startLine": 11,
-                  "startColumn": 1,
-                  "startOffset": 182,
-                  "fragmentLength": 44
-                },
                 "StatementList": {
                   "$type": "StatementList",
-                  "location": {
-                    "startLine": -1,
-                    "startColumn": -1,
-                    "startOffset": -1,
-                    "fragmentLength": -1
-                  },
                   "Statements": [
                     {
                       "$type": "DeclareVariableStatement",
-                      "location": {
-                        "startLine": 11,
-                        "startColumn": 7,
-                        "startOffset": 188,
-                        "fragmentLength": 20
-                      },
                       "Declarations": [
                         {
                           "$type": "DeclareVariableElement",
-                          "location": {
-                            "startLine": 11,
-                            "startColumn": 15,
-                            "startOffset": 196,
-                            "fragmentLength": 11
-                          },
                           "VariableName": {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 11,
-                              "startColumn": 15,
-                              "startOffset": 196,
-                              "fragmentLength": 2
-                            },
                             "Value": "@v",
                             "QuoteType": "NotQuoted"
                           },
                           "DataType": {
                             "$type": "SqlDataTypeReference",
-                            "location": {
-                              "startLine": 11,
-                              "startColumn": 18,
-                              "startOffset": 199,
-                              "fragmentLength": 3
-                            },
                             "SqlDataTypeOption": "Int",
                             "Name": {
                               "$type": "SchemaObjectName",
-                              "location": {
-                                "startLine": 11,
-                                "startColumn": 18,
-                                "startOffset": 199,
-                                "fragmentLength": 3
-                              },
                               "BaseIdentifier": {
                                 "$type": "Identifier",
-                                "location": {
-                                  "startLine": 11,
-                                  "startColumn": 18,
-                                  "startOffset": 199,
-                                  "fragmentLength": 3
-                                },
                                 "Value": "int",
                                 "QuoteType": "NotQuoted"
                               },
@@ -480,12 +216,6 @@
                           },
                           "Value": {
                             "$type": "IntegerLiteral",
-                            "location": {
-                              "startLine": 11,
-                              "startColumn": 24,
-                              "startOffset": 205,
-                              "fragmentLength": 2
-                            },
                             "LiteralType": "Integer",
                             "Value": "10"
                           }
@@ -494,39 +224,15 @@
                     },
                     {
                       "$type": "ReturnStatement",
-                      "location": {
-                        "startLine": 11,
-                        "startColumn": 28,
-                        "startOffset": 209,
-                        "fragmentLength": 13
-                      },
                       "Expression": {
                         "$type": "BinaryExpression",
-                        "location": {
-                          "startLine": 11,
-                          "startColumn": 35,
-                          "startOffset": 216,
-                          "fragmentLength": 5
-                        },
                         "BinaryExpressionType": "Multiply",
                         "FirstExpression": {
                           "$type": "VariableReference",
-                          "location": {
-                            "startLine": 11,
-                            "startColumn": 35,
-                            "startOffset": 216,
-                            "fragmentLength": 2
-                          },
                           "Name": "@v"
                         },
                         "SecondExpression": {
                           "$type": "VariableReference",
-                          "location": {
-                            "startLine": 11,
-                            "startColumn": 38,
-                            "startOffset": 219,
-                            "fragmentLength": 2
-                          },
                           "Name": "@v"
                         }
                       }
@@ -541,48 +247,18 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 13,
-        "startColumn": 1,
-        "startOffset": 231,
-        "fragmentLength": 122
-      },
       "Statements": [
         {
           "$type": "AlterFunctionStatement",
-          "location": {
-            "startLine": 13,
-            "startColumn": 1,
-            "startOffset": 231,
-            "fragmentLength": 122
-          },
           "Name": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 13,
-              "startColumn": 16,
-              "startOffset": 246,
-              "fragmentLength": 17
-            },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 13,
-                "startColumn": 16,
-                "startOffset": 246,
-                "fragmentLength": 5
-              },
               "Value": "dbo",
               "QuoteType": "SquareBracket"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 13,
-                "startColumn": 22,
-                "startOffset": 252,
-                "fragmentLength": 11
-              },
               "Value": "test_udf1",
               "QuoteType": "SquareBracket"
             },
@@ -598,37 +274,13 @@
           },
           "ReturnType": {
             "$type": "ScalarFunctionReturnType",
-            "location": {
-              "startLine": 14,
-              "startColumn": 9,
-              "startOffset": 274,
-              "fragmentLength": 3
-            },
             "DataType": {
               "$type": "SqlDataTypeReference",
-              "location": {
-                "startLine": 14,
-                "startColumn": 9,
-                "startOffset": 274,
-                "fragmentLength": 3
-              },
               "SqlDataTypeOption": "Int",
               "Name": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 14,
-                  "startColumn": 9,
-                  "startOffset": 274,
-                  "fragmentLength": 3
-                },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 14,
-                    "startColumn": 9,
-                    "startOffset": 274,
-                    "fragmentLength": 3
-                  },
                   "Value": "int",
                   "QuoteType": "NotQuoted"
                 },
@@ -644,105 +296,39 @@
           "Options": [
             {
               "$type": "InlineFunctionOption",
-              "location": {
-                "startLine": 15,
-                "startColumn": 6,
-                "startOffset": 283,
-                "fragmentLength": 9
-              },
               "OptionState": "On",
               "OptionKind": "Inline"
             },
             {
               "$type": "FunctionOption",
-              "location": {
-                "startLine": 15,
-                "startColumn": 17,
-                "startOffset": 294,
-                "fragmentLength": 10
-              },
               "OptionKind": "Encryption"
             }
           ],
           "StatementList": {
             "$type": "StatementList",
-            "location": {
-              "startLine": 17,
-              "startColumn": 1,
-              "startOffset": 308,
-              "fragmentLength": 44
-            },
             "Statements": [
               {
                 "$type": "BeginEndBlockStatement",
-                "location": {
-                  "startLine": 17,
-                  "startColumn": 1,
-                  "startOffset": 308,
-                  "fragmentLength": 44
-                },
                 "StatementList": {
                   "$type": "StatementList",
-                  "location": {
-                    "startLine": -1,
-                    "startColumn": -1,
-                    "startOffset": -1,
-                    "fragmentLength": -1
-                  },
                   "Statements": [
                     {
                       "$type": "DeclareVariableStatement",
-                      "location": {
-                        "startLine": 17,
-                        "startColumn": 7,
-                        "startOffset": 314,
-                        "fragmentLength": 20
-                      },
                       "Declarations": [
                         {
                           "$type": "DeclareVariableElement",
-                          "location": {
-                            "startLine": 17,
-                            "startColumn": 15,
-                            "startOffset": 322,
-                            "fragmentLength": 11
-                          },
                           "VariableName": {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 17,
-                              "startColumn": 15,
-                              "startOffset": 322,
-                              "fragmentLength": 2
-                            },
                             "Value": "@v",
                             "QuoteType": "NotQuoted"
                           },
                           "DataType": {
                             "$type": "SqlDataTypeReference",
-                            "location": {
-                              "startLine": 17,
-                              "startColumn": 18,
-                              "startOffset": 325,
-                              "fragmentLength": 3
-                            },
                             "SqlDataTypeOption": "Int",
                             "Name": {
                               "$type": "SchemaObjectName",
-                              "location": {
-                                "startLine": 17,
-                                "startColumn": 18,
-                                "startOffset": 325,
-                                "fragmentLength": 3
-                              },
                               "BaseIdentifier": {
                                 "$type": "Identifier",
-                                "location": {
-                                  "startLine": 17,
-                                  "startColumn": 18,
-                                  "startOffset": 325,
-                                  "fragmentLength": 3
-                                },
                                 "Value": "int",
                                 "QuoteType": "NotQuoted"
                               },
@@ -756,12 +342,6 @@
                           },
                           "Value": {
                             "$type": "IntegerLiteral",
-                            "location": {
-                              "startLine": 17,
-                              "startColumn": 24,
-                              "startOffset": 331,
-                              "fragmentLength": 2
-                            },
                             "LiteralType": "Integer",
                             "Value": "10"
                           }
@@ -770,39 +350,15 @@
                     },
                     {
                       "$type": "ReturnStatement",
-                      "location": {
-                        "startLine": 17,
-                        "startColumn": 28,
-                        "startOffset": 335,
-                        "fragmentLength": 13
-                      },
                       "Expression": {
                         "$type": "BinaryExpression",
-                        "location": {
-                          "startLine": 17,
-                          "startColumn": 35,
-                          "startOffset": 342,
-                          "fragmentLength": 5
-                        },
                         "BinaryExpressionType": "Multiply",
                         "FirstExpression": {
                           "$type": "VariableReference",
-                          "location": {
-                            "startLine": 17,
-                            "startColumn": 35,
-                            "startOffset": 342,
-                            "fragmentLength": 2
-                          },
                           "Name": "@v"
                         },
                         "SecondExpression": {
                           "$type": "VariableReference",
-                          "location": {
-                            "startLine": 17,
-                            "startColumn": 38,
-                            "startOffset": 345,
-                            "fragmentLength": 2
-                          },
                           "Name": "@v"
                         }
                       }
@@ -817,48 +373,18 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 19,
-        "startColumn": 1,
-        "startOffset": 357,
-        "fragmentLength": 120
-      },
       "Statements": [
         {
           "$type": "CreateOrAlterFunctionStatement",
-          "location": {
-            "startLine": 19,
-            "startColumn": 1,
-            "startOffset": 357,
-            "fragmentLength": 120
-          },
           "Name": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 19,
-              "startColumn": 26,
-              "startOffset": 382,
-              "fragmentLength": 17
-            },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 19,
-                "startColumn": 26,
-                "startOffset": 382,
-                "fragmentLength": 5
-              },
               "Value": "dbo",
               "QuoteType": "SquareBracket"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 19,
-                "startColumn": 32,
-                "startOffset": 388,
-                "fragmentLength": 11
-              },
               "Value": "test_udf1",
               "QuoteType": "SquareBracket"
             },
@@ -874,37 +400,13 @@
           },
           "ReturnType": {
             "$type": "ScalarFunctionReturnType",
-            "location": {
-              "startLine": 20,
-              "startColumn": 9,
-              "startOffset": 410,
-              "fragmentLength": 3
-            },
             "DataType": {
               "$type": "SqlDataTypeReference",
-              "location": {
-                "startLine": 20,
-                "startColumn": 9,
-                "startOffset": 410,
-                "fragmentLength": 3
-              },
               "SqlDataTypeOption": "Int",
               "Name": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 20,
-                  "startColumn": 9,
-                  "startOffset": 410,
-                  "fragmentLength": 3
-                },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 20,
-                    "startColumn": 9,
-                    "startOffset": 410,
-                    "fragmentLength": 3
-                  },
                   "Value": "int",
                   "QuoteType": "NotQuoted"
                 },
@@ -920,95 +422,35 @@
           "Options": [
             {
               "$type": "InlineFunctionOption",
-              "location": {
-                "startLine": 21,
-                "startColumn": 6,
-                "startOffset": 419,
-                "fragmentLength": 9
-              },
               "OptionState": "On",
               "OptionKind": "Inline"
             }
           ],
           "StatementList": {
             "$type": "StatementList",
-            "location": {
-              "startLine": 23,
-              "startColumn": 1,
-              "startOffset": 432,
-              "fragmentLength": 44
-            },
             "Statements": [
               {
                 "$type": "BeginEndBlockStatement",
-                "location": {
-                  "startLine": 23,
-                  "startColumn": 1,
-                  "startOffset": 432,
-                  "fragmentLength": 44
-                },
                 "StatementList": {
                   "$type": "StatementList",
-                  "location": {
-                    "startLine": -1,
-                    "startColumn": -1,
-                    "startOffset": -1,
-                    "fragmentLength": -1
-                  },
                   "Statements": [
                     {
                       "$type": "DeclareVariableStatement",
-                      "location": {
-                        "startLine": 23,
-                        "startColumn": 7,
-                        "startOffset": 438,
-                        "fragmentLength": 20
-                      },
                       "Declarations": [
                         {
                           "$type": "DeclareVariableElement",
-                          "location": {
-                            "startLine": 23,
-                            "startColumn": 15,
-                            "startOffset": 446,
-                            "fragmentLength": 11
-                          },
                           "VariableName": {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 23,
-                              "startColumn": 15,
-                              "startOffset": 446,
-                              "fragmentLength": 2
-                            },
                             "Value": "@v",
                             "QuoteType": "NotQuoted"
                           },
                           "DataType": {
                             "$type": "SqlDataTypeReference",
-                            "location": {
-                              "startLine": 23,
-                              "startColumn": 18,
-                              "startOffset": 449,
-                              "fragmentLength": 3
-                            },
                             "SqlDataTypeOption": "Int",
                             "Name": {
                               "$type": "SchemaObjectName",
-                              "location": {
-                                "startLine": 23,
-                                "startColumn": 18,
-                                "startOffset": 449,
-                                "fragmentLength": 3
-                              },
                               "BaseIdentifier": {
                                 "$type": "Identifier",
-                                "location": {
-                                  "startLine": 23,
-                                  "startColumn": 18,
-                                  "startOffset": 449,
-                                  "fragmentLength": 3
-                                },
                                 "Value": "int",
                                 "QuoteType": "NotQuoted"
                               },
@@ -1022,12 +464,6 @@
                           },
                           "Value": {
                             "$type": "IntegerLiteral",
-                            "location": {
-                              "startLine": 23,
-                              "startColumn": 24,
-                              "startOffset": 455,
-                              "fragmentLength": 2
-                            },
                             "LiteralType": "Integer",
                             "Value": "10"
                           }
@@ -1036,39 +472,15 @@
                     },
                     {
                       "$type": "ReturnStatement",
-                      "location": {
-                        "startLine": 23,
-                        "startColumn": 28,
-                        "startOffset": 459,
-                        "fragmentLength": 13
-                      },
                       "Expression": {
                         "$type": "BinaryExpression",
-                        "location": {
-                          "startLine": 23,
-                          "startColumn": 35,
-                          "startOffset": 466,
-                          "fragmentLength": 5
-                        },
                         "BinaryExpressionType": "Multiply",
                         "FirstExpression": {
                           "$type": "VariableReference",
-                          "location": {
-                            "startLine": 23,
-                            "startColumn": 35,
-                            "startOffset": 466,
-                            "fragmentLength": 2
-                          },
                           "Name": "@v"
                         },
                         "SecondExpression": {
                           "$type": "VariableReference",
-                          "location": {
-                            "startLine": 23,
-                            "startColumn": 38,
-                            "startOffset": 469,
-                            "fragmentLength": 2
-                          },
                           "Name": "@v"
                         }
                       }

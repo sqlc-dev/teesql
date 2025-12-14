@@ -1,84 +1,30 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 218
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 4,
-        "startColumn": 1,
-        "startOffset": 45,
-        "fragmentLength": 170
-      },
       "Statements": [
         {
           "$type": "WhileStatement",
-          "location": {
-            "startLine": 4,
-            "startColumn": 1,
-            "startOffset": 45,
-            "fragmentLength": 39
-          },
           "Predicate": {
             "$type": "BooleanComparisonExpression",
-            "location": {
-              "startLine": 4,
-              "startColumn": 7,
-              "startOffset": 51,
-              "fragmentLength": 7
-            },
             "ComparisonType": "GreaterThan",
             "FirstExpression": {
               "$type": "VariableReference",
-              "location": {
-                "startLine": 4,
-                "startColumn": 7,
-                "startOffset": 51,
-                "fragmentLength": 2
-              },
               "Name": "@a"
             },
             "SecondExpression": {
               "$type": "IntegerLiteral",
-              "location": {
-                "startLine": 4,
-                "startColumn": 12,
-                "startOffset": 56,
-                "fragmentLength": 2
-              },
               "LiteralType": "Integer",
               "Value": "10"
             }
           },
           "Statement": {
             "$type": "CreateTableStatement",
-            "location": {
-              "startLine": 5,
-              "startColumn": 2,
-              "startOffset": 60,
-              "fragmentLength": 24
-            },
             "SchemaObjectName": {
               "$type": "SchemaObjectName",
-              "location": {
-                "startLine": 5,
-                "startColumn": 15,
-                "startOffset": 73,
-                "fragmentLength": 2
-              },
               "BaseIdentifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 5,
-                  "startColumn": 15,
-                  "startOffset": 73,
-                  "fragmentLength": 2
-                },
                 "Value": "t1",
                 "QuoteType": "NotQuoted"
               },
@@ -94,61 +40,25 @@
             "AsNode": false,
             "Definition": {
               "$type": "TableDefinition",
-              "location": {
-                "startLine": 5,
-                "startColumn": 19,
-                "startOffset": 77,
-                "fragmentLength": 6
-              },
               "ColumnDefinitions": [
                 {
                   "$type": "ColumnDefinition",
-                  "location": {
-                    "startLine": 5,
-                    "startColumn": 19,
-                    "startOffset": 77,
-                    "fragmentLength": 6
-                  },
                   "IsPersisted": false,
                   "IsRowGuidCol": false,
                   "IsHidden": false,
                   "IsMasked": false,
                   "ColumnIdentifier": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 5,
-                      "startColumn": 19,
-                      "startOffset": 77,
-                      "fragmentLength": 2
-                    },
                     "Value": "c1",
                     "QuoteType": "NotQuoted"
                   },
                   "DataType": {
                     "$type": "SqlDataTypeReference",
-                    "location": {
-                      "startLine": 5,
-                      "startColumn": 22,
-                      "startOffset": 80,
-                      "fragmentLength": 3
-                    },
                     "SqlDataTypeOption": "Int",
                     "Name": {
                       "$type": "SchemaObjectName",
-                      "location": {
-                        "startLine": 5,
-                        "startColumn": 22,
-                        "startOffset": 80,
-                        "fragmentLength": 3
-                      },
                       "BaseIdentifier": {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 5,
-                          "startColumn": 22,
-                          "startOffset": 80,
-                          "fragmentLength": 3
-                        },
                         "Value": "int",
                         "QuoteType": "NotQuoted"
                       },
@@ -167,173 +77,65 @@
         },
         {
           "$type": "WhileStatement",
-          "location": {
-            "startLine": 8,
-            "startColumn": 1,
-            "startOffset": 135,
-            "fragmentLength": 80
-          },
           "Predicate": {
             "$type": "BooleanComparisonExpression",
-            "location": {
-              "startLine": 8,
-              "startColumn": 7,
-              "startOffset": 141,
-              "fragmentLength": 7
-            },
             "ComparisonType": "GreaterThan",
             "FirstExpression": {
               "$type": "VariableReference",
-              "location": {
-                "startLine": 8,
-                "startColumn": 7,
-                "startOffset": 141,
-                "fragmentLength": 2
-              },
               "Name": "@a"
             },
             "SecondExpression": {
               "$type": "IntegerLiteral",
-              "location": {
-                "startLine": 8,
-                "startColumn": 12,
-                "startOffset": 146,
-                "fragmentLength": 2
-              },
               "LiteralType": "Integer",
               "Value": "10"
             }
           },
           "Statement": {
             "$type": "BeginEndBlockStatement",
-            "location": {
-              "startLine": 9,
-              "startColumn": 2,
-              "startOffset": 150,
-              "fragmentLength": 65
-            },
             "StatementList": {
               "$type": "StatementList",
-              "location": {
-                "startLine": -1,
-                "startColumn": -1,
-                "startOffset": -1,
-                "fragmentLength": -1
-              },
               "Statements": [
                 {
                   "$type": "IfStatement",
-                  "location": {
-                    "startLine": 10,
-                    "startColumn": 2,
-                    "startOffset": 157,
-                    "fragmentLength": 53
-                  },
                   "Predicate": {
                     "$type": "BooleanParenthesisExpression",
-                    "location": {
-                      "startLine": 10,
-                      "startColumn": 5,
-                      "startOffset": 160,
-                      "fragmentLength": 9
-                    },
                     "Expression": {
                       "$type": "BooleanComparisonExpression",
-                      "location": {
-                        "startLine": 10,
-                        "startColumn": 6,
-                        "startOffset": 161,
-                        "fragmentLength": 7
-                      },
                       "ComparisonType": "GreaterThan",
                       "FirstExpression": {
                         "$type": "VariableReference",
-                        "location": {
-                          "startLine": 10,
-                          "startColumn": 6,
-                          "startOffset": 161,
-                          "fragmentLength": 2
-                        },
                         "Name": "@b"
                       },
                       "SecondExpression": {
                         "$type": "IntegerLiteral",
-                        "location": {
-                          "startLine": 10,
-                          "startColumn": 11,
-                          "startOffset": 166,
-                          "fragmentLength": 2
-                        },
                         "LiteralType": "Integer",
                         "Value": "10"
                       }
                     }
                   },
                   "ThenStatement": {
-                    "$type": "BreakStatement",
-                    "location": {
-                      "startLine": 11,
-                      "startColumn": 3,
-                      "startOffset": 172,
-                      "fragmentLength": 5
-                    }
+                    "$type": "BreakStatement"
                   },
                   "ElseStatement": {
                     "$type": "IfStatement",
-                    "location": {
-                      "startLine": 13,
-                      "startColumn": 3,
-                      "startOffset": 186,
-                      "fragmentLength": 24
-                    },
                     "Predicate": {
                       "$type": "BooleanParenthesisExpression",
-                      "location": {
-                        "startLine": 13,
-                        "startColumn": 6,
-                        "startOffset": 189,
-                        "fragmentLength": 9
-                      },
                       "Expression": {
                         "$type": "BooleanComparisonExpression",
-                        "location": {
-                          "startLine": 13,
-                          "startColumn": 7,
-                          "startOffset": 190,
-                          "fragmentLength": 7
-                        },
                         "ComparisonType": "Equals",
                         "FirstExpression": {
                           "$type": "VariableReference",
-                          "location": {
-                            "startLine": 13,
-                            "startColumn": 7,
-                            "startOffset": 190,
-                            "fragmentLength": 2
-                          },
                           "Name": "@c"
                         },
                         "SecondExpression": {
                           "$type": "IntegerLiteral",
-                          "location": {
-                            "startLine": 13,
-                            "startColumn": 12,
-                            "startOffset": 195,
-                            "fragmentLength": 2
-                          },
                           "LiteralType": "Integer",
                           "Value": "20"
                         }
                       }
                     },
                     "ThenStatement": {
-                      "$type": "ContinueStatement",
-                      "location": {
-                        "startLine": 14,
-                        "startColumn": 4,
-                        "startOffset": 202,
-                        "fragmentLength": 8
-                      }
+                      "$type": "ContinueStatement"
                     }
                   }
                 }

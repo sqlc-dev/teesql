@@ -1,74 +1,26 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 1704
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 2,
-        "startColumn": 1,
-        "startOffset": 10,
-        "fragmentLength": 1694
-      },
       "Statements": [
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 2,
-            "startColumn": 1,
-            "startOffset": 10,
-            "fragmentLength": 56
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 2,
-              "startColumn": 1,
-              "startOffset": 10,
-              "fragmentLength": 56
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 2,
-                  "startColumn": 8,
-                  "startOffset": 17,
-                  "fragmentLength": 2
-                },
                 "Expression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 2,
-                    "startColumn": 8,
-                    "startOffset": 17,
-                    "fragmentLength": 2
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 2,
-                      "startColumn": 8,
-                      "startOffset": 17,
-                      "fragmentLength": 2
-                    },
                     "Count": 1,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 2,
-                          "startColumn": 8,
-                          "startOffset": 17,
-                          "fragmentLength": 2
-                        },
                         "Value": "id",
                         "QuoteType": "NotQuoted"
                       }
@@ -78,39 +30,15 @@
               },
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 2,
-                  "startColumn": 12,
-                  "startOffset": 21,
-                  "fragmentLength": 8
-                },
                 "Expression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 2,
-                    "startColumn": 12,
-                    "startOffset": 21,
-                    "fragmentLength": 8
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 2,
-                      "startColumn": 12,
-                      "startOffset": 21,
-                      "fragmentLength": 8
-                    },
                     "Count": 1,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 2,
-                          "startColumn": 12,
-                          "startOffset": 21,
-                          "fragmentLength": 8
-                        },
                         "Value": "json_col",
                         "QuoteType": "NotQuoted"
                       }
@@ -121,37 +49,13 @@
             ],
             "FromClause": {
               "$type": "FromClause",
-              "location": {
-                "startLine": 3,
-                "startColumn": 1,
-                "startOffset": 30,
-                "fragmentLength": 9
-              },
               "TableReferences": [
                 {
                   "$type": "NamedTableReference",
-                  "location": {
-                    "startLine": 3,
-                    "startColumn": 6,
-                    "startOffset": 35,
-                    "fragmentLength": 4
-                  },
                   "SchemaObject": {
                     "$type": "SchemaObjectName",
-                    "location": {
-                      "startLine": 3,
-                      "startColumn": 6,
-                      "startOffset": 35,
-                      "fragmentLength": 4
-                    },
                     "BaseIdentifier": {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": 3,
-                        "startColumn": 6,
-                        "startOffset": 35,
-                        "fragmentLength": 4
-                      },
                       "Value": "tab1",
                       "QuoteType": "NotQuoted"
                     },
@@ -168,68 +72,26 @@
             },
             "WhereClause": {
               "$type": "WhereClause",
-              "location": {
-                "startLine": 4,
-                "startColumn": 1,
-                "startOffset": 40,
-                "fragmentLength": 26
-              },
               "SearchCondition": {
                 "$type": "BooleanComparisonExpression",
-                "location": {
-                  "startLine": 4,
-                  "startColumn": 7,
-                  "startOffset": 46,
-                  "fragmentLength": 20
-                },
                 "ComparisonType": "Equals",
                 "FirstExpression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 4,
-                    "startColumn": 7,
-                    "startOffset": 46,
-                    "fragmentLength": 16
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 4,
-                      "startColumn": 7,
-                      "startOffset": 46,
-                      "fragmentLength": 6
-                    },
                     "Value": "ISJSON",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "ColumnReferenceExpression",
-                      "location": {
-                        "startLine": 4,
-                        "startColumn": 14,
-                        "startOffset": 53,
-                        "fragmentLength": 8
-                      },
                       "ColumnType": "Regular",
                       "MultiPartIdentifier": {
                         "$type": "MultiPartIdentifier",
-                        "location": {
-                          "startLine": 4,
-                          "startColumn": 14,
-                          "startOffset": 53,
-                          "fragmentLength": 8
-                        },
                         "Count": 1,
                         "Identifiers": [
                           {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 4,
-                              "startColumn": 14,
-                              "startOffset": 53,
-                              "fragmentLength": 8
-                            },
                             "Value": "json_col",
                             "QuoteType": "NotQuoted"
                           }
@@ -242,12 +104,6 @@
                 },
                 "SecondExpression": {
                   "$type": "IntegerLiteral",
-                  "location": {
-                    "startLine": 4,
-                    "startColumn": 26,
-                    "startOffset": 65,
-                    "fragmentLength": 1
-                  },
                   "LiteralType": "Integer",
                   "Value": "1"
                 }
@@ -257,57 +113,21 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 6,
-            "startColumn": 1,
-            "startOffset": 68,
-            "fragmentLength": 64
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 6,
-              "startColumn": 1,
-              "startOffset": 68,
-              "fragmentLength": 64
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 6,
-                  "startColumn": 8,
-                  "startOffset": 75,
-                  "fragmentLength": 2
-                },
                 "Expression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 6,
-                    "startColumn": 8,
-                    "startOffset": 75,
-                    "fragmentLength": 2
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 6,
-                      "startColumn": 8,
-                      "startOffset": 75,
-                      "fragmentLength": 2
-                    },
                     "Count": 1,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 6,
-                          "startColumn": 8,
-                          "startOffset": 75,
-                          "fragmentLength": 2
-                        },
                         "Value": "id",
                         "QuoteType": "NotQuoted"
                       }
@@ -317,39 +137,15 @@
               },
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 6,
-                  "startColumn": 12,
-                  "startOffset": 79,
-                  "fragmentLength": 8
-                },
                 "Expression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 6,
-                    "startColumn": 12,
-                    "startOffset": 79,
-                    "fragmentLength": 8
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 6,
-                      "startColumn": 12,
-                      "startOffset": 79,
-                      "fragmentLength": 8
-                    },
                     "Count": 1,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 6,
-                          "startColumn": 12,
-                          "startOffset": 79,
-                          "fragmentLength": 8
-                        },
                         "Value": "json_col",
                         "QuoteType": "NotQuoted"
                       }
@@ -360,37 +156,13 @@
             ],
             "FromClause": {
               "$type": "FromClause",
-              "location": {
-                "startLine": 7,
-                "startColumn": 1,
-                "startOffset": 88,
-                "fragmentLength": 9
-              },
               "TableReferences": [
                 {
                   "$type": "NamedTableReference",
-                  "location": {
-                    "startLine": 7,
-                    "startColumn": 6,
-                    "startOffset": 93,
-                    "fragmentLength": 4
-                  },
                   "SchemaObject": {
                     "$type": "SchemaObjectName",
-                    "location": {
-                      "startLine": 7,
-                      "startColumn": 6,
-                      "startOffset": 93,
-                      "fragmentLength": 4
-                    },
                     "BaseIdentifier": {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": 7,
-                        "startColumn": 6,
-                        "startOffset": 93,
-                        "fragmentLength": 4
-                      },
                       "Value": "tab1",
                       "QuoteType": "NotQuoted"
                     },
@@ -407,68 +179,26 @@
             },
             "WhereClause": {
               "$type": "WhereClause",
-              "location": {
-                "startLine": 8,
-                "startColumn": 1,
-                "startOffset": 98,
-                "fragmentLength": 34
-              },
               "SearchCondition": {
                 "$type": "BooleanComparisonExpression",
-                "location": {
-                  "startLine": 8,
-                  "startColumn": 7,
-                  "startOffset": 104,
-                  "fragmentLength": 28
-                },
                 "ComparisonType": "Equals",
                 "FirstExpression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 8,
-                    "startColumn": 7,
-                    "startOffset": 104,
-                    "fragmentLength": 24
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 8,
-                      "startColumn": 7,
-                      "startOffset": 104,
-                      "fragmentLength": 6
-                    },
                     "Value": "ISJSON",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "ColumnReferenceExpression",
-                      "location": {
-                        "startLine": 8,
-                        "startColumn": 14,
-                        "startOffset": 111,
-                        "fragmentLength": 8
-                      },
                       "ColumnType": "Regular",
                       "MultiPartIdentifier": {
                         "$type": "MultiPartIdentifier",
-                        "location": {
-                          "startLine": 8,
-                          "startColumn": 14,
-                          "startOffset": 111,
-                          "fragmentLength": 8
-                        },
                         "Count": 1,
                         "Identifiers": [
                           {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 8,
-                              "startColumn": 14,
-                              "startOffset": 111,
-                              "fragmentLength": 8
-                            },
                             "Value": "json_col",
                             "QuoteType": "NotQuoted"
                           }
@@ -477,31 +207,13 @@
                     },
                     {
                       "$type": "ColumnReferenceExpression",
-                      "location": {
-                        "startLine": 8,
-                        "startColumn": 24,
-                        "startOffset": 121,
-                        "fragmentLength": 6
-                      },
                       "ColumnType": "Regular",
                       "MultiPartIdentifier": {
                         "$type": "MultiPartIdentifier",
-                        "location": {
-                          "startLine": 8,
-                          "startColumn": 24,
-                          "startOffset": 121,
-                          "fragmentLength": 6
-                        },
                         "Count": 1,
                         "Identifiers": [
                           {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 8,
-                              "startColumn": 24,
-                              "startOffset": 121,
-                              "fragmentLength": 6
-                            },
                             "Value": "SCALAR",
                             "QuoteType": "NotQuoted"
                           }
@@ -514,12 +226,6 @@
                 },
                 "SecondExpression": {
                   "$type": "IntegerLiteral",
-                  "location": {
-                    "startLine": 8,
-                    "startColumn": 34,
-                    "startOffset": 131,
-                    "fragmentLength": 1
-                  },
                   "LiteralType": "Integer",
                   "Value": "1"
                 }
@@ -529,58 +235,22 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 10,
-            "startColumn": 1,
-            "startOffset": 134,
-            "fragmentLength": 28
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 10,
-              "startColumn": 1,
-              "startOffset": 134,
-              "fragmentLength": 28
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 10,
-                  "startColumn": 8,
-                  "startOffset": 141,
-                  "fragmentLength": 21
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 10,
-                    "startColumn": 8,
-                    "startOffset": 141,
-                    "fragmentLength": 21
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 10,
-                      "startColumn": 8,
-                      "startOffset": 141,
-                      "fragmentLength": 6
-                    },
                     "Value": "ISJSON",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "StringLiteral",
-                      "location": {
-                        "startLine": 10,
-                        "startColumn": 15,
-                        "startOffset": 148,
-                        "fragmentLength": 6
-                      },
                       "LiteralType": "String",
                       "IsNational": false,
                       "IsLargeObject": false,
@@ -588,31 +258,13 @@
                     },
                     {
                       "$type": "ColumnReferenceExpression",
-                      "location": {
-                        "startLine": 10,
-                        "startColumn": 23,
-                        "startOffset": 156,
-                        "fragmentLength": 5
-                      },
                       "ColumnType": "Regular",
                       "MultiPartIdentifier": {
                         "$type": "MultiPartIdentifier",
-                        "location": {
-                          "startLine": 10,
-                          "startColumn": 23,
-                          "startOffset": 156,
-                          "fragmentLength": 5
-                        },
                         "Count": 1,
                         "Identifiers": [
                           {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 10,
-                              "startColumn": 23,
-                              "startOffset": 156,
-                              "fragmentLength": 5
-                            },
                             "Value": "VALUE",
                             "QuoteType": "NotQuoted"
                           }
@@ -629,70 +281,28 @@
         },
         {
           "$type": "DeclareVariableStatement",
-          "location": {
-            "startLine": 13,
-            "startColumn": 1,
-            "startOffset": 184,
-            "fragmentLength": 32
-          },
           "Declarations": [
             {
               "$type": "DeclareVariableElement",
-              "location": {
-                "startLine": 13,
-                "startColumn": 9,
-                "startOffset": 192,
-                "fragmentLength": 23
-              },
               "VariableName": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 13,
-                  "startColumn": 9,
-                  "startOffset": 192,
-                  "fragmentLength": 9
-                },
                 "Value": "@jsonInfo",
                 "QuoteType": "NotQuoted"
               },
               "DataType": {
                 "$type": "SqlDataTypeReference",
-                "location": {
-                  "startLine": 13,
-                  "startColumn": 19,
-                  "startOffset": 202,
-                  "fragmentLength": 13
-                },
                 "SqlDataTypeOption": "NVarChar",
                 "Parameters": [
                   {
                     "$type": "MaxLiteral",
-                    "location": {
-                      "startLine": 13,
-                      "startColumn": 28,
-                      "startOffset": 211,
-                      "fragmentLength": 3
-                    },
                     "LiteralType": "Max",
                     "Value": "MAX"
                   }
                 ],
                 "Name": {
                   "$type": "SchemaObjectName",
-                  "location": {
-                    "startLine": 13,
-                    "startColumn": 19,
-                    "startOffset": 202,
-                    "fragmentLength": 8
-                  },
                   "BaseIdentifier": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 13,
-                      "startColumn": 19,
-                      "startOffset": 202,
-                      "fragmentLength": 8
-                    },
                     "Value": "NVARCHAR",
                     "QuoteType": "NotQuoted"
                   },
@@ -709,103 +319,43 @@
         },
         {
           "$type": "SetVariableStatement",
-          "location": {
-            "startLine": 14,
-            "startColumn": 1,
-            "startOffset": 217,
-            "fragmentLength": 75
-          },
           "Variable": {
             "$type": "VariableReference",
-            "location": {
-              "startLine": 14,
-              "startColumn": 5,
-              "startOffset": 221,
-              "fragmentLength": 9
-            },
             "Name": "@jsonInfo"
           },
           "SeparatorType": "NotSpecified",
           "FunctionCallExists": false,
           "Expression": {
             "$type": "StringLiteral",
-            "location": {
-              "startLine": 14,
-              "startColumn": 15,
-              "startOffset": 231,
-              "fragmentLength": 60
-            },
             "LiteralType": "String",
             "IsNational": true,
             "IsLargeObject": false,
-            "Value": "{\u0022info\u0022:{\u0022address\u0022:[{\u0022town\u0022:\u0022Paris\u0022},{\u0022town\u0022:\u0022London\u0022}]}}"
+            "Value": "{\"info\":{\"address\":[{\"town\":\"Paris\"},{\"town\":\"London\"}]}}"
           },
           "AssignmentKind": "Equals"
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 15,
-            "startColumn": 1,
-            "startOffset": 293,
-            "fragmentLength": 52
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 15,
-              "startColumn": 1,
-              "startOffset": 293,
-              "fragmentLength": 51
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 15,
-                  "startColumn": 8,
-                  "startOffset": 300,
-                  "fragmentLength": 44
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 15,
-                    "startColumn": 8,
-                    "startOffset": 300,
-                    "fragmentLength": 44
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 15,
-                      "startColumn": 8,
-                      "startOffset": 300,
-                      "fragmentLength": 16
-                    },
                     "Value": "JSON_PATH_EXISTS",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "VariableReference",
-                      "location": {
-                        "startLine": 15,
-                        "startColumn": 25,
-                        "startOffset": 317,
-                        "fragmentLength": 9
-                      },
                       "Name": "@jsonInfo"
                     },
                     {
                       "$type": "StringLiteral",
-                      "location": {
-                        "startLine": 15,
-                        "startColumn": 35,
-                        "startOffset": 327,
-                        "fragmentLength": 16
-                      },
                       "LiteralType": "String",
                       "IsNational": false,
                       "IsLargeObject": false,
@@ -821,46 +371,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 17,
-            "startColumn": 1,
-            "startOffset": 347,
-            "fragmentLength": 35
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 17,
-              "startColumn": 1,
-              "startOffset": 347,
-              "fragmentLength": 34
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 17,
-                  "startColumn": 8,
-                  "startOffset": 354,
-                  "fragmentLength": 27
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 17,
-                    "startColumn": 8,
-                    "startOffset": 354,
-                    "fragmentLength": 27
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 17,
-                      "startColumn": 8,
-                      "startOffset": 354,
-                      "fragmentLength": 11
-                    },
                     "Value": "JSON_OBJECT",
                     "QuoteType": "NotQuoted"
                   },
@@ -868,20 +388,8 @@
                   "JsonParameters": [
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 17,
-                        "startColumn": 20,
-                        "startOffset": 366,
-                        "fragmentLength": 14
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 17,
-                          "startColumn": 20,
-                          "startOffset": 366,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -889,12 +397,6 @@
                       },
                       "JsonValue": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 17,
-                          "startColumn": 27,
-                          "startOffset": 373,
-                          "fragmentLength": 7
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -910,46 +412,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 19,
-            "startColumn": 1,
-            "startOffset": 384,
-            "fragmentLength": 58
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 19,
-              "startColumn": 1,
-              "startOffset": 384,
-              "fragmentLength": 57
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 19,
-                  "startColumn": 8,
-                  "startOffset": 391,
-                  "fragmentLength": 50
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 19,
-                    "startColumn": 8,
-                    "startOffset": 391,
-                    "fragmentLength": 50
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 19,
-                      "startColumn": 8,
-                      "startOffset": 391,
-                      "fragmentLength": 11
-                    },
                     "Value": "JSON_OBJECT",
                     "QuoteType": "NotQuoted"
                   },
@@ -957,20 +429,8 @@
                   "JsonParameters": [
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 19,
-                        "startColumn": 20,
-                        "startOffset": 403,
-                        "fragmentLength": 14
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 19,
-                          "startColumn": 20,
-                          "startOffset": 403,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -978,12 +438,6 @@
                       },
                       "JsonValue": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 19,
-                          "startColumn": 27,
-                          "startOffset": 410,
-                          "fragmentLength": 7
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -992,20 +446,8 @@
                     },
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 19,
-                        "startColumn": 36,
-                        "startOffset": 419,
-                        "fragmentLength": 8
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 19,
-                          "startColumn": 36,
-                          "startOffset": 419,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1013,12 +455,6 @@
                       },
                       "JsonValue": {
                         "$type": "IntegerLiteral",
-                        "location": {
-                          "startLine": 19,
-                          "startColumn": 43,
-                          "startOffset": 426,
-                          "fragmentLength": 1
-                        },
                         "LiteralType": "Integer",
                         "Value": "1"
                       }
@@ -1027,12 +463,6 @@
                   "AbsentOrNullOnNull": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": -1,
-                        "startColumn": -1,
-                        "startOffset": -1,
-                        "fragmentLength": -1
-                      },
                       "Value": "NULL",
                       "QuoteType": "NotQuoted"
                     }
@@ -1045,46 +475,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 21,
-            "startColumn": 1,
-            "startOffset": 444,
-            "fragmentLength": 33
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 21,
-              "startColumn": 1,
-              "startOffset": 444,
-              "fragmentLength": 32
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 21,
-                  "startColumn": 8,
-                  "startOffset": 451,
-                  "fragmentLength": 25
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 21,
-                    "startColumn": 8,
-                    "startOffset": 451,
-                    "fragmentLength": 25
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 21,
-                      "startColumn": 8,
-                      "startOffset": 451,
-                      "fragmentLength": 11
-                    },
                     "Value": "JSON_OBJECT",
                     "QuoteType": "NotQuoted"
                   },
@@ -1092,12 +492,6 @@
                   "AbsentOrNullOnNull": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": -1,
-                        "startColumn": -1,
-                        "startOffset": -1,
-                        "fragmentLength": -1
-                      },
                       "Value": "NULL",
                       "QuoteType": "NotQuoted"
                     }
@@ -1110,46 +504,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 23,
-            "startColumn": 1,
-            "startOffset": 479,
-            "fragmentLength": 63
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 23,
-              "startColumn": 1,
-              "startOffset": 479,
-              "fragmentLength": 62
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 23,
-                  "startColumn": 8,
-                  "startOffset": 486,
-                  "fragmentLength": 55
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 23,
-                    "startColumn": 8,
-                    "startOffset": 486,
-                    "fragmentLength": 55
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 23,
-                      "startColumn": 8,
-                      "startOffset": 486,
-                      "fragmentLength": 11
-                    },
                     "Value": "JSON_OBJECT",
                     "QuoteType": "NotQuoted"
                   },
@@ -1157,20 +521,8 @@
                   "JsonParameters": [
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 23,
-                        "startColumn": 20,
-                        "startOffset": 498,
-                        "fragmentLength": 14
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 23,
-                          "startColumn": 20,
-                          "startOffset": 498,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1178,12 +530,6 @@
                       },
                       "JsonValue": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 23,
-                          "startColumn": 27,
-                          "startOffset": 505,
-                          "fragmentLength": 7
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1192,20 +538,8 @@
                     },
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 23,
-                        "startColumn": 36,
-                        "startOffset": 514,
-                        "fragmentLength": 11
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 23,
-                          "startColumn": 36,
-                          "startOffset": 514,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1213,12 +547,6 @@
                       },
                       "JsonValue": {
                         "$type": "NullLiteral",
-                        "location": {
-                          "startLine": 23,
-                          "startColumn": 43,
-                          "startOffset": 521,
-                          "fragmentLength": 4
-                        },
                         "LiteralType": "Null",
                         "Value": "NULL"
                       }
@@ -1227,12 +555,6 @@
                   "AbsentOrNullOnNull": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": -1,
-                        "startColumn": -1,
-                        "startOffset": -1,
-                        "fragmentLength": -1
-                      },
                       "Value": "ABSENT",
                       "QuoteType": "NotQuoted"
                     }
@@ -1245,46 +567,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 25,
-            "startColumn": 1,
-            "startOffset": 544,
-            "fragmentLength": 80
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 25,
-              "startColumn": 1,
-              "startOffset": 544,
-              "fragmentLength": 79
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 25,
-                  "startColumn": 8,
-                  "startOffset": 551,
-                  "fragmentLength": 72
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 25,
-                    "startColumn": 8,
-                    "startOffset": 551,
-                    "fragmentLength": 72
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 25,
-                      "startColumn": 8,
-                      "startOffset": 551,
-                      "fragmentLength": 11
-                    },
                     "Value": "JSON_OBJECT",
                     "QuoteType": "NotQuoted"
                   },
@@ -1292,20 +584,8 @@
                   "JsonParameters": [
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 25,
-                        "startColumn": 20,
-                        "startOffset": 563,
-                        "fragmentLength": 14
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 25,
-                          "startColumn": 20,
-                          "startOffset": 563,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1313,12 +593,6 @@
                       },
                       "JsonValue": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 25,
-                          "startColumn": 27,
-                          "startOffset": 570,
-                          "fragmentLength": 7
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1327,20 +601,8 @@
                     },
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 25,
-                        "startColumn": 36,
-                        "startOffset": 579,
-                        "fragmentLength": 43
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 25,
-                          "startColumn": 36,
-                          "startOffset": 579,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1348,20 +610,8 @@
                       },
                       "JsonValue": {
                         "$type": "FunctionCall",
-                        "location": {
-                          "startLine": 25,
-                          "startColumn": 43,
-                          "startOffset": 586,
-                          "fragmentLength": 36
-                        },
                         "FunctionName": {
                           "$type": "Identifier",
-                          "location": {
-                            "startLine": 25,
-                            "startColumn": 43,
-                            "startOffset": 586,
-                            "fragmentLength": 11
-                          },
                           "Value": "JSON_OBJECT",
                           "QuoteType": "NotQuoted"
                         },
@@ -1369,20 +619,8 @@
                         "JsonParameters": [
                           {
                             "$type": "JsonKeyValue",
-                            "location": {
-                              "startLine": 25,
-                              "startColumn": 55,
-                              "startOffset": 598,
-                              "fragmentLength": 11
-                            },
                             "JsonKeyName": {
                               "$type": "StringLiteral",
-                              "location": {
-                                "startLine": 25,
-                                "startColumn": 55,
-                                "startOffset": 598,
-                                "fragmentLength": 9
-                              },
                               "LiteralType": "String",
                               "IsNational": false,
                               "IsLargeObject": false,
@@ -1390,32 +628,14 @@
                             },
                             "JsonValue": {
                               "$type": "IntegerLiteral",
-                              "location": {
-                                "startLine": 25,
-                                "startColumn": 65,
-                                "startOffset": 608,
-                                "fragmentLength": 1
-                              },
                               "LiteralType": "Integer",
                               "Value": "1"
                             }
                           },
                           {
                             "$type": "JsonKeyValue",
-                            "location": {
-                              "startLine": 25,
-                              "startColumn": 68,
-                              "startOffset": 611,
-                              "fragmentLength": 10
-                            },
                             "JsonKeyName": {
                               "$type": "StringLiteral",
-                              "location": {
-                                "startLine": 25,
-                                "startColumn": 68,
-                                "startOffset": 611,
-                                "fragmentLength": 6
-                              },
                               "LiteralType": "String",
                               "IsNational": false,
                               "IsLargeObject": false,
@@ -1423,12 +643,6 @@
                             },
                             "JsonValue": {
                               "$type": "StringLiteral",
-                              "location": {
-                                "startLine": 25,
-                                "startColumn": 75,
-                                "startOffset": 618,
-                                "fragmentLength": 3
-                              },
                               "LiteralType": "String",
                               "IsNational": false,
                               "IsLargeObject": false,
@@ -1448,46 +662,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 27,
-            "startColumn": 1,
-            "startOffset": 626,
-            "fragmentLength": 21
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 27,
-              "startColumn": 1,
-              "startOffset": 626,
-              "fragmentLength": 20
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 27,
-                  "startColumn": 8,
-                  "startOffset": 633,
-                  "fragmentLength": 13
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 27,
-                    "startColumn": 8,
-                    "startOffset": 633,
-                    "fragmentLength": 13
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 27,
-                      "startColumn": 8,
-                      "startOffset": 633,
-                      "fragmentLength": 11
-                    },
                     "Value": "JSON_OBJECT",
                     "QuoteType": "NotQuoted"
                   },
@@ -1500,46 +684,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 29,
-            "startColumn": 1,
-            "startOffset": 649,
-            "fragmentLength": 45
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 29,
-              "startColumn": 1,
-              "startOffset": 649,
-              "fragmentLength": 44
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 29,
-                  "startColumn": 8,
-                  "startOffset": 656,
-                  "fragmentLength": 37
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 29,
-                    "startColumn": 8,
-                    "startOffset": 656,
-                    "fragmentLength": 37
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 29,
-                      "startColumn": 8,
-                      "startOffset": 656,
-                      "fragmentLength": 11
-                    },
                     "Value": "JSON_OBJECT",
                     "QuoteType": "NotQuoted"
                   },
@@ -1547,20 +701,8 @@
                   "JsonParameters": [
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 29,
-                        "startColumn": 20,
-                        "startOffset": 668,
-                        "fragmentLength": 14
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 29,
-                          "startColumn": 20,
-                          "startOffset": 668,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1568,12 +710,6 @@
                       },
                       "JsonValue": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 29,
-                          "startColumn": 27,
-                          "startOffset": 675,
-                          "fragmentLength": 7
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1582,20 +718,8 @@
                     },
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 29,
-                        "startColumn": 36,
-                        "startOffset": 684,
-                        "fragmentLength": 8
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 29,
-                          "startColumn": 36,
-                          "startOffset": 684,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1603,12 +727,6 @@
                       },
                       "JsonValue": {
                         "$type": "IntegerLiteral",
-                        "location": {
-                          "startLine": 29,
-                          "startColumn": 43,
-                          "startOffset": 691,
-                          "fragmentLength": 1
-                        },
                         "LiteralType": "Integer",
                         "Value": "1"
                       }
@@ -1622,46 +740,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 31,
-            "startColumn": 1,
-            "startOffset": 696,
-            "fragmentLength": 60
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 31,
-              "startColumn": 1,
-              "startOffset": 696,
-              "fragmentLength": 59
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 31,
-                  "startColumn": 8,
-                  "startOffset": 703,
-                  "fragmentLength": 52
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 31,
-                    "startColumn": 8,
-                    "startOffset": 703,
-                    "fragmentLength": 52
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 31,
-                      "startColumn": 8,
-                      "startOffset": 703,
-                      "fragmentLength": 11
-                    },
                     "Value": "JSON_OBJECT",
                     "QuoteType": "NotQuoted"
                   },
@@ -1669,20 +757,8 @@
                   "JsonParameters": [
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 31,
-                        "startColumn": 20,
-                        "startOffset": 715,
-                        "fragmentLength": 14
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 31,
-                          "startColumn": 20,
-                          "startOffset": 715,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1690,12 +766,6 @@
                       },
                       "JsonValue": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 31,
-                          "startColumn": 27,
-                          "startOffset": 722,
-                          "fragmentLength": 7
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1704,20 +774,8 @@
                     },
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 31,
-                        "startColumn": 36,
-                        "startOffset": 731,
-                        "fragmentLength": 23
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 31,
-                          "startColumn": 36,
-                          "startOffset": 731,
-                          "fragmentLength": 6
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -1725,43 +783,19 @@
                       },
                       "JsonValue": {
                         "$type": "FunctionCall",
-                        "location": {
-                          "startLine": 31,
-                          "startColumn": 43,
-                          "startOffset": 738,
-                          "fragmentLength": 16
-                        },
                         "FunctionName": {
                           "$type": "Identifier",
-                          "location": {
-                            "startLine": 31,
-                            "startColumn": 43,
-                            "startOffset": 738,
-                            "fragmentLength": 10
-                          },
                           "Value": "JSON_ARRAY",
                           "QuoteType": "NotQuoted"
                         },
                         "Parameters": [
                           {
                             "$type": "IntegerLiteral",
-                            "location": {
-                              "startLine": 31,
-                              "startColumn": 54,
-                              "startOffset": 749,
-                              "fragmentLength": 1
-                            },
                             "LiteralType": "Integer",
                             "Value": "1"
                           },
                           {
                             "$type": "IntegerLiteral",
-                            "location": {
-                              "startLine": 31,
-                              "startColumn": 57,
-                              "startOffset": 752,
-                              "fragmentLength": 1
-                            },
                             "LiteralType": "Integer",
                             "Value": "2"
                           }
@@ -1779,70 +813,28 @@
         },
         {
           "$type": "DeclareVariableStatement",
-          "location": {
-            "startLine": 33,
-            "startColumn": 1,
-            "startOffset": 758,
-            "fragmentLength": 79
-          },
           "Declarations": [
             {
               "$type": "DeclareVariableElement",
-              "location": {
-                "startLine": 33,
-                "startColumn": 9,
-                "startOffset": 766,
-                "fragmentLength": 32
-              },
               "VariableName": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 33,
-                  "startColumn": 9,
-                  "startOffset": 766,
-                  "fragmentLength": 7
-                },
                 "Value": "@id_key",
                 "QuoteType": "NotQuoted"
               },
               "DataType": {
                 "$type": "SqlDataTypeReference",
-                "location": {
-                  "startLine": 33,
-                  "startColumn": 20,
-                  "startOffset": 777,
-                  "fragmentLength": 13
-                },
                 "SqlDataTypeOption": "NVarChar",
                 "Parameters": [
                   {
                     "$type": "IntegerLiteral",
-                    "location": {
-                      "startLine": 33,
-                      "startColumn": 30,
-                      "startOffset": 787,
-                      "fragmentLength": 2
-                    },
                     "LiteralType": "Integer",
                     "Value": "10"
                   }
                 ],
                 "Name": {
                   "$type": "SchemaObjectName",
-                  "location": {
-                    "startLine": 33,
-                    "startColumn": 20,
-                    "startOffset": 777,
-                    "fragmentLength": 8
-                  },
                   "BaseIdentifier": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 33,
-                      "startColumn": 20,
-                      "startOffset": 777,
-                      "fragmentLength": 8
-                    },
                     "Value": "NVARCHAR",
                     "QuoteType": "NotQuoted"
                   },
@@ -1856,12 +848,6 @@
               },
               "Value": {
                 "$type": "StringLiteral",
-                "location": {
-                  "startLine": 33,
-                  "startColumn": 36,
-                  "startOffset": 793,
-                  "fragmentLength": 5
-                },
                 "LiteralType": "String",
                 "IsNational": true,
                 "IsLargeObject": false,
@@ -1870,61 +856,25 @@
             },
             {
               "$type": "DeclareVariableElement",
-              "location": {
-                "startLine": 33,
-                "startColumn": 43,
-                "startOffset": 800,
-                "fragmentLength": 36
-              },
               "VariableName": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 33,
-                  "startColumn": 43,
-                  "startOffset": 800,
-                  "fragmentLength": 9
-                },
                 "Value": "@id_value",
                 "QuoteType": "NotQuoted"
               },
               "DataType": {
                 "$type": "SqlDataTypeReference",
-                "location": {
-                  "startLine": 33,
-                  "startColumn": 56,
-                  "startOffset": 813,
-                  "fragmentLength": 13
-                },
                 "SqlDataTypeOption": "NVarChar",
                 "Parameters": [
                   {
                     "$type": "IntegerLiteral",
-                    "location": {
-                      "startLine": 33,
-                      "startColumn": 66,
-                      "startOffset": 823,
-                      "fragmentLength": 2
-                    },
                     "LiteralType": "Integer",
                     "Value": "64"
                   }
                 ],
                 "Name": {
                   "$type": "SchemaObjectName",
-                  "location": {
-                    "startLine": 33,
-                    "startColumn": 56,
-                    "startOffset": 813,
-                    "fragmentLength": 8
-                  },
                   "BaseIdentifier": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 33,
-                      "startColumn": 56,
-                      "startOffset": 813,
-                      "fragmentLength": 8
-                    },
                     "Value": "NVARCHAR",
                     "QuoteType": "NotQuoted"
                   },
@@ -1938,20 +888,8 @@
               },
               "Value": {
                 "$type": "FunctionCall",
-                "location": {
-                  "startLine": 33,
-                  "startColumn": 72,
-                  "startOffset": 829,
-                  "fragmentLength": 7
-                },
                 "FunctionName": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 33,
-                    "startColumn": 72,
-                    "startOffset": 829,
-                    "fragmentLength": 5
-                  },
                   "Value": "NEWID",
                   "QuoteType": "NotQuoted"
                 },
@@ -1963,46 +901,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 35,
-            "startColumn": 1,
-            "startOffset": 839,
-            "fragmentLength": 86
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 35,
-              "startColumn": 1,
-              "startOffset": 839,
-              "fragmentLength": 85
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 35,
-                  "startColumn": 8,
-                  "startOffset": 846,
-                  "fragmentLength": 78
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 35,
-                    "startColumn": 8,
-                    "startOffset": 846,
-                    "fragmentLength": 78
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 35,
-                      "startColumn": 8,
-                      "startOffset": 846,
-                      "fragmentLength": 11
-                    },
                     "Value": "JSON_OBJECT",
                     "QuoteType": "NotQuoted"
                   },
@@ -2010,20 +918,8 @@
                   "JsonParameters": [
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 35,
-                        "startColumn": 20,
-                        "startOffset": 858,
-                        "fragmentLength": 23
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 35,
-                          "startColumn": 20,
-                          "startOffset": 858,
-                          "fragmentLength": 11
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -2031,20 +927,8 @@
                       },
                       "JsonValue": {
                         "$type": "FunctionCall",
-                        "location": {
-                          "startLine": 35,
-                          "startColumn": 32,
-                          "startOffset": 870,
-                          "fragmentLength": 11
-                        },
                         "FunctionName": {
                           "$type": "Identifier",
-                          "location": {
-                            "startLine": 35,
-                            "startColumn": 32,
-                            "startOffset": 870,
-                            "fragmentLength": 9
-                          },
                           "Value": "USER_NAME",
                           "QuoteType": "NotQuoted"
                         },
@@ -2054,49 +938,19 @@
                     },
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 35,
-                        "startColumn": 45,
-                        "startOffset": 883,
-                        "fragmentLength": 17
-                      },
                       "JsonKeyName": {
                         "$type": "VariableReference",
-                        "location": {
-                          "startLine": 35,
-                          "startColumn": 45,
-                          "startOffset": 883,
-                          "fragmentLength": 7
-                        },
                         "Name": "@id_key"
                       },
                       "JsonValue": {
                         "$type": "VariableReference",
-                        "location": {
-                          "startLine": 35,
-                          "startColumn": 53,
-                          "startOffset": 891,
-                          "fragmentLength": 9
-                        },
                         "Name": "@id_value"
                       }
                     },
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 35,
-                        "startColumn": 64,
-                        "startOffset": 902,
-                        "fragmentLength": 21
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 35,
-                          "startColumn": 64,
-                          "startOffset": 902,
-                          "fragmentLength": 5
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -2104,38 +958,14 @@
                       },
                       "JsonValue": {
                         "$type": "ScalarSubquery",
-                        "location": {
-                          "startLine": 35,
-                          "startColumn": 70,
-                          "startOffset": 908,
-                          "fragmentLength": 15
-                        },
                         "QueryExpression": {
                           "$type": "QuerySpecification",
-                          "location": {
-                            "startLine": 35,
-                            "startColumn": 71,
-                            "startOffset": 909,
-                            "fragmentLength": 13
-                          },
                           "UniqueRowFilter": "NotSpecified",
                           "SelectElements": [
                             {
                               "$type": "SelectScalarExpression",
-                              "location": {
-                                "startLine": 35,
-                                "startColumn": 78,
-                                "startOffset": 916,
-                                "fragmentLength": 6
-                              },
                               "Expression": {
                                 "$type": "GlobalVariableExpression",
-                                "location": {
-                                  "startLine": 35,
-                                  "startColumn": 78,
-                                  "startOffset": 916,
-                                  "fragmentLength": 6
-                                },
                                 "Name": "@@SPID"
                               }
                             }
@@ -2152,68 +982,26 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 37,
-            "startColumn": 1,
-            "startOffset": 927,
-            "fragmentLength": 177
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 37,
-              "startColumn": 1,
-              "startOffset": 927,
-              "fragmentLength": 176
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 37,
-                  "startColumn": 8,
-                  "startOffset": 934,
-                  "fragmentLength": 12
-                },
                 "Expression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 37,
-                    "startColumn": 8,
-                    "startOffset": 934,
-                    "fragmentLength": 12
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 37,
-                      "startColumn": 8,
-                      "startOffset": 934,
-                      "fragmentLength": 12
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 37,
-                          "startColumn": 8,
-                          "startOffset": 934,
-                          "fragmentLength": 1
-                        },
                         "Value": "s",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 37,
-                          "startColumn": 10,
-                          "startOffset": 936,
-                          "fragmentLength": 10
-                        },
                         "Value": "session_id",
                         "QuoteType": "NotQuoted"
                       }
@@ -2223,28 +1011,10 @@
               },
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 38,
-                  "startColumn": 8,
-                  "startOffset": 955,
-                  "fragmentLength": 89
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 38,
-                    "startColumn": 8,
-                    "startOffset": 955,
-                    "fragmentLength": 81
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 38,
-                      "startColumn": 8,
-                      "startOffset": 955,
-                      "fragmentLength": 11
-                    },
                     "Value": "JSON_OBJECT",
                     "QuoteType": "NotQuoted"
                   },
@@ -2252,20 +1022,8 @@
                   "JsonParameters": [
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 38,
-                        "startColumn": 20,
-                        "startOffset": 967,
-                        "fragmentLength": 27
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 38,
-                          "startColumn": 20,
-                          "startOffset": 967,
-                          "fragmentLength": 13
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -2273,42 +1031,18 @@
                       },
                       "JsonValue": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 38,
-                          "startColumn": 34,
-                          "startOffset": 981,
-                          "fragmentLength": 13
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 38,
-                            "startColumn": 34,
-                            "startOffset": 981,
-                            "fragmentLength": 13
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 38,
-                                "startColumn": 34,
-                                "startOffset": 981,
-                                "fragmentLength": 1
-                              },
                               "Value": "s",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 38,
-                                "startColumn": 36,
-                                "startOffset": 983,
-                                "fragmentLength": 11
-                              },
                               "Value": "security_id",
                               "QuoteType": "NotQuoted"
                             }
@@ -2318,20 +1052,8 @@
                     },
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 38,
-                        "startColumn": 49,
-                        "startOffset": 996,
-                        "fragmentLength": 20
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 38,
-                          "startColumn": 49,
-                          "startOffset": 996,
-                          "fragmentLength": 7
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -2339,42 +1061,18 @@
                       },
                       "JsonValue": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 38,
-                          "startColumn": 57,
-                          "startOffset": 1004,
-                          "fragmentLength": 12
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 38,
-                            "startColumn": 57,
-                            "startOffset": 1004,
-                            "fragmentLength": 12
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 38,
-                                "startColumn": 57,
-                                "startOffset": 1004,
-                                "fragmentLength": 1
-                              },
                               "Value": "s",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 38,
-                                "startColumn": 59,
-                                "startOffset": 1006,
-                                "fragmentLength": 10
-                              },
                               "Value": "login_name",
                               "QuoteType": "NotQuoted"
                             }
@@ -2384,20 +1082,8 @@
                     },
                     {
                       "$type": "JsonKeyValue",
-                      "location": {
-                        "startLine": 38,
-                        "startColumn": 71,
-                        "startOffset": 1018,
-                        "fragmentLength": 17
-                      },
                       "JsonKeyName": {
                         "$type": "StringLiteral",
-                        "location": {
-                          "startLine": 38,
-                          "startColumn": 71,
-                          "startOffset": 1018,
-                          "fragmentLength": 8
-                        },
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -2405,42 +1091,18 @@
                       },
                       "JsonValue": {
                         "$type": "ColumnReferenceExpression",
-                        "location": {
-                          "startLine": 38,
-                          "startColumn": 80,
-                          "startOffset": 1027,
-                          "fragmentLength": 8
-                        },
                         "ColumnType": "Regular",
                         "MultiPartIdentifier": {
                           "$type": "MultiPartIdentifier",
-                          "location": {
-                            "startLine": 38,
-                            "startColumn": 80,
-                            "startOffset": 1027,
-                            "fragmentLength": 8
-                          },
                           "Count": 2,
                           "Identifiers": [
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 38,
-                                "startColumn": 80,
-                                "startOffset": 1027,
-                                "fragmentLength": 1
-                              },
                               "Value": "s",
                               "QuoteType": "NotQuoted"
                             },
                             {
                               "$type": "Identifier",
-                              "location": {
-                                "startLine": 38,
-                                "startColumn": 82,
-                                "startOffset": 1029,
-                                "fragmentLength": 6
-                              },
                               "Value": "status",
                               "QuoteType": "NotQuoted"
                             }
@@ -2453,21 +1115,9 @@
                 },
                 "ColumnName": {
                   "$type": "IdentifierOrValueExpression",
-                  "location": {
-                    "startLine": 38,
-                    "startColumn": 93,
-                    "startOffset": 1040,
-                    "fragmentLength": 4
-                  },
                   "Value": "info",
                   "Identifier": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 38,
-                      "startColumn": 93,
-                      "startOffset": 1040,
-                      "fragmentLength": 4
-                    },
                     "Value": "info",
                     "QuoteType": "NotQuoted"
                   }
@@ -2476,48 +1126,18 @@
             ],
             "FromClause": {
               "$type": "FromClause",
-              "location": {
-                "startLine": 39,
-                "startColumn": 1,
-                "startOffset": 1045,
-                "fragmentLength": 30
-              },
               "TableReferences": [
                 {
                   "$type": "NamedTableReference",
-                  "location": {
-                    "startLine": 39,
-                    "startColumn": 6,
-                    "startOffset": 1050,
-                    "fragmentLength": 25
-                  },
                   "SchemaObject": {
                     "$type": "SchemaObjectName",
-                    "location": {
-                      "startLine": 39,
-                      "startColumn": 6,
-                      "startOffset": 1050,
-                      "fragmentLength": 20
-                    },
                     "SchemaIdentifier": {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": 39,
-                        "startColumn": 6,
-                        "startOffset": 1050,
-                        "fragmentLength": 3
-                      },
                       "Value": "sys",
                       "QuoteType": "NotQuoted"
                     },
                     "BaseIdentifier": {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": 39,
-                        "startColumn": 10,
-                        "startOffset": 1054,
-                        "fragmentLength": 16
-                      },
                       "Value": "dm_exec_sessions",
                       "QuoteType": "NotQuoted"
                     },
@@ -2533,12 +1153,6 @@
                   },
                   "Alias": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 39,
-                      "startColumn": 30,
-                      "startOffset": 1074,
-                      "fragmentLength": 1
-                    },
                     "Value": "s",
                     "QuoteType": "NotQuoted"
                   },
@@ -2548,59 +1162,23 @@
             },
             "WhereClause": {
               "$type": "WhereClause",
-              "location": {
-                "startLine": 40,
-                "startColumn": 1,
-                "startOffset": 1076,
-                "fragmentLength": 27
-              },
               "SearchCondition": {
                 "$type": "BooleanComparisonExpression",
-                "location": {
-                  "startLine": 40,
-                  "startColumn": 7,
-                  "startOffset": 1082,
-                  "fragmentLength": 21
-                },
                 "ComparisonType": "Equals",
                 "FirstExpression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 40,
-                    "startColumn": 7,
-                    "startOffset": 1082,
-                    "fragmentLength": 17
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 40,
-                      "startColumn": 7,
-                      "startOffset": 1082,
-                      "fragmentLength": 17
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 40,
-                          "startColumn": 7,
-                          "startOffset": 1082,
-                          "fragmentLength": 1
-                        },
                         "Value": "s",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 40,
-                          "startColumn": 9,
-                          "startOffset": 1084,
-                          "fragmentLength": 15
-                        },
                         "Value": "is_user_process",
                         "QuoteType": "NotQuoted"
                       }
@@ -2609,12 +1187,6 @@
                 },
                 "SecondExpression": {
                   "$type": "IntegerLiteral",
-                  "location": {
-                    "startLine": 40,
-                    "startColumn": 27,
-                    "startOffset": 1102,
-                    "fragmentLength": 1
-                  },
                   "LiteralType": "Integer",
                   "Value": "1"
                 }
@@ -2624,58 +1196,22 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 42,
-            "startColumn": 1,
-            "startOffset": 1106,
-            "fragmentLength": 88
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 42,
-              "startColumn": 1,
-              "startOffset": 1106,
-              "fragmentLength": 87
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 42,
-                  "startColumn": 8,
-                  "startOffset": 1113,
-                  "fragmentLength": 80
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 42,
-                    "startColumn": 8,
-                    "startOffset": 1113,
-                    "fragmentLength": 80
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 42,
-                      "startColumn": 8,
-                      "startOffset": 1113,
-                      "fragmentLength": 10
-                    },
                     "Value": "JSON_ARRAY",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "StringLiteral",
-                      "location": {
-                        "startLine": 42,
-                        "startColumn": 19,
-                        "startOffset": 1124,
-                        "fragmentLength": 3
-                      },
                       "LiteralType": "String",
                       "IsNational": false,
                       "IsLargeObject": false,
@@ -2683,20 +1219,8 @@
                     },
                     {
                       "$type": "FunctionCall",
-                      "location": {
-                        "startLine": 42,
-                        "startColumn": 24,
-                        "startOffset": 1129,
-                        "fragmentLength": 50
-                      },
                       "FunctionName": {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 42,
-                          "startColumn": 24,
-                          "startOffset": 1129,
-                          "fragmentLength": 11
-                        },
                         "Value": "JSON_OBJECT",
                         "QuoteType": "NotQuoted"
                       },
@@ -2704,20 +1228,8 @@
                       "JsonParameters": [
                         {
                           "$type": "JsonKeyValue",
-                          "location": {
-                            "startLine": 42,
-                            "startColumn": 36,
-                            "startOffset": 1141,
-                            "fragmentLength": 14
-                          },
                           "JsonKeyName": {
                             "$type": "StringLiteral",
-                            "location": {
-                              "startLine": 42,
-                              "startColumn": 36,
-                              "startOffset": 1141,
-                              "fragmentLength": 6
-                            },
                             "LiteralType": "String",
                             "IsNational": false,
                             "IsLargeObject": false,
@@ -2725,12 +1237,6 @@
                           },
                           "JsonValue": {
                             "$type": "StringLiteral",
-                            "location": {
-                              "startLine": 42,
-                              "startColumn": 43,
-                              "startOffset": 1148,
-                              "fragmentLength": 7
-                            },
                             "LiteralType": "String",
                             "IsNational": false,
                             "IsLargeObject": false,
@@ -2739,20 +1245,8 @@
                         },
                         {
                           "$type": "JsonKeyValue",
-                          "location": {
-                            "startLine": 42,
-                            "startColumn": 52,
-                            "startOffset": 1157,
-                            "fragmentLength": 8
-                          },
                           "JsonKeyName": {
                             "$type": "StringLiteral",
-                            "location": {
-                              "startLine": 42,
-                              "startColumn": 52,
-                              "startOffset": 1157,
-                              "fragmentLength": 6
-                            },
                             "LiteralType": "String",
                             "IsNational": false,
                             "IsLargeObject": false,
@@ -2760,12 +1254,6 @@
                           },
                           "JsonValue": {
                             "$type": "IntegerLiteral",
-                            "location": {
-                              "startLine": 42,
-                              "startColumn": 59,
-                              "startOffset": 1164,
-                              "fragmentLength": 1
-                            },
                             "LiteralType": "Integer",
                             "Value": "1"
                           }
@@ -2774,12 +1262,6 @@
                       "AbsentOrNullOnNull": [
                         {
                           "$type": "Identifier",
-                          "location": {
-                            "startLine": -1,
-                            "startColumn": -1,
-                            "startOffset": -1,
-                            "fragmentLength": -1
-                          },
                           "Value": "NULL",
                           "QuoteType": "NotQuoted"
                         }
@@ -2791,12 +1273,6 @@
                   "AbsentOrNullOnNull": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": -1,
-                        "startColumn": -1,
-                        "startOffset": -1,
-                        "fragmentLength": -1
-                      },
                       "Value": "NULL",
                       "QuoteType": "NotQuoted"
                     }
@@ -2809,46 +1285,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 44,
-            "startColumn": 1,
-            "startOffset": 1196,
-            "fragmentLength": 20
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 44,
-              "startColumn": 1,
-              "startOffset": 1196,
-              "fragmentLength": 19
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 44,
-                  "startColumn": 8,
-                  "startOffset": 1203,
-                  "fragmentLength": 12
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 44,
-                    "startColumn": 8,
-                    "startOffset": 1203,
-                    "fragmentLength": 12
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 44,
-                      "startColumn": 8,
-                      "startOffset": 1203,
-                      "fragmentLength": 10
-                    },
                     "Value": "JSON_ARRAY",
                     "QuoteType": "NotQuoted"
                   },
@@ -2861,58 +1307,22 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 46,
-            "startColumn": 1,
-            "startOffset": 1218,
-            "fragmentLength": 26
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 46,
-              "startColumn": 1,
-              "startOffset": 1218,
-              "fragmentLength": 25
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 46,
-                  "startColumn": 8,
-                  "startOffset": 1225,
-                  "fragmentLength": 18
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 46,
-                    "startColumn": 8,
-                    "startOffset": 1225,
-                    "fragmentLength": 18
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 46,
-                      "startColumn": 8,
-                      "startOffset": 1225,
-                      "fragmentLength": 10
-                    },
                     "Value": "JSON_ARRAY",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "StringLiteral",
-                      "location": {
-                        "startLine": 46,
-                        "startColumn": 19,
-                        "startOffset": 1236,
-                        "fragmentLength": 6
-                      },
                       "LiteralType": "String",
                       "IsNational": false,
                       "IsLargeObject": false,
@@ -2928,58 +1338,22 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 48,
-            "startColumn": 1,
-            "startOffset": 1246,
-            "fragmentLength": 34
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 48,
-              "startColumn": 1,
-              "startOffset": 1246,
-              "fragmentLength": 33
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 48,
-                  "startColumn": 8,
-                  "startOffset": 1253,
-                  "fragmentLength": 26
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 48,
-                    "startColumn": 8,
-                    "startOffset": 1253,
-                    "fragmentLength": 26
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 48,
-                      "startColumn": 8,
-                      "startOffset": 1253,
-                      "fragmentLength": 10
-                    },
                     "Value": "JSON_ARRAY",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "StringLiteral",
-                      "location": {
-                        "startLine": 48,
-                        "startColumn": 19,
-                        "startOffset": 1264,
-                        "fragmentLength": 3
-                      },
                       "LiteralType": "String",
                       "IsNational": false,
                       "IsLargeObject": false,
@@ -2987,23 +1361,11 @@
                     },
                     {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 48,
-                        "startColumn": 24,
-                        "startOffset": 1269,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "1"
                     },
                     {
                       "$type": "StringLiteral",
-                      "location": {
-                        "startLine": 48,
-                        "startColumn": 27,
-                        "startOffset": 1272,
-                        "fragmentLength": 3
-                      },
                       "LiteralType": "String",
                       "IsNational": false,
                       "IsLargeObject": false,
@@ -3011,12 +1373,6 @@
                     },
                     {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 48,
-                        "startColumn": 32,
-                        "startOffset": 1277,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "2"
                     }
@@ -3030,58 +1386,22 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 50,
-            "startColumn": 1,
-            "startOffset": 1282,
-            "fragmentLength": 48
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 50,
-              "startColumn": 1,
-              "startOffset": 1282,
-              "fragmentLength": 47
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 50,
-                  "startColumn": 8,
-                  "startOffset": 1289,
-                  "fragmentLength": 40
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 50,
-                    "startColumn": 8,
-                    "startOffset": 1289,
-                    "fragmentLength": 40
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 50,
-                      "startColumn": 8,
-                      "startOffset": 1289,
-                      "fragmentLength": 10
-                    },
                     "Value": "JSON_ARRAY",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "StringLiteral",
-                      "location": {
-                        "startLine": 50,
-                        "startColumn": 19,
-                        "startOffset": 1300,
-                        "fragmentLength": 3
-                      },
                       "LiteralType": "String",
                       "IsNational": false,
                       "IsLargeObject": false,
@@ -3089,34 +1409,16 @@
                     },
                     {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 50,
-                        "startColumn": 24,
-                        "startOffset": 1305,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "1"
                     },
                     {
                       "$type": "NullLiteral",
-                      "location": {
-                        "startLine": 50,
-                        "startColumn": 27,
-                        "startOffset": 1308,
-                        "fragmentLength": 4
-                      },
                       "LiteralType": "Null",
                       "Value": "NULL"
                     },
                     {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 50,
-                        "startColumn": 33,
-                        "startOffset": 1314,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "2"
                     }
@@ -3125,12 +1427,6 @@
                   "AbsentOrNullOnNull": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": -1,
-                        "startColumn": -1,
-                        "startOffset": -1,
-                        "fragmentLength": -1
-                      },
                       "Value": "NULL",
                       "QuoteType": "NotQuoted"
                     }
@@ -3143,58 +1439,22 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 52,
-            "startColumn": 1,
-            "startOffset": 1332,
-            "fragmentLength": 50
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 52,
-              "startColumn": 1,
-              "startOffset": 1332,
-              "fragmentLength": 49
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 52,
-                  "startColumn": 8,
-                  "startOffset": 1339,
-                  "fragmentLength": 42
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 52,
-                    "startColumn": 8,
-                    "startOffset": 1339,
-                    "fragmentLength": 42
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 52,
-                      "startColumn": 8,
-                      "startOffset": 1339,
-                      "fragmentLength": 10
-                    },
                     "Value": "JSON_ARRAY",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "StringLiteral",
-                      "location": {
-                        "startLine": 52,
-                        "startColumn": 19,
-                        "startOffset": 1350,
-                        "fragmentLength": 3
-                      },
                       "LiteralType": "String",
                       "IsNational": false,
                       "IsLargeObject": false,
@@ -3202,34 +1462,16 @@
                     },
                     {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 52,
-                        "startColumn": 24,
-                        "startOffset": 1355,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "1"
                     },
                     {
                       "$type": "NullLiteral",
-                      "location": {
-                        "startLine": 52,
-                        "startColumn": 27,
-                        "startOffset": 1358,
-                        "fragmentLength": 4
-                      },
                       "LiteralType": "Null",
                       "Value": "NULL"
                     },
                     {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 52,
-                        "startColumn": 33,
-                        "startOffset": 1364,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "2"
                     }
@@ -3238,12 +1480,6 @@
                   "AbsentOrNullOnNull": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": -1,
-                        "startColumn": -1,
-                        "startOffset": -1,
-                        "fragmentLength": -1
-                      },
                       "Value": "ABSENT",
                       "QuoteType": "NotQuoted"
                     }
@@ -3256,46 +1492,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 54,
-            "startColumn": 1,
-            "startOffset": 1384,
-            "fragmentLength": 32
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 54,
-              "startColumn": 1,
-              "startOffset": 1384,
-              "fragmentLength": 31
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 54,
-                  "startColumn": 8,
-                  "startOffset": 1391,
-                  "fragmentLength": 24
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 54,
-                    "startColumn": 8,
-                    "startOffset": 1391,
-                    "fragmentLength": 24
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 54,
-                      "startColumn": 8,
-                      "startOffset": 1391,
-                      "fragmentLength": 10
-                    },
                     "Value": "JSON_ARRAY",
                     "QuoteType": "NotQuoted"
                   },
@@ -3303,12 +1509,6 @@
                   "AbsentOrNullOnNull": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": -1,
-                        "startColumn": -1,
-                        "startOffset": -1,
-                        "fragmentLength": -1
-                      },
                       "Value": "NULL",
                       "QuoteType": "NotQuoted"
                     }
@@ -3321,46 +1521,16 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 56,
-            "startColumn": 1,
-            "startOffset": 1418,
-            "fragmentLength": 34
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 56,
-              "startColumn": 1,
-              "startOffset": 1418,
-              "fragmentLength": 33
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 56,
-                  "startColumn": 8,
-                  "startOffset": 1425,
-                  "fragmentLength": 26
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 56,
-                    "startColumn": 8,
-                    "startOffset": 1425,
-                    "fragmentLength": 26
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 56,
-                      "startColumn": 8,
-                      "startOffset": 1425,
-                      "fragmentLength": 10
-                    },
                     "Value": "JSON_ARRAY",
                     "QuoteType": "NotQuoted"
                   },
@@ -3368,12 +1538,6 @@
                   "AbsentOrNullOnNull": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": -1,
-                        "startColumn": -1,
-                        "startOffset": -1,
-                        "fragmentLength": -1
-                      },
                       "Value": "ABSENT",
                       "QuoteType": "NotQuoted"
                     }
@@ -3386,70 +1550,28 @@
         },
         {
           "$type": "DeclareVariableStatement",
-          "location": {
-            "startLine": 58,
-            "startColumn": 1,
-            "startOffset": 1454,
-            "fragmentLength": 45
-          },
           "Declarations": [
             {
               "$type": "DeclareVariableElement",
-              "location": {
-                "startLine": 58,
-                "startColumn": 9,
-                "startOffset": 1462,
-                "fragmentLength": 36
-              },
               "VariableName": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 58,
-                  "startColumn": 9,
-                  "startOffset": 1462,
-                  "fragmentLength": 9
-                },
                 "Value": "@id_value",
                 "QuoteType": "NotQuoted"
               },
               "DataType": {
                 "$type": "SqlDataTypeReference",
-                "location": {
-                  "startLine": 58,
-                  "startColumn": 22,
-                  "startOffset": 1475,
-                  "fragmentLength": 13
-                },
                 "SqlDataTypeOption": "NVarChar",
                 "Parameters": [
                   {
                     "$type": "IntegerLiteral",
-                    "location": {
-                      "startLine": 58,
-                      "startColumn": 32,
-                      "startOffset": 1485,
-                      "fragmentLength": 2
-                    },
                     "LiteralType": "Integer",
                     "Value": "64"
                   }
                 ],
                 "Name": {
                   "$type": "SchemaObjectName",
-                  "location": {
-                    "startLine": 58,
-                    "startColumn": 22,
-                    "startOffset": 1475,
-                    "fragmentLength": 8
-                  },
                   "BaseIdentifier": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 58,
-                      "startColumn": 22,
-                      "startOffset": 1475,
-                      "fragmentLength": 8
-                    },
                     "Value": "NVARCHAR",
                     "QuoteType": "NotQuoted"
                   },
@@ -3463,20 +1585,8 @@
               },
               "Value": {
                 "$type": "FunctionCall",
-                "location": {
-                  "startLine": 58,
-                  "startColumn": 38,
-                  "startOffset": 1491,
-                  "fragmentLength": 7
-                },
                 "FunctionName": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 58,
-                    "startColumn": 38,
-                    "startOffset": 1491,
-                    "fragmentLength": 5
-                  },
                   "Value": "NEWID",
                   "QuoteType": "NotQuoted"
                 },
@@ -3488,105 +1598,39 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 60,
-            "startColumn": 1,
-            "startOffset": 1501,
-            "fragmentLength": 49
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 60,
-              "startColumn": 1,
-              "startOffset": 1501,
-              "fragmentLength": 48
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 60,
-                  "startColumn": 8,
-                  "startOffset": 1508,
-                  "fragmentLength": 41
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 60,
-                    "startColumn": 8,
-                    "startOffset": 1508,
-                    "fragmentLength": 41
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 60,
-                      "startColumn": 8,
-                      "startOffset": 1508,
-                      "fragmentLength": 10
-                    },
                     "Value": "JSON_ARRAY",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 60,
-                        "startColumn": 19,
-                        "startOffset": 1519,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "1"
                     },
                     {
                       "$type": "VariableReference",
-                      "location": {
-                        "startLine": 60,
-                        "startColumn": 22,
-                        "startOffset": 1522,
-                        "fragmentLength": 9
-                      },
                       "Name": "@id_value"
                     },
                     {
                       "$type": "ScalarSubquery",
-                      "location": {
-                        "startLine": 60,
-                        "startColumn": 33,
-                        "startOffset": 1533,
-                        "fragmentLength": 15
-                      },
                       "QueryExpression": {
                         "$type": "QuerySpecification",
-                        "location": {
-                          "startLine": 60,
-                          "startColumn": 34,
-                          "startOffset": 1534,
-                          "fragmentLength": 13
-                        },
                         "UniqueRowFilter": "NotSpecified",
                         "SelectElements": [
                           {
                             "$type": "SelectScalarExpression",
-                            "location": {
-                              "startLine": 60,
-                              "startColumn": 41,
-                              "startOffset": 1541,
-                              "fragmentLength": 6
-                            },
                             "Expression": {
                               "$type": "GlobalVariableExpression",
-                              "location": {
-                                "startLine": 60,
-                                "startColumn": 41,
-                                "startOffset": 1541,
-                                "fragmentLength": 6
-                              },
                               "Name": "@@SPID"
                             }
                           }
@@ -3603,68 +1647,26 @@
         },
         {
           "$type": "SelectStatement",
-          "location": {
-            "startLine": 62,
-            "startColumn": 1,
-            "startOffset": 1552,
-            "fragmentLength": 152
-          },
           "QueryExpression": {
             "$type": "QuerySpecification",
-            "location": {
-              "startLine": 62,
-              "startColumn": 1,
-              "startOffset": 1552,
-              "fragmentLength": 151
-            },
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 62,
-                  "startColumn": 8,
-                  "startOffset": 1559,
-                  "fragmentLength": 12
-                },
                 "Expression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 62,
-                    "startColumn": 8,
-                    "startOffset": 1559,
-                    "fragmentLength": 12
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 62,
-                      "startColumn": 8,
-                      "startOffset": 1559,
-                      "fragmentLength": 12
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 62,
-                          "startColumn": 8,
-                          "startOffset": 1559,
-                          "fragmentLength": 1
-                        },
                         "Value": "s",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 62,
-                          "startColumn": 10,
-                          "startOffset": 1561,
-                          "fragmentLength": 10
-                        },
                         "Value": "session_id",
                         "QuoteType": "NotQuoted"
                       }
@@ -3674,70 +1676,28 @@
               },
               {
                 "$type": "SelectScalarExpression",
-                "location": {
-                  "startLine": 63,
-                  "startColumn": 8,
-                  "startOffset": 1580,
-                  "fragmentLength": 64
-                },
                 "Expression": {
                   "$type": "FunctionCall",
-                  "location": {
-                    "startLine": 63,
-                    "startColumn": 8,
-                    "startOffset": 1580,
-                    "fragmentLength": 64
-                  },
                   "FunctionName": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 63,
-                      "startColumn": 8,
-                      "startOffset": 1580,
-                      "fragmentLength": 10
-                    },
                     "Value": "JSON_ARRAY",
                     "QuoteType": "NotQuoted"
                   },
                   "Parameters": [
                     {
                       "$type": "ColumnReferenceExpression",
-                      "location": {
-                        "startLine": 63,
-                        "startColumn": 19,
-                        "startOffset": 1591,
-                        "fragmentLength": 11
-                      },
                       "ColumnType": "Regular",
                       "MultiPartIdentifier": {
                         "$type": "MultiPartIdentifier",
-                        "location": {
-                          "startLine": 63,
-                          "startColumn": 19,
-                          "startOffset": 1591,
-                          "fragmentLength": 11
-                        },
                         "Count": 2,
                         "Identifiers": [
                           {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 63,
-                              "startColumn": 19,
-                              "startOffset": 1591,
-                              "fragmentLength": 1
-                            },
                             "Value": "s",
                             "QuoteType": "NotQuoted"
                           },
                           {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 63,
-                              "startColumn": 21,
-                              "startOffset": 1593,
-                              "fragmentLength": 9
-                            },
                             "Value": "host_name",
                             "QuoteType": "NotQuoted"
                           }
@@ -3746,42 +1706,18 @@
                     },
                     {
                       "$type": "ColumnReferenceExpression",
-                      "location": {
-                        "startLine": 63,
-                        "startColumn": 32,
-                        "startOffset": 1604,
-                        "fragmentLength": 14
-                      },
                       "ColumnType": "Regular",
                       "MultiPartIdentifier": {
                         "$type": "MultiPartIdentifier",
-                        "location": {
-                          "startLine": 63,
-                          "startColumn": 32,
-                          "startOffset": 1604,
-                          "fragmentLength": 14
-                        },
                         "Count": 2,
                         "Identifiers": [
                           {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 63,
-                              "startColumn": 32,
-                              "startOffset": 1604,
-                              "fragmentLength": 1
-                            },
                             "Value": "s",
                             "QuoteType": "NotQuoted"
                           },
                           {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 63,
-                              "startColumn": 34,
-                              "startOffset": 1606,
-                              "fragmentLength": 12
-                            },
                             "Value": "program_name",
                             "QuoteType": "NotQuoted"
                           }
@@ -3790,42 +1726,18 @@
                     },
                     {
                       "$type": "ColumnReferenceExpression",
-                      "location": {
-                        "startLine": 63,
-                        "startColumn": 48,
-                        "startOffset": 1620,
-                        "fragmentLength": 23
-                      },
                       "ColumnType": "Regular",
                       "MultiPartIdentifier": {
                         "$type": "MultiPartIdentifier",
-                        "location": {
-                          "startLine": 63,
-                          "startColumn": 48,
-                          "startOffset": 1620,
-                          "fragmentLength": 23
-                        },
                         "Count": 2,
                         "Identifiers": [
                           {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 63,
-                              "startColumn": 48,
-                              "startOffset": 1620,
-                              "fragmentLength": 1
-                            },
                             "Value": "s",
                             "QuoteType": "NotQuoted"
                           },
                           {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 63,
-                              "startColumn": 50,
-                              "startOffset": 1622,
-                              "fragmentLength": 21
-                            },
                             "Value": "client_interface_name",
                             "QuoteType": "NotQuoted"
                           }
@@ -3840,48 +1752,18 @@
             ],
             "FromClause": {
               "$type": "FromClause",
-              "location": {
-                "startLine": 64,
-                "startColumn": 1,
-                "startOffset": 1645,
-                "fragmentLength": 30
-              },
               "TableReferences": [
                 {
                   "$type": "NamedTableReference",
-                  "location": {
-                    "startLine": 64,
-                    "startColumn": 6,
-                    "startOffset": 1650,
-                    "fragmentLength": 25
-                  },
                   "SchemaObject": {
                     "$type": "SchemaObjectName",
-                    "location": {
-                      "startLine": 64,
-                      "startColumn": 6,
-                      "startOffset": 1650,
-                      "fragmentLength": 20
-                    },
                     "SchemaIdentifier": {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": 64,
-                        "startColumn": 6,
-                        "startOffset": 1650,
-                        "fragmentLength": 3
-                      },
                       "Value": "sys",
                       "QuoteType": "NotQuoted"
                     },
                     "BaseIdentifier": {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": 64,
-                        "startColumn": 10,
-                        "startOffset": 1654,
-                        "fragmentLength": 16
-                      },
                       "Value": "dm_exec_sessions",
                       "QuoteType": "NotQuoted"
                     },
@@ -3897,12 +1779,6 @@
                   },
                   "Alias": {
                     "$type": "Identifier",
-                    "location": {
-                      "startLine": 64,
-                      "startColumn": 30,
-                      "startOffset": 1674,
-                      "fragmentLength": 1
-                    },
                     "Value": "s",
                     "QuoteType": "NotQuoted"
                   },
@@ -3912,59 +1788,23 @@
             },
             "WhereClause": {
               "$type": "WhereClause",
-              "location": {
-                "startLine": 65,
-                "startColumn": 1,
-                "startOffset": 1676,
-                "fragmentLength": 27
-              },
               "SearchCondition": {
                 "$type": "BooleanComparisonExpression",
-                "location": {
-                  "startLine": 65,
-                  "startColumn": 7,
-                  "startOffset": 1682,
-                  "fragmentLength": 21
-                },
                 "ComparisonType": "Equals",
                 "FirstExpression": {
                   "$type": "ColumnReferenceExpression",
-                  "location": {
-                    "startLine": 65,
-                    "startColumn": 7,
-                    "startOffset": 1682,
-                    "fragmentLength": 17
-                  },
                   "ColumnType": "Regular",
                   "MultiPartIdentifier": {
                     "$type": "MultiPartIdentifier",
-                    "location": {
-                      "startLine": 65,
-                      "startColumn": 7,
-                      "startOffset": 1682,
-                      "fragmentLength": 17
-                    },
                     "Count": 2,
                     "Identifiers": [
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 65,
-                          "startColumn": 7,
-                          "startOffset": 1682,
-                          "fragmentLength": 1
-                        },
                         "Value": "s",
                         "QuoteType": "NotQuoted"
                       },
                       {
                         "$type": "Identifier",
-                        "location": {
-                          "startLine": 65,
-                          "startColumn": 9,
-                          "startOffset": 1684,
-                          "fragmentLength": 15
-                        },
                         "Value": "is_user_process",
                         "QuoteType": "NotQuoted"
                       }
@@ -3973,12 +1813,6 @@
                 },
                 "SecondExpression": {
                   "$type": "IntegerLiteral",
-                  "location": {
-                    "startLine": 65,
-                    "startColumn": 27,
-                    "startOffset": 1702,
-                    "fragmentLength": 1
-                  },
                   "LiteralType": "Integer",
                   "Value": "1"
                 }

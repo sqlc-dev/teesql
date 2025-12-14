@@ -94,15 +94,6 @@ class AstToJsonConverter
             ["$type"] = node.GetType().Name
         };
 
-        // Add location info
-        result["location"] = new Dictionary<string, object>
-        {
-            ["startLine"] = node.StartLine,
-            ["startColumn"] = node.StartColumn,
-            ["startOffset"] = node.StartOffset,
-            ["fragmentLength"] = node.FragmentLength
-        };
-
         var type = node.GetType();
         var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 

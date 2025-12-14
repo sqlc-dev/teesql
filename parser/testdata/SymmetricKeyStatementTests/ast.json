@@ -1,82 +1,34 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 503
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 339
-      },
       "Statements": [
         {
           "$type": "CreateSymmetricKeyStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 91
-          },
           "KeyOptions": [
             {
               "$type": "AlgorithmKeyOption",
-              "location": {
-                "startLine": 1,
-                "startColumn": 48,
-                "startOffset": 47,
-                "fragmentLength": 15
-              },
               "Algorithm": "Des",
               "OptionKind": "Algorithm"
             }
           ],
           "Owner": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 1,
-              "startColumn": 39,
-              "startOffset": 38,
-              "fragmentLength": 3
-            },
             "Value": "zzz",
             "QuoteType": "NotQuoted"
           },
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 1,
-              "startColumn": 22,
-              "startOffset": 21,
-              "fragmentLength": 2
-            },
             "Value": "k1",
             "QuoteType": "NotQuoted"
           },
           "EncryptingMechanisms": [
             {
               "$type": "CryptoMechanism",
-              "location": {
-                "startLine": 1,
-                "startColumn": 90,
-                "startOffset": 89,
-                "fragmentLength": 2
-              },
               "CryptoMechanismType": "Certificate",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 1,
-                  "startColumn": 90,
-                  "startOffset": 89,
-                  "fragmentLength": 2
-                },
                 "Value": "c1",
                 "QuoteType": "NotQuoted"
               }
@@ -85,29 +37,11 @@
         },
         {
           "$type": "CreateSymmetricKeyStatement",
-          "location": {
-            "startLine": 2,
-            "startColumn": 1,
-            "startOffset": 92,
-            "fragmentLength": 116
-          },
           "KeyOptions": [
             {
               "$type": "KeySourceKeyOption",
-              "location": {
-                "startLine": 2,
-                "startColumn": 30,
-                "startOffset": 121,
-                "fragmentLength": 17
-              },
               "PassPhrase": {
                 "$type": "StringLiteral",
-                "location": {
-                  "startLine": 2,
-                  "startColumn": 43,
-                  "startOffset": 134,
-                  "fragmentLength": 4
-                },
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -117,20 +51,8 @@
             },
             {
               "$type": "IdentityValueKeyOption",
-              "location": {
-                "startLine": 2,
-                "startColumn": 49,
-                "startOffset": 140,
-                "fragmentLength": 21
-              },
               "IdentityPhrase": {
                 "$type": "StringLiteral",
-                "location": {
-                  "startLine": 2,
-                  "startColumn": 66,
-                  "startOffset": 157,
-                  "fragmentLength": 4
-                },
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -140,45 +62,21 @@
             },
             {
               "$type": "AlgorithmKeyOption",
-              "location": {
-                "startLine": 2,
-                "startColumn": 72,
-                "startOffset": 163,
-                "fragmentLength": 15
-              },
               "Algorithm": "RC2",
               "OptionKind": "Algorithm"
             }
           ],
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 2,
-              "startColumn": 22,
-              "startOffset": 113,
-              "fragmentLength": 2
-            },
             "Value": "k1",
             "QuoteType": "NotQuoted"
           },
           "EncryptingMechanisms": [
             {
               "$type": "CryptoMechanism",
-              "location": {
-                "startLine": 2,
-                "startColumn": 113,
-                "startOffset": 204,
-                "fragmentLength": 4
-              },
               "CryptoMechanismType": "Password",
               "PasswordOrSignature": {
                 "$type": "StringLiteral",
-                "location": {
-                  "startLine": 2,
-                  "startColumn": 113,
-                  "startOffset": 204,
-                  "fragmentLength": 4
-                },
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -189,75 +87,33 @@
         },
         {
           "$type": "CreateSymmetricKeyStatement",
-          "location": {
-            "startLine": 3,
-            "startColumn": 1,
-            "startOffset": 209,
-            "fragmentLength": 130
-          },
           "KeyOptions": [
             {
               "$type": "AlgorithmKeyOption",
-              "location": {
-                "startLine": 3,
-                "startColumn": 30,
-                "startOffset": 238,
-                "fragmentLength": 15
-              },
               "Algorithm": "RC4",
               "OptionKind": "Algorithm"
             }
           ],
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 3,
-              "startColumn": 22,
-              "startOffset": 230,
-              "fragmentLength": 2
-            },
             "Value": "k1",
             "QuoteType": "NotQuoted"
           },
           "EncryptingMechanisms": [
             {
               "$type": "CryptoMechanism",
-              "location": {
-                "startLine": 4,
-                "startColumn": 28,
-                "startOffset": 282,
-                "fragmentLength": 2
-              },
               "CryptoMechanismType": "Certificate",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 4,
-                  "startColumn": 28,
-                  "startOffset": 282,
-                  "fragmentLength": 2
-                },
                 "Value": "c1",
                 "QuoteType": "NotQuoted"
               }
             },
             {
               "$type": "CryptoMechanism",
-              "location": {
-                "startLine": 4,
-                "startColumn": 43,
-                "startOffset": 297,
-                "fragmentLength": 4
-              },
               "CryptoMechanismType": "Password",
               "PasswordOrSignature": {
                 "$type": "StringLiteral",
-                "location": {
-                  "startLine": 4,
-                  "startColumn": 43,
-                  "startOffset": 297,
-                  "fragmentLength": 4
-                },
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -266,42 +122,18 @@
             },
             {
               "$type": "CryptoMechanism",
-              "location": {
-                "startLine": 4,
-                "startColumn": 63,
-                "startOffset": 317,
-                "fragmentLength": 2
-              },
               "CryptoMechanismType": "SymmetricKey",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 4,
-                  "startColumn": 63,
-                  "startOffset": 317,
-                  "fragmentLength": 2
-                },
                 "Value": "s1",
                 "QuoteType": "NotQuoted"
               }
             },
             {
               "$type": "CryptoMechanism",
-              "location": {
-                "startLine": 4,
-                "startColumn": 82,
-                "startOffset": 336,
-                "fragmentLength": 3
-              },
               "CryptoMechanismType": "AsymmetricKey",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 4,
-                  "startColumn": 82,
-                  "startOffset": 336,
-                  "fragmentLength": 3
-                },
                 "Value": "as1",
                 "QuoteType": "NotQuoted"
               }
@@ -312,51 +144,21 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 6,
-        "startColumn": 1,
-        "startOffset": 344,
-        "fragmentLength": 132
-      },
       "Statements": [
         {
           "$type": "AlterSymmetricKeyStatement",
-          "location": {
-            "startLine": 6,
-            "startColumn": 1,
-            "startOffset": 344,
-            "fragmentLength": 57
-          },
           "IsAdd": false,
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 6,
-              "startColumn": 21,
-              "startOffset": 364,
-              "fragmentLength": 2
-            },
             "Value": "k1",
             "QuoteType": "NotQuoted"
           },
           "EncryptingMechanisms": [
             {
               "$type": "CryptoMechanism",
-              "location": {
-                "startLine": 6,
-                "startColumn": 54,
-                "startOffset": 397,
-                "fragmentLength": 4
-              },
               "CryptoMechanismType": "Password",
               "PasswordOrSignature": {
                 "$type": "StringLiteral",
-                "location": {
-                  "startLine": 6,
-                  "startColumn": 54,
-                  "startOffset": 397,
-                  "fragmentLength": 4
-                },
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -367,42 +169,18 @@
         },
         {
           "$type": "AlterSymmetricKeyStatement",
-          "location": {
-            "startLine": 7,
-            "startColumn": 1,
-            "startOffset": 402,
-            "fragmentLength": 74
-          },
           "IsAdd": true,
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 7,
-              "startColumn": 21,
-              "startOffset": 422,
-              "fragmentLength": 2
-            },
             "Value": "k1",
             "QuoteType": "NotQuoted"
           },
           "EncryptingMechanisms": [
             {
               "$type": "CryptoMechanism",
-              "location": {
-                "startLine": 7,
-                "startColumn": 53,
-                "startOffset": 454,
-                "fragmentLength": 4
-              },
               "CryptoMechanismType": "Password",
               "PasswordOrSignature": {
                 "$type": "StringLiteral",
-                "location": {
-                  "startLine": 7,
-                  "startColumn": 53,
-                  "startOffset": 454,
-                  "fragmentLength": 4
-                },
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -411,21 +189,9 @@
             },
             {
               "$type": "CryptoMechanism",
-              "location": {
-                "startLine": 7,
-                "startColumn": 73,
-                "startOffset": 474,
-                "fragmentLength": 2
-              },
               "CryptoMechanismType": "SymmetricKey",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 7,
-                  "startColumn": 73,
-                  "startOffset": 474,
-                  "fragmentLength": 2
-                },
                 "Value": "s1",
                 "QuoteType": "NotQuoted"
               }
@@ -436,30 +202,12 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 9,
-        "startColumn": 1,
-        "startOffset": 480,
-        "fragmentLength": 21
-      },
       "Statements": [
         {
           "$type": "DropSymmetricKeyStatement",
-          "location": {
-            "startLine": 9,
-            "startColumn": 1,
-            "startOffset": 480,
-            "fragmentLength": 21
-          },
           "RemoveProviderKey": false,
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 9,
-              "startColumn": 20,
-              "startOffset": 499,
-              "fragmentLength": 2
-            },
             "Value": "k1",
             "QuoteType": "NotQuoted"
           },

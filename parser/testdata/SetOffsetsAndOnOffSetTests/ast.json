@@ -1,57 +1,21 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 423
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 2,
-        "startColumn": 1,
-        "startOffset": 16,
-        "fragmentLength": 35
-      },
       "Statements": [
         {
           "$type": "SetRowCountStatement",
-          "location": {
-            "startLine": 2,
-            "startColumn": 1,
-            "startOffset": 16,
-            "fragmentLength": 15
-          },
           "NumberRows": {
             "$type": "IntegerLiteral",
-            "location": {
-              "startLine": 2,
-              "startColumn": 14,
-              "startOffset": 29,
-              "fragmentLength": 2
-            },
             "LiteralType": "Integer",
             "Value": "10"
           }
         },
         {
           "$type": "SetRowCountStatement",
-          "location": {
-            "startLine": 3,
-            "startColumn": 1,
-            "startOffset": 32,
-            "fragmentLength": 19
-          },
           "NumberRows": {
             "$type": "VariableReference",
-            "location": {
-              "startLine": 3,
-              "startColumn": 14,
-              "startOffset": 45,
-              "fragmentLength": 6
-            },
             "Name": "@myVar"
           }
         }
@@ -59,54 +23,24 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 7,
-        "startColumn": 1,
-        "startOffset": 87,
-        "fragmentLength": 178
-      },
       "Statements": [
         {
           "$type": "PredicateSetStatement",
-          "location": {
-            "startLine": 7,
-            "startColumn": 1,
-            "startOffset": 87,
-            "fragmentLength": 55
-          },
           "Options": "ConcatNullYieldsNull, CursorCloseOnCommit",
           "IsOn": true
         },
         {
           "$type": "PredicateSetStatement",
-          "location": {
-            "startLine": 8,
-            "startColumn": 1,
-            "startOffset": 143,
-            "fragmentLength": 53
-          },
           "Options": "ArithAbort, NumericRoundAbort, AnsiDefaults",
           "IsOn": false
         },
         {
           "$type": "SetStatisticsStatement",
-          "location": {
-            "startLine": 9,
-            "startColumn": 1,
-            "startOffset": 197,
-            "fragmentLength": 35
-          },
           "Options": "IO, Profile, Time",
           "IsOn": true
         },
         {
           "$type": "SetStatisticsStatement",
-          "location": {
-            "startLine": 10,
-            "startColumn": 1,
-            "startOffset": 233,
-            "fragmentLength": 32
-          },
           "Options": "Profile, Time",
           "IsOn": false
         }
@@ -114,43 +48,19 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 14,
-        "startColumn": 1,
-        "startOffset": 285,
-        "fragmentLength": 137
-      },
       "Statements": [
         {
           "$type": "SetOffsetsStatement",
-          "location": {
-            "startLine": 14,
-            "startColumn": 1,
-            "startOffset": 285,
-            "fragmentLength": 88
-          },
           "Options": "Select, From, Order, Compute, Table, Procedure, Execute, Statement, Param",
           "IsOn": true
         },
         {
           "$type": "SetOffsetsStatement",
-          "location": {
-            "startLine": 15,
-            "startColumn": 1,
-            "startOffset": 374,
-            "fragmentLength": 27
-          },
           "Options": "From, Order",
           "IsOn": false
         },
         {
           "$type": "SetOffsetsStatement",
-          "location": {
-            "startLine": 16,
-            "startColumn": 1,
-            "startOffset": 402,
-            "fragmentLength": 20
-          },
           "Options": "Param",
           "IsOn": true
         }
