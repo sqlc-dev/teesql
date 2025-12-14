@@ -1,66 +1,24 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 344
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 118
-      },
       "Statements": [
         {
           "$type": "CreateServerAuditStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 118
-          },
           "AuditName": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 1,
-              "startColumn": 21,
-              "startOffset": 20,
-              "fragmentLength": 2
-            },
             "Value": "a1",
             "QuoteType": "NotQuoted"
           },
           "AuditTarget": {
             "$type": "AuditTarget",
-            "location": {
-              "startLine": 1,
-              "startColumn": 24,
-              "startOffset": 23,
-              "fragmentLength": 42
-            },
             "TargetKind": "File",
             "TargetOptions": [
               {
                 "$type": "LiteralAuditTargetOption",
-                "location": {
-                  "startLine": 1,
-                  "startColumn": 33,
-                  "startOffset": 32,
-                  "fragmentLength": 16
-                },
                 "Value": {
                   "$type": "StringLiteral",
-                  "location": {
-                    "startLine": 1,
-                    "startColumn": 44,
-                    "startOffset": 43,
-                    "fragmentLength": 5
-                  },
                   "LiteralType": "String",
                   "IsNational": false,
                   "IsLargeObject": false,
@@ -70,20 +28,8 @@
               },
               {
                 "$type": "LiteralAuditTargetOption",
-                "location": {
-                  "startLine": 1,
-                  "startColumn": 51,
-                  "startOffset": 50,
-                  "fragmentLength": 14
-                },
                 "Value": {
                   "$type": "IntegerLiteral",
-                  "location": {
-                    "startLine": 1,
-                    "startColumn": 63,
-                    "startOffset": 62,
-                    "fragmentLength": 2
-                  },
                   "LiteralType": "Integer",
                   "Value": "10"
                 },
@@ -94,59 +40,23 @@
           "Options": [
             {
               "$type": "OnFailureAuditOption",
-              "location": {
-                "startLine": 1,
-                "startColumn": 73,
-                "startOffset": 72,
-                "fragmentLength": 27
-              },
               "OnFailureAction": "FailOperation",
               "OptionKind": "OnFailure"
             }
           ],
           "PredicateExpression": {
             "$type": "BooleanComparisonExpression",
-            "location": {
-              "startLine": 2,
-              "startColumn": 11,
-              "startOffset": 111,
-              "fragmentLength": 6
-            },
             "ComparisonType": "Equals",
             "FirstExpression": {
               "$type": "SourceDeclaration",
-              "location": {
-                "startLine": 2,
-                "startColumn": 11,
-                "startOffset": 111,
-                "fragmentLength": 2
-              },
               "Value": {
                 "$type": "EventSessionObjectName",
-                "location": {
-                  "startLine": 2,
-                  "startColumn": 11,
-                  "startOffset": 111,
-                  "fragmentLength": 2
-                },
                 "MultiPartIdentifier": {
                   "$type": "MultiPartIdentifier",
-                  "location": {
-                    "startLine": 2,
-                    "startColumn": 11,
-                    "startOffset": 111,
-                    "fragmentLength": 2
-                  },
                   "Count": 1,
                   "Identifiers": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": 2,
-                        "startColumn": 11,
-                        "startOffset": 111,
-                        "fragmentLength": 2
-                      },
                       "Value": "c1",
                       "QuoteType": "NotQuoted"
                     }
@@ -156,12 +66,6 @@
             },
             "SecondExpression": {
               "$type": "IntegerLiteral",
-              "location": {
-                "startLine": 2,
-                "startColumn": 16,
-                "startOffset": 116,
-                "fragmentLength": 1
-              },
               "LiteralType": "Integer",
               "Value": "1"
             }
@@ -171,76 +75,28 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 6,
-        "startColumn": 1,
-        "startOffset": 124,
-        "fragmentLength": 39
-      },
       "Statements": [
         {
           "$type": "AlterServerAuditStatement",
-          "location": {
-            "startLine": 6,
-            "startColumn": 1,
-            "startOffset": 124,
-            "fragmentLength": 39
-          },
           "RemoveWhere": false,
           "AuditName": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 6,
-              "startColumn": 20,
-              "startOffset": 143,
-              "fragmentLength": 2
-            },
             "Value": "a1",
             "QuoteType": "NotQuoted"
           },
           "PredicateExpression": {
             "$type": "BooleanComparisonExpression",
-            "location": {
-              "startLine": 7,
-              "startColumn": 11,
-              "startOffset": 156,
-              "fragmentLength": 6
-            },
             "ComparisonType": "Equals",
             "FirstExpression": {
               "$type": "SourceDeclaration",
-              "location": {
-                "startLine": 7,
-                "startColumn": 11,
-                "startOffset": 156,
-                "fragmentLength": 2
-              },
               "Value": {
                 "$type": "EventSessionObjectName",
-                "location": {
-                  "startLine": 7,
-                  "startColumn": 11,
-                  "startOffset": 156,
-                  "fragmentLength": 2
-                },
                 "MultiPartIdentifier": {
                   "$type": "MultiPartIdentifier",
-                  "location": {
-                    "startLine": 7,
-                    "startColumn": 11,
-                    "startOffset": 156,
-                    "fragmentLength": 2
-                  },
                   "Count": 1,
                   "Identifiers": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": 7,
-                        "startColumn": 11,
-                        "startOffset": 156,
-                        "fragmentLength": 2
-                      },
                       "Value": "c1",
                       "QuoteType": "NotQuoted"
                     }
@@ -250,12 +106,6 @@
             },
             "SecondExpression": {
               "$type": "IntegerLiteral",
-              "location": {
-                "startLine": 7,
-                "startColumn": 16,
-                "startOffset": 161,
-                "fragmentLength": 1
-              },
               "LiteralType": "Integer",
               "Value": "1"
             }
@@ -265,30 +115,12 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 11,
-        "startColumn": 1,
-        "startOffset": 169,
-        "fragmentLength": 35
-      },
       "Statements": [
         {
           "$type": "AlterServerAuditStatement",
-          "location": {
-            "startLine": 11,
-            "startColumn": 1,
-            "startOffset": 169,
-            "fragmentLength": 35
-          },
           "RemoveWhere": true,
           "AuditName": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 11,
-              "startColumn": 20,
-              "startOffset": 188,
-              "fragmentLength": 2
-            },
             "Value": "a1",
             "QuoteType": "NotQuoted"
           }
@@ -297,59 +129,23 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 15,
-        "startColumn": 1,
-        "startOffset": 210,
-        "fragmentLength": 134
-      },
       "Statements": [
         {
           "$type": "AlterServerAuditStatement",
-          "location": {
-            "startLine": 15,
-            "startColumn": 1,
-            "startOffset": 210,
-            "fragmentLength": 134
-          },
           "RemoveWhere": false,
           "AuditName": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 15,
-              "startColumn": 20,
-              "startOffset": 229,
-              "fragmentLength": 2
-            },
             "Value": "a1",
             "QuoteType": "NotQuoted"
           },
           "AuditTarget": {
             "$type": "AuditTarget",
-            "location": {
-              "startLine": 15,
-              "startColumn": 23,
-              "startOffset": 232,
-              "fragmentLength": 42
-            },
             "TargetKind": "File",
             "TargetOptions": [
               {
                 "$type": "LiteralAuditTargetOption",
-                "location": {
-                  "startLine": 15,
-                  "startColumn": 32,
-                  "startOffset": 241,
-                  "fragmentLength": 16
-                },
                 "Value": {
                   "$type": "StringLiteral",
-                  "location": {
-                    "startLine": 15,
-                    "startColumn": 43,
-                    "startOffset": 252,
-                    "fragmentLength": 5
-                  },
                   "LiteralType": "String",
                   "IsNational": false,
                   "IsLargeObject": false,
@@ -359,20 +155,8 @@
               },
               {
                 "$type": "LiteralAuditTargetOption",
-                "location": {
-                  "startLine": 15,
-                  "startColumn": 50,
-                  "startOffset": 259,
-                  "fragmentLength": 14
-                },
                 "Value": {
                   "$type": "IntegerLiteral",
-                  "location": {
-                    "startLine": 15,
-                    "startColumn": 62,
-                    "startOffset": 271,
-                    "fragmentLength": 2
-                  },
                   "LiteralType": "Integer",
                   "Value": "10"
                 },
@@ -383,31 +167,13 @@
           "Options": [
             {
               "$type": "OnFailureAuditOption",
-              "location": {
-                "startLine": 15,
-                "startColumn": 72,
-                "startOffset": 281,
-                "fragmentLength": 27
-              },
               "OnFailureAction": "FailOperation",
               "OptionKind": "OnFailure"
             },
             {
               "$type": "QueueDelayAuditOption",
-              "location": {
-                "startLine": 15,
-                "startColumn": 101,
-                "startOffset": 310,
-                "fragmentLength": 15
-              },
               "Delay": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 15,
-                  "startColumn": 115,
-                  "startOffset": 324,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "2"
               },
@@ -416,47 +182,17 @@
           ],
           "PredicateExpression": {
             "$type": "BooleanComparisonExpression",
-            "location": {
-              "startLine": 16,
-              "startColumn": 11,
-              "startOffset": 337,
-              "fragmentLength": 6
-            },
             "ComparisonType": "Equals",
             "FirstExpression": {
               "$type": "SourceDeclaration",
-              "location": {
-                "startLine": 16,
-                "startColumn": 11,
-                "startOffset": 337,
-                "fragmentLength": 2
-              },
               "Value": {
                 "$type": "EventSessionObjectName",
-                "location": {
-                  "startLine": 16,
-                  "startColumn": 11,
-                  "startOffset": 337,
-                  "fragmentLength": 2
-                },
                 "MultiPartIdentifier": {
                   "$type": "MultiPartIdentifier",
-                  "location": {
-                    "startLine": 16,
-                    "startColumn": 11,
-                    "startOffset": 337,
-                    "fragmentLength": 2
-                  },
                   "Count": 1,
                   "Identifiers": [
                     {
                       "$type": "Identifier",
-                      "location": {
-                        "startLine": 16,
-                        "startColumn": 11,
-                        "startOffset": 337,
-                        "fragmentLength": 2
-                      },
                       "Value": "c1",
                       "QuoteType": "NotQuoted"
                     }
@@ -466,12 +202,6 @@
             },
             "SecondExpression": {
               "$type": "IntegerLiteral",
-              "location": {
-                "startLine": 16,
-                "startColumn": 16,
-                "startOffset": 342,
-                "fragmentLength": 1
-              },
               "LiteralType": "Integer",
               "Value": "1"
             }

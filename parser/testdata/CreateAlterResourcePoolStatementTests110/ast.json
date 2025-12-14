@@ -1,142 +1,58 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 863
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 862
-      },
       "Statements": [
         {
           "$type": "CreateResourcePoolStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 142
-          },
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 1,
-              "startColumn": 22,
-              "startOffset": 21,
-              "fragmentLength": 1
-            },
             "Value": "p",
             "QuoteType": "NotQuoted"
           },
           "ResourcePoolParameters": [
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 3,
-                "startColumn": 19,
-                "startOffset": 48,
-                "fragmentLength": 2
-              },
               "ParameterType": "CapCpuPercent",
               "ParameterValue": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 3,
-                  "startColumn": 19,
-                  "startOffset": 48,
-                  "fragmentLength": 2
-                },
                 "LiteralType": "Integer",
                 "Value": "40"
               }
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 4,
-                "startColumn": 25,
-                "startOffset": 76,
-                "fragmentLength": 1
-              },
               "ParameterType": "TargetMemoryPercent",
               "ParameterValue": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 4,
-                  "startColumn": 25,
-                  "startOffset": 76,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "4"
               }
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 5,
-                "startColumn": 18,
-                "startOffset": 96,
-                "fragmentLength": 2
-              },
               "ParameterType": "MinIoPercent",
               "ParameterValue": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 5,
-                  "startColumn": 18,
-                  "startOffset": 96,
-                  "fragmentLength": 2
-                },
                 "LiteralType": "Integer",
                 "Value": "17"
               }
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 6,
-                "startColumn": 18,
-                "startOffset": 117,
-                "fragmentLength": 2
-              },
               "ParameterType": "MaxIoPercent",
               "ParameterValue": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 6,
-                  "startColumn": 18,
-                  "startOffset": 117,
-                  "fragmentLength": 2
-                },
                 "LiteralType": "Integer",
                 "Value": "18"
               }
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 7,
-                "startColumn": 18,
-                "startOffset": 138,
-                "fragmentLength": 2
-              },
               "ParameterType": "CapIoPercent",
               "ParameterValue": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 7,
-                  "startColumn": 18,
-                  "startOffset": 138,
-                  "fragmentLength": 2
-                },
                 "LiteralType": "Integer",
                 "Value": "80"
               }
@@ -145,81 +61,33 @@
         },
         {
           "$type": "CreateResourcePoolStatement",
-          "location": {
-            "startLine": 10,
-            "startColumn": 1,
-            "startOffset": 144,
-            "fragmentLength": 287
-          },
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 10,
-              "startColumn": 22,
-              "startOffset": 165,
-              "fragmentLength": 1
-            },
             "Value": "p",
             "QuoteType": "NotQuoted"
           },
           "ResourcePoolParameters": [
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 12,
-                "startColumn": 22,
-                "startOffset": 195,
-                "fragmentLength": 4
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 12,
-                  "startColumn": 22,
-                  "startOffset": 195,
-                  "fragmentLength": 4
-                },
                 "AffinityType": "Scheduler",
                 "IsAuto": true
               }
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 13,
-                "startColumn": 22,
-                "startOffset": 222,
-                "fragmentLength": 4
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 13,
-                  "startColumn": 22,
-                  "startOffset": 222,
-                  "fragmentLength": 4
-                },
                 "AffinityType": "Scheduler",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 13,
-                      "startColumn": 23,
-                      "startOffset": 223,
-                      "fragmentLength": 2
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 13,
-                        "startColumn": 23,
-                        "startOffset": 223,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "50"
                     }
@@ -229,51 +97,21 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 14,
-                "startColumn": 22,
-                "startOffset": 249,
-                "fragmentLength": 10
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 14,
-                  "startColumn": 22,
-                  "startOffset": 249,
-                  "fragmentLength": 10
-                },
                 "AffinityType": "Scheduler",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 14,
-                      "startColumn": 23,
-                      "startOffset": 250,
-                      "fragmentLength": 8
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 14,
-                        "startColumn": 23,
-                        "startOffset": 250,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "50"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 14,
-                        "startColumn": 29,
-                        "startOffset": 256,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "60"
                     }
@@ -283,102 +121,42 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 15,
-                "startColumn": 22,
-                "startOffset": 282,
-                "fragmentLength": 21
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 15,
-                  "startColumn": 22,
-                  "startOffset": 282,
-                  "fragmentLength": 21
-                },
                 "AffinityType": "Scheduler",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 15,
-                      "startColumn": 23,
-                      "startOffset": 283,
-                      "fragmentLength": 1
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 15,
-                        "startColumn": 23,
-                        "startOffset": 283,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "4"
                     }
                   },
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 15,
-                      "startColumn": 26,
-                      "startOffset": 286,
-                      "fragmentLength": 6
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 15,
-                        "startColumn": 26,
-                        "startOffset": 286,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "5"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 15,
-                        "startColumn": 31,
-                        "startOffset": 291,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "6"
                     }
                   },
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 15,
-                      "startColumn": 34,
-                      "startOffset": 294,
-                      "fragmentLength": 8
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 15,
-                        "startColumn": 34,
-                        "startOffset": 294,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "70"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 15,
-                        "startColumn": 40,
-                        "startOffset": 300,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "80"
                     }
@@ -388,40 +166,16 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 16,
-                "startColumn": 21,
-                "startOffset": 325,
-                "fragmentLength": 4
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 16,
-                  "startColumn": 21,
-                  "startOffset": 325,
-                  "fragmentLength": 4
-                },
                 "AffinityType": "NumaNode",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 16,
-                      "startColumn": 22,
-                      "startOffset": 326,
-                      "fragmentLength": 2
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 16,
-                        "startColumn": 22,
-                        "startOffset": 326,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "50"
                     }
@@ -431,51 +185,21 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 17,
-                "startColumn": 21,
-                "startOffset": 351,
-                "fragmentLength": 10
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 17,
-                  "startColumn": 21,
-                  "startOffset": 351,
-                  "fragmentLength": 10
-                },
                 "AffinityType": "NumaNode",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 17,
-                      "startColumn": 22,
-                      "startOffset": 352,
-                      "fragmentLength": 8
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 17,
-                        "startColumn": 22,
-                        "startOffset": 352,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "50"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 17,
-                        "startColumn": 28,
-                        "startOffset": 358,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "60"
                     }
@@ -485,102 +209,42 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 18,
-                "startColumn": 21,
-                "startOffset": 383,
-                "fragmentLength": 21
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 18,
-                  "startColumn": 21,
-                  "startOffset": 383,
-                  "fragmentLength": 21
-                },
                 "AffinityType": "NumaNode",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 18,
-                      "startColumn": 22,
-                      "startOffset": 384,
-                      "fragmentLength": 1
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 18,
-                        "startColumn": 22,
-                        "startOffset": 384,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "4"
                     }
                   },
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 18,
-                      "startColumn": 25,
-                      "startOffset": 387,
-                      "fragmentLength": 6
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 18,
-                        "startColumn": 25,
-                        "startOffset": 387,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "5"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 18,
-                        "startColumn": 30,
-                        "startOffset": 392,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "6"
                     }
                   },
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 18,
-                      "startColumn": 33,
-                      "startOffset": 395,
-                      "fragmentLength": 8
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 18,
-                        "startColumn": 33,
-                        "startOffset": 395,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "70"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 18,
-                        "startColumn": 39,
-                        "startOffset": 401,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "80"
                     }
@@ -590,40 +254,16 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 19,
-                "startColumn": 21,
-                "startOffset": 426,
-                "fragmentLength": 3
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 19,
-                  "startColumn": 21,
-                  "startOffset": 426,
-                  "fragmentLength": 3
-                },
                 "AffinityType": "NumaNode",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 19,
-                      "startColumn": 22,
-                      "startOffset": 427,
-                      "fragmentLength": 1
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 19,
-                        "startColumn": 22,
-                        "startOffset": 427,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "4"
                     }
@@ -635,125 +275,53 @@
         },
         {
           "$type": "AlterResourcePoolStatement",
-          "location": {
-            "startLine": 22,
-            "startColumn": 1,
-            "startOffset": 433,
-            "fragmentLength": 141
-          },
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 22,
-              "startColumn": 21,
-              "startOffset": 453,
-              "fragmentLength": 1
-            },
             "Value": "p",
             "QuoteType": "NotQuoted"
           },
           "ResourcePoolParameters": [
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 24,
-                "startColumn": 19,
-                "startOffset": 480,
-                "fragmentLength": 2
-              },
               "ParameterType": "CapCpuPercent",
               "ParameterValue": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 24,
-                  "startColumn": 19,
-                  "startOffset": 480,
-                  "fragmentLength": 2
-                },
                 "LiteralType": "Integer",
                 "Value": "40"
               }
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 25,
-                "startColumn": 25,
-                "startOffset": 508,
-                "fragmentLength": 1
-              },
               "ParameterType": "TargetMemoryPercent",
               "ParameterValue": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 25,
-                  "startColumn": 25,
-                  "startOffset": 508,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "4"
               }
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 26,
-                "startColumn": 18,
-                "startOffset": 528,
-                "fragmentLength": 2
-              },
               "ParameterType": "MinIoPercent",
               "ParameterValue": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 26,
-                  "startColumn": 18,
-                  "startOffset": 528,
-                  "fragmentLength": 2
-                },
                 "LiteralType": "Integer",
                 "Value": "17"
               }
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 27,
-                "startColumn": 18,
-                "startOffset": 549,
-                "fragmentLength": 2
-              },
               "ParameterType": "MaxIoPercent",
               "ParameterValue": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 27,
-                  "startColumn": 18,
-                  "startOffset": 549,
-                  "fragmentLength": 2
-                },
                 "LiteralType": "Integer",
                 "Value": "18"
               }
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 28,
-                "startColumn": 18,
-                "startOffset": 570,
-                "fragmentLength": 2
-              },
               "ParameterType": "CapIoPercent",
               "ParameterValue": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 28,
-                  "startColumn": 18,
-                  "startOffset": 570,
-                  "fragmentLength": 2
-                },
                 "LiteralType": "Integer",
                 "Value": "80"
               }
@@ -762,81 +330,33 @@
         },
         {
           "$type": "AlterResourcePoolStatement",
-          "location": {
-            "startLine": 31,
-            "startColumn": 1,
-            "startOffset": 576,
-            "fragmentLength": 286
-          },
           "Name": {
             "$type": "Identifier",
-            "location": {
-              "startLine": 31,
-              "startColumn": 21,
-              "startOffset": 596,
-              "fragmentLength": 1
-            },
             "Value": "p",
             "QuoteType": "NotQuoted"
           },
           "ResourcePoolParameters": [
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 33,
-                "startColumn": 22,
-                "startOffset": 626,
-                "fragmentLength": 4
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 33,
-                  "startColumn": 22,
-                  "startOffset": 626,
-                  "fragmentLength": 4
-                },
                 "AffinityType": "Scheduler",
                 "IsAuto": true
               }
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 34,
-                "startColumn": 22,
-                "startOffset": 653,
-                "fragmentLength": 4
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 34,
-                  "startColumn": 22,
-                  "startOffset": 653,
-                  "fragmentLength": 4
-                },
                 "AffinityType": "Scheduler",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 34,
-                      "startColumn": 23,
-                      "startOffset": 654,
-                      "fragmentLength": 2
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 34,
-                        "startColumn": 23,
-                        "startOffset": 654,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "50"
                     }
@@ -846,51 +366,21 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 35,
-                "startColumn": 22,
-                "startOffset": 680,
-                "fragmentLength": 10
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 35,
-                  "startColumn": 22,
-                  "startOffset": 680,
-                  "fragmentLength": 10
-                },
                 "AffinityType": "Scheduler",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 35,
-                      "startColumn": 23,
-                      "startOffset": 681,
-                      "fragmentLength": 8
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 35,
-                        "startColumn": 23,
-                        "startOffset": 681,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "50"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 35,
-                        "startColumn": 29,
-                        "startOffset": 687,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "60"
                     }
@@ -900,102 +390,42 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 36,
-                "startColumn": 22,
-                "startOffset": 713,
-                "fragmentLength": 21
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 36,
-                  "startColumn": 22,
-                  "startOffset": 713,
-                  "fragmentLength": 21
-                },
                 "AffinityType": "Scheduler",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 36,
-                      "startColumn": 23,
-                      "startOffset": 714,
-                      "fragmentLength": 1
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 36,
-                        "startColumn": 23,
-                        "startOffset": 714,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "4"
                     }
                   },
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 36,
-                      "startColumn": 26,
-                      "startOffset": 717,
-                      "fragmentLength": 6
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 36,
-                        "startColumn": 26,
-                        "startOffset": 717,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "5"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 36,
-                        "startColumn": 31,
-                        "startOffset": 722,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "6"
                     }
                   },
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 36,
-                      "startColumn": 34,
-                      "startOffset": 725,
-                      "fragmentLength": 8
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 36,
-                        "startColumn": 34,
-                        "startOffset": 725,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "70"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 36,
-                        "startColumn": 40,
-                        "startOffset": 731,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "80"
                     }
@@ -1005,40 +435,16 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 37,
-                "startColumn": 21,
-                "startOffset": 756,
-                "fragmentLength": 4
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 37,
-                  "startColumn": 21,
-                  "startOffset": 756,
-                  "fragmentLength": 4
-                },
                 "AffinityType": "NumaNode",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 37,
-                      "startColumn": 22,
-                      "startOffset": 757,
-                      "fragmentLength": 2
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 37,
-                        "startColumn": 22,
-                        "startOffset": 757,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "50"
                     }
@@ -1048,51 +454,21 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 38,
-                "startColumn": 21,
-                "startOffset": 782,
-                "fragmentLength": 10
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 38,
-                  "startColumn": 21,
-                  "startOffset": 782,
-                  "fragmentLength": 10
-                },
                 "AffinityType": "NumaNode",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 38,
-                      "startColumn": 22,
-                      "startOffset": 783,
-                      "fragmentLength": 8
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 38,
-                        "startColumn": 22,
-                        "startOffset": 783,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "50"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 38,
-                        "startColumn": 28,
-                        "startOffset": 789,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "60"
                     }
@@ -1102,102 +478,42 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 39,
-                "startColumn": 21,
-                "startOffset": 814,
-                "fragmentLength": 21
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 39,
-                  "startColumn": 21,
-                  "startOffset": 814,
-                  "fragmentLength": 21
-                },
                 "AffinityType": "NumaNode",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 39,
-                      "startColumn": 22,
-                      "startOffset": 815,
-                      "fragmentLength": 1
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 39,
-                        "startColumn": 22,
-                        "startOffset": 815,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "4"
                     }
                   },
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 39,
-                      "startColumn": 25,
-                      "startOffset": 818,
-                      "fragmentLength": 6
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 39,
-                        "startColumn": 25,
-                        "startOffset": 818,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "5"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 39,
-                        "startColumn": 30,
-                        "startOffset": 823,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "6"
                     }
                   },
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 39,
-                      "startColumn": 33,
-                      "startOffset": 826,
-                      "fragmentLength": 8
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 39,
-                        "startColumn": 33,
-                        "startOffset": 826,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "70"
                     },
                     "To": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 39,
-                        "startColumn": 39,
-                        "startOffset": 832,
-                        "fragmentLength": 2
-                      },
                       "LiteralType": "Integer",
                       "Value": "80"
                     }
@@ -1207,40 +523,16 @@
             },
             {
               "$type": "ResourcePoolParameter",
-              "location": {
-                "startLine": 40,
-                "startColumn": 21,
-                "startOffset": 857,
-                "fragmentLength": 3
-              },
               "ParameterType": "Affinity",
               "AffinitySpecification": {
                 "$type": "ResourcePoolAffinitySpecification",
-                "location": {
-                  "startLine": 40,
-                  "startColumn": 21,
-                  "startOffset": 857,
-                  "fragmentLength": 3
-                },
                 "AffinityType": "NumaNode",
                 "IsAuto": false,
                 "PoolAffinityRanges": [
                   {
                     "$type": "LiteralRange",
-                    "location": {
-                      "startLine": 40,
-                      "startColumn": 22,
-                      "startOffset": 858,
-                      "fragmentLength": 1
-                    },
                     "From": {
                       "$type": "IntegerLiteral",
-                      "location": {
-                        "startLine": 40,
-                        "startColumn": 22,
-                        "startOffset": 858,
-                        "fragmentLength": 1
-                      },
                       "LiteralType": "Integer",
                       "Value": "4"
                     }

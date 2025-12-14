@@ -1,55 +1,19 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 293
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 292
-      },
       "Statements": [
         {
           "$type": "OpenCursorStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 17
-          },
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 1,
-              "startColumn": 6,
-              "startOffset": 5,
-              "fragmentLength": 12
-            },
             "IsGlobal": false,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 1,
-                "startColumn": 6,
-                "startOffset": 5,
-                "fragmentLength": 12
-              },
               "Value": "authorcursor",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 1,
-                  "startColumn": 6,
-                  "startOffset": 5,
-                  "fragmentLength": 12
-                },
                 "Value": "authorcursor",
                 "QuoteType": "NotQuoted"
               }
@@ -58,38 +22,14 @@
         },
         {
           "$type": "CloseCursorStatement",
-          "location": {
-            "startLine": 2,
-            "startColumn": 1,
-            "startOffset": 18,
-            "fragmentLength": 15
-          },
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 2,
-              "startColumn": 14,
-              "startOffset": 31,
-              "fragmentLength": 2
-            },
             "IsGlobal": true,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 2,
-                "startColumn": 14,
-                "startOffset": 31,
-                "fragmentLength": 2
-              },
               "Value": "c1",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 2,
-                  "startColumn": 14,
-                  "startOffset": 31,
-                  "fragmentLength": 2
-                },
                 "Value": "c1",
                 "QuoteType": "NotQuoted"
               }
@@ -98,38 +38,14 @@
         },
         {
           "$type": "DeallocateCursorStatement",
-          "location": {
-            "startLine": 3,
-            "startColumn": 1,
-            "startOffset": 34,
-            "fragmentLength": 21
-          },
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 3,
-              "startColumn": 12,
-              "startOffset": 45,
-              "fragmentLength": 10
-            },
             "IsGlobal": false,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 3,
-                "startColumn": 12,
-                "startOffset": 45,
-                "fragmentLength": 10
-              },
               "Value": "@cursorVar",
               "ValueExpression": {
                 "$type": "VariableReference",
-                "location": {
-                  "startLine": 3,
-                  "startColumn": 12,
-                  "startOffset": 45,
-                  "fragmentLength": 10
-                },
                 "Name": "@cursorVar"
               }
             }
@@ -137,70 +53,28 @@
         },
         {
           "$type": "FetchCursorStatement",
-          "location": {
-            "startLine": 5,
-            "startColumn": 1,
-            "startOffset": 57,
-            "fragmentLength": 56
-          },
           "FetchType": {
             "$type": "FetchType",
-            "location": {
-              "startLine": -1,
-              "startColumn": -1,
-              "startOffset": -1,
-              "fragmentLength": -1
-            },
             "Orientation": "Next"
           },
           "IntoVariables": [
             {
               "$type": "VariableReference",
-              "location": {
-                "startLine": 5,
-                "startColumn": 37,
-                "startOffset": 93,
-                "fragmentLength": 9
-              },
               "Name": "@au_lname"
             },
             {
               "$type": "VariableReference",
-              "location": {
-                "startLine": 5,
-                "startColumn": 48,
-                "startOffset": 104,
-                "fragmentLength": 9
-              },
               "Name": "@au_fname"
             }
           ],
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 5,
-              "startColumn": 17,
-              "startOffset": 73,
-              "fragmentLength": 14
-            },
             "IsGlobal": false,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 5,
-                "startColumn": 17,
-                "startOffset": 73,
-                "fragmentLength": 14
-              },
               "Value": "authors_cursor",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 5,
-                  "startColumn": 17,
-                  "startOffset": 73,
-                  "fragmentLength": 14
-                },
                 "Value": "authors_cursor",
                 "QuoteType": "NotQuoted"
               }
@@ -209,59 +83,23 @@
         },
         {
           "$type": "FetchCursorStatement",
-          "location": {
-            "startLine": 6,
-            "startColumn": 1,
-            "startOffset": 114,
-            "fragmentLength": 31
-          },
           "FetchType": {
             "$type": "FetchType",
-            "location": {
-              "startLine": 6,
-              "startColumn": 16,
-              "startOffset": 129,
-              "fragmentLength": 1
-            },
             "Orientation": "Absolute",
             "RowOffset": {
               "$type": "IntegerLiteral",
-              "location": {
-                "startLine": 6,
-                "startColumn": 16,
-                "startOffset": 129,
-                "fragmentLength": 1
-              },
               "LiteralType": "Integer",
               "Value": "2"
             }
           },
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 6,
-              "startColumn": 30,
-              "startOffset": 143,
-              "fragmentLength": 2
-            },
             "IsGlobal": true,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 6,
-                "startColumn": 30,
-                "startOffset": 143,
-                "fragmentLength": 2
-              },
               "Value": "ac",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 6,
-                  "startColumn": 30,
-                  "startOffset": 143,
-                  "fragmentLength": 2
-                },
                 "Value": "ac",
                 "QuoteType": "NotQuoted"
               }
@@ -270,58 +108,22 @@
         },
         {
           "$type": "FetchCursorStatement",
-          "location": {
-            "startLine": 7,
-            "startColumn": 1,
-            "startOffset": 146,
-            "fragmentLength": 31
-          },
           "FetchType": {
             "$type": "FetchType",
-            "location": {
-              "startLine": 7,
-              "startColumn": 16,
-              "startOffset": 161,
-              "fragmentLength": 8
-            },
             "Orientation": "Absolute",
             "RowOffset": {
               "$type": "VariableReference",
-              "location": {
-                "startLine": 7,
-                "startColumn": 16,
-                "startOffset": 161,
-                "fragmentLength": 8
-              },
               "Name": "@someVar"
             }
           },
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 7,
-              "startColumn": 30,
-              "startOffset": 175,
-              "fragmentLength": 2
-            },
             "IsGlobal": false,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 7,
-                "startColumn": 30,
-                "startOffset": 175,
-                "fragmentLength": 2
-              },
               "Value": "ac",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 7,
-                  "startColumn": 30,
-                  "startOffset": 175,
-                  "fragmentLength": 2
-                },
                 "Value": "ac",
                 "QuoteType": "NotQuoted"
               }
@@ -330,38 +132,14 @@
         },
         {
           "$type": "FetchCursorStatement",
-          "location": {
-            "startLine": 8,
-            "startColumn": 1,
-            "startOffset": 178,
-            "fragmentLength": 34
-          },
           "FetchType": {
             "$type": "FetchType",
-            "location": {
-              "startLine": 8,
-              "startColumn": 16,
-              "startOffset": 193,
-              "fragmentLength": 2
-            },
             "Orientation": "Relative",
             "RowOffset": {
               "$type": "UnaryExpression",
-              "location": {
-                "startLine": 8,
-                "startColumn": 16,
-                "startOffset": 193,
-                "fragmentLength": 2
-              },
               "UnaryExpressionType": "Negative",
               "Expression": {
                 "$type": "IntegerLiteral",
-                "location": {
-                  "startLine": 8,
-                  "startColumn": 17,
-                  "startOffset": 194,
-                  "fragmentLength": 1
-                },
                 "LiteralType": "Integer",
                 "Value": "2"
               }
@@ -369,30 +147,12 @@
           },
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 8,
-              "startColumn": 24,
-              "startOffset": 201,
-              "fragmentLength": 11
-            },
             "IsGlobal": false,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 8,
-                "startColumn": 24,
-                "startOffset": 201,
-                "fragmentLength": 11
-              },
               "Value": "@cursorVar2",
               "ValueExpression": {
                 "$type": "VariableReference",
-                "location": {
-                  "startLine": 8,
-                  "startColumn": 24,
-                  "startOffset": 201,
-                  "fragmentLength": 11
-                },
                 "Name": "@cursorVar2"
               }
             }
@@ -400,38 +160,14 @@
         },
         {
           "$type": "FetchCursorStatement",
-          "location": {
-            "startLine": 9,
-            "startColumn": 1,
-            "startOffset": 213,
-            "fragmentLength": 20
-          },
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 9,
-              "startColumn": 7,
-              "startOffset": 219,
-              "fragmentLength": 14
-            },
             "IsGlobal": false,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 9,
-                "startColumn": 7,
-                "startOffset": 219,
-                "fragmentLength": 14
-              },
               "Value": "authors_cursor",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 9,
-                  "startColumn": 7,
-                  "startOffset": 219,
-                  "fragmentLength": 14
-                },
                 "Value": "authors_cursor",
                 "QuoteType": "NotQuoted"
               }
@@ -440,48 +176,18 @@
         },
         {
           "$type": "FetchCursorStatement",
-          "location": {
-            "startLine": 10,
-            "startColumn": 1,
-            "startOffset": 234,
-            "fragmentLength": 19
-          },
           "FetchType": {
             "$type": "FetchType",
-            "location": {
-              "startLine": -1,
-              "startColumn": -1,
-              "startOffset": -1,
-              "fragmentLength": -1
-            },
             "Orientation": "Prior"
           },
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 10,
-              "startColumn": 18,
-              "startOffset": 251,
-              "fragmentLength": 2
-            },
             "IsGlobal": false,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 10,
-                "startColumn": 18,
-                "startOffset": 251,
-                "fragmentLength": 2
-              },
               "Value": "ac",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 10,
-                  "startColumn": 18,
-                  "startOffset": 251,
-                  "fragmentLength": 2
-                },
                 "Value": "ac",
                 "QuoteType": "NotQuoted"
               }
@@ -490,48 +196,18 @@
         },
         {
           "$type": "FetchCursorStatement",
-          "location": {
-            "startLine": 11,
-            "startColumn": 1,
-            "startOffset": 254,
-            "fragmentLength": 19
-          },
           "FetchType": {
             "$type": "FetchType",
-            "location": {
-              "startLine": -1,
-              "startColumn": -1,
-              "startOffset": -1,
-              "fragmentLength": -1
-            },
             "Orientation": "First"
           },
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 11,
-              "startColumn": 18,
-              "startOffset": 271,
-              "fragmentLength": 2
-            },
             "IsGlobal": false,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 11,
-                "startColumn": 18,
-                "startOffset": 271,
-                "fragmentLength": 2
-              },
               "Value": "ac",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 11,
-                  "startColumn": 18,
-                  "startOffset": 271,
-                  "fragmentLength": 2
-                },
                 "Value": "ac",
                 "QuoteType": "NotQuoted"
               }
@@ -540,48 +216,18 @@
         },
         {
           "$type": "FetchCursorStatement",
-          "location": {
-            "startLine": 12,
-            "startColumn": 1,
-            "startOffset": 274,
-            "fragmentLength": 18
-          },
           "FetchType": {
             "$type": "FetchType",
-            "location": {
-              "startLine": -1,
-              "startColumn": -1,
-              "startOffset": -1,
-              "fragmentLength": -1
-            },
             "Orientation": "Last"
           },
           "Cursor": {
             "$type": "CursorId",
-            "location": {
-              "startLine": 12,
-              "startColumn": 17,
-              "startOffset": 290,
-              "fragmentLength": 2
-            },
             "IsGlobal": false,
             "Name": {
               "$type": "IdentifierOrValueExpression",
-              "location": {
-                "startLine": 12,
-                "startColumn": 17,
-                "startOffset": 290,
-                "fragmentLength": 2
-              },
               "Value": "ac",
               "Identifier": {
                 "$type": "Identifier",
-                "location": {
-                  "startLine": 12,
-                  "startColumn": 17,
-                  "startOffset": 290,
-                  "fragmentLength": 2
-                },
                 "Value": "ac",
                 "QuoteType": "NotQuoted"
               }

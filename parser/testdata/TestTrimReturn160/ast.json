@@ -1,45 +1,15 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 164
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 2,
-        "startColumn": 1,
-        "startOffset": 70,
-        "fragmentLength": 90
-      },
       "Statements": [
         {
           "$type": "AlterFunctionStatement",
-          "location": {
-            "startLine": 2,
-            "startColumn": 1,
-            "startOffset": 70,
-            "fragmentLength": 90
-          },
           "Name": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 2,
-              "startColumn": 16,
-              "startOffset": 85,
-              "fragmentLength": 8
-            },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 2,
-                "startColumn": 16,
-                "startOffset": 85,
-                "fragmentLength": 8
-              },
               "Value": "TestTrim",
               "QuoteType": "NotQuoted"
             },
@@ -52,50 +22,20 @@
           },
           "ReturnType": {
             "$type": "ScalarFunctionReturnType",
-            "location": {
-              "startLine": 3,
-              "startColumn": 9,
-              "startOffset": 104,
-              "fragmentLength": 13
-            },
             "DataType": {
               "$type": "SqlDataTypeReference",
-              "location": {
-                "startLine": 3,
-                "startColumn": 9,
-                "startOffset": 104,
-                "fragmentLength": 13
-              },
               "SqlDataTypeOption": "NVarChar",
               "Parameters": [
                 {
                   "$type": "MaxLiteral",
-                  "location": {
-                    "startLine": 3,
-                    "startColumn": 18,
-                    "startOffset": 113,
-                    "fragmentLength": 3
-                  },
                   "LiteralType": "Max",
                   "Value": "MAX"
                 }
               ],
               "Name": {
                 "$type": "SchemaObjectName",
-                "location": {
-                  "startLine": 3,
-                  "startColumn": 9,
-                  "startOffset": 104,
-                  "fragmentLength": 8
-                },
                 "BaseIdentifier": {
                   "$type": "Identifier",
-                  "location": {
-                    "startLine": 3,
-                    "startColumn": 9,
-                    "startOffset": 104,
-                    "fragmentLength": 8
-                  },
                   "Value": "NVARCHAR",
                   "QuoteType": "NotQuoted"
                 },
@@ -110,74 +50,26 @@
           },
           "StatementList": {
             "$type": "StatementList",
-            "location": {
-              "startLine": 5,
-              "startColumn": 1,
-              "startOffset": 121,
-              "fragmentLength": 38
-            },
             "Statements": [
               {
                 "$type": "BeginEndBlockStatement",
-                "location": {
-                  "startLine": 5,
-                  "startColumn": 1,
-                  "startOffset": 121,
-                  "fragmentLength": 38
-                },
                 "StatementList": {
                   "$type": "StatementList",
-                  "location": {
-                    "startLine": -1,
-                    "startColumn": -1,
-                    "startOffset": -1,
-                    "fragmentLength": -1
-                  },
                   "Statements": [
                     {
                       "$type": "ReturnStatement",
-                      "location": {
-                        "startLine": 6,
-                        "startColumn": 5,
-                        "startOffset": 131,
-                        "fragmentLength": 24
-                      },
                       "Expression": {
                         "$type": "ParenthesisExpression",
-                        "location": {
-                          "startLine": 6,
-                          "startColumn": 12,
-                          "startOffset": 138,
-                          "fragmentLength": 16
-                        },
                         "Expression": {
                           "$type": "FunctionCall",
-                          "location": {
-                            "startLine": 6,
-                            "startColumn": 13,
-                            "startOffset": 139,
-                            "fragmentLength": 14
-                          },
                           "FunctionName": {
                             "$type": "Identifier",
-                            "location": {
-                              "startLine": 6,
-                              "startColumn": 13,
-                              "startOffset": 139,
-                              "fragmentLength": 4
-                            },
                             "Value": "TRIM",
                             "QuoteType": "NotQuoted"
                           },
                           "Parameters": [
                             {
                               "$type": "StringLiteral",
-                              "location": {
-                                "startLine": 6,
-                                "startColumn": 18,
-                                "startOffset": 144,
-                                "fragmentLength": 8
-                              },
                               "LiteralType": "String",
                               "IsNational": false,
                               "IsLargeObject": false,

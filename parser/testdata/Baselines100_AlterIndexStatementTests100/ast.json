@@ -1,57 +1,21 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 123
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 123
-      },
       "Statements": [
         {
           "$type": "AlterIndexStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 50
-          },
           "All": true,
           "AlterIndexType": "Rebuild",
           "Partition": {
             "$type": "PartitionSpecifier",
-            "location": {
-              "startLine": 2,
-              "startColumn": 31,
-              "startOffset": 46,
-              "fragmentLength": 3
-            },
             "All": true
           },
           "OnName": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 2,
-              "startColumn": 8,
-              "startOffset": 23,
-              "fragmentLength": 2
-            },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 2,
-                "startColumn": 8,
-                "startOffset": 23,
-                "fragmentLength": 2
-              },
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -65,40 +29,16 @@
         },
         {
           "$type": "AlterIndexStatement",
-          "location": {
-            "startLine": 4,
-            "startColumn": 1,
-            "startOffset": 52,
-            "fragmentLength": 71
-          },
           "All": true,
           "AlterIndexType": "Rebuild",
           "Partition": {
             "$type": "PartitionSpecifier",
-            "location": {
-              "startLine": 5,
-              "startColumn": 31,
-              "startOffset": 98,
-              "fragmentLength": 3
-            },
             "All": true
           },
           "OnName": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 5,
-              "startColumn": 8,
-              "startOffset": 75,
-              "fragmentLength": 2
-            },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 5,
-                "startColumn": 8,
-                "startOffset": 75,
-                "fragmentLength": 2
-              },
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -112,12 +52,6 @@
           "IndexOptions": [
             {
               "$type": "IndexStateOption",
-              "location": {
-                "startLine": 5,
-                "startColumn": 40,
-                "startOffset": 107,
-                "fragmentLength": 14
-              },
               "OptionState": "On",
               "OptionKind": "PadIndex"
             }

@@ -1,46 +1,16 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 510
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 206
-      },
       "Statements": [
         {
           "$type": "CreateDatabaseEncryptionKeyStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 97
-          },
           "Encryptor": {
             "$type": "CryptoMechanism",
-            "location": {
-              "startLine": 2,
-              "startColumn": 38,
-              "startOffset": 93,
-              "fragmentLength": 4
-            },
             "CryptoMechanismType": "Certificate",
             "Identifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 2,
-                "startColumn": 38,
-                "startOffset": 93,
-                "fragmentLength": 4
-              },
               "Value": "enc1",
               "QuoteType": "NotQuoted"
             }
@@ -49,29 +19,11 @@
         },
         {
           "$type": "CreateDatabaseEncryptionKeyStatement",
-          "location": {
-            "startLine": 4,
-            "startColumn": 1,
-            "startOffset": 103,
-            "fragmentLength": 103
-          },
           "Encryptor": {
             "$type": "CryptoMechanism",
-            "location": {
-              "startLine": 5,
-              "startColumn": 41,
-              "startOffset": 199,
-              "fragmentLength": 7
-            },
             "CryptoMechanismType": "AsymmetricKey",
             "Identifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 5,
-                "startColumn": 41,
-                "startOffset": 199,
-                "fragmentLength": 7
-              },
               "Value": "someKey",
               "QuoteType": "NotQuoted"
             }
@@ -82,39 +34,15 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 8,
-        "startColumn": 1,
-        "startOffset": 211,
-        "fragmentLength": 266
-      },
       "Statements": [
         {
           "$type": "AlterDatabaseEncryptionKeyStatement",
-          "location": {
-            "startLine": 8,
-            "startColumn": 1,
-            "startOffset": 211,
-            "fragmentLength": 107
-          },
           "Regenerate": true,
           "Encryptor": {
             "$type": "CryptoMechanism",
-            "location": {
-              "startLine": 9,
-              "startColumn": 38,
-              "startOffset": 314,
-              "fragmentLength": 4
-            },
             "CryptoMechanismType": "Certificate",
             "Identifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 9,
-                "startColumn": 38,
-                "startOffset": 314,
-                "fragmentLength": 4
-              },
               "Value": "enc1",
               "QuoteType": "NotQuoted"
             }
@@ -123,41 +51,17 @@
         },
         {
           "$type": "AlterDatabaseEncryptionKeyStatement",
-          "location": {
-            "startLine": 11,
-            "startColumn": 1,
-            "startOffset": 324,
-            "fragmentLength": 73
-          },
           "Regenerate": true,
           "Algorithm": "TripleDes3Key"
         },
         {
           "$type": "AlterDatabaseEncryptionKeyStatement",
-          "location": {
-            "startLine": 13,
-            "startColumn": 1,
-            "startOffset": 399,
-            "fragmentLength": 78
-          },
           "Regenerate": false,
           "Encryptor": {
             "$type": "CryptoMechanism",
-            "location": {
-              "startLine": 14,
-              "startColumn": 41,
-              "startOffset": 470,
-              "fragmentLength": 7
-            },
             "CryptoMechanismType": "AsymmetricKey",
             "Identifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 14,
-                "startColumn": 41,
-                "startOffset": 470,
-                "fragmentLength": 7
-              },
               "Value": "someKey",
               "QuoteType": "NotQuoted"
             }
@@ -168,21 +72,9 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 17,
-        "startColumn": 1,
-        "startOffset": 482,
-        "fragmentLength": 28
-      },
       "Statements": [
         {
-          "$type": "DropDatabaseEncryptionKeyStatement",
-          "location": {
-            "startLine": 17,
-            "startColumn": 1,
-            "startOffset": 482,
-            "fragmentLength": 28
-          }
+          "$type": "DropDatabaseEncryptionKeyStatement"
         }
       ]
     }

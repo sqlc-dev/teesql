@@ -1,45 +1,15 @@
 {
   "$type": "TSqlScript",
-  "location": {
-    "startLine": 1,
-    "startColumn": 1,
-    "startOffset": 0,
-    "fragmentLength": 183
-  },
   "Batches": [
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 1,
-        "startColumn": 1,
-        "startOffset": 0,
-        "fragmentLength": 92
-      },
       "Statements": [
         {
           "$type": "CreateQueueStatement",
-          "location": {
-            "startLine": 1,
-            "startColumn": 1,
-            "startOffset": 0,
-            "fragmentLength": 92
-          },
           "Name": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 1,
-              "startColumn": 14,
-              "startOffset": 13,
-              "fragmentLength": 2
-            },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 1,
-                "startColumn": 14,
-                "startOffset": 13,
-                "fragmentLength": 2
-              },
               "Value": "q1",
               "QuoteType": "NotQuoted"
             },
@@ -53,34 +23,16 @@
           "QueueOptions": [
             {
               "$type": "QueueStateOption",
-              "location": {
-                "startLine": 2,
-                "startColumn": 19,
-                "startOffset": 34,
-                "fragmentLength": 2
-              },
               "OptionState": "On",
               "OptionKind": "Status"
             },
             {
               "$type": "QueueStateOption",
-              "location": {
-                "startLine": 2,
-                "startColumn": 23,
-                "startOffset": 38,
-                "fragmentLength": 36
-              },
               "OptionState": "On",
               "OptionKind": "PoisonMessageHandlingStatus"
             },
             {
               "$type": "QueueStateOption",
-              "location": {
-                "startLine": 2,
-                "startColumn": 73,
-                "startOffset": 88,
-                "fragmentLength": 3
-              },
               "OptionState": "Off",
               "OptionKind": "Retention"
             }
@@ -90,48 +42,18 @@
     },
     {
       "$type": "TSqlBatch",
-      "location": {
-        "startLine": 6,
-        "startColumn": 1,
-        "startOffset": 98,
-        "fragmentLength": 85
-      },
       "Statements": [
         {
           "$type": "AlterQueueStatement",
-          "location": {
-            "startLine": 6,
-            "startColumn": 1,
-            "startOffset": 98,
-            "fragmentLength": 85
-          },
           "Name": {
             "$type": "SchemaObjectName",
-            "location": {
-              "startLine": 6,
-              "startColumn": 13,
-              "startOffset": 110,
-              "fragmentLength": 6
-            },
             "SchemaIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 6,
-                "startColumn": 13,
-                "startOffset": 110,
-                "fragmentLength": 3
-              },
               "Value": "dbo",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
-              "location": {
-                "startLine": 6,
-                "startColumn": 17,
-                "startOffset": 114,
-                "fragmentLength": 2
-              },
               "Value": "q1",
               "QuoteType": "NotQuoted"
             },
@@ -148,23 +70,11 @@
           "QueueOptions": [
             {
               "$type": "QueueStateOption",
-              "location": {
-                "startLine": 7,
-                "startColumn": 10,
-                "startOffset": 126,
-                "fragmentLength": 37
-              },
               "OptionState": "Off",
               "OptionKind": "PoisonMessageHandlingStatus"
             },
             {
               "$type": "QueueOption",
-              "location": {
-                "startLine": 7,
-                "startColumn": 61,
-                "startOffset": 177,
-                "fragmentLength": 4
-              },
               "OptionKind": "ActivationDrop"
             }
           ]
