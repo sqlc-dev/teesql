@@ -105,7 +105,7 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 	case TokenWhile:
 		return p.parseWhileStatement()
 	case TokenBegin:
-		return p.parseBeginEndBlockStatement()
+		return p.parseBeginStatement()
 	case TokenCreate:
 		return p.parseCreateStatement()
 	case TokenExec, TokenExecute:
@@ -128,9 +128,22 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseContinueStatement()
 	case TokenGrant:
 		return p.parseGrantStatement()
+	case TokenCommit:
+		return p.parseCommitTransactionStatement()
+	case TokenRollback:
+		return p.parseRollbackTransactionStatement()
+	case TokenSave:
+		return p.parseSaveTransactionStatement()
+	case TokenWaitfor:
+		return p.parseWaitForStatement()
+	case TokenGoto:
+		return p.parseGotoStatement()
 	case TokenSemicolon:
 		p.nextToken()
 		return nil, nil
+	case TokenIdent:
+		// Check for label (identifier followed by colon)
+		return p.parseLabelOrError()
 	default:
 		return nil, fmt.Errorf("unexpected token: %s", p.curTok.Literal)
 	}
@@ -784,6 +797,11 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			p.nextToken()
 			return &ast.VariableReference{Name: name}, nil
 		}
+		// Check for N-prefixed national string (N'...')
+		if strings.ToUpper(p.curTok.Literal) == "N" && p.peekTok.Type == TokenString {
+			p.nextToken() // consume N
+			return p.parseNationalStringLiteral()
+		}
 		return p.parseColumnReference()
 	case TokenNumber:
 		val := p.curTok.Literal
@@ -808,7 +826,7 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
 		p.nextToken()
-		return expr, nil
+		return &ast.ParenthesisExpression{Expression: expr}, nil
 	default:
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	}
@@ -879,6 +897,31 @@ func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
 	return &ast.StringLiteral{
 		LiteralType:   "String",
 		IsNational:    false,
+		IsLargeObject: false,
+		Value:         raw,
+	}, nil
+}
+
+func (p *Parser) parseNationalStringLiteral() (*ast.StringLiteral, error) {
+	raw := p.curTok.Literal
+	p.nextToken()
+
+	// Remove surrounding quotes and handle escaped quotes
+	if len(raw) >= 2 && raw[0] == '\'' && raw[len(raw)-1] == '\'' {
+		inner := raw[1 : len(raw)-1]
+		// Replace escaped quotes
+		value := strings.ReplaceAll(inner, "''", "'")
+		return &ast.StringLiteral{
+			LiteralType:   "String",
+			IsNational:    true,
+			IsLargeObject: false,
+			Value:         value,
+		}, nil
+	}
+
+	return &ast.StringLiteral{
+		LiteralType:   "String",
+		IsNational:    true,
 		IsLargeObject: false,
 		Value:         raw,
 	}, nil
@@ -2437,6 +2480,177 @@ func (p *Parser) parseWhileStatement() (*ast.WhileStatement, error) {
 	return stmt, nil
 }
 
+func (p *Parser) parseBeginStatement() (ast.Statement, error) {
+	// Peek at what follows BEGIN
+	p.nextToken() // consume BEGIN
+
+	switch p.curTok.Type {
+	case TokenTransaction, TokenTran:
+		return p.parseBeginTransactionStatementContinued(false)
+	case TokenTry:
+		return p.parseTryCatchStatement()
+	case TokenIdent:
+		// Check for DISTRIBUTED
+		if strings.ToUpper(p.curTok.Literal) == "DISTRIBUTED" {
+			p.nextToken() // consume DISTRIBUTED
+			if p.curTok.Type == TokenTransaction || p.curTok.Type == TokenTran {
+				return p.parseBeginTransactionStatementContinued(true)
+			}
+			return nil, fmt.Errorf("expected TRANSACTION after DISTRIBUTED, got %s", p.curTok.Literal)
+		}
+		// Fall through to BEGIN...END block
+		fallthrough
+	default:
+		return p.parseBeginEndBlockStatementContinued()
+	}
+}
+
+func (p *Parser) parseBeginTransactionStatementContinued(distributed bool) (*ast.BeginTransactionStatement, error) {
+	// TRANSACTION or TRAN already consumed by caller
+	p.nextToken()
+
+	stmt := &ast.BeginTransactionStatement{
+		Distributed: distributed,
+	}
+
+	// Optional transaction name or variable
+	if p.curTok.Type == TokenIdent && !isKeyword(p.curTok.Literal) {
+		stmt.Name = &ast.IdentifierOrValueExpression{
+			Value: p.curTok.Literal,
+			Identifier: &ast.Identifier{
+				Value:     p.curTok.Literal,
+				QuoteType: "NotQuoted",
+			},
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '@' {
+		stmt.Name = &ast.IdentifierOrValueExpression{
+			Value: p.curTok.Literal,
+			ValueExpression: &ast.VariableReference{
+				Name: p.curTok.Literal,
+			},
+		}
+		p.nextToken()
+	}
+
+	// Check for WITH MARK
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "MARK" {
+			stmt.MarkDefined = true
+			p.nextToken() // consume MARK
+			// Optional mark description
+			if p.curTok.Type == TokenString || (p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '@') {
+				desc, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				stmt.MarkDescription = desc
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseTryCatchStatement() (*ast.TryCatchStatement, error) {
+	// TRY already seen, consume it
+	p.nextToken()
+
+	stmt := &ast.TryCatchStatement{
+		TryStatements: &ast.StatementList{},
+	}
+
+	// Parse statements until END TRY
+	for p.curTok.Type != TokenEnd && p.curTok.Type != TokenEOF {
+		s, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		if s != nil {
+			stmt.TryStatements.Statements = append(stmt.TryStatements.Statements, s)
+		}
+	}
+
+	// Consume END TRY
+	if p.curTok.Type == TokenEnd {
+		p.nextToken() // consume END
+		if p.curTok.Type == TokenTry {
+			p.nextToken() // consume TRY
+		}
+	}
+
+	// Expect BEGIN CATCH
+	if p.curTok.Type == TokenBegin {
+		p.nextToken() // consume BEGIN
+		if p.curTok.Type == TokenCatch {
+			p.nextToken() // consume CATCH
+		}
+	}
+
+	stmt.CatchStatements = &ast.StatementList{}
+
+	// Parse catch statements until END CATCH
+	for p.curTok.Type != TokenEnd && p.curTok.Type != TokenEOF {
+		s, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		if s != nil {
+			stmt.CatchStatements.Statements = append(stmt.CatchStatements.Statements, s)
+		}
+	}
+
+	// Consume END CATCH
+	if p.curTok.Type == TokenEnd {
+		p.nextToken() // consume END
+		if p.curTok.Type == TokenCatch {
+			p.nextToken() // consume CATCH
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseBeginEndBlockStatementContinued() (*ast.BeginEndBlockStatement, error) {
+	stmt := &ast.BeginEndBlockStatement{
+		StatementList: &ast.StatementList{},
+	}
+
+	// Parse statements until END
+	for p.curTok.Type != TokenEnd && p.curTok.Type != TokenEOF {
+		s, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		if s != nil {
+			stmt.StatementList.Statements = append(stmt.StatementList.Statements, s)
+		}
+	}
+
+	// Consume END
+	if p.curTok.Type == TokenEnd {
+		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseBeginEndBlockStatement() (*ast.BeginEndBlockStatement, error) {
 	// Consume BEGIN
 	p.nextToken()
@@ -2480,6 +2694,10 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		return p.parseCreateViewStatement()
 	case TokenSchema:
 		return p.parseCreateSchemaStatement()
+	case TokenDefault:
+		return p.parseCreateDefaultStatement()
+	case TokenMaster:
+		return p.parseCreateMasterKeyStatement()
 	default:
 		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	}
@@ -2592,6 +2810,90 @@ func (p *Parser) parseCreateSchemaStatement() (*ast.CreateSchemaStatement, error
 	return stmt, nil
 }
 
+func (p *Parser) parseCreateDefaultStatement() (*ast.CreateDefaultStatement, error) {
+	// Consume DEFAULT
+	p.nextToken()
+
+	stmt := &ast.CreateDefaultStatement{}
+
+	// Parse default name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Expect AS
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+	}
+
+	// Parse expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Expression = expr
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateMasterKeyStatement() (*ast.CreateMasterKeyStatement, error) {
+	// Consume MASTER
+	p.nextToken()
+
+	stmt := &ast.CreateMasterKeyStatement{}
+
+	// Expect KEY
+	if p.curTok.Type != TokenKey {
+		return nil, fmt.Errorf("expected KEY after MASTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect ENCRYPTION
+	if p.curTok.Type != TokenEncryption {
+		return nil, fmt.Errorf("expected ENCRYPTION after KEY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect BY
+	if p.curTok.Type != TokenBy {
+		return nil, fmt.Errorf("expected BY after ENCRYPTION, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect PASSWORD
+	if p.curTok.Type != TokenPassword {
+		return nil, fmt.Errorf("expected PASSWORD after BY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after PASSWORD, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse password expression
+	password, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Password = password
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseExecuteStatement() (*ast.ExecuteStatement, error) {
 	execSpec, err := p.parseExecuteSpecification()
 	if err != nil {
@@ -2650,6 +2952,202 @@ func (p *Parser) parseContinueStatement() (*ast.ContinueStatement, error) {
 	}
 
 	return &ast.ContinueStatement{}, nil
+}
+
+func (p *Parser) parseCommitTransactionStatement() (*ast.CommitTransactionStatement, error) {
+	// Consume COMMIT
+	p.nextToken()
+
+	stmt := &ast.CommitTransactionStatement{
+		DelayedDurabilityOption: "NotSet",
+	}
+
+	// Skip optional WORK, TRAN, or TRANSACTION
+	if p.curTok.Type == TokenWork || p.curTok.Type == TokenTran || p.curTok.Type == TokenTransaction {
+		p.nextToken()
+	}
+
+	// Optional transaction name or variable
+	if p.curTok.Type == TokenIdent && !isKeyword(p.curTok.Literal) && p.curTok.Literal[0] != '@' {
+		stmt.Name = &ast.IdentifierOrValueExpression{
+			Value: p.curTok.Literal,
+			Identifier: &ast.Identifier{
+				Value:     p.curTok.Literal,
+				QuoteType: "NotQuoted",
+			},
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '@' {
+		stmt.Name = &ast.IdentifierOrValueExpression{
+			Value: p.curTok.Literal,
+			ValueExpression: &ast.VariableReference{
+				Name: p.curTok.Literal,
+			},
+		}
+		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseRollbackTransactionStatement() (*ast.RollbackTransactionStatement, error) {
+	// Consume ROLLBACK
+	p.nextToken()
+
+	stmt := &ast.RollbackTransactionStatement{}
+
+	// Skip optional WORK, TRAN, or TRANSACTION
+	if p.curTok.Type == TokenWork || p.curTok.Type == TokenTran || p.curTok.Type == TokenTransaction {
+		p.nextToken()
+	}
+
+	// Optional transaction name or variable
+	if p.curTok.Type == TokenIdent && !isKeyword(p.curTok.Literal) && p.curTok.Literal[0] != '@' {
+		stmt.Name = &ast.IdentifierOrValueExpression{
+			Value: p.curTok.Literal,
+			Identifier: &ast.Identifier{
+				Value:     p.curTok.Literal,
+				QuoteType: "NotQuoted",
+			},
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '@' {
+		stmt.Name = &ast.IdentifierOrValueExpression{
+			Value: p.curTok.Literal,
+			ValueExpression: &ast.VariableReference{
+				Name: p.curTok.Literal,
+			},
+		}
+		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseSaveTransactionStatement() (*ast.SaveTransactionStatement, error) {
+	// Consume SAVE
+	p.nextToken()
+
+	stmt := &ast.SaveTransactionStatement{}
+
+	// Skip optional TRAN or TRANSACTION
+	if p.curTok.Type == TokenTran || p.curTok.Type == TokenTransaction {
+		p.nextToken()
+	}
+
+	// Optional transaction name or variable
+	if p.curTok.Type == TokenIdent && !isKeyword(p.curTok.Literal) && p.curTok.Literal[0] != '@' {
+		stmt.Name = &ast.IdentifierOrValueExpression{
+			Value: p.curTok.Literal,
+			Identifier: &ast.Identifier{
+				Value:     p.curTok.Literal,
+				QuoteType: "NotQuoted",
+			},
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '@' {
+		stmt.Name = &ast.IdentifierOrValueExpression{
+			Value: p.curTok.Literal,
+			ValueExpression: &ast.VariableReference{
+				Name: p.curTok.Literal,
+			},
+		}
+		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseWaitForStatement() (*ast.WaitForStatement, error) {
+	// Consume WAITFOR
+	p.nextToken()
+
+	stmt := &ast.WaitForStatement{}
+
+	// Expect DELAY or TIME
+	if p.curTok.Type == TokenDelay {
+		stmt.WaitForOption = "Delay"
+		p.nextToken()
+	} else if p.curTok.Type == TokenTime {
+		stmt.WaitForOption = "Time"
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected DELAY or TIME after WAITFOR, got %s", p.curTok.Literal)
+	}
+
+	// Parse the parameter expression
+	param, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Parameter = param
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseGotoStatement() (*ast.GoToStatement, error) {
+	// Consume GOTO
+	p.nextToken()
+
+	stmt := &ast.GoToStatement{}
+
+	// Expect label name
+	if p.curTok.Type == TokenIdent {
+		stmt.LabelName = &ast.Identifier{
+			Value:     p.curTok.Literal,
+			QuoteType: "NotQuoted",
+		}
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected label name after GOTO, got %s", p.curTok.Literal)
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseLabelOrError() (ast.Statement, error) {
+	// Check if this is a label (identifier followed by colon)
+	label := p.curTok.Literal
+	p.nextToken()
+
+	// Check if followed by colon - then it's a label
+	if p.curTok.Type == TokenColon {
+		p.nextToken() // consume the colon
+		return &ast.LabelStatement{Value: label + ":"}, nil
+	}
+
+	// Not a label - return error
+	return nil, fmt.Errorf("unexpected identifier: %s", label)
+}
+
+func isKeyword(s string) bool {
+	_, ok := keywords[strings.ToUpper(s)]
+	return ok
 }
 
 // ======================= End New Statement Parsing Functions =======================
@@ -2739,6 +3237,26 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return grantStatementToJSON(s)
 	case *ast.PredicateSetStatement:
 		return predicateSetStatementToJSON(s)
+	case *ast.CommitTransactionStatement:
+		return commitTransactionStatementToJSON(s)
+	case *ast.RollbackTransactionStatement:
+		return rollbackTransactionStatementToJSON(s)
+	case *ast.SaveTransactionStatement:
+		return saveTransactionStatementToJSON(s)
+	case *ast.BeginTransactionStatement:
+		return beginTransactionStatementToJSON(s)
+	case *ast.WaitForStatement:
+		return waitForStatementToJSON(s)
+	case *ast.GoToStatement:
+		return goToStatementToJSON(s)
+	case *ast.LabelStatement:
+		return labelStatementToJSON(s)
+	case *ast.CreateDefaultStatement:
+		return createDefaultStatementToJSON(s)
+	case *ast.CreateMasterKeyStatement:
+		return createMasterKeyStatementToJSON(s)
+	case *ast.TryCatchStatement:
+		return tryCatchStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -3109,6 +3627,14 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Expression"] = scalarExpressionToJSON(e.Expression)
 		}
 		return node
+	case *ast.ParenthesisExpression:
+		node := jsonNode{
+			"$type": "ParenthesisExpression",
+		}
+		if e.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(e.Expression)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownScalarExpression"}
 	}
@@ -3152,6 +3678,9 @@ func identifierOrValueExpressionToJSON(iove *ast.IdentifierOrValueExpression) js
 	}
 	if iove.Identifier != nil {
 		node["Identifier"] = identifierToJSON(iove.Identifier)
+	}
+	if iove.ValueExpression != nil {
+		node["ValueExpression"] = scalarExpressionToJSON(iove.ValueExpression)
 	}
 	return node
 }
@@ -4158,4 +4687,117 @@ func predicateSetStatementToJSON(s *ast.PredicateSetStatement) jsonNode {
 		"Options": string(s.Options),
 		"IsOn":    s.IsOn,
 	}
+}
+
+func commitTransactionStatementToJSON(s *ast.CommitTransactionStatement) jsonNode {
+	node := jsonNode{
+		"$type":                   "CommitTransactionStatement",
+		"DelayedDurabilityOption": s.DelayedDurabilityOption,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierOrValueExpressionToJSON(s.Name)
+	}
+	return node
+}
+
+func rollbackTransactionStatementToJSON(s *ast.RollbackTransactionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "RollbackTransactionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierOrValueExpressionToJSON(s.Name)
+	}
+	return node
+}
+
+func saveTransactionStatementToJSON(s *ast.SaveTransactionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "SaveTransactionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierOrValueExpressionToJSON(s.Name)
+	}
+	return node
+}
+
+func beginTransactionStatementToJSON(s *ast.BeginTransactionStatement) jsonNode {
+	node := jsonNode{
+		"$type":       "BeginTransactionStatement",
+		"Distributed": s.Distributed,
+		"MarkDefined": s.MarkDefined,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierOrValueExpressionToJSON(s.Name)
+	}
+	if s.MarkDescription != nil {
+		node["MarkDescription"] = scalarExpressionToJSON(s.MarkDescription)
+	}
+	return node
+}
+
+func waitForStatementToJSON(s *ast.WaitForStatement) jsonNode {
+	node := jsonNode{
+		"$type":         "WaitForStatement",
+		"WaitForOption": s.WaitForOption,
+	}
+	if s.Parameter != nil {
+		node["Parameter"] = scalarExpressionToJSON(s.Parameter)
+	}
+	if s.Timeout != nil {
+		node["Timeout"] = scalarExpressionToJSON(s.Timeout)
+	}
+	return node
+}
+
+func goToStatementToJSON(s *ast.GoToStatement) jsonNode {
+	node := jsonNode{
+		"$type": "GoToStatement",
+	}
+	if s.LabelName != nil {
+		node["LabelName"] = identifierToJSON(s.LabelName)
+	}
+	return node
+}
+
+func labelStatementToJSON(s *ast.LabelStatement) jsonNode {
+	return jsonNode{
+		"$type": "LabelStatement",
+		"Value": s.Value,
+	}
+}
+
+func createDefaultStatementToJSON(s *ast.CreateDefaultStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateDefaultStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.Expression != nil {
+		node["Expression"] = scalarExpressionToJSON(s.Expression)
+	}
+	return node
+}
+
+func createMasterKeyStatementToJSON(s *ast.CreateMasterKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateMasterKeyStatement",
+	}
+	if s.Password != nil {
+		node["Password"] = scalarExpressionToJSON(s.Password)
+	}
+	return node
+}
+
+func tryCatchStatementToJSON(s *ast.TryCatchStatement) jsonNode {
+	node := jsonNode{
+		"$type": "TryCatchStatement",
+	}
+	if s.TryStatements != nil {
+		node["TryStatements"] = statementListToJSON(s.TryStatements)
+	}
+	if s.CatchStatements != nil {
+		node["CatchStatements"] = statementListToJSON(s.CatchStatements)
+	}
+	return node
 }

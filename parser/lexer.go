@@ -130,6 +130,27 @@ const (
 	TokenRevoke
 	TokenTo
 	TokenPublic
+
+	// Transaction keywords
+	TokenCommit
+	TokenRollback
+	TokenSave
+	TokenTransaction
+	TokenTran
+	TokenWork
+
+	// Additional keywords
+	TokenWaitfor
+	TokenDelay
+	TokenTime
+	TokenMaster
+	TokenKey
+	TokenEncryption
+	TokenPassword
+	TokenLabel
+	TokenRaiserror
+	TokenTruncate
+	TokenColon
 )
 
 // Token represents a lexical token.
@@ -210,6 +231,10 @@ func (l *Lexer) NextToken() Token {
 	case ';':
 		tok.Type = TokenSemicolon
 		tok.Literal = ";"
+		l.readChar()
+	case ':':
+		tok.Type = TokenColon
+		tok.Literal = ":"
 		l.readChar()
 	case '=':
 		tok.Type = TokenEquals
@@ -478,6 +503,21 @@ var keywords = map[string]TokenType{
 	"REVOKE":        TokenRevoke,
 	"TO":            TokenTo,
 	"PUBLIC":        TokenPublic,
+	"COMMIT":        TokenCommit,
+	"ROLLBACK":      TokenRollback,
+	"SAVE":          TokenSave,
+	"TRANSACTION":   TokenTransaction,
+	"TRAN":          TokenTran,
+	"WORK":          TokenWork,
+	"WAITFOR":       TokenWaitfor,
+	"DELAY":         TokenDelay,
+	"TIME":          TokenTime,
+	"MASTER":        TokenMaster,
+	"KEY":           TokenKey,
+	"ENCRYPTION":    TokenEncryption,
+	"PASSWORD":      TokenPassword,
+	"RAISERROR":     TokenRaiserror,
+	"TRUNCATE":      TokenTruncate,
 }
 
 func lookupKeyword(ident string) TokenType {
