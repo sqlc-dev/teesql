@@ -79,6 +79,57 @@ const (
 	TokenNot
 	TokenLBrace
 	TokenRBrace
+
+	// DML Keywords
+	TokenInsert
+	TokenUpdate
+	TokenDelete
+	TokenSet
+	TokenValues
+	TokenDefault
+	TokenNull
+	TokenExec
+	TokenExecute
+	TokenOver
+
+	// DDL Keywords
+	TokenCreate
+	TokenView
+	TokenSchema
+	TokenProcedure
+	TokenFunction
+	TokenTrigger
+	TokenAuthorization
+
+	// Control flow keywords
+	TokenDeclare
+	TokenIf
+	TokenElse
+	TokenWhile
+	TokenBegin
+	TokenEnd
+	TokenReturn
+	TokenBreak
+	TokenContinue
+	TokenGoto
+	TokenTry
+	TokenCatch
+
+	// Additional keywords
+	TokenCurrent
+	TokenOf
+	TokenCursor
+	TokenOpenRowset
+	TokenHoldlock
+	TokenNowait
+	TokenFast
+	TokenMaxdop
+
+	// Security keywords
+	TokenGrant
+	TokenRevoke
+	TokenTo
+	TokenPublic
 )
 
 // Token represents a lexical token.
@@ -340,51 +391,93 @@ func isDigit(ch byte) bool {
 }
 
 var keywords = map[string]TokenType{
-	"SELECT":     TokenSelect,
-	"FROM":       TokenFrom,
-	"WHERE":      TokenWhere,
-	"AND":        TokenAnd,
-	"OR":         TokenOr,
-	"AS":         TokenAs,
-	"OPTION":     TokenOption,
-	"ALL":        TokenAll,
-	"DISTINCT":   TokenDistinct,
-	"PRINT":      TokenPrint,
-	"THROW":      TokenThrow,
-	"ALTER":      TokenAlter,
-	"TABLE":      TokenTable,
-	"DROP":       TokenDrop,
-	"INDEX":      TokenIndex,
-	"REVERT":     TokenRevert,
-	"WITH":       TokenWith,
-	"COOKIE":     TokenCookie,
-	"DATABASE":   TokenDatabase,
-	"SCOPED":     TokenScoped,
-	"CREDENTIAL": TokenCredential,
-	"TOP":        TokenTop,
-	"PERCENT":    TokenPercent,
-	"TIES":       TokenTies,
-	"INTO":       TokenInto,
-	"GROUP":      TokenGroup,
-	"BY":         TokenBy,
-	"HAVING":     TokenHaving,
-	"ORDER":      TokenOrder,
-	"ASC":        TokenAsc,
-	"DESC":       TokenDesc,
-	"UNION":      TokenUnion,
-	"EXCEPT":     TokenExcept,
-	"INTERSECT":  TokenIntersect,
-	"CROSS":      TokenCross,
-	"JOIN":       TokenJoin,
-	"INNER":      TokenInner,
-	"LEFT":       TokenLeft,
-	"RIGHT":      TokenRight,
-	"FULL":       TokenFull,
-	"OUTER":      TokenOuter,
-	"ON":         TokenOn,
-	"ROLLUP":     TokenRollup,
-	"CUBE":       TokenCube,
-	"NOT":        TokenNot,
+	"SELECT":        TokenSelect,
+	"FROM":          TokenFrom,
+	"WHERE":         TokenWhere,
+	"AND":           TokenAnd,
+	"OR":            TokenOr,
+	"AS":            TokenAs,
+	"OPTION":        TokenOption,
+	"ALL":           TokenAll,
+	"DISTINCT":      TokenDistinct,
+	"PRINT":         TokenPrint,
+	"THROW":         TokenThrow,
+	"ALTER":         TokenAlter,
+	"TABLE":         TokenTable,
+	"DROP":          TokenDrop,
+	"INDEX":         TokenIndex,
+	"REVERT":        TokenRevert,
+	"WITH":          TokenWith,
+	"COOKIE":        TokenCookie,
+	"DATABASE":      TokenDatabase,
+	"SCOPED":        TokenScoped,
+	"CREDENTIAL":    TokenCredential,
+	"TOP":           TokenTop,
+	"PERCENT":       TokenPercent,
+	"TIES":          TokenTies,
+	"INTO":          TokenInto,
+	"GROUP":         TokenGroup,
+	"BY":            TokenBy,
+	"HAVING":        TokenHaving,
+	"ORDER":         TokenOrder,
+	"ASC":           TokenAsc,
+	"DESC":          TokenDesc,
+	"UNION":         TokenUnion,
+	"EXCEPT":        TokenExcept,
+	"INTERSECT":     TokenIntersect,
+	"CROSS":         TokenCross,
+	"JOIN":          TokenJoin,
+	"INNER":         TokenInner,
+	"LEFT":          TokenLeft,
+	"RIGHT":         TokenRight,
+	"FULL":          TokenFull,
+	"OUTER":         TokenOuter,
+	"ON":            TokenOn,
+	"ROLLUP":        TokenRollup,
+	"CUBE":          TokenCube,
+	"NOT":           TokenNot,
+	"INSERT":        TokenInsert,
+	"UPDATE":        TokenUpdate,
+	"DELETE":        TokenDelete,
+	"SET":           TokenSet,
+	"VALUES":        TokenValues,
+	"DEFAULT":       TokenDefault,
+	"NULL":          TokenNull,
+	"EXEC":          TokenExec,
+	"EXECUTE":       TokenExecute,
+	"OVER":          TokenOver,
+	"CREATE":        TokenCreate,
+	"VIEW":          TokenView,
+	"SCHEMA":        TokenSchema,
+	"PROCEDURE":     TokenProcedure,
+	"PROC":          TokenProcedure,
+	"FUNCTION":      TokenFunction,
+	"TRIGGER":       TokenTrigger,
+	"AUTHORIZATION": TokenAuthorization,
+	"DECLARE":       TokenDeclare,
+	"IF":            TokenIf,
+	"ELSE":          TokenElse,
+	"WHILE":         TokenWhile,
+	"BEGIN":         TokenBegin,
+	"END":           TokenEnd,
+	"RETURN":        TokenReturn,
+	"BREAK":         TokenBreak,
+	"CONTINUE":      TokenContinue,
+	"GOTO":          TokenGoto,
+	"TRY":           TokenTry,
+	"CATCH":         TokenCatch,
+	"CURRENT":       TokenCurrent,
+	"OF":            TokenOf,
+	"CURSOR":        TokenCursor,
+	"OPENROWSET":    TokenOpenRowset,
+	"HOLDLOCK":      TokenHoldlock,
+	"NOWAIT":        TokenNowait,
+	"FAST":          TokenFast,
+	"MAXDOP":        TokenMaxdop,
+	"GRANT":         TokenGrant,
+	"REVOKE":        TokenRevoke,
+	"TO":            TokenTo,
+	"PUBLIC":        TokenPublic,
 }
 
 func lookupKeyword(ident string) TokenType {
