@@ -14,6 +14,7 @@ const (
 	TokenIdent
 	TokenNumber
 	TokenString
+	TokenNationalString
 	TokenStar
 	TokenComma
 	TokenDot
@@ -27,6 +28,8 @@ const (
 	TokenGreaterThan
 	TokenPlus
 	TokenMinus
+	TokenSlash
+	TokenModulo
 
 	// Keywords
 	TokenSelect
@@ -283,6 +286,14 @@ func (l *Lexer) NextToken() Token {
 		tok.Type = TokenMinus
 		tok.Literal = "-"
 		l.readChar()
+	case '/':
+		tok.Type = TokenSlash
+		tok.Literal = "/"
+		l.readChar()
+	case '%':
+		tok.Type = TokenModulo
+		tok.Literal = "%"
+		l.readChar()
 	case '\'':
 		tok = l.readString()
 	default:
@@ -340,6 +351,12 @@ func (l *Lexer) readIdentifier() Token {
 		l.readChar()
 	}
 	literal := l.input[startPos:l.pos]
+
+	// Handle N'...' national string literals
+	if (literal == "N" || literal == "n") && l.ch == '\'' {
+		return l.readNationalString(startPos)
+	}
+
 	return Token{
 		Type:    lookupKeyword(literal),
 		Literal: literal,
@@ -383,6 +400,31 @@ func (l *Lexer) readString() Token {
 	}
 	return Token{
 		Type:    TokenString,
+		Literal: l.input[startPos:l.pos],
+		Pos:     startPos,
+	}
+}
+
+func (l *Lexer) readNationalString(startPos int) Token {
+	// startPos already points to 'N', now we're at the opening quote
+	l.readChar() // skip opening quote
+	for l.ch != 0 {
+		if l.ch == '\'' {
+			if l.peekChar() == '\'' {
+				// Escaped quote
+				l.readChar()
+				l.readChar()
+				continue
+			}
+			break
+		}
+		l.readChar()
+	}
+	if l.ch == '\'' {
+		l.readChar() // skip closing quote
+	}
+	return Token{
+		Type:    TokenNationalString,
 		Literal: l.input[startPos:l.pos],
 		Pos:     startPos,
 	}

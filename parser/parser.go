@@ -738,7 +738,7 @@ func (p *Parser) parseScalarExpression() (ast.ScalarExpression, error) {
 }
 
 func (p *Parser) parseAdditiveExpression() (ast.ScalarExpression, error) {
-	left, err := p.parsePrimaryExpression()
+	left, err := p.parseMultiplicativeExpression()
 	if err != nil {
 		return nil, err
 	}
@@ -749,6 +749,39 @@ func (p *Parser) parseAdditiveExpression() (ast.ScalarExpression, error) {
 			opType = "Add"
 		} else {
 			opType = "Subtract"
+		}
+		p.nextToken()
+
+		right, err := p.parseMultiplicativeExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BinaryExpression{
+			BinaryExpressionType: opType,
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
+}
+
+func (p *Parser) parseMultiplicativeExpression() (ast.ScalarExpression, error) {
+	left, err := p.parsePrimaryExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.curTok.Type == TokenStar || p.curTok.Type == TokenSlash || p.curTok.Type == TokenModulo {
+		var opType string
+		switch p.curTok.Type {
+		case TokenStar:
+			opType = "Multiply"
+		case TokenSlash:
+			opType = "Divide"
+		case TokenModulo:
+			opType = "Modulo"
 		}
 		p.nextToken()
 
@@ -813,6 +846,8 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		return &ast.IntegerLiteral{LiteralType: "Integer", Value: val}, nil
 	case TokenString:
 		return p.parseStringLiteral()
+	case TokenNationalString:
+		return p.parseNationalStringFromToken()
 	case TokenLBrace:
 		return p.parseOdbcLiteral()
 	case TokenLParen:
@@ -842,20 +877,34 @@ func (p *Parser) parseOdbcLiteral() (*ast.OdbcLiteral, error) {
 	}
 	p.nextToken()
 
-	// Check for N prefix for national string
+	// Check for national string (either separate N token or combined N'...' token)
 	isNational := false
-	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "N" {
+	var raw string
+
+	if p.curTok.Type == TokenNationalString {
+		// Combined N'...' token from lexer
 		isNational = true
+		raw = p.curTok.Literal
+		// Strip the N prefix
+		if len(raw) >= 3 && (raw[0] == 'N' || raw[0] == 'n') && raw[1] == '\'' {
+			raw = raw[1:] // Remove the N, keep the rest including quotes
+		}
+		p.nextToken()
+	} else {
+		// Check for separate N token followed by string
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "N" {
+			isNational = true
+			p.nextToken()
+		}
+
+		// Expect string literal
+		if p.curTok.Type != TokenString {
+			return nil, fmt.Errorf("expected string in ODBC literal, got %s", p.curTok.Literal)
+		}
+
+		raw = p.curTok.Literal
 		p.nextToken()
 	}
-
-	// Expect string literal
-	if p.curTok.Type != TokenString {
-		return nil, fmt.Errorf("expected string in ODBC literal, got %s", p.curTok.Literal)
-	}
-
-	raw := p.curTok.Literal
-	p.nextToken()
 
 	// Remove surrounding quotes
 	value := raw
@@ -909,6 +958,32 @@ func (p *Parser) parseNationalStringLiteral() (*ast.StringLiteral, error) {
 	// Remove surrounding quotes and handle escaped quotes
 	if len(raw) >= 2 && raw[0] == '\'' && raw[len(raw)-1] == '\'' {
 		inner := raw[1 : len(raw)-1]
+		// Replace escaped quotes
+		value := strings.ReplaceAll(inner, "''", "'")
+		return &ast.StringLiteral{
+			LiteralType:   "String",
+			IsNational:    true,
+			IsLargeObject: false,
+			Value:         value,
+		}, nil
+	}
+
+	return &ast.StringLiteral{
+		LiteralType:   "String",
+		IsNational:    true,
+		IsLargeObject: false,
+		Value:         raw,
+	}, nil
+}
+
+func (p *Parser) parseNationalStringFromToken() (*ast.StringLiteral, error) {
+	// Token is N'...' combined - strip the N prefix and quotes
+	raw := p.curTok.Literal
+	p.nextToken()
+
+	// Raw is like N'value' or n'value'
+	if len(raw) >= 3 && (raw[0] == 'N' || raw[0] == 'n') && raw[1] == '\'' && raw[len(raw)-1] == '\'' {
+		inner := raw[2 : len(raw)-1]
 		// Replace escaped quotes
 		value := strings.ReplaceAll(inner, "''", "'")
 		return &ast.StringLiteral{
@@ -2553,21 +2628,21 @@ func (p *Parser) parseBeginTransactionStatementContinued(distributed bool) (*ast
 		Distributed: distributed,
 	}
 
-	// Optional transaction name or variable
-	if p.curTok.Type == TokenIdent && !isKeyword(p.curTok.Literal) {
+	// Optional transaction name or variable - check for variable first
+	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+		stmt.Name = &ast.IdentifierOrValueExpression{
+			Value: p.curTok.Literal,
+			ValueExpression: &ast.VariableReference{
+				Name: p.curTok.Literal,
+			},
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && !isKeyword(p.curTok.Literal) {
 		stmt.Name = &ast.IdentifierOrValueExpression{
 			Value: p.curTok.Literal,
 			Identifier: &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
-			},
-		}
-		p.nextToken()
-	} else if p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '@' {
-		stmt.Name = &ast.IdentifierOrValueExpression{
-			Value: p.curTok.Literal,
-			ValueExpression: &ast.VariableReference{
-				Name: p.curTok.Literal,
 			},
 		}
 		p.nextToken()
@@ -2580,7 +2655,7 @@ func (p *Parser) parseBeginTransactionStatementContinued(distributed bool) (*ast
 			stmt.MarkDefined = true
 			p.nextToken() // consume MARK
 			// Optional mark description
-			if p.curTok.Type == TokenString || (p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '@') {
+			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString || (p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '@') {
 				desc, err := p.parseScalarExpression()
 				if err != nil {
 					return nil, err
