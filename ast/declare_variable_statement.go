@@ -10,9 +10,10 @@ func (d *DeclareVariableStatement) statement() {}
 
 // DeclareVariableElement represents a single variable declaration.
 type DeclareVariableElement struct {
-	VariableName *Identifier       `json:"VariableName,omitempty"`
-	DataType     *SqlDataTypeReference `json:"DataType,omitempty"`
-	Value        ScalarExpression  `json:"Value,omitempty"`
+	VariableName *Identifier                   `json:"VariableName,omitempty"`
+	DataType     *SqlDataTypeReference         `json:"DataType,omitempty"`
+	Value        ScalarExpression              `json:"Value,omitempty"`
+	Nullable     *NullableConstraintDefinition `json:"Nullable,omitempty"`
 }
 
 // SqlDataTypeReference represents a SQL data type.

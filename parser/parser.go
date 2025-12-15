@@ -1808,8 +1808,9 @@ func (p *Parser) parseMultiplicativeExpression() (ast.ScalarExpression, error) {
 func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 	switch p.curTok.Type {
 	case TokenNull:
+		val := p.curTok.Literal
 		p.nextToken()
-		return &ast.NullLiteral{LiteralType: "Null", Value: "null"}, nil
+		return &ast.NullLiteral{LiteralType: "Null", Value: val}, nil
 	case TokenDefault:
 		val := p.curTok.Literal
 		p.nextToken()
@@ -3596,6 +3597,18 @@ func (p *Parser) parseDeclareVariableElement() (*ast.DeclareVariableElement, err
 		return nil, err
 	}
 	elem.DataType = dataType
+
+	// Check for NULL / NOT NULL
+	if p.curTok.Type == TokenNull {
+		elem.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+		p.nextToken()
+	} else if p.curTok.Type == TokenNot {
+		p.nextToken()
+		if p.curTok.Type == TokenNull {
+			elem.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+			p.nextToken()
+		}
+	}
 
 	// Check for = initial value
 	if p.curTok.Type == TokenEquals {
@@ -7630,6 +7643,9 @@ func declareVariableElementToJSON(elem *ast.DeclareVariableElement) jsonNode {
 	}
 	if elem.DataType != nil {
 		node["DataType"] = sqlDataTypeReferenceToJSON(elem.DataType)
+	}
+	if elem.Nullable != nil {
+		node["Nullable"] = nullableConstraintToJSON(elem.Nullable)
 	}
 	if elem.Value != nil {
 		node["Value"] = scalarExpressionToJSON(elem.Value)
