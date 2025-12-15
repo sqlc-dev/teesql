@@ -25,3 +25,13 @@ type SqlDataTypeReference struct {
 
 func (s *SqlDataTypeReference) node()              {}
 func (s *SqlDataTypeReference) dataTypeReference() {}
+
+// XmlDataTypeReference represents an XML data type with optional schema collection
+type XmlDataTypeReference struct {
+	XmlDataTypeOption   string            `json:"XmlDataTypeOption,omitempty"`
+	XmlSchemaCollection *SchemaObjectName `json:"XmlSchemaCollection,omitempty"`
+	Name                *SchemaObjectName `json:"Name,omitempty"`
+}
+
+func (x *XmlDataTypeReference) node()              {}
+func (x *XmlDataTypeReference) dataTypeReference() {}

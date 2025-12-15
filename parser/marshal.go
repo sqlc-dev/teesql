@@ -156,6 +156,18 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return useStatementToJSON(s)
 	case *ast.KillStatement:
 		return killStatementToJSON(s)
+	case *ast.KillStatsJobStatement:
+		return killStatsJobStatementToJSON(s)
+	case *ast.KillQueryNotificationSubscriptionStatement:
+		return killQueryNotificationSubscriptionStatementToJSON(s)
+	case *ast.CloseSymmetricKeyStatement:
+		return closeSymmetricKeyStatementToJSON(s)
+	case *ast.CloseMasterKeyStatement:
+		return closeMasterKeyStatementToJSON(s)
+	case *ast.OpenMasterKeyStatement:
+		return openMasterKeyStatementToJSON(s)
+	case *ast.OpenSymmetricKeyStatement:
+		return openSymmetricKeyStatementToJSON(s)
 	case *ast.CheckpointStatement:
 		return checkpointStatementToJSON(s)
 	case *ast.ReconfigureStatement:
@@ -208,8 +220,22 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createXmlSchemaCollectionStatementToJSON(s)
 	case *ast.CreateSearchPropertyListStatement:
 		return createSearchPropertyListStatementToJSON(s)
+	case *ast.CreateExternalDataSourceStatement:
+		return createExternalDataSourceStatementToJSON(s)
+	case *ast.CreateExternalFileFormatStatement:
+		return createExternalFileFormatStatementToJSON(s)
+	case *ast.CreateExternalTableStatement:
+		return createExternalTableStatementToJSON(s)
+	case *ast.CreateExternalLanguageStatement:
+		return createExternalLanguageStatementToJSON(s)
+	case *ast.CreateExternalLibraryStatement:
+		return createExternalLibraryStatementToJSON(s)
+	case *ast.CreateEventSessionStatement:
+		return createEventSessionStatementToJSON(s)
 	case *ast.RestoreStatement:
 		return restoreStatementToJSON(s)
+	case *ast.BackupDatabaseStatement:
+		return backupDatabaseStatementToJSON(s)
 	case *ast.CreateUserStatement:
 		return createUserStatementToJSON(s)
 	case *ast.CreateAggregateStatement:
@@ -2263,9 +2289,27 @@ func dataTypeReferenceToJSON(d ast.DataTypeReference) jsonNode {
 	switch dt := d.(type) {
 	case *ast.SqlDataTypeReference:
 		return sqlDataTypeReferenceToJSON(dt)
+	case *ast.XmlDataTypeReference:
+		return xmlDataTypeReferenceToJSON(dt)
 	default:
 		return jsonNode{"$type": "UnknownDataType"}
 	}
+}
+
+func xmlDataTypeReferenceToJSON(dt *ast.XmlDataTypeReference) jsonNode {
+	node := jsonNode{
+		"$type": "XmlDataTypeReference",
+	}
+	if dt.XmlDataTypeOption != "" {
+		node["XmlDataTypeOption"] = dt.XmlDataTypeOption
+	}
+	if dt.XmlSchemaCollection != nil {
+		node["XmlSchemaCollection"] = schemaObjectNameToJSON(dt.XmlSchemaCollection)
+	}
+	if dt.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(dt.Name)
+	}
+	return node
 }
 
 func grantStatementToJSON(s *ast.GrantStatement) jsonNode {
@@ -2467,6 +2511,70 @@ func killStatementToJSON(s *ast.KillStatement) jsonNode {
 	}
 	if s.Parameter != nil {
 		node["Parameter"] = scalarExpressionToJSON(s.Parameter)
+	}
+	return node
+}
+
+func killStatsJobStatementToJSON(s *ast.KillStatsJobStatement) jsonNode {
+	node := jsonNode{
+		"$type": "KillStatsJobStatement",
+	}
+	if s.JobId != nil {
+		node["JobId"] = scalarExpressionToJSON(s.JobId)
+	}
+	return node
+}
+
+func killQueryNotificationSubscriptionStatementToJSON(s *ast.KillQueryNotificationSubscriptionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "KillQueryNotificationSubscriptionStatement",
+		"All":   s.All,
+	}
+	if s.SubscriptionId != nil {
+		node["SubscriptionId"] = scalarExpressionToJSON(s.SubscriptionId)
+	}
+	return node
+}
+
+func closeSymmetricKeyStatementToJSON(s *ast.CloseSymmetricKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CloseSymmetricKeyStatement",
+		"All":   s.All,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func closeMasterKeyStatementToJSON(s *ast.CloseMasterKeyStatement) jsonNode {
+	return jsonNode{
+		"$type": "CloseMasterKeyStatement",
+	}
+}
+
+func openMasterKeyStatementToJSON(s *ast.OpenMasterKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "OpenMasterKeyStatement",
+	}
+	if s.Password != nil {
+		node["Password"] = scalarExpressionToJSON(s.Password)
+	}
+	return node
+}
+
+func openSymmetricKeyStatementToJSON(s *ast.OpenSymmetricKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "OpenSymmetricKeyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.DecryptionMechanism != "" {
+		node["DecryptionMechanism"] = s.DecryptionMechanism
+	}
+	if s.DecryptionKey != nil {
+		node["DecryptionKey"] = scalarExpressionToJSON(s.DecryptionKey)
 	}
 	return node
 }
@@ -3270,9 +3378,19 @@ func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
 				return nil, err
 			}
 
-			opt := &ast.LiteralPrincipalOption{
-				OptionKind: convertUserOptionKind(optionName),
-				Value:      value,
+			// Check if value is a simple identifier (ColumnReferenceExpression with single identifier)
+			// If so, use IdentifierPrincipalOption instead
+			var opt ast.UserOption
+			if colRef, ok := value.(*ast.ColumnReferenceExpression); ok && colRef.MultiPartIdentifier != nil && len(colRef.MultiPartIdentifier.Identifiers) == 1 {
+				opt = &ast.IdentifierPrincipalOption{
+					OptionKind: convertUserOptionKind(optionName),
+					Identifier: colRef.MultiPartIdentifier.Identifiers[0],
+				}
+			} else {
+				opt = &ast.LiteralPrincipalOption{
+					OptionKind: convertUserOptionKind(optionName),
+					Value:      value,
+				}
 			}
 			stmt.UserOptions = append(stmt.UserOptions, opt)
 
@@ -3331,7 +3449,7 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 		}
 
 		// Parse data type
-		dataType, err := p.parseDataType()
+		dataType, err := p.parseDataTypeReference()
 		if err != nil {
 			return nil, err
 		}
@@ -3358,7 +3476,7 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 	p.nextToken()
 
 	// Parse return type
-	returnType, err := p.parseDataType()
+	returnType, err := p.parseDataTypeReference()
 	if err != nil {
 		return nil, err
 	}
@@ -3401,9 +3519,11 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 	// Parse CLUSTERED or NONCLUSTERED
 	if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 		stmt.Clustered = true
+		stmt.ClusteredExplicit = true
 		p.nextToken()
 	} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 		stmt.Clustered = false
+		stmt.ClusteredExplicit = true
 		p.nextToken()
 	}
 
@@ -4177,6 +4297,41 @@ func restoreStatementToJSON(s *ast.RestoreStatement) jsonNode {
 	return node
 }
 
+func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
+	node := jsonNode{
+		"$type": "BackupDatabaseStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierOrValueExpressionToJSON(s.DatabaseName)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = backupOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	if len(s.Devices) > 0 {
+		devices := make([]jsonNode, len(s.Devices))
+		for i, d := range s.Devices {
+			devices[i] = deviceInfoToJSON(d)
+		}
+		node["Devices"] = devices
+	}
+	return node
+}
+
+func backupOptionToJSON(o *ast.BackupOption) jsonNode {
+	node := jsonNode{
+		"$type":      "BackupOption",
+		"OptionKind": o.OptionKind,
+	}
+	if o.Value != nil {
+		node["Value"] = scalarExpressionToJSON(o.Value)
+	}
+	return node
+}
+
 func deviceInfoToJSON(d *ast.DeviceInfo) jsonNode {
 	node := jsonNode{
 		"$type":      "DeviceInfo",
@@ -4326,7 +4481,9 @@ func createColumnStoreIndexStatementToJSON(s *ast.CreateColumnStoreIndexStatemen
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	node["Clustered"] = s.Clustered
+	if s.Clustered || s.ClusteredExplicit {
+		node["Clustered"] = s.Clustered
+	}
 	if s.OnName != nil {
 		node["OnName"] = schemaObjectNameToJSON(s.OnName)
 	}
@@ -4775,6 +4932,66 @@ func alterTableConstraintModificationStatementToJSON(s *ast.AlterTableConstraint
 	}
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func createExternalDataSourceStatementToJSON(s *ast.CreateExternalDataSourceStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateExternalDataSourceStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createExternalFileFormatStatementToJSON(s *ast.CreateExternalFileFormatStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateExternalFileFormatStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createExternalTableStatementToJSON(s *ast.CreateExternalTableStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateExternalTableStatement",
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func createExternalLanguageStatementToJSON(s *ast.CreateExternalLanguageStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateExternalLanguageStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createExternalLibraryStatementToJSON(s *ast.CreateExternalLibraryStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateExternalLibraryStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createEventSessionStatementToJSON(s *ast.CreateEventSessionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateEventSessionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
 	}
 	return node
 }
