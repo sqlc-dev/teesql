@@ -25,3 +25,12 @@ type AcceleratedDatabaseRecoveryDatabaseOption struct {
 
 func (a *AcceleratedDatabaseRecoveryDatabaseOption) node()           {}
 func (a *AcceleratedDatabaseRecoveryDatabaseOption) databaseOption() {}
+
+// OnOffDatabaseOption represents a simple ON/OFF database option
+type OnOffDatabaseOption struct {
+	OptionKind  string // "TemporalHistoryRetention", etc.
+	OptionState string // "On" or "Off"
+}
+
+func (o *OnOffDatabaseOption) node()           {}
+func (o *OnOffDatabaseOption) databaseOption() {}

@@ -402,19 +402,26 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 		optionName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
 
-		if p.curTok.Type != TokenEquals {
-			return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
-		}
-		p.nextToken()
-
-		// Parse option value
-		optionValue := strings.ToUpper(p.curTok.Literal)
-		p.nextToken()
-
 		switch optionName {
 		case "ACCELERATED_DATABASE_RECOVERY":
+			// Expect = for this option
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+			}
+			p.nextToken()
+			optionValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
 			opt := &ast.AcceleratedDatabaseRecoveryDatabaseOption{
 				OptionKind:  "AcceleratedDatabaseRecovery",
+				OptionState: capitalizeFirst(optionValue),
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "TEMPORAL_HISTORY_RETENTION":
+			// This option uses ON/OFF directly without =
+			optionValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			opt := &ast.OnOffDatabaseOption{
+				OptionKind:  "TemporalHistoryRetention",
 				OptionState: capitalizeFirst(optionValue),
 			}
 			stmt.Options = append(stmt.Options, opt)
@@ -2789,11 +2796,15 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			return nil, err
 		}
 
-		return &ast.BooleanBetweenExpression{
-			FirstExpression:  left,
-			SecondExpression: low,
-			ThirdExpression:  high,
-			NotDefined:       notDefined,
+		ternaryType := "Between"
+		if notDefined {
+			ternaryType = "NotBetween"
+		}
+		return &ast.BooleanTernaryExpression{
+			TernaryExpressionType: ternaryType,
+			FirstExpression:       left,
+			SecondExpression:      low,
+			ThirdExpression:       high,
 		}, nil
 	}
 
@@ -4151,6 +4162,10 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateContractStatement()
 		case "PARTITION":
 			return p.parseCreatePartitionSchemeStatement()
+		case "RULE":
+			return p.parseCreateRuleStatement()
+		case "SYNONYM":
+			return p.parseCreateSynonymStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	default:
@@ -4338,6 +4353,74 @@ func (p *Parser) parseCreatePartitionSchemeStatement() (*ast.CreatePartitionSche
 	if p.curTok.Type == TokenRParen {
 		p.nextToken()
 	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateRuleStatement() (*ast.CreateRuleStatement, error) {
+	// Consume RULE
+	p.nextToken()
+
+	stmt := &ast.CreateRuleStatement{}
+
+	// Parse rule name (can be two-part: dbo.r1)
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		return nil, fmt.Errorf("expected AS after rule name, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse boolean expression
+	expr, err := p.parseBooleanExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Expression = expr
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateSynonymStatement() (*ast.CreateSynonymStatement, error) {
+	// Consume SYNONYM
+	p.nextToken()
+
+	stmt := &ast.CreateSynonymStatement{}
+
+	// Parse synonym name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Expect FOR
+	if strings.ToUpper(p.curTok.Literal) != "FOR" {
+		return nil, fmt.Errorf("expected FOR after synonym name, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse target name
+	forName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.ForName = forName
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -5923,6 +6006,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createContractStatementToJSON(s)
 	case *ast.CreatePartitionSchemeStatement:
 		return createPartitionSchemeStatementToJSON(s)
+	case *ast.CreateRuleStatement:
+		return createRuleStatementToJSON(s)
+	case *ast.CreateSynonymStatement:
+		return createSynonymStatementToJSON(s)
 	case *ast.AlterCredentialStatement:
 		return alterCredentialStatementToJSON(s)
 	case *ast.AlterDatabaseSetStatement:
@@ -6213,6 +6300,32 @@ func createPartitionSchemeStatementToJSON(s *ast.CreatePartitionSchemeStatement)
 	return node
 }
 
+func createRuleStatementToJSON(s *ast.CreateRuleStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateRuleStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.Expression != nil {
+		node["Expression"] = booleanExpressionToJSON(s.Expression)
+	}
+	return node
+}
+
+func createSynonymStatementToJSON(s *ast.CreateSynonymStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateSynonymStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.ForName != nil {
+		node["ForName"] = schemaObjectNameToJSON(s.ForName)
+	}
+	return node
+}
+
 func alterCredentialStatementToJSON(s *ast.AlterCredentialStatement) jsonNode {
 	node := jsonNode{
 		"$type":            "AlterCredentialStatement",
@@ -6254,6 +6367,12 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 	case *ast.AcceleratedDatabaseRecoveryDatabaseOption:
 		return jsonNode{
 			"$type":       "AcceleratedDatabaseRecoveryDatabaseOption",
+			"OptionKind":  o.OptionKind,
+			"OptionState": o.OptionState,
+		}
+	case *ast.OnOffDatabaseOption:
+		return jsonNode{
+			"$type":       "OnOffDatabaseOption",
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
 		}
@@ -7010,9 +7129,10 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		}
 		node["NotDefined"] = e.NotDefined
 		return node
-	case *ast.BooleanBetweenExpression:
+	case *ast.BooleanTernaryExpression:
 		node := jsonNode{
-			"$type": "BooleanBetweenExpression",
+			"$type":                 "BooleanTernaryExpression",
+			"TernaryExpressionType": e.TernaryExpressionType,
 		}
 		if e.FirstExpression != nil {
 			node["FirstExpression"] = scalarExpressionToJSON(e.FirstExpression)
@@ -7023,7 +7143,6 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.ThirdExpression != nil {
 			node["ThirdExpression"] = scalarExpressionToJSON(e.ThirdExpression)
 		}
-		node["NotDefined"] = e.NotDefined
 		return node
 	default:
 		return jsonNode{"$type": "UnknownBooleanExpression"}
