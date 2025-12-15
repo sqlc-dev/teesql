@@ -272,11 +272,14 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 	p.nextToken()
 
 	// Check what type of ALTER statement this is
-	if p.curTok.Type == TokenTable {
+	switch p.curTok.Type {
+	case TokenTable:
 		return p.parseAlterTableStatement()
+	case TokenMaster:
+		return p.parseAlterMasterKeyStatement()
+	default:
+		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	}
-
-	return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 }
 
 func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
@@ -331,6 +334,131 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 	p.nextToken()
 
 	stmt.AlterTableDropTableElements = append(stmt.AlterTableDropTableElements, element)
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterMasterKeyStatement() (*ast.AlterMasterKeyStatement, error) {
+	// Consume MASTER
+	p.nextToken()
+
+	// Expect KEY
+	if p.curTok.Type != TokenKey {
+		return nil, fmt.Errorf("expected KEY after MASTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterMasterKeyStatement{}
+
+	// Check for FORCE or operation
+	if strings.ToUpper(p.curTok.Literal) == "FORCE" {
+		p.nextToken() // consume FORCE
+		if strings.ToUpper(p.curTok.Literal) != "REGENERATE" {
+			return nil, fmt.Errorf("expected REGENERATE after FORCE, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume REGENERATE
+		stmt.Option = "ForceRegenerate"
+	} else if strings.ToUpper(p.curTok.Literal) == "REGENERATE" {
+		p.nextToken() // consume REGENERATE
+		stmt.Option = "Regenerate"
+	} else if strings.ToUpper(p.curTok.Literal) == "ADD" {
+		p.nextToken() // consume ADD
+		if p.curTok.Type != TokenEncryption {
+			return nil, fmt.Errorf("expected ENCRYPTION after ADD, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ENCRYPTION
+		if p.curTok.Type != TokenBy {
+			return nil, fmt.Errorf("expected BY after ENCRYPTION, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume BY
+
+		if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
+			p.nextToken() // consume SERVICE
+			p.nextToken() // consume MASTER
+			p.nextToken() // consume KEY
+			stmt.Option = "AddEncryptionByServiceMasterKey"
+		} else if p.curTok.Type == TokenPassword {
+			stmt.Option = "AddEncryptionByPassword"
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after PASSWORD, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			password, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Password = password
+		} else {
+			return nil, fmt.Errorf("expected PASSWORD or SERVICE after BY, got %s", p.curTok.Literal)
+		}
+	} else if strings.ToUpper(p.curTok.Literal) == "DROP" {
+		p.nextToken() // consume DROP
+		if p.curTok.Type != TokenEncryption {
+			return nil, fmt.Errorf("expected ENCRYPTION after DROP, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ENCRYPTION
+		if p.curTok.Type != TokenBy {
+			return nil, fmt.Errorf("expected BY after ENCRYPTION, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume BY
+
+		if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
+			p.nextToken() // consume SERVICE
+			p.nextToken() // consume MASTER
+			p.nextToken() // consume KEY
+			stmt.Option = "DropEncryptionByServiceMasterKey"
+		} else if p.curTok.Type == TokenPassword {
+			stmt.Option = "DropEncryptionByPassword"
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after PASSWORD, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			password, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Password = password
+		} else {
+			return nil, fmt.Errorf("expected PASSWORD or SERVICE after BY, got %s", p.curTok.Literal)
+		}
+	} else {
+		return nil, fmt.Errorf("unexpected token in ALTER MASTER KEY: %s", p.curTok.Literal)
+	}
+
+	// Handle WITH ENCRYPTION BY PASSWORD for REGENERATE
+	if stmt.Option == "Regenerate" || stmt.Option == "ForceRegenerate" {
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			if p.curTok.Type != TokenEncryption {
+				return nil, fmt.Errorf("expected ENCRYPTION after WITH, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume ENCRYPTION
+			if p.curTok.Type != TokenBy {
+				return nil, fmt.Errorf("expected BY after ENCRYPTION, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume BY
+			if p.curTok.Type != TokenPassword {
+				return nil, fmt.Errorf("expected PASSWORD after BY, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after PASSWORD, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			password, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Password = password
+		}
+	}
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -4499,6 +4627,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createDefaultStatementToJSON(s)
 	case *ast.CreateMasterKeyStatement:
 		return createMasterKeyStatementToJSON(s)
+	case *ast.AlterMasterKeyStatement:
+		return alterMasterKeyStatementToJSON(s)
 	case *ast.TryCatchStatement:
 		return tryCatchStatementToJSON(s)
 	case *ast.SendStatement:
@@ -6470,5 +6600,16 @@ func createCredentialStatementToJSON(s *ast.CreateCredentialStatement) jsonNode 
 		node["Secret"] = scalarExpressionToJSON(s.Secret)
 	}
 	node["IsDatabaseScoped"] = s.IsDatabaseScoped
+	return node
+}
+
+func alterMasterKeyStatementToJSON(s *ast.AlterMasterKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type":  "AlterMasterKeyStatement",
+		"Option": s.Option,
+	}
+	if s.Password != nil {
+		node["Password"] = scalarExpressionToJSON(s.Password)
+	}
 	return node
 }
