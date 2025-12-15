@@ -193,6 +193,10 @@ const (
 	TokenNoRevert
 	TokenExternal
 	TokenLanguage
+	TokenRestore
+	TokenBackup
+	TokenFilestream
+	TokenReturns
 )
 
 // Token represents a lexical token.
@@ -674,6 +678,10 @@ var keywords = map[string]TokenType{
 	"NOREVERT":      TokenNoRevert,
 	"EXTERNAL":      TokenExternal,
 	"LANGUAGE":      TokenLanguage,
+	"RESTORE":       TokenRestore,
+	"BACKUP":        TokenBackup,
+	"FILESTREAM":    TokenFilestream,
+	"RETURNS":       TokenReturns,
 }
 
 func lookupKeyword(ident string) TokenType {
