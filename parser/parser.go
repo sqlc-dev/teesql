@@ -346,16 +346,149 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterSchemaStatement()
 	case TokenLogin:
 		return p.parseAlterLoginStatement()
+	case TokenMessage:
+		return p.parseAlterMessageTypeStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
 		case "ROLE":
 			return p.parseAlterRoleStatement()
+		case "SERVER":
+			return p.parseAlterServerConfigurationStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	}
+}
+
+func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error) {
+	// Consume SERVER
+	p.nextToken()
+
+	// Expect CONFIGURATION
+	if strings.ToUpper(p.curTok.Literal) != "CONFIGURATION" {
+		return nil, fmt.Errorf("expected CONFIGURATION after SERVER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect SET
+	if p.curTok.Type != TokenSet {
+		return nil, fmt.Errorf("expected SET after CONFIGURATION, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check what type of SET it is
+	if strings.ToUpper(p.curTok.Literal) == "SOFTNUMA" {
+		return p.parseAlterServerConfigurationSetSoftNumaStatement()
+	}
+
+	return nil, fmt.Errorf("unexpected token after SET: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseAlterServerConfigurationSetSoftNumaStatement() (*ast.AlterServerConfigurationSetSoftNumaStatement, error) {
+	// Consume SOFTNUMA
+	p.nextToken()
+
+	stmt := &ast.AlterServerConfigurationSetSoftNumaStatement{}
+
+	// Parse ON or OFF
+	optionState := strings.ToUpper(p.curTok.Literal)
+	if optionState != "ON" && optionState != "OFF" {
+		return nil, fmt.Errorf("expected ON or OFF after SOFTNUMA, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	option := &ast.AlterServerConfigurationSoftNumaOption{
+		OptionKind: "OnOff",
+		OptionValue: &ast.OnOffOptionValue{
+			OptionState: capitalizeFirst(optionState),
+		},
+	}
+	stmt.Options = append(stmt.Options, option)
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func capitalizeFirst(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + strings.ToLower(s[1:])
+}
+
+func (p *Parser) parseAlterMessageTypeStatement() (*ast.AlterMessageTypeStatement, error) {
+	// Consume MESSAGE
+	p.nextToken()
+
+	// Expect TYPE
+	if strings.ToUpper(p.curTok.Literal) != "TYPE" {
+		return nil, fmt.Errorf("expected TYPE after MESSAGE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterMessageTypeStatement{}
+
+	// Parse message type name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect VALIDATION
+	if strings.ToUpper(p.curTok.Literal) != "VALIDATION" {
+		return nil, fmt.Errorf("expected VALIDATION, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after VALIDATION, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse validation method
+	validationMethod := strings.ToUpper(p.curTok.Literal)
+	switch validationMethod {
+	case "EMPTY":
+		stmt.ValidationMethod = "Empty"
+		p.nextToken()
+	case "NONE":
+		stmt.ValidationMethod = "None"
+		p.nextToken()
+	case "WELL_FORMED_XML":
+		stmt.ValidationMethod = "WellFormedXml"
+		p.nextToken()
+	case "VALID_XML":
+		stmt.ValidationMethod = "ValidXml"
+		p.nextToken()
+		// Expect WITH SCHEMA COLLECTION
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			if strings.ToUpper(p.curTok.Literal) == "SCHEMA" {
+				p.nextToken() // consume SCHEMA
+				if strings.ToUpper(p.curTok.Literal) == "COLLECTION" {
+					p.nextToken() // consume COLLECTION
+					collName, err := p.parseSchemaObjectName()
+					if err != nil {
+						return nil, err
+					}
+					stmt.XmlSchemaCollectionName = collName
+				}
+			}
+		}
+	default:
+		return nil, fmt.Errorf("unexpected validation method: %s", p.curTok.Literal)
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
@@ -376,6 +509,16 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 	// Check for ALTER INDEX
 	if p.curTok.Type == TokenAlter && p.peekTok.Type == TokenIndex {
 		return p.parseAlterTableAlterIndexStatement(tableName)
+	}
+
+	// Check for ALTER COLUMN
+	if p.curTok.Type == TokenAlter && strings.ToUpper(p.peekTok.Literal) == "COLUMN" {
+		return p.parseAlterTableAlterColumnStatement(tableName)
+	}
+
+	// Check for ADD
+	if strings.ToUpper(p.curTok.Literal) == "ADD" {
+		return p.parseAlterTableAddStatement(tableName)
 	}
 
 	return nil, fmt.Errorf("unexpected token in ALTER TABLE: %s", p.curTok.Literal)
@@ -525,23 +668,211 @@ func (p *Parser) parseAlterTableAlterIndexStatement(tableName *ast.SchemaObjectN
 
 func convertIndexOptionKind(name string) string {
 	optionMap := map[string]string{
-		"BUCKET_COUNT":         "BucketCount",
-		"PAD_INDEX":            "PadIndex",
-		"FILLFACTOR":           "FillFactor",
-		"SORT_IN_TEMPDB":       "SortInTempDB",
-		"IGNORE_DUP_KEY":       "IgnoreDupKey",
+		"BUCKET_COUNT":           "BucketCount",
+		"PAD_INDEX":              "PadIndex",
+		"FILLFACTOR":             "FillFactor",
+		"SORT_IN_TEMPDB":         "SortInTempDB",
+		"IGNORE_DUP_KEY":         "IgnoreDupKey",
 		"STATISTICS_NORECOMPUTE": "StatisticsNoRecompute",
-		"DROP_EXISTING":        "DropExisting",
-		"ONLINE":               "Online",
-		"ALLOW_ROW_LOCKS":      "AllowRowLocks",
-		"ALLOW_PAGE_LOCKS":     "AllowPageLocks",
-		"MAXDOP":               "MaxDop",
-		"DATA_COMPRESSION":     "DataCompression",
+		"DROP_EXISTING":          "DropExisting",
+		"ONLINE":                 "Online",
+		"ALLOW_ROW_LOCKS":        "AllowRowLocks",
+		"ALLOW_PAGE_LOCKS":       "AllowPageLocks",
+		"MAXDOP":                 "MaxDop",
+		"DATA_COMPRESSION":       "DataCompression",
 	}
 	if mapped, ok := optionMap[name]; ok {
 		return mapped
 	}
 	return name
+}
+
+func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableAlterColumnStatement, error) {
+	// Consume ALTER
+	p.nextToken()
+	// Consume COLUMN
+	p.nextToken()
+
+	stmt := &ast.AlterTableAlterColumnStatement{
+		SchemaObjectName:            tableName,
+		AlterTableAlterColumnOption: "NoOptionDefined",
+	}
+
+	// Parse column name
+	stmt.ColumnIdentifier = p.parseIdentifier()
+
+	// Parse data type
+	dataType, err := p.parseDataType()
+	if err != nil {
+		return nil, err
+	}
+	stmt.DataType = dataType
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableAddTableElementStatement, error) {
+	// Consume ADD
+	p.nextToken()
+
+	stmt := &ast.AlterTableAddTableElementStatement{
+		SchemaObjectName:             tableName,
+		ExistingRowsCheckEnforcement: "NotSpecified",
+		Definition:                   &ast.TableDefinition{},
+	}
+
+	// Check if this is ADD INDEX
+	if p.curTok.Type == TokenIndex {
+		p.nextToken() // consume INDEX
+
+		indexDef := &ast.IndexDefinition{}
+
+		// Parse index name
+		indexDef.Name = p.parseIdentifier()
+
+		// Parse optional UNIQUE, CLUSTERED, NONCLUSTERED, HASH keywords
+		var indexTypeKind string
+		for {
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "UNIQUE":
+				indexDef.Unique = true
+				p.nextToken()
+				continue
+			case "CLUSTERED":
+				indexTypeKind = "Clustered"
+				p.nextToken()
+				continue
+			case "NONCLUSTERED":
+				// Check for HASH suffix
+				p.nextToken()
+				if strings.ToUpper(p.curTok.Literal) == "HASH" {
+					indexTypeKind = "NonClusteredHash"
+					p.nextToken()
+				} else {
+					indexTypeKind = "NonClustered"
+				}
+				continue
+			case "HASH":
+				if indexTypeKind == "" {
+					indexTypeKind = "NonClusteredHash"
+				}
+				p.nextToken()
+				continue
+			}
+			break
+		}
+
+		if indexTypeKind != "" {
+			indexDef.IndexType = &ast.IndexType{
+				IndexTypeKind: indexTypeKind,
+			}
+		}
+
+		// Parse column list (c1, c2, ...)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colRef := &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{p.parseIdentifier()},
+					},
+				}
+				colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
+
+				col := &ast.ColumnWithSortOrder{
+					Column:    colRef,
+					SortOrder: ast.SortOrderNotSpecified,
+				}
+
+				// Check for ASC/DESC
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "ASC":
+					col.SortOrder = ast.SortOrderAscending
+					p.nextToken()
+				case "DESC":
+					col.SortOrder = ast.SortOrderDescending
+					p.nextToken()
+				}
+
+				indexDef.Columns = append(indexDef.Columns, col)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+
+		// Parse optional WITH clause
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					// Parse option name
+					optionName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+
+					if p.curTok.Type != TokenEquals {
+						return nil, fmt.Errorf("expected = after option name, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume =
+
+					// Parse option value
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+
+					option := &ast.IndexExpressionOption{
+						OptionKind: convertIndexOptionKind(optionName),
+						Expression: expr,
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, option)
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+		}
+
+		stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
+	} else {
+		// Parse column definition (column_name data_type ...)
+		colDef, err := p.parseColumnDefinition()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Definition.ColumnDefinitions = append(stmt.Definition.ColumnDefinitions, colDef)
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
@@ -1241,7 +1572,37 @@ func (p *Parser) parseIdentifier() *ast.Identifier {
 }
 
 func (p *Parser) parseScalarExpression() (ast.ScalarExpression, error) {
-	return p.parseAdditiveExpression()
+	return p.parseShiftExpression()
+}
+
+func (p *Parser) parseShiftExpression() (ast.ScalarExpression, error) {
+	left, err := p.parseAdditiveExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.curTok.Type == TokenLeftShift || p.curTok.Type == TokenRightShift {
+		var opType string
+		if p.curTok.Type == TokenLeftShift {
+			opType = "LeftShift"
+		} else {
+			opType = "RightShift"
+		}
+		p.nextToken()
+
+		right, err := p.parseAdditiveExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BinaryExpression{
+			BinaryExpressionType: opType,
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
 }
 
 func (p *Parser) parseAdditiveExpression() (ast.ScalarExpression, error) {
@@ -3658,6 +4019,10 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		switch strings.ToUpper(p.curTok.Literal) {
 		case "ROLE":
 			return p.parseCreateRoleStatement()
+		case "CONTRACT":
+			return p.parseCreateContractStatement()
+		case "PARTITION":
+			return p.parseCreatePartitionSchemeStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	default:
@@ -3678,6 +4043,172 @@ func (p *Parser) parseCreateRoleStatement() (*ast.CreateRoleStatement, error) {
 	if p.curTok.Type == TokenAuthorization {
 		p.nextToken() // consume AUTHORIZATION
 		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateContractStatement() (*ast.CreateContractStatement, error) {
+	// Consume CONTRACT
+	p.nextToken()
+
+	stmt := &ast.CreateContractStatement{}
+
+	// Parse contract name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after contract name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse messages
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		msg := &ast.ContractMessage{}
+
+		// Parse message name
+		msg.Name = p.parseIdentifier()
+
+		// Expect SENT
+		if strings.ToUpper(p.curTok.Literal) != "SENT" {
+			return nil, fmt.Errorf("expected SENT, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume SENT
+
+		// Expect BY
+		if strings.ToUpper(p.curTok.Literal) != "BY" {
+			return nil, fmt.Errorf("expected BY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume BY
+
+		// Parse sender type
+		senderType := strings.ToUpper(p.curTok.Literal)
+		switch senderType {
+		case "INITIATOR":
+			msg.SentBy = "Initiator"
+		case "TARGET":
+			msg.SentBy = "Target"
+		case "ANY":
+			msg.SentBy = "Any"
+		default:
+			return nil, fmt.Errorf("expected INITIATOR, TARGET, or ANY, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+
+		stmt.Messages = append(stmt.Messages, msg)
+
+		// Check for comma or end of list
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else if p.curTok.Type != TokenRParen {
+			break
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreatePartitionSchemeStatement() (*ast.CreatePartitionSchemeStatement, error) {
+	// Consume PARTITION
+	p.nextToken()
+
+	// Expect SCHEME
+	if strings.ToUpper(p.curTok.Literal) != "SCHEME" {
+		return nil, fmt.Errorf("expected SCHEME after PARTITION, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.CreatePartitionSchemeStatement{}
+
+	// Parse scheme name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		return nil, fmt.Errorf("expected AS, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect PARTITION
+	if strings.ToUpper(p.curTok.Literal) != "PARTITION" {
+		return nil, fmt.Errorf("expected PARTITION, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse partition function name
+	stmt.PartitionFunction = p.parseIdentifier()
+
+	// Check for optional ALL keyword
+	if p.curTok.Type == TokenAll {
+		stmt.IsAll = true
+		p.nextToken()
+	}
+
+	// Expect TO
+	if strings.ToUpper(p.curTok.Literal) != "TO" {
+		return nil, fmt.Errorf("expected TO, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TO, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse file groups
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		idOrVal := &ast.IdentifierOrValueExpression{}
+
+		if p.curTok.Type == TokenString {
+			// String literal - strip surrounding quotes
+			litVal := p.curTok.Literal
+			if len(litVal) >= 2 && litVal[0] == '\'' && litVal[len(litVal)-1] == '\'' {
+				litVal = litVal[1 : len(litVal)-1]
+			}
+			idOrVal.Value = litVal
+			idOrVal.ValueExpression = &ast.StringLiteral{
+				LiteralType:   "String",
+				Value:         litVal,
+				IsNational:    false,
+				IsLargeObject: false,
+			}
+			p.nextToken()
+		} else {
+			// Identifier
+			id := p.parseIdentifier()
+			idOrVal.Value = id.Value
+			idOrVal.Identifier = id
+		}
+
+		stmt.FileGroups = append(stmt.FileGroups, idOrVal)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
 	}
 
 	// Skip optional semicolon
@@ -5254,6 +5785,16 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTableDropTableElementStatementToJSON(s)
 	case *ast.AlterTableAlterIndexStatement:
 		return alterTableAlterIndexStatementToJSON(s)
+	case *ast.AlterTableAddTableElementStatement:
+		return alterTableAddTableElementStatementToJSON(s)
+	case *ast.AlterTableAlterColumnStatement:
+		return alterTableAlterColumnStatementToJSON(s)
+	case *ast.AlterMessageTypeStatement:
+		return alterMessageTypeStatementToJSON(s)
+	case *ast.CreateContractStatement:
+		return createContractStatementToJSON(s)
+	case *ast.CreatePartitionSchemeStatement:
+		return createPartitionSchemeStatementToJSON(s)
 	case *ast.RevertStatement:
 		return revertStatementToJSON(s)
 	case *ast.DropCredentialStatement:
@@ -5316,6 +5857,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterSchemaStatementToJSON(s)
 	case *ast.AlterRoleStatement:
 		return alterRoleStatementToJSON(s)
+	case *ast.AlterServerConfigurationSetSoftNumaStatement:
+		return alterServerConfigurationSetSoftNumaStatementToJSON(s)
 	case *ast.AlterLoginAddDropCredentialStatement:
 		return alterLoginAddDropCredentialStatementToJSON(s)
 	case *ast.TryCatchStatement:
@@ -5439,6 +5982,155 @@ func indexExpressionOptionToJSON(o *ast.IndexExpressionOption) jsonNode {
 	if o.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(o.Expression)
 	}
+	return node
+}
+
+func alterTableAddTableElementStatementToJSON(s *ast.AlterTableAddTableElementStatement) jsonNode {
+	node := jsonNode{
+		"$type":                        "AlterTableAddTableElementStatement",
+		"ExistingRowsCheckEnforcement": s.ExistingRowsCheckEnforcement,
+	}
+	if s.Definition != nil {
+		node["Definition"] = tableDefinitionToJSON(s.Definition)
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func alterTableAlterColumnStatementToJSON(s *ast.AlterTableAlterColumnStatement) jsonNode {
+	node := jsonNode{
+		"$type":                       "AlterTableAlterColumnStatement",
+		"AlterTableAlterColumnOption": s.AlterTableAlterColumnOption,
+		"IsHidden":                    s.IsHidden,
+		"IsMasked":                    s.IsMasked,
+	}
+	if s.ColumnIdentifier != nil {
+		node["ColumnIdentifier"] = identifierToJSON(s.ColumnIdentifier)
+	}
+	if s.DataType != nil {
+		node["DataType"] = dataTypeReferenceToJSON(s.DataType)
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func alterMessageTypeStatementToJSON(s *ast.AlterMessageTypeStatement) jsonNode {
+	node := jsonNode{
+		"$type":            "AlterMessageTypeStatement",
+		"ValidationMethod": s.ValidationMethod,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.XmlSchemaCollectionName != nil {
+		node["XmlSchemaCollectionName"] = schemaObjectNameToJSON(s.XmlSchemaCollectionName)
+	}
+	return node
+}
+
+func createContractStatementToJSON(s *ast.CreateContractStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateContractStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Messages) > 0 {
+		msgs := make([]jsonNode, len(s.Messages))
+		for i, m := range s.Messages {
+			msgs[i] = contractMessageToJSON(m)
+		}
+		node["Messages"] = msgs
+	}
+	return node
+}
+
+func contractMessageToJSON(m *ast.ContractMessage) jsonNode {
+	node := jsonNode{
+		"$type":  "ContractMessage",
+		"SentBy": m.SentBy,
+	}
+	if m.Name != nil {
+		node["Name"] = identifierToJSON(m.Name)
+	}
+	return node
+}
+
+func createPartitionSchemeStatementToJSON(s *ast.CreatePartitionSchemeStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreatePartitionSchemeStatement",
+		"IsAll": s.IsAll,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.PartitionFunction != nil {
+		node["PartitionFunction"] = identifierToJSON(s.PartitionFunction)
+	}
+	if len(s.FileGroups) > 0 {
+		fgs := make([]jsonNode, len(s.FileGroups))
+		for i, fg := range s.FileGroups {
+			fgs[i] = identifierOrValueExpressionToJSON(fg)
+		}
+		node["FileGroups"] = fgs
+	}
+	return node
+}
+
+func indexDefinitionToJSON(idx *ast.IndexDefinition) jsonNode {
+	node := jsonNode{
+		"$type":  "IndexDefinition",
+		"Unique": idx.Unique,
+	}
+	if idx.Name != nil {
+		node["Name"] = identifierToJSON(idx.Name)
+	}
+	if idx.IndexType != nil {
+		node["IndexType"] = indexTypeToJSON(idx.IndexType)
+	}
+	if len(idx.IndexOptions) > 0 {
+		options := make([]jsonNode, len(idx.IndexOptions))
+		for i, o := range idx.IndexOptions {
+			options[i] = indexExpressionOptionToJSON(o)
+		}
+		node["IndexOptions"] = options
+	}
+	if len(idx.Columns) > 0 {
+		cols := make([]jsonNode, len(idx.Columns))
+		for i, c := range idx.Columns {
+			cols[i] = columnWithSortOrderToJSON(c)
+		}
+		node["Columns"] = cols
+	}
+	return node
+}
+
+func indexTypeToJSON(t *ast.IndexType) jsonNode {
+	return jsonNode{
+		"$type":         "IndexType",
+		"IndexTypeKind": t.IndexTypeKind,
+	}
+}
+
+func columnWithSortOrderToJSON(c *ast.ColumnWithSortOrder) jsonNode {
+	node := jsonNode{
+		"$type": "ColumnWithSortOrder",
+	}
+	if c.Column != nil {
+		node["Column"] = scalarExpressionToJSON(c.Column)
+	}
+	sortOrder := "NotSpecified"
+	switch c.SortOrder {
+	case ast.SortOrderAscending:
+		sortOrder = "Ascending"
+	case ast.SortOrderDescending:
+		sortOrder = "Descending"
+	}
+	node["SortOrder"] = sortOrder
 	return node
 }
 
@@ -6968,6 +7660,13 @@ func tableDefinitionToJSON(t *ast.TableDefinition) jsonNode {
 		}
 		node["ColumnDefinitions"] = cols
 	}
+	if len(t.Indexes) > 0 {
+		indexes := make([]jsonNode, len(t.Indexes))
+		for i, idx := range t.Indexes {
+			indexes[i] = indexDefinitionToJSON(idx)
+		}
+		node["Indexes"] = indexes
+	}
 	return node
 }
 
@@ -7505,6 +8204,38 @@ func alterRoleActionToJSON(a ast.AlterRoleAction) jsonNode {
 		return node
 	default:
 		return jsonNode{"$type": "UnknownAlterRoleAction"}
+	}
+}
+
+func alterServerConfigurationSetSoftNumaStatementToJSON(s *ast.AlterServerConfigurationSetSoftNumaStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterServerConfigurationSetSoftNumaStatement",
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = alterServerConfigurationSoftNumaOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func alterServerConfigurationSoftNumaOptionToJSON(o *ast.AlterServerConfigurationSoftNumaOption) jsonNode {
+	node := jsonNode{
+		"$type":      "AlterServerConfigurationSoftNumaOption",
+		"OptionKind": o.OptionKind,
+	}
+	if o.OptionValue != nil {
+		node["OptionValue"] = onOffOptionValueToJSON(o.OptionValue)
+	}
+	return node
+}
+
+func onOffOptionValueToJSON(o *ast.OnOffOptionValue) jsonNode {
+	return jsonNode{
+		"$type":       "OnOffOptionValue",
+		"OptionState": o.OptionState,
 	}
 }
 

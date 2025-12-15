@@ -83,9 +83,11 @@ type TableConstraint interface {
 
 // IndexDefinition represents an index definition within CREATE TABLE
 type IndexDefinition struct {
-	Name    *Identifier
-	Columns []*ColumnWithSortOrder
-	Unique  bool
+	Name         *Identifier
+	Columns      []*ColumnWithSortOrder
+	Unique       bool
+	IndexType    *IndexType
+	IndexOptions []*IndexExpressionOption
 }
 
 func (i *IndexDefinition) node() {}

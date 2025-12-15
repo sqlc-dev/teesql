@@ -82,6 +82,8 @@ const (
 	TokenNot
 	TokenLBrace
 	TokenRBrace
+	TokenLeftShift
+	TokenRightShift
 
 	// DML Keywords
 	TokenInsert
@@ -298,6 +300,11 @@ func (l *Lexer) NextToken() Token {
 			tok.Type = TokenLessOrEqual
 			tok.Literal = "<="
 			l.readChar()
+		} else if l.peekChar() == '<' {
+			l.readChar()
+			tok.Type = TokenLeftShift
+			tok.Literal = "<<"
+			l.readChar()
 		} else {
 			tok.Type = TokenLessThan
 			tok.Literal = "<"
@@ -308,6 +315,11 @@ func (l *Lexer) NextToken() Token {
 			l.readChar()
 			tok.Type = TokenGreaterOrEqual
 			tok.Literal = ">="
+			l.readChar()
+		} else if l.peekChar() == '>' {
+			l.readChar()
+			tok.Type = TokenRightShift
+			tok.Literal = ">>"
 			l.readChar()
 		} else {
 			tok.Type = TokenGreaterThan
