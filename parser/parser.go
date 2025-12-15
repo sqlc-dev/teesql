@@ -3647,7 +3647,13 @@ func (p *Parser) parseCreateCredentialStatement(isDatabaseScoped bool) (*ast.Cre
 	return stmt, nil
 }
 
-func (p *Parser) parseExecuteStatement() (*ast.ExecuteStatement, error) {
+func (p *Parser) parseExecuteStatement() (ast.Statement, error) {
+	// Check for EXECUTE AS by looking at peek token
+	if p.peekTok.Type == TokenAs {
+		p.nextToken() // consume EXEC/EXECUTE
+		return p.parseExecuteAsStatement()
+	}
+
 	execSpec, err := p.parseExecuteSpecification()
 	if err != nil {
 		return nil, err
@@ -3659,6 +3665,88 @@ func (p *Parser) parseExecuteStatement() (*ast.ExecuteStatement, error) {
 	}
 
 	return &ast.ExecuteStatement{ExecuteSpecification: execSpec}, nil
+}
+
+func (p *Parser) parseExecuteAsStatement() (*ast.ExecuteAsStatement, error) {
+	// We're positioned after EXECUTE, at AS
+	p.nextToken() // consume AS
+
+	stmt := &ast.ExecuteAsStatement{}
+
+	// Parse the execute context
+	stmt.ExecuteContext = &ast.ExecuteContext{}
+
+	switch p.curTok.Type {
+	case TokenCaller:
+		stmt.ExecuteContext.Kind = "Caller"
+		p.nextToken()
+	case TokenLogin:
+		stmt.ExecuteContext.Kind = "Login"
+		p.nextToken()
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after LOGIN, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		principal, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ExecuteContext.Principal = principal
+	case TokenUser:
+		stmt.ExecuteContext.Kind = "User"
+		p.nextToken()
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after USER, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		principal, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ExecuteContext.Principal = principal
+	default:
+		return nil, fmt.Errorf("expected CALLER, LOGIN, or USER after EXECUTE AS, got %s", p.curTok.Literal)
+	}
+
+	// Check for WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		for {
+			if strings.ToUpper(p.curTok.Literal) == "NO" {
+				p.nextToken() // consume NO
+				if strings.ToUpper(p.curTok.Literal) != "REVERT" {
+					return nil, fmt.Errorf("expected REVERT after NO, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume REVERT
+				stmt.WithNoRevert = true
+			} else if p.curTok.Type == TokenCookie {
+				p.nextToken() // consume COOKIE
+				if p.curTok.Type != TokenInto {
+					return nil, fmt.Errorf("expected INTO after COOKIE, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume INTO
+				cookie, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				stmt.Cookie = cookie
+			} else {
+				break
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, error) {
@@ -4661,6 +4749,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createSchemaStatementToJSON(s)
 	case *ast.ExecuteStatement:
 		return executeStatementToJSON(s)
+	case *ast.ExecuteAsStatement:
+		return executeAsStatementToJSON(s)
 	case *ast.ReturnStatement:
 		return returnStatementToJSON(s)
 	case *ast.BreakStatement:
@@ -6059,6 +6149,31 @@ func executeStatementToJSON(s *ast.ExecuteStatement) jsonNode {
 	}
 	if s.ExecuteSpecification != nil {
 		node["ExecuteSpecification"] = executeSpecificationToJSON(s.ExecuteSpecification)
+	}
+	return node
+}
+
+func executeAsStatementToJSON(s *ast.ExecuteAsStatement) jsonNode {
+	node := jsonNode{
+		"$type":        "ExecuteAsStatement",
+		"WithNoRevert": s.WithNoRevert,
+	}
+	if s.ExecuteContext != nil {
+		node["ExecuteContext"] = executeContextToJSON(s.ExecuteContext)
+	}
+	if s.Cookie != nil {
+		node["Cookie"] = scalarExpressionToJSON(s.Cookie)
+	}
+	return node
+}
+
+func executeContextToJSON(c *ast.ExecuteContext) jsonNode {
+	node := jsonNode{
+		"$type": "ExecuteContext",
+		"Kind":  c.Kind,
+	}
+	if c.Principal != nil {
+		node["Principal"] = scalarExpressionToJSON(c.Principal)
 	}
 	return node
 }
