@@ -5089,14 +5089,13 @@ func dropCredentialStatementToJSON(s *ast.DropCredentialStatement) jsonNode {
 
 func dropExternalLanguageStatementToJSON(s *ast.DropExternalLanguageStatement) jsonNode {
 	node := jsonNode{
-		"$type":      "DropExternalLanguageStatement",
-		"IsIfExists": s.IsIfExists,
+		"$type": "DropExternalLanguageStatement",
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	if s.Authorization != nil {
-		node["Authorization"] = identifierToJSON(s.Authorization)
+		node["Owner"] = identifierToJSON(s.Authorization)
 	}
 	return node
 }

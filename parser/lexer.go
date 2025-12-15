@@ -206,6 +206,10 @@ type Lexer struct {
 
 // NewLexer creates a new Lexer for the given input.
 func NewLexer(input string) *Lexer {
+	// Skip UTF-8 BOM if present
+	if len(input) >= 3 && input[0] == 0xEF && input[1] == 0xBB && input[2] == 0xBF {
+		input = input[3:]
+	}
 	l := &Lexer{input: input}
 	l.readChar()
 	return l
