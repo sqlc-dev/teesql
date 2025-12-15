@@ -376,7 +376,63 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 		}
 	}
 
+	// Parse database name followed by SET
+	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+		dbName := p.parseIdentifier()
+
+		// Expect SET
+		if p.curTok.Type == TokenSet {
+			return p.parseAlterDatabaseSetStatement(dbName)
+		}
+	}
+
 	return nil, fmt.Errorf("unexpected token after ALTER DATABASE: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.AlterDatabaseSetStatement, error) {
+	// Consume SET
+	p.nextToken()
+
+	stmt := &ast.AlterDatabaseSetStatement{
+		DatabaseName: dbName,
+	}
+
+	// Parse options
+	for {
+		optionName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+		}
+		p.nextToken()
+
+		// Parse option value
+		optionValue := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		switch optionName {
+		case "ACCELERATED_DATABASE_RECOVERY":
+			opt := &ast.AcceleratedDatabaseRecoveryDatabaseOption{
+				OptionKind:  "AcceleratedDatabaseRecovery",
+				OptionState: capitalizeFirst(optionValue),
+			}
+			stmt.Options = append(stmt.Options, opt)
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseAlterDatabaseScopedCredentialStatement() (*ast.AlterCredentialStatement, error) {
@@ -5869,6 +5925,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createPartitionSchemeStatementToJSON(s)
 	case *ast.AlterCredentialStatement:
 		return alterCredentialStatementToJSON(s)
+	case *ast.AlterDatabaseSetStatement:
+		return alterDatabaseSetStatementToJSON(s)
 	case *ast.RevertStatement:
 		return revertStatementToJSON(s)
 	case *ast.DropCredentialStatement:
@@ -6170,6 +6228,38 @@ func alterCredentialStatementToJSON(s *ast.AlterCredentialStatement) jsonNode {
 		node["Secret"] = scalarExpressionToJSON(s.Secret)
 	}
 	return node
+}
+
+func alterDatabaseSetStatementToJSON(s *ast.AlterDatabaseSetStatement) jsonNode {
+	node := jsonNode{
+		"$type":             "AlterDatabaseSetStatement",
+		"WithManualCutover": s.WithManualCutover,
+		"UseCurrent":        s.UseCurrent,
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = databaseOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.AcceleratedDatabaseRecoveryDatabaseOption:
+		return jsonNode{
+			"$type":       "AcceleratedDatabaseRecoveryDatabaseOption",
+			"OptionKind":  o.OptionKind,
+			"OptionState": o.OptionState,
+		}
+	default:
+		return jsonNode{"$type": "UnknownDatabaseOption"}
+	}
 }
 
 func indexDefinitionToJSON(idx *ast.IndexDefinition) jsonNode {
