@@ -4401,6 +4401,9 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		return p.parseCreateCredentialStatement(false)
 	case TokenProcedure:
 		return p.parseCreateProcedureStatement()
+	case TokenDatabase:
+		// CREATE DATABASE SCOPED CREDENTIAL
+		return p.parseCreateDatabaseScopedCredentialStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -5118,12 +5121,45 @@ func (p *Parser) parseCreateCredentialStatement(isDatabaseScoped bool) (*ast.Cre
 		stmt.Secret = secret
 	}
 
+	// Optional FOR CRYPTOGRAPHIC PROVIDER clause
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) != "CRYPTOGRAPHIC" {
+			return nil, fmt.Errorf("expected CRYPTOGRAPHIC after FOR, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume CRYPTOGRAPHIC
+		if strings.ToUpper(p.curTok.Literal) != "PROVIDER" {
+			return nil, fmt.Errorf("expected PROVIDER after CRYPTOGRAPHIC, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume PROVIDER
+		stmt.CryptographicProviderName = p.parseIdentifier()
+	}
+
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseCreateDatabaseScopedCredentialStatement() (*ast.CreateCredentialStatement, error) {
+	// Already consumed CREATE, curTok is DATABASE
+	p.nextToken() // consume DATABASE
+
+	// Expect SCOPED
+	if strings.ToUpper(p.curTok.Literal) != "SCOPED" {
+		return nil, fmt.Errorf("expected SCOPED after DATABASE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume SCOPED
+
+	// Expect CREDENTIAL
+	if p.curTok.Type != TokenCredential {
+		return nil, fmt.Errorf("expected CREDENTIAL after SCOPED, got %s", p.curTok.Literal)
+	}
+
+	// Call the existing parser with isDatabaseScoped = true
+	return p.parseCreateCredentialStatement(true)
 }
 
 func (p *Parser) parseExecuteStatement() (ast.Statement, error) {
@@ -9095,6 +9131,9 @@ func variableTableReferenceToJSON(v *ast.VariableTableReference) jsonNode {
 func createCredentialStatementToJSON(s *ast.CreateCredentialStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateCredentialStatement",
+	}
+	if s.CryptographicProviderName != nil {
+		node["CryptographicProviderName"] = identifierToJSON(s.CryptographicProviderName)
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
