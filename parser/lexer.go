@@ -15,6 +15,7 @@ const (
 	TokenNumber
 	TokenString
 	TokenNationalString
+	TokenBinary
 	TokenStar
 	TokenComma
 	TokenDot
@@ -162,6 +163,7 @@ const (
 	TokenPassword
 	TokenLabel
 	TokenRaiserror
+	TokenReadtext
 	TokenTruncate
 	TokenColon
 	TokenColonColon
@@ -488,6 +490,21 @@ func (l *Lexer) readNationalString(startPos int) Token {
 
 func (l *Lexer) readNumber() Token {
 	startPos := l.pos
+
+	// Check for binary literal (0x...)
+	if l.ch == '0' && (l.peekChar() == 'x' || l.peekChar() == 'X') {
+		l.readChar() // consume 0
+		l.readChar() // consume x
+		for isHexDigit(l.ch) {
+			l.readChar()
+		}
+		return Token{
+			Type:    TokenBinary,
+			Literal: l.input[startPos:l.pos],
+			Pos:     startPos,
+		}
+	}
+
 	for isDigit(l.ch) {
 		l.readChar()
 	}
@@ -503,6 +520,10 @@ func (l *Lexer) readNumber() Token {
 		Literal: l.input[startPos:l.pos],
 		Pos:     startPos,
 	}
+}
+
+func isHexDigit(ch byte) bool {
+	return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')
 }
 
 func isLetter(ch byte) bool {
@@ -623,6 +644,7 @@ var keywords = map[string]TokenType{
 	"ENCRYPTION":    TokenEncryption,
 	"PASSWORD":      TokenPassword,
 	"RAISERROR":     TokenRaiserror,
+	"READTEXT":      TokenReadtext,
 	"TRUNCATE":      TokenTruncate,
 	"MOVE":          TokenMove,
 	"CONVERSATION":  TokenConversation,

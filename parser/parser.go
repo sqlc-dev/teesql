@@ -161,6 +161,8 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseLineNoStatement()
 	case TokenRaiserror:
 		return p.parseRaiseErrorStatement()
+	case TokenReadtext:
+		return p.parseReadTextStatement()
 	case TokenSend:
 		return p.parseSendStatement()
 	case TokenReceive:
@@ -5701,6 +5703,80 @@ func (p *Parser) parseRaiseErrorStatement() (*ast.RaiseErrorStatement, error) {
 	return stmt, nil
 }
 
+func (p *Parser) parseReadTextStatement() (*ast.ReadTextStatement, error) {
+	// Consume READTEXT
+	p.nextToken()
+
+	stmt := &ast.ReadTextStatement{}
+
+	// Parse column (multi-part identifier like t1.c1 or master.dbo.t1.c1 or ..t1.c1)
+	multiPart := &ast.MultiPartIdentifier{}
+	for {
+		// Handle leading dots or consecutive dots by inserting empty identifiers
+		if p.curTok.Type == TokenDot {
+			multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{Value: "", QuoteType: "NotQuoted"})
+			p.nextToken()
+			continue
+		}
+
+		id := p.parseIdentifier()
+		multiPart.Identifiers = append(multiPart.Identifiers, id)
+
+		if p.curTok.Type == TokenDot {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+	multiPart.Count = len(multiPart.Identifiers)
+	stmt.Column = &ast.ColumnReferenceExpression{
+		ColumnType:          "Regular",
+		MultiPartIdentifier: multiPart,
+	}
+
+	// Parse text pointer (variable or binary literal)
+	if p.curTok.Type == TokenBinary {
+		stmt.TextPointer = &ast.BinaryLiteral{
+			LiteralType:   "Binary",
+			Value:         p.curTok.Literal,
+			IsLargeObject: false,
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		stmt.TextPointer = &ast.VariableReference{Name: p.curTok.Literal}
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected text pointer, got %s", p.curTok.Literal)
+	}
+
+	// Parse offset
+	offset, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Offset = offset
+
+	// Parse size
+	size, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Size = size
+
+	// Check for optional HOLDLOCK
+	if strings.ToUpper(p.curTok.Literal) == "HOLDLOCK" {
+		stmt.HoldLock = true
+		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseGotoStatement() (*ast.GoToStatement, error) {
 	// Consume GOTO
 	p.nextToken()
@@ -6062,6 +6138,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return lineNoStatementToJSON(s)
 	case *ast.RaiseErrorStatement:
 		return raiseErrorStatementToJSON(s)
+	case *ast.ReadTextStatement:
+		return readTextStatementToJSON(s)
 	case *ast.GoToStatement:
 		return goToStatementToJSON(s)
 	case *ast.LabelStatement:
@@ -6655,6 +6733,18 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		}
 		// Always include IsNational and IsLargeObject
 		node["IsNational"] = e.IsNational
+		node["IsLargeObject"] = e.IsLargeObject
+		if e.Value != "" {
+			node["Value"] = e.Value
+		}
+		return node
+	case *ast.BinaryLiteral:
+		node := jsonNode{
+			"$type": "BinaryLiteral",
+		}
+		if e.LiteralType != "" {
+			node["LiteralType"] = e.LiteralType
+		}
 		node["IsLargeObject"] = e.IsLargeObject
 		if e.Value != "" {
 			node["Value"] = e.Value
@@ -8300,6 +8390,39 @@ func raiseErrorStatementToJSON(s *ast.RaiseErrorStatement) jsonNode {
 	}
 	if s.RaiseErrorOptions != "" {
 		node["RaiseErrorOptions"] = s.RaiseErrorOptions
+	}
+	return node
+}
+
+func readTextStatementToJSON(s *ast.ReadTextStatement) jsonNode {
+	node := jsonNode{
+		"$type":    "ReadTextStatement",
+		"HoldLock": s.HoldLock,
+	}
+	if s.Column != nil {
+		node["Column"] = columnReferenceExpressionToJSON(s.Column)
+	}
+	if s.TextPointer != nil {
+		node["TextPointer"] = scalarExpressionToJSON(s.TextPointer)
+	}
+	if s.Offset != nil {
+		node["Offset"] = scalarExpressionToJSON(s.Offset)
+	}
+	if s.Size != nil {
+		node["Size"] = scalarExpressionToJSON(s.Size)
+	}
+	return node
+}
+
+func columnReferenceExpressionToJSON(c *ast.ColumnReferenceExpression) jsonNode {
+	node := jsonNode{
+		"$type": "ColumnReferenceExpression",
+	}
+	if c.ColumnType != "" {
+		node["ColumnType"] = c.ColumnType
+	}
+	if c.MultiPartIdentifier != nil {
+		node["MultiPartIdentifier"] = multiPartIdentifierToJSON(c.MultiPartIdentifier)
 	}
 	return node
 }
