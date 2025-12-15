@@ -161,6 +161,10 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseLineNoStatement()
 	case TokenRaiserror:
 		return p.parseRaiseErrorStatement()
+	case TokenSend:
+		return p.parseSendStatement()
+	case TokenReceive:
+		return p.parseReceiveStatement()
 	case TokenSemicolon:
 		p.nextToken()
 		return nil, nil
@@ -903,9 +907,120 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		}
 		p.nextToken()
 		return &ast.ParenthesisExpression{Expression: expr}, nil
+	case TokenCase:
+		return p.parseCaseExpression()
 	default:
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	}
+}
+
+func (p *Parser) parseCaseExpression() (ast.ScalarExpression, error) {
+	p.nextToken() // consume CASE
+
+	// Check if it's a searched CASE (CASE WHEN ...) or simple CASE (CASE expr WHEN ...)
+	if p.curTok.Type == TokenWhen {
+		// Searched CASE expression
+		return p.parseSearchedCaseExpression()
+	}
+	// Simple CASE expression
+	return p.parseSimpleCaseExpression()
+}
+
+func (p *Parser) parseSearchedCaseExpression() (*ast.SearchedCaseExpression, error) {
+	expr := &ast.SearchedCaseExpression{}
+
+	for p.curTok.Type == TokenWhen {
+		p.nextToken() // consume WHEN
+
+		when, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		if p.curTok.Type != TokenThen {
+			return nil, fmt.Errorf("expected THEN in CASE, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume THEN
+
+		then, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		expr.WhenClauses = append(expr.WhenClauses, &ast.SearchedWhenClause{
+			WhenExpression: when,
+			ThenExpression: then,
+		})
+	}
+
+	// Optional ELSE
+	if p.curTok.Type == TokenElse {
+		p.nextToken() // consume ELSE
+		elseExpr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		expr.ElseExpression = elseExpr
+	}
+
+	if p.curTok.Type != TokenEnd {
+		return nil, fmt.Errorf("expected END in CASE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume END
+
+	return expr, nil
+}
+
+func (p *Parser) parseSimpleCaseExpression() (*ast.SimpleCaseExpression, error) {
+	expr := &ast.SimpleCaseExpression{}
+
+	// Parse input expression
+	input, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	expr.InputExpression = input
+
+	for p.curTok.Type == TokenWhen {
+		p.nextToken() // consume WHEN
+
+		when, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		if p.curTok.Type != TokenThen {
+			return nil, fmt.Errorf("expected THEN in CASE, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume THEN
+
+		then, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		expr.WhenClauses = append(expr.WhenClauses, &ast.SimpleWhenClause{
+			WhenExpression: when,
+			ThenExpression: then,
+		})
+	}
+
+	// Optional ELSE
+	if p.curTok.Type == TokenElse {
+		p.nextToken() // consume ELSE
+		elseExpr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		expr.ElseExpression = elseExpr
+	}
+
+	if p.curTok.Type != TokenEnd {
+		return nil, fmt.Errorf("expected END in CASE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume END
+
+	return expr, nil
 }
 
 func (p *Parser) parseOdbcLiteral() (*ast.OdbcLiteral, error) {
@@ -3042,6 +3157,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		return p.parseCreateDefaultStatement()
 	case TokenMaster:
 		return p.parseCreateMasterKeyStatement()
+	case TokenCredential:
+		return p.parseCreateCredentialStatement(false)
 	default:
 		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	}
@@ -3243,6 +3360,67 @@ func (p *Parser) parseCreateMasterKeyStatement() (*ast.CreateMasterKeyStatement,
 	return stmt, nil
 }
 
+func (p *Parser) parseCreateCredentialStatement(isDatabaseScoped bool) (*ast.CreateCredentialStatement, error) {
+	// Consume CREDENTIAL
+	p.nextToken()
+
+	stmt := &ast.CreateCredentialStatement{
+		IsDatabaseScoped: isDatabaseScoped,
+	}
+
+	// Parse credential name
+	stmt.Name = p.parseIdentifier()
+
+	// WITH IDENTITY
+	if p.curTok.Type != TokenWith {
+		return nil, fmt.Errorf("expected WITH after credential name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume WITH
+
+	if strings.ToUpper(p.curTok.Literal) != "IDENTITY" {
+		return nil, fmt.Errorf("expected IDENTITY after WITH, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume IDENTITY
+
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after IDENTITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume =
+
+	identity, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Identity = identity
+
+	// Optional SECRET clause
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		if strings.ToUpper(p.curTok.Literal) != "SECRET" {
+			return nil, fmt.Errorf("expected SECRET after comma, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume SECRET
+
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after SECRET, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume =
+
+		secret, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Secret = secret
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseExecuteStatement() (*ast.ExecuteStatement, error) {
 	execSpec, err := p.parseExecuteSpecification()
 	if err != nil {
@@ -3334,6 +3512,35 @@ func (p *Parser) parseCommitTransactionStatement() (*ast.CommitTransactionStatem
 			},
 		}
 		p.nextToken()
+	}
+
+	// Optional WITH (DELAYED_DURABILITY = ON|OFF)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+		if strings.ToUpper(p.curTok.Literal) != "DELAYED_DURABILITY" {
+			return nil, fmt.Errorf("expected DELAYED_DURABILITY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume DELAYED_DURABILITY
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after DELAYED_DURABILITY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume =
+		if strings.ToUpper(p.curTok.Literal) == "ON" {
+			stmt.DelayedDurabilityOption = "On"
+		} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+			stmt.DelayedDurabilityOption = "Off"
+		} else {
+			return nil, fmt.Errorf("expected ON or OFF, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ON/OFF
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after DELAYED_DURABILITY option, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
 	}
 
 	// Skip optional semicolon
@@ -3428,23 +3635,58 @@ func (p *Parser) parseWaitForStatement() (*ast.WaitForStatement, error) {
 
 	stmt := &ast.WaitForStatement{}
 
-	// Expect DELAY or TIME
-	if p.curTok.Type == TokenDelay {
+	// Check for WAITFOR (statement) syntax
+	if p.curTok.Type == TokenLParen {
+		stmt.WaitForOption = "Statement"
+		p.nextToken() // consume (
+
+		// Parse the inner statement (RECEIVE or GET CONVERSATION GROUP)
+		innerStmt, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Statement = innerStmt
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after statement, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		// Check for optional , TIMEOUT
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+			if strings.ToUpper(p.curTok.Literal) != "TIMEOUT" {
+				return nil, fmt.Errorf("expected TIMEOUT, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume TIMEOUT
+
+			timeout, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Timeout = timeout
+		}
+	} else if p.curTok.Type == TokenDelay {
 		stmt.WaitForOption = "Delay"
 		p.nextToken()
+		// Parse the parameter expression
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Parameter = param
 	} else if p.curTok.Type == TokenTime {
 		stmt.WaitForOption = "Time"
 		p.nextToken()
+		// Parse the parameter expression
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Parameter = param
 	} else {
-		return nil, fmt.Errorf("expected DELAY or TIME after WAITFOR, got %s", p.curTok.Literal)
+		return nil, fmt.Errorf("expected DELAY, TIME or ( after WAITFOR, got %s", p.curTok.Literal)
 	}
-
-	// Parse the parameter expression
-	param, err := p.parseScalarExpression()
-	if err != nil {
-		return nil, err
-	}
-	stmt.Parameter = param
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -3963,6 +4205,171 @@ func isKeyword(s string) bool {
 	return ok
 }
 
+func (p *Parser) parseSendStatement() (*ast.SendStatement, error) {
+	// Consume SEND
+	p.nextToken()
+
+	stmt := &ast.SendStatement{}
+
+	// ON CONVERSATION
+	if p.curTok.Type != TokenOn {
+		return nil, fmt.Errorf("expected ON after SEND, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ON
+
+	if p.curTok.Type != TokenConversation {
+		return nil, fmt.Errorf("expected CONVERSATION after ON, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume CONVERSATION
+
+	// Parse conversation handle(s)
+	for {
+		handle, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ConversationHandles = append(stmt.ConversationHandles, handle)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Optional MESSAGE TYPE
+	if p.curTok.Type == TokenMessage {
+		p.nextToken() // consume MESSAGE
+		if p.curTok.Type != TokenTyp {
+			return nil, fmt.Errorf("expected TYPE after MESSAGE, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume TYPE
+
+		// Parse message type name - could be identifier or variable
+		if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+			stmt.MessageTypeName = &ast.IdentifierOrValueExpression{
+				Value: p.curTok.Literal,
+				ValueExpression: &ast.VariableReference{
+					Name: p.curTok.Literal,
+				},
+			}
+			p.nextToken()
+		} else {
+			id := p.parseIdentifier()
+			stmt.MessageTypeName = &ast.IdentifierOrValueExpression{
+				Value:      id.Value,
+				Identifier: id,
+			}
+		}
+	}
+
+	// Optional message body in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		body, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.MessageBody = body
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after message body, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseReceiveStatement() (*ast.ReceiveStatement, error) {
+	// Consume RECEIVE
+	p.nextToken()
+
+	stmt := &ast.ReceiveStatement{}
+
+	// Check for TOP
+	if p.curTok.Type == TokenTop {
+		p.nextToken() // consume TOP
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after TOP, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+		top, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Top = top
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after TOP value, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	}
+
+	// Parse select elements (similar to SELECT)
+	for {
+		elem, err := p.parseSelectElement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.SelectElements = append(stmt.SelectElements, elem)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// FROM queue
+	if p.curTok.Type != TokenFrom {
+		return nil, fmt.Errorf("expected FROM, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume FROM
+
+	queue, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Queue = queue
+
+	// Optional INTO @table_variable
+	if p.curTok.Type == TokenInto {
+		p.nextToken() // consume INTO
+		if p.curTok.Type != TokenIdent || len(p.curTok.Literal) == 0 || p.curTok.Literal[0] != '@' {
+			return nil, fmt.Errorf("expected @variable after INTO, got %s", p.curTok.Literal)
+		}
+		stmt.Into = &ast.VariableTableReference{
+			Variable: &ast.VariableReference{Name: p.curTok.Literal},
+		}
+		p.nextToken()
+	}
+
+	// Optional WHERE clause
+	if p.curTok.Type == TokenWhere {
+		p.nextToken() // consume WHERE
+
+		// Check for conversation_group_id
+		if strings.ToLower(p.curTok.Literal) == "conversation_group_id" {
+			stmt.IsConversationGroupIdWhere = true
+		}
+
+		where, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Where = where
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 // ======================= End New Statement Parsing Functions =======================
 
 // jsonNode represents a generic JSON node from the AST JSON format.
@@ -4094,6 +4501,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createMasterKeyStatementToJSON(s)
 	case *ast.TryCatchStatement:
 		return tryCatchStatementToJSON(s)
+	case *ast.SendStatement:
+		return sendStatementToJSON(s)
+	case *ast.ReceiveStatement:
+		return receiveStatementToJSON(s)
+	case *ast.CreateCredentialStatement:
+		return createCredentialStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -4502,6 +4915,57 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		}
 		if e.QueryExpression != nil {
 			node["QueryExpression"] = queryExpressionToJSON(e.QueryExpression)
+		}
+		return node
+	case *ast.SearchedCaseExpression:
+		node := jsonNode{
+			"$type": "SearchedCaseExpression",
+		}
+		if len(e.WhenClauses) > 0 {
+			clauses := make([]jsonNode, len(e.WhenClauses))
+			for i, c := range e.WhenClauses {
+				clause := jsonNode{
+					"$type": "SearchedWhenClause",
+				}
+				if c.WhenExpression != nil {
+					clause["WhenExpression"] = booleanExpressionToJSON(c.WhenExpression)
+				}
+				if c.ThenExpression != nil {
+					clause["ThenExpression"] = scalarExpressionToJSON(c.ThenExpression)
+				}
+				clauses[i] = clause
+			}
+			node["WhenClauses"] = clauses
+		}
+		if e.ElseExpression != nil {
+			node["ElseExpression"] = scalarExpressionToJSON(e.ElseExpression)
+		}
+		return node
+	case *ast.SimpleCaseExpression:
+		node := jsonNode{
+			"$type": "SimpleCaseExpression",
+		}
+		if e.InputExpression != nil {
+			node["InputExpression"] = scalarExpressionToJSON(e.InputExpression)
+		}
+		if len(e.WhenClauses) > 0 {
+			clauses := make([]jsonNode, len(e.WhenClauses))
+			for i, c := range e.WhenClauses {
+				clause := jsonNode{
+					"$type": "SimpleWhenClause",
+				}
+				if c.WhenExpression != nil {
+					clause["WhenExpression"] = scalarExpressionToJSON(c.WhenExpression)
+				}
+				if c.ThenExpression != nil {
+					clause["ThenExpression"] = scalarExpressionToJSON(c.ThenExpression)
+				}
+				clauses[i] = clause
+			}
+			node["WhenClauses"] = clauses
+		}
+		if e.ElseExpression != nil {
+			node["ElseExpression"] = scalarExpressionToJSON(e.ElseExpression)
 		}
 		return node
 	default:
@@ -5721,6 +6185,9 @@ func waitForStatementToJSON(s *ast.WaitForStatement) jsonNode {
 	if s.Timeout != nil {
 		node["Timeout"] = scalarExpressionToJSON(s.Timeout)
 	}
+	if s.Statement != nil {
+		node["Statement"] = statementToJSON(s.Statement)
+	}
 	return node
 }
 
@@ -5922,5 +6389,86 @@ func tryCatchStatementToJSON(s *ast.TryCatchStatement) jsonNode {
 	if s.CatchStatements != nil {
 		node["CatchStatements"] = statementListToJSON(s.CatchStatements)
 	}
+	return node
+}
+
+func sendStatementToJSON(s *ast.SendStatement) jsonNode {
+	node := jsonNode{
+		"$type": "SendStatement",
+	}
+	if len(s.ConversationHandles) > 0 {
+		handles := make([]jsonNode, len(s.ConversationHandles))
+		for i, h := range s.ConversationHandles {
+			handles[i] = scalarExpressionToJSON(h)
+		}
+		node["ConversationHandles"] = handles
+	}
+	if s.MessageTypeName != nil {
+		node["MessageTypeName"] = identifierOrValueExpressionToJSON(s.MessageTypeName)
+	}
+	if s.MessageBody != nil {
+		node["MessageBody"] = scalarExpressionToJSON(s.MessageBody)
+	}
+	return node
+}
+
+func receiveStatementToJSON(s *ast.ReceiveStatement) jsonNode {
+	node := jsonNode{
+		"$type": "ReceiveStatement",
+	}
+	if s.Top != nil {
+		node["Top"] = scalarExpressionToJSON(s.Top)
+	}
+	if len(s.SelectElements) > 0 {
+		elems := make([]jsonNode, len(s.SelectElements))
+		for i, e := range s.SelectElements {
+			elems[i] = selectElementToJSON(e)
+		}
+		node["SelectElements"] = elems
+	}
+	if s.Queue != nil {
+		node["Queue"] = schemaObjectNameToJSON(s.Queue)
+	}
+	if s.Into != nil {
+		node["Into"] = variableTableReferenceToJSON(s.Into)
+	}
+	if s.Where != nil {
+		node["Where"] = booleanExpressionToJSON(s.Where)
+	}
+	node["IsConversationGroupIdWhere"] = s.IsConversationGroupIdWhere
+	return node
+}
+
+func variableTableReferenceToJSON(v *ast.VariableTableReference) jsonNode {
+	node := jsonNode{
+		"$type": "VariableTableReference",
+	}
+	if v.Variable != nil {
+		varNode := jsonNode{
+			"$type": "VariableReference",
+		}
+		if v.Variable.Name != "" {
+			varNode["Name"] = v.Variable.Name
+		}
+		node["Variable"] = varNode
+	}
+	node["ForPath"] = v.ForPath
+	return node
+}
+
+func createCredentialStatementToJSON(s *ast.CreateCredentialStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateCredentialStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Identity != nil {
+		node["Identity"] = scalarExpressionToJSON(s.Identity)
+	}
+	if s.Secret != nil {
+		node["Secret"] = scalarExpressionToJSON(s.Secret)
+	}
+	node["IsDatabaseScoped"] = s.IsDatabaseScoped
 	return node
 }

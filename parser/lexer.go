@@ -113,6 +113,9 @@ const (
 	TokenDeclare
 	TokenIf
 	TokenElse
+	TokenCase
+	TokenWhen
+	TokenThen
 	TokenWhile
 	TokenBegin
 	TokenEnd
@@ -172,6 +175,10 @@ const (
 	TokenLineno
 	TokenStatusonly
 	TokenNoreset
+	TokenSend
+	TokenMessage
+	TokenTyp
+	TokenReceive
 )
 
 // Token represents a lexical token.
@@ -547,6 +554,9 @@ var keywords = map[string]TokenType{
 	"DECLARE":       TokenDeclare,
 	"IF":            TokenIf,
 	"ELSE":          TokenElse,
+	"CASE":          TokenCase,
+	"WHEN":          TokenWhen,
+	"THEN":          TokenThen,
 	"WHILE":         TokenWhile,
 	"BEGIN":         TokenBegin,
 	"END":           TokenEnd,
@@ -596,6 +606,10 @@ var keywords = map[string]TokenType{
 	"LINENO":        TokenLineno,
 	"STATUSONLY":    TokenStatusonly,
 	"NORESET":       TokenNoreset,
+	"SEND":          TokenSend,
+	"MESSAGE":       TokenMessage,
+	"TYPE":          TokenTyp,
+	"RECEIVE":       TokenReceive,
 }
 
 func lookupKeyword(ident string) TokenType {
