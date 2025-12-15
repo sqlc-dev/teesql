@@ -389,32 +389,50 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 		SchemaObjectName: tableName,
 	}
 
-	// Parse the element type and name
-	var elementType string
-	switch p.curTok.Type {
-	case TokenIndex:
-		elementType = "Index"
-		p.nextToken()
-	default:
-		return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
-	}
+	// Parse multiple elements separated by commas
+	// Format: DROP [COLUMN] name, [CONSTRAINT] name, [INDEX] name, ...
+	var currentElementType string = "NotSpecified"
 
-	// Parse the element name
-	if p.curTok.Type != TokenIdent {
-		return nil, fmt.Errorf("expected identifier after %s, got %s", elementType, p.curTok.Literal)
-	}
+	for {
+		// Check for element type keyword
+		switch {
+		case strings.ToUpper(p.curTok.Literal) == "COLUMN":
+			currentElementType = "Column"
+			p.nextToken()
+		case strings.ToUpper(p.curTok.Literal) == "CONSTRAINT":
+			currentElementType = "Constraint"
+			p.nextToken()
+		case p.curTok.Type == TokenIndex:
+			currentElementType = "Index"
+			p.nextToken()
+		}
 
-	element := &ast.AlterTableDropTableElement{
-		TableElementType: elementType,
-		Name: &ast.Identifier{
-			Value:     p.curTok.Literal,
-			QuoteType: "NotQuoted",
-		},
-		IsIfExists: false,
-	}
-	p.nextToken()
+		// Parse the element name
+		if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLBracket {
+			if len(stmt.AlterTableDropTableElements) > 0 {
+				break
+			}
+			return nil, fmt.Errorf("expected identifier, got %s", p.curTok.Literal)
+		}
 
-	stmt.AlterTableDropTableElements = append(stmt.AlterTableDropTableElements, element)
+		element := &ast.AlterTableDropTableElement{
+			TableElementType: currentElementType,
+			Name:             p.parseIdentifier(),
+			IsIfExists:       false,
+		}
+		stmt.AlterTableDropTableElements = append(stmt.AlterTableDropTableElements, element)
+
+		// After adding an element, reset type to NotSpecified for next element
+		// unless another type keyword is found
+		currentElementType = "NotSpecified"
+
+		// Check for comma to continue or end
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else {
+			break
+		}
+	}
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
