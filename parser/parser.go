@@ -220,7 +220,45 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropDatabaseScopedStatement()
 	}
 
+	if p.curTok.Type == TokenExternal {
+		return p.parseDropExternalStatement()
+	}
+
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseDropExternalStatement() (ast.Statement, error) {
+	// Consume EXTERNAL
+	p.nextToken()
+
+	if p.curTok.Type == TokenLanguage {
+		return p.parseDropExternalLanguageStatement()
+	}
+
+	return nil, fmt.Errorf("unexpected token after EXTERNAL: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseDropExternalLanguageStatement() (*ast.DropExternalLanguageStatement, error) {
+	// Consume LANGUAGE
+	p.nextToken()
+
+	stmt := &ast.DropExternalLanguageStatement{}
+
+	// Parse language name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for AUTHORIZATION
+	if p.curTok.Type == TokenAuthorization {
+		p.nextToken()
+		stmt.Authorization = p.parseIdentifier()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseDropDatabaseScopedStatement() (ast.Statement, error) {
@@ -4958,6 +4996,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return revertStatementToJSON(s)
 	case *ast.DropCredentialStatement:
 		return dropCredentialStatementToJSON(s)
+	case *ast.DropExternalLanguageStatement:
+		return dropExternalLanguageStatementToJSON(s)
 	case *ast.CreateTableStatement:
 		return createTableStatementToJSON(s)
 	case *ast.GrantStatement:
@@ -5044,6 +5084,20 @@ func dropCredentialStatementToJSON(s *ast.DropCredentialStatement) jsonNode {
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func dropExternalLanguageStatementToJSON(s *ast.DropExternalLanguageStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropExternalLanguageStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Authorization != nil {
+		node["Authorization"] = identifierToJSON(s.Authorization)
+	}
 	return node
 }
 

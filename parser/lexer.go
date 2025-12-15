@@ -185,6 +185,8 @@ const (
 	TokenUser
 	TokenCaller
 	TokenNoRevert
+	TokenExternal
+	TokenLanguage
 )
 
 // Token represents a lexical token.
@@ -628,6 +630,8 @@ var keywords = map[string]TokenType{
 	"USER":          TokenUser,
 	"CALLER":        TokenCaller,
 	"NOREVERT":      TokenNoRevert,
+	"EXTERNAL":      TokenExternal,
+	"LANGUAGE":      TokenLanguage,
 }
 
 func lookupKeyword(ident string) TokenType {
