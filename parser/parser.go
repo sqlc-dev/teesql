@@ -171,6 +171,12 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseReceiveStatement()
 	case TokenRestore:
 		return p.parseRestoreStatement()
+	case TokenBackup:
+		return p.parseBackupStatement()
+	case TokenClose:
+		return p.parseCloseStatement()
+	case TokenOpen:
+		return p.parseOpenStatement()
 	case TokenSemicolon:
 		p.nextToken()
 		return nil, nil

@@ -50,3 +50,53 @@ type LineNoStatement struct {
 
 func (l *LineNoStatement) node()      {}
 func (l *LineNoStatement) statement() {}
+
+// CloseSymmetricKeyStatement represents CLOSE SYMMETRIC KEY statement
+type CloseSymmetricKeyStatement struct {
+	Name *Identifier
+	All  bool
+}
+
+func (s *CloseSymmetricKeyStatement) node()      {}
+func (s *CloseSymmetricKeyStatement) statement() {}
+
+// CloseMasterKeyStatement represents CLOSE MASTER KEY statement
+type CloseMasterKeyStatement struct{}
+
+func (s *CloseMasterKeyStatement) node()      {}
+func (s *CloseMasterKeyStatement) statement() {}
+
+// OpenMasterKeyStatement represents OPEN MASTER KEY statement
+type OpenMasterKeyStatement struct {
+	Password ScalarExpression
+}
+
+func (s *OpenMasterKeyStatement) node()      {}
+func (s *OpenMasterKeyStatement) statement() {}
+
+// OpenSymmetricKeyStatement represents OPEN SYMMETRIC KEY statement
+type OpenSymmetricKeyStatement struct {
+	Name                *Identifier
+	DecryptionMechanism string // "Key", "Certificate", "Password", "AsymmetricKey"
+	DecryptionKey       ScalarExpression
+}
+
+func (s *OpenSymmetricKeyStatement) node()      {}
+func (s *OpenSymmetricKeyStatement) statement() {}
+
+// KillStatsJobStatement represents KILL STATS JOB statement
+type KillStatsJobStatement struct {
+	JobId ScalarExpression
+}
+
+func (s *KillStatsJobStatement) node()      {}
+func (s *KillStatsJobStatement) statement() {}
+
+// KillQueryNotificationSubscriptionStatement represents KILL QUERY NOTIFICATION SUBSCRIPTION statement
+type KillQueryNotificationSubscriptionStatement struct {
+	SubscriptionId ScalarExpression
+	All            bool
+}
+
+func (s *KillQueryNotificationSubscriptionStatement) node()      {}
+func (s *KillQueryNotificationSubscriptionStatement) statement() {}

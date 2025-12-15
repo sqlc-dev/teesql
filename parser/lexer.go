@@ -197,6 +197,17 @@ const (
 	TokenBackup
 	TokenFilestream
 	TokenReturns
+	TokenClose
+	TokenOpen
+	TokenSymmetric
+	TokenStats
+	TokenJob
+	TokenQuery
+	TokenNotification
+	TokenSubscription
+	TokenDecryption
+	TokenAsymmetric
+	TokenCertificate
 )
 
 // Token represents a lexical token.
@@ -682,6 +693,17 @@ var keywords = map[string]TokenType{
 	"BACKUP":        TokenBackup,
 	"FILESTREAM":    TokenFilestream,
 	"RETURNS":       TokenReturns,
+	"CLOSE":         TokenClose,
+	"OPEN":          TokenOpen,
+	"SYMMETRIC":     TokenSymmetric,
+	"STATS":         TokenStats,
+	"JOB":           TokenJob,
+	"QUERY":         TokenQuery,
+	"NOTIFICATION":  TokenNotification,
+	"SUBSCRIPTION":  TokenSubscription,
+	"DECRYPTION":    TokenDecryption,
+	"ASYMMETRIC":    TokenAsymmetric,
+	"CERTIFICATE":   TokenCertificate,
 }
 
 func lookupKeyword(ident string) TokenType {
