@@ -277,6 +277,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterTableStatement()
 	case TokenMaster:
 		return p.parseAlterMasterKeyStatement()
+	case TokenSchema:
+		return p.parseAlterSchemaStatement()
 	default:
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	}
@@ -459,6 +461,63 @@ func (p *Parser) parseAlterMasterKeyStatement() (*ast.AlterMasterKeyStatement, e
 			stmt.Password = password
 		}
 	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterSchemaStatement() (*ast.AlterSchemaStatement, error) {
+	// Consume SCHEMA
+	p.nextToken()
+
+	stmt := &ast.AlterSchemaStatement{}
+
+	// Parse schema name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect TRANSFER
+	if strings.ToUpper(p.curTok.Literal) != "TRANSFER" {
+		return nil, fmt.Errorf("expected TRANSFER after schema name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume TRANSFER
+
+	// Check for optional object kind (TYPE::, OBJECT::, XML SCHEMA COLLECTION::)
+	stmt.ObjectKind = "NotSpecified"
+	if strings.ToUpper(p.curTok.Literal) == "TYPE" {
+		p.nextToken() // consume TYPE
+		if p.curTok.Type != TokenColonColon {
+			return nil, fmt.Errorf("expected :: after TYPE, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ::
+		stmt.ObjectKind = "Type"
+	} else if strings.ToUpper(p.curTok.Literal) == "OBJECT" {
+		p.nextToken() // consume OBJECT
+		if p.curTok.Type != TokenColonColon {
+			return nil, fmt.Errorf("expected :: after OBJECT, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ::
+		stmt.ObjectKind = "Object"
+	} else if strings.ToUpper(p.curTok.Literal) == "XML" {
+		p.nextToken() // consume XML
+		p.nextToken() // consume SCHEMA
+		p.nextToken() // consume COLLECTION
+		if p.curTok.Type != TokenColonColon {
+			return nil, fmt.Errorf("expected :: after XML SCHEMA COLLECTION, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ::
+		stmt.ObjectKind = "XmlSchemaCollection"
+	}
+
+	// Parse object name
+	objectName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.ObjectName = objectName
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -4629,6 +4688,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createMasterKeyStatementToJSON(s)
 	case *ast.AlterMasterKeyStatement:
 		return alterMasterKeyStatementToJSON(s)
+	case *ast.AlterSchemaStatement:
+		return alterSchemaStatementToJSON(s)
 	case *ast.TryCatchStatement:
 		return tryCatchStatementToJSON(s)
 	case *ast.SendStatement:
@@ -6611,5 +6672,19 @@ func alterMasterKeyStatementToJSON(s *ast.AlterMasterKeyStatement) jsonNode {
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
+	return node
+}
+
+func alterSchemaStatementToJSON(s *ast.AlterSchemaStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterSchemaStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.ObjectName != nil {
+		node["ObjectName"] = schemaObjectNameToJSON(s.ObjectName)
+	}
+	node["ObjectKind"] = s.ObjectKind
 	return node
 }

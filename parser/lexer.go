@@ -162,6 +162,7 @@ const (
 	TokenRaiserror
 	TokenTruncate
 	TokenColon
+	TokenColonColon
 	TokenMove
 	TokenConversation
 	TokenGet
@@ -261,9 +262,16 @@ func (l *Lexer) NextToken() Token {
 		tok.Literal = ";"
 		l.readChar()
 	case ':':
-		tok.Type = TokenColon
-		tok.Literal = ":"
-		l.readChar()
+		if l.peekChar() == ':' {
+			l.readChar()
+			tok.Type = TokenColonColon
+			tok.Literal = "::"
+			l.readChar()
+		} else {
+			tok.Type = TokenColon
+			tok.Literal = ":"
+			l.readChar()
+		}
 	case '=':
 		tok.Type = TokenEquals
 		tok.Literal = "="
