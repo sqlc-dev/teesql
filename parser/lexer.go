@@ -180,6 +180,8 @@ const (
 	TokenMessage
 	TokenTyp
 	TokenReceive
+	TokenLogin
+	TokenAdd
 )
 
 // Token represents a lexical token.
@@ -618,6 +620,8 @@ var keywords = map[string]TokenType{
 	"MESSAGE":       TokenMessage,
 	"TYPE":          TokenTyp,
 	"RECEIVE":       TokenReceive,
+	"LOGIN":         TokenLogin,
+	"ADD":           TokenAdd,
 }
 
 func lookupKeyword(ident string) TokenType {

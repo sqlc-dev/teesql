@@ -279,6 +279,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterMasterKeyStatement()
 	case TokenSchema:
 		return p.parseAlterSchemaStatement()
+	case TokenLogin:
+		return p.parseAlterLoginStatement()
 	default:
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	}
@@ -518,6 +520,43 @@ func (p *Parser) parseAlterSchemaStatement() (*ast.AlterSchemaStatement, error) 
 		return nil, err
 	}
 	stmt.ObjectName = objectName
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterLoginStatement() (*ast.AlterLoginAddDropCredentialStatement, error) {
+	// Consume LOGIN
+	p.nextToken()
+
+	stmt := &ast.AlterLoginAddDropCredentialStatement{}
+
+	// Parse login name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for ADD or DROP
+	if p.curTok.Type == TokenAdd {
+		stmt.IsAdd = true
+		p.nextToken() // consume ADD
+	} else if p.curTok.Type == TokenDrop {
+		stmt.IsAdd = false
+		p.nextToken() // consume DROP
+	} else {
+		return nil, fmt.Errorf("expected ADD or DROP after login name, got %s", p.curTok.Literal)
+	}
+
+	// Expect CREDENTIAL
+	if p.curTok.Type != TokenCredential {
+		return nil, fmt.Errorf("expected CREDENTIAL, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse credential name
+	stmt.CredentialName = p.parseIdentifier()
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -4690,6 +4729,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterMasterKeyStatementToJSON(s)
 	case *ast.AlterSchemaStatement:
 		return alterSchemaStatementToJSON(s)
+	case *ast.AlterLoginAddDropCredentialStatement:
+		return alterLoginAddDropCredentialStatementToJSON(s)
 	case *ast.TryCatchStatement:
 		return tryCatchStatementToJSON(s)
 	case *ast.SendStatement:
@@ -6686,5 +6727,19 @@ func alterSchemaStatementToJSON(s *ast.AlterSchemaStatement) jsonNode {
 		node["ObjectName"] = schemaObjectNameToJSON(s.ObjectName)
 	}
 	node["ObjectKind"] = s.ObjectKind
+	return node
+}
+
+func alterLoginAddDropCredentialStatementToJSON(s *ast.AlterLoginAddDropCredentialStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterLoginAddDropCredentialStatement",
+		"IsAdd": s.IsAdd,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.CredentialName != nil {
+		node["CredentialName"] = identifierToJSON(s.CredentialName)
+	}
 	return node
 }
