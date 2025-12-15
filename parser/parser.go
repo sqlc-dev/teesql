@@ -230,6 +230,20 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropExternalStatement()
 	}
 
+	// Handle keyword-based DROP statements
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "SEQUENCE":
+		return p.parseDropSequenceStatement()
+	case "SEARCH":
+		return p.parseDropSearchPropertyListStatement()
+	case "SERVER":
+		return p.parseDropServerRoleStatement()
+	case "AVAILABILITY":
+		return p.parseDropAvailabilityGroupStatement()
+	case "FEDERATION":
+		return p.parseDropFederationStatement()
+	}
+
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
 }
 
@@ -329,6 +343,119 @@ func (p *Parser) parseDropCredentialStatement(isDatabaseScoped bool) (*ast.DropC
 		QuoteType: "NotQuoted",
 	}
 	p.nextToken()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropSequenceStatement() (*ast.DropSequenceStatement, error) {
+	// Consume SEQUENCE
+	p.nextToken()
+
+	stmt := &ast.DropSequenceStatement{}
+
+	// Parse comma-separated list of schema object names
+	for {
+		name, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, name)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropSearchPropertyListStatement() (*ast.DropSearchPropertyListStatement, error) {
+	// Consume SEARCH
+	p.nextToken()
+
+	// Expect PROPERTY
+	if strings.ToUpper(p.curTok.Literal) != "PROPERTY" {
+		return nil, fmt.Errorf("expected PROPERTY after SEARCH, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect LIST
+	if strings.ToUpper(p.curTok.Literal) != "LIST" {
+		return nil, fmt.Errorf("expected LIST after PROPERTY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.DropSearchPropertyListStatement{}
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropServerRoleStatement() (*ast.DropServerRoleStatement, error) {
+	// Consume SERVER
+	p.nextToken()
+
+	// Expect ROLE
+	if strings.ToUpper(p.curTok.Literal) != "ROLE" {
+		return nil, fmt.Errorf("expected ROLE after SERVER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.DropServerRoleStatement{}
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropAvailabilityGroupStatement() (*ast.DropAvailabilityGroupStatement, error) {
+	// Consume AVAILABILITY
+	p.nextToken()
+
+	// Expect GROUP
+	if strings.ToUpper(p.curTok.Literal) != "GROUP" {
+		return nil, fmt.Errorf("expected GROUP after AVAILABILITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.DropAvailabilityGroupStatement{}
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropFederationStatement() (*ast.DropFederationStatement, error) {
+	// Consume FEDERATION
+	p.nextToken()
+
+	stmt := &ast.DropFederationStatement{}
+	stmt.Name = p.parseIdentifier()
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -6619,6 +6746,16 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropExternalLanguageStatementToJSON(s)
 	case *ast.DropExternalLibraryStatement:
 		return dropExternalLibraryStatementToJSON(s)
+	case *ast.DropSequenceStatement:
+		return dropSequenceStatementToJSON(s)
+	case *ast.DropSearchPropertyListStatement:
+		return dropSearchPropertyListStatementToJSON(s)
+	case *ast.DropServerRoleStatement:
+		return dropServerRoleStatementToJSON(s)
+	case *ast.DropAvailabilityGroupStatement:
+		return dropAvailabilityGroupStatementToJSON(s)
+	case *ast.DropFederationStatement:
+		return dropFederationStatementToJSON(s)
 	case *ast.CreateTableStatement:
 		return createTableStatementToJSON(s)
 	case *ast.GrantStatement:
@@ -6749,6 +6886,65 @@ func dropExternalLibraryStatementToJSON(s *ast.DropExternalLibraryStatement) jso
 	if s.Owner != nil {
 		node["Owner"] = identifierToJSON(s.Owner)
 	}
+	return node
+}
+
+func dropSequenceStatementToJSON(s *ast.DropSequenceStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropSequenceStatement",
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func dropSearchPropertyListStatementToJSON(s *ast.DropSearchPropertyListStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropSearchPropertyListStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func dropServerRoleStatementToJSON(s *ast.DropServerRoleStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropServerRoleStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func dropAvailabilityGroupStatementToJSON(s *ast.DropAvailabilityGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropAvailabilityGroupStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func dropFederationStatementToJSON(s *ast.DropFederationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropFederationStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
 	return node
 }
 
