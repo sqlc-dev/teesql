@@ -1245,6 +1245,11 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 		return p.parseAlterTableSwitchStatement(tableName)
 	}
 
+	// Check for WITH CHECK/NOCHECK or CHECK/NOCHECK CONSTRAINT
+	if strings.ToUpper(p.curTok.Literal) == "WITH" || strings.ToUpper(p.curTok.Literal) == "CHECK" || strings.ToUpper(p.curTok.Literal) == "NOCHECK" {
+		return p.parseAlterTableConstraintModificationStatement(tableName)
+	}
+
 	return nil, fmt.Errorf("unexpected token in ALTER TABLE: %s", p.curTok.Literal)
 }
 
@@ -1715,6 +1720,65 @@ func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName)
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterTableConstraintModificationStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableConstraintModificationStatement, error) {
+	stmt := &ast.AlterTableConstraintModificationStatement{
+		SchemaObjectName:             tableName,
+		ExistingRowsCheckEnforcement: "NotSpecified",
+	}
+
+	// Check for WITH CHECK/NOCHECK
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "CHECK" {
+			stmt.ExistingRowsCheckEnforcement = "Check"
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "NOCHECK" {
+			stmt.ExistingRowsCheckEnforcement = "NoCheck"
+			p.nextToken()
+		}
+	}
+
+	// Expect CHECK or NOCHECK
+	if strings.ToUpper(p.curTok.Literal) == "CHECK" {
+		stmt.ConstraintEnforcement = "Check"
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "NOCHECK" {
+		stmt.ConstraintEnforcement = "NoCheck"
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected CHECK or NOCHECK, got %s", p.curTok.Literal)
+	}
+
+	// Expect CONSTRAINT
+	if strings.ToUpper(p.curTok.Literal) != "CONSTRAINT" {
+		return nil, fmt.Errorf("expected CONSTRAINT, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for ALL or constraint names
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		stmt.All = true
+		p.nextToken()
+	} else {
+		stmt.All = false
+		// Parse constraint names (comma-separated)
+		for {
+			stmt.ConstraintNames = append(stmt.ConstraintNames, p.parseIdentifier())
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume comma
 		}
 	}
 
@@ -5135,6 +5199,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateSearchPropertyListStatement()
 		case "AGGREGATE":
 			return p.parseCreateAggregateStatement()
+		case "CLUSTERED", "NONCLUSTERED", "COLUMNSTORE":
+			return p.parseCreateColumnStoreIndexStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	default:
@@ -7429,6 +7495,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createUserStatementToJSON(s)
 	case *ast.CreateAggregateStatement:
 		return createAggregateStatementToJSON(s)
+	case *ast.CreateColumnStoreIndexStatement:
+		return createColumnStoreIndexStatementToJSON(s)
 	case *ast.AlterFunctionStatement:
 		return alterFunctionStatementToJSON(s)
 	case *ast.AlterTriggerStatement:
@@ -7461,6 +7529,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTableTriggerModificationStatementToJSON(s)
 	case *ast.AlterTableSwitchStatement:
 		return alterTableSwitchStatementToJSON(s)
+	case *ast.AlterTableConstraintModificationStatement:
+		return alterTableConstraintModificationStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -10603,6 +10673,133 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 	return stmt, nil
 }
 
+// parseCreateColumnStoreIndexStatement parses a CREATE COLUMNSTORE INDEX statement
+func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreIndexStatement, error) {
+	stmt := &ast.CreateColumnStoreIndexStatement{}
+
+	// Parse CLUSTERED or NONCLUSTERED
+	if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
+		stmt.Clustered = true
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
+		stmt.Clustered = false
+		p.nextToken()
+	}
+
+	// Expect COLUMNSTORE
+	if strings.ToUpper(p.curTok.Literal) != "COLUMNSTORE" {
+		return nil, fmt.Errorf("expected COLUMNSTORE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect INDEX
+	if p.curTok.Type != TokenIndex {
+		return nil, fmt.Errorf("expected INDEX, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse index name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect ON
+	if p.curTok.Type != TokenOn {
+		return nil, fmt.Errorf("expected ON, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse table name
+	tableName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.OnName = tableName
+
+	// Parse optional column list for non-clustered columnstore indexes
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			colRef := &ast.ColumnReferenceExpression{
+				ColumnType: "Regular",
+				MultiPartIdentifier: &ast.MultiPartIdentifier{
+					Identifiers: []*ast.Identifier{p.parseIdentifier()},
+				},
+			}
+			colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
+			stmt.Columns = append(stmt.Columns, colRef)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Parse optional ORDER clause
+	if strings.ToUpper(p.curTok.Literal) == "ORDER" {
+		p.nextToken() // consume ORDER
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colRef := &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{p.parseIdentifier()},
+					},
+				}
+				colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
+				stmt.OrderedColumns = append(stmt.OrderedColumns, colRef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Skip optional WITH clause for now
+	if p.curTok.Type == TokenWith {
+		// TODO: parse WITH options
+		p.nextToken()
+		if p.curTok.Type == TokenLParen {
+			p.nextToken()
+			depth := 1
+			for depth > 0 && p.curTok.Type != TokenEOF {
+				if p.curTok.Type == TokenLParen {
+					depth++
+				} else if p.curTok.Type == TokenRParen {
+					depth--
+				}
+				p.nextToken()
+			}
+		}
+	}
+
+	// Skip optional ON partition clause
+	if p.curTok.Type == TokenOn {
+		p.nextToken()
+		// Skip to semicolon
+		for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+			p.nextToken()
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 // parseAlterFunctionStatement parses an ALTER FUNCTION statement
 func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, error) {
 	// Consume FUNCTION
@@ -11380,6 +11577,34 @@ func assemblyNameToJSON(a *ast.AssemblyName) jsonNode {
 	return node
 }
 
+func createColumnStoreIndexStatementToJSON(s *ast.CreateColumnStoreIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateColumnStoreIndexStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["Clustered"] = s.Clustered
+	if s.OnName != nil {
+		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, col := range s.Columns {
+			cols[i] = columnReferenceExpressionToJSON(col)
+		}
+		node["Columns"] = cols
+	}
+	if len(s.OrderedColumns) > 0 {
+		cols := make([]jsonNode, len(s.OrderedColumns))
+		for i, col := range s.OrderedColumns {
+			cols[i] = columnReferenceExpressionToJSON(col)
+		}
+		node["OrderedColumns"] = cols
+	}
+	return node
+}
+
 func alterFunctionStatementToJSON(s *ast.AlterFunctionStatement) jsonNode {
 	node := jsonNode{
 		"$type": "AlterFunctionStatement",
@@ -11757,4 +11982,24 @@ func tableSwitchOptionToJSON(opt ast.TableSwitchOption) jsonNode {
 	default:
 		return jsonNode{"$type": "UnknownSwitchOption"}
 	}
+}
+
+func alterTableConstraintModificationStatementToJSON(s *ast.AlterTableConstraintModificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":                        "AlterTableConstraintModificationStatement",
+		"ExistingRowsCheckEnforcement": s.ExistingRowsCheckEnforcement,
+		"ConstraintEnforcement":        s.ConstraintEnforcement,
+		"All":                          s.All,
+	}
+	if len(s.ConstraintNames) > 0 {
+		names := make([]jsonNode, len(s.ConstraintNames))
+		for i, name := range s.ConstraintNames {
+			names[i] = identifierToJSON(name)
+		}
+		node["ConstraintNames"] = names
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
 }
