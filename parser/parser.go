@@ -3385,9 +3385,198 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		return p.parseCreateMasterKeyStatement()
 	case TokenCredential:
 		return p.parseCreateCredentialStatement(false)
+	case TokenProcedure:
+		return p.parseCreateProcedureStatement()
 	default:
 		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	}
+}
+
+func (p *Parser) parseCreateProcedureStatement() (*ast.CreateProcedureStatement, error) {
+	// Consume PROCEDURE/PROC
+	p.nextToken()
+
+	stmt := &ast.CreateProcedureStatement{}
+	stmt.ProcedureReference = &ast.ProcedureReference{}
+
+	// Parse procedure name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.ProcedureReference.Name = name
+
+	// Parse optional parameters
+	if p.curTok.Type == TokenLParen || (p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@")) {
+		params, err := p.parseProcedureParameters()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Parameters = params
+	}
+
+	// Skip WITH options (like RECOMPILE, ENCRYPTION, etc.)
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		for {
+			if strings.ToUpper(p.curTok.Literal) == "FOR" || p.curTok.Type == TokenAs || p.curTok.Type == TokenEOF {
+				break
+			}
+			if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+				stmt.IsForReplication = true
+			}
+			p.nextToken()
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Expect AS
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+	}
+
+	// Parse statement list
+	stmts, err := p.parseStatementList()
+	if err != nil {
+		return nil, err
+	}
+	stmt.StatementList = stmts
+
+	return stmt, nil
+}
+
+func (p *Parser) parseProcedureParameters() ([]*ast.ProcedureParameter, error) {
+	var params []*ast.ProcedureParameter
+
+	// Handle optional parentheses
+	hasParens := p.curTok.Type == TokenLParen
+	if hasParens {
+		p.nextToken()
+	}
+
+	for {
+		// Check if we're done
+		if hasParens && p.curTok.Type == TokenRParen {
+			p.nextToken()
+			break
+		}
+		if !hasParens && (p.curTok.Type == TokenAs || p.curTok.Type == TokenWith || strings.ToUpper(p.curTok.Literal) == "FOR") {
+			break
+		}
+		if p.curTok.Type == TokenEOF {
+			break
+		}
+
+		// Parse parameter (starts with @)
+		if !strings.HasPrefix(p.curTok.Literal, "@") {
+			if hasParens {
+				p.nextToken()
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+			break
+		}
+
+		param := &ast.ProcedureParameter{
+			Modifier: "None",
+		}
+
+		// Parse variable name
+		param.VariableName = p.parseIdentifier()
+
+		// Check for AS (optional type prefix)
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+		}
+
+		// Parse data type
+		dataType, err := p.parseDataType()
+		if err != nil {
+			return nil, err
+		}
+		param.DataType = dataType
+
+		// Parse optional NULL/NOT NULL
+		if p.curTok.Type == TokenNull {
+			param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+			p.nextToken()
+		} else if p.curTok.Type == TokenNot {
+			p.nextToken()
+			if p.curTok.Type == TokenNull {
+				param.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+				p.nextToken()
+			}
+		}
+
+		// Parse optional default value
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			param.Value = val
+		}
+
+		// Parse optional OUTPUT/OUT modifier
+		if strings.ToUpper(p.curTok.Literal) == "OUTPUT" || strings.ToUpper(p.curTok.Literal) == "OUT" {
+			param.Modifier = "Output"
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "READONLY" {
+			param.Modifier = "ReadOnly"
+			p.nextToken()
+		}
+
+		params = append(params, param)
+
+		// Check for comma
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			if hasParens && p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+			break
+		}
+	}
+
+	return params, nil
+}
+
+func (p *Parser) parseStatementList() (*ast.StatementList, error) {
+	sl := &ast.StatementList{}
+
+	for p.curTok.Type != TokenEOF && !p.isBatchSeparator() {
+		// Skip semicolons
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+			continue
+		}
+
+		// Check for END (end of BEGIN block or TRY/CATCH)
+		if p.curTok.Type == TokenEnd {
+			break
+		}
+
+		stmt, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		if stmt != nil {
+			sl.Statements = append(sl.Statements, stmt)
+		}
+	}
+
+	return sl, nil
+}
+
+func (p *Parser) isBatchSeparator() bool {
+	return p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO"
 }
 
 func (p *Parser) parseCreateViewStatement() (*ast.CreateViewStatement, error) {
@@ -4747,6 +4936,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createViewStatementToJSON(s)
 	case *ast.CreateSchemaStatement:
 		return createSchemaStatementToJSON(s)
+	case *ast.CreateProcedureStatement:
+		return createProcedureStatementToJSON(s)
 	case *ast.ExecuteStatement:
 		return executeStatementToJSON(s)
 	case *ast.ExecuteAsStatement:
@@ -6857,4 +7048,53 @@ func alterLoginAddDropCredentialStatementToJSON(s *ast.AlterLoginAddDropCredenti
 		node["CredentialName"] = identifierToJSON(s.CredentialName)
 	}
 	return node
+}
+
+func createProcedureStatementToJSON(s *ast.CreateProcedureStatement) jsonNode {
+	node := jsonNode{
+		"$type":            "CreateProcedureStatement",
+		"IsForReplication": s.IsForReplication,
+	}
+	if s.ProcedureReference != nil {
+		node["ProcedureReference"] = procedureReferenceToJSON(s.ProcedureReference)
+	}
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = procedureParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func procedureParameterToJSON(p *ast.ProcedureParameter) jsonNode {
+	node := jsonNode{
+		"$type":     "ProcedureParameter",
+		"IsVarying": p.IsVarying,
+		"Modifier":  p.Modifier,
+	}
+	if p.VariableName != nil {
+		node["VariableName"] = identifierToJSON(p.VariableName)
+	}
+	if p.DataType != nil {
+		node["DataType"] = dataTypeReferenceToJSON(p.DataType)
+	}
+	if p.Value != nil {
+		node["Value"] = scalarExpressionToJSON(p.Value)
+	}
+	if p.Nullable != nil {
+		node["Nullable"] = nullableConstraintToJSON(p.Nullable)
+	}
+	return node
+}
+
+func nullableConstraintToJSON(n *ast.NullableConstraintDefinition) jsonNode {
+	return jsonNode{
+		"$type":    "NullableConstraintDefinition",
+		"Nullable": n.Nullable,
+	}
 }
