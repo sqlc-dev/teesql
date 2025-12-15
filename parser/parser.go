@@ -235,6 +235,10 @@ func (p *Parser) parseDropExternalStatement() (ast.Statement, error) {
 		return p.parseDropExternalLanguageStatement()
 	}
 
+	if strings.ToUpper(p.curTok.Literal) == "LIBRARY" {
+		return p.parseDropExternalLibraryStatement()
+	}
+
 	return nil, fmt.Errorf("unexpected token after EXTERNAL: %s", p.curTok.Literal)
 }
 
@@ -251,6 +255,29 @@ func (p *Parser) parseDropExternalLanguageStatement() (*ast.DropExternalLanguage
 	if p.curTok.Type == TokenAuthorization {
 		p.nextToken()
 		stmt.Authorization = p.parseIdentifier()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropExternalLibraryStatement() (*ast.DropExternalLibraryStatement, error) {
+	// Consume LIBRARY
+	p.nextToken()
+
+	stmt := &ast.DropExternalLibraryStatement{}
+
+	// Parse library name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for AUTHORIZATION
+	if p.curTok.Type == TokenAuthorization {
+		p.nextToken()
+		stmt.Owner = p.parseIdentifier()
 	}
 
 	// Skip optional semicolon
@@ -319,6 +346,13 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterSchemaStatement()
 	case TokenLogin:
 		return p.parseAlterLoginStatement()
+	case TokenIdent:
+		// Handle keywords that are not reserved tokens
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "ROLE":
+			return p.parseAlterRoleStatement()
+		}
+		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	}
@@ -337,6 +371,11 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 	// Check what kind of ALTER TABLE statement this is
 	if p.curTok.Type == TokenDrop {
 		return p.parseAlterTableDropStatement(tableName)
+	}
+
+	// Check for ALTER INDEX
+	if p.curTok.Type == TokenAlter && p.peekTok.Type == TokenIndex {
+		return p.parseAlterTableAlterIndexStatement(tableName)
 	}
 
 	return nil, fmt.Errorf("unexpected token in ALTER TABLE: %s", p.curTok.Literal)
@@ -376,6 +415,165 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 	p.nextToken()
 
 	stmt.AlterTableDropTableElements = append(stmt.AlterTableDropTableElements, element)
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterTableAlterIndexStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableAlterIndexStatement, error) {
+	// Consume ALTER
+	p.nextToken()
+
+	// Consume INDEX
+	p.nextToken()
+
+	stmt := &ast.AlterTableAlterIndexStatement{
+		SchemaObjectName: tableName,
+	}
+
+	// Parse index name
+	stmt.IndexIdentifier = p.parseIdentifier()
+
+	// Parse operation type (REBUILD, DISABLE, etc.)
+	operation := strings.ToUpper(p.curTok.Literal)
+	switch operation {
+	case "REBUILD":
+		stmt.AlterIndexType = "Rebuild"
+		p.nextToken()
+	case "DISABLE":
+		stmt.AlterIndexType = "Disable"
+		p.nextToken()
+	case "REORGANIZE":
+		stmt.AlterIndexType = "Reorganize"
+		p.nextToken()
+	default:
+		return nil, fmt.Errorf("expected REBUILD, DISABLE, or REORGANIZE after index name, got %s", p.curTok.Literal)
+	}
+
+	// Parse optional WITH clause for options
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			// Parse option name
+			optionName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after option name, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			// Parse option value
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			option := &ast.IndexExpressionOption{
+				OptionKind: convertIndexOptionKind(optionName),
+				Expression: expr,
+			}
+			stmt.IndexOptions = append(stmt.IndexOptions, option)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func convertIndexOptionKind(name string) string {
+	optionMap := map[string]string{
+		"BUCKET_COUNT":         "BucketCount",
+		"PAD_INDEX":            "PadIndex",
+		"FILLFACTOR":           "FillFactor",
+		"SORT_IN_TEMPDB":       "SortInTempDB",
+		"IGNORE_DUP_KEY":       "IgnoreDupKey",
+		"STATISTICS_NORECOMPUTE": "StatisticsNoRecompute",
+		"DROP_EXISTING":        "DropExisting",
+		"ONLINE":               "Online",
+		"ALLOW_ROW_LOCKS":      "AllowRowLocks",
+		"ALLOW_PAGE_LOCKS":     "AllowPageLocks",
+		"MAXDOP":               "MaxDop",
+		"DATA_COMPRESSION":     "DataCompression",
+	}
+	if mapped, ok := optionMap[name]; ok {
+		return mapped
+	}
+	return name
+}
+
+func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
+	// Consume ROLE
+	p.nextToken()
+
+	stmt := &ast.AlterRoleStatement{}
+
+	// Parse role name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse action: ADD MEMBER, DROP MEMBER, or WITH NAME =
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "ADD":
+		p.nextToken() // consume ADD
+		if strings.ToUpper(p.curTok.Literal) != "MEMBER" {
+			return nil, fmt.Errorf("expected MEMBER after ADD, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume MEMBER
+		action := &ast.AddMemberAlterRoleAction{}
+		action.Member = p.parseIdentifier()
+		stmt.Action = action
+
+	case "DROP":
+		p.nextToken() // consume DROP
+		if strings.ToUpper(p.curTok.Literal) != "MEMBER" {
+			return nil, fmt.Errorf("expected MEMBER after DROP, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume MEMBER
+		action := &ast.DropMemberAlterRoleAction{}
+		action.Member = p.parseIdentifier()
+		stmt.Action = action
+
+	case "WITH":
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) != "NAME" {
+			return nil, fmt.Errorf("expected NAME after WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume NAME
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after NAME, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume =
+		action := &ast.RenameAlterRoleAction{}
+		action.NewName = p.parseIdentifier()
+		stmt.Action = action
+
+	default:
+		return nil, fmt.Errorf("expected ADD, DROP, or WITH after role name, got %s", p.curTok.Literal)
+	}
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -2905,15 +3103,27 @@ func (p *Parser) parseDataType() (*ast.SqlDataTypeReference, error) {
 		return nil, fmt.Errorf("expected data type, got %s", p.curTok.Literal)
 	}
 
-	typeName := p.curTok.Literal
+	var typeName string
+	var quoteType string
+	literal := p.curTok.Literal
+
+	// Check if this is a bracketed identifier like [int]
+	if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
+		typeName = literal[1 : len(literal)-1]
+		quoteType = "SquareBracket"
+	} else {
+		typeName = literal
+		quoteType = "NotQuoted"
+	}
+	p.nextToken()
+
 	dt.SqlDataTypeOption = convertDataTypeOption(typeName)
-	baseId := &ast.Identifier{Value: typeName, QuoteType: "NotQuoted"}
+	baseId := &ast.Identifier{Value: typeName, QuoteType: quoteType}
 	dt.Name = &ast.SchemaObjectName{
 		BaseIdentifier: baseId,
 		Count:          1,
 		Identifiers:    []*ast.Identifier{baseId},
 	}
-	p.nextToken()
 
 	// Check for parameters like VARCHAR(100)
 	if p.curTok.Type == TokenLParen {
@@ -3425,9 +3635,39 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		return p.parseCreateCredentialStatement(false)
 	case TokenProcedure:
 		return p.parseCreateProcedureStatement()
+	case TokenIdent:
+		// Handle keywords that are not reserved tokens
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "ROLE":
+			return p.parseCreateRoleStatement()
+		}
+		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	default:
 		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	}
+}
+
+func (p *Parser) parseCreateRoleStatement() (*ast.CreateRoleStatement, error) {
+	// Consume ROLE
+	p.nextToken()
+
+	stmt := &ast.CreateRoleStatement{}
+
+	// Parse role name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for optional AUTHORIZATION
+	if p.curTok.Type == TokenAuthorization {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseCreateProcedureStatement() (*ast.CreateProcedureStatement, error) {
@@ -4976,6 +5216,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createSchemaStatementToJSON(s)
 	case *ast.CreateProcedureStatement:
 		return createProcedureStatementToJSON(s)
+	case *ast.CreateRoleStatement:
+		return createRoleStatementToJSON(s)
 	case *ast.ExecuteStatement:
 		return executeStatementToJSON(s)
 	case *ast.ExecuteAsStatement:
@@ -4992,12 +5234,16 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return throwStatementToJSON(s)
 	case *ast.AlterTableDropTableElementStatement:
 		return alterTableDropTableElementStatementToJSON(s)
+	case *ast.AlterTableAlterIndexStatement:
+		return alterTableAlterIndexStatementToJSON(s)
 	case *ast.RevertStatement:
 		return revertStatementToJSON(s)
 	case *ast.DropCredentialStatement:
 		return dropCredentialStatementToJSON(s)
 	case *ast.DropExternalLanguageStatement:
 		return dropExternalLanguageStatementToJSON(s)
+	case *ast.DropExternalLibraryStatement:
+		return dropExternalLibraryStatementToJSON(s)
 	case *ast.CreateTableStatement:
 		return createTableStatementToJSON(s)
 	case *ast.GrantStatement:
@@ -5050,6 +5296,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterMasterKeyStatementToJSON(s)
 	case *ast.AlterSchemaStatement:
 		return alterSchemaStatementToJSON(s)
+	case *ast.AlterRoleStatement:
+		return alterRoleStatementToJSON(s)
 	case *ast.AlterLoginAddDropCredentialStatement:
 		return alterLoginAddDropCredentialStatementToJSON(s)
 	case *ast.TryCatchStatement:
@@ -5100,6 +5348,19 @@ func dropExternalLanguageStatementToJSON(s *ast.DropExternalLanguageStatement) j
 	return node
 }
 
+func dropExternalLibraryStatementToJSON(s *ast.DropExternalLibraryStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropExternalLibraryStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
+	return node
+}
+
 func alterTableDropTableElementStatementToJSON(s *ast.AlterTableDropTableElementStatement) jsonNode {
 	node := jsonNode{
 		"$type": "AlterTableDropTableElementStatement",
@@ -5128,6 +5389,38 @@ func alterTableDropTableElementToJSON(e *ast.AlterTableDropTableElement) jsonNod
 		node["Name"] = identifierToJSON(e.Name)
 	}
 	node["IsIfExists"] = e.IsIfExists
+	return node
+}
+
+func alterTableAlterIndexStatementToJSON(s *ast.AlterTableAlterIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type":          "AlterTableAlterIndexStatement",
+		"AlterIndexType": s.AlterIndexType,
+	}
+	if s.IndexIdentifier != nil {
+		node["IndexIdentifier"] = identifierToJSON(s.IndexIdentifier)
+	}
+	if len(s.IndexOptions) > 0 {
+		options := make([]jsonNode, len(s.IndexOptions))
+		for i, o := range s.IndexOptions {
+			options[i] = indexExpressionOptionToJSON(o)
+		}
+		node["IndexOptions"] = options
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func indexExpressionOptionToJSON(o *ast.IndexExpressionOption) jsonNode {
+	node := jsonNode{
+		"$type":      "IndexExpressionOption",
+		"OptionKind": o.OptionKind,
+	}
+	if o.Expression != nil {
+		node["Expression"] = scalarExpressionToJSON(o.Expression)
+	}
 	return node
 }
 
@@ -6506,6 +6799,53 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 	}
 	col.DataType = dataType
 
+	// Parse optional IDENTITY specification
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "IDENTITY" {
+		p.nextToken() // consume IDENTITY
+		identityOpts := &ast.IdentityOptions{}
+
+		// Check for optional (seed, increment)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+
+			// Parse seed
+			if p.curTok.Type == TokenNumber {
+				identityOpts.IdentitySeed = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+				p.nextToken()
+			}
+
+			// Expect comma
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+
+				// Parse increment
+				if p.curTok.Type == TokenNumber {
+					identityOpts.IdentityIncrement = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+					p.nextToken()
+				}
+			}
+
+			// Expect closing paren
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+
+		// Check for NOT FOR REPLICATION
+		if p.curTok.Type == TokenNot {
+			p.nextToken() // consume NOT
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+				if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+					p.nextToken() // consume REPLICATION
+					identityOpts.NotForReplication = true
+				}
+			}
+		}
+
+		col.IdentityOptions = identityOpts
+	}
+
 	// Parse optional NULL/NOT NULL constraint
 	if p.curTok.Type == TokenNot {
 		p.nextToken() // consume NOT
@@ -6622,6 +6962,9 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 		"IsMasked":         c.IsMasked,
 		"ColumnIdentifier": identifierToJSON(c.ColumnIdentifier),
 	}
+	if c.IdentityOptions != nil {
+		node["IdentityOptions"] = identityOptionsToJSON(c.IdentityOptions)
+	}
 	if len(c.Constraints) > 0 {
 		constraints := make([]jsonNode, len(c.Constraints))
 		for i, constraint := range c.Constraints {
@@ -6631,6 +6974,20 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 	}
 	if c.DataType != nil {
 		node["DataType"] = dataTypeReferenceToJSON(c.DataType)
+	}
+	return node
+}
+
+func identityOptionsToJSON(i *ast.IdentityOptions) jsonNode {
+	node := jsonNode{
+		"$type":                       "IdentityOptions",
+		"IsIdentityNotForReplication": i.NotForReplication,
+	}
+	if i.IdentitySeed != nil {
+		node["IdentitySeed"] = scalarExpressionToJSON(i.IdentitySeed)
+	}
+	if i.IdentityIncrement != nil {
+		node["IdentityIncrement"] = scalarExpressionToJSON(i.IdentityIncrement)
 	}
 	return node
 }
@@ -7089,6 +7446,50 @@ func alterSchemaStatementToJSON(s *ast.AlterSchemaStatement) jsonNode {
 	return node
 }
 
+func alterRoleStatementToJSON(s *ast.AlterRoleStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterRoleStatement",
+	}
+	if s.Action != nil {
+		node["Action"] = alterRoleActionToJSON(s.Action)
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterRoleActionToJSON(a ast.AlterRoleAction) jsonNode {
+	switch action := a.(type) {
+	case *ast.AddMemberAlterRoleAction:
+		node := jsonNode{
+			"$type": "AddMemberAlterRoleAction",
+		}
+		if action.Member != nil {
+			node["Member"] = identifierToJSON(action.Member)
+		}
+		return node
+	case *ast.DropMemberAlterRoleAction:
+		node := jsonNode{
+			"$type": "DropMemberAlterRoleAction",
+		}
+		if action.Member != nil {
+			node["Member"] = identifierToJSON(action.Member)
+		}
+		return node
+	case *ast.RenameAlterRoleAction:
+		node := jsonNode{
+			"$type": "RenameAlterRoleAction",
+		}
+		if action.NewName != nil {
+			node["NewName"] = identifierToJSON(action.NewName)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownAlterRoleAction"}
+	}
+}
+
 func alterLoginAddDropCredentialStatementToJSON(s *ast.AlterLoginAddDropCredentialStatement) jsonNode {
 	node := jsonNode{
 		"$type": "AlterLoginAddDropCredentialStatement",
@@ -7120,6 +7521,19 @@ func createProcedureStatementToJSON(s *ast.CreateProcedureStatement) jsonNode {
 	}
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func createRoleStatementToJSON(s *ast.CreateRoleStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateRoleStatement",
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
 	}
 	return node
 }
