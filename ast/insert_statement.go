@@ -3,7 +3,7 @@ package ast
 // InsertStatement represents an INSERT statement.
 type InsertStatement struct {
 	InsertSpecification *InsertSpecification `json:"InsertSpecification,omitempty"`
-	OptimizerHints      []*OptimizerHint     `json:"OptimizerHints,omitempty"`
+	OptimizerHints      []OptimizerHintBase  `json:"OptimizerHints,omitempty"`
 }
 
 func (i *InsertStatement) node()      {}

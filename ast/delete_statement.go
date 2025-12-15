@@ -3,7 +3,7 @@ package ast
 // DeleteStatement represents a DELETE statement.
 type DeleteStatement struct {
 	DeleteSpecification *DeleteSpecification `json:"DeleteSpecification,omitempty"`
-	OptimizerHints      []*OptimizerHint     `json:"OptimizerHints,omitempty"`
+	OptimizerHints      []OptimizerHintBase  `json:"OptimizerHints,omitempty"`
 }
 
 func (d *DeleteStatement) node()      {}

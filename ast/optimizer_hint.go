@@ -5,4 +5,5 @@ type OptimizerHint struct {
 	HintKind string `json:"HintKind,omitempty"`
 }
 
-func (*OptimizerHint) node() {}
+func (*OptimizerHint) node()          {}
+func (*OptimizerHint) optimizerHint() {}

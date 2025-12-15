@@ -14,6 +14,8 @@ const (
 	TokenIdent
 	TokenNumber
 	TokenString
+	TokenNationalString
+	TokenBinary
 	TokenStar
 	TokenComma
 	TokenDot
@@ -27,6 +29,8 @@ const (
 	TokenGreaterThan
 	TokenPlus
 	TokenMinus
+	TokenSlash
+	TokenModulo
 
 	// Keywords
 	TokenSelect
@@ -79,6 +83,8 @@ const (
 	TokenNot
 	TokenLBrace
 	TokenRBrace
+	TokenLeftShift
+	TokenRightShift
 
 	// DML Keywords
 	TokenInsert
@@ -88,6 +94,11 @@ const (
 	TokenValues
 	TokenDefault
 	TokenNull
+	TokenIs
+	TokenIn
+	TokenLike
+	TokenBetween
+	TokenEscape
 	TokenExec
 	TokenExecute
 	TokenOver
@@ -105,6 +116,9 @@ const (
 	TokenDeclare
 	TokenIf
 	TokenElse
+	TokenCase
+	TokenWhen
+	TokenThen
 	TokenWhile
 	TokenBegin
 	TokenEnd
@@ -149,8 +163,36 @@ const (
 	TokenPassword
 	TokenLabel
 	TokenRaiserror
+	TokenReadtext
+	TokenWritetext
+	TokenUpdatetext
 	TokenTruncate
 	TokenColon
+	TokenColonColon
+	TokenMove
+	TokenConversation
+	TokenGet
+	TokenUse
+	TokenKill
+	TokenCheckpoint
+	TokenReconfigure
+	TokenOverride
+	TokenShutdown
+	TokenSetuser
+	TokenLineno
+	TokenStatusonly
+	TokenNoreset
+	TokenSend
+	TokenMessage
+	TokenTyp
+	TokenReceive
+	TokenLogin
+	TokenAdd
+	TokenUser
+	TokenCaller
+	TokenNoRevert
+	TokenExternal
+	TokenLanguage
 )
 
 // Token represents a lexical token.
@@ -170,6 +212,10 @@ type Lexer struct {
 
 // NewLexer creates a new Lexer for the given input.
 func NewLexer(input string) *Lexer {
+	// Skip UTF-8 BOM if present
+	if len(input) >= 3 && input[0] == 0xEF && input[1] == 0xBB && input[2] == 0xBF {
+		input = input[3:]
+	}
 	l := &Lexer{input: input}
 	l.readChar()
 	return l
@@ -233,9 +279,16 @@ func (l *Lexer) NextToken() Token {
 		tok.Literal = ";"
 		l.readChar()
 	case ':':
-		tok.Type = TokenColon
-		tok.Literal = ":"
-		l.readChar()
+		if l.peekChar() == ':' {
+			l.readChar()
+			tok.Type = TokenColonColon
+			tok.Literal = "::"
+			l.readChar()
+		} else {
+			tok.Type = TokenColon
+			tok.Literal = ":"
+			l.readChar()
+		}
 	case '=':
 		tok.Type = TokenEquals
 		tok.Literal = "="
@@ -251,6 +304,11 @@ func (l *Lexer) NextToken() Token {
 			tok.Type = TokenLessOrEqual
 			tok.Literal = "<="
 			l.readChar()
+		} else if l.peekChar() == '<' {
+			l.readChar()
+			tok.Type = TokenLeftShift
+			tok.Literal = "<<"
+			l.readChar()
 		} else {
 			tok.Type = TokenLessThan
 			tok.Literal = "<"
@@ -261,6 +319,11 @@ func (l *Lexer) NextToken() Token {
 			l.readChar()
 			tok.Type = TokenGreaterOrEqual
 			tok.Literal = ">="
+			l.readChar()
+		} else if l.peekChar() == '>' {
+			l.readChar()
+			tok.Type = TokenRightShift
+			tok.Literal = ">>"
 			l.readChar()
 		} else {
 			tok.Type = TokenGreaterThan
@@ -282,6 +345,14 @@ func (l *Lexer) NextToken() Token {
 	case '-':
 		tok.Type = TokenMinus
 		tok.Literal = "-"
+		l.readChar()
+	case '/':
+		tok.Type = TokenSlash
+		tok.Literal = "/"
+		l.readChar()
+	case '%':
+		tok.Type = TokenModulo
+		tok.Literal = "%"
 		l.readChar()
 	case '\'':
 		tok = l.readString()
@@ -340,6 +411,12 @@ func (l *Lexer) readIdentifier() Token {
 		l.readChar()
 	}
 	literal := l.input[startPos:l.pos]
+
+	// Handle N'...' national string literals
+	if (literal == "N" || literal == "n") && l.ch == '\'' {
+		return l.readNationalString(startPos)
+	}
+
 	return Token{
 		Type:    lookupKeyword(literal),
 		Literal: literal,
@@ -388,8 +465,48 @@ func (l *Lexer) readString() Token {
 	}
 }
 
+func (l *Lexer) readNationalString(startPos int) Token {
+	// startPos already points to 'N', now we're at the opening quote
+	l.readChar() // skip opening quote
+	for l.ch != 0 {
+		if l.ch == '\'' {
+			if l.peekChar() == '\'' {
+				// Escaped quote
+				l.readChar()
+				l.readChar()
+				continue
+			}
+			break
+		}
+		l.readChar()
+	}
+	if l.ch == '\'' {
+		l.readChar() // skip closing quote
+	}
+	return Token{
+		Type:    TokenNationalString,
+		Literal: l.input[startPos:l.pos],
+		Pos:     startPos,
+	}
+}
+
 func (l *Lexer) readNumber() Token {
 	startPos := l.pos
+
+	// Check for binary literal (0x...)
+	if l.ch == '0' && (l.peekChar() == 'x' || l.peekChar() == 'X') {
+		l.readChar() // consume 0
+		l.readChar() // consume x
+		for isHexDigit(l.ch) {
+			l.readChar()
+		}
+		return Token{
+			Type:    TokenBinary,
+			Literal: l.input[startPos:l.pos],
+			Pos:     startPos,
+		}
+	}
+
 	for isDigit(l.ch) {
 		l.readChar()
 	}
@@ -405,6 +522,10 @@ func (l *Lexer) readNumber() Token {
 		Literal: l.input[startPos:l.pos],
 		Pos:     startPos,
 	}
+}
+
+func isHexDigit(ch byte) bool {
+	return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F')
 }
 
 func isLetter(ch byte) bool {
@@ -468,6 +589,11 @@ var keywords = map[string]TokenType{
 	"VALUES":        TokenValues,
 	"DEFAULT":       TokenDefault,
 	"NULL":          TokenNull,
+	"IS":            TokenIs,
+	"IN":            TokenIn,
+	"LIKE":          TokenLike,
+	"BETWEEN":       TokenBetween,
+	"ESCAPE":        TokenEscape,
 	"EXEC":          TokenExec,
 	"EXECUTE":       TokenExecute,
 	"OVER":          TokenOver,
@@ -482,6 +608,9 @@ var keywords = map[string]TokenType{
 	"DECLARE":       TokenDeclare,
 	"IF":            TokenIf,
 	"ELSE":          TokenElse,
+	"CASE":          TokenCase,
+	"WHEN":          TokenWhen,
+	"THEN":          TokenThen,
 	"WHILE":         TokenWhile,
 	"BEGIN":         TokenBegin,
 	"END":           TokenEnd,
@@ -517,7 +646,34 @@ var keywords = map[string]TokenType{
 	"ENCRYPTION":    TokenEncryption,
 	"PASSWORD":      TokenPassword,
 	"RAISERROR":     TokenRaiserror,
+	"READTEXT":      TokenReadtext,
+	"WRITETEXT":     TokenWritetext,
+	"UPDATETEXT":    TokenUpdatetext,
 	"TRUNCATE":      TokenTruncate,
+	"MOVE":          TokenMove,
+	"CONVERSATION":  TokenConversation,
+	"GET":           TokenGet,
+	"USE":           TokenUse,
+	"KILL":          TokenKill,
+	"CHECKPOINT":    TokenCheckpoint,
+	"RECONFIGURE":   TokenReconfigure,
+	"OVERRIDE":      TokenOverride,
+	"SHUTDOWN":      TokenShutdown,
+	"SETUSER":       TokenSetuser,
+	"LINENO":        TokenLineno,
+	"STATUSONLY":    TokenStatusonly,
+	"NORESET":       TokenNoreset,
+	"SEND":          TokenSend,
+	"MESSAGE":       TokenMessage,
+	"TYPE":          TokenTyp,
+	"RECEIVE":       TokenReceive,
+	"LOGIN":         TokenLogin,
+	"ADD":           TokenAdd,
+	"USER":          TokenUser,
+	"CALLER":        TokenCaller,
+	"NOREVERT":      TokenNoRevert,
+	"EXTERNAL":      TokenExternal,
+	"LANGUAGE":      TokenLanguage,
 }
 
 func lookupKeyword(ident string) TokenType {
