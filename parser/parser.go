@@ -359,6 +359,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterRoleStatement()
 		case "SERVER":
 			return p.parseAlterServerConfigurationStatement()
+		case "REMOTE":
+			return p.parseAlterRemoteServiceBindingStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -1059,6 +1061,82 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 
 	default:
 		return nil, fmt.Errorf("expected ADD, DROP, or WITH after role name, got %s", p.curTok.Literal)
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterRemoteServiceBindingStatement() (*ast.AlterRemoteServiceBindingStatement, error) {
+	// Consume REMOTE
+	p.nextToken()
+
+	// Expect SERVICE
+	if strings.ToUpper(p.curTok.Literal) != "SERVICE" {
+		return nil, fmt.Errorf("expected SERVICE after REMOTE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect BINDING
+	if strings.ToUpper(p.curTok.Literal) != "BINDING" {
+		return nil, fmt.Errorf("expected BINDING after SERVICE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterRemoteServiceBindingStatement{}
+
+	// Parse binding name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect WITH
+	if p.curTok.Type != TokenWith {
+		return nil, fmt.Errorf("expected WITH after binding name, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse options
+	for {
+		optionName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+		}
+		p.nextToken()
+
+		switch optionName {
+		case "USER":
+			opt := &ast.UserRemoteServiceBindingOption{
+				OptionKind: "User",
+				User:       p.parseIdentifier(),
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "ANONYMOUS":
+			optState := strings.ToUpper(p.curTok.Literal)
+			var state string
+			if optState == "ON" {
+				state = "On"
+			} else {
+				state = "Off"
+			}
+			p.nextToken()
+			opt := &ast.OnOffRemoteServiceBindingOption{
+				OptionKind:  "Anonymous",
+				OptionState: state,
+			}
+			stmt.Options = append(stmt.Options, opt)
+		}
+
+		// Check for comma
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
 	}
 
 	// Skip optional semicolon
@@ -6167,6 +6245,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterSchemaStatementToJSON(s)
 	case *ast.AlterRoleStatement:
 		return alterRoleStatementToJSON(s)
+	case *ast.AlterRemoteServiceBindingStatement:
+		return alterRemoteServiceBindingStatementToJSON(s)
 	case *ast.AlterServerConfigurationSetSoftNumaStatement:
 		return alterServerConfigurationSetSoftNumaStatementToJSON(s)
 	case *ast.AlterLoginAddDropCredentialStatement:
@@ -8643,6 +8723,45 @@ func alterRoleActionToJSON(a ast.AlterRoleAction) jsonNode {
 		return node
 	default:
 		return jsonNode{"$type": "UnknownAlterRoleAction"}
+	}
+}
+
+func alterRemoteServiceBindingStatementToJSON(s *ast.AlterRemoteServiceBindingStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterRemoteServiceBindingStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = remoteServiceBindingOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func remoteServiceBindingOptionToJSON(o ast.RemoteServiceBindingOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.UserRemoteServiceBindingOption:
+		node := jsonNode{
+			"$type":      "UserRemoteServiceBindingOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.User != nil {
+			node["User"] = identifierToJSON(opt.User)
+		}
+		return node
+	case *ast.OnOffRemoteServiceBindingOption:
+		return jsonNode{
+			"$type":       "OnOffRemoteServiceBindingOption",
+			"OptionState": opt.OptionState,
+			"OptionKind":  opt.OptionKind,
+		}
+	default:
+		return jsonNode{"$type": "UnknownRemoteServiceBindingOption"}
 	}
 }
 
