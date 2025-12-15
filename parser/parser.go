@@ -923,6 +923,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterFunctionStatement()
 	case TokenTrigger:
 		return p.parseAlterTriggerStatement()
+	case TokenIndex:
+		return p.parseAlterIndexStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -1231,6 +1233,11 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 	// Check for ADD
 	if strings.ToUpper(p.curTok.Literal) == "ADD" {
 		return p.parseAlterTableAddStatement(tableName)
+	}
+
+	// Check for ENABLE/DISABLE TRIGGER
+	if strings.ToUpper(p.curTok.Literal) == "ENABLE" || strings.ToUpper(p.curTok.Literal) == "DISABLE" {
+		return p.parseAlterTableTriggerModificationStatement(tableName)
 	}
 
 	return nil, fmt.Errorf("unexpected token in ALTER TABLE: %s", p.curTok.Literal)
@@ -1577,6 +1584,50 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 			return nil, err
 		}
 		stmt.Definition.ColumnDefinitions = append(stmt.Definition.ColumnDefinitions, colDef)
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterTableTriggerModificationStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableTriggerModificationStatement, error) {
+	stmt := &ast.AlterTableTriggerModificationStatement{
+		SchemaObjectName: tableName,
+	}
+
+	// Parse ENABLE or DISABLE
+	if strings.ToUpper(p.curTok.Literal) == "ENABLE" {
+		stmt.TriggerEnforcement = "Enable"
+	} else {
+		stmt.TriggerEnforcement = "Disable"
+	}
+	p.nextToken()
+
+	// Expect TRIGGER keyword
+	if strings.ToUpper(p.curTok.Literal) != "TRIGGER" {
+		return nil, fmt.Errorf("expected TRIGGER after %s, got %s", stmt.TriggerEnforcement, p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for ALL or trigger names
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		stmt.All = true
+		p.nextToken()
+	} else {
+		stmt.All = false
+		// Parse trigger names (comma-separated)
+		for {
+			stmt.TriggerNames = append(stmt.TriggerNames, p.parseIdentifier())
+
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume comma
+		}
 	}
 
 	// Skip optional semicolon
@@ -7294,6 +7345,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterFunctionStatementToJSON(s)
 	case *ast.AlterTriggerStatement:
 		return alterTriggerStatementToJSON(s)
+	case *ast.AlterIndexStatement:
+		return alterIndexStatementToJSON(s)
 	case *ast.DropDatabaseStatement:
 		return dropDatabaseStatementToJSON(s)
 	case *ast.DropTableStatement:
@@ -7316,6 +7369,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropRuleStatementToJSON(s)
 	case *ast.DropSchemaStatement:
 		return dropSchemaStatementToJSON(s)
+	case *ast.AlterTableTriggerModificationStatement:
+		return alterTableTriggerModificationStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -10695,6 +10750,163 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 	return stmt, nil
 }
 
+func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
+	// Consume INDEX
+	p.nextToken()
+
+	stmt := &ast.AlterIndexStatement{}
+
+	// Check for ALL or index name
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		stmt.All = true
+		p.nextToken()
+	} else {
+		// Parse index name
+		stmt.Name = p.parseIdentifier()
+	}
+
+	// Expect ON
+	if strings.ToUpper(p.curTok.Literal) != "ON" {
+		return nil, fmt.Errorf("expected ON, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse table name
+	onName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.OnName = onName
+
+	// Parse alter index type
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "REBUILD":
+		stmt.AlterIndexType = "Rebuild"
+		p.nextToken()
+	case "REORGANIZE":
+		stmt.AlterIndexType = "Reorganize"
+		p.nextToken()
+	case "DISABLE":
+		stmt.AlterIndexType = "Disable"
+		p.nextToken()
+	case "SET":
+		stmt.AlterIndexType = "Set"
+		p.nextToken()
+	case "RESUME":
+		stmt.AlterIndexType = "Resume"
+		p.nextToken()
+	case "PAUSE":
+		stmt.AlterIndexType = "Pause"
+		p.nextToken()
+	case "ABORT":
+		stmt.AlterIndexType = "Abort"
+		p.nextToken()
+	}
+
+	// Parse PARTITION clause if present
+	if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+		p.nextToken()
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after PARTITION, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+
+		stmt.Partition = &ast.PartitionSpecifier{}
+		if strings.ToUpper(p.curTok.Literal) == "ALL" {
+			stmt.Partition.All = true
+			p.nextToken()
+		} else {
+			// Parse partition number
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Partition.Number = expr
+		}
+	}
+
+	// Parse WITH clause if present
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			optionName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+				valueStr := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+
+				// Determine if it's a state option (ON/OFF) or expression option
+				if valueStr == "ON" || valueStr == "OFF" {
+					opt := &ast.IndexStateOption{
+						OptionKind:  p.getIndexOptionKind(optionName),
+						OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, opt)
+				} else {
+					// Expression option like FILLFACTOR = 80
+					opt := &ast.IndexExpressionOption{
+						OptionKind: p.getIndexOptionKind(optionName),
+						Expression: &ast.IntegerLiteral{Value: valueStr},
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, opt)
+				}
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) getIndexOptionKind(optionName string) string {
+	optionMap := map[string]string{
+		"PAD_INDEX":             "PadIndex",
+		"FILLFACTOR":            "FillFactor",
+		"SORT_IN_TEMPDB":        "SortInTempDB",
+		"IGNORE_DUP_KEY":        "IgnoreDupKey",
+		"STATISTICS_NORECOMPUTE": "StatisticsNoRecompute",
+		"DROP_EXISTING":         "DropExisting",
+		"ONLINE":                "Online",
+		"ALLOW_ROW_LOCKS":       "AllowRowLocks",
+		"ALLOW_PAGE_LOCKS":      "AllowPageLocks",
+		"MAXDOP":                "MaxDop",
+		"DATA_COMPRESSION":      "DataCompression",
+		"RESUMABLE":             "Resumable",
+		"MAX_DURATION":          "MaxDuration",
+		"WAIT_AT_LOW_PRIORITY":  "WaitAtLowPriority",
+	}
+	if kind, ok := optionMap[optionName]; ok {
+		return kind
+	}
+	return optionName
+}
+
+func (p *Parser) capitalizeFirst(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
 // parseCreateFunctionStatement parses a CREATE FUNCTION statement
 func (p *Parser) parseCreateFunctionStatement() (*ast.AlterFunctionStatement, error) {
 	// For now, CREATE FUNCTION uses the same structure as ALTER FUNCTION
@@ -11153,6 +11365,61 @@ func triggerActionToJSON(a *ast.TriggerAction) jsonNode {
 	}
 }
 
+func alterIndexStatementToJSON(s *ast.AlterIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type":          "AlterIndexStatement",
+		"All":            s.All,
+		"AlterIndexType": s.AlterIndexType,
+	}
+	if s.Partition != nil {
+		node["Partition"] = partitionSpecifierToJSON(s.Partition)
+	}
+	if s.OnName != nil {
+		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.IndexOptions) > 0 {
+		opts := make([]jsonNode, len(s.IndexOptions))
+		for i, opt := range s.IndexOptions {
+			opts[i] = indexOptionToJSON(opt)
+		}
+		node["IndexOptions"] = opts
+	}
+	return node
+}
+
+func partitionSpecifierToJSON(p *ast.PartitionSpecifier) jsonNode {
+	node := jsonNode{
+		"$type": "PartitionSpecifier",
+		"All":   p.All,
+	}
+	if p.Number != nil {
+		node["Number"] = scalarExpressionToJSON(p.Number)
+	}
+	return node
+}
+
+func indexOptionToJSON(opt ast.IndexOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.IndexStateOption:
+		return jsonNode{
+			"$type":       "IndexStateOption",
+			"OptionState": o.OptionState,
+			"OptionKind":  o.OptionKind,
+		}
+	case *ast.IndexExpressionOption:
+		return jsonNode{
+			"$type":      "IndexExpressionOption",
+			"OptionKind": o.OptionKind,
+			"Expression": scalarExpressionToJSON(o.Expression),
+		}
+	default:
+		return jsonNode{"$type": "UnknownIndexOption"}
+	}
+}
+
 func convertUserOptionKind(name string) string {
 	// Convert option names to the expected format
 	optionMap := map[string]string{
@@ -11340,6 +11607,25 @@ func dropSchemaStatementToJSON(s *ast.DropSchemaStatement) jsonNode {
 	}
 	if s.Schema != nil {
 		node["Schema"] = schemaObjectNameToJSON(s.Schema)
+	}
+	return node
+}
+
+func alterTableTriggerModificationStatementToJSON(s *ast.AlterTableTriggerModificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":              "AlterTableTriggerModificationStatement",
+		"TriggerEnforcement": s.TriggerEnforcement,
+		"All":                s.All,
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	if len(s.TriggerNames) > 0 {
+		names := make([]jsonNode, len(s.TriggerNames))
+		for i, name := range s.TriggerNames {
+			names[i] = identifierToJSON(name)
+		}
+		node["TriggerNames"] = names
 	}
 	return node
 }
