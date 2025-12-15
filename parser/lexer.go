@@ -165,6 +165,7 @@ const (
 	TokenRaiserror
 	TokenReadtext
 	TokenWritetext
+	TokenUpdatetext
 	TokenTruncate
 	TokenColon
 	TokenColonColon
@@ -647,6 +648,7 @@ var keywords = map[string]TokenType{
 	"RAISERROR":     TokenRaiserror,
 	"READTEXT":      TokenReadtext,
 	"WRITETEXT":     TokenWritetext,
+	"UPDATETEXT":    TokenUpdatetext,
 	"TRUNCATE":      TokenTruncate,
 	"MOVE":          TokenMove,
 	"CONVERSATION":  TokenConversation,
