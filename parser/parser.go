@@ -163,6 +163,8 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseRaiseErrorStatement()
 	case TokenReadtext:
 		return p.parseReadTextStatement()
+	case TokenWritetext:
+		return p.parseWriteTextStatement()
 	case TokenSend:
 		return p.parseSendStatement()
 	case TokenReceive:
@@ -361,6 +363,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterServerConfigurationStatement()
 		case "REMOTE":
 			return p.parseAlterRemoteServiceBindingStatement()
+		case "XML":
+			return p.parseAlterXmlSchemaCollectionStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -1137,6 +1141,151 @@ func (p *Parser) parseAlterRemoteServiceBindingStatement() (*ast.AlterRemoteServ
 		} else {
 			break
 		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterXmlSchemaCollectionStatement() (*ast.AlterXmlSchemaCollectionStatement, error) {
+	// Consume XML
+	p.nextToken()
+
+	// Expect SCHEMA
+	if strings.ToUpper(p.curTok.Literal) != "SCHEMA" {
+		return nil, fmt.Errorf("expected SCHEMA after XML, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect COLLECTION
+	if strings.ToUpper(p.curTok.Literal) != "COLLECTION" {
+		return nil, fmt.Errorf("expected COLLECTION after SCHEMA, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterXmlSchemaCollectionStatement{}
+
+	// Parse collection name (can be one or two parts)
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Expect ADD
+	if strings.ToUpper(p.curTok.Literal) != "ADD" {
+		return nil, fmt.Errorf("expected ADD after collection name, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse expression (variable or string literal)
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Expression = expr
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateXmlSchemaCollectionStatement() (*ast.CreateXmlSchemaCollectionStatement, error) {
+	// Consume XML
+	p.nextToken()
+
+	// Expect SCHEMA
+	if strings.ToUpper(p.curTok.Literal) != "SCHEMA" {
+		return nil, fmt.Errorf("expected SCHEMA after XML, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect COLLECTION
+	if strings.ToUpper(p.curTok.Literal) != "COLLECTION" {
+		return nil, fmt.Errorf("expected COLLECTION after SCHEMA, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.CreateXmlSchemaCollectionStatement{}
+
+	// Parse collection name (can be one or two parts)
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		return nil, fmt.Errorf("expected AS after collection name, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse expression (variable or string literal)
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Expression = expr
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateSearchPropertyListStatement() (*ast.CreateSearchPropertyListStatement, error) {
+	// Consume SEARCH
+	p.nextToken()
+
+	// Expect PROPERTY
+	if strings.ToUpper(p.curTok.Literal) != "PROPERTY" {
+		return nil, fmt.Errorf("expected PROPERTY after SEARCH, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect LIST
+	if strings.ToUpper(p.curTok.Literal) != "LIST" {
+		return nil, fmt.Errorf("expected LIST after PROPERTY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.CreateSearchPropertyListStatement{}
+
+	// Parse name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for optional FROM clause
+	if strings.ToUpper(p.curTok.Literal) == "FROM" {
+		p.nextToken()
+		// Parse source property list name (can be one or two parts)
+		multiPart := &ast.MultiPartIdentifier{}
+		for {
+			id := p.parseIdentifier()
+			multiPart.Identifiers = append(multiPart.Identifiers, id)
+			if p.curTok.Type == TokenDot {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		multiPart.Count = len(multiPart.Identifiers)
+		stmt.SourceSearchPropertyList = multiPart
+	}
+
+	// Check for optional AUTHORIZATION clause
+	if p.curTok.Type == TokenAuthorization {
+		p.nextToken()
+		stmt.Owner = p.parseIdentifier()
 	}
 
 	// Skip optional semicolon
@@ -1934,6 +2083,10 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			return &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, nil
 		}
 		return &ast.IntegerLiteral{LiteralType: "Integer", Value: val}, nil
+	case TokenBinary:
+		val := p.curTok.Literal
+		p.nextToken()
+		return &ast.BinaryLiteral{LiteralType: "Binary", Value: val, IsLargeObject: false}, nil
 	case TokenString:
 		return p.parseStringLiteral()
 	case TokenNationalString:
@@ -4259,6 +4412,10 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateRuleStatement()
 		case "SYNONYM":
 			return p.parseCreateSynonymStatement()
+		case "XML":
+			return p.parseCreateXmlSchemaCollectionStatement()
+		case "SEARCH":
+			return p.parseCreateSearchPropertyListStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	default:
@@ -5868,6 +6025,81 @@ func (p *Parser) parseReadTextStatement() (*ast.ReadTextStatement, error) {
 	return stmt, nil
 }
 
+func (p *Parser) parseWriteTextStatement() (*ast.WriteTextStatement, error) {
+	// Consume WRITETEXT
+	p.nextToken()
+
+	stmt := &ast.WriteTextStatement{}
+
+	// Check for BULK keyword
+	if strings.ToUpper(p.curTok.Literal) == "BULK" {
+		stmt.Bulk = true
+		p.nextToken()
+	}
+
+	// Parse column (multi-part identifier like t1.c1)
+	multiPart := &ast.MultiPartIdentifier{}
+	for {
+		id := p.parseIdentifier()
+		multiPart.Identifiers = append(multiPart.Identifiers, id)
+
+		if p.curTok.Type == TokenDot {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+	multiPart.Count = len(multiPart.Identifiers)
+	stmt.Column = &ast.ColumnReferenceExpression{
+		ColumnType:          "Regular",
+		MultiPartIdentifier: multiPart,
+	}
+
+	// Parse text ID (can be binary literal, variable, or integer)
+	if p.curTok.Type == TokenBinary {
+		stmt.TextId = &ast.BinaryLiteral{
+			LiteralType:   "Binary",
+			Value:         p.curTok.Literal,
+			IsLargeObject: false,
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		stmt.TextId = &ast.VariableReference{Name: p.curTok.Literal}
+		p.nextToken()
+	} else if p.curTok.Type == TokenNumber {
+		stmt.TextId = &ast.IntegerLiteral{
+			LiteralType: "Integer",
+			Value:       p.curTok.Literal,
+		}
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected text ID, got %s", p.curTok.Literal)
+	}
+
+	// Check for optional WITH LOG
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "LOG" {
+			stmt.WithLog = true
+			p.nextToken()
+		}
+	}
+
+	// Parse source parameter (variable, string literal, binary literal, or NULL)
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.SourceParameter = expr
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseGotoStatement() (*ast.GoToStatement, error) {
 	// Consume GOTO
 	p.nextToken()
@@ -6231,6 +6463,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return raiseErrorStatementToJSON(s)
 	case *ast.ReadTextStatement:
 		return readTextStatementToJSON(s)
+	case *ast.WriteTextStatement:
+		return writeTextStatementToJSON(s)
 	case *ast.GoToStatement:
 		return goToStatementToJSON(s)
 	case *ast.LabelStatement:
@@ -6247,6 +6481,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterRoleStatementToJSON(s)
 	case *ast.AlterRemoteServiceBindingStatement:
 		return alterRemoteServiceBindingStatementToJSON(s)
+	case *ast.AlterXmlSchemaCollectionStatement:
+		return alterXmlSchemaCollectionStatementToJSON(s)
 	case *ast.AlterServerConfigurationSetSoftNumaStatement:
 		return alterServerConfigurationSetSoftNumaStatementToJSON(s)
 	case *ast.AlterLoginAddDropCredentialStatement:
@@ -6259,6 +6495,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return receiveStatementToJSON(s)
 	case *ast.CreateCredentialStatement:
 		return createCredentialStatementToJSON(s)
+	case *ast.CreateXmlSchemaCollectionStatement:
+		return createXmlSchemaCollectionStatementToJSON(s)
+	case *ast.CreateSearchPropertyListStatement:
+		return createSearchPropertyListStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -8510,6 +8750,24 @@ func readTextStatementToJSON(s *ast.ReadTextStatement) jsonNode {
 	return node
 }
 
+func writeTextStatementToJSON(s *ast.WriteTextStatement) jsonNode {
+	node := jsonNode{
+		"$type":   "WriteTextStatement",
+		"Bulk":    s.Bulk,
+		"WithLog": s.WithLog,
+	}
+	if s.SourceParameter != nil {
+		node["SourceParameter"] = scalarExpressionToJSON(s.SourceParameter)
+	}
+	if s.Column != nil {
+		node["Column"] = columnReferenceExpressionToJSON(s.Column)
+	}
+	if s.TextId != nil {
+		node["TextId"] = scalarExpressionToJSON(s.TextId)
+	}
+	return node
+}
+
 func columnReferenceExpressionToJSON(c *ast.ColumnReferenceExpression) jsonNode {
 	node := jsonNode{
 		"$type": "ColumnReferenceExpression",
@@ -8763,6 +9021,48 @@ func remoteServiceBindingOptionToJSON(o ast.RemoteServiceBindingOption) jsonNode
 	default:
 		return jsonNode{"$type": "UnknownRemoteServiceBindingOption"}
 	}
+}
+
+func alterXmlSchemaCollectionStatementToJSON(s *ast.AlterXmlSchemaCollectionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterXmlSchemaCollectionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.Expression != nil {
+		node["Expression"] = scalarExpressionToJSON(s.Expression)
+	}
+	return node
+}
+
+func createXmlSchemaCollectionStatementToJSON(s *ast.CreateXmlSchemaCollectionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateXmlSchemaCollectionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.Expression != nil {
+		node["Expression"] = scalarExpressionToJSON(s.Expression)
+	}
+	return node
+}
+
+func createSearchPropertyListStatementToJSON(s *ast.CreateSearchPropertyListStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateSearchPropertyListStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.SourceSearchPropertyList != nil {
+		node["SourceSearchPropertyList"] = multiPartIdentifierToJSON(s.SourceSearchPropertyList)
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
+	return node
 }
 
 func alterServerConfigurationSetSoftNumaStatementToJSON(s *ast.AlterServerConfigurationSetSoftNumaStatement) jsonNode {

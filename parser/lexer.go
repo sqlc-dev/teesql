@@ -164,6 +164,7 @@ const (
 	TokenLabel
 	TokenRaiserror
 	TokenReadtext
+	TokenWritetext
 	TokenTruncate
 	TokenColon
 	TokenColonColon
@@ -645,6 +646,7 @@ var keywords = map[string]TokenType{
 	"PASSWORD":      TokenPassword,
 	"RAISERROR":     TokenRaiserror,
 	"READTEXT":      TokenReadtext,
+	"WRITETEXT":     TokenWritetext,
 	"TRUNCATE":      TokenTruncate,
 	"MOVE":          TokenMove,
 	"CONVERSATION":  TokenConversation,
