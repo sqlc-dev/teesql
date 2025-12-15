@@ -1,0 +1,35 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateQueueStatement",
+          "Name": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "t1"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ],
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "sc"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

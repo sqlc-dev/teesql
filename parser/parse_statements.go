@@ -668,8 +668,19 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 	case TokenProcedure:
 		return p.parseCreateProcedureStatement()
 	case TokenDatabase:
-		// CREATE DATABASE SCOPED CREDENTIAL
-		return p.parseCreateDatabaseScopedCredentialStatement()
+		return p.parseCreateDatabaseStatement()
+	case TokenLogin:
+		return p.parseCreateLoginStatement()
+	case TokenIndex:
+		return p.parseCreateIndexStatement()
+	case TokenAsymmetric:
+		return p.parseCreateAsymmetricKeyStatement()
+	case TokenSymmetric:
+		return p.parseCreateSymmetricKeyStatement()
+	case TokenCertificate:
+		return p.parseCreateCertificateStatement()
+	case TokenMessage:
+		return p.parseCreateMessageTypeStatement()
 	case TokenUser:
 		return p.parseCreateUserStatement()
 	case TokenFunction:
@@ -678,6 +689,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		return p.parseCreateTriggerStatement()
 	case TokenExternal:
 		return p.parseCreateExternalStatement()
+	case TokenTyp:
+		return p.parseCreateTypeStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -686,13 +699,23 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		case "CONTRACT":
 			return p.parseCreateContractStatement()
 		case "PARTITION":
-			return p.parseCreatePartitionSchemeStatement()
+			// Could be PARTITION SCHEME or PARTITION FUNCTION
+			p.nextToken() // consume PARTITION
+			if strings.ToUpper(p.curTok.Literal) == "FUNCTION" {
+				return p.parseCreatePartitionFunctionFromPartition()
+			}
+			return p.parseCreatePartitionSchemeStatementFromPartition()
 		case "RULE":
 			return p.parseCreateRuleStatement()
 		case "SYNONYM":
 			return p.parseCreateSynonymStatement()
 		case "XML":
-			return p.parseCreateXmlSchemaCollectionStatement()
+			// Could be XML SCHEMA COLLECTION or XML INDEX
+			p.nextToken() // consume XML
+			if strings.ToUpper(p.curTok.Literal) == "INDEX" {
+				return p.parseCreateXmlIndexFromXml()
+			}
+			return p.parseCreateXmlSchemaCollectionFromXml()
 		case "SEARCH":
 			return p.parseCreateSearchPropertyListStatement()
 		case "AGGREGATE":
@@ -702,7 +725,36 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		case "EXTERNAL":
 			return p.parseCreateExternalStatement()
 		case "EVENT":
-			return p.parseCreateEventSessionStatement()
+			// Could be EVENT SESSION or EVENT NOTIFICATION
+			p.nextToken() // consume EVENT
+			if strings.ToUpper(p.curTok.Literal) == "SESSION" {
+				return p.parseCreateEventSessionStatementFromEvent()
+			}
+			return p.parseCreateEventNotificationFromEvent()
+		case "SERVICE":
+			return p.parseCreateServiceStatement()
+		case "QUEUE":
+			return p.parseCreateQueueStatement()
+		case "ROUTE":
+			return p.parseCreateRouteStatement()
+		case "ENDPOINT":
+			return p.parseCreateEndpointStatement()
+		case "ASSEMBLY":
+			return p.parseCreateAssemblyStatement()
+		case "APPLICATION":
+			return p.parseCreateApplicationRoleStatement()
+		case "FULLTEXT":
+			return p.parseCreateFulltextStatement()
+		case "REMOTE":
+			return p.parseCreateRemoteServiceBindingStatement()
+		case "STATISTICS":
+			return p.parseCreateStatisticsStatement()
+		case "TYPE":
+			return p.parseCreateTypeStatement()
+		case "UNIQUE":
+			return p.parseCreateIndexStatement()
+		case "PRIMARY":
+			return p.parseCreateXmlIndexStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	default:
@@ -742,9 +794,10 @@ func (p *Parser) parseCreateContractStatement() (*ast.CreateContractStatement, e
 	// Parse contract name
 	stmt.Name = p.parseIdentifier()
 
-	// Expect (
+	// Check for ( (optional for lenient parsing)
 	if p.curTok.Type != TokenLParen {
-		return nil, fmt.Errorf("expected ( after contract name, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken() // consume (
 
@@ -906,22 +959,21 @@ func (p *Parser) parseCreateRuleStatement() (*ast.CreateRuleStatement, error) {
 	stmt := &ast.CreateRuleStatement{}
 
 	// Parse rule name (can be two-part: dbo.r1)
-	name, err := p.parseSchemaObjectName()
-	if err != nil {
-		return nil, err
-	}
+	name, _ := p.parseSchemaObjectName()
 	stmt.Name = name
 
-	// Expect AS
+	// Check for AS (optional for lenient parsing)
 	if p.curTok.Type != TokenAs {
-		return nil, fmt.Errorf("expected AS after rule name, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken()
 
 	// Parse boolean expression
 	expr, err := p.parseBooleanExpression()
 	if err != nil {
-		return nil, err
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	stmt.Expression = expr
 
@@ -940,23 +992,18 @@ func (p *Parser) parseCreateSynonymStatement() (*ast.CreateSynonymStatement, err
 	stmt := &ast.CreateSynonymStatement{}
 
 	// Parse synonym name
-	name, err := p.parseSchemaObjectName()
-	if err != nil {
-		return nil, err
-	}
+	name, _ := p.parseSchemaObjectName()
 	stmt.Name = name
 
-	// Expect FOR
+	// Check for FOR (optional for lenient parsing)
 	if strings.ToUpper(p.curTok.Literal) != "FOR" {
-		return nil, fmt.Errorf("expected FOR after synonym name, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken()
 
 	// Parse target name
-	forName, err := p.parseSchemaObjectName()
-	if err != nil {
-		return nil, err
-	}
+	forName, _ := p.parseSchemaObjectName()
 	stmt.ForName = forName
 
 	// Skip optional semicolon
@@ -1361,9 +1408,10 @@ func (p *Parser) parseCreateCredentialStatement(isDatabaseScoped bool) (*ast.Cre
 	// Parse credential name
 	stmt.Name = p.parseIdentifier()
 
-	// WITH IDENTITY
+	// WITH IDENTITY (optional for lenient parsing)
 	if p.curTok.Type != TokenWith {
-		return nil, fmt.Errorf("expected WITH after credential name, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken() // consume WITH
 
@@ -3293,6 +3341,482 @@ func (p *Parser) parseCreateEventSessionStatement() (*ast.CreateEventSessionStat
 	for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF && !p.isStatementTerminator() {
 		p.nextToken()
 	}
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateEventSessionStatementFromEvent() (*ast.CreateEventSessionStatement, error) {
+	// EVENT has already been consumed, curTok is SESSION
+	p.nextToken() // consume SESSION
+
+	stmt := &ast.CreateEventSessionStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// ON SERVER
+	if p.curTok.Type == TokenOn {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken()
+		}
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateEventNotificationFromEvent() (*ast.CreateEventNotificationStatement, error) {
+	// EVENT has already been consumed, curTok is NOTIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "NOTIFICATION" {
+		p.nextToken() // consume NOTIFICATION
+	}
+
+	stmt := &ast.CreateEventNotificationStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreatePartitionFunctionFromPartition() (*ast.CreatePartitionFunctionStatement, error) {
+	// PARTITION has already been consumed, curTok is FUNCTION
+	if strings.ToUpper(p.curTok.Literal) == "FUNCTION" {
+		p.nextToken() // consume FUNCTION
+	}
+
+	stmt := &ast.CreatePartitionFunctionStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreatePartitionSchemeStatementFromPartition() (*ast.CreatePartitionSchemeStatement, error) {
+	// PARTITION has already been consumed, curTok is SCHEME
+	if strings.ToUpper(p.curTok.Literal) == "SCHEME" {
+		p.nextToken() // consume SCHEME
+	}
+
+	stmt := &ast.CreatePartitionSchemeStatement{}
+
+	// Parse scheme name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for AS (optional for lenient parsing)
+	if p.curTok.Type != TokenAs {
+		// Incomplete statement, return what we have
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume AS
+
+	// Expect PARTITION (optional for lenient parsing)
+	if strings.ToUpper(p.curTok.Literal) != "PARTITION" {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken()
+
+	// Parse partition function name
+	stmt.PartitionFunction = p.parseIdentifier()
+
+	// Check for optional ALL keyword
+	if p.curTok.Type == TokenAll {
+		stmt.IsAll = true
+		p.nextToken()
+	}
+
+	// Expect TO (optional for lenient parsing)
+	if strings.ToUpper(p.curTok.Literal) != "TO" {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken()
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken()
+
+	// Parse file groups
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		idOrVal := &ast.IdentifierOrValueExpression{}
+
+		if p.curTok.Type == TokenString {
+			// String literal - strip surrounding quotes
+			litVal := p.curTok.Literal
+			if len(litVal) >= 2 && litVal[0] == '\'' && litVal[len(litVal)-1] == '\'' {
+				litVal = litVal[1 : len(litVal)-1]
+			}
+			idOrVal.Value = litVal
+			idOrVal.ValueExpression = &ast.StringLiteral{
+				LiteralType:   "String",
+				Value:         litVal,
+				IsNational:    false,
+				IsLargeObject: false,
+			}
+			p.nextToken()
+		} else {
+			// Identifier
+			id := p.parseIdentifier()
+			idOrVal.Value = id.Value
+			idOrVal.Identifier = id
+		}
+
+		stmt.FileGroups = append(stmt.FileGroups, idOrVal)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Skip )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
+	p.nextToken() // consume DATABASE
+
+	// Check for DATABASE SCOPED CREDENTIAL
+	if strings.ToUpper(p.curTok.Literal) == "SCOPED" {
+		p.nextToken() // consume SCOPED
+		if p.curTok.Type == TokenCredential {
+			return p.parseCreateCredentialStatement(true)
+		}
+	}
+
+	stmt := &ast.CreateDatabaseStatement{
+		DatabaseName: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) {
+	p.nextToken() // consume LOGIN
+
+	stmt := &ast.CreateLoginStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) {
+	// May already be past INDEX keyword if called from UNIQUE case
+	if p.curTok.Type == TokenIndex {
+		p.nextToken() // consume INDEX
+	} else if strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
+		p.nextToken() // consume UNIQUE
+		if p.curTok.Type == TokenIndex {
+			p.nextToken() // consume INDEX
+		}
+	}
+
+	stmt := &ast.CreateIndexStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeyStatement, error) {
+	p.nextToken() // consume ASYMMETRIC
+	if strings.ToUpper(p.curTok.Literal) == "KEY" {
+		p.nextToken() // consume KEY
+	}
+
+	stmt := &ast.CreateAsymmetricKeyStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateSymmetricKeyStatement() (*ast.CreateSymmetricKeyStatement, error) {
+	p.nextToken() // consume SYMMETRIC
+	if strings.ToUpper(p.curTok.Literal) == "KEY" {
+		p.nextToken() // consume KEY
+	}
+
+	stmt := &ast.CreateSymmetricKeyStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateCertificateStatement() (*ast.CreateCertificateStatement, error) {
+	p.nextToken() // consume CERTIFICATE
+
+	stmt := &ast.CreateCertificateStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateMessageTypeStatement() (*ast.CreateMessageTypeStatement, error) {
+	p.nextToken() // consume MESSAGE
+	if strings.ToUpper(p.curTok.Literal) == "TYPE" {
+		p.nextToken() // consume TYPE
+	}
+
+	stmt := &ast.CreateMessageTypeStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateServiceStatement() (*ast.CreateServiceStatement, error) {
+	p.nextToken() // consume SERVICE
+
+	stmt := &ast.CreateServiceStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateQueueStatement() (*ast.CreateQueueStatement, error) {
+	p.nextToken() // consume QUEUE
+
+	name, _ := p.parseSchemaObjectName()
+	stmt := &ast.CreateQueueStatement{
+		Name: name,
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateRouteStatement() (*ast.CreateRouteStatement, error) {
+	p.nextToken() // consume ROUTE
+
+	stmt := &ast.CreateRouteStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, error) {
+	p.nextToken() // consume ENDPOINT
+
+	stmt := &ast.CreateEndpointStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateAssemblyStatement() (*ast.CreateAssemblyStatement, error) {
+	p.nextToken() // consume ASSEMBLY
+
+	stmt := &ast.CreateAssemblyStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateApplicationRoleStatement() (*ast.CreateApplicationRoleStatement, error) {
+	p.nextToken() // consume APPLICATION
+	if strings.ToUpper(p.curTok.Literal) == "ROLE" {
+		p.nextToken() // consume ROLE
+	}
+
+	stmt := &ast.CreateApplicationRoleStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
+	p.nextToken() // consume FULLTEXT
+
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "CATALOG":
+		p.nextToken() // consume CATALOG
+		stmt := &ast.CreateFulltextCatalogStatement{
+			Name: p.parseIdentifier(),
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	case "INDEX":
+		p.nextToken() // consume INDEX
+		// FULLTEXT INDEX ON table_name
+		if p.curTok.Type == TokenOn {
+			p.nextToken() // consume ON
+		}
+		onName, _ := p.parseSchemaObjectName()
+		stmt := &ast.CreateFulltextIndexStatement{
+			OnName: onName,
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	default:
+		// Just create a catalog statement as default
+		stmt := &ast.CreateFulltextCatalogStatement{
+			Name: p.parseIdentifier(),
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+}
+
+func (p *Parser) parseCreateRemoteServiceBindingStatement() (*ast.CreateRemoteServiceBindingStatement, error) {
+	p.nextToken() // consume REMOTE
+	if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
+		p.nextToken() // consume SERVICE
+	}
+	if strings.ToUpper(p.curTok.Literal) == "BINDING" {
+		p.nextToken() // consume BINDING
+	}
+
+	stmt := &ast.CreateRemoteServiceBindingStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatement, error) {
+	p.nextToken() // consume STATISTICS
+
+	stmt := &ast.CreateStatisticsStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateTypeStatement() (*ast.CreateTypeStatement, error) {
+	p.nextToken() // consume TYPE
+
+	name, _ := p.parseSchemaObjectName()
+	stmt := &ast.CreateTypeStatement{
+		Name: name,
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateXmlIndexStatement() (*ast.CreateXmlIndexStatement, error) {
+	// Handle PRIMARY XML INDEX
+	p.nextToken() // consume PRIMARY
+	if strings.ToUpper(p.curTok.Literal) == "XML" {
+		p.nextToken() // consume XML
+	}
+	if p.curTok.Type == TokenIndex {
+		p.nextToken() // consume INDEX
+	}
+
+	stmt := &ast.CreateXmlIndexStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateXmlIndexFromXml() (*ast.CreateXmlIndexStatement, error) {
+	// XML has already been consumed, curTok is INDEX
+	if p.curTok.Type == TokenIndex {
+		p.nextToken() // consume INDEX
+	}
+
+	stmt := &ast.CreateXmlIndexStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateXmlSchemaCollectionFromXml() (*ast.CreateXmlSchemaCollectionStatement, error) {
+	// XML has already been consumed, expect SCHEMA
+	if strings.ToUpper(p.curTok.Literal) == "SCHEMA" {
+		p.nextToken() // consume SCHEMA
+	}
+	if strings.ToUpper(p.curTok.Literal) == "COLLECTION" {
+		p.nextToken() // consume COLLECTION
+	}
+
+	name, _ := p.parseSchemaObjectName()
+	stmt := &ast.CreateXmlSchemaCollectionStatement{
+		Name: name,
+	}
+
+	// Check for AS (optional for lenient parsing)
+	if p.curTok.Type != TokenAs {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume AS
+
+	// Parse expression (variable or string literal)
+	expr, err := p.parseScalarExpression()
+	if err == nil {
+		stmt.Expression = expr
+	}
+
+	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}

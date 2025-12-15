@@ -110,6 +110,20 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterCredentialStatementToJSON(s)
 	case *ast.AlterDatabaseSetStatement:
 		return alterDatabaseSetStatementToJSON(s)
+	case *ast.AlterDatabaseAddFileStatement:
+		return alterDatabaseAddFileStatementToJSON(s)
+	case *ast.AlterDatabaseAddFileGroupStatement:
+		return alterDatabaseAddFileGroupStatementToJSON(s)
+	case *ast.AlterDatabaseModifyFileStatement:
+		return alterDatabaseModifyFileStatementToJSON(s)
+	case *ast.AlterDatabaseModifyFileGroupStatement:
+		return alterDatabaseModifyFileGroupStatementToJSON(s)
+	case *ast.AlterDatabaseModifyNameStatement:
+		return alterDatabaseModifyNameStatementToJSON(s)
+	case *ast.AlterDatabaseRemoveFileStatement:
+		return alterDatabaseRemoveFileStatementToJSON(s)
+	case *ast.AlterDatabaseRemoveFileGroupStatement:
+		return alterDatabaseRemoveFileGroupStatementToJSON(s)
 	case *ast.RevertStatement:
 		return revertStatementToJSON(s)
 	case *ast.DropCredentialStatement:
@@ -248,6 +262,48 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTriggerStatementToJSON(s)
 	case *ast.CreateTriggerStatement:
 		return createTriggerStatementToJSON(s)
+	case *ast.CreateDatabaseStatement:
+		return createDatabaseStatementToJSON(s)
+	case *ast.CreateLoginStatement:
+		return createLoginStatementToJSON(s)
+	case *ast.CreateIndexStatement:
+		return createIndexStatementToJSON(s)
+	case *ast.CreateAsymmetricKeyStatement:
+		return createAsymmetricKeyStatementToJSON(s)
+	case *ast.CreateSymmetricKeyStatement:
+		return createSymmetricKeyStatementToJSON(s)
+	case *ast.CreateCertificateStatement:
+		return createCertificateStatementToJSON(s)
+	case *ast.CreateMessageTypeStatement:
+		return createMessageTypeStatementToJSON(s)
+	case *ast.CreateServiceStatement:
+		return createServiceStatementToJSON(s)
+	case *ast.CreateQueueStatement:
+		return createQueueStatementToJSON(s)
+	case *ast.CreateRouteStatement:
+		return createRouteStatementToJSON(s)
+	case *ast.CreateEndpointStatement:
+		return createEndpointStatementToJSON(s)
+	case *ast.CreateAssemblyStatement:
+		return createAssemblyStatementToJSON(s)
+	case *ast.CreateApplicationRoleStatement:
+		return createApplicationRoleStatementToJSON(s)
+	case *ast.CreateFulltextCatalogStatement:
+		return createFulltextCatalogStatementToJSON(s)
+	case *ast.CreateFulltextIndexStatement:
+		return createFulltextIndexStatementToJSON(s)
+	case *ast.CreateRemoteServiceBindingStatement:
+		return createRemoteServiceBindingStatementToJSON(s)
+	case *ast.CreateStatisticsStatement:
+		return createStatisticsStatementToJSON(s)
+	case *ast.CreateTypeStatement:
+		return createTypeStatementToJSON(s)
+	case *ast.CreateXmlIndexStatement:
+		return createXmlIndexStatementToJSON(s)
+	case *ast.CreatePartitionFunctionStatement:
+		return createPartitionFunctionStatementToJSON(s)
+	case *ast.CreateEventNotificationStatement:
+		return createEventNotificationStatementToJSON(s)
 	case *ast.AlterIndexStatement:
 		return alterIndexStatementToJSON(s)
 	case *ast.DropDatabaseStatement:
@@ -278,6 +334,40 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTableSwitchStatementToJSON(s)
 	case *ast.AlterTableConstraintModificationStatement:
 		return alterTableConstraintModificationStatementToJSON(s)
+	case *ast.InsertBulkStatement:
+		return insertBulkStatementToJSON(s)
+	case *ast.BulkInsertStatement:
+		return bulkInsertStatementToJSON(s)
+	case *ast.AlterUserStatement:
+		return alterUserStatementToJSON(s)
+	case *ast.AlterRouteStatement:
+		return alterRouteStatementToJSON(s)
+	case *ast.AlterAssemblyStatement:
+		return alterAssemblyStatementToJSON(s)
+	case *ast.AlterEndpointStatement:
+		return alterEndpointStatementToJSON(s)
+	case *ast.AlterServiceStatement:
+		return alterServiceStatementToJSON(s)
+	case *ast.AlterCertificateStatement:
+		return alterCertificateStatementToJSON(s)
+	case *ast.AlterApplicationRoleStatement:
+		return alterApplicationRoleStatementToJSON(s)
+	case *ast.AlterAsymmetricKeyStatement:
+		return alterAsymmetricKeyStatementToJSON(s)
+	case *ast.AlterQueueStatement:
+		return alterQueueStatementToJSON(s)
+	case *ast.AlterPartitionSchemeStatement:
+		return alterPartitionSchemeStatementToJSON(s)
+	case *ast.AlterPartitionFunctionStatement:
+		return alterPartitionFunctionStatementToJSON(s)
+	case *ast.AlterFulltextCatalogStatement:
+		return alterFulltextCatalogStatementToJSON(s)
+	case *ast.AlterFulltextIndexStatement:
+		return alterFulltextIndexStatementToJSON(s)
+	case *ast.AlterSymmetricKeyStatement:
+		return alterSymmetricKeyStatementToJSON(s)
+	case *ast.AlterServiceMasterKeyStatement:
+		return alterServiceMasterKeyStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -3418,15 +3508,13 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 	stmt := &ast.CreateAggregateStatement{}
 
 	// Parse aggregate name
-	name, err := p.parseSchemaObjectName()
-	if err != nil {
-		return nil, err
-	}
+	name, _ := p.parseSchemaObjectName()
 	stmt.Name = name
 
-	// Expect (
+	// Check for ( (optional for lenient parsing)
 	if p.curTok.Type != TokenLParen {
-		return nil, fmt.Errorf("expected ( after aggregate name, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken()
 
@@ -3820,9 +3908,14 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 
 	// Parse trigger actions
 	isDatabaseOrServerTrigger := triggerObject.TriggerScope == "Database" || triggerObject.TriggerScope == "AllServer"
-	for {
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
 		action := &ast.TriggerAction{}
 		actionType := strings.ToUpper(p.curTok.Literal)
+
+		// Check for empty action type (lenient parsing for incomplete statements)
+		if actionType == "" || p.curTok.Type == TokenAs {
+			break
+		}
 
 		switch actionType {
 		case "INSERT":
@@ -3833,7 +3926,7 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 			action.TriggerActionType = "Delete"
 		default:
 			// For database/server triggers, events are wrapped in EventTypeContainer
-			if isDatabaseOrServerTrigger {
+			if isDatabaseOrServerTrigger && len(actionType) > 0 {
 				action.TriggerActionType = "Event"
 				// Convert action type to proper case (e.g., RENAME -> Rename)
 				eventType := strings.ToUpper(actionType[:1]) + strings.ToLower(actionType[1:])
@@ -4201,9 +4294,14 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 
 	// Parse trigger actions
 	isDatabaseOrServerTrigger := triggerObject.TriggerScope == "Database" || triggerObject.TriggerScope == "AllServer"
-	for {
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
 		action := &ast.TriggerAction{}
 		actionType := strings.ToUpper(p.curTok.Literal)
+
+		// Check for empty action type (lenient parsing for incomplete statements)
+		if actionType == "" || p.curTok.Type == TokenAs {
+			break
+		}
 
 		switch actionType {
 		case "INSERT":
@@ -4214,7 +4312,7 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 			action.TriggerActionType = "Delete"
 		default:
 			// For database/server triggers, events are wrapped in EventTypeContainer
-			if isDatabaseOrServerTrigger {
+			if isDatabaseOrServerTrigger && len(actionType) > 0 {
 				action.TriggerActionType = "Event"
 				// Convert action type to proper case (e.g., RENAME -> Rename)
 				eventType := strings.ToUpper(actionType[:1]) + strings.ToLower(actionType[1:])
@@ -4995,3 +5093,561 @@ func createEventSessionStatementToJSON(s *ast.CreateEventSessionStatement) jsonN
 	}
 	return node
 }
+
+func insertBulkStatementToJSON(s *ast.InsertBulkStatement) jsonNode {
+	node := jsonNode{
+		"$type": "InsertBulkStatement",
+	}
+	if s.To != nil {
+		node["To"] = schemaObjectNameToJSON(s.To)
+	}
+	if len(s.ColumnDefinitions) > 0 {
+		colDefs := make([]jsonNode, len(s.ColumnDefinitions))
+		for i, colDef := range s.ColumnDefinitions {
+			colDefs[i] = insertBulkColumnDefinitionToJSON(colDef)
+		}
+		node["ColumnDefinitions"] = colDefs
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			options[i] = bulkInsertOptionToJSON(opt)
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func insertBulkColumnDefinitionToJSON(c *ast.InsertBulkColumnDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "InsertBulkColumnDefinition",
+	}
+	if c.Column != nil {
+		node["Column"] = columnDefinitionBaseToJSON(c.Column)
+	}
+	if c.NullNotNull != "" && c.NullNotNull != "Unspecified" {
+		node["NullNotNull"] = c.NullNotNull
+	}
+	return node
+}
+
+func columnDefinitionBaseToJSON(c *ast.ColumnDefinitionBase) jsonNode {
+	node := jsonNode{
+		"$type": "ColumnDefinitionBase",
+	}
+	if c.ColumnIdentifier != nil {
+		node["ColumnIdentifier"] = identifierToJSON(c.ColumnIdentifier)
+	}
+	if c.DataType != nil {
+		node["DataType"] = dataTypeReferenceToJSON(c.DataType)
+	}
+	return node
+}
+
+func bulkInsertOptionToJSON(opt ast.BulkInsertOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.BulkInsertOptionBase:
+		return jsonNode{
+			"$type":      "BulkInsertOption",
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.LiteralBulkInsertOption:
+		node := jsonNode{
+			"$type":      "LiteralBulkInsertOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		return node
+	case *ast.OrderBulkInsertOption:
+		node := jsonNode{
+			"$type":      "OrderBulkInsertOption",
+			"OptionKind": "Order",
+		}
+		if len(o.Columns) > 0 {
+			cols := make([]jsonNode, len(o.Columns))
+			for i, col := range o.Columns {
+				cols[i] = columnWithSortOrderToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		if o.IsUnique {
+			node["IsUnique"] = o.IsUnique
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownBulkInsertOption"}
+	}
+}
+
+func bulkInsertStatementToJSON(s *ast.BulkInsertStatement) jsonNode {
+	node := jsonNode{
+		"$type": "BulkInsertStatement",
+	}
+	if s.From != nil {
+		node["From"] = identifierOrValueExpressionToJSON(s.From)
+	}
+	if s.To != nil {
+		node["To"] = schemaObjectNameToJSON(s.To)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			options[i] = bulkInsertOptionToJSON(opt)
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func alterUserStatementToJSON(s *ast.AlterUserStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterUserStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterRouteStatementToJSON(s *ast.AlterRouteStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterRouteStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterAssemblyStatementToJSON(s *ast.AlterAssemblyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterAssemblyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterEndpointStatementToJSON(s *ast.AlterEndpointStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterEndpointStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterServiceStatementToJSON(s *ast.AlterServiceStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterServiceStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterCertificateStatementToJSON(s *ast.AlterCertificateStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterCertificateStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterApplicationRoleStatementToJSON(s *ast.AlterApplicationRoleStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterApplicationRoleStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterAsymmetricKeyStatementToJSON(s *ast.AlterAsymmetricKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterAsymmetricKeyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterQueueStatementToJSON(s *ast.AlterQueueStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterQueueStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	return node
+}
+
+func alterPartitionSchemeStatementToJSON(s *ast.AlterPartitionSchemeStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterPartitionSchemeStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterPartitionFunctionStatementToJSON(s *ast.AlterPartitionFunctionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterPartitionFunctionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterFulltextCatalogStatementToJSON(s *ast.AlterFulltextCatalogStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterFulltextCatalogStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterFulltextIndexStatementToJSON(s *ast.AlterFulltextIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterFulltextIndexStatement",
+	}
+	if s.OnName != nil {
+		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	return node
+}
+
+func alterSymmetricKeyStatementToJSON(s *ast.AlterSymmetricKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterSymmetricKeyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterServiceMasterKeyStatementToJSON(s *ast.AlterServiceMasterKeyStatement) jsonNode {
+	return jsonNode{
+		"$type": "AlterServiceMasterKeyStatement",
+	}
+}
+
+func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateDatabaseStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	return node
+}
+
+func createLoginStatementToJSON(s *ast.CreateLoginStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateLoginStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createIndexStatementToJSON(s *ast.CreateIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateIndexStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.OnName != nil {
+		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	return node
+}
+
+func createAsymmetricKeyStatementToJSON(s *ast.CreateAsymmetricKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateAsymmetricKeyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createSymmetricKeyStatementToJSON(s *ast.CreateSymmetricKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateSymmetricKeyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createCertificateStatementToJSON(s *ast.CreateCertificateStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateCertificateStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createMessageTypeStatementToJSON(s *ast.CreateMessageTypeStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateMessageTypeStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createServiceStatementToJSON(s *ast.CreateServiceStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateServiceStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createQueueStatementToJSON(s *ast.CreateQueueStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateQueueStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	return node
+}
+
+func createRouteStatementToJSON(s *ast.CreateRouteStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateRouteStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createEndpointStatementToJSON(s *ast.CreateEndpointStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateEndpointStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createAssemblyStatementToJSON(s *ast.CreateAssemblyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateAssemblyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createApplicationRoleStatementToJSON(s *ast.CreateApplicationRoleStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateApplicationRoleStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createFulltextCatalogStatementToJSON(s *ast.CreateFulltextCatalogStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateFulltextCatalogStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createFulltextIndexStatementToJSON(s *ast.CreateFulltextIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateFulltextIndexStatement",
+	}
+	if s.OnName != nil {
+		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	return node
+}
+
+func createRemoteServiceBindingStatementToJSON(s *ast.CreateRemoteServiceBindingStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateRemoteServiceBindingStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createStatisticsStatementToJSON(s *ast.CreateStatisticsStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateStatisticsStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.OnName != nil {
+		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	return node
+}
+
+func createTypeStatementToJSON(s *ast.CreateTypeStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateTypeStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	return node
+}
+
+func createXmlIndexStatementToJSON(s *ast.CreateXmlIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateXmlIndexStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.OnName != nil {
+		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	return node
+}
+
+func createPartitionFunctionStatementToJSON(s *ast.CreatePartitionFunctionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreatePartitionFunctionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func createEventNotificationStatementToJSON(s *ast.CreateEventNotificationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateEventNotificationStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterDatabaseAddFileStatementToJSON(s *ast.AlterDatabaseAddFileStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseAddFileStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	return node
+}
+
+func alterDatabaseAddFileGroupStatementToJSON(s *ast.AlterDatabaseAddFileGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseAddFileGroupStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	if s.FileGroupName != nil {
+		node["FileGroup"] = identifierToJSON(s.FileGroupName)
+	}
+	return node
+}
+
+func alterDatabaseModifyFileStatementToJSON(s *ast.AlterDatabaseModifyFileStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseModifyFileStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	return node
+}
+
+func alterDatabaseModifyFileGroupStatementToJSON(s *ast.AlterDatabaseModifyFileGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseModifyFileGroupStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	if s.FileGroupName != nil {
+		node["FileGroup"] = identifierToJSON(s.FileGroupName)
+	}
+	return node
+}
+
+func alterDatabaseModifyNameStatementToJSON(s *ast.AlterDatabaseModifyNameStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseModifyNameStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	if s.NewName != nil {
+		node["NewDatabaseName"] = identifierToJSON(s.NewName)
+	}
+	return node
+}
+
+func alterDatabaseRemoveFileStatementToJSON(s *ast.AlterDatabaseRemoveFileStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseRemoveFileStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	if s.FileName != nil {
+		node["File"] = identifierToJSON(s.FileName)
+	}
+	return node
+}
+
+func alterDatabaseRemoveFileGroupStatementToJSON(s *ast.AlterDatabaseRemoveFileGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseRemoveFileGroupStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	if s.FileGroupName != nil {
+		node["FileGroup"] = identifierToJSON(s.FileGroupName)
+	}
+	return node
+}
+

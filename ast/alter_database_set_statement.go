@@ -34,3 +34,64 @@ type OnOffDatabaseOption struct {
 
 func (o *OnOffDatabaseOption) node()           {}
 func (o *OnOffDatabaseOption) databaseOption() {}
+
+// AlterDatabaseAddFileStatement represents ALTER DATABASE ... ADD FILE statement
+type AlterDatabaseAddFileStatement struct {
+	DatabaseName *Identifier
+}
+
+func (a *AlterDatabaseAddFileStatement) node()      {}
+func (a *AlterDatabaseAddFileStatement) statement() {}
+
+// AlterDatabaseAddFileGroupStatement represents ALTER DATABASE ... ADD FILEGROUP statement
+type AlterDatabaseAddFileGroupStatement struct {
+	DatabaseName  *Identifier
+	FileGroupName *Identifier
+}
+
+func (a *AlterDatabaseAddFileGroupStatement) node()      {}
+func (a *AlterDatabaseAddFileGroupStatement) statement() {}
+
+// AlterDatabaseModifyFileStatement represents ALTER DATABASE ... MODIFY FILE statement
+type AlterDatabaseModifyFileStatement struct {
+	DatabaseName *Identifier
+}
+
+func (a *AlterDatabaseModifyFileStatement) node()      {}
+func (a *AlterDatabaseModifyFileStatement) statement() {}
+
+// AlterDatabaseModifyFileGroupStatement represents ALTER DATABASE ... MODIFY FILEGROUP statement
+type AlterDatabaseModifyFileGroupStatement struct {
+	DatabaseName  *Identifier
+	FileGroupName *Identifier
+}
+
+func (a *AlterDatabaseModifyFileGroupStatement) node()      {}
+func (a *AlterDatabaseModifyFileGroupStatement) statement() {}
+
+// AlterDatabaseModifyNameStatement represents ALTER DATABASE ... MODIFY NAME statement
+type AlterDatabaseModifyNameStatement struct {
+	DatabaseName *Identifier
+	NewName      *Identifier
+}
+
+func (a *AlterDatabaseModifyNameStatement) node()      {}
+func (a *AlterDatabaseModifyNameStatement) statement() {}
+
+// AlterDatabaseRemoveFileStatement represents ALTER DATABASE ... REMOVE FILE statement
+type AlterDatabaseRemoveFileStatement struct {
+	DatabaseName *Identifier
+	FileName     *Identifier
+}
+
+func (a *AlterDatabaseRemoveFileStatement) node()      {}
+func (a *AlterDatabaseRemoveFileStatement) statement() {}
+
+// AlterDatabaseRemoveFileGroupStatement represents ALTER DATABASE ... REMOVE FILEGROUP statement
+type AlterDatabaseRemoveFileGroupStatement struct {
+	DatabaseName  *Identifier
+	FileGroupName *Identifier
+}
+
+func (a *AlterDatabaseRemoveFileGroupStatement) node()      {}
+func (a *AlterDatabaseRemoveFileGroupStatement) statement() {}

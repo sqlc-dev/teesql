@@ -1,0 +1,43 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "BulkInsertStatement",
+          "From": {
+            "$type": "IdentifierOrValueExpression",
+            "Identifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": ""
+            }
+          },
+          "To": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "t1"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ],
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "db1"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

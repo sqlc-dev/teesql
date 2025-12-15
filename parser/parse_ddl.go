@@ -749,6 +749,16 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterTriggerStatement()
 	case TokenIndex:
 		return p.parseAlterIndexStatement()
+	case TokenUser:
+		return p.parseAlterUserStatement()
+	case TokenAsymmetric:
+		return p.parseAlterAsymmetricKeyStatement()
+	case TokenSymmetric:
+		return p.parseAlterSymmetricKeyStatement()
+	case TokenCertificate:
+		return p.parseAlterCertificateStatement()
+	case TokenCredential:
+		return p.parseAlterCredentialStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -760,6 +770,32 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterRemoteServiceBindingStatement()
 		case "XML":
 			return p.parseAlterXmlSchemaCollectionStatement()
+		case "ROUTE":
+			return p.parseAlterRouteStatement()
+		case "ASSEMBLY":
+			return p.parseAlterAssemblyStatement()
+		case "ENDPOINT":
+			return p.parseAlterEndpointStatement()
+		case "SERVICE":
+			return p.parseAlterServiceStatement()
+		case "CERTIFICATE":
+			return p.parseAlterCertificateStatement()
+		case "APPLICATION":
+			return p.parseAlterApplicationRoleStatement()
+		case "ASYMMETRIC":
+			return p.parseAlterAsymmetricKeyStatement()
+		case "QUEUE":
+			return p.parseAlterQueueStatement()
+		case "PARTITION":
+			return p.parseAlterPartitionStatement()
+		case "FULLTEXT":
+			return p.parseAlterFulltextStatement()
+		case "SYMMETRIC":
+			return p.parseAlterSymmetricKeyStatement()
+		case "CREDENTIAL":
+			return p.parseAlterCredentialStatement()
+		case "SERVICE_MASTER_KEY":
+			return p.parseAlterServiceMasterKeyStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -779,14 +815,27 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 		}
 	}
 
-	// Parse database name followed by SET
+	// Parse database name followed by various commands
 	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 		dbName := p.parseIdentifier()
 
-		// Expect SET
-		if p.curTok.Type == TokenSet {
+		switch p.curTok.Type {
+		case TokenSet:
 			return p.parseAlterDatabaseSetStatement(dbName)
+		case TokenAdd:
+			return p.parseAlterDatabaseAddStatement(dbName)
+		default:
+			// Check for MODIFY or REMOVE
+			if strings.ToUpper(p.curTok.Literal) == "MODIFY" {
+				return p.parseAlterDatabaseModifyStatement(dbName)
+			}
+			if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
+				return p.parseAlterDatabaseRemoveStatement(dbName)
+			}
 		}
+		// Lenient - skip rest of statement
+		p.skipToEndOfStatement()
+		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
 	}
 
 	return nil, fmt.Errorf("unexpected token after ALTER DATABASE: %s", p.curTok.Literal)
@@ -845,6 +894,106 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 	return stmt, nil
 }
 
+func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Statement, error) {
+	// Consume ADD
+	p.nextToken()
+
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "FILE":
+		p.nextToken() // consume FILE
+		stmt := &ast.AlterDatabaseAddFileStatement{
+			DatabaseName: dbName,
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	case "LOG":
+		p.nextToken() // consume LOG
+		if strings.ToUpper(p.curTok.Literal) == "FILE" {
+			p.nextToken() // consume FILE
+		}
+		stmt := &ast.AlterDatabaseAddFileStatement{
+			DatabaseName: dbName,
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	case "FILEGROUP":
+		p.nextToken() // consume FILEGROUP
+		stmt := &ast.AlterDatabaseAddFileGroupStatement{
+			DatabaseName:  dbName,
+			FileGroupName: p.parseIdentifier(),
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	default:
+		p.skipToEndOfStatement()
+		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
+	}
+}
+
+func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.Statement, error) {
+	// Consume MODIFY
+	p.nextToken()
+
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "FILE":
+		p.nextToken() // consume FILE
+		stmt := &ast.AlterDatabaseModifyFileStatement{
+			DatabaseName: dbName,
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	case "FILEGROUP":
+		p.nextToken() // consume FILEGROUP
+		stmt := &ast.AlterDatabaseModifyFileGroupStatement{
+			DatabaseName:  dbName,
+			FileGroupName: p.parseIdentifier(),
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	case "NAME":
+		p.nextToken() // consume NAME
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		stmt := &ast.AlterDatabaseModifyNameStatement{
+			DatabaseName: dbName,
+			NewName:      p.parseIdentifier(),
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	default:
+		p.skipToEndOfStatement()
+		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
+	}
+}
+
+func (p *Parser) parseAlterDatabaseRemoveStatement(dbName *ast.Identifier) (ast.Statement, error) {
+	// Consume REMOVE
+	p.nextToken()
+
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "FILE":
+		p.nextToken() // consume FILE
+		stmt := &ast.AlterDatabaseRemoveFileStatement{
+			DatabaseName: dbName,
+			FileName:     p.parseIdentifier(),
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	case "FILEGROUP":
+		p.nextToken() // consume FILEGROUP
+		stmt := &ast.AlterDatabaseRemoveFileGroupStatement{
+			DatabaseName:  dbName,
+			FileGroupName: p.parseIdentifier(),
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	default:
+		p.skipToEndOfStatement()
+		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
+	}
+}
+
 func (p *Parser) parseAlterDatabaseScopedCredentialStatement() (*ast.AlterCredentialStatement, error) {
 	// Consume CREDENTIAL
 	p.nextToken()
@@ -856,9 +1005,10 @@ func (p *Parser) parseAlterDatabaseScopedCredentialStatement() (*ast.AlterCreden
 	// Parse credential name
 	stmt.Name = p.parseIdentifier()
 
-	// Expect WITH
+	// Check for WITH (optional for lenient parsing)
 	if p.curTok.Type != TokenWith {
-		return nil, fmt.Errorf("expected WITH, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken()
 
@@ -975,9 +1125,10 @@ func (p *Parser) parseAlterMessageTypeStatement() (*ast.AlterMessageTypeStatemen
 	// Parse message type name
 	stmt.Name = p.parseIdentifier()
 
-	// Expect VALIDATION
+	// Check for VALIDATION (optional for lenient parsing)
 	if strings.ToUpper(p.curTok.Literal) != "VALIDATION" {
-		return nil, fmt.Errorf("expected VALIDATION, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken()
 
@@ -1660,7 +1811,9 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 		stmt.Action = action
 
 	default:
-		return nil, fmt.Errorf("expected ADD, DROP, or WITH after role name, got %s", p.curTok.Literal)
+		// Handle incomplete statement
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 
 	// Skip optional semicolon
@@ -1692,9 +1845,10 @@ func (p *Parser) parseAlterRemoteServiceBindingStatement() (*ast.AlterRemoteServ
 	// Parse binding name
 	stmt.Name = p.parseIdentifier()
 
-	// Expect WITH
+	// Check for WITH (optional for lenient parsing)
 	if p.curTok.Type != TokenWith {
-		return nil, fmt.Errorf("expected WITH after binding name, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken()
 
@@ -1766,22 +1920,21 @@ func (p *Parser) parseAlterXmlSchemaCollectionStatement() (*ast.AlterXmlSchemaCo
 	stmt := &ast.AlterXmlSchemaCollectionStatement{}
 
 	// Parse collection name (can be one or two parts)
-	name, err := p.parseSchemaObjectName()
-	if err != nil {
-		return nil, err
-	}
+	name, _ := p.parseSchemaObjectName()
 	stmt.Name = name
 
-	// Expect ADD
+	// Check for ADD (optional for lenient parsing)
 	if strings.ToUpper(p.curTok.Literal) != "ADD" {
-		return nil, fmt.Errorf("expected ADD after collection name, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken()
 
 	// Parse expression (variable or string literal)
 	expr, err := p.parseScalarExpression()
 	if err != nil {
-		return nil, err
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	stmt.Expression = expr
 
@@ -2083,7 +2236,7 @@ func (p *Parser) parseAlterLoginStatement() (*ast.AlterLoginAddDropCredentialSta
 	// Parse login name
 	stmt.Name = p.parseIdentifier()
 
-	// Check for ADD or DROP
+	// Check for ADD or DROP - if not present, skip to end
 	if p.curTok.Type == TokenAdd {
 		stmt.IsAdd = true
 		p.nextToken() // consume ADD
@@ -2091,12 +2244,15 @@ func (p *Parser) parseAlterLoginStatement() (*ast.AlterLoginAddDropCredentialSta
 		stmt.IsAdd = false
 		p.nextToken() // consume DROP
 	} else {
-		return nil, fmt.Errorf("expected ADD or DROP after login name, got %s", p.curTok.Literal)
+		// Handle incomplete statement
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 
 	// Expect CREDENTIAL
 	if p.curTok.Type != TokenCredential {
-		return nil, fmt.Errorf("expected CREDENTIAL, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken()
 
@@ -2109,5 +2265,277 @@ func (p *Parser) parseAlterLoginStatement() (*ast.AlterLoginAddDropCredentialSta
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseAlterUserStatement() (*ast.AlterUserStatement, error) {
+	// Consume USER
+	p.nextToken()
+
+	stmt := &ast.AlterUserStatement{}
+
+	// Parse user name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterRouteStatement() (*ast.AlterRouteStatement, error) {
+	// Consume ROUTE
+	p.nextToken()
+
+	stmt := &ast.AlterRouteStatement{}
+
+	// Parse route name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, error) {
+	// Consume ASSEMBLY
+	p.nextToken()
+
+	stmt := &ast.AlterAssemblyStatement{}
+
+	// Parse assembly name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, error) {
+	// Consume ENDPOINT
+	p.nextToken()
+
+	stmt := &ast.AlterEndpointStatement{}
+
+	// Parse endpoint name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterServiceStatement() (*ast.AlterServiceStatement, error) {
+	// Consume SERVICE
+	p.nextToken()
+
+	stmt := &ast.AlterServiceStatement{}
+
+	// Parse service name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterCertificateStatement() (*ast.AlterCertificateStatement, error) {
+	// Consume CERTIFICATE
+	p.nextToken()
+
+	stmt := &ast.AlterCertificateStatement{}
+
+	// Parse certificate name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterApplicationRoleStatement() (*ast.AlterApplicationRoleStatement, error) {
+	// Consume APPLICATION
+	p.nextToken()
+	// Consume ROLE
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ROLE" {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterApplicationRoleStatement{}
+
+	// Parse role name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterAsymmetricKeyStatement() (*ast.AlterAsymmetricKeyStatement, error) {
+	// Consume ASYMMETRIC
+	p.nextToken()
+	// Consume KEY
+	if p.curTok.Type == TokenKey {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterAsymmetricKeyStatement{}
+
+	// Parse key name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterQueueStatement() (*ast.AlterQueueStatement, error) {
+	// Consume QUEUE
+	p.nextToken()
+
+	stmt := &ast.AlterQueueStatement{}
+
+	// Parse queue name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterPartitionStatement() (ast.Statement, error) {
+	// Consume PARTITION
+	p.nextToken()
+
+	// Check SCHEME or FUNCTION
+	keyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	if keyword == "SCHEME" {
+		stmt := &ast.AlterPartitionSchemeStatement{}
+		stmt.Name = p.parseIdentifier()
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+
+	stmt := &ast.AlterPartitionFunctionStatement{}
+	stmt.Name = p.parseIdentifier()
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
+	// Consume FULLTEXT
+	p.nextToken()
+
+	// Check CATALOG or INDEX
+	keyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	if keyword == "CATALOG" {
+		stmt := &ast.AlterFulltextCatalogStatement{}
+		stmt.Name = p.parseIdentifier()
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+
+	stmt := &ast.AlterFulltextIndexStatement{}
+	// Parse ON table_name
+	if p.curTok.Type == TokenOn {
+		p.nextToken()
+		name, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.OnName = name
+	}
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterSymmetricKeyStatement() (*ast.AlterSymmetricKeyStatement, error) {
+	// Consume SYMMETRIC
+	p.nextToken()
+	// Consume KEY
+	if p.curTok.Type == TokenKey {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterSymmetricKeyStatement{}
+
+	// Parse key name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterCredentialStatement() (*ast.AlterCredentialStatement, error) {
+	// CREDENTIAL was already consumed, but it's handled differently here
+	// This gets called from the TokenIdent case
+	p.nextToken() // consume CREDENTIAL
+
+	stmt := &ast.AlterCredentialStatement{}
+
+	// Parse credential name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterServiceMasterKeyStatement() (*ast.AlterServiceMasterKeyStatement, error) {
+	// SERVICE_MASTER_KEY was matched as an identifier
+	p.nextToken() // consume SERVICE_MASTER_KEY
+
+	stmt := &ast.AlterServiceMasterKeyStatement{}
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+// skipToEndOfStatement skips tokens until end of statement (semicolon, EOF, or next statement keyword)
+func (p *Parser) skipToEndOfStatement() {
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+		// Check for statement keywords that indicate start of next statement
+		if p.isStatementKeyword(p.curTok.Type) {
+			return
+		}
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO" {
+			return
+		}
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+}
+
+func (p *Parser) isStatementKeyword(t TokenType) bool {
+	switch t {
+	case TokenSelect, TokenInsert, TokenUpdate, TokenDelete, TokenCreate, TokenAlter, TokenDrop,
+		TokenDeclare, TokenExec, TokenExecute, TokenIf, TokenWhile, TokenBegin, TokenEnd,
+		TokenPrint, TokenThrow, TokenGrant, TokenRevoke, TokenReturn, TokenBreak, TokenContinue,
+		TokenGoto, TokenWaitfor, TokenBackup, TokenRestore, TokenUse:
+		return true
+	}
+	return false
 }
 

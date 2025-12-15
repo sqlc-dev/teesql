@@ -1,0 +1,23 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "AlterDatabaseAddFileGroupStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "tempdb"
+          },
+          "FileGroup": {
+            "$type": "Identifier",
+            "QuoteType": "SquareBracket",
+            "Value": "fg1"
+          }
+        }
+      ]
+    }
+  ]
+}
