@@ -348,6 +348,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterLoginStatement()
 	case TokenMessage:
 		return p.parseAlterMessageTypeStatement()
+	case TokenDatabase:
+		return p.parseAlterDatabaseStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -360,6 +362,76 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 	default:
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	}
+}
+
+func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
+	// Consume DATABASE
+	p.nextToken()
+
+	// Check for SCOPED CREDENTIAL
+	if p.curTok.Type == TokenScoped {
+		p.nextToken() // consume SCOPED
+		if p.curTok.Type == TokenCredential {
+			return p.parseAlterDatabaseScopedCredentialStatement()
+		}
+	}
+
+	return nil, fmt.Errorf("unexpected token after ALTER DATABASE: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseAlterDatabaseScopedCredentialStatement() (*ast.AlterCredentialStatement, error) {
+	// Consume CREDENTIAL
+	p.nextToken()
+
+	stmt := &ast.AlterCredentialStatement{
+		IsDatabaseScoped: true,
+	}
+
+	// Parse credential name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect WITH
+	if p.curTok.Type != TokenWith {
+		return nil, fmt.Errorf("expected WITH, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse options
+	for {
+		optionName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+		}
+		p.nextToken()
+
+		// Parse value
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		switch optionName {
+		case "IDENTITY":
+			stmt.Identity = expr
+		case "SECRET":
+			stmt.Secret = expr
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error) {
@@ -5795,6 +5867,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createContractStatementToJSON(s)
 	case *ast.CreatePartitionSchemeStatement:
 		return createPartitionSchemeStatementToJSON(s)
+	case *ast.AlterCredentialStatement:
+		return alterCredentialStatementToJSON(s)
 	case *ast.RevertStatement:
 		return revertStatementToJSON(s)
 	case *ast.DropCredentialStatement:
@@ -6077,6 +6151,23 @@ func createPartitionSchemeStatementToJSON(s *ast.CreatePartitionSchemeStatement)
 			fgs[i] = identifierOrValueExpressionToJSON(fg)
 		}
 		node["FileGroups"] = fgs
+	}
+	return node
+}
+
+func alterCredentialStatementToJSON(s *ast.AlterCredentialStatement) jsonNode {
+	node := jsonNode{
+		"$type":            "AlterCredentialStatement",
+		"IsDatabaseScoped": s.IsDatabaseScoped,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Identity != nil {
+		node["Identity"] = scalarExpressionToJSON(s.Identity)
+	}
+	if s.Secret != nil {
+		node["Secret"] = scalarExpressionToJSON(s.Secret)
 	}
 	return node
 }
