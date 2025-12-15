@@ -1240,6 +1240,11 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 		return p.parseAlterTableTriggerModificationStatement(tableName)
 	}
 
+	// Check for SWITCH
+	if strings.ToUpper(p.curTok.Literal) == "SWITCH" {
+		return p.parseAlterTableSwitchStatement(tableName)
+	}
+
 	return nil, fmt.Errorf("unexpected token in ALTER TABLE: %s", p.curTok.Literal)
 }
 
@@ -1627,6 +1632,89 @@ func (p *Parser) parseAlterTableTriggerModificationStatement(tableName *ast.Sche
 				break
 			}
 			p.nextToken() // consume comma
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableSwitchStatement, error) {
+	stmt := &ast.AlterTableSwitchStatement{
+		SchemaObjectName: tableName,
+	}
+
+	// Consume SWITCH
+	p.nextToken()
+
+	// Check for PARTITION clause on source
+	if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+		p.nextToken()
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.SourcePartition = expr
+	}
+
+	// Expect TO
+	if strings.ToUpper(p.curTok.Literal) != "TO" {
+		return nil, fmt.Errorf("expected TO, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse target table name
+	targetTable, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.TargetTable = targetTable
+
+	// Check for PARTITION clause on target
+	if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+		p.nextToken()
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.TargetPartition = expr
+	}
+
+	// Check for WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if p.curTok.Type == TokenLParen {
+			p.nextToken()
+
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optionName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+
+				if optionName == "TRUNCATE_TARGET" {
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+						value := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+						opt := &ast.TruncateTargetTableSwitchOption{
+							TruncateTarget: value == "ON",
+							OptionKind:     "TruncateTarget",
+						}
+						stmt.Options = append(stmt.Options, opt)
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
 		}
 	}
 
@@ -7371,6 +7459,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropSchemaStatementToJSON(s)
 	case *ast.AlterTableTriggerModificationStatement:
 		return alterTableTriggerModificationStatementToJSON(s)
+	case *ast.AlterTableSwitchStatement:
+		return alterTableSwitchStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -11628,4 +11718,43 @@ func alterTableTriggerModificationStatementToJSON(s *ast.AlterTableTriggerModifi
 		node["TriggerNames"] = names
 	}
 	return node
+}
+
+func alterTableSwitchStatementToJSON(s *ast.AlterTableSwitchStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterTableSwitchStatement",
+	}
+	if s.TargetTable != nil {
+		node["TargetTable"] = schemaObjectNameToJSON(s.TargetTable)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = tableSwitchOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	if s.SourcePartition != nil {
+		node["SourcePartition"] = scalarExpressionToJSON(s.SourcePartition)
+	}
+	if s.TargetPartition != nil {
+		node["TargetPartition"] = scalarExpressionToJSON(s.TargetPartition)
+	}
+	return node
+}
+
+func tableSwitchOptionToJSON(opt ast.TableSwitchOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.TruncateTargetTableSwitchOption:
+		return jsonNode{
+			"$type":          "TruncateTargetTableSwitchOption",
+			"TruncateTarget": o.TruncateTarget,
+			"OptionKind":     o.OptionKind,
+		}
+	default:
+		return jsonNode{"$type": "UnknownSwitchOption"}
+	}
 }
