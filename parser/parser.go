@@ -7501,6 +7501,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterFunctionStatementToJSON(s)
 	case *ast.AlterTriggerStatement:
 		return alterTriggerStatementToJSON(s)
+	case *ast.CreateTriggerStatement:
+		return createTriggerStatementToJSON(s)
 	case *ast.AlterIndexStatement:
 		return alterIndexStatementToJSON(s)
 	case *ast.DropDatabaseStatement:
@@ -10978,6 +10980,7 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 	}
 
 	// Parse trigger actions
+	isDatabaseOrServerTrigger := triggerObject.TriggerScope == "Database" || triggerObject.TriggerScope == "AllServer"
 	for {
 		action := &ast.TriggerAction{}
 		actionType := strings.ToUpper(p.curTok.Literal)
@@ -10990,7 +10993,17 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 		case "DELETE":
 			action.TriggerActionType = "Delete"
 		default:
-			action.TriggerActionType = actionType
+			// For database/server triggers, events are wrapped in EventTypeContainer
+			if isDatabaseOrServerTrigger {
+				action.TriggerActionType = "Event"
+				// Convert action type to proper case (e.g., RENAME -> Rename)
+				eventType := strings.ToUpper(actionType[:1]) + strings.ToLower(actionType[1:])
+				action.EventTypeGroup = &ast.EventTypeContainer{
+					EventType: eventType,
+				}
+			} else {
+				action.TriggerActionType = actionType
+			}
 		}
 		p.nextToken()
 
@@ -11286,12 +11299,11 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.AlterFunctionStatement, er
 }
 
 // parseCreateTriggerStatement parses a CREATE TRIGGER statement
-func (p *Parser) parseCreateTriggerStatement() (*ast.AlterTriggerStatement, error) {
-	// CREATE TRIGGER uses the same structure as ALTER TRIGGER
+func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, error) {
 	// Consume TRIGGER
 	p.nextToken()
 
-	stmt := &ast.AlterTriggerStatement{}
+	stmt := &ast.CreateTriggerStatement{}
 
 	// Parse trigger name
 	name, err := p.parseSchemaObjectName()
@@ -11349,6 +11361,7 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.AlterTriggerStatement, erro
 	}
 
 	// Parse trigger actions
+	isDatabaseOrServerTrigger := triggerObject.TriggerScope == "Database" || triggerObject.TriggerScope == "AllServer"
 	for {
 		action := &ast.TriggerAction{}
 		actionType := strings.ToUpper(p.curTok.Literal)
@@ -11361,7 +11374,17 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.AlterTriggerStatement, erro
 		case "DELETE":
 			action.TriggerActionType = "Delete"
 		default:
-			action.TriggerActionType = actionType
+			// For database/server triggers, events are wrapped in EventTypeContainer
+			if isDatabaseOrServerTrigger {
+				action.TriggerActionType = "Event"
+				// Convert action type to proper case (e.g., RENAME -> Rename)
+				eventType := strings.ToUpper(actionType[:1]) + strings.ToLower(actionType[1:])
+				action.EventTypeGroup = &ast.EventTypeContainer{
+					EventType: eventType,
+				}
+			} else {
+				action.TriggerActionType = actionType
+			}
 		}
 		p.nextToken()
 
@@ -11662,6 +11685,32 @@ func alterTriggerStatementToJSON(s *ast.AlterTriggerStatement) jsonNode {
 	return node
 }
 
+func createTriggerStatementToJSON(s *ast.CreateTriggerStatement) jsonNode {
+	node := jsonNode{
+		"$type":               "CreateTriggerStatement",
+		"TriggerType":         s.TriggerType,
+		"WithAppend":          s.WithAppend,
+		"IsNotForReplication": s.IsNotForReplication,
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.TriggerObject != nil {
+		node["TriggerObject"] = triggerObjectToJSON(s.TriggerObject)
+	}
+	if len(s.TriggerActions) > 0 {
+		actions := make([]jsonNode, len(s.TriggerActions))
+		for i, a := range s.TriggerActions {
+			actions[i] = triggerActionToJSON(a)
+		}
+		node["TriggerActions"] = actions
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
 func triggerObjectToJSON(t *ast.TriggerObject) jsonNode {
 	node := jsonNode{
 		"$type":        "TriggerObject",
@@ -11674,10 +11723,17 @@ func triggerObjectToJSON(t *ast.TriggerObject) jsonNode {
 }
 
 func triggerActionToJSON(a *ast.TriggerAction) jsonNode {
-	return jsonNode{
+	node := jsonNode{
 		"$type":             "TriggerAction",
 		"TriggerActionType": a.TriggerActionType,
 	}
+	if a.EventTypeGroup != nil {
+		node["EventTypeGroup"] = jsonNode{
+			"$type":     "EventTypeContainer",
+			"EventType": a.EventTypeGroup.EventType,
+		}
+	}
+	return node
 }
 
 func alterIndexStatementToJSON(s *ast.AlterIndexStatement) jsonNode {

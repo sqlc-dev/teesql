@@ -24,13 +24,8 @@ type TriggerObject struct {
 
 // TriggerAction represents a trigger action
 type TriggerAction struct {
-	TriggerActionType string // "Insert", "Update", "Delete", "EventType", etc.
-	EventTypeGroup    *EventTypeGroup
-}
-
-// EventTypeGroup represents an event type group
-type EventTypeGroup struct {
-	EventType string
+	TriggerActionType string              // "Insert", "Update", "Delete", "Event", etc.
+	EventTypeGroup    *EventTypeContainer // For database/server events
 }
 
 // TriggerOption represents a trigger option
