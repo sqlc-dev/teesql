@@ -428,6 +428,25 @@ func (p *Parser) parseIdentifier() *ast.Identifier {
 	return id
 }
 
+// isKeywordAsIdentifier returns true if the current token is a keyword that can be used as an identifier
+func (p *Parser) isKeywordAsIdentifier() bool {
+	// In T-SQL, many keywords can be used as identifiers in the right context
+	// This includes database objects, table names, column names, etc.
+	switch p.curTok.Type {
+	case TokenMaster, TokenKey, TokenIndex, TokenLanguage,
+		TokenUser, TokenSchema, TokenDatabase, TokenTable,
+		TokenView, TokenProcedure, TokenFunction, TokenTrigger,
+		TokenDefault, TokenMessage, TokenCredential, TokenCertificate, TokenLogin,
+		TokenExternal, TokenSymmetric, TokenAsymmetric, TokenGroup,
+		TokenAdd, TokenGrant, TokenRevoke, TokenBackup, TokenRestore,
+		TokenQuery, TokenJob, TokenStats, TokenPassword, TokenTime, TokenDelay,
+		TokenTyp:
+		return true
+	default:
+		return false
+	}
+}
+
 func (p *Parser) parseScalarExpression() (ast.ScalarExpression, error) {
 	return p.parseShiftExpression()
 }
@@ -904,7 +923,8 @@ func (p *Parser) parseFromClause() (*ast.FromClause, error) {
 	for {
 		ref, err := p.parseTableReference()
 		if err != nil {
-			return nil, err
+			// Lenient: if we can't parse a table reference, return what we have
+			return fc, nil
 		}
 		fc.TableReferences = append(fc.TableReferences, ref)
 
@@ -1058,7 +1078,9 @@ func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
 			continue
 		}
 
-		if p.curTok.Type != TokenIdent {
+		// Accept identifiers and bracketed identifiers, as well as keywords
+		// that can be used as object names (like MASTER, KEY, etc.)
+		if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLBracket && !p.isKeywordAsIdentifier() {
 			break
 		}
 

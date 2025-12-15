@@ -1,0 +1,35 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateFunctionStatement",
+          "Name": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "f1"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ],
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "dbo"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

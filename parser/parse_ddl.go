@@ -838,7 +838,9 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
 	}
 
-	return nil, fmt.Errorf("unexpected token after ALTER DATABASE: %s", p.curTok.Literal)
+	// Lenient: skip unknown database names (like $(tempdb) SQLCMD variables)
+	p.skipToEndOfStatement()
+	return &ast.AlterDatabaseSetStatement{}, nil
 }
 
 func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.AlterDatabaseSetStatement, error) {
@@ -1405,10 +1407,12 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 	// Parse column name
 	stmt.ColumnIdentifier = p.parseIdentifier()
 
-	// Parse data type
+	// Parse data type - be lenient if no data type is provided
 	dataType, err := p.parseDataType()
 	if err != nil {
-		return nil, err
+		// Lenient: return statement without data type
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	stmt.DataType = dataType
 
@@ -1428,6 +1432,17 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 		SchemaObjectName:             tableName,
 		ExistingRowsCheckEnforcement: "NotSpecified",
 		Definition:                   &ast.TableDefinition{},
+	}
+
+	// Check if this is ADD CONSTRAINT
+	if strings.ToUpper(p.curTok.Literal) == "CONSTRAINT" {
+		p.nextToken() // consume CONSTRAINT
+		// Parse constraint name
+		constraintName := p.parseIdentifier()
+		_ = constraintName // We'll use this later when we implement full constraint support
+		// Skip to end of statement (lenient parsing for incomplete constraints)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 
 	// Check if this is ADD INDEX

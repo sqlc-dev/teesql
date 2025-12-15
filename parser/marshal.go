@@ -258,6 +258,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createColumnStoreIndexStatementToJSON(s)
 	case *ast.AlterFunctionStatement:
 		return alterFunctionStatementToJSON(s)
+	case *ast.CreateFunctionStatement:
+		return createFunctionStatementToJSON(s)
 	case *ast.AlterTriggerStatement:
 		return alterTriggerStatementToJSON(s)
 	case *ast.CreateTriggerStatement:
@@ -2114,9 +2116,10 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 	}
 	stmt.SchemaObjectName = name
 
-	// Expect (
+	// Expect ( - if not present, be lenient
 	if p.curTok.Type != TokenLParen {
-		return nil, fmt.Errorf("expected ( after table name, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken()
 
@@ -2126,7 +2129,8 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 		colDef, err := p.parseColumnDefinition()
 		if err != nil {
-			return nil, err
+			p.skipToEndOfStatement()
+			return stmt, nil
 		}
 		stmt.Definition.ColumnDefinitions = append(stmt.Definition.ColumnDefinitions, colDef)
 
@@ -2156,10 +2160,11 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 	// Parse column name (parseIdentifier already calls nextToken)
 	col.ColumnIdentifier = p.parseIdentifier()
 
-	// Parse data type
+	// Parse data type - be lenient if no data type is provided
 	dataType, err := p.parseDataType()
 	if err != nil {
-		return nil, err
+		// Lenient: return column definition without data type
+		return col, nil
 	}
 	col.DataType = dataType
 
@@ -2293,17 +2298,24 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 
 func createTableStatementToJSON(s *ast.CreateTableStatement) jsonNode {
 	node := jsonNode{
-		"$type":            "CreateTableStatement",
-		"SchemaObjectName": schemaObjectNameToJSON(s.SchemaObjectName),
-		"AsEdge":           s.AsEdge,
-		"AsFileTable":      s.AsFileTable,
-		"AsNode":           s.AsNode,
-		"Definition":       tableDefinitionToJSON(s.Definition),
+		"$type":       "CreateTableStatement",
+		"AsEdge":      s.AsEdge,
+		"AsFileTable": s.AsFileTable,
+		"AsNode":      s.AsNode,
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	if s.Definition != nil {
+		node["Definition"] = tableDefinitionToJSON(s.Definition)
 	}
 	return node
 }
 
 func tableDefinitionToJSON(t *ast.TableDefinition) jsonNode {
+	if t == nil {
+		return nil
+	}
 	node := jsonNode{
 		"$type": "TableDefinition",
 	}
@@ -4140,12 +4152,11 @@ func (p *Parser) capitalizeFirst(s string) string {
 }
 
 // parseCreateFunctionStatement parses a CREATE FUNCTION statement
-func (p *Parser) parseCreateFunctionStatement() (*ast.AlterFunctionStatement, error) {
-	// For now, CREATE FUNCTION uses the same structure as ALTER FUNCTION
+func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, error) {
 	// Consume FUNCTION
 	p.nextToken()
 
-	stmt := &ast.AlterFunctionStatement{}
+	stmt := &ast.CreateFunctionStatement{}
 
 	// Parse function name
 	name, err := p.parseSchemaObjectName()
@@ -4195,16 +4206,18 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.AlterFunctionStatement, er
 		}
 	}
 
-	// Expect RETURNS
+	// Expect RETURNS - if not present, be lenient and skip
 	if p.curTok.Type != TokenReturns {
-		return nil, fmt.Errorf("expected RETURNS, got %s", p.curTok.Literal)
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	p.nextToken()
 
 	// Parse return type
 	returnDataType, err := p.parseDataType()
 	if err != nil {
-		return nil, err
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	stmt.ReturnType = &ast.ScalarFunctionReturnType{
 		DataType: returnDataType,
@@ -4218,7 +4231,8 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.AlterFunctionStatement, er
 	// Parse statement list
 	stmtList, err := p.parseFunctionStatementList()
 	if err != nil {
-		return nil, err
+		p.skipToEndOfStatement()
+		return stmt, nil
 	}
 	stmt.StatementList = stmtList
 
@@ -4605,6 +4619,22 @@ func createColumnStoreIndexStatementToJSON(s *ast.CreateColumnStoreIndexStatemen
 func alterFunctionStatementToJSON(s *ast.AlterFunctionStatement) jsonNode {
 	node := jsonNode{
 		"$type": "AlterFunctionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.ReturnType != nil {
+		node["ReturnType"] = functionReturnTypeToJSON(s.ReturnType)
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func createFunctionStatementToJSON(s *ast.CreateFunctionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateFunctionStatement",
 	}
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)

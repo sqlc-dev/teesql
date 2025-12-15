@@ -12,6 +12,18 @@ type AlterFunctionStatement struct {
 func (s *AlterFunctionStatement) statement() {}
 func (s *AlterFunctionStatement) node()      {}
 
+// CreateFunctionStatement represents a CREATE FUNCTION statement
+type CreateFunctionStatement struct {
+	Name          *SchemaObjectName
+	Parameters    []*ProcedureParameter
+	ReturnType    FunctionReturnType
+	Options       []*FunctionOption
+	StatementList *StatementList
+}
+
+func (s *CreateFunctionStatement) statement() {}
+func (s *CreateFunctionStatement) node()      {}
+
 // FunctionReturnType is an interface for function return types
 type FunctionReturnType interface {
 	functionReturnTypeNode()
