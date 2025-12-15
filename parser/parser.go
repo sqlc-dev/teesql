@@ -171,6 +171,8 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseSendStatement()
 	case TokenReceive:
 		return p.parseReceiveStatement()
+	case TokenRestore:
+		return p.parseRestoreStatement()
 	case TokenSemicolon:
 		p.nextToken()
 		return nil, nil
@@ -223,11 +225,19 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 
 	// Check what type of DROP statement this is
 	if p.curTok.Type == TokenDatabase {
-		return p.parseDropDatabaseScopedStatement()
+		return p.parseDropDatabaseStatement()
 	}
 
 	if p.curTok.Type == TokenExternal {
 		return p.parseDropExternalStatement()
+	}
+
+	if p.curTok.Type == TokenTable {
+		return p.parseDropTableStatement()
+	}
+
+	if p.curTok.Type == TokenIndex {
+		return p.parseDropIndexStatement()
 	}
 
 	// Handle keyword-based DROP statements
@@ -242,6 +252,22 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropAvailabilityGroupStatement()
 	case "FEDERATION":
 		return p.parseDropFederationStatement()
+	case "VIEW":
+		return p.parseDropViewStatement()
+	case "PROCEDURE", "PROC":
+		return p.parseDropProcedureStatement()
+	case "FUNCTION":
+		return p.parseDropFunctionStatement()
+	case "TRIGGER":
+		return p.parseDropTriggerStatement()
+	case "STATISTICS":
+		return p.parseDropStatisticsStatement()
+	case "DEFAULT":
+		return p.parseDropDefaultStatement()
+	case "RULE":
+		return p.parseDropRuleStatement()
+	case "SCHEMA":
+		return p.parseDropSchemaStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -308,20 +334,50 @@ func (p *Parser) parseDropExternalLibraryStatement() (*ast.DropExternalLibrarySt
 	return stmt, nil
 }
 
-func (p *Parser) parseDropDatabaseScopedStatement() (ast.Statement, error) {
+func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
 
-	if p.curTok.Type != TokenScoped {
-		return nil, fmt.Errorf("expected SCOPED after DATABASE, got %s", p.curTok.Literal)
-	}
-	p.nextToken() // consume SCOPED
+	// Check for DATABASE SCOPED CREDENTIAL
+	if p.curTok.Type == TokenScoped {
+		p.nextToken() // consume SCOPED
 
-	if p.curTok.Type == TokenCredential {
-		return p.parseDropCredentialStatement(true)
+		if p.curTok.Type == TokenCredential {
+			return p.parseDropCredentialStatement(true)
+		}
+
+		return nil, fmt.Errorf("unexpected token after SCOPED: %s", p.curTok.Literal)
 	}
 
-	return nil, fmt.Errorf("unexpected token after SCOPED: %s", p.curTok.Literal)
+	// Plain DROP DATABASE statement
+	stmt := &ast.DropDatabaseStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse database names (comma-separated)
+	for {
+		stmt.Databases = append(stmt.Databases, p.parseIdentifier())
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseDropCredentialStatement(isDatabaseScoped bool) (*ast.DropCredentialStatement, error) {
@@ -465,6 +521,386 @@ func (p *Parser) parseDropFederationStatement() (*ast.DropFederationStatement, e
 	return stmt, nil
 }
 
+func (p *Parser) parseDropTableStatement() (*ast.DropTableStatement, error) {
+	// Consume TABLE
+	p.nextToken()
+
+	stmt := &ast.DropTableStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse table names (comma-separated)
+	for {
+		obj, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, obj)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropViewStatement() (*ast.DropViewStatement, error) {
+	// Consume VIEW
+	p.nextToken()
+
+	stmt := &ast.DropViewStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse view names (comma-separated)
+	for {
+		obj, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, obj)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropProcedureStatement() (*ast.DropProcedureStatement, error) {
+	// Consume PROCEDURE or PROC
+	p.nextToken()
+
+	stmt := &ast.DropProcedureStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse procedure names (comma-separated)
+	for {
+		obj, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, obj)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropFunctionStatement() (*ast.DropFunctionStatement, error) {
+	// Consume FUNCTION
+	p.nextToken()
+
+	stmt := &ast.DropFunctionStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse function names (comma-separated)
+	for {
+		obj, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, obj)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropTriggerStatement() (*ast.DropTriggerStatement, error) {
+	// Consume TRIGGER
+	p.nextToken()
+
+	stmt := &ast.DropTriggerStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse trigger names (comma-separated)
+	for {
+		obj, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, obj)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Check for ON DATABASE or ON ALL SERVER
+	if p.curTok.Type == TokenOn {
+		p.nextToken()
+		if p.curTok.Type == TokenDatabase {
+			stmt.TriggerScope = "Database"
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "ALL" {
+			p.nextToken()
+			if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+				stmt.TriggerScope = "AllServer"
+				p.nextToken()
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
+	// Consume INDEX
+	p.nextToken()
+
+	stmt := &ast.DropIndexStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse index clauses (comma-separated)
+	for {
+		clause := &ast.DropIndexClause{}
+		idx, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		clause.Index = idx
+		stmt.Indexes = append(stmt.Indexes, clause)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropStatisticsStatement() (*ast.DropStatisticsStatement, error) {
+	// Consume STATISTICS
+	p.nextToken()
+
+	stmt := &ast.DropStatisticsStatement{}
+
+	// Parse statistic names (comma-separated)
+	for {
+		obj, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, obj)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropDefaultStatement() (*ast.DropDefaultStatement, error) {
+	// Consume DEFAULT
+	p.nextToken()
+
+	stmt := &ast.DropDefaultStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse default names (comma-separated)
+	for {
+		obj, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, obj)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropRuleStatement() (*ast.DropRuleStatement, error) {
+	// Consume RULE
+	p.nextToken()
+
+	stmt := &ast.DropRuleStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse rule names (comma-separated)
+	for {
+		obj, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, obj)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropSchemaStatement() (*ast.DropSchemaStatement, error) {
+	// Consume SCHEMA
+	p.nextToken()
+
+	stmt := &ast.DropSchemaStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse schema name
+	schema, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Schema = schema
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 	// Consume ALTER
 	p.nextToken()
@@ -483,6 +919,10 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterMessageTypeStatement()
 	case TokenDatabase:
 		return p.parseAlterDatabaseStatement()
+	case TokenFunction:
+		return p.parseAlterFunctionStatement()
+	case TokenTrigger:
+		return p.parseAlterTriggerStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -4531,6 +4971,12 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 	case TokenDatabase:
 		// CREATE DATABASE SCOPED CREDENTIAL
 		return p.parseCreateDatabaseScopedCredentialStatement()
+	case TokenUser:
+		return p.parseCreateUserStatement()
+	case TokenFunction:
+		return p.parseCreateFunctionStatement()
+	case TokenTrigger:
+		return p.parseCreateTriggerStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -4548,6 +4994,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateXmlSchemaCollectionStatement()
 		case "SEARCH":
 			return p.parseCreateSearchPropertyListStatement()
+		case "AGGREGATE":
+			return p.parseCreateAggregateStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after CREATE: %s", p.curTok.Literal)
 	default:
@@ -6836,6 +7284,38 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createXmlSchemaCollectionStatementToJSON(s)
 	case *ast.CreateSearchPropertyListStatement:
 		return createSearchPropertyListStatementToJSON(s)
+	case *ast.RestoreStatement:
+		return restoreStatementToJSON(s)
+	case *ast.CreateUserStatement:
+		return createUserStatementToJSON(s)
+	case *ast.CreateAggregateStatement:
+		return createAggregateStatementToJSON(s)
+	case *ast.AlterFunctionStatement:
+		return alterFunctionStatementToJSON(s)
+	case *ast.AlterTriggerStatement:
+		return alterTriggerStatementToJSON(s)
+	case *ast.DropDatabaseStatement:
+		return dropDatabaseStatementToJSON(s)
+	case *ast.DropTableStatement:
+		return dropTableStatementToJSON(s)
+	case *ast.DropViewStatement:
+		return dropViewStatementToJSON(s)
+	case *ast.DropProcedureStatement:
+		return dropProcedureStatementToJSON(s)
+	case *ast.DropFunctionStatement:
+		return dropFunctionStatementToJSON(s)
+	case *ast.DropTriggerStatement:
+		return dropTriggerStatementToJSON(s)
+	case *ast.DropIndexStatement:
+		return dropIndexStatementToJSON(s)
+	case *ast.DropStatisticsStatement:
+		return dropStatisticsStatementToJSON(s)
+	case *ast.DropDefaultStatement:
+		return dropDefaultStatementToJSON(s)
+	case *ast.DropRuleStatement:
+		return dropRuleStatementToJSON(s)
+	case *ast.DropSchemaStatement:
+		return dropSchemaStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -9600,4 +10080,1266 @@ func nullableConstraintToJSON(n *ast.NullableConstraintDefinition) jsonNode {
 		"$type":    "NullableConstraintDefinition",
 		"Nullable": n.Nullable,
 	}
+}
+
+// parseRestoreStatement parses a RESTORE DATABASE statement
+func (p *Parser) parseRestoreStatement() (*ast.RestoreStatement, error) {
+	// Consume RESTORE
+	p.nextToken()
+
+	stmt := &ast.RestoreStatement{}
+
+	// Parse restore kind (DATABASE, LOG, etc.)
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "DATABASE":
+		stmt.Kind = "Database"
+		p.nextToken()
+	case "LOG":
+		stmt.Kind = "Log"
+		p.nextToken()
+	default:
+		stmt.Kind = "Database"
+	}
+
+	// Parse database name
+	dbName := &ast.IdentifierOrValueExpression{}
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		// Variable reference
+		varRef := &ast.VariableReference{Name: p.curTok.Literal}
+		p.nextToken()
+		dbName.Value = varRef.Name
+		dbName.ValueExpression = varRef
+	} else {
+		ident := p.parseIdentifier()
+		dbName.Value = ident.Value
+		dbName.Identifier = ident
+	}
+	stmt.DatabaseName = dbName
+
+	// Expect FROM
+	if strings.ToUpper(p.curTok.Literal) != "FROM" {
+		return nil, fmt.Errorf("expected FROM, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse devices
+	for {
+		device := &ast.DeviceInfo{DeviceType: "None"}
+
+		// Check for device type
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "DISK":
+			device.DeviceType = "Disk"
+			p.nextToken()
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after DISK, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+		case "URL":
+			device.DeviceType = "URL"
+			p.nextToken()
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after URL, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+		}
+
+		// Parse device name
+		deviceName := &ast.IdentifierOrValueExpression{}
+		if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+			varRef := &ast.VariableReference{Name: p.curTok.Literal}
+			p.nextToken()
+			deviceName.Value = varRef.Name
+			deviceName.ValueExpression = varRef
+		} else if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+			strLit := &ast.StringLiteral{
+				LiteralType:   "String",
+				Value:         p.curTok.Literal,
+				IsNational:    p.curTok.Type == TokenNationalString,
+				IsLargeObject: false,
+			}
+			deviceName.Value = strLit.Value
+			deviceName.ValueExpression = strLit
+			p.nextToken()
+		} else {
+			ident := p.parseIdentifier()
+			deviceName.Value = ident.Value
+			deviceName.Identifier = ident
+		}
+		device.LogicalDevice = deviceName
+		stmt.Devices = append(stmt.Devices, device)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+
+		for {
+			optionName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			switch optionName {
+			case "FILESTREAM":
+				if p.curTok.Type != TokenLParen {
+					return nil, fmt.Errorf("expected ( after FILESTREAM, got %s", p.curTok.Literal)
+				}
+				p.nextToken()
+
+				fsOpt := &ast.FileStreamRestoreOption{
+					OptionKind: "FileStream",
+					FileStreamOption: &ast.FileStreamDatabaseOption{
+						OptionKind: "FileStream",
+					},
+				}
+
+				// Parse FILESTREAM options
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					fsOptName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+
+					if p.curTok.Type != TokenEquals {
+						return nil, fmt.Errorf("expected = after %s, got %s", fsOptName, p.curTok.Literal)
+					}
+					p.nextToken()
+
+					switch fsOptName {
+					case "DIRECTORY_NAME":
+						expr, err := p.parseScalarExpression()
+						if err != nil {
+							return nil, err
+						}
+						fsOpt.FileStreamOption.DirectoryName = expr
+					}
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+				stmt.Options = append(stmt.Options, fsOpt)
+
+			default:
+				// Generic option
+				opt := &ast.GeneralSetCommandRestoreOption{
+					OptionKind: optionName,
+				}
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					opt.OptionValue = expr
+				}
+				stmt.Options = append(stmt.Options, opt)
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseCreateUserStatement parses a CREATE USER statement
+func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
+	// Consume USER
+	p.nextToken()
+
+	stmt := &ast.CreateUserStatement{}
+
+	// Parse user name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for login option
+	if strings.ToUpper(p.curTok.Literal) == "FOR" || strings.ToUpper(p.curTok.Literal) == "FROM" {
+		isFor := strings.ToUpper(p.curTok.Literal) == "FOR"
+		p.nextToken()
+
+		loginOption := &ast.UserLoginOption{}
+
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "LOGIN":
+			if isFor {
+				loginOption.UserLoginOptionType = "ForLogin"
+			} else {
+				loginOption.UserLoginOptionType = "FromLogin"
+			}
+			p.nextToken()
+			loginOption.Identifier = p.parseIdentifier()
+		case "CERTIFICATE":
+			loginOption.UserLoginOptionType = "FromCertificate"
+			p.nextToken()
+			loginOption.Identifier = p.parseIdentifier()
+		case "ASYMMETRIC":
+			p.nextToken() // consume ASYMMETRIC
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			loginOption.UserLoginOptionType = "FromAsymmetricKey"
+			loginOption.Identifier = p.parseIdentifier()
+		case "EXTERNAL":
+			p.nextToken() // consume EXTERNAL
+			if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+				p.nextToken() // consume PROVIDER
+			}
+			loginOption.UserLoginOptionType = "External"
+		}
+		stmt.UserLoginOption = loginOption
+	} else if strings.ToUpper(p.curTok.Literal) == "WITHOUT" {
+		p.nextToken() // consume WITHOUT
+		if p.curTok.Type == TokenLogin {
+			p.nextToken() // consume LOGIN
+		}
+		stmt.UserLoginOption = &ast.UserLoginOption{
+			UserLoginOptionType: "WithoutLogin",
+		}
+	}
+
+	// Parse WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+
+		for {
+			optionName := p.curTok.Literal
+			p.nextToken()
+
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+			}
+			p.nextToken()
+
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			opt := &ast.LiteralPrincipalOption{
+				OptionKind: convertUserOptionKind(optionName),
+				Value:      value,
+			}
+			stmt.UserOptions = append(stmt.UserOptions, opt)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseCreateAggregateStatement parses a CREATE AGGREGATE statement
+func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement, error) {
+	// Consume AGGREGATE
+	p.nextToken()
+
+	stmt := &ast.CreateAggregateStatement{}
+
+	// Parse aggregate name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after aggregate name, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param := &ast.ProcedureParameter{
+			IsVarying: false,
+			Modifier:  "None",
+		}
+
+		// Parse parameter name
+		if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+			param.VariableName = &ast.Identifier{
+				Value:     p.curTok.Literal,
+				QuoteType: "NotQuoted",
+			}
+			p.nextToken()
+		} else {
+			param.VariableName = p.parseIdentifier()
+		}
+
+		// Parse data type
+		dataType, err := p.parseDataType()
+		if err != nil {
+			return nil, err
+		}
+		param.DataType = dataType
+
+		stmt.Parameters = append(stmt.Parameters, param)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	// Expect RETURNS
+	if p.curTok.Type != TokenReturns {
+		return nil, fmt.Errorf("expected RETURNS, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse return type
+	returnType, err := p.parseDataType()
+	if err != nil {
+		return nil, err
+	}
+	stmt.ReturnType = returnType
+
+	// Expect EXTERNAL NAME
+	if strings.ToUpper(p.curTok.Literal) != "EXTERNAL" {
+		return nil, fmt.Errorf("expected EXTERNAL, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	if strings.ToUpper(p.curTok.Literal) != "NAME" {
+		return nil, fmt.Errorf("expected NAME after EXTERNAL, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse assembly name
+	stmt.AssemblyName = &ast.AssemblyName{
+		Name: p.parseIdentifier(),
+	}
+
+	// Check for .class.method syntax
+	if p.curTok.Type == TokenDot {
+		p.nextToken()
+		stmt.AssemblyName.ClassName = p.parseIdentifier()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseAlterFunctionStatement parses an ALTER FUNCTION statement
+func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, error) {
+	// Consume FUNCTION
+	p.nextToken()
+
+	stmt := &ast.AlterFunctionStatement{}
+
+	// Parse function name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Parse parameters in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			param := &ast.ProcedureParameter{
+				IsVarying: false,
+				Modifier:  "None",
+			}
+
+			// Parse parameter name
+			if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+				param.VariableName = &ast.Identifier{
+					Value:     p.curTok.Literal,
+					QuoteType: "NotQuoted",
+				}
+				p.nextToken()
+			}
+
+			// Parse data type if present
+			if p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma {
+				dataType, err := p.parseDataType()
+				if err != nil {
+					return nil, err
+				}
+				param.DataType = dataType
+			}
+
+			stmt.Parameters = append(stmt.Parameters, param)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Expect RETURNS
+	if p.curTok.Type != TokenReturns {
+		return nil, fmt.Errorf("expected RETURNS, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse return type
+	returnDataType, err := p.parseDataType()
+	if err != nil {
+		return nil, err
+	}
+	stmt.ReturnType = &ast.ScalarFunctionReturnType{
+		DataType: returnDataType,
+	}
+
+	// Parse AS
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+	}
+
+	// Parse statement list
+	stmtList, err := p.parseFunctionStatementList()
+	if err != nil {
+		return nil, err
+	}
+	stmt.StatementList = stmtList
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseFunctionStatementList parses the body of a function
+func (p *Parser) parseFunctionStatementList() (*ast.StatementList, error) {
+	stmtList := &ast.StatementList{}
+
+	for p.curTok.Type != TokenEOF {
+		// Check for GO or end of batch
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO" {
+			break
+		}
+
+		stmt, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		if stmt != nil {
+			stmtList.Statements = append(stmtList.Statements, stmt)
+		}
+
+		// Stop after one statement for simple function bodies
+		break
+	}
+
+	return stmtList, nil
+}
+
+// parseAlterTriggerStatement parses an ALTER TRIGGER statement
+func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error) {
+	// Consume TRIGGER
+	p.nextToken()
+
+	stmt := &ast.AlterTriggerStatement{}
+
+	// Parse trigger name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Expect ON
+	if strings.ToUpper(p.curTok.Literal) != "ON" {
+		return nil, fmt.Errorf("expected ON, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse trigger object
+	triggerObject := &ast.TriggerObject{
+		TriggerScope: "Normal",
+	}
+
+	// Check for ALL SERVER or DATABASE
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "ALL":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken()
+			triggerObject.TriggerScope = "AllServer"
+		}
+	case "DATABASE":
+		p.nextToken()
+		triggerObject.TriggerScope = "Database"
+	default:
+		// Parse table/view name
+		objName, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		triggerObject.Name = objName
+	}
+	stmt.TriggerObject = triggerObject
+
+	// Parse trigger type (FOR, AFTER, INSTEAD OF)
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "FOR":
+		stmt.TriggerType = "For"
+		p.nextToken()
+	case "AFTER":
+		stmt.TriggerType = "After"
+		p.nextToken()
+	case "INSTEAD":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "OF" {
+			p.nextToken()
+		}
+		stmt.TriggerType = "InsteadOf"
+	}
+
+	// Parse trigger actions
+	for {
+		action := &ast.TriggerAction{}
+		actionType := strings.ToUpper(p.curTok.Literal)
+
+		switch actionType {
+		case "INSERT":
+			action.TriggerActionType = "Insert"
+		case "UPDATE":
+			action.TriggerActionType = "Update"
+		case "DELETE":
+			action.TriggerActionType = "Delete"
+		default:
+			action.TriggerActionType = actionType
+		}
+		p.nextToken()
+
+		stmt.TriggerActions = append(stmt.TriggerActions, action)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Parse AS
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+	}
+
+	// Parse statement list
+	stmtList := &ast.StatementList{}
+	for p.curTok.Type != TokenEOF {
+		// Check for GO or end of batch
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO" {
+			break
+		}
+
+		innerStmt, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		if innerStmt != nil {
+			stmtList.Statements = append(stmtList.Statements, innerStmt)
+		}
+
+		// For simple triggers, stop after parsing one statement
+		break
+	}
+	stmt.StatementList = stmtList
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseCreateFunctionStatement parses a CREATE FUNCTION statement
+func (p *Parser) parseCreateFunctionStatement() (*ast.AlterFunctionStatement, error) {
+	// For now, CREATE FUNCTION uses the same structure as ALTER FUNCTION
+	// Consume FUNCTION
+	p.nextToken()
+
+	stmt := &ast.AlterFunctionStatement{}
+
+	// Parse function name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Parse parameters in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			param := &ast.ProcedureParameter{
+				IsVarying: false,
+				Modifier:  "None",
+			}
+
+			// Parse parameter name
+			if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+				param.VariableName = &ast.Identifier{
+					Value:     p.curTok.Literal,
+					QuoteType: "NotQuoted",
+				}
+				p.nextToken()
+			}
+
+			// Parse data type if present
+			if p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma {
+				dataType, err := p.parseDataType()
+				if err != nil {
+					return nil, err
+				}
+				param.DataType = dataType
+			}
+
+			stmt.Parameters = append(stmt.Parameters, param)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Expect RETURNS
+	if p.curTok.Type != TokenReturns {
+		return nil, fmt.Errorf("expected RETURNS, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse return type
+	returnDataType, err := p.parseDataType()
+	if err != nil {
+		return nil, err
+	}
+	stmt.ReturnType = &ast.ScalarFunctionReturnType{
+		DataType: returnDataType,
+	}
+
+	// Parse AS
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+	}
+
+	// Parse statement list
+	stmtList, err := p.parseFunctionStatementList()
+	if err != nil {
+		return nil, err
+	}
+	stmt.StatementList = stmtList
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseCreateTriggerStatement parses a CREATE TRIGGER statement
+func (p *Parser) parseCreateTriggerStatement() (*ast.AlterTriggerStatement, error) {
+	// CREATE TRIGGER uses the same structure as ALTER TRIGGER
+	// Consume TRIGGER
+	p.nextToken()
+
+	stmt := &ast.AlterTriggerStatement{}
+
+	// Parse trigger name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Expect ON
+	if strings.ToUpper(p.curTok.Literal) != "ON" {
+		return nil, fmt.Errorf("expected ON, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse trigger object
+	triggerObject := &ast.TriggerObject{
+		TriggerScope: "Normal",
+	}
+
+	// Check for ALL SERVER or DATABASE
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "ALL":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken()
+			triggerObject.TriggerScope = "AllServer"
+		}
+	case "DATABASE":
+		p.nextToken()
+		triggerObject.TriggerScope = "Database"
+	default:
+		// Parse table/view name
+		objName, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		triggerObject.Name = objName
+	}
+	stmt.TriggerObject = triggerObject
+
+	// Parse trigger type (FOR, AFTER, INSTEAD OF)
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "FOR":
+		stmt.TriggerType = "For"
+		p.nextToken()
+	case "AFTER":
+		stmt.TriggerType = "After"
+		p.nextToken()
+	case "INSTEAD":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "OF" {
+			p.nextToken()
+		}
+		stmt.TriggerType = "InsteadOf"
+	}
+
+	// Parse trigger actions
+	for {
+		action := &ast.TriggerAction{}
+		actionType := strings.ToUpper(p.curTok.Literal)
+
+		switch actionType {
+		case "INSERT":
+			action.TriggerActionType = "Insert"
+		case "UPDATE":
+			action.TriggerActionType = "Update"
+		case "DELETE":
+			action.TriggerActionType = "Delete"
+		default:
+			action.TriggerActionType = actionType
+		}
+		p.nextToken()
+
+		stmt.TriggerActions = append(stmt.TriggerActions, action)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Parse AS
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+	}
+
+	// Parse statement list
+	stmtList := &ast.StatementList{}
+	for p.curTok.Type != TokenEOF {
+		// Check for GO or end of batch
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO" {
+			break
+		}
+
+		innerStmt, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		if innerStmt != nil {
+			stmtList.Statements = append(stmtList.Statements, innerStmt)
+		}
+
+		// For simple triggers, stop after parsing one statement
+		break
+	}
+	stmt.StatementList = stmtList
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// JSON marshaling functions for new statement types
+
+func restoreStatementToJSON(s *ast.RestoreStatement) jsonNode {
+	node := jsonNode{
+		"$type": "RestoreStatement",
+		"Kind":  s.Kind,
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierOrValueExpressionToJSON(s.DatabaseName)
+	}
+	if len(s.Devices) > 0 {
+		devices := make([]jsonNode, len(s.Devices))
+		for i, d := range s.Devices {
+			devices[i] = deviceInfoToJSON(d)
+		}
+		node["Devices"] = devices
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = restoreOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func deviceInfoToJSON(d *ast.DeviceInfo) jsonNode {
+	node := jsonNode{
+		"$type":      "DeviceInfo",
+		"DeviceType": d.DeviceType,
+	}
+	if d.LogicalDevice != nil {
+		node["LogicalDevice"] = identifierOrValueExpressionToJSON(d.LogicalDevice)
+	}
+	if d.PhysicalDevice != nil {
+		node["PhysicalDevice"] = identifierOrValueExpressionToJSON(d.PhysicalDevice)
+	}
+	return node
+}
+
+func restoreOptionToJSON(o ast.RestoreOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.FileStreamRestoreOption:
+		node := jsonNode{
+			"$type":      "FileStreamRestoreOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.FileStreamOption != nil {
+			node["FileStreamOption"] = fileStreamDatabaseOptionToJSON(opt.FileStreamOption)
+		}
+		return node
+	case *ast.GeneralSetCommandRestoreOption:
+		node := jsonNode{
+			"$type":      "GeneralSetCommandRestoreOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.OptionValue != nil {
+			node["OptionValue"] = scalarExpressionToJSON(opt.OptionValue)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownRestoreOption"}
+	}
+}
+
+func fileStreamDatabaseOptionToJSON(f *ast.FileStreamDatabaseOption) jsonNode {
+	node := jsonNode{
+		"$type":      "FileStreamDatabaseOption",
+		"OptionKind": f.OptionKind,
+	}
+	if f.DirectoryName != nil {
+		node["DirectoryName"] = scalarExpressionToJSON(f.DirectoryName)
+	}
+	return node
+}
+
+func createUserStatementToJSON(s *ast.CreateUserStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateUserStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.UserLoginOption != nil {
+		node["UserLoginOption"] = userLoginOptionToJSON(s.UserLoginOption)
+	}
+	if len(s.UserOptions) > 0 {
+		options := make([]jsonNode, len(s.UserOptions))
+		for i, o := range s.UserOptions {
+			options[i] = userOptionToJSON(o)
+		}
+		node["UserOptions"] = options
+	}
+	return node
+}
+
+func userLoginOptionToJSON(u *ast.UserLoginOption) jsonNode {
+	node := jsonNode{
+		"$type":               "UserLoginOption",
+		"UserLoginOptionType": u.UserLoginOptionType,
+	}
+	if u.Identifier != nil {
+		node["Identifier"] = identifierToJSON(u.Identifier)
+	}
+	return node
+}
+
+func userOptionToJSON(o ast.UserOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.LiteralPrincipalOption:
+		node := jsonNode{
+			"$type":      "LiteralPrincipalOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		return node
+	case *ast.IdentifierPrincipalOption:
+		node := jsonNode{
+			"$type":      "IdentifierPrincipalOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Identifier != nil {
+			node["Identifier"] = identifierToJSON(opt.Identifier)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownUserOption"}
+	}
+}
+
+func createAggregateStatementToJSON(s *ast.CreateAggregateStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateAggregateStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.AssemblyName != nil {
+		node["AssemblyName"] = assemblyNameToJSON(s.AssemblyName)
+	}
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = procedureParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	if s.ReturnType != nil {
+		node["ReturnType"] = dataTypeReferenceToJSON(s.ReturnType)
+	}
+	return node
+}
+
+func assemblyNameToJSON(a *ast.AssemblyName) jsonNode {
+	node := jsonNode{
+		"$type": "AssemblyName",
+	}
+	if a.Name != nil {
+		node["Name"] = identifierToJSON(a.Name)
+	}
+	if a.ClassName != nil {
+		node["ClassName"] = identifierToJSON(a.ClassName)
+	}
+	return node
+}
+
+func alterFunctionStatementToJSON(s *ast.AlterFunctionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterFunctionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.ReturnType != nil {
+		node["ReturnType"] = functionReturnTypeToJSON(s.ReturnType)
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func functionReturnTypeToJSON(r ast.FunctionReturnType) jsonNode {
+	switch rt := r.(type) {
+	case *ast.ScalarFunctionReturnType:
+		node := jsonNode{
+			"$type": "ScalarFunctionReturnType",
+		}
+		if rt.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(rt.DataType)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownFunctionReturnType"}
+	}
+}
+
+func alterTriggerStatementToJSON(s *ast.AlterTriggerStatement) jsonNode {
+	node := jsonNode{
+		"$type":               "AlterTriggerStatement",
+		"TriggerType":         s.TriggerType,
+		"WithAppend":          s.WithAppend,
+		"IsNotForReplication": s.IsNotForReplication,
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.TriggerObject != nil {
+		node["TriggerObject"] = triggerObjectToJSON(s.TriggerObject)
+	}
+	if len(s.TriggerActions) > 0 {
+		actions := make([]jsonNode, len(s.TriggerActions))
+		for i, a := range s.TriggerActions {
+			actions[i] = triggerActionToJSON(a)
+		}
+		node["TriggerActions"] = actions
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func triggerObjectToJSON(t *ast.TriggerObject) jsonNode {
+	node := jsonNode{
+		"$type":        "TriggerObject",
+		"TriggerScope": t.TriggerScope,
+	}
+	if t.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(t.Name)
+	}
+	return node
+}
+
+func triggerActionToJSON(a *ast.TriggerAction) jsonNode {
+	return jsonNode{
+		"$type":             "TriggerAction",
+		"TriggerActionType": a.TriggerActionType,
+	}
+}
+
+func convertUserOptionKind(name string) string {
+	// Convert option names to the expected format
+	optionMap := map[string]string{
+		"OBJECT_ID":      "Object_ID",
+		"DEFAULT_SCHEMA": "Default_Schema",
+		"SID":            "Sid",
+		"PASSWORD":       "Password",
+		"NAME":           "Name",
+		"LOGIN":          "Login",
+	}
+	upper := strings.ToUpper(name)
+	if mapped, ok := optionMap[upper]; ok {
+		return mapped
+	}
+	// Default: return as-is with first letter capitalized
+	return capitalizeFirst(name)
+}
+
+func dropDatabaseStatementToJSON(s *ast.DropDatabaseStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropDatabaseStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Databases) > 0 {
+		dbs := make([]jsonNode, len(s.Databases))
+		for i, db := range s.Databases {
+			dbs[i] = identifierToJSON(db)
+		}
+		node["Databases"] = dbs
+	}
+	return node
+}
+
+func dropTableStatementToJSON(s *ast.DropTableStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropTableStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropViewStatementToJSON(s *ast.DropViewStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropViewStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropProcedureStatementToJSON(s *ast.DropProcedureStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropProcedureStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropFunctionStatementToJSON(s *ast.DropFunctionStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropFunctionStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropTriggerStatementToJSON(s *ast.DropTriggerStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropTriggerStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	if s.TriggerScope != "" {
+		node["TriggerScope"] = s.TriggerScope
+	}
+	return node
+}
+
+func dropIndexStatementToJSON(s *ast.DropIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropIndexStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Indexes) > 0 {
+		clauses := make([]jsonNode, len(s.Indexes))
+		for i, clause := range s.Indexes {
+			clauses[i] = dropIndexClauseToJSON(clause)
+		}
+		node["DropIndexClauses"] = clauses
+	}
+	return node
+}
+
+func dropIndexClauseToJSON(c *ast.DropIndexClause) jsonNode {
+	node := jsonNode{
+		"$type": "DropIndexClauseBase",
+	}
+	if c.Index != nil {
+		node["Index"] = schemaObjectNameToJSON(c.Index)
+	}
+	return node
+}
+
+func dropStatisticsStatementToJSON(s *ast.DropStatisticsStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropStatisticsStatement",
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropDefaultStatementToJSON(s *ast.DropDefaultStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropDefaultStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropRuleStatementToJSON(s *ast.DropRuleStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropRuleStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropSchemaStatementToJSON(s *ast.DropSchemaStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropSchemaStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Schema != nil {
+		node["Schema"] = schemaObjectNameToJSON(s.Schema)
+	}
+	return node
 }
