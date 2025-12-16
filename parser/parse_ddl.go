@@ -2999,8 +2999,42 @@ func (p *Parser) parseAlterCredentialStatement() (*ast.AlterCredentialStatement,
 	// Parse credential name
 	stmt.Name = p.parseIdentifier()
 
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		for {
+			optName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume option name
+
+			if p.curTok.Type != TokenEquals {
+				break
+			}
+			p.nextToken() // consume =
+
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			switch optName {
+			case "IDENTITY":
+				stmt.Identity = val
+			case "SECRET":
+				stmt.Secret = val
+			}
+
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume ,
+		}
+	}
+
 	// Skip rest of statement
-	p.skipToEndOfStatement()
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
