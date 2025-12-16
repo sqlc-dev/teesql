@@ -5259,10 +5259,10 @@ func alterTableSwitchStatementToJSON(s *ast.AlterTableSwitchStatement) jsonNode 
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
 	if s.SourcePartition != nil {
-		node["SourcePartition"] = scalarExpressionToJSON(s.SourcePartition)
+		node["SourcePartitionNumber"] = scalarExpressionToJSON(s.SourcePartition)
 	}
 	if s.TargetPartition != nil {
-		node["TargetPartition"] = scalarExpressionToJSON(s.TargetPartition)
+		node["TargetPartitionNumber"] = scalarExpressionToJSON(s.TargetPartition)
 	}
 	return node
 }
