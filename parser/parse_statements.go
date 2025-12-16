@@ -356,11 +356,15 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 	stmt.Variable = &ast.VariableReference{Name: p.curTok.Literal}
 	p.nextToken()
 
-	// Expect =
-	if p.curTok.Type != TokenEquals {
+	// Expect = or ||=
+	if p.curTok.Type == TokenConcatEquals {
+		stmt.AssignmentKind = "ConcatEquals"
+		p.nextToken()
+	} else if p.curTok.Type != TokenEquals {
 		return nil, fmt.Errorf("expected =, got %s", p.curTok.Literal)
+	} else {
+		p.nextToken()
 	}
-	p.nextToken()
 
 	// Check for CURSOR definition
 	if p.curTok.Type == TokenCursor {

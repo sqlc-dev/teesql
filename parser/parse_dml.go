@@ -551,15 +551,18 @@ func (p *Parser) parseSetClauses() ([]ast.SetClause, error) {
 func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 	clause := &ast.AssignmentSetClause{AssignmentKind: "Equals"}
 
-	// Could be @var = col = value, @var = value, or col = value
+	// Could be @var = col = value, @var = value, @var ||= value, or col = value, col ||= value
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		varName := p.curTok.Literal
 		p.nextToken()
-		if p.curTok.Type == TokenEquals {
+		if p.curTok.Type == TokenEquals || p.curTok.Type == TokenConcatEquals {
 			clause.Variable = &ast.VariableReference{Name: varName}
+			if p.curTok.Type == TokenConcatEquals {
+				clause.AssignmentKind = "ConcatEquals"
+			}
 			p.nextToken()
 
-			// Check if next is column = value (SET @a = col = value)
+			// Check if next is column = value (SET @a = col = value) or col ||= value
 			if p.curTok.Type == TokenIdent && !strings.HasPrefix(p.curTok.Literal, "@") {
 				// Could be @a = col = value or @a = expr
 				savedTok := p.curTok
@@ -567,8 +570,11 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 				if err != nil {
 					return nil, err
 				}
-				if p.curTok.Type == TokenEquals {
+				if p.curTok.Type == TokenEquals || p.curTok.Type == TokenConcatEquals {
 					clause.Column = col
+					if p.curTok.Type == TokenConcatEquals {
+						clause.AssignmentKind = "ConcatEquals"
+					}
 					p.nextToken()
 					val, err := p.parseScalarExpression()
 					if err != nil {
@@ -597,17 +603,21 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 		}
 	}
 
-	// col = value
+	// col = value or col ||= value
 	col, err := p.parseMultiPartIdentifierAsColumn()
 	if err != nil {
 		return nil, err
 	}
 	clause.Column = col
 
-	if p.curTok.Type != TokenEquals {
+	if p.curTok.Type == TokenConcatEquals {
+		clause.AssignmentKind = "ConcatEquals"
+		p.nextToken()
+	} else if p.curTok.Type != TokenEquals {
 		return nil, fmt.Errorf("expected =, got %s", p.curTok.Literal)
+	} else {
+		p.nextToken()
 	}
-	p.nextToken()
 
 	val, err := p.parseScalarExpression()
 	if err != nil {
