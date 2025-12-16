@@ -181,6 +181,11 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		p.nextToken()
 		return nil, nil
 	case TokenIdent:
+		// Check for BULK INSERT
+		if strings.ToUpper(p.curTok.Literal) == "BULK" {
+			p.nextToken() // consume BULK
+			return p.parseBulkInsertStatement()
+		}
 		// Check for label (identifier followed by colon)
 		return p.parseLabelOrError()
 	default:

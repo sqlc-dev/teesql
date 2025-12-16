@@ -1,0 +1,51 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "AlterTableAlterColumnStatement",
+          "AlterTableAlterColumnOption": "NoOptionDefined",
+          "ColumnIdentifier": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "c1"
+          },
+          "IsHidden": false,
+          "IsMasked": false,
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "t1"
+            },
+            "Count": 3,
+            "DatabaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "SquareBracket",
+              "Value": "master"
+            },
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ],
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "dbo"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

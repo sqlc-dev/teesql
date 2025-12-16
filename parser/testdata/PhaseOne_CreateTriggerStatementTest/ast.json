@@ -1,0 +1,59 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateTriggerStatement",
+          "IsNotForReplication": false,
+          "Name": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "trig1"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "StatementList": {
+            "$type": "StatementList"
+          },
+          "TriggerObject": {
+            "$type": "TriggerObject",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "t1"
+              },
+              "Count": 2,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                },
+                {
+                  "$ref": "Identifier"
+                }
+              ],
+              "SchemaIdentifier": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "dbo"
+              }
+            },
+            "TriggerScope": "Normal"
+          },
+          "TriggerType": "",
+          "WithAppend": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "AlterDatabaseRemoveFileStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "tempdb"
+          },
+          "File": {
+            "$type": "Identifier",
+            "QuoteType": "SquareBracket",
+            "Value": "file1"
+          }
+        }
+      ]
+    }
+  ]
+}

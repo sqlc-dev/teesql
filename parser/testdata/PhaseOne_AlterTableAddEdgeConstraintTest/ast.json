@@ -1,0 +1,79 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "AlterTableAddTableElementStatement",
+          "Definition": {
+            "$type": "TableDefinition",
+            "ColumnDefinitions": [
+              {
+                "$type": "ColumnDefinition",
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "QuoteType": "NotQuoted",
+                  "Value": "CONNECTION"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "CONNECTION"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "SqlDataTypeOption": "Connection"
+                },
+                "IsHidden": false,
+                "IsMasked": false,
+                "IsPersisted": false,
+                "IsRowGuidCol": false
+              }
+            ]
+          },
+          "ExistingRowsCheckEnforcement": "NotSpecified",
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "SquareBracket",
+              "Value": "t1"
+            },
+            "Count": 3,
+            "DatabaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "SquareBracket",
+              "Value": "master"
+            },
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ],
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "SquareBracket",
+              "Value": "dbo"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

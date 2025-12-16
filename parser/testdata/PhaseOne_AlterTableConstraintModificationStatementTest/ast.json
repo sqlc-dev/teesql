@@ -1,0 +1,53 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "AlterTableConstraintModificationStatement",
+          "All": false,
+          "ConstraintEnforcement": "Check",
+          "ConstraintNames": [
+            {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "fk1"
+            }
+          ],
+          "ExistingRowsCheckEnforcement": "Check",
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "t1"
+            },
+            "Count": 3,
+            "DatabaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "SquareBracket",
+              "Value": "master"
+            },
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ],
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "dbo"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

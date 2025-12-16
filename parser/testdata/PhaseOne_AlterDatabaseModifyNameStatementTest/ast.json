@@ -1,0 +1,23 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "AlterDatabaseModifyNameStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "tempdb"
+          },
+          "NewDatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "newName"
+          }
+        }
+      ]
+    }
+  ]
+}

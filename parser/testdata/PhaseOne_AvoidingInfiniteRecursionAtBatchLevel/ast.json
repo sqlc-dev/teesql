@@ -1,0 +1,73 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "LabelStatement",
+          "Value": "abcde"
+        },
+        {
+          "$type": "CreateProcedureStatement",
+          "IsForReplication": false
+        },
+        {
+          "$type": "CreateTableStatement",
+          "AsEdge": false,
+          "AsFileTable": false,
+          "AsNode": false,
+          "Definition": {
+            "$type": "TableDefinition",
+            "ColumnDefinitions": [
+              {
+                "$type": "ColumnDefinition",
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "QuoteType": "NotQuoted",
+                  "Value": "c1"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "int"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "SqlDataTypeOption": "Int"
+                },
+                "IsHidden": false,
+                "IsMasked": false,
+                "IsPersisted": false,
+                "IsRowGuidCol": false
+              }
+            ]
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "t1"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
