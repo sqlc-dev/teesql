@@ -276,6 +276,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return restoreStatementToJSON(s)
 	case *ast.BackupDatabaseStatement:
 		return backupDatabaseStatementToJSON(s)
+	case *ast.BackupCertificateStatement:
+		return backupCertificateStatementToJSON(s)
 	case *ast.CreateUserStatement:
 		return createUserStatementToJSON(s)
 	case *ast.CreateAggregateStatement:
@@ -4455,6 +4457,29 @@ func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
 			devices[i] = deviceInfoToJSON(d)
 		}
 		node["Devices"] = devices
+	}
+	return node
+}
+
+func backupCertificateStatementToJSON(s *ast.BackupCertificateStatement) jsonNode {
+	node := jsonNode{
+		"$type": "BackupCertificateStatement",
+	}
+	if s.File != nil {
+		node["File"] = scalarExpressionToJSON(s.File)
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["ActiveForBeginDialog"] = s.ActiveForBeginDialog
+	if s.PrivateKeyPath != nil {
+		node["PrivateKeyPath"] = scalarExpressionToJSON(s.PrivateKeyPath)
+	}
+	if s.EncryptionPassword != nil {
+		node["EncryptionPassword"] = scalarExpressionToJSON(s.EncryptionPassword)
+	}
+	if s.DecryptionPassword != nil {
+		node["DecryptionPassword"] = scalarExpressionToJSON(s.DecryptionPassword)
 	}
 	return node
 }

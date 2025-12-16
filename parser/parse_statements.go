@@ -2910,9 +2910,14 @@ func (p *Parser) parseReceiveStatement() (*ast.ReceiveStatement, error) {
 	return stmt, nil
 }
 
-func (p *Parser) parseBackupStatement() (*ast.BackupDatabaseStatement, error) {
+func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 	// Consume BACKUP
 	p.nextToken()
+
+	// Check for CERTIFICATE
+	if strings.ToUpper(p.curTok.Literal) == "CERTIFICATE" {
+		return p.parseBackupCertificateStatement()
+	}
 
 	stmt := &ast.BackupDatabaseStatement{}
 
@@ -3056,6 +3061,142 @@ func (p *Parser) parseBackupStatement() (*ast.BackupDatabaseStatement, error) {
 				p.nextToken()
 			} else {
 				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseBackupCertificateStatement() (*ast.BackupCertificateStatement, error) {
+	// Consume CERTIFICATE
+	p.nextToken()
+
+	stmt := &ast.BackupCertificateStatement{
+		ActiveForBeginDialog: "NotSet",
+	}
+
+	// Parse certificate name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect TO
+	if p.curTok.Type != TokenTo {
+		return nil, fmt.Errorf("expected TO after certificate name, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect FILE
+	if strings.ToUpper(p.curTok.Literal) != "FILE" {
+		return nil, fmt.Errorf("expected FILE after TO, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after FILE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse file path
+	file, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.File = file
+
+	// Check for WITH PRIVATE KEY clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		if strings.ToUpper(p.curTok.Literal) == "PRIVATE" {
+			p.nextToken() // consume PRIVATE
+			if strings.ToUpper(p.curTok.Literal) != "KEY" {
+				return nil, fmt.Errorf("expected KEY after PRIVATE, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume KEY
+
+			// Expect (
+			if p.curTok.Type != TokenLParen {
+				return nil, fmt.Errorf("expected ( after PRIVATE KEY, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+
+			// Parse options
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					val, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+
+					switch optName {
+					case "FILE":
+						stmt.PrivateKeyPath = val
+					case "ENCRYPTION":
+						// ENCRYPTION BY PASSWORD = value
+						if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+							p.nextToken()
+							if p.curTok.Type == TokenEquals {
+								p.nextToken()
+								val, err = p.parseScalarExpression()
+								if err != nil {
+									return nil, err
+								}
+							}
+						}
+						stmt.EncryptionPassword = val
+					case "DECRYPTION":
+						// DECRYPTION BY PASSWORD = value
+						if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+							p.nextToken()
+							if p.curTok.Type == TokenEquals {
+								p.nextToken()
+								val, err = p.parseScalarExpression()
+								if err != nil {
+									return nil, err
+								}
+							}
+						}
+						stmt.DecryptionPassword = val
+					}
+				} else if optName == "ENCRYPTION" || optName == "DECRYPTION" {
+					// ENCRYPTION BY PASSWORD = value
+					if strings.ToUpper(p.curTok.Literal) == "BY" {
+						p.nextToken() // consume BY
+						if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+							p.nextToken() // consume PASSWORD
+							if p.curTok.Type == TokenEquals {
+								p.nextToken()
+								val, err := p.parseScalarExpression()
+								if err != nil {
+									return nil, err
+								}
+								if optName == "ENCRYPTION" {
+									stmt.EncryptionPassword = val
+								} else {
+									stmt.DecryptionPassword = val
+								}
+							}
+						}
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
 			}
 		}
 	}
