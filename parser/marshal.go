@@ -142,6 +142,32 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropAvailabilityGroupStatementToJSON(s)
 	case *ast.DropFederationStatement:
 		return dropFederationStatementToJSON(s)
+	case *ast.DropSecurityPolicyStatement:
+		return dropSecurityPolicyStatementToJSON(s)
+	case *ast.DropExternalDataSourceStatement:
+		return dropExternalDataSourceStatementToJSON(s)
+	case *ast.DropExternalFileFormatStatement:
+		return dropExternalFileFormatStatementToJSON(s)
+	case *ast.DropExternalTableStatement:
+		return dropExternalTableStatementToJSON(s)
+	case *ast.DropExternalResourcePoolStatement:
+		return dropExternalResourcePoolStatementToJSON(s)
+	case *ast.DropWorkloadGroupStatement:
+		return dropWorkloadGroupStatementToJSON(s)
+	case *ast.DropWorkloadClassifierStatement:
+		return dropWorkloadClassifierStatementToJSON(s)
+	case *ast.DropTypeStatement:
+		return dropTypeStatementToJSON(s)
+	case *ast.DropAggregateStatement:
+		return dropAggregateStatementToJSON(s)
+	case *ast.DropSynonymStatement:
+		return dropSynonymStatementToJSON(s)
+	case *ast.DropUserStatement:
+		return dropUserStatementToJSON(s)
+	case *ast.DropRoleStatement:
+		return dropRoleStatementToJSON(s)
+	case *ast.DropAssemblyStatement:
+		return dropAssemblyStatementToJSON(s)
 	case *ast.CreateTableStatement:
 		return createTableStatementToJSON(s)
 	case *ast.GrantStatement:
@@ -250,6 +276,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return restoreStatementToJSON(s)
 	case *ast.BackupDatabaseStatement:
 		return backupDatabaseStatementToJSON(s)
+	case *ast.BackupCertificateStatement:
+		return backupCertificateStatementToJSON(s)
 	case *ast.CreateUserStatement:
 		return createUserStatementToJSON(s)
 	case *ast.CreateAggregateStatement:
@@ -1930,6 +1958,12 @@ func setVariableStatementToJSON(s *ast.SetVariableStatement) jsonNode {
 	if s.Variable != nil {
 		node["Variable"] = scalarExpressionToJSON(s.Variable)
 	}
+	if s.SeparatorType != "" {
+		node["SeparatorType"] = s.SeparatorType
+	} else {
+		node["SeparatorType"] = "NotSpecified"
+	}
+	node["FunctionCallExists"] = s.FunctionCallExists
 	if s.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(s.Expression)
 	}
@@ -1939,15 +1973,22 @@ func setVariableStatementToJSON(s *ast.SetVariableStatement) jsonNode {
 	if s.AssignmentKind != "" {
 		node["AssignmentKind"] = s.AssignmentKind
 	}
-	if s.SeparatorType != "" {
-		node["SeparatorType"] = s.SeparatorType
-	}
 	return node
 }
 
 func cursorDefinitionToJSON(cd *ast.CursorDefinition) jsonNode {
 	node := jsonNode{
 		"$type": "CursorDefinition",
+	}
+	if len(cd.Options) > 0 {
+		opts := make([]jsonNode, len(cd.Options))
+		for i, opt := range cd.Options {
+			opts[i] = jsonNode{
+				"$type":      "CursorOption",
+				"OptionKind": opt.OptionKind,
+			}
+		}
+		node["Options"] = opts
 	}
 	if cd.Select != nil {
 		node["Select"] = queryExpressionToJSON(cd.Select)
@@ -4433,6 +4474,29 @@ func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
 	return node
 }
 
+func backupCertificateStatementToJSON(s *ast.BackupCertificateStatement) jsonNode {
+	node := jsonNode{
+		"$type": "BackupCertificateStatement",
+	}
+	if s.File != nil {
+		node["File"] = scalarExpressionToJSON(s.File)
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["ActiveForBeginDialog"] = s.ActiveForBeginDialog
+	if s.PrivateKeyPath != nil {
+		node["PrivateKeyPath"] = scalarExpressionToJSON(s.PrivateKeyPath)
+	}
+	if s.EncryptionPassword != nil {
+		node["EncryptionPassword"] = scalarExpressionToJSON(s.EncryptionPassword)
+	}
+	if s.DecryptionPassword != nil {
+		node["DecryptionPassword"] = scalarExpressionToJSON(s.DecryptionPassword)
+	}
+	return node
+}
+
 func backupOptionToJSON(o *ast.BackupOption) jsonNode {
 	node := jsonNode{
 		"$type":      "BackupOption",
@@ -4922,11 +4986,27 @@ func dropIndexStatementToJSON(s *ast.DropIndexStatement) jsonNode {
 }
 
 func dropIndexClauseToJSON(c *ast.DropIndexClause) jsonNode {
+	// If we have an Object (ON clause), use DropIndexClause type
+	if c.Object != nil {
+		node := jsonNode{
+			"$type": "DropIndexClause",
+		}
+		if c.IndexName != nil {
+			node["Index"] = identifierToJSON(c.IndexName)
+		}
+		node["Object"] = schemaObjectNameToJSON(c.Object)
+		return node
+	}
+
+	// Otherwise use DropIndexClauseBase for backwards-compatible syntax
 	node := jsonNode{
 		"$type": "DropIndexClauseBase",
 	}
 	if c.Index != nil {
 		node["Index"] = schemaObjectNameToJSON(c.Index)
+	} else if c.IndexName != nil {
+		// Just index name without object - use identifier
+		node["Index"] = identifierToJSON(c.IndexName)
 	}
 	return node
 }
@@ -4983,6 +5063,175 @@ func dropSchemaStatementToJSON(s *ast.DropSchemaStatement) jsonNode {
 	if s.Schema != nil {
 		node["Schema"] = schemaObjectNameToJSON(s.Schema)
 	}
+	// DropBehavior defaults to "None"
+	behavior := s.DropBehavior
+	if behavior == "" {
+		behavior = "None"
+	}
+	node["DropBehavior"] = behavior
+	return node
+}
+
+func dropSecurityPolicyStatementToJSON(s *ast.DropSecurityPolicyStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropSecurityPolicyStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropExternalDataSourceStatementToJSON(s *ast.DropExternalDataSourceStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropExternalDataSourceStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropExternalFileFormatStatementToJSON(s *ast.DropExternalFileFormatStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropExternalFileFormatStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropExternalTableStatementToJSON(s *ast.DropExternalTableStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropExternalTableStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropExternalResourcePoolStatementToJSON(s *ast.DropExternalResourcePoolStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropExternalResourcePoolStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropWorkloadGroupStatementToJSON(s *ast.DropWorkloadGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropWorkloadGroupStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropWorkloadClassifierStatementToJSON(s *ast.DropWorkloadClassifierStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropWorkloadClassifierStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropTypeStatementToJSON(s *ast.DropTypeStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropTypeStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	return node
+}
+
+func dropAggregateStatementToJSON(s *ast.DropAggregateStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropAggregateStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropSynonymStatementToJSON(s *ast.DropSynonymStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropSynonymStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropUserStatementToJSON(s *ast.DropUserStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropUserStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropRoleStatementToJSON(s *ast.DropRoleStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropRoleStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropAssemblyStatementToJSON(s *ast.DropAssemblyStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropAssemblyStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
 	return node
 }
 
@@ -5023,10 +5272,10 @@ func alterTableSwitchStatementToJSON(s *ast.AlterTableSwitchStatement) jsonNode 
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
 	if s.SourcePartition != nil {
-		node["SourcePartition"] = scalarExpressionToJSON(s.SourcePartition)
+		node["SourcePartitionNumber"] = scalarExpressionToJSON(s.SourcePartition)
 	}
 	if s.TargetPartition != nil {
-		node["TargetPartition"] = scalarExpressionToJSON(s.TargetPartition)
+		node["TargetPartitionNumber"] = scalarExpressionToJSON(s.TargetPartition)
 	}
 	return node
 }
@@ -5582,6 +5831,32 @@ func createPartitionFunctionStatementToJSON(s *ast.CreatePartitionFunctionStatem
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.ParameterType != nil {
+		node["ParameterType"] = partitionParameterTypeToJSON(s.ParameterType)
+	}
+	if s.Range != "" {
+		node["Range"] = s.Range
+	}
+	if len(s.BoundaryValues) > 0 {
+		values := make([]jsonNode, len(s.BoundaryValues))
+		for i, v := range s.BoundaryValues {
+			values[i] = scalarExpressionToJSON(v)
+		}
+		node["BoundaryValues"] = values
+	}
+	return node
+}
+
+func partitionParameterTypeToJSON(p *ast.PartitionParameterType) jsonNode {
+	node := jsonNode{
+		"$type": "PartitionParameterType",
+	}
+	if p.DataType != nil {
+		node["DataType"] = sqlDataTypeReferenceToJSON(p.DataType)
+	}
+	if p.Collation != nil {
+		node["Collation"] = identifierToJSON(p.Collation)
 	}
 	return node
 }

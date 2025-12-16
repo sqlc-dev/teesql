@@ -338,7 +338,6 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 
 	stmt := &ast.SetVariableStatement{
 		AssignmentKind: "Equals",
-		SeparatorType:  "Equals",
 	}
 
 	// Parse variable name
@@ -357,22 +356,30 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 	// Check for CURSOR definition
 	if p.curTok.Type == TokenCursor {
 		p.nextToken()
-		// Parse cursor options and FOR SELECT
-		// For now, simplified - skip to FOR
+		cursorDef := &ast.CursorDefinition{}
+
+		// Parse cursor options (SCROLL, DYNAMIC, etc.) until FOR
 		for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
 			if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "FOR" {
-				p.nextToken()
+				p.nextToken() // consume FOR
 				break
+			}
+			// Cursor options are typically identifiers like SCROLL, DYNAMIC, STATIC, etc.
+			if p.curTok.Type == TokenIdent {
+				optKind := strings.Title(strings.ToLower(p.curTok.Literal))
+				cursorDef.Options = append(cursorDef.Options, &ast.CursorOption{OptionKind: optKind})
 			}
 			p.nextToken()
 		}
+
 		if p.curTok.Type == TokenSelect {
 			qe, err := p.parseQueryExpression()
 			if err != nil {
 				return nil, err
 			}
-			stmt.CursorDefinition = &ast.CursorDefinition{Select: qe}
+			cursorDef.Select = qe
 		}
+		stmt.CursorDefinition = cursorDef
 	} else {
 		expr, err := p.parseScalarExpression()
 		if err != nil {
@@ -2910,9 +2917,14 @@ func (p *Parser) parseReceiveStatement() (*ast.ReceiveStatement, error) {
 	return stmt, nil
 }
 
-func (p *Parser) parseBackupStatement() (*ast.BackupDatabaseStatement, error) {
+func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 	// Consume BACKUP
 	p.nextToken()
+
+	// Check for CERTIFICATE
+	if strings.ToUpper(p.curTok.Literal) == "CERTIFICATE" {
+		return p.parseBackupCertificateStatement()
+	}
 
 	stmt := &ast.BackupDatabaseStatement{}
 
@@ -3056,6 +3068,142 @@ func (p *Parser) parseBackupStatement() (*ast.BackupDatabaseStatement, error) {
 				p.nextToken()
 			} else {
 				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseBackupCertificateStatement() (*ast.BackupCertificateStatement, error) {
+	// Consume CERTIFICATE
+	p.nextToken()
+
+	stmt := &ast.BackupCertificateStatement{
+		ActiveForBeginDialog: "NotSet",
+	}
+
+	// Parse certificate name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect TO
+	if p.curTok.Type != TokenTo {
+		return nil, fmt.Errorf("expected TO after certificate name, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect FILE
+	if strings.ToUpper(p.curTok.Literal) != "FILE" {
+		return nil, fmt.Errorf("expected FILE after TO, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after FILE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse file path
+	file, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.File = file
+
+	// Check for WITH PRIVATE KEY clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		if strings.ToUpper(p.curTok.Literal) == "PRIVATE" {
+			p.nextToken() // consume PRIVATE
+			if strings.ToUpper(p.curTok.Literal) != "KEY" {
+				return nil, fmt.Errorf("expected KEY after PRIVATE, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume KEY
+
+			// Expect (
+			if p.curTok.Type != TokenLParen {
+				return nil, fmt.Errorf("expected ( after PRIVATE KEY, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+
+			// Parse options
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					val, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+
+					switch optName {
+					case "FILE":
+						stmt.PrivateKeyPath = val
+					case "ENCRYPTION":
+						// ENCRYPTION BY PASSWORD = value
+						if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+							p.nextToken()
+							if p.curTok.Type == TokenEquals {
+								p.nextToken()
+								val, err = p.parseScalarExpression()
+								if err != nil {
+									return nil, err
+								}
+							}
+						}
+						stmt.EncryptionPassword = val
+					case "DECRYPTION":
+						// DECRYPTION BY PASSWORD = value
+						if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+							p.nextToken()
+							if p.curTok.Type == TokenEquals {
+								p.nextToken()
+								val, err = p.parseScalarExpression()
+								if err != nil {
+									return nil, err
+								}
+							}
+						}
+						stmt.DecryptionPassword = val
+					}
+				} else if optName == "ENCRYPTION" || optName == "DECRYPTION" {
+					// ENCRYPTION BY PASSWORD = value
+					if strings.ToUpper(p.curTok.Literal) == "BY" {
+						p.nextToken() // consume BY
+						if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+							p.nextToken() // consume PASSWORD
+							if p.curTok.Type == TokenEquals {
+								p.nextToken()
+								val, err := p.parseScalarExpression()
+								if err != nil {
+									return nil, err
+								}
+								if optName == "ENCRYPTION" {
+									stmt.EncryptionPassword = val
+								} else {
+									stmt.DecryptionPassword = val
+								}
+							}
+						}
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
 			}
 		}
 	}
@@ -3413,7 +3561,94 @@ func (p *Parser) parseCreatePartitionFunctionFromPartition() (*ast.CreatePartiti
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
+	// Parse ( parameter_type )
+	if p.curTok.Type != TokenLParen {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume (
+
+	// Parse parameter type (data type with optional collation)
+	paramType := &ast.PartitionParameterType{}
+	dt, err := p.parseDataType()
+	if err != nil {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	paramType.DataType = dt
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		paramType.Collation = p.parseIdentifier()
+	}
+
+	stmt.ParameterType = paramType
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume AS
+
+	// Expect RANGE
+	if strings.ToUpper(p.curTok.Literal) != "RANGE" {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume RANGE
+
+	// Parse LEFT or RIGHT (optional, default is LEFT)
+	rangeDirection := strings.ToUpper(p.curTok.Literal)
+	if rangeDirection == "LEFT" || rangeDirection == "RIGHT" {
+		stmt.Range = strings.Title(strings.ToLower(rangeDirection))
+		p.nextToken() // consume LEFT/RIGHT
+	}
+
+	// Expect FOR VALUES
+	if strings.ToUpper(p.curTok.Literal) != "FOR" {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume FOR
+
+	if strings.ToUpper(p.curTok.Literal) != "VALUES" {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume VALUES
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume (
+
+	// Parse boundary values
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			p.skipToEndOfStatement()
+			return stmt, nil
+		}
+		stmt.BoundaryValues = append(stmt.BoundaryValues, expr)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume ,
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
 	p.skipToEndOfStatement()
 	return stmt, nil
 }

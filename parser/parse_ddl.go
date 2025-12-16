@@ -92,6 +92,22 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropRuleStatement()
 	case "SCHEMA":
 		return p.parseDropSchemaStatement()
+	case "SECURITY":
+		return p.parseDropSecurityPolicyStatement()
+	case "WORKLOAD":
+		return p.parseDropWorkloadStatement()
+	case "TYPE":
+		return p.parseDropTypeStatement()
+	case "AGGREGATE":
+		return p.parseDropAggregateStatement()
+	case "SYNONYM":
+		return p.parseDropSynonymStatement()
+	case "USER":
+		return p.parseDropUserStatement()
+	case "ROLE":
+		return p.parseDropRoleStatement()
+	case "ASSEMBLY":
+		return p.parseDropAssemblyStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -105,8 +121,17 @@ func (p *Parser) parseDropExternalStatement() (ast.Statement, error) {
 		return p.parseDropExternalLanguageStatement()
 	}
 
-	if strings.ToUpper(p.curTok.Literal) == "LIBRARY" {
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "LIBRARY":
 		return p.parseDropExternalLibraryStatement()
+	case "DATA":
+		return p.parseDropExternalDataSourceStatement()
+	case "FILE":
+		return p.parseDropExternalFileFormatStatement()
+	case "TABLE":
+		return p.parseDropExternalTableStatement()
+	case "RESOURCE":
+		return p.parseDropExternalResourcePoolStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after EXTERNAL: %s", p.curTok.Literal)
@@ -158,19 +183,462 @@ func (p *Parser) parseDropExternalLibraryStatement() (*ast.DropExternalLibrarySt
 	return stmt, nil
 }
 
+func (p *Parser) parseDropExternalDataSourceStatement() (*ast.DropExternalDataSourceStatement, error) {
+	// Consume DATA
+	p.nextToken()
+
+	// Expect SOURCE
+	if strings.ToUpper(p.curTok.Literal) != "SOURCE" {
+		return nil, fmt.Errorf("expected SOURCE after DATA, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.DropExternalDataSourceStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse data source name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropExternalFileFormatStatement() (*ast.DropExternalFileFormatStatement, error) {
+	// Consume FILE
+	p.nextToken()
+
+	// Expect FORMAT
+	if strings.ToUpper(p.curTok.Literal) != "FORMAT" {
+		return nil, fmt.Errorf("expected FORMAT after FILE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.DropExternalFileFormatStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse file format name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropExternalTableStatement() (*ast.DropExternalTableStatement, error) {
+	// Consume TABLE
+	p.nextToken()
+
+	stmt := &ast.DropExternalTableStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse table names (can be comma-separated)
+	for {
+		tableName, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, tableName)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropExternalResourcePoolStatement() (*ast.DropExternalResourcePoolStatement, error) {
+	// Consume RESOURCE
+	p.nextToken()
+
+	// Expect POOL
+	if strings.ToUpper(p.curTok.Literal) != "POOL" {
+		return nil, fmt.Errorf("expected POOL after RESOURCE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.DropExternalResourcePoolStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse pool name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropSecurityPolicyStatement() (*ast.DropSecurityPolicyStatement, error) {
+	// Consume SECURITY
+	p.nextToken()
+
+	// Expect POLICY
+	if strings.ToUpper(p.curTok.Literal) != "POLICY" {
+		return nil, fmt.Errorf("expected POLICY after SECURITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.DropSecurityPolicyStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse policy names (can be comma-separated)
+	for {
+		policyName, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, policyName)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropWorkloadStatement() (ast.Statement, error) {
+	// Consume WORKLOAD
+	p.nextToken()
+
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "GROUP":
+		return p.parseDropWorkloadGroupStatement()
+	case "CLASSIFIER":
+		return p.parseDropWorkloadClassifierStatement()
+	}
+
+	return nil, fmt.Errorf("expected GROUP or CLASSIFIER after WORKLOAD, got %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseDropWorkloadGroupStatement() (*ast.DropWorkloadGroupStatement, error) {
+	// Consume GROUP
+	p.nextToken()
+
+	stmt := &ast.DropWorkloadGroupStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse group name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropWorkloadClassifierStatement() (*ast.DropWorkloadClassifierStatement, error) {
+	// Consume CLASSIFIER
+	p.nextToken()
+
+	stmt := &ast.DropWorkloadClassifierStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse classifier name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropTypeStatement() (*ast.DropTypeStatement, error) {
+	// Consume TYPE
+	p.nextToken()
+
+	stmt := &ast.DropTypeStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse type name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropAggregateStatement() (*ast.DropAggregateStatement, error) {
+	// Consume AGGREGATE
+	p.nextToken()
+
+	stmt := &ast.DropAggregateStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse aggregate names (can be comma-separated)
+	for {
+		name, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, name)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropSynonymStatement() (*ast.DropSynonymStatement, error) {
+	// Consume SYNONYM
+	p.nextToken()
+
+	stmt := &ast.DropSynonymStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse synonym names (can be comma-separated)
+	for {
+		name, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, name)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropUserStatement() (*ast.DropUserStatement, error) {
+	// Consume USER
+	p.nextToken()
+
+	stmt := &ast.DropUserStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse user name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropRoleStatement() (*ast.DropRoleStatement, error) {
+	// Consume ROLE
+	p.nextToken()
+
+	stmt := &ast.DropRoleStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse role name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropAssemblyStatement() (*ast.DropAssemblyStatement, error) {
+	// Consume ASSEMBLY
+	p.nextToken()
+
+	stmt := &ast.DropAssemblyStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse assembly names (can be comma-separated)
+	for {
+		name, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Objects = append(stmt.Objects, name)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
 
-	// Check for DATABASE SCOPED CREDENTIAL
-	if p.curTok.Type == TokenScoped {
+	// Check for DATABASE SCOPED CREDENTIAL (look ahead to confirm)
+	if p.curTok.Type == TokenScoped && p.peekTok.Type == TokenCredential {
 		p.nextToken() // consume SCOPED
-
-		if p.curTok.Type == TokenCredential {
-			return p.parseDropCredentialStatement(true)
-		}
-
-		return nil, fmt.Errorf("unexpected token after SCOPED: %s", p.curTok.Literal)
+		return p.parseDropCredentialStatement(true)
 	}
 
 	// Plain DROP DATABASE statement
@@ -569,11 +1037,34 @@ func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
 	// Parse index clauses (comma-separated)
 	for {
 		clause := &ast.DropIndexClause{}
-		idx, err := p.parseSchemaObjectName()
-		if err != nil {
-			return nil, err
+
+		// Parse index name
+		indexName := p.parseIdentifier()
+
+		// Check for ON clause (new syntax: index ON table)
+		if strings.ToUpper(p.curTok.Literal) == "ON" {
+			p.nextToken() // consume ON
+
+			// Parse table name
+			tableName, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			clause.IndexName = indexName
+			clause.Object = tableName
+		} else if p.curTok.Type == TokenDot {
+			// Old backwards-compatible syntax: table.index
+			p.nextToken() // consume dot
+			childName := p.parseIdentifier()
+			clause.Index = &ast.SchemaObjectName{
+				SchemaIdentifier: indexName,
+				BaseIdentifier:   childName,
+			}
+		} else {
+			// Just index name without ON or dot
+			clause.IndexName = indexName
 		}
-		clause.Index = idx
+
 		stmt.Indexes = append(stmt.Indexes, clause)
 
 		if p.curTok.Type != TokenComma {
@@ -2508,8 +2999,42 @@ func (p *Parser) parseAlterCredentialStatement() (*ast.AlterCredentialStatement,
 	// Parse credential name
 	stmt.Name = p.parseIdentifier()
 
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		for {
+			optName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume option name
+
+			if p.curTok.Type != TokenEquals {
+				break
+			}
+			p.nextToken() // consume =
+
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			switch optName {
+			case "IDENTITY":
+				stmt.Identity = val
+			case "SECRET":
+				stmt.Secret = val
+			}
+
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume ,
+		}
+	}
+
 	// Skip rest of statement
-	p.skipToEndOfStatement()
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
