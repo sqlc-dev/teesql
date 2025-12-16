@@ -156,6 +156,18 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropWorkloadGroupStatementToJSON(s)
 	case *ast.DropWorkloadClassifierStatement:
 		return dropWorkloadClassifierStatementToJSON(s)
+	case *ast.DropTypeStatement:
+		return dropTypeStatementToJSON(s)
+	case *ast.DropAggregateStatement:
+		return dropAggregateStatementToJSON(s)
+	case *ast.DropSynonymStatement:
+		return dropSynonymStatementToJSON(s)
+	case *ast.DropUserStatement:
+		return dropUserStatementToJSON(s)
+	case *ast.DropRoleStatement:
+		return dropRoleStatementToJSON(s)
+	case *ast.DropAssemblyStatement:
+		return dropAssemblyStatementToJSON(s)
 	case *ast.CreateTableStatement:
 		return createTableStatementToJSON(s)
 	case *ast.GrantStatement:
@@ -4936,11 +4948,27 @@ func dropIndexStatementToJSON(s *ast.DropIndexStatement) jsonNode {
 }
 
 func dropIndexClauseToJSON(c *ast.DropIndexClause) jsonNode {
+	// If we have an Object (ON clause), use DropIndexClause type
+	if c.Object != nil {
+		node := jsonNode{
+			"$type": "DropIndexClause",
+		}
+		if c.IndexName != nil {
+			node["Index"] = identifierToJSON(c.IndexName)
+		}
+		node["Object"] = schemaObjectNameToJSON(c.Object)
+		return node
+	}
+
+	// Otherwise use DropIndexClauseBase for backwards-compatible syntax
 	node := jsonNode{
 		"$type": "DropIndexClauseBase",
 	}
 	if c.Index != nil {
 		node["Index"] = schemaObjectNameToJSON(c.Index)
+	} else if c.IndexName != nil {
+		// Just index name without object - use identifier
+		node["Index"] = identifierToJSON(c.IndexName)
 	}
 	return node
 }
@@ -4997,6 +5025,12 @@ func dropSchemaStatementToJSON(s *ast.DropSchemaStatement) jsonNode {
 	if s.Schema != nil {
 		node["Schema"] = schemaObjectNameToJSON(s.Schema)
 	}
+	// DropBehavior defaults to "None"
+	behavior := s.DropBehavior
+	if behavior == "" {
+		behavior = "None"
+	}
+	node["DropBehavior"] = behavior
 	return node
 }
 
@@ -5081,6 +5115,84 @@ func dropWorkloadClassifierStatementToJSON(s *ast.DropWorkloadClassifierStatemen
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropTypeStatementToJSON(s *ast.DropTypeStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropTypeStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	return node
+}
+
+func dropAggregateStatementToJSON(s *ast.DropAggregateStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropAggregateStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropSynonymStatementToJSON(s *ast.DropSynonymStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropSynonymStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropUserStatementToJSON(s *ast.DropUserStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropUserStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropRoleStatementToJSON(s *ast.DropRoleStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropRoleStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropAssemblyStatementToJSON(s *ast.DropAssemblyStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropAssemblyStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
 	}
 	return node
 }

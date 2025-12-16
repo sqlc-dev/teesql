@@ -66,8 +66,9 @@ func (s *DropIndexStatement) node()      {}
 
 // DropIndexClause represents a single index to drop
 type DropIndexClause struct {
-	Index *SchemaObjectName
-	// Could have additional options like ON table, WITH options
+	Index     *SchemaObjectName // For backwards-compatible syntax: table.index
+	IndexName *Identifier       // For new syntax: index ON table
+	Object    *SchemaObjectName // Table name for ON clause syntax
 }
 
 // DropStatisticsStatement represents a DROP STATISTICS statement
@@ -98,8 +99,9 @@ func (s *DropRuleStatement) node()      {}
 
 // DropSchemaStatement represents a DROP SCHEMA statement
 type DropSchemaStatement struct {
-	IsIfExists bool
-	Schema     *SchemaObjectName
+	IsIfExists   bool
+	Schema       *SchemaObjectName
+	DropBehavior string // "None", "Cascade", "Restrict"
 }
 
 func (s *DropSchemaStatement) statement() {}
@@ -167,3 +169,57 @@ type DropWorkloadClassifierStatement struct {
 
 func (s *DropWorkloadClassifierStatement) statement() {}
 func (s *DropWorkloadClassifierStatement) node()      {}
+
+// DropTypeStatement represents a DROP TYPE statement
+type DropTypeStatement struct {
+	IsIfExists bool
+	Name       *SchemaObjectName
+}
+
+func (s *DropTypeStatement) statement() {}
+func (s *DropTypeStatement) node()      {}
+
+// DropAggregateStatement represents a DROP AGGREGATE statement
+type DropAggregateStatement struct {
+	IsIfExists bool
+	Objects    []*SchemaObjectName
+}
+
+func (s *DropAggregateStatement) statement() {}
+func (s *DropAggregateStatement) node()      {}
+
+// DropSynonymStatement represents a DROP SYNONYM statement
+type DropSynonymStatement struct {
+	IsIfExists bool
+	Objects    []*SchemaObjectName
+}
+
+func (s *DropSynonymStatement) statement() {}
+func (s *DropSynonymStatement) node()      {}
+
+// DropUserStatement represents a DROP USER statement
+type DropUserStatement struct {
+	IsIfExists bool
+	Name       *Identifier
+}
+
+func (s *DropUserStatement) statement() {}
+func (s *DropUserStatement) node()      {}
+
+// DropRoleStatement represents a DROP ROLE statement
+type DropRoleStatement struct {
+	IsIfExists bool
+	Name       *Identifier
+}
+
+func (s *DropRoleStatement) statement() {}
+func (s *DropRoleStatement) node()      {}
+
+// DropAssemblyStatement represents a DROP ASSEMBLY statement
+type DropAssemblyStatement struct {
+	IsIfExists bool
+	Objects    []*SchemaObjectName
+}
+
+func (s *DropAssemblyStatement) statement() {}
+func (s *DropAssemblyStatement) node()      {}
