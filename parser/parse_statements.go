@@ -3554,7 +3554,94 @@ func (p *Parser) parseCreatePartitionFunctionFromPartition() (*ast.CreatePartiti
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
+	// Parse ( parameter_type )
+	if p.curTok.Type != TokenLParen {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume (
+
+	// Parse parameter type (data type with optional collation)
+	paramType := &ast.PartitionParameterType{}
+	dt, err := p.parseDataType()
+	if err != nil {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	paramType.DataType = dt
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		paramType.Collation = p.parseIdentifier()
+	}
+
+	stmt.ParameterType = paramType
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume AS
+
+	// Expect RANGE
+	if strings.ToUpper(p.curTok.Literal) != "RANGE" {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume RANGE
+
+	// Parse LEFT or RIGHT (optional, default is LEFT)
+	rangeDirection := strings.ToUpper(p.curTok.Literal)
+	if rangeDirection == "LEFT" || rangeDirection == "RIGHT" {
+		stmt.Range = strings.Title(strings.ToLower(rangeDirection))
+		p.nextToken() // consume LEFT/RIGHT
+	}
+
+	// Expect FOR VALUES
+	if strings.ToUpper(p.curTok.Literal) != "FOR" {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume FOR
+
+	if strings.ToUpper(p.curTok.Literal) != "VALUES" {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume VALUES
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken() // consume (
+
+	// Parse boundary values
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			p.skipToEndOfStatement()
+			return stmt, nil
+		}
+		stmt.BoundaryValues = append(stmt.BoundaryValues, expr)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume ,
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
 	p.skipToEndOfStatement()
 	return stmt, nil
 }

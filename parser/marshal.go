@@ -5819,6 +5819,32 @@ func createPartitionFunctionStatementToJSON(s *ast.CreatePartitionFunctionStatem
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.ParameterType != nil {
+		node["ParameterType"] = partitionParameterTypeToJSON(s.ParameterType)
+	}
+	if s.Range != "" {
+		node["Range"] = s.Range
+	}
+	if len(s.BoundaryValues) > 0 {
+		values := make([]jsonNode, len(s.BoundaryValues))
+		for i, v := range s.BoundaryValues {
+			values[i] = scalarExpressionToJSON(v)
+		}
+		node["BoundaryValues"] = values
+	}
+	return node
+}
+
+func partitionParameterTypeToJSON(p *ast.PartitionParameterType) jsonNode {
+	node := jsonNode{
+		"$type": "PartitionParameterType",
+	}
+	if p.DataType != nil {
+		node["DataType"] = sqlDataTypeReferenceToJSON(p.DataType)
+	}
+	if p.Collation != nil {
+		node["Collation"] = identifierToJSON(p.Collation)
+	}
 	return node
 }
 

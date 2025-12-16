@@ -120,9 +120,20 @@ type CreateFulltextIndexStatement struct {
 func (s *CreateFulltextIndexStatement) node()      {}
 func (s *CreateFulltextIndexStatement) statement() {}
 
+// PartitionParameterType represents the parameter type in a partition function.
+type PartitionParameterType struct {
+	DataType  *SqlDataTypeReference `json:"DataType,omitempty"`
+	Collation *Identifier           `json:"Collation,omitempty"`
+}
+
+func (p *PartitionParameterType) node() {}
+
 // CreatePartitionFunctionStatement represents a CREATE PARTITION FUNCTION statement.
 type CreatePartitionFunctionStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name           *Identifier              `json:"Name,omitempty"`
+	ParameterType  *PartitionParameterType  `json:"ParameterType,omitempty"`
+	Range          string                   `json:"Range,omitempty"` // "Left" or "Right"
+	BoundaryValues []ScalarExpression       `json:"BoundaryValues,omitempty"`
 }
 
 func (s *CreatePartitionFunctionStatement) node()      {}
