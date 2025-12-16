@@ -142,6 +142,20 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropAvailabilityGroupStatementToJSON(s)
 	case *ast.DropFederationStatement:
 		return dropFederationStatementToJSON(s)
+	case *ast.DropSecurityPolicyStatement:
+		return dropSecurityPolicyStatementToJSON(s)
+	case *ast.DropExternalDataSourceStatement:
+		return dropExternalDataSourceStatementToJSON(s)
+	case *ast.DropExternalFileFormatStatement:
+		return dropExternalFileFormatStatementToJSON(s)
+	case *ast.DropExternalTableStatement:
+		return dropExternalTableStatementToJSON(s)
+	case *ast.DropExternalResourcePoolStatement:
+		return dropExternalResourcePoolStatementToJSON(s)
+	case *ast.DropWorkloadGroupStatement:
+		return dropWorkloadGroupStatementToJSON(s)
+	case *ast.DropWorkloadClassifierStatement:
+		return dropWorkloadClassifierStatementToJSON(s)
 	case *ast.CreateTableStatement:
 		return createTableStatementToJSON(s)
 	case *ast.GrantStatement:
@@ -4982,6 +4996,91 @@ func dropSchemaStatementToJSON(s *ast.DropSchemaStatement) jsonNode {
 	}
 	if s.Schema != nil {
 		node["Schema"] = schemaObjectNameToJSON(s.Schema)
+	}
+	return node
+}
+
+func dropSecurityPolicyStatementToJSON(s *ast.DropSecurityPolicyStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropSecurityPolicyStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropExternalDataSourceStatementToJSON(s *ast.DropExternalDataSourceStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropExternalDataSourceStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropExternalFileFormatStatementToJSON(s *ast.DropExternalFileFormatStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropExternalFileFormatStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropExternalTableStatementToJSON(s *ast.DropExternalTableStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropExternalTableStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if len(s.Objects) > 0 {
+		objects := make([]jsonNode, len(s.Objects))
+		for i, obj := range s.Objects {
+			objects[i] = schemaObjectNameToJSON(obj)
+		}
+		node["Objects"] = objects
+	}
+	return node
+}
+
+func dropExternalResourcePoolStatementToJSON(s *ast.DropExternalResourcePoolStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropExternalResourcePoolStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropWorkloadGroupStatementToJSON(s *ast.DropWorkloadGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropWorkloadGroupStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropWorkloadClassifierStatementToJSON(s *ast.DropWorkloadClassifierStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropWorkloadClassifierStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
 	}
 	return node
 }

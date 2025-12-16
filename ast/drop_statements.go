@@ -104,3 +104,66 @@ type DropSchemaStatement struct {
 
 func (s *DropSchemaStatement) statement() {}
 func (s *DropSchemaStatement) node()      {}
+
+// DropSecurityPolicyStatement represents a DROP SECURITY POLICY statement
+type DropSecurityPolicyStatement struct {
+	IsIfExists bool
+	Objects    []*SchemaObjectName
+}
+
+func (s *DropSecurityPolicyStatement) statement() {}
+func (s *DropSecurityPolicyStatement) node()      {}
+
+// DropExternalDataSourceStatement represents a DROP EXTERNAL DATA SOURCE statement
+type DropExternalDataSourceStatement struct {
+	IsIfExists bool
+	Name       *Identifier
+}
+
+func (s *DropExternalDataSourceStatement) statement() {}
+func (s *DropExternalDataSourceStatement) node()      {}
+
+// DropExternalFileFormatStatement represents a DROP EXTERNAL FILE FORMAT statement
+type DropExternalFileFormatStatement struct {
+	IsIfExists bool
+	Name       *Identifier
+}
+
+func (s *DropExternalFileFormatStatement) statement() {}
+func (s *DropExternalFileFormatStatement) node()      {}
+
+// DropExternalTableStatement represents a DROP EXTERNAL TABLE statement
+type DropExternalTableStatement struct {
+	IsIfExists bool
+	Objects    []*SchemaObjectName
+}
+
+func (s *DropExternalTableStatement) statement() {}
+func (s *DropExternalTableStatement) node()      {}
+
+// DropExternalResourcePoolStatement represents a DROP EXTERNAL RESOURCE POOL statement
+type DropExternalResourcePoolStatement struct {
+	IsIfExists bool
+	Name       *Identifier
+}
+
+func (s *DropExternalResourcePoolStatement) statement() {}
+func (s *DropExternalResourcePoolStatement) node()      {}
+
+// DropWorkloadGroupStatement represents a DROP WORKLOAD GROUP statement
+type DropWorkloadGroupStatement struct {
+	IsIfExists bool
+	Name       *Identifier
+}
+
+func (s *DropWorkloadGroupStatement) statement() {}
+func (s *DropWorkloadGroupStatement) node()      {}
+
+// DropWorkloadClassifierStatement represents a DROP WORKLOAD CLASSIFIER statement
+type DropWorkloadClassifierStatement struct {
+	IsIfExists bool
+	Name       *Identifier
+}
+
+func (s *DropWorkloadClassifierStatement) statement() {}
+func (s *DropWorkloadClassifierStatement) node()      {}
