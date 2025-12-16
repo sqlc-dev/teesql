@@ -1958,6 +1958,12 @@ func setVariableStatementToJSON(s *ast.SetVariableStatement) jsonNode {
 	if s.Variable != nil {
 		node["Variable"] = scalarExpressionToJSON(s.Variable)
 	}
+	if s.SeparatorType != "" {
+		node["SeparatorType"] = s.SeparatorType
+	} else {
+		node["SeparatorType"] = "NotSpecified"
+	}
+	node["FunctionCallExists"] = s.FunctionCallExists
 	if s.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(s.Expression)
 	}
@@ -1967,15 +1973,22 @@ func setVariableStatementToJSON(s *ast.SetVariableStatement) jsonNode {
 	if s.AssignmentKind != "" {
 		node["AssignmentKind"] = s.AssignmentKind
 	}
-	if s.SeparatorType != "" {
-		node["SeparatorType"] = s.SeparatorType
-	}
 	return node
 }
 
 func cursorDefinitionToJSON(cd *ast.CursorDefinition) jsonNode {
 	node := jsonNode{
 		"$type": "CursorDefinition",
+	}
+	if len(cd.Options) > 0 {
+		opts := make([]jsonNode, len(cd.Options))
+		for i, opt := range cd.Options {
+			opts[i] = jsonNode{
+				"$type":      "CursorOption",
+				"OptionKind": opt.OptionKind,
+			}
+		}
+		node["Options"] = opts
 	}
 	if cd.Select != nil {
 		node["Select"] = queryExpressionToJSON(cd.Select)

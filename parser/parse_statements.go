@@ -338,7 +338,6 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 
 	stmt := &ast.SetVariableStatement{
 		AssignmentKind: "Equals",
-		SeparatorType:  "Equals",
 	}
 
 	// Parse variable name
@@ -357,22 +356,30 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 	// Check for CURSOR definition
 	if p.curTok.Type == TokenCursor {
 		p.nextToken()
-		// Parse cursor options and FOR SELECT
-		// For now, simplified - skip to FOR
+		cursorDef := &ast.CursorDefinition{}
+
+		// Parse cursor options (SCROLL, DYNAMIC, etc.) until FOR
 		for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
 			if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "FOR" {
-				p.nextToken()
+				p.nextToken() // consume FOR
 				break
+			}
+			// Cursor options are typically identifiers like SCROLL, DYNAMIC, STATIC, etc.
+			if p.curTok.Type == TokenIdent {
+				optKind := strings.Title(strings.ToLower(p.curTok.Literal))
+				cursorDef.Options = append(cursorDef.Options, &ast.CursorOption{OptionKind: optKind})
 			}
 			p.nextToken()
 		}
+
 		if p.curTok.Type == TokenSelect {
 			qe, err := p.parseQueryExpression()
 			if err != nil {
 				return nil, err
 			}
-			stmt.CursorDefinition = &ast.CursorDefinition{Select: qe}
+			cursorDef.Select = qe
 		}
+		stmt.CursorDefinition = cursorDef
 	} else {
 		expr, err := p.parseScalarExpression()
 		if err != nil {
