@@ -1058,9 +1058,17 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.UniqueRowFilter != "" {
 			node["UniqueRowFilter"] = e.UniqueRowFilter
 		}
-		if e.WithArrayWrapper {
-			node["WithArrayWrapper"] = e.WithArrayWrapper
+		if e.OverClause != nil {
+			node["OverClause"] = overClauseToJSON(e.OverClause)
 		}
+		if len(e.IgnoreRespectNulls) > 0 {
+			ids := make([]jsonNode, len(e.IgnoreRespectNulls))
+			for i, id := range e.IgnoreRespectNulls {
+				ids[i] = identifierToJSON(id)
+			}
+			node["IgnoreRespectNulls"] = ids
+		}
+		node["WithArrayWrapper"] = e.WithArrayWrapper
 		return node
 	case *ast.BinaryExpression:
 		node := jsonNode{
@@ -1132,6 +1140,17 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 	case *ast.DefaultLiteral:
 		node := jsonNode{
 			"$type": "DefaultLiteral",
+		}
+		if e.LiteralType != "" {
+			node["LiteralType"] = e.LiteralType
+		}
+		if e.Value != "" {
+			node["Value"] = e.Value
+		}
+		return node
+	case *ast.MaxLiteral:
+		node := jsonNode{
+			"$type": "MaxLiteral",
 		}
 		if e.LiteralType != "" {
 			node["LiteralType"] = e.LiteralType
@@ -1231,6 +1250,27 @@ func identifierToJSON(id *ast.Identifier) jsonNode {
 	node["Value"] = id.Value
 	if id.QuoteType != "" {
 		node["QuoteType"] = id.QuoteType
+	}
+	return node
+}
+
+func overClauseToJSON(oc *ast.OverClause) jsonNode {
+	node := jsonNode{
+		"$type": "OverClause",
+	}
+	if len(oc.Partitions) > 0 {
+		partitions := make([]jsonNode, len(oc.Partitions))
+		for i, p := range oc.Partitions {
+			partitions[i] = scalarExpressionToJSON(p)
+		}
+		node["Partitions"] = partitions
+	}
+	if len(oc.OrderByElements) > 0 {
+		orderBy := make([]jsonNode, len(oc.OrderByElements))
+		for i, o := range oc.OrderByElements {
+			orderBy[i] = expressionWithSortOrderToJSON(o)
+		}
+		node["OrderByElements"] = orderBy
 	}
 	return node
 }

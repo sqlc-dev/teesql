@@ -85,6 +85,8 @@ const (
 	TokenRBrace
 	TokenLeftShift
 	TokenRightShift
+	TokenConcat // ||
+	TokenPipe   // |
 
 	// DML Keywords
 	TokenInsert
@@ -369,6 +371,17 @@ func (l *Lexer) NextToken() Token {
 		tok.Type = TokenModulo
 		tok.Literal = "%"
 		l.readChar()
+	case '|':
+		if l.peekChar() == '|' {
+			l.readChar()
+			tok.Type = TokenConcat
+			tok.Literal = "||"
+			l.readChar()
+		} else {
+			tok.Type = TokenPipe
+			tok.Literal = "|"
+			l.readChar()
+		}
 	case '\'':
 		tok = l.readString()
 	default:

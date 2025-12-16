@@ -487,12 +487,15 @@ func (p *Parser) parseAdditiveExpression() (ast.ScalarExpression, error) {
 		return nil, err
 	}
 
-	for p.curTok.Type == TokenPlus || p.curTok.Type == TokenMinus {
+	for p.curTok.Type == TokenPlus || p.curTok.Type == TokenMinus || p.curTok.Type == TokenConcat {
 		var opType string
-		if p.curTok.Type == TokenPlus {
+		switch p.curTok.Type {
+		case TokenPlus:
 			opType = "Add"
-		} else {
+		case TokenMinus:
 			opType = "Subtract"
+		case TokenConcat:
+			opType = "Concat"
 		}
 		p.nextToken()
 
@@ -585,6 +588,10 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		if strings.ToUpper(p.curTok.Literal) == "N" && p.peekTok.Type == TokenString {
 			p.nextToken() // consume N
 			return p.parseNationalStringLiteral()
+		}
+		// Check for function call (identifier followed by parenthesis)
+		if p.peekTok.Type == TokenLParen {
+			return p.parseFunctionCallExpression()
 		}
 		return p.parseColumnReference()
 	case TokenNumber:
@@ -878,6 +885,147 @@ func (p *Parser) parseNationalStringFromToken() (*ast.StringLiteral, error) {
 		IsLargeObject: false,
 		Value:         raw,
 	}, nil
+}
+
+func (p *Parser) parseFunctionCallExpression() (*ast.FunctionCall, error) {
+	funcName := &ast.Identifier{
+		Value:     p.curTok.Literal,
+		QuoteType: "NotQuoted",
+	}
+	p.nextToken() // consume function name
+
+	// Expect opening parenthesis
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after function name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	fc := &ast.FunctionCall{
+		FunctionName:     funcName,
+		UniqueRowFilter:  "NotSpecified",
+		WithArrayWrapper: false,
+	}
+
+	// Parse parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		fc.Parameters = append(fc.Parameters, param)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else {
+			break
+		}
+	}
+
+	// Expect closing parenthesis
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after function parameters, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Check for IGNORE NULLS or RESPECT NULLS
+	if p.curTok.Type == TokenIdent {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "IGNORE" || upperLit == "RESPECT" {
+			fc.IgnoreRespectNulls = append(fc.IgnoreRespectNulls, &ast.Identifier{
+				Value:     upperLit,
+				QuoteType: "NotQuoted",
+			})
+			p.nextToken()
+			// Expect NULLS
+			if p.curTok.Type == TokenNull || (p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "NULLS") {
+				fc.IgnoreRespectNulls = append(fc.IgnoreRespectNulls, &ast.Identifier{
+					Value:     "NULLS",
+					QuoteType: "NotQuoted",
+				})
+				p.nextToken()
+			}
+		}
+	}
+
+	// Check for OVER clause
+	if p.curTok.Type == TokenOver {
+		p.nextToken() // consume OVER
+
+		oc := &ast.OverClause{}
+
+		// Expect opening parenthesis
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Parse PARTITION BY if present
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+			p.nextToken() // consume PARTITION
+			if p.curTok.Type == TokenBy {
+				p.nextToken() // consume BY
+			}
+			// Parse partition expressions
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenOrder && p.curTok.Type != TokenEOF {
+				expr, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				oc.Partitions = append(oc.Partitions, expr)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		}
+
+		// Parse ORDER BY if present
+		if p.curTok.Type == TokenOrder {
+			p.nextToken() // consume ORDER
+			if p.curTok.Type == TokenBy {
+				p.nextToken() // consume BY
+			}
+			// Parse order by elements
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				expr, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+
+				elem := &ast.ExpressionWithSortOrder{
+					Expression: expr,
+					SortOrder:  "NotSpecified",
+				}
+
+				// Check for ASC or DESC
+				if p.curTok.Type == TokenAsc {
+					elem.SortOrder = "Ascending"
+					p.nextToken()
+				} else if p.curTok.Type == TokenDesc {
+					elem.SortOrder = "Descending"
+					p.nextToken()
+				}
+
+				oc.OrderByElements = append(oc.OrderByElements, elem)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		}
+
+		// Expect closing parenthesis
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after OVER clause, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		fc.OverClause = oc
+	}
+
+	return fc, nil
 }
 
 func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) {
