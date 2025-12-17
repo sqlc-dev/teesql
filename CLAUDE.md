@@ -20,7 +20,22 @@ This file lists all skipped tests ordered by query file size (smallest first). S
 6. Add JSON marshaling functions in `parser/parser.go`
 7. Enable the test by setting `{"skip": false}` in its `metadata.json`
 8. Run `go test ./parser/...` to verify
-9. **Update `skipped_tests_by_size.txt`** after enabling tests
+9. **Check if other skipped tests now pass** (see below)
+10. **Update `skipped_tests_by_size.txt`** after enabling tests
+
+## Checking for Newly Passing Skipped Tests
+
+After implementing parser changes, run:
+
+```bash
+go test ./parser/... -only-skipped -v 2>&1 | grep "PASS:"
+```
+
+This shows any skipped tests that now pass. Enable those tests by setting `{"skip": false}` in their `metadata.json`.
+
+Available test flags:
+- `-only-skipped` - Run only skipped tests (find newly passing tests)
+- `-run-skipped` - Run skipped tests along with normal tests
 
 ## Updating skipped_tests_by_size.txt
 
