@@ -72,6 +72,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createSchemaStatementToJSON(s)
 	case *ast.CreateProcedureStatement:
 		return createProcedureStatementToJSON(s)
+	case *ast.AlterProcedureStatement:
+		return alterProcedureStatementToJSON(s)
 	case *ast.CreateRoleStatement:
 		return createRoleStatementToJSON(s)
 	case *ast.ExecuteStatement:
@@ -146,6 +148,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropSecurityPolicyStatementToJSON(s)
 	case *ast.DropExternalDataSourceStatement:
 		return dropExternalDataSourceStatementToJSON(s)
+	case *ast.AlterExternalDataSourceStatement:
+		return alterExternalDataSourceStatementToJSON(s)
+	case *ast.AlterExternalLanguageStatement:
+		return alterExternalLanguageStatementToJSON(s)
+	case *ast.AlterExternalLibraryStatement:
+		return alterExternalLibraryStatementToJSON(s)
 	case *ast.DropExternalFileFormatStatement:
 		return dropExternalFileFormatStatementToJSON(s)
 	case *ast.DropExternalTableStatement:
@@ -1045,6 +1053,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		node := jsonNode{
 			"$type": "FunctionCall",
 		}
+		if e.CallTarget != nil {
+			node["CallTarget"] = callTargetToJSON(e.CallTarget)
+		}
 		if e.FunctionName != nil {
 			node["FunctionName"] = identifierToJSON(e.FunctionName)
 		}
@@ -1058,9 +1069,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.UniqueRowFilter != "" {
 			node["UniqueRowFilter"] = e.UniqueRowFilter
 		}
-		if e.WithArrayWrapper {
-			node["WithArrayWrapper"] = e.WithArrayWrapper
-		}
+		node["WithArrayWrapper"] = e.WithArrayWrapper
 		return node
 	case *ast.BinaryExpression:
 		node := jsonNode{
@@ -1095,6 +1104,17 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 	case *ast.NumericLiteral:
 		node := jsonNode{
 			"$type": "NumericLiteral",
+		}
+		if e.LiteralType != "" {
+			node["LiteralType"] = e.LiteralType
+		}
+		if e.Value != "" {
+			node["Value"] = e.Value
+		}
+		return node
+	case *ast.MaxLiteral:
+		node := jsonNode{
+			"$type": "MaxLiteral",
 		}
 		if e.LiteralType != "" {
 			node["LiteralType"] = e.LiteralType
@@ -5577,6 +5597,9 @@ func alterPartitionSchemeStatementToJSON(s *ast.AlterPartitionSchemeStatement) j
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.FileGroup != nil {
+		node["FileGroup"] = identifierOrValueExpressionToJSON(s.FileGroup)
+	}
 	return node
 }
 
@@ -5586,6 +5609,13 @@ func alterPartitionFunctionStatementToJSON(s *ast.AlterPartitionFunctionStatemen
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	// Only include IsSplit when there was a SPLIT or MERGE action
+	if s.HasAction {
+		node["IsSplit"] = s.IsSplit
+	}
+	if s.Boundary != nil {
+		node["Boundary"] = scalarExpressionToJSON(s.Boundary)
 	}
 	return node
 }
@@ -5621,9 +5651,19 @@ func alterSymmetricKeyStatementToJSON(s *ast.AlterSymmetricKeyStatement) jsonNod
 }
 
 func alterServiceMasterKeyStatementToJSON(s *ast.AlterServiceMasterKeyStatement) jsonNode {
-	return jsonNode{
+	node := jsonNode{
 		"$type": "AlterServiceMasterKeyStatement",
 	}
+	if s.Kind != "" {
+		node["Kind"] = s.Kind
+	}
+	if s.Account != nil {
+		node["Account"] = scalarExpressionToJSON(s.Account)
+	}
+	if s.Password != nil {
+		node["Password"] = scalarExpressionToJSON(s.Password)
+	}
+	return node
 }
 
 func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
@@ -5952,6 +5992,108 @@ func alterDatabaseRemoveFileGroupStatementToJSON(s *ast.AlterDatabaseRemoveFileG
 	}
 	if s.FileGroupName != nil {
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
+	}
+	return node
+}
+
+func callTargetToJSON(ct ast.CallTarget) jsonNode {
+	switch t := ct.(type) {
+	case *ast.MultiPartIdentifierCallTarget:
+		node := jsonNode{
+			"$type": "MultiPartIdentifierCallTarget",
+		}
+		if t.MultiPartIdentifier != nil {
+			node["MultiPartIdentifier"] = multiPartIdentifierToJSON(t.MultiPartIdentifier)
+		}
+		return node
+	case *ast.ExpressionCallTarget:
+		node := jsonNode{
+			"$type": "ExpressionCallTarget",
+		}
+		if t.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(t.Expression)
+		}
+		return node
+	case *ast.UserDefinedTypeCallTarget:
+		node := jsonNode{
+			"$type": "UserDefinedTypeCallTarget",
+		}
+		if t.SchemaObjectName != nil {
+			node["SchemaObjectName"] = schemaObjectNameToJSON(t.SchemaObjectName)
+		}
+		return node
+	default:
+		return jsonNode{}
+	}
+}
+
+func alterProcedureStatementToJSON(s *ast.AlterProcedureStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterProcedureStatement",
+	}
+	if s.ProcedureReference != nil {
+		node["ProcedureReference"] = procedureReferenceToJSON(s.ProcedureReference)
+	}
+	node["IsForReplication"] = s.IsForReplication
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = procedureParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func alterExternalDataSourceStatementToJSON(s *ast.AlterExternalDataSourceStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterExternalDataSourceStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			opts[i] = externalDataSourceOptionToJSON(o)
+		}
+		node["ExternalDataSourceOptions"] = opts
+	}
+	return node
+}
+
+func externalDataSourceOptionToJSON(o *ast.ExternalDataSourceOption) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalDataSourceLiteralOrIdentifierOption",
+	}
+	if o.OptionKind != "" {
+		node["OptionKind"] = o.OptionKind
+	}
+	if o.Value != nil {
+		node["Value"] = scalarExpressionToJSON(o.Value)
+	}
+	return node
+}
+
+func alterExternalLanguageStatementToJSON(s *ast.AlterExternalLanguageStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterExternalLanguageStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterExternalLibraryStatementToJSON(s *ast.AlterExternalLibraryStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterExternalLibraryStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
 	}
 	return node
 }

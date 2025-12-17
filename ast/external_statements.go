@@ -79,3 +79,30 @@ type ExternalLibraryOption struct {
 	OptionKind string
 	Value      ScalarExpression
 }
+
+// AlterExternalDataSourceStatement represents ALTER EXTERNAL DATA SOURCE statement
+type AlterExternalDataSourceStatement struct {
+	Name    *Identifier
+	Options []*ExternalDataSourceOption
+}
+
+func (s *AlterExternalDataSourceStatement) node()      {}
+func (s *AlterExternalDataSourceStatement) statement() {}
+
+// AlterExternalLanguageStatement represents ALTER EXTERNAL LANGUAGE statement
+type AlterExternalLanguageStatement struct {
+	Name    *Identifier
+	Options []*ExternalLanguageOption
+}
+
+func (s *AlterExternalLanguageStatement) node()      {}
+func (s *AlterExternalLanguageStatement) statement() {}
+
+// AlterExternalLibraryStatement represents ALTER EXTERNAL LIBRARY statement
+type AlterExternalLibraryStatement struct {
+	Name    *Identifier
+	Options []*ExternalLibraryOption
+}
+
+func (s *AlterExternalLibraryStatement) node()      {}
+func (s *AlterExternalLibraryStatement) statement() {}

@@ -66,7 +66,8 @@ func (s *AlterQueueStatement) statement() {}
 
 // AlterPartitionSchemeStatement represents an ALTER PARTITION SCHEME statement.
 type AlterPartitionSchemeStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name      *Identifier                  `json:"Name,omitempty"`
+	FileGroup *IdentifierOrValueExpression `json:"FileGroup,omitempty"`
 }
 
 func (s *AlterPartitionSchemeStatement) node()      {}
@@ -74,7 +75,10 @@ func (s *AlterPartitionSchemeStatement) statement() {}
 
 // AlterPartitionFunctionStatement represents an ALTER PARTITION FUNCTION statement.
 type AlterPartitionFunctionStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name      *Identifier      `json:"Name,omitempty"`
+	HasAction bool             `json:"-"` // Internal: true if SPLIT or MERGE was specified
+	IsSplit   bool             `json:"IsSplit,omitempty"`
+	Boundary  ScalarExpression `json:"Boundary,omitempty"`
 }
 
 func (s *AlterPartitionFunctionStatement) node()      {}
@@ -106,6 +110,9 @@ func (s *AlterSymmetricKeyStatement) statement() {}
 
 // AlterServiceMasterKeyStatement represents an ALTER SERVICE MASTER KEY statement.
 type AlterServiceMasterKeyStatement struct {
+	Kind     string         `json:"Kind,omitempty"`
+	Account  *StringLiteral `json:"Account,omitempty"`
+	Password *StringLiteral `json:"Password,omitempty"`
 }
 
 func (s *AlterServiceMasterKeyStatement) node()      {}
