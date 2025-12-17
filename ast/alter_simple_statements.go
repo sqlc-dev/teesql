@@ -34,7 +34,13 @@ func (s *AlterServiceStatement) statement() {}
 
 // AlterCertificateStatement represents an ALTER CERTIFICATE statement.
 type AlterCertificateStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name               *Identifier    `json:"Name,omitempty"`
+	Kind               string         `json:"Kind,omitempty"` // RemovePrivateKey, WithActiveForBeginDialog, WithPrivateKey, RemoveAttestedOption, AttestedBy
+	ActiveForBeginDialog string       `json:"ActiveForBeginDialog,omitempty"` // NotSet, On, Off
+	PrivateKeyPath     *StringLiteral `json:"PrivateKeyPath,omitempty"`
+	DecryptionPassword *StringLiteral `json:"DecryptionPassword,omitempty"`
+	EncryptionPassword *StringLiteral `json:"EncryptionPassword,omitempty"`
+	AttestedBy         *StringLiteral `json:"AttestedBy,omitempty"`
 }
 
 func (s *AlterCertificateStatement) node()      {}
@@ -86,11 +92,19 @@ func (s *AlterPartitionFunctionStatement) statement() {}
 
 // AlterFulltextCatalogStatement represents an ALTER FULLTEXT CATALOG statement.
 type AlterFulltextCatalogStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name    *Identifier                   `json:"Name,omitempty"`
+	Action  string                        `json:"Action,omitempty"` // Rebuild, Reorganize, AsDefault
+	Options []*OnOffFullTextCatalogOption `json:"Options,omitempty"`
 }
 
 func (s *AlterFulltextCatalogStatement) node()      {}
 func (s *AlterFulltextCatalogStatement) statement() {}
+
+// OnOffFullTextCatalogOption represents an option for ALTER FULLTEXT CATALOG
+type OnOffFullTextCatalogOption struct {
+	OptionKind  string `json:"OptionKind,omitempty"`  // AccentSensitivity
+	OptionState string `json:"OptionState,omitempty"` // On, Off
+}
 
 // AlterFulltextIndexStatement represents an ALTER FULLTEXT INDEX statement.
 type AlterFulltextIndexStatement struct {
@@ -117,3 +131,14 @@ type AlterServiceMasterKeyStatement struct {
 
 func (s *AlterServiceMasterKeyStatement) node()      {}
 func (s *AlterServiceMasterKeyStatement) statement() {}
+
+// RenameEntityStatement represents a RENAME statement (Azure SQL DW/Synapse).
+type RenameEntityStatement struct {
+	RenameEntityType string            `json:"RenameEntityType,omitempty"` // Object, Database
+	SeparatorType    string            `json:"SeparatorType,omitempty"`    // DoubleColon (only when :: is used)
+	OldName          *SchemaObjectName `json:"OldName,omitempty"`
+	NewName          *Identifier       `json:"NewName,omitempty"`
+}
+
+func (s *RenameEntityStatement) node()      {}
+func (s *RenameEntityStatement) statement() {}

@@ -186,6 +186,10 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 			p.nextToken() // consume BULK
 			return p.parseBulkInsertStatement()
 		}
+		// Check for RENAME (Azure SQL DW/Synapse)
+		if strings.ToUpper(p.curTok.Literal) == "RENAME" {
+			return p.parseRenameStatement()
+		}
 		// Check for label (identifier followed by colon)
 		return p.parseLabelOrError()
 	default:

@@ -108,6 +108,8 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropRoleStatement()
 	case "ASSEMBLY":
 		return p.parseDropAssemblyStatement()
+	case "CRYPTOGRAPHIC":
+		return p.parseDropCryptographicProviderStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -1293,6 +1295,12 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterServiceMasterKeyStatement()
 		case "EXTERNAL":
 			return p.parseAlterExternalStatement()
+		case "RESOURCE":
+			return p.parseAlterResourceGovernorStatement()
+		case "CRYPTOGRAPHIC":
+			return p.parseAlterCryptographicProviderStatement()
+		case "FEDERATION":
+			return p.parseAlterFederationStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -1300,15 +1308,72 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 	}
 }
 
+func (p *Parser) parseAlterResourceGovernorStatement() (ast.Statement, error) {
+	// Consume RESOURCE
+	p.nextToken()
+
+	// Consume GOVERNOR
+	if strings.ToUpper(p.curTok.Literal) == "GOVERNOR" {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterResourceGovernorStatement{}
+
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "DISABLE":
+		stmt.Command = "Disable"
+		p.nextToken()
+	case "RECONFIGURE":
+		stmt.Command = "Reconfigure"
+		p.nextToken()
+	case "RESET":
+		p.nextToken() // consume RESET
+		if strings.ToUpper(p.curTok.Literal) == "STATISTICS" {
+			p.nextToken() // consume STATISTICS
+		}
+		stmt.Command = "ResetStatistics"
+	case "WITH":
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+		}
+		// Expect CLASSIFIER_FUNCTION = ...
+		if strings.ToUpper(p.curTok.Literal) == "CLASSIFIER_FUNCTION" {
+			stmt.Command = "ClassifierFunction"
+			p.nextToken() // consume CLASSIFIER_FUNCTION
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			// Check for NULL or schema.function
+			if p.curTok.Type == TokenNull {
+				// ClassifierFunction stays nil
+				p.nextToken()
+			} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+				stmt.ClassifierFunction, _ = p.parseSchemaObjectName()
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
 func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
 
-	// Check for SCOPED CREDENTIAL
+	// Check for SCOPED CREDENTIAL or SCOPED CONFIGURATION
 	if p.curTok.Type == TokenScoped {
 		p.nextToken() // consume SCOPED
 		if p.curTok.Type == TokenCredential {
 			return p.parseAlterDatabaseScopedCredentialStatement()
+		}
+		// Check for CONFIGURATION
+		if strings.ToUpper(p.curTok.Literal) == "CONFIGURATION" {
+			return p.parseAlterDatabaseScopedConfigurationStatement()
 		}
 	}
 
@@ -1452,6 +1517,18 @@ func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Sta
 			DatabaseName:  dbName,
 			FileGroupName: p.parseIdentifier(),
 		}
+		// Check for CONTAINS FILESTREAM or CONTAINS MEMORY_OPTIMIZED_DATA
+		if strings.ToUpper(p.curTok.Literal) == "CONTAINS" {
+			p.nextToken() // consume CONTAINS
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "FILESTREAM":
+				stmt.ContainsFileStream = true
+				p.nextToken()
+			case "MEMORY_OPTIMIZED_DATA":
+				stmt.ContainsMemoryOptimizedData = true
+				p.nextToken()
+			}
+		}
 		p.skipToEndOfStatement()
 		return stmt, nil
 	default:
@@ -1478,8 +1555,29 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 			DatabaseName:  dbName,
 			FileGroupName: p.parseIdentifier(),
 		}
-		p.skipToEndOfStatement()
-		return stmt, nil
+		// Parse optional modifiers
+		for {
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "DEFAULT":
+				stmt.MakeDefault = true
+				p.nextToken()
+			case "READONLY", "READ_ONLY":
+				stmt.UpdatabilityOption = "ReadOnly"
+				p.nextToken()
+			case "READWRITE", "READ_WRITE":
+				stmt.UpdatabilityOption = "ReadWrite"
+				p.nextToken()
+			case "NAME":
+				p.nextToken() // consume NAME
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				stmt.NewFileGroupName = p.parseIdentifier()
+			default:
+				p.skipToEndOfStatement()
+				return stmt, nil
+			}
+		}
 	case "NAME":
 		p.nextToken() // consume NAME
 		if p.curTok.Type == TokenEquals {
@@ -1577,6 +1675,52 @@ func (p *Parser) parseAlterDatabaseScopedCredentialStatement() (*ast.AlterCreden
 		p.nextToken()
 	}
 
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterDatabaseScopedConfigurationStatement() (ast.Statement, error) {
+	// Consume CONFIGURATION
+	p.nextToken()
+
+	stmt := &ast.AlterDatabaseScopedConfigurationClearStatement{}
+
+	// Check for FOR SECONDARY
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "SECONDARY" {
+			stmt.Secondary = true
+			p.nextToken() // consume SECONDARY
+		}
+	}
+
+	// Check for CLEAR
+	if strings.ToUpper(p.curTok.Literal) == "CLEAR" {
+		p.nextToken() // consume CLEAR
+
+		// Parse option (PROCEDURE_CACHE)
+		optionKind := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		option := &ast.DatabaseConfigurationClearOption{}
+		if optionKind == "PROCEDURE_CACHE" {
+			option.OptionKind = "ProcedureCache"
+		} else {
+			option.OptionKind = optionKind
+		}
+
+		// Check for optional plan handle (binary literal)
+		if p.curTok.Type == TokenBinary {
+			option.PlanHandle = &ast.BinaryLiteral{
+				LiteralType: "Binary",
+				Value:       p.curTok.Literal,
+			}
+			p.nextToken()
+		}
+
+		stmt.Option = option
+	}
+
+	p.skipToEndOfStatement()
 	return stmt, nil
 }
 
@@ -2912,12 +3056,129 @@ func (p *Parser) parseAlterCertificateStatement() (*ast.AlterCertificateStatemen
 	p.nextToken()
 
 	stmt := &ast.AlterCertificateStatement{}
+	stmt.ActiveForBeginDialog = "NotSet"
 
 	// Parse certificate name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Check what kind of ALTER CERTIFICATE this is
+	lit := strings.ToUpper(p.curTok.Literal)
+	if lit == "REMOVE" {
+		p.nextToken() // consume REMOVE
+		nextLit := strings.ToUpper(p.curTok.Literal)
+		if nextLit == "PRIVATE" {
+			p.nextToken() // consume PRIVATE
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			stmt.Kind = "RemovePrivateKey"
+		} else if nextLit == "ATTESTED" {
+			p.nextToken() // consume ATTESTED
+			if strings.ToUpper(p.curTok.Literal) == "OPTION" {
+				p.nextToken() // consume OPTION
+			}
+			stmt.Kind = "RemoveAttestedOption"
+		}
+	} else if lit == "ATTESTED" {
+		p.nextToken() // consume ATTESTED
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		stmt.Kind = "AttestedBy"
+		if p.curTok.Type == TokenString {
+			strLit, _ := p.parseStringLiteral()
+			stmt.AttestedBy = strLit
+		}
+	} else if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		withLit := strings.ToUpper(p.curTok.Literal)
+		if withLit == "ACTIVE" {
+			p.nextToken() // consume ACTIVE
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+			}
+			if strings.ToUpper(p.curTok.Literal) == "BEGIN_DIALOG" {
+				p.nextToken() // consume BEGIN_DIALOG
+			}
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			stmt.Kind = "WithActiveForBeginDialog"
+			if p.curTok.Type == TokenOn {
+				stmt.ActiveForBeginDialog = "On"
+				p.nextToken()
+			} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OFF" {
+				stmt.ActiveForBeginDialog = "Off"
+				p.nextToken()
+			}
+		} else if withLit == "PRIVATE" {
+			p.nextToken() // consume PRIVATE
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			stmt.Kind = "WithPrivateKey"
+			// Parse private key options (FILE = '...', DECRYPTION BY PASSWORD = '...', etc.)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optLit := strings.ToUpper(p.curTok.Literal)
+					if optLit == "FILE" {
+						p.nextToken() // consume FILE
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						if p.curTok.Type == TokenString {
+							strLit, _ := p.parseStringLiteral()
+							stmt.PrivateKeyPath = strLit
+						}
+					} else if optLit == "DECRYPTION" {
+						p.nextToken() // consume DECRYPTION
+						if strings.ToUpper(p.curTok.Literal) == "BY" {
+							p.nextToken() // consume BY
+						}
+						if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+							p.nextToken() // consume PASSWORD
+						}
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						if p.curTok.Type == TokenString {
+							strLit, _ := p.parseStringLiteral()
+							stmt.DecryptionPassword = strLit
+						}
+					} else if optLit == "ENCRYPTION" {
+						p.nextToken() // consume ENCRYPTION
+						if strings.ToUpper(p.curTok.Literal) == "BY" {
+							p.nextToken() // consume BY
+						}
+						if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+							p.nextToken() // consume PASSWORD
+						}
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						if p.curTok.Type == TokenString {
+							strLit, _ := p.parseStringLiteral()
+							stmt.EncryptionPassword = strLit
+						}
+					} else {
+						p.nextToken() // skip unknown option
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken() // consume comma
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
@@ -3065,7 +3326,48 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 	if keyword == "CATALOG" {
 		stmt := &ast.AlterFulltextCatalogStatement{}
 		stmt.Name = p.parseIdentifier()
-		p.skipToEndOfStatement()
+
+		// Parse action: REBUILD, REORGANIZE, AS DEFAULT
+		actionLit := strings.ToUpper(p.curTok.Literal)
+		if actionLit == "REBUILD" {
+			stmt.Action = "Rebuild"
+			p.nextToken()
+			// Check for WITH ACCENT_SENSITIVITY = ON/OFF
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if strings.ToUpper(p.curTok.Literal) == "ACCENT_SENSITIVITY" {
+					p.nextToken() // consume ACCENT_SENSITIVITY
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					opt := &ast.OnOffFullTextCatalogOption{
+						OptionKind: "AccentSensitivity",
+					}
+					if p.curTok.Type == TokenOn {
+						opt.OptionState = "On"
+						p.nextToken()
+					} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OFF" {
+						opt.OptionState = "Off"
+						p.nextToken()
+					}
+					stmt.Options = append(stmt.Options, opt)
+				}
+			}
+		} else if actionLit == "REORGANIZE" {
+			stmt.Action = "Reorganize"
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "AS" {
+			p.nextToken() // consume AS
+			if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+				p.nextToken() // consume DEFAULT
+			}
+			stmt.Action = "AsDefault"
+		}
+
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
 		return stmt, nil
 	}
 

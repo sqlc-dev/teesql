@@ -45,8 +45,11 @@ func (a *AlterDatabaseAddFileStatement) statement() {}
 
 // AlterDatabaseAddFileGroupStatement represents ALTER DATABASE ... ADD FILEGROUP statement
 type AlterDatabaseAddFileGroupStatement struct {
-	DatabaseName  *Identifier
-	FileGroupName *Identifier
+	DatabaseName              *Identifier
+	FileGroupName             *Identifier
+	ContainsFileStream        bool
+	ContainsMemoryOptimizedData bool
+	UseCurrent                bool
 }
 
 func (a *AlterDatabaseAddFileGroupStatement) node()      {}
@@ -62,8 +65,11 @@ func (a *AlterDatabaseModifyFileStatement) statement() {}
 
 // AlterDatabaseModifyFileGroupStatement represents ALTER DATABASE ... MODIFY FILEGROUP statement
 type AlterDatabaseModifyFileGroupStatement struct {
-	DatabaseName  *Identifier
-	FileGroupName *Identifier
+	DatabaseName       *Identifier
+	FileGroupName      *Identifier
+	MakeDefault        bool
+	UpdatabilityOption string // "ReadOnly", "ReadWrite", "ReadOnlyOld", "ReadWriteOld", or ""
+	NewFileGroupName   *Identifier
 }
 
 func (a *AlterDatabaseModifyFileGroupStatement) node()      {}
@@ -95,3 +101,20 @@ type AlterDatabaseRemoveFileGroupStatement struct {
 
 func (a *AlterDatabaseRemoveFileGroupStatement) node()      {}
 func (a *AlterDatabaseRemoveFileGroupStatement) statement() {}
+
+// AlterDatabaseScopedConfigurationClearStatement represents ALTER DATABASE SCOPED CONFIGURATION CLEAR statement
+type AlterDatabaseScopedConfigurationClearStatement struct {
+	Option    *DatabaseConfigurationClearOption
+	Secondary bool
+}
+
+func (a *AlterDatabaseScopedConfigurationClearStatement) node()      {}
+func (a *AlterDatabaseScopedConfigurationClearStatement) statement() {}
+
+// DatabaseConfigurationClearOption represents a CLEAR option
+type DatabaseConfigurationClearOption struct {
+	OptionKind string           // "ProcedureCache"
+	PlanHandle ScalarExpression // Optional binary plan handle
+}
+
+func (d *DatabaseConfigurationClearOption) node() {}
