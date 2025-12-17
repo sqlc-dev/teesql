@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"flag"
 	"os"
 	"path/filepath"
 	"testing"
@@ -12,6 +13,12 @@ import (
 type testMetadata struct {
 	Skip bool `json:"skip"`
 }
+
+// Test flags for running skipped tests
+// Usage: go test ./parser/... -run-skipped     # run all tests including skipped
+// Usage: go test ./parser/... -only-skipped    # run only skipped tests (find newly passing tests)
+var runSkippedTests = flag.Bool("run-skipped", false, "run skipped tests along with normal tests")
+var onlySkippedTests = flag.Bool("only-skipped", false, "run only skipped tests (useful to find tests that now pass)")
 
 func TestParse(t *testing.T) {
 	entries, err := os.ReadDir("testdata")
@@ -40,8 +47,11 @@ func TestParse(t *testing.T) {
 				t.Fatalf("failed to parse metadata.json: %v", err)
 			}
 
-			if metadata.Skip {
+			if metadata.Skip && !*runSkippedTests && !*onlySkippedTests {
 				t.Skip("skipped via metadata.json")
+			}
+			if !metadata.Skip && *onlySkippedTests {
+				t.Skip("not a skipped test")
 			}
 
 			// Read the test SQL file
