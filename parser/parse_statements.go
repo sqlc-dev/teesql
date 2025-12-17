@@ -771,6 +771,10 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateIndexStatement()
 		case "PRIMARY":
 			return p.parseCreateXmlIndexStatement()
+		case "CRYPTOGRAPHIC":
+			return p.parseCreateCryptographicProviderStatement()
+		case "FEDERATION":
+			return p.parseCreateFederationStatement()
 		}
 		// Lenient: skip unknown CREATE statements
 		p.skipToEndOfStatement()
@@ -787,6 +791,101 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		p.skipToEndOfStatement()
 		return &ast.CreateProcedureStatement{}, nil
 	}
+}
+
+func (p *Parser) parseCreateCryptographicProviderStatement() (*ast.CreateCryptographicProviderStatement, error) {
+	// Consume CRYPTOGRAPHIC
+	p.nextToken()
+
+	// Consume PROVIDER
+	if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+		p.nextToken()
+	}
+
+	stmt := &ast.CreateCryptographicProviderStatement{}
+
+	// Parse provider name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse FROM FILE = 'path'
+	if strings.ToUpper(p.curTok.Literal) == "FROM" {
+		p.nextToken() // consume FROM
+		if strings.ToUpper(p.curTok.Literal) == "FILE" {
+			p.nextToken() // consume FILE
+		}
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		stmt.File, _ = p.parseStringLiteral()
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterCryptographicProviderStatement() (*ast.AlterCryptographicProviderStatement, error) {
+	// Consume CRYPTOGRAPHIC
+	p.nextToken()
+
+	// Consume PROVIDER
+	if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterCryptographicProviderStatement{}
+
+	// Parse provider name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse action: FROM FILE = 'path', ENABLE, or DISABLE
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "FROM":
+		stmt.Option = "None"
+		p.nextToken() // consume FROM
+		if strings.ToUpper(p.curTok.Literal) == "FILE" {
+			p.nextToken() // consume FILE
+		}
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		stmt.File, _ = p.parseStringLiteral()
+	case "ENABLE":
+		stmt.Option = "Enable"
+		p.nextToken()
+	case "DISABLE":
+		stmt.Option = "Disable"
+		p.nextToken()
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseDropCryptographicProviderStatement() (*ast.DropCryptographicProviderStatement, error) {
+	// Consume CRYPTOGRAPHIC
+	p.nextToken()
+
+	// Consume PROVIDER
+	if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropCryptographicProviderStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken() // consume IF
+		if strings.ToUpper(p.curTok.Literal) == "EXISTS" {
+			stmt.IsIfExists = true
+			p.nextToken() // consume EXISTS
+		}
+	}
+
+	// Parse provider name
+	stmt.Name = p.parseIdentifier()
+
+	p.skipToEndOfStatement()
+	return stmt, nil
 }
 
 func (p *Parser) parseCreateRoleStatement() (*ast.CreateRoleStatement, error) {
@@ -2073,9 +2172,14 @@ func (p *Parser) parseTruncateTableStatement() (*ast.TruncateTableStatement, err
 	return stmt, nil
 }
 
-func (p *Parser) parseUseStatement() (*ast.UseStatement, error) {
+func (p *Parser) parseUseStatement() (ast.Statement, error) {
 	// Consume USE
 	p.nextToken()
+
+	// Check for FEDERATION
+	if strings.ToUpper(p.curTok.Literal) == "FEDERATION" {
+		return p.parseUseFederationStatement()
+	}
 
 	stmt := &ast.UseStatement{}
 
@@ -2089,6 +2193,169 @@ func (p *Parser) parseUseStatement() (*ast.UseStatement, error) {
 		p.nextToken()
 	}
 
+	return stmt, nil
+}
+
+func (p *Parser) parseUseFederationStatement() (ast.Statement, error) {
+	// Consume FEDERATION
+	p.nextToken()
+
+	// Check if this is "USE FEDERATION ROOT" or just "USE FEDERATION" as database name
+	if strings.ToUpper(p.curTok.Literal) == "ROOT" {
+		p.nextToken() // consume ROOT
+		stmt := &ast.UseFederationStatement{}
+		// Parse WITH RESET
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			if strings.ToUpper(p.curTok.Literal) == "RESET" {
+				p.nextToken() // consume RESET
+			}
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+
+	// Check if it's just "USE FEDERATION" as a database name (no other tokens before GO/EOF)
+	if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon || strings.ToUpper(p.curTok.Literal) == "GO" {
+		return &ast.UseStatement{
+			DatabaseName: &ast.Identifier{Value: "federation", QuoteType: "NotQuoted"},
+		}, nil
+	}
+
+	stmt := &ast.UseFederationStatement{}
+
+	// Parse federation name
+	stmt.FederationName = p.parseIdentifier()
+
+	// Parse (distribution = value)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		stmt.DistributionName = p.parseIdentifier()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		stmt.Value, _ = p.parseScalarExpression()
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		for {
+			if strings.ToUpper(p.curTok.Literal) == "FILTERING" {
+				p.nextToken() // consume FILTERING
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				if p.curTok.Type == TokenOn {
+					stmt.Filtering = true
+					p.nextToken()
+				} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+					stmt.Filtering = false
+					p.nextToken()
+				}
+			} else if strings.ToUpper(p.curTok.Literal) == "RESET" {
+				p.nextToken() // consume RESET
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma and continue
+			} else {
+				break
+			}
+		}
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateFederationStatement() (ast.Statement, error) {
+	// Consume FEDERATION
+	p.nextToken()
+
+	stmt := &ast.CreateFederationStatement{}
+
+	// Parse federation name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse (distribution_name datatype RANGE)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		stmt.DistributionName = p.parseIdentifier()
+		stmt.DataType, _ = p.parseDataType()
+		if strings.ToUpper(p.curTok.Literal) == "RANGE" {
+			p.nextToken() // consume RANGE
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterFederationStatement() (ast.Statement, error) {
+	// Consume FEDERATION
+	p.nextToken()
+
+	stmt := &ast.AlterFederationStatement{}
+
+	// Parse federation name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse SPLIT AT or DROP AT
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "SPLIT":
+		stmt.Kind = "Split"
+		p.nextToken() // consume SPLIT
+		if strings.ToUpper(p.curTok.Literal) == "AT" {
+			p.nextToken() // consume AT
+		}
+	case "DROP":
+		p.nextToken() // consume DROP
+		if strings.ToUpper(p.curTok.Literal) == "AT" {
+			p.nextToken() // consume AT
+		}
+		// Check for LOW or HIGH after opening paren
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if strings.ToUpper(p.curTok.Literal) == "LOW" {
+				stmt.Kind = "DropLow"
+				p.nextToken() // consume LOW
+			} else if strings.ToUpper(p.curTok.Literal) == "HIGH" {
+				stmt.Kind = "DropHigh"
+				p.nextToken() // consume HIGH
+			}
+			stmt.DistributionName = p.parseIdentifier()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			stmt.Boundary, _ = p.parseScalarExpression()
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+
+	// Parse (distribution_name = value)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		stmt.DistributionName = p.parseIdentifier()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		stmt.Boundary, _ = p.parseScalarExpression()
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	p.skipToEndOfStatement()
 	return stmt, nil
 }
 

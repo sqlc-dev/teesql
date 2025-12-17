@@ -108,6 +108,8 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropRoleStatement()
 	case "ASSEMBLY":
 		return p.parseDropAssemblyStatement()
+	case "CRYPTOGRAPHIC":
+		return p.parseDropCryptographicProviderStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -1293,11 +1295,70 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterServiceMasterKeyStatement()
 		case "EXTERNAL":
 			return p.parseAlterExternalStatement()
+		case "RESOURCE":
+			return p.parseAlterResourceGovernorStatement()
+		case "CRYPTOGRAPHIC":
+			return p.parseAlterCryptographicProviderStatement()
+		case "FEDERATION":
+			return p.parseAlterFederationStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	}
+}
+
+func (p *Parser) parseAlterResourceGovernorStatement() (ast.Statement, error) {
+	// Consume RESOURCE
+	p.nextToken()
+
+	// Consume GOVERNOR
+	if strings.ToUpper(p.curTok.Literal) == "GOVERNOR" {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterResourceGovernorStatement{}
+
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "DISABLE":
+		stmt.Command = "Disable"
+		p.nextToken()
+	case "RECONFIGURE":
+		stmt.Command = "Reconfigure"
+		p.nextToken()
+	case "RESET":
+		p.nextToken() // consume RESET
+		if strings.ToUpper(p.curTok.Literal) == "STATISTICS" {
+			p.nextToken() // consume STATISTICS
+		}
+		stmt.Command = "ResetStatistics"
+	case "WITH":
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+		}
+		// Expect CLASSIFIER_FUNCTION = ...
+		if strings.ToUpper(p.curTok.Literal) == "CLASSIFIER_FUNCTION" {
+			stmt.Command = "ClassifierFunction"
+			p.nextToken() // consume CLASSIFIER_FUNCTION
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			// Check for NULL or schema.function
+			if p.curTok.Type == TokenNull {
+				// ClassifierFunction stays nil
+				p.nextToken()
+			} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+				stmt.ClassifierFunction, _ = p.parseSchemaObjectName()
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
 }
 
 func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
@@ -1494,8 +1555,29 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 			DatabaseName:  dbName,
 			FileGroupName: p.parseIdentifier(),
 		}
-		p.skipToEndOfStatement()
-		return stmt, nil
+		// Parse optional modifiers
+		for {
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "DEFAULT":
+				stmt.MakeDefault = true
+				p.nextToken()
+			case "READONLY", "READ_ONLY":
+				stmt.UpdatabilityOption = "ReadOnly"
+				p.nextToken()
+			case "READWRITE", "READ_WRITE":
+				stmt.UpdatabilityOption = "ReadWrite"
+				p.nextToken()
+			case "NAME":
+				p.nextToken() // consume NAME
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				stmt.NewFileGroupName = p.parseIdentifier()
+			default:
+				p.skipToEndOfStatement()
+				return stmt, nil
+			}
+		}
 	case "NAME":
 		p.nextToken() // consume NAME
 		if p.curTok.Type == TokenEquals {

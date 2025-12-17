@@ -128,6 +128,20 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterDatabaseRemoveFileGroupStatementToJSON(s)
 	case *ast.AlterDatabaseScopedConfigurationClearStatement:
 		return alterDatabaseScopedConfigurationClearStatementToJSON(s)
+	case *ast.AlterResourceGovernorStatement:
+		return alterResourceGovernorStatementToJSON(s)
+	case *ast.CreateCryptographicProviderStatement:
+		return createCryptographicProviderStatementToJSON(s)
+	case *ast.AlterCryptographicProviderStatement:
+		return alterCryptographicProviderStatementToJSON(s)
+	case *ast.DropCryptographicProviderStatement:
+		return dropCryptographicProviderStatementToJSON(s)
+	case *ast.UseFederationStatement:
+		return useFederationStatementToJSON(s)
+	case *ast.CreateFederationStatement:
+		return createFederationStatementToJSON(s)
+	case *ast.AlterFederationStatement:
+		return alterFederationStatementToJSON(s)
 	case *ast.RevertStatement:
 		return revertStatementToJSON(s)
 	case *ast.DropCredentialStatement:
@@ -6017,6 +6031,13 @@ func alterDatabaseModifyFileGroupStatementToJSON(s *ast.AlterDatabaseModifyFileG
 	if s.FileGroupName != nil {
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
+	node["MakeDefault"] = s.MakeDefault
+	if s.NewFileGroupName != nil {
+		node["NewFileGroupName"] = identifierToJSON(s.NewFileGroupName)
+	}
+	if s.UpdatabilityOption != "" {
+		node["UpdatabilityOption"] = s.UpdatabilityOption
+	}
 	return node
 }
 
@@ -6079,6 +6100,111 @@ func databaseConfigurationClearOptionToJSON(o *ast.DatabaseConfigurationClearOpt
 	}
 	if o.PlanHandle != nil {
 		node["PlanHandle"] = scalarExpressionToJSON(o.PlanHandle)
+	}
+	return node
+}
+
+func alterResourceGovernorStatementToJSON(s *ast.AlterResourceGovernorStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterResourceGovernorStatement",
+	}
+	if s.Command != "" {
+		node["Command"] = s.Command
+	}
+	if s.ClassifierFunction != nil {
+		node["ClassifierFunction"] = schemaObjectNameToJSON(s.ClassifierFunction)
+	}
+	return node
+}
+
+func createCryptographicProviderStatementToJSON(s *ast.CreateCryptographicProviderStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateCryptographicProviderStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.File != nil {
+		node["File"] = scalarExpressionToJSON(s.File)
+	}
+	return node
+}
+
+func alterCryptographicProviderStatementToJSON(s *ast.AlterCryptographicProviderStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterCryptographicProviderStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Option != "" {
+		node["Option"] = s.Option
+	}
+	if s.File != nil {
+		node["File"] = scalarExpressionToJSON(s.File)
+	}
+	return node
+}
+
+func dropCryptographicProviderStatementToJSON(s *ast.DropCryptographicProviderStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropCryptographicProviderStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func useFederationStatementToJSON(s *ast.UseFederationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "UseFederationStatement",
+	}
+	if s.FederationName != nil {
+		node["FederationName"] = identifierToJSON(s.FederationName)
+	}
+	if s.DistributionName != nil {
+		node["DistributionName"] = identifierToJSON(s.DistributionName)
+	}
+	if s.Value != nil {
+		node["Value"] = scalarExpressionToJSON(s.Value)
+	}
+	node["Filtering"] = s.Filtering
+	return node
+}
+
+func createFederationStatementToJSON(s *ast.CreateFederationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateFederationStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.DistributionName != nil {
+		node["DistributionName"] = identifierToJSON(s.DistributionName)
+	}
+	if s.DataType != nil {
+		node["DataType"] = dataTypeReferenceToJSON(s.DataType)
+	}
+	return node
+}
+
+func alterFederationStatementToJSON(s *ast.AlterFederationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterFederationStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Kind != "" {
+		node["Kind"] = s.Kind
+	}
+	if s.DistributionName != nil {
+		node["DistributionName"] = identifierToJSON(s.DistributionName)
+	}
+	if s.Boundary != nil {
+		node["Boundary"] = scalarExpressionToJSON(s.Boundary)
 	}
 	return node
 }

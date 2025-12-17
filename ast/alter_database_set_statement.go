@@ -65,8 +65,11 @@ func (a *AlterDatabaseModifyFileStatement) statement() {}
 
 // AlterDatabaseModifyFileGroupStatement represents ALTER DATABASE ... MODIFY FILEGROUP statement
 type AlterDatabaseModifyFileGroupStatement struct {
-	DatabaseName  *Identifier
-	FileGroupName *Identifier
+	DatabaseName       *Identifier
+	FileGroupName      *Identifier
+	MakeDefault        bool
+	UpdatabilityOption string // "ReadOnly", "ReadWrite", "ReadOnlyOld", "ReadWriteOld", or ""
+	NewFileGroupName   *Identifier
 }
 
 func (a *AlterDatabaseModifyFileGroupStatement) node()      {}
