@@ -1304,11 +1304,15 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
 
-	// Check for SCOPED CREDENTIAL
+	// Check for SCOPED CREDENTIAL or SCOPED CONFIGURATION
 	if p.curTok.Type == TokenScoped {
 		p.nextToken() // consume SCOPED
 		if p.curTok.Type == TokenCredential {
 			return p.parseAlterDatabaseScopedCredentialStatement()
+		}
+		// Check for CONFIGURATION
+		if strings.ToUpper(p.curTok.Literal) == "CONFIGURATION" {
+			return p.parseAlterDatabaseScopedConfigurationStatement()
 		}
 	}
 
@@ -1589,6 +1593,52 @@ func (p *Parser) parseAlterDatabaseScopedCredentialStatement() (*ast.AlterCreden
 		p.nextToken()
 	}
 
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterDatabaseScopedConfigurationStatement() (ast.Statement, error) {
+	// Consume CONFIGURATION
+	p.nextToken()
+
+	stmt := &ast.AlterDatabaseScopedConfigurationClearStatement{}
+
+	// Check for FOR SECONDARY
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "SECONDARY" {
+			stmt.Secondary = true
+			p.nextToken() // consume SECONDARY
+		}
+	}
+
+	// Check for CLEAR
+	if strings.ToUpper(p.curTok.Literal) == "CLEAR" {
+		p.nextToken() // consume CLEAR
+
+		// Parse option (PROCEDURE_CACHE)
+		optionKind := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		option := &ast.DatabaseConfigurationClearOption{}
+		if optionKind == "PROCEDURE_CACHE" {
+			option.OptionKind = "ProcedureCache"
+		} else {
+			option.OptionKind = optionKind
+		}
+
+		// Check for optional plan handle (binary literal)
+		if p.curTok.Type == TokenBinary {
+			option.PlanHandle = &ast.BinaryLiteral{
+				LiteralType: "Binary",
+				Value:       p.curTok.Literal,
+			}
+			p.nextToken()
+		}
+
+		stmt.Option = option
+	}
+
+	p.skipToEndOfStatement()
 	return stmt, nil
 }
 

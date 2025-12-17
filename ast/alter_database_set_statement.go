@@ -98,3 +98,20 @@ type AlterDatabaseRemoveFileGroupStatement struct {
 
 func (a *AlterDatabaseRemoveFileGroupStatement) node()      {}
 func (a *AlterDatabaseRemoveFileGroupStatement) statement() {}
+
+// AlterDatabaseScopedConfigurationClearStatement represents ALTER DATABASE SCOPED CONFIGURATION CLEAR statement
+type AlterDatabaseScopedConfigurationClearStatement struct {
+	Option    *DatabaseConfigurationClearOption
+	Secondary bool
+}
+
+func (a *AlterDatabaseScopedConfigurationClearStatement) node()      {}
+func (a *AlterDatabaseScopedConfigurationClearStatement) statement() {}
+
+// DatabaseConfigurationClearOption represents a CLEAR option
+type DatabaseConfigurationClearOption struct {
+	OptionKind string           // "ProcedureCache"
+	PlanHandle ScalarExpression // Optional binary plan handle
+}
+
+func (d *DatabaseConfigurationClearOption) node() {}

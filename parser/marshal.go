@@ -126,6 +126,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterDatabaseRemoveFileStatementToJSON(s)
 	case *ast.AlterDatabaseRemoveFileGroupStatement:
 		return alterDatabaseRemoveFileGroupStatementToJSON(s)
+	case *ast.AlterDatabaseScopedConfigurationClearStatement:
+		return alterDatabaseScopedConfigurationClearStatementToJSON(s)
 	case *ast.RevertStatement:
 		return revertStatementToJSON(s)
 	case *ast.DropCredentialStatement:
@@ -6053,6 +6055,30 @@ func alterDatabaseRemoveFileGroupStatementToJSON(s *ast.AlterDatabaseRemoveFileG
 	}
 	if s.FileGroupName != nil {
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
+	}
+	return node
+}
+
+func alterDatabaseScopedConfigurationClearStatementToJSON(s *ast.AlterDatabaseScopedConfigurationClearStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseScopedConfigurationClearStatement",
+	}
+	if s.Option != nil {
+		node["Option"] = databaseConfigurationClearOptionToJSON(s.Option)
+	}
+	node["Secondary"] = s.Secondary
+	return node
+}
+
+func databaseConfigurationClearOptionToJSON(o *ast.DatabaseConfigurationClearOption) jsonNode {
+	node := jsonNode{
+		"$type": "DatabaseConfigurationClearOption",
+	}
+	if o.OptionKind != "" {
+		node["OptionKind"] = o.OptionKind
+	}
+	if o.PlanHandle != nil {
+		node["PlanHandle"] = scalarExpressionToJSON(o.PlanHandle)
 	}
 	return node
 }
