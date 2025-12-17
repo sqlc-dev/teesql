@@ -586,7 +586,7 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			p.nextToken() // consume N
 			return p.parseNationalStringLiteral()
 		}
-		return p.parseColumnReference()
+		return p.parseColumnReferenceOrFunctionCall()
 	case TokenNumber:
 		val := p.curTok.Literal
 		p.nextToken()
@@ -880,7 +880,7 @@ func (p *Parser) parseNationalStringFromToken() (*ast.StringLiteral, error) {
 	}, nil
 }
 
-func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) {
+func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, error) {
 	var identifiers []*ast.Identifier
 
 	for {
@@ -888,9 +888,17 @@ func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) 
 			break
 		}
 
+		quoteType := "NotQuoted"
+		literal := p.curTok.Literal
+		// Handle bracketed identifiers
+		if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
+			quoteType = "SquareBracket"
+			literal = literal[1 : len(literal)-1]
+		}
+
 		id := &ast.Identifier{
-			Value:     p.curTok.Literal,
-			QuoteType: "NotQuoted",
+			Value:     literal,
+			QuoteType: quoteType,
 		}
 		identifiers = append(identifiers, id)
 		p.nextToken()
@@ -901,6 +909,11 @@ func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) 
 		p.nextToken() // consume dot
 	}
 
+	// If followed by ( it's a function call
+	if p.curTok.Type == TokenLParen {
+		return p.parseFunctionCallFromIdentifiers(identifiers)
+	}
+
 	return &ast.ColumnReferenceExpression{
 		ColumnType: "Regular",
 		MultiPartIdentifier: &ast.MultiPartIdentifier{
@@ -908,6 +921,67 @@ func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) 
 			Identifiers: identifiers,
 		},
 	}, nil
+}
+
+func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) {
+	expr, err := p.parseColumnReferenceOrFunctionCall()
+	if err != nil {
+		return nil, err
+	}
+	if colRef, ok := expr.(*ast.ColumnReferenceExpression); ok {
+		return colRef, nil
+	}
+	// If we got a function call, wrap it in a column reference (shouldn't happen in this context)
+	return nil, fmt.Errorf("expected column reference, got function call")
+}
+
+func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier) (*ast.FunctionCall, error) {
+	fc := &ast.FunctionCall{
+		UniqueRowFilter:  "NotSpecified",
+		WithArrayWrapper: false,
+	}
+
+	if len(identifiers) == 1 {
+		// Simple function call: func()
+		fc.FunctionName = identifiers[0]
+	} else {
+		// Function call with call target: schema.func() or db.schema.func()
+		// The last identifier is the function name, the rest form the call target
+		fc.FunctionName = identifiers[len(identifiers)-1]
+		fc.CallTarget = &ast.MultiPartIdentifierCallTarget{
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Count:       len(identifiers) - 1,
+				Identifiers: identifiers[:len(identifiers)-1],
+			},
+		}
+	}
+
+	// Consume (
+	p.nextToken()
+
+	// Parse parameters
+	if p.curTok.Type != TokenRParen {
+		for {
+			param, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			fc.Parameters = append(fc.Parameters, param)
+
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume comma
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in function call, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	return fc, nil
 }
 
 func (p *Parser) parseFromClause() (*ast.FromClause, error) {

@@ -1240,6 +1240,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterTriggerStatement()
 	case TokenIndex:
 		return p.parseAlterIndexStatement()
+	case TokenProcedure:
+		return p.parseAlterProcedureStatement()
 	case TokenUser:
 		return p.parseAlterUserStatement()
 	case TokenAsymmetric:
@@ -1250,6 +1252,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterCertificateStatement()
 	case TokenCredential:
 		return p.parseAlterCredentialStatement()
+	case TokenExternal:
+		return p.parseAlterExternalStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -1287,6 +1291,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterCredentialStatement()
 		case "SERVICE_MASTER_KEY":
 			return p.parseAlterServiceMasterKeyStatement()
+		case "EXTERNAL":
+			return p.parseAlterExternalStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -1370,6 +1376,37 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				OptionState: capitalizeFirst(optionValue),
 			}
 			stmt.Options = append(stmt.Options, opt)
+		default:
+			// Handle generic options with = syntax (e.g., OPTIMIZED_LOCKING = ON)
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+				optionValue := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				// Handle parenthesized sub-options
+				if p.curTok.Type == TokenLParen {
+					p.skipToEndOfStatement()
+					return stmt, nil
+				}
+				opt := &ast.OnOffDatabaseOption{
+					OptionKind:  convertOptionKind(optionName),
+					OptionState: capitalizeFirst(optionValue),
+				}
+				stmt.Options = append(stmt.Options, opt)
+			} else if p.curTok.Type == TokenOn ||
+				strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "OFF" {
+				// Handle options without = (e.g., ENCRYPTION ON)
+				optionValue := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				opt := &ast.OnOffDatabaseOption{
+					OptionKind:  convertOptionKind(optionName),
+					OptionState: capitalizeFirst(optionValue),
+				}
+				stmt.Options = append(stmt.Options, opt)
+			} else {
+				// Skip unknown option syntax
+				p.skipToEndOfStatement()
+				return stmt, nil
+			}
 		}
 
 		if p.curTok.Type == TokenComma {
@@ -2833,9 +2870,31 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 	return stmt, nil
 }
 
-func (p *Parser) parseAlterServiceStatement() (*ast.AlterServiceStatement, error) {
+func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {
 	// Consume SERVICE
 	p.nextToken()
+
+	// Check for SERVICE MASTER KEY <action>
+	// Only treat as AlterServiceMasterKeyStatement if followed by REGENERATE, FORCE, or WITH
+	if strings.ToUpper(p.curTok.Literal) == "MASTER" && strings.ToUpper(p.peekTok.Literal) == "KEY" {
+		// Peek ahead to see if there's an action keyword
+		// Save current position info
+		curLit := p.curTok.Literal
+		p.nextToken() // consume MASTER
+		p.nextToken() // consume KEY
+
+		nextKeyword := strings.ToUpper(p.curTok.Literal)
+		if nextKeyword == "REGENERATE" || nextKeyword == "FORCE" || nextKeyword == "WITH" {
+			return p.parseAlterServiceMasterKeyStatementBody()
+		}
+
+		// Not a valid SERVICE MASTER KEY statement - treat "master" as service name
+		// KEY and following tokens will be skipped by skipToEndOfStatement
+		stmt := &ast.AlterServiceStatement{}
+		stmt.Name = &ast.Identifier{QuoteType: "NotQuoted", Value: curLit}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
 
 	stmt := &ast.AlterServiceStatement{}
 
@@ -2931,12 +2990,66 @@ func (p *Parser) parseAlterPartitionStatement() (ast.Statement, error) {
 	if keyword == "SCHEME" {
 		stmt := &ast.AlterPartitionSchemeStatement{}
 		stmt.Name = p.parseIdentifier()
+		// Parse NEXT USED [filegroup]
+		if strings.ToUpper(p.curTok.Literal) == "NEXT" {
+			p.nextToken() // consume NEXT
+			if strings.ToUpper(p.curTok.Literal) == "USED" {
+				p.nextToken() // consume USED
+			}
+			// Check for optional filegroup name (identifier or string)
+			if p.curTok.Type == TokenIdent || p.curTok.Type == TokenString {
+				stmt.FileGroup = &ast.IdentifierOrValueExpression{}
+				if p.curTok.Type == TokenString {
+					strLit, err := p.parseStringLiteral()
+					if err == nil {
+						stmt.FileGroup.Value = strLit.Value
+						stmt.FileGroup.ValueExpression = strLit
+					}
+				} else {
+					ident := p.parseIdentifier()
+					stmt.FileGroup.Value = ident.Value
+					stmt.FileGroup.Identifier = ident
+				}
+			}
+		}
 		p.skipToEndOfStatement()
 		return stmt, nil
 	}
 
 	stmt := &ast.AlterPartitionFunctionStatement{}
 	stmt.Name = p.parseIdentifier()
+	// Consume ()
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+	// Parse SPLIT or MERGE
+	action := strings.ToUpper(p.curTok.Literal)
+	if action == "SPLIT" {
+		stmt.HasAction = true
+		stmt.IsSplit = true
+		p.nextToken()
+	} else if action == "MERGE" {
+		stmt.HasAction = true
+		stmt.IsSplit = false
+		p.nextToken()
+	}
+	// Parse optional RANGE (value)
+	if strings.ToUpper(p.curTok.Literal) == "RANGE" {
+		p.nextToken() // consume RANGE
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			boundary, err := p.parseScalarExpression()
+			if err == nil {
+				stmt.Boundary = boundary
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
 	p.skipToEndOfStatement()
 	return stmt, nil
 }
@@ -3042,10 +3155,64 @@ func (p *Parser) parseAlterCredentialStatement() (*ast.AlterCredentialStatement,
 func (p *Parser) parseAlterServiceMasterKeyStatement() (*ast.AlterServiceMasterKeyStatement, error) {
 	// SERVICE_MASTER_KEY was matched as an identifier
 	p.nextToken() // consume SERVICE_MASTER_KEY
+	return p.parseAlterServiceMasterKeyStatementBody()
+}
 
+func (p *Parser) parseAlterServiceMasterKeyStatementBody() (*ast.AlterServiceMasterKeyStatement, error) {
 	stmt := &ast.AlterServiceMasterKeyStatement{}
 
-	// Skip rest of statement
+	// Parse the kind: REGENERATE, FORCE REGENERATE, WITH OLD_ACCOUNT/NEW_ACCOUNT
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "REGENERATE":
+		stmt.Kind = "Regenerate"
+		p.nextToken()
+	case "FORCE":
+		p.nextToken() // consume FORCE
+		if strings.ToUpper(p.curTok.Literal) == "REGENERATE" {
+			stmt.Kind = "ForceRegenerate"
+			p.nextToken()
+		}
+	case "WITH":
+		p.nextToken() // consume WITH
+		// Parse OLD_ACCOUNT or NEW_ACCOUNT
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "OLD_ACCOUNT":
+			stmt.Kind = "WithOldAccount"
+			p.nextToken() // consume OLD_ACCOUNT
+		case "NEW_ACCOUNT":
+			stmt.Kind = "WithNewAccount"
+			p.nextToken() // consume NEW_ACCOUNT
+		}
+		// Parse = 'account'
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		if p.curTok.Type == TokenString {
+			account, err := p.parseStringLiteral()
+			if err == nil {
+				stmt.Account = account
+			}
+		}
+		// Parse , OLD_PASSWORD/NEW_PASSWORD = 'password'
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+		// Skip OLD_PASSWORD or NEW_PASSWORD
+		if strings.ToUpper(p.curTok.Literal) == "OLD_PASSWORD" || strings.ToUpper(p.curTok.Literal) == "NEW_PASSWORD" {
+			p.nextToken()
+		}
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		if p.curTok.Type == TokenString {
+			password, err := p.parseStringLiteral()
+			if err == nil {
+				stmt.Password = password
+			}
+		}
+	}
+
+	// Skip to end of statement
 	p.skipToEndOfStatement()
 
 	return stmt, nil
@@ -3077,5 +3244,196 @@ func (p *Parser) isStatementKeyword(t TokenType) bool {
 		return true
 	}
 	return false
+}
+
+func (p *Parser) parseAlterProcedureStatement() (*ast.AlterProcedureStatement, error) {
+	// Consume PROCEDURE/PROC
+	p.nextToken()
+
+	stmt := &ast.AlterProcedureStatement{}
+	stmt.ProcedureReference = &ast.ProcedureReference{}
+
+	// Parse procedure name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.ProcedureReference.Name = name
+
+	// Parse optional parameters
+	if p.curTok.Type == TokenLParen || (p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@")) {
+		params, err := p.parseProcedureParameters()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Parameters = params
+	}
+
+	// Skip WITH options (like RECOMPILE, ENCRYPTION, etc.)
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		for {
+			if strings.ToUpper(p.curTok.Literal) == "FOR" || p.curTok.Type == TokenAs || p.curTok.Type == TokenEOF {
+				break
+			}
+			if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+				stmt.IsForReplication = true
+			}
+			p.nextToken()
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Expect AS
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+	}
+
+	// Parse statement list
+	stmts, err := p.parseStatementList()
+	if err != nil {
+		return nil, err
+	}
+	stmt.StatementList = stmts
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterExternalStatement() (ast.Statement, error) {
+	// Consume EXTERNAL
+	p.nextToken()
+
+	// Check what type of external statement
+	upper := strings.ToUpper(p.curTok.Literal)
+	switch upper {
+	case "DATA":
+		return p.parseAlterExternalDataSourceStatement()
+	case "LANGUAGE":
+		return p.parseAlterExternalLanguageStatement()
+	case "LIBRARY":
+		return p.parseAlterExternalLibraryStatement()
+	default:
+		// Skip to end of statement for unsupported external statements
+		p.skipToEndOfStatement()
+		return &ast.AlterExternalDataSourceStatement{}, nil
+	}
+}
+
+func (p *Parser) parseAlterExternalDataSourceStatement() (*ast.AlterExternalDataSourceStatement, error) {
+	// Consume DATA
+	p.nextToken()
+
+	// Expect SOURCE
+	if strings.ToUpper(p.curTok.Literal) != "SOURCE" {
+		p.skipToEndOfStatement()
+		return &ast.AlterExternalDataSourceStatement{}, nil
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterExternalDataSourceStatement{}
+
+	// Parse name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect SET
+	if p.curTok.Type == TokenSet {
+		p.nextToken()
+	}
+
+	// Parse options
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+		if p.isStatementKeyword(p.curTok.Type) {
+			break
+		}
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO" {
+			break
+		}
+
+		opt := &ast.ExternalDataSourceOption{}
+		opt.OptionKind = strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		// Expect =
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+
+		// Parse value
+		if p.curTok.Type == TokenString {
+			val, _ := p.parseStringLiteral()
+			opt.Value = val
+		} else if p.curTok.Type == TokenIdent {
+			opt.Value = &ast.ColumnReferenceExpression{
+				ColumnType: "Regular",
+				MultiPartIdentifier: &ast.MultiPartIdentifier{
+					Count:       1,
+					Identifiers: []*ast.Identifier{p.parseIdentifier()},
+				},
+			}
+		} else {
+			p.nextToken()
+		}
+
+		stmt.Options = append(stmt.Options, opt)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterExternalLanguageStatement() (*ast.AlterExternalLanguageStatement, error) {
+	// Consume LANGUAGE
+	p.nextToken()
+
+	stmt := &ast.AlterExternalLanguageStatement{}
+
+	// Parse name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibraryStatement, error) {
+	// Consume LIBRARY
+	p.nextToken()
+
+	stmt := &ast.AlterExternalLibraryStatement{}
+
+	// Parse name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip rest of statement
+	p.skipToEndOfStatement()
+
+	return stmt, nil
+}
+
+// convertOptionKind converts a SQL option name (e.g., "OPTIMIZED_LOCKING") to its OptionKind form (e.g., "OptimizedLocking")
+func convertOptionKind(optionName string) string {
+	// Split by underscores and capitalize each word
+	parts := strings.Split(optionName, "_")
+	for i, part := range parts {
+		if len(part) > 0 {
+			parts[i] = strings.ToUpper(part[:1]) + strings.ToLower(part[1:])
+		}
+	}
+	return strings.Join(parts, "")
 }
 

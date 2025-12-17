@@ -157,15 +157,24 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 		Name:              baseName,
 	}
 
-	// Check for parameters like VARCHAR(100)
+	// Check for parameters like VARCHAR(100) or VARCHAR(MAX)
 	if p.curTok.Type == TokenLParen {
 		p.nextToken()
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-			expr, err := p.parseScalarExpression()
-			if err != nil {
-				return nil, err
+			// Special case: MAX keyword in data type parameters
+			if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "MAX" {
+				dt.Parameters = append(dt.Parameters, &ast.MaxLiteral{
+					LiteralType: "Max",
+					Value:       "MAX",
+				})
+				p.nextToken()
+			} else {
+				expr, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				dt.Parameters = append(dt.Parameters, expr)
 			}
-			dt.Parameters = append(dt.Parameters, expr)
 			if p.curTok.Type != TokenComma {
 				break
 			}
