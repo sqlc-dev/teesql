@@ -45,8 +45,11 @@ func (a *AlterDatabaseAddFileStatement) statement() {}
 
 // AlterDatabaseAddFileGroupStatement represents ALTER DATABASE ... ADD FILEGROUP statement
 type AlterDatabaseAddFileGroupStatement struct {
-	DatabaseName  *Identifier
-	FileGroupName *Identifier
+	DatabaseName              *Identifier
+	FileGroupName             *Identifier
+	ContainsFileStream        bool
+	ContainsMemoryOptimizedData bool
+	UseCurrent                bool
 }
 
 func (a *AlterDatabaseAddFileGroupStatement) node()      {}

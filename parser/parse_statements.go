@@ -4087,4 +4087,50 @@ func (p *Parser) parseCreateXmlSchemaCollectionFromXml() (*ast.CreateXmlSchemaCo
 	return stmt, nil
 }
 
+// parseRenameStatement parses RENAME statements (Azure SQL DW/Synapse).
+// RENAME OBJECT [::] old_name TO new_name
+// RENAME DATABASE [::] old_name TO new_name
+func (p *Parser) parseRenameStatement() (*ast.RenameEntityStatement, error) {
+	// Consume RENAME
+	p.nextToken()
 
+	stmt := &ast.RenameEntityStatement{}
+
+	// Parse entity type: OBJECT or DATABASE
+	typeLit := strings.ToUpper(p.curTok.Literal)
+	if typeLit == "OBJECT" {
+		stmt.RenameEntityType = "Object"
+		p.nextToken()
+	} else if typeLit == "DATABASE" {
+		stmt.RenameEntityType = "Database"
+		p.nextToken()
+	}
+
+	// Check for optional ::
+	if p.curTok.Type == TokenColonColon {
+		p.nextToken() // consume ::
+		stmt.SeparatorType = "DoubleColon"
+	}
+
+	// Parse old name (schema object name)
+	oldName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.OldName = oldName
+
+	// Consume TO
+	if p.curTok.Type == TokenTo {
+		p.nextToken()
+	}
+
+	// Parse new name (single identifier)
+	stmt.NewName = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}

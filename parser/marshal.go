@@ -406,6 +406,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterSymmetricKeyStatementToJSON(s)
 	case *ast.AlterServiceMasterKeyStatement:
 		return alterServiceMasterKeyStatementToJSON(s)
+	case *ast.RenameEntityStatement:
+		return renameEntityStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -5554,8 +5556,26 @@ func alterCertificateStatementToJSON(s *ast.AlterCertificateStatement) jsonNode 
 	node := jsonNode{
 		"$type": "AlterCertificateStatement",
 	}
+	if s.Kind != "" {
+		node["Kind"] = s.Kind
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.ActiveForBeginDialog != "" {
+		node["ActiveForBeginDialog"] = s.ActiveForBeginDialog
+	}
+	if s.PrivateKeyPath != nil {
+		node["PrivateKeyPath"] = scalarExpressionToJSON(s.PrivateKeyPath)
+	}
+	if s.DecryptionPassword != nil {
+		node["DecryptionPassword"] = scalarExpressionToJSON(s.DecryptionPassword)
+	}
+	if s.EncryptionPassword != nil {
+		node["EncryptionPassword"] = scalarExpressionToJSON(s.EncryptionPassword)
+	}
+	if s.AttestedBy != nil {
+		node["AttestedBy"] = scalarExpressionToJSON(s.AttestedBy)
 	}
 	return node
 }
@@ -5622,10 +5642,29 @@ func alterPartitionFunctionStatementToJSON(s *ast.AlterPartitionFunctionStatemen
 
 func alterFulltextCatalogStatementToJSON(s *ast.AlterFulltextCatalogStatement) jsonNode {
 	node := jsonNode{
-		"$type": "AlterFulltextCatalogStatement",
+		"$type": "AlterFullTextCatalogStatement",
+	}
+	if s.Action != "" {
+		node["Action"] = s.Action
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			optNode := jsonNode{
+				"$type": "OnOffFullTextCatalogOption",
+			}
+			if opt.OptionState != "" {
+				optNode["OptionState"] = opt.OptionState
+			}
+			if opt.OptionKind != "" {
+				optNode["OptionKind"] = opt.OptionKind
+			}
+			opts[i] = optNode
+		}
+		node["Options"] = opts
 	}
 	return node
 }
@@ -5662,6 +5701,25 @@ func alterServiceMasterKeyStatementToJSON(s *ast.AlterServiceMasterKeyStatement)
 	}
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
+	}
+	return node
+}
+
+func renameEntityStatementToJSON(s *ast.RenameEntityStatement) jsonNode {
+	node := jsonNode{
+		"$type": "RenameEntityStatement",
+	}
+	if s.RenameEntityType != "" {
+		node["RenameEntityType"] = s.RenameEntityType
+	}
+	if s.SeparatorType != "" {
+		node["SeparatorType"] = s.SeparatorType
+	}
+	if s.OldName != nil {
+		node["OldName"] = schemaObjectNameToJSON(s.OldName)
+	}
+	if s.NewName != nil {
+		node["NewName"] = identifierToJSON(s.NewName)
 	}
 	return node
 }
@@ -5925,12 +5983,15 @@ func alterDatabaseAddFileGroupStatementToJSON(s *ast.AlterDatabaseAddFileGroupSt
 	node := jsonNode{
 		"$type": "AlterDatabaseAddFileGroupStatement",
 	}
+	node["ContainsFileStream"] = s.ContainsFileStream
+	node["ContainsMemoryOptimizedData"] = s.ContainsMemoryOptimizedData
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	if s.FileGroupName != nil {
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
+	node["UseCurrent"] = s.UseCurrent
 	return node
 }
 
