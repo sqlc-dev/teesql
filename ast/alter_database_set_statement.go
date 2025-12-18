@@ -35,6 +35,35 @@ type OnOffDatabaseOption struct {
 func (o *OnOffDatabaseOption) node()           {}
 func (o *OnOffDatabaseOption) databaseOption() {}
 
+// DelayedDurabilityDatabaseOption represents DELAYED_DURABILITY option
+type DelayedDurabilityDatabaseOption struct {
+	OptionKind string // "DelayedDurability"
+	Value      string // "Disabled", "Allowed", "Forced"
+}
+
+func (d *DelayedDurabilityDatabaseOption) node()           {}
+func (d *DelayedDurabilityDatabaseOption) databaseOption() {}
+
+// IdentifierDatabaseOption represents a database option with an identifier value
+type IdentifierDatabaseOption struct {
+	OptionKind string      `json:"OptionKind,omitempty"` // "CatalogCollation"
+	Value      *Identifier `json:"Value,omitempty"`
+}
+
+func (i *IdentifierDatabaseOption) node()           {}
+func (i *IdentifierDatabaseOption) databaseOption() {}
+
+// CreateDatabaseOption is an interface for CREATE DATABASE options (can be DatabaseOption)
+type CreateDatabaseOption interface {
+	node()
+	createDatabaseOption()
+}
+
+// Make existing database options implement CreateDatabaseOption
+func (o *OnOffDatabaseOption) createDatabaseOption()            {}
+func (i *IdentifierDatabaseOption) createDatabaseOption()       {}
+func (d *DelayedDurabilityDatabaseOption) createDatabaseOption() {}
+
 // AlterDatabaseAddFileStatement represents ALTER DATABASE ... ADD FILE statement
 type AlterDatabaseAddFileStatement struct {
 	DatabaseName *Identifier
@@ -97,6 +126,7 @@ func (a *AlterDatabaseRemoveFileStatement) statement() {}
 type AlterDatabaseRemoveFileGroupStatement struct {
 	DatabaseName  *Identifier
 	FileGroupName *Identifier
+	UseCurrent    bool
 }
 
 func (a *AlterDatabaseRemoveFileGroupStatement) node()      {}

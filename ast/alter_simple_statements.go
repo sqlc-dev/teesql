@@ -48,7 +48,8 @@ func (s *AlterCertificateStatement) statement() {}
 
 // AlterApplicationRoleStatement represents an ALTER APPLICATION ROLE statement.
 type AlterApplicationRoleStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name                   *Identifier              `json:"Name,omitempty"`
+	ApplicationRoleOptions []*ApplicationRoleOption `json:"ApplicationRoleOptions,omitempty"`
 }
 
 func (s *AlterApplicationRoleStatement) node()      {}
@@ -64,7 +65,8 @@ func (s *AlterAsymmetricKeyStatement) statement() {}
 
 // AlterQueueStatement represents an ALTER QUEUE statement.
 type AlterQueueStatement struct {
-	Name *SchemaObjectName `json:"Name,omitempty"`
+	Name         *SchemaObjectName `json:"Name,omitempty"`
+	QueueOptions []QueueOption     `json:"QueueOptions,omitempty"`
 }
 
 func (s *AlterQueueStatement) node()      {}

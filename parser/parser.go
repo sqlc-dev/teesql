@@ -92,7 +92,7 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 	case TokenInsert:
 		return p.parseInsertStatement()
 	case TokenUpdate:
-		return p.parseUpdateStatement()
+		return p.parseUpdateOrUpdateStatisticsStatement()
 	case TokenDelete:
 		return p.parseDeleteStatement()
 	case TokenDeclare:
@@ -189,6 +189,22 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		// Check for RENAME (Azure SQL DW/Synapse)
 		if strings.ToUpper(p.curTok.Literal) == "RENAME" {
 			return p.parseRenameStatement()
+		}
+		// Check for FETCH cursor
+		if strings.ToUpper(p.curTok.Literal) == "FETCH" {
+			return p.parseFetchCursorStatement()
+		}
+		// Check for DEALLOCATE cursor
+		if strings.ToUpper(p.curTok.Literal) == "DEALLOCATE" {
+			return p.parseDeallocateCursorStatement()
+		}
+		// Check for ENABLE TRIGGER
+		if strings.ToUpper(p.curTok.Literal) == "ENABLE" {
+			return p.parseEnableDisableTriggerStatement("Enable")
+		}
+		// Check for DISABLE TRIGGER
+		if strings.ToUpper(p.curTok.Literal) == "DISABLE" {
+			return p.parseEnableDisableTriggerStatement("Disable")
 		}
 		// Check for label (identifier followed by colon)
 		return p.parseLabelOrError()

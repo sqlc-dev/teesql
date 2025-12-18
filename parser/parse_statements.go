@@ -13,6 +13,24 @@ func (p *Parser) parseDeclareVariableStatement() (ast.Statement, error) {
 	// Consume DECLARE
 	p.nextToken()
 
+	// Check if this is DECLARE cursor_name CURSOR (without @)
+	if p.curTok.Type == TokenIdent && !strings.HasPrefix(p.curTok.Literal, "@") {
+		// This might be DECLARE cursor_name CURSOR
+		cursorName := p.parseIdentifier()
+
+		// Check for CURSOR keyword
+		if p.curTok.Type == TokenCursor {
+			return p.parseDeclareCursorStatementContinued(cursorName)
+		}
+		// Could also be old cursor syntax with options before CURSOR
+		kwd := strings.ToUpper(p.curTok.Literal)
+		if kwd == "INSENSITIVE" || kwd == "SCROLL" {
+			return p.parseDeclareCursorStatementContinued(cursorName)
+		}
+		// Not a cursor, error
+		return nil, fmt.Errorf("expected CURSOR after identifier in DECLARE, got %s", p.curTok.Literal)
+	}
+
 	// Parse variable name
 	if p.curTok.Type != TokenIdent || !strings.HasPrefix(p.curTok.Literal, "@") {
 		return nil, fmt.Errorf("expected variable name, got %s", p.curTok.Literal)
@@ -4009,7 +4027,8 @@ func (p *Parser) parseCloseStatement() (ast.Statement, error) {
 		return &ast.CloseMasterKeyStatement{}, nil
 	}
 
-	return nil, fmt.Errorf("expected SYMMETRIC, ALL, or MASTER after CLOSE, got %s", p.curTok.Literal)
+	// Otherwise, it's CLOSE cursor_name
+	return p.parseCloseCursorStatement()
 }
 
 func (p *Parser) parseOpenStatement() (ast.Statement, error) {
@@ -4062,7 +4081,8 @@ func (p *Parser) parseOpenStatement() (ast.Statement, error) {
 		return stmt, nil
 	}
 
-	return nil, fmt.Errorf("expected SYMMETRIC or MASTER after OPEN, got %s", p.curTok.Literal)
+	// Otherwise, it's OPEN cursor_name
+	return p.parseOpenCursorStatement()
 }
 
 func (p *Parser) parseCreateExternalStatement() (ast.Statement, error) {
@@ -4511,11 +4531,70 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 
 	stmt := &ast.CreateDatabaseStatement{
 		DatabaseName: p.parseIdentifier(),
+		AttachMode:   "None",
+	}
+
+	// Check for WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		opts, err := p.parseCreateDatabaseOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Options = opts
 	}
 
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 	return stmt, nil
+}
+
+func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error) {
+	var options []ast.CreateDatabaseOption
+
+	for {
+		optName := strings.ToUpper(p.curTok.Literal)
+		switch optName {
+		case "LEDGER":
+			p.nextToken() // consume LEDGER
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after LEDGER, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.OnOffDatabaseOption{
+				OptionKind:  "Ledger",
+				OptionState: capitalizeFirst(state),
+			}
+			options = append(options, opt)
+
+		case "CATALOG_COLLATION":
+			p.nextToken() // consume CATALOG_COLLATION
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after CATALOG_COLLATION, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			opt := &ast.IdentifierDatabaseOption{
+				OptionKind: "CatalogCollation",
+				Value:      p.parseIdentifier(),
+			}
+			options = append(options, opt)
+
+		default:
+			// Unknown option, return what we have
+			return options, nil
+		}
+
+		// Check for comma separator
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return options, nil
 }
 
 func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) {
@@ -4602,8 +4681,52 @@ func (p *Parser) parseCreateMessageTypeStatement() (*ast.CreateMessageTypeStatem
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Optional AUTHORIZATION
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken()
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Optional VALIDATION
+	if strings.ToUpper(p.curTok.Literal) == "VALIDATION" {
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		valMethod := strings.ToUpper(p.curTok.Literal)
+		switch valMethod {
+		case "WELL_FORMED_XML":
+			stmt.ValidationMethod = "WellFormedXml"
+			p.nextToken()
+		case "NONE":
+			stmt.ValidationMethod = "None"
+			p.nextToken()
+		case "EMPTY":
+			stmt.ValidationMethod = "Empty"
+			p.nextToken()
+		case "VALID_XML":
+			stmt.ValidationMethod = "ValidXml"
+			p.nextToken()
+			// Expect WITH SCHEMA COLLECTION
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken()
+				if strings.ToUpper(p.curTok.Literal) == "SCHEMA" {
+					p.nextToken()
+					if strings.ToUpper(p.curTok.Literal) == "COLLECTION" {
+						p.nextToken()
+						schemaName, _ := p.parseSchemaObjectName()
+						stmt.XmlSchemaCollectionName = schemaName
+					}
+				}
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
 }
 
@@ -4627,9 +4750,126 @@ func (p *Parser) parseCreateQueueStatement() (*ast.CreateQueueStatement, error) 
 		Name: name,
 	}
 
+	// Check for WITH clause
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		opts, err := p.parseQueueOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.QueueOptions = opts
+	}
+
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 	return stmt, nil
+}
+
+func (p *Parser) parseQueueOptions() ([]ast.QueueOption, error) {
+	var options []ast.QueueOption
+
+	for {
+		optName := strings.ToUpper(p.curTok.Literal)
+		switch optName {
+		case "STATUS":
+			p.nextToken() // consume STATUS
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after STATUS, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.QueueStateOption{
+				OptionState: capitalizeFirst(state),
+				OptionKind:  "Status",
+			}
+			options = append(options, opt)
+
+		case "RETENTION":
+			p.nextToken() // consume RETENTION
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after RETENTION, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.QueueStateOption{
+				OptionState: capitalizeFirst(state),
+				OptionKind:  "Retention",
+			}
+			options = append(options, opt)
+
+		case "POISON_MESSAGE_HANDLING":
+			p.nextToken() // consume POISON_MESSAGE_HANDLING
+			if p.curTok.Type != TokenLParen {
+				return nil, fmt.Errorf("expected ( after POISON_MESSAGE_HANDLING, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume (
+			// Expect STATUS = ON/OFF
+			if strings.ToUpper(p.curTok.Literal) != "STATUS" {
+				return nil, fmt.Errorf("expected STATUS in POISON_MESSAGE_HANDLING, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume STATUS
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after STATUS in POISON_MESSAGE_HANDLING, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) after POISON_MESSAGE_HANDLING status, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+			opt := &ast.QueueStateOption{
+				OptionState: capitalizeFirst(state),
+				OptionKind:  "PoisonMessageHandlingStatus",
+			}
+			options = append(options, opt)
+
+		case "ACTIVATION":
+			p.nextToken() // consume ACTIVATION
+			if p.curTok.Type != TokenLParen {
+				return nil, fmt.Errorf("expected ( after ACTIVATION, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume (
+			// Check for DROP or other activation options
+			if strings.ToUpper(p.curTok.Literal) == "DROP" {
+				p.nextToken() // consume DROP
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ) after ACTIVATION DROP, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+				opt := &ast.QueueOptionSimple{
+					OptionKind: "ActivationDrop",
+				}
+				options = append(options, opt)
+			} else {
+				// Skip to end of activation clause
+				depth := 1
+				for depth > 0 && p.curTok.Type != TokenEOF {
+					if p.curTok.Type == TokenLParen {
+						depth++
+					} else if p.curTok.Type == TokenRParen {
+						depth--
+					}
+					p.nextToken()
+				}
+			}
+
+		default:
+			// Unknown option, return what we have
+			return options, nil
+		}
+
+		// Check for comma separator
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return options, nil
 }
 
 func (p *Parser) parseCreateRouteStatement() (*ast.CreateRouteStatement, error) {
@@ -4678,9 +4918,94 @@ func (p *Parser) parseCreateApplicationRoleStatement() (*ast.CreateApplicationRo
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		opts, err := p.parseApplicationRoleOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ApplicationRoleOptions = opts
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
+}
+
+func (p *Parser) parseApplicationRoleOptions() ([]*ast.ApplicationRoleOption, error) {
+	var options []*ast.ApplicationRoleOption
+
+	for {
+		optionName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		// Expect =
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+		}
+		p.nextToken()
+
+		opt := &ast.ApplicationRoleOption{}
+
+		switch optionName {
+		case "PASSWORD":
+			opt.OptionKind = "Password"
+			// Parse string literal
+			if p.curTok.Type == TokenString {
+				val := p.curTok.Literal
+				// Strip quotes from string literal
+				if len(val) >= 2 && (val[0] == '\'' && val[len(val)-1] == '\'') {
+					val = val[1 : len(val)-1]
+				}
+				opt.Value = &ast.IdentifierOrValueExpression{
+					Value: val,
+					ValueExpression: &ast.StringLiteral{
+						Value:       val,
+						LiteralType: "String",
+					},
+				}
+				p.nextToken()
+			}
+		case "DEFAULT_SCHEMA":
+			opt.OptionKind = "DefaultSchema"
+			// Parse identifier
+			id := p.parseIdentifier()
+			opt.Value = &ast.IdentifierOrValueExpression{
+				Value:      id.Value,
+				Identifier: id,
+			}
+		case "NAME":
+			opt.OptionKind = "Name"
+			id := p.parseIdentifier()
+			opt.Value = &ast.IdentifierOrValueExpression{
+				Value:      id.Value,
+				Identifier: id,
+			}
+		case "LOGIN":
+			opt.OptionKind = "Login"
+			id := p.parseIdentifier()
+			opt.Value = &ast.IdentifierOrValueExpression{
+				Value:      id.Value,
+				Identifier: id,
+			}
+		default:
+			// Unknown option, skip
+			p.nextToken()
+		}
+
+		options = append(options, opt)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	return options, nil
 }
 
 func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
@@ -4741,8 +5066,99 @@ func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatemen
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse ON table_name
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		tableName, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.OnName = tableName
+	}
+
+	// Parse columns in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			// Parse column name
+			colRef, err := p.parseColumnReferenceOrFunctionCall()
+			if err != nil {
+				return nil, err
+			}
+			// Type assert to ColumnReferenceExpression
+			if cr, ok := colRef.(*ast.ColumnReferenceExpression); ok {
+				stmt.Columns = append(stmt.Columns, cr)
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse optional WITH clause (reuse UPDATE STATISTICS options logic)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF && p.curTok.Type != TokenWhere {
+			optionName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume option name
+
+			switch optionName {
+			case "FULLSCAN":
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.SimpleStatisticsOption{
+					OptionKind: "FullScan",
+				})
+			case "NORECOMPUTE":
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.SimpleStatisticsOption{
+					OptionKind: "NoRecompute",
+				})
+			case "SAMPLE":
+				// Parse number PERCENT/ROWS
+				value, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				mode := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume PERCENT or ROWS
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
+					OptionKind: "Sample" + strings.Title(strings.ToLower(mode)),
+					Literal:    value,
+				})
+			case "INCREMENTAL":
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					state := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
+						OptionKind:  "Incremental",
+						OptionState: state,
+					})
+				} else {
+					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
+						OptionKind:  "Incremental",
+						OptionState: "On",
+					})
+				}
+			default:
+				// Unknown option, skip
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional WHERE clause and rest of statement
+	if p.curTok.Type == TokenWhere || p.curTok.Type == TokenSemicolon {
+		p.skipToEndOfStatement()
+	}
+
 	return stmt, nil
 }
 
@@ -4866,6 +5282,324 @@ func (p *Parser) parseRenameStatement() (*ast.RenameEntityStatement, error) {
 
 	// Parse new name (single identifier)
 	stmt.NewName = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseCursorId parses a cursor identifier (optional GLOBAL, cursor name/variable).
+func (p *Parser) parseCursorId() *ast.CursorId {
+	cursorId := &ast.CursorId{}
+
+	// Check for GLOBAL keyword
+	if strings.ToUpper(p.curTok.Literal) == "GLOBAL" {
+		cursorId.IsGlobal = true
+		p.nextToken()
+	}
+
+	// Parse cursor name or variable
+	cursorId.Name = &ast.IdentifierOrValueExpression{
+		Value: p.curTok.Literal,
+	}
+
+	// Check if it's a variable
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		cursorId.Name.ValueExpression = &ast.VariableReference{Name: p.curTok.Literal}
+	} else {
+		// Create identifier inline (same logic as parseIdentifier but without advancing)
+		literal := p.curTok.Literal
+		quoteType := "NotQuoted"
+		if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
+			quoteType = "SquareBracket"
+			literal = literal[1 : len(literal)-1]
+		}
+		cursorId.Name.Identifier = &ast.Identifier{
+			Value:     literal,
+			QuoteType: quoteType,
+		}
+	}
+	p.nextToken()
+
+	return cursorId
+}
+
+// parseOpenCursorStatement parses OPEN cursor_name.
+func (p *Parser) parseOpenCursorStatement() (*ast.OpenCursorStatement, error) {
+	stmt := &ast.OpenCursorStatement{
+		Cursor: p.parseCursorId(),
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseCloseCursorStatement parses CLOSE cursor_name.
+func (p *Parser) parseCloseCursorStatement() (*ast.CloseCursorStatement, error) {
+	stmt := &ast.CloseCursorStatement{
+		Cursor: p.parseCursorId(),
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseDeallocateCursorStatement parses DEALLOCATE cursor_name.
+func (p *Parser) parseDeallocateCursorStatement() (*ast.DeallocateCursorStatement, error) {
+	// Already consumed DEALLOCATE
+	p.nextToken()
+
+	// Check for optional CURSOR keyword
+	if p.curTok.Type == TokenCursor {
+		p.nextToken()
+	}
+
+	stmt := &ast.DeallocateCursorStatement{
+		Cursor: p.parseCursorId(),
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseFetchCursorStatement parses FETCH ... FROM cursor_name.
+func (p *Parser) parseFetchCursorStatement() (*ast.FetchCursorStatement, error) {
+	// Already consumed FETCH
+	p.nextToken()
+
+	stmt := &ast.FetchCursorStatement{}
+
+	// Check for fetch orientation
+	orientationKeyword := strings.ToUpper(p.curTok.Literal)
+	switch orientationKeyword {
+	case "NEXT":
+		stmt.FetchType = &ast.FetchType{Orientation: "Next"}
+		p.nextToken()
+	case "PRIOR":
+		stmt.FetchType = &ast.FetchType{Orientation: "Prior"}
+		p.nextToken()
+	case "FIRST":
+		stmt.FetchType = &ast.FetchType{Orientation: "First"}
+		p.nextToken()
+	case "LAST":
+		stmt.FetchType = &ast.FetchType{Orientation: "Last"}
+		p.nextToken()
+	case "ABSOLUTE":
+		p.nextToken() // consume ABSOLUTE
+		offset, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.FetchType = &ast.FetchType{
+			Orientation: "Absolute",
+			RowOffset:   offset,
+		}
+	case "RELATIVE":
+		p.nextToken() // consume RELATIVE
+		offset, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.FetchType = &ast.FetchType{
+			Orientation: "Relative",
+			RowOffset:   offset,
+		}
+	}
+
+	// Check for FROM keyword
+	if p.curTok.Type == TokenFrom {
+		p.nextToken()
+	}
+
+	// Parse cursor id
+	stmt.Cursor = p.parseCursorId()
+
+	// Check for INTO clause
+	if p.curTok.Type == TokenInto {
+		p.nextToken() // consume INTO
+		for {
+			varRef, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.IntoVariables = append(stmt.IntoVariables, varRef)
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume comma
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseDeclareCursorStatementContinued parses DECLARE cursor CURSOR ... after the cursor name.
+func (p *Parser) parseDeclareCursorStatementContinued(cursorName *ast.Identifier) (*ast.DeclareCursorStatement, error) {
+	stmt := &ast.DeclareCursorStatement{
+		Name:             cursorName,
+		CursorDefinition: &ast.CursorDefinition{},
+	}
+
+	// Parse cursor options (INSENSITIVE, SCROLL, LOCAL, GLOBAL, FORWARD_ONLY, etc.)
+	for p.curTok.Type != TokenCursor && p.curTok.Type != TokenEOF && strings.ToUpper(p.curTok.Literal) != "FOR" {
+		kwd := strings.ToUpper(p.curTok.Literal)
+		switch kwd {
+		case "INSENSITIVE", "SCROLL", "LOCAL", "GLOBAL", "FORWARD_ONLY", "STATIC",
+			"KEYSET", "DYNAMIC", "FAST_FORWARD", "READ_ONLY", "SCROLL_LOCKS",
+			"OPTIMISTIC", "TYPE_WARNING":
+			stmt.CursorDefinition.Options = append(stmt.CursorDefinition.Options, &ast.CursorOption{
+				OptionKind: toTitleCase(kwd),
+			})
+			p.nextToken()
+		default:
+			break
+		}
+		if p.curTok.Type == TokenCursor || strings.ToUpper(p.curTok.Literal) == "FOR" {
+			break
+		}
+	}
+
+	// Consume CURSOR keyword
+	if p.curTok.Type == TokenCursor {
+		p.nextToken()
+	}
+
+	// Parse more options after CURSOR (for the new syntax)
+	for strings.ToUpper(p.curTok.Literal) != "FOR" && p.curTok.Type != TokenEOF {
+		kwd := strings.ToUpper(p.curTok.Literal)
+		switch kwd {
+		case "LOCAL", "GLOBAL", "FORWARD_ONLY", "SCROLL", "STATIC", "KEYSET",
+			"DYNAMIC", "FAST_FORWARD", "READ_ONLY", "SCROLL_LOCKS", "OPTIMISTIC",
+			"TYPE_WARNING":
+			stmt.CursorDefinition.Options = append(stmt.CursorDefinition.Options, &ast.CursorOption{
+				OptionKind: toTitleCase(kwd),
+			})
+			p.nextToken()
+		default:
+			break
+		}
+		if strings.ToUpper(p.curTok.Literal) == "FOR" {
+			break
+		}
+	}
+
+	// Consume FOR keyword
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken()
+	}
+
+	// Parse SELECT statement and extract its QueryExpression
+	selectStmt, err := p.parseSelectStatement()
+	if err != nil {
+		return nil, err
+	}
+	// CursorDefinition.Select is a QueryExpression, so we extract it from the SelectStatement
+	stmt.CursorDefinition.Select = selectStmt.QueryExpression
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// toTitleCase converts underscore-separated names to TitleCase.
+func toTitleCase(s string) string {
+	parts := strings.Split(strings.ToLower(s), "_")
+	for i, part := range parts {
+		if len(part) > 0 {
+			parts[i] = strings.ToUpper(part[0:1]) + part[1:]
+		}
+	}
+	return strings.Join(parts, "")
+}
+
+// parseEnableDisableTriggerStatement parses ENABLE/DISABLE TRIGGER statements
+func (p *Parser) parseEnableDisableTriggerStatement(enforcement string) (*ast.EnableDisableTriggerStatement, error) {
+	// Consume ENABLE or DISABLE
+	p.nextToken()
+
+	// Expect TRIGGER
+	if strings.ToUpper(p.curTok.Literal) != "TRIGGER" {
+		return nil, fmt.Errorf("expected TRIGGER after %s, got %s", enforcement, p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.EnableDisableTriggerStatement{
+		TriggerEnforcement: enforcement,
+	}
+
+	// Check for ALL
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		stmt.All = true
+		p.nextToken()
+	} else {
+		stmt.All = false
+		// Parse trigger names (comma-separated)
+		for {
+			name, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			stmt.TriggerNames = append(stmt.TriggerNames, name)
+
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume comma
+		}
+	}
+
+	// Expect ON
+	if p.curTok.Type != TokenOn {
+		return nil, fmt.Errorf("expected ON after trigger names, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for ALL SERVER or DATABASE or table name
+	stmt.TriggerObject = &ast.TriggerObject{}
+
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			stmt.TriggerObject.TriggerScope = "AllServer"
+			p.nextToken()
+		} else {
+			return nil, fmt.Errorf("expected SERVER after ALL, got %s", p.curTok.Literal)
+		}
+	} else if strings.ToUpper(p.curTok.Literal) == "DATABASE" {
+		stmt.TriggerObject.TriggerScope = "Database"
+		p.nextToken()
+	} else {
+		// Parse table name
+		tableName, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.TriggerObject.Name = tableName
+		stmt.TriggerObject.TriggerScope = "Normal"
+	}
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {

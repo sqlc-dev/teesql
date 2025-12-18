@@ -1460,6 +1460,19 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				OptionState: capitalizeFirst(optionValue),
 			}
 			stmt.Options = append(stmt.Options, opt)
+		case "DELAYED_DURABILITY":
+			// This option uses = with DISABLED/ALLOWED/FORCED values
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+			}
+			p.nextToken()
+			optionValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			opt := &ast.DelayedDurabilityDatabaseOption{
+				OptionKind: "DelayedDurability",
+				Value:      capitalizeFirst(optionValue),
+			}
+			stmt.Options = append(stmt.Options, opt)
 		default:
 			// Handle generic options with = syntax (e.g., OPTIMIZED_LOCKING = ON)
 			if p.curTok.Type == TokenEquals {
@@ -1580,11 +1593,23 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 			case "DEFAULT":
 				stmt.MakeDefault = true
 				p.nextToken()
-			case "READONLY", "READ_ONLY":
+			case "READONLY":
+				stmt.UpdatabilityOption = "ReadOnlyOld"
+				p.nextToken()
+			case "READ_ONLY":
 				stmt.UpdatabilityOption = "ReadOnly"
 				p.nextToken()
-			case "READWRITE", "READ_WRITE":
+			case "READWRITE":
+				stmt.UpdatabilityOption = "ReadWriteOld"
+				p.nextToken()
+			case "READ_WRITE":
 				stmt.UpdatabilityOption = "ReadWrite"
+				p.nextToken()
+			case "AUTOGROW_ALL_FILES":
+				stmt.UpdatabilityOption = "AutogrowAllFiles"
+				p.nextToken()
+			case "AUTOGROW_SINGLE_FILE":
+				stmt.UpdatabilityOption = "AutogrowSingleFile"
 				p.nextToken()
 			case "NAME":
 				p.nextToken() // consume NAME
@@ -3309,8 +3334,20 @@ func (p *Parser) parseAlterApplicationRoleStatement() (*ast.AlterApplicationRole
 	// Parse role name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		opts, err := p.parseApplicationRoleOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ApplicationRoleOptions = opts
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
@@ -3346,6 +3383,16 @@ func (p *Parser) parseAlterQueueStatement() (*ast.AlterQueueStatement, error) {
 		return nil, err
 	}
 	stmt.Name = name
+
+	// Check for WITH clause
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		opts, err := p.parseQueueOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.QueueOptions = opts
+	}
 
 	// Skip rest of statement
 	p.skipToEndOfStatement()
