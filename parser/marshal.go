@@ -54,6 +54,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return insertStatementToJSON(s)
 	case *ast.UpdateStatement:
 		return updateStatementToJSON(s)
+	case *ast.UpdateStatisticsStatement:
+		return updateStatisticsStatementToJSON(s)
 	case *ast.DeleteStatement:
 		return deleteStatementToJSON(s)
 	case *ast.DeclareVariableStatement:
@@ -430,6 +432,16 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterServiceMasterKeyStatementToJSON(s)
 	case *ast.RenameEntityStatement:
 		return renameEntityStatementToJSON(s)
+	case *ast.OpenCursorStatement:
+		return openCursorStatementToJSON(s)
+	case *ast.CloseCursorStatement:
+		return closeCursorStatementToJSON(s)
+	case *ast.DeallocateCursorStatement:
+		return deallocateCursorStatementToJSON(s)
+	case *ast.FetchCursorStatement:
+		return fetchCursorStatementToJSON(s)
+	case *ast.DeclareCursorStatement:
+		return declareCursorStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -6183,6 +6195,23 @@ func createStatisticsStatementToJSON(s *ast.CreateStatisticsStatement) jsonNode 
 	if s.OnName != nil {
 		node["OnName"] = schemaObjectNameToJSON(s.OnName)
 	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, c := range s.Columns {
+			cols[i] = columnReferenceExpressionToJSON(c)
+		}
+		node["Columns"] = cols
+	}
+	if len(s.StatisticsOptions) > 0 {
+		opts := make([]jsonNode, len(s.StatisticsOptions))
+		for i, o := range s.StatisticsOptions {
+			opts[i] = statisticsOptionToJSON(o)
+		}
+		node["StatisticsOptions"] = opts
+	}
+	if s.FilterPredicate != nil {
+		node["FilterPredicate"] = booleanExpressionToJSON(s.FilterPredicate)
+	}
 	return node
 }
 
@@ -6302,6 +6331,10 @@ func alterDatabaseModifyFileGroupStatementToJSON(s *ast.AlterDatabaseModifyFileG
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
 	node["MakeDefault"] = s.MakeDefault
+	// Only output UseCurrent when UpdatabilityOption is an autogrow option
+	if strings.HasPrefix(s.UpdatabilityOption, "Autogrow") {
+		node["UseCurrent"] = false
+	}
 	if s.NewFileGroupName != nil {
 		node["NewFileGroupName"] = identifierToJSON(s.NewFileGroupName)
 	}
@@ -6581,3 +6614,195 @@ func alterExternalLibraryStatementToJSON(s *ast.AlterExternalLibraryStatement) j
 	return node
 }
 
+func fetchTypeToJSON(f *ast.FetchType) jsonNode {
+	node := jsonNode{
+		"$type": "FetchType",
+	}
+	if f.Orientation != "" {
+		node["Orientation"] = f.Orientation
+	}
+	if f.RowOffset != nil {
+		node["RowOffset"] = scalarExpressionToJSON(f.RowOffset)
+	}
+	return node
+}
+
+func openCursorStatementToJSON(s *ast.OpenCursorStatement) jsonNode {
+	node := jsonNode{
+		"$type": "OpenCursorStatement",
+	}
+	if s.Cursor != nil {
+		node["Cursor"] = cursorIdToJSON(s.Cursor)
+	}
+	return node
+}
+
+func closeCursorStatementToJSON(s *ast.CloseCursorStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CloseCursorStatement",
+	}
+	if s.Cursor != nil {
+		node["Cursor"] = cursorIdToJSON(s.Cursor)
+	}
+	return node
+}
+
+func deallocateCursorStatementToJSON(s *ast.DeallocateCursorStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DeallocateCursorStatement",
+	}
+	if s.Cursor != nil {
+		node["Cursor"] = cursorIdToJSON(s.Cursor)
+	}
+	return node
+}
+
+func fetchCursorStatementToJSON(s *ast.FetchCursorStatement) jsonNode {
+	node := jsonNode{
+		"$type": "FetchCursorStatement",
+	}
+	if s.FetchType != nil {
+		node["FetchType"] = fetchTypeToJSON(s.FetchType)
+	}
+	if s.Cursor != nil {
+		node["Cursor"] = cursorIdToJSON(s.Cursor)
+	}
+	if len(s.IntoVariables) > 0 {
+		vars := make([]jsonNode, len(s.IntoVariables))
+		for i, v := range s.IntoVariables {
+			vars[i] = scalarExpressionToJSON(v)
+		}
+		node["IntoVariables"] = vars
+	}
+	return node
+}
+
+func updateStatisticsStatementToJSON(s *ast.UpdateStatisticsStatement) jsonNode {
+	node := jsonNode{
+		"$type": "UpdateStatisticsStatement",
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	if len(s.SubElements) > 0 {
+		elems := make([]jsonNode, len(s.SubElements))
+		for i, e := range s.SubElements {
+			elems[i] = identifierToJSON(e)
+		}
+		node["SubElements"] = elems
+	}
+	if len(s.StatisticsOptions) > 0 {
+		opts := make([]jsonNode, len(s.StatisticsOptions))
+		for i, o := range s.StatisticsOptions {
+			opts[i] = statisticsOptionToJSON(o)
+		}
+		node["StatisticsOptions"] = opts
+	}
+	return node
+}
+
+func statisticsOptionToJSON(opt ast.StatisticsOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.SimpleStatisticsOption:
+		return simpleStatisticsOptionToJSON(o)
+	case *ast.LiteralStatisticsOption:
+		return literalStatisticsOptionToJSON(o)
+	case *ast.OnOffStatisticsOption:
+		return onOffStatisticsOptionToJSON(o)
+	case *ast.ResampleStatisticsOption:
+		return resampleStatisticsOptionToJSON(o)
+	default:
+		return jsonNode{"$type": "UnknownStatisticsOption"}
+	}
+}
+
+func simpleStatisticsOptionToJSON(o *ast.SimpleStatisticsOption) jsonNode {
+	node := jsonNode{
+		"$type": "StatisticsOption",
+	}
+	if o.OptionKind != "" {
+		node["OptionKind"] = o.OptionKind
+	}
+	return node
+}
+
+func literalStatisticsOptionToJSON(o *ast.LiteralStatisticsOption) jsonNode {
+	node := jsonNode{
+		"$type": "LiteralStatisticsOption",
+	}
+	if o.OptionKind != "" {
+		node["OptionKind"] = o.OptionKind
+	}
+	if o.Literal != nil {
+		node["Literal"] = scalarExpressionToJSON(o.Literal)
+	}
+	return node
+}
+
+func onOffStatisticsOptionToJSON(o *ast.OnOffStatisticsOption) jsonNode {
+	node := jsonNode{
+		"$type": "OnOffStatisticsOption",
+	}
+	if o.OptionKind != "" {
+		node["OptionKind"] = o.OptionKind
+	}
+	if o.OptionState != "" {
+		node["OptionState"] = o.OptionState
+	}
+	return node
+}
+
+func resampleStatisticsOptionToJSON(o *ast.ResampleStatisticsOption) jsonNode {
+	node := jsonNode{
+		"$type": "ResampleStatisticsOption",
+	}
+	if o.OptionKind != "" {
+		node["OptionKind"] = o.OptionKind
+	}
+	if len(o.Partitions) > 0 {
+		partitions := make([]jsonNode, len(o.Partitions))
+		for i, p := range o.Partitions {
+			partitions[i] = scalarExpressionToJSON(p)
+		}
+		node["Partitions"] = partitions
+	}
+	return node
+}
+
+func declareCursorStatementToJSON(s *ast.DeclareCursorStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DeclareCursorStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.CursorDefinition != nil {
+		node["CursorDefinition"] = declareCursorDefinitionToJSON(s.CursorDefinition)
+	}
+	return node
+}
+
+func declareCursorDefinitionToJSON(d *ast.CursorDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "CursorDefinition",
+	}
+	if len(d.Options) > 0 {
+		opts := make([]jsonNode, len(d.Options))
+		for i, o := range d.Options {
+			opts[i] = jsonNode{
+				"$type":      "CursorOption",
+				"OptionKind": o.OptionKind,
+			}
+		}
+		node["Options"] = opts
+	}
+	if d.Select != nil {
+		// For DeclareCursorStatement, we need to wrap the QueryExpression in a SelectStatement format
+		selectNode := jsonNode{
+			"$type":           "SelectStatement",
+			"QueryExpression": queryExpressionToJSON(d.Select),
+		}
+		node["Select"] = selectNode
+	}
+	return node
+}

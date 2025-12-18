@@ -1045,3 +1045,223 @@ func (p *Parser) parseIdentifierOrValueExpression() (*ast.IdentifierOrValueExpre
 	return result, nil
 }
 
+// parseUpdateOrUpdateStatisticsStatement routes to UPDATE or UPDATE STATISTICS.
+func (p *Parser) parseUpdateOrUpdateStatisticsStatement() (ast.Statement, error) {
+	// Consume UPDATE
+	p.nextToken()
+
+	// Check for UPDATE STATISTICS
+	if p.curTok.Type == TokenStats || strings.ToUpper(p.curTok.Literal) == "STATISTICS" {
+		return p.parseUpdateStatisticsStatementContinued()
+	}
+
+	// Otherwise, parse normal UPDATE statement
+	stmt := &ast.UpdateStatement{
+		UpdateSpecification: &ast.UpdateSpecification{},
+	}
+
+	// Parse target
+	target, err := p.parseDMLTarget()
+	if err != nil {
+		return nil, err
+	}
+	stmt.UpdateSpecification.Target = target
+
+	// Expect SET
+	if p.curTok.Type != TokenSet {
+		return nil, fmt.Errorf("expected SET, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse SET clauses
+	setClauses, err := p.parseSetClauses()
+	if err != nil {
+		return nil, err
+	}
+	stmt.UpdateSpecification.SetClauses = setClauses
+
+	// Parse optional FROM clause
+	if p.curTok.Type == TokenFrom {
+		fromClause, err := p.parseFromClause()
+		if err != nil {
+			return nil, err
+		}
+		stmt.UpdateSpecification.FromClause = fromClause
+	}
+
+	// Parse optional WHERE clause
+	if p.curTok.Type == TokenWhere {
+		whereClause, err := p.parseWhereClause()
+		if err != nil {
+			return nil, err
+		}
+		stmt.UpdateSpecification.WhereClause = whereClause
+	}
+
+	// Parse optional OPTION clause
+	if p.curTok.Type == TokenOption {
+		hints, err := p.parseOptionClause()
+		if err != nil {
+			return nil, err
+		}
+		stmt.OptimizerHints = hints
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseUpdateStatisticsStatementContinued parses UPDATE STATISTICS after consuming UPDATE.
+func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatisticsStatement, error) {
+	// Consume STATISTICS
+	p.nextToken()
+
+	stmt := &ast.UpdateStatisticsStatement{}
+
+	// Parse table name
+	schemaObjectName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.SchemaObjectName = schemaObjectName
+
+	// Parse optional SubElements (stat/index names)
+	// Can be either in parentheses: (c1, c2, c3) or a single identifier: st1
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			ident := p.parseIdentifier()
+			stmt.SubElements = append(stmt.SubElements, ident)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	} else if p.curTok.Type == TokenIdent {
+		// Single identifier without parentheses
+		ident := p.parseIdentifier()
+		stmt.SubElements = append(stmt.SubElements, ident)
+	}
+
+	// Parse optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+			optionName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume option name
+
+			switch optionName {
+			case "ALL":
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.SimpleStatisticsOption{
+					OptionKind: "All",
+				})
+			case "FULLSCAN":
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.SimpleStatisticsOption{
+					OptionKind: "FullScan",
+				})
+			case "NORECOMPUTE":
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.SimpleStatisticsOption{
+					OptionKind: "NoRecompute",
+				})
+			case "COLUMNS":
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.SimpleStatisticsOption{
+					OptionKind: "Columns",
+				})
+			case "INDEX":
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.SimpleStatisticsOption{
+					OptionKind: "Index",
+				})
+			case "ROWCOUNT":
+				// Parse = value
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				val := p.curTok.Literal
+				p.nextToken()
+				// Use NumericLiteral for very large numbers, IntegerLiteral otherwise
+				var literal ast.ScalarExpression
+				if len(val) > 18 { // Numbers > 18 digits are likely > MaxInt64
+					literal = &ast.NumericLiteral{LiteralType: "Numeric", Value: val}
+				} else {
+					literal = &ast.IntegerLiteral{LiteralType: "Integer", Value: val}
+				}
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
+					OptionKind: "RowCount",
+					Literal:    literal,
+				})
+			case "PAGECOUNT":
+				// Parse = value
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				val := p.curTok.Literal
+				p.nextToken()
+				// Use NumericLiteral for very large numbers, IntegerLiteral otherwise
+				var literal ast.ScalarExpression
+				if len(val) > 18 { // Numbers > 18 digits are likely > MaxInt64
+					literal = &ast.NumericLiteral{LiteralType: "Numeric", Value: val}
+				} else {
+					literal = &ast.IntegerLiteral{LiteralType: "Integer", Value: val}
+				}
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
+					OptionKind: "PageCount",
+					Literal:    literal,
+				})
+			case "SAMPLE":
+				// Parse number PERCENT/ROWS
+				value, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				mode := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume PERCENT or ROWS
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
+					OptionKind: "Sample" + strings.Title(strings.ToLower(mode)),
+					Literal:    value,
+				})
+			case "RESAMPLE":
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.ResampleStatisticsOption{
+					OptionKind: "Resample",
+				})
+			case "INCREMENTAL":
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					state := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
+						OptionKind:  "Incremental",
+						OptionState: state,
+					})
+				} else {
+					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
+						OptionKind:  "Incremental",
+						OptionState: "On",
+					})
+				}
+			default:
+				// Unknown option, skip
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+

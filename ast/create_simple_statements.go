@@ -150,8 +150,11 @@ func (s *CreateIndexStatement) statement() {}
 
 // CreateStatisticsStatement represents a CREATE STATISTICS statement.
 type CreateStatisticsStatement struct {
-	Name   *Identifier       `json:"Name,omitempty"`
-	OnName *SchemaObjectName `json:"OnName,omitempty"`
+	Name              *Identifier                   `json:"Name,omitempty"`
+	OnName            *SchemaObjectName             `json:"OnName,omitempty"`
+	Columns           []*ColumnReferenceExpression  `json:"Columns,omitempty"`
+	StatisticsOptions []StatisticsOption            `json:"StatisticsOptions,omitempty"`
+	FilterPredicate   BooleanExpression             `json:"FilterPredicate,omitempty"`
 }
 
 func (s *CreateStatisticsStatement) node()      {}

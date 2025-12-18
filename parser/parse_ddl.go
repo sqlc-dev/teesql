@@ -1586,6 +1586,12 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 			case "READWRITE", "READ_WRITE":
 				stmt.UpdatabilityOption = "ReadWrite"
 				p.nextToken()
+			case "AUTOGROW_ALL_FILES":
+				stmt.UpdatabilityOption = "AutogrowAllFiles"
+				p.nextToken()
+			case "AUTOGROW_SINGLE_FILE":
+				stmt.UpdatabilityOption = "AutogrowSingleFile"
+				p.nextToken()
 			case "NAME":
 				p.nextToken() // consume NAME
 				if p.curTok.Type == TokenEquals {
