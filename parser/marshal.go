@@ -6331,10 +6331,7 @@ func alterDatabaseModifyFileGroupStatementToJSON(s *ast.AlterDatabaseModifyFileG
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
 	node["MakeDefault"] = s.MakeDefault
-	// Only output UseCurrent when UpdatabilityOption is an autogrow option
-	if strings.HasPrefix(s.UpdatabilityOption, "Autogrow") {
-		node["UseCurrent"] = false
-	}
+	node["UseCurrent"] = false
 	if s.NewFileGroupName != nil {
 		node["NewFileGroupName"] = identifierToJSON(s.NewFileGroupName)
 	}
@@ -6380,6 +6377,7 @@ func alterDatabaseRemoveFileGroupStatementToJSON(s *ast.AlterDatabaseRemoveFileG
 	if s.FileGroupName != nil {
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
+	node["UseCurrent"] = s.UseCurrent
 	return node
 }
 

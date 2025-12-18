@@ -1580,10 +1580,16 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 			case "DEFAULT":
 				stmt.MakeDefault = true
 				p.nextToken()
-			case "READONLY", "READ_ONLY":
+			case "READONLY":
+				stmt.UpdatabilityOption = "ReadOnlyOld"
+				p.nextToken()
+			case "READ_ONLY":
 				stmt.UpdatabilityOption = "ReadOnly"
 				p.nextToken()
-			case "READWRITE", "READ_WRITE":
+			case "READWRITE":
+				stmt.UpdatabilityOption = "ReadWriteOld"
+				p.nextToken()
+			case "READ_WRITE":
 				stmt.UpdatabilityOption = "ReadWrite"
 				p.nextToken()
 			case "AUTOGROW_ALL_FILES":

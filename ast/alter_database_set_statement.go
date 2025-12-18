@@ -97,6 +97,7 @@ func (a *AlterDatabaseRemoveFileStatement) statement() {}
 type AlterDatabaseRemoveFileGroupStatement struct {
 	DatabaseName  *Identifier
 	FileGroupName *Identifier
+	UseCurrent    bool
 }
 
 func (a *AlterDatabaseRemoveFileGroupStatement) node()      {}
