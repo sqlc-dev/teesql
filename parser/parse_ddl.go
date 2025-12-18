@@ -3384,6 +3384,16 @@ func (p *Parser) parseAlterQueueStatement() (*ast.AlterQueueStatement, error) {
 	}
 	stmt.Name = name
 
+	// Check for WITH clause
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		opts, err := p.parseQueueOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.QueueOptions = opts
+	}
+
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 

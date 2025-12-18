@@ -24,9 +24,33 @@ type CreateServiceStatement struct {
 func (s *CreateServiceStatement) node()      {}
 func (s *CreateServiceStatement) statement() {}
 
+// QueueOption is an interface for queue options.
+type QueueOption interface {
+	node()
+	queueOption()
+}
+
+// QueueStateOption represents a queue state option (STATUS, RETENTION, POISON_MESSAGE_HANDLING).
+type QueueStateOption struct {
+	OptionState string `json:"OptionState,omitempty"` // "On" or "Off"
+	OptionKind  string `json:"OptionKind,omitempty"`  // "Status", "Retention", "PoisonMessageHandlingStatus"
+}
+
+func (o *QueueStateOption) node()        {}
+func (o *QueueStateOption) queueOption() {}
+
+// QueueOptionSimple represents a simple queue option like ActivationDrop.
+type QueueOptionSimple struct {
+	OptionKind string `json:"OptionKind,omitempty"` // e.g. "ActivationDrop"
+}
+
+func (o *QueueOptionSimple) node()        {}
+func (o *QueueOptionSimple) queueOption() {}
+
 // CreateQueueStatement represents a CREATE QUEUE statement.
 type CreateQueueStatement struct {
-	Name *SchemaObjectName `json:"Name,omitempty"`
+	Name         *SchemaObjectName `json:"Name,omitempty"`
+	QueueOptions []QueueOption     `json:"QueueOptions,omitempty"`
 }
 
 func (s *CreateQueueStatement) node()      {}

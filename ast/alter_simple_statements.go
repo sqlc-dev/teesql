@@ -65,7 +65,8 @@ func (s *AlterAsymmetricKeyStatement) statement() {}
 
 // AlterQueueStatement represents an ALTER QUEUE statement.
 type AlterQueueStatement struct {
-	Name *SchemaObjectName `json:"Name,omitempty"`
+	Name         *SchemaObjectName `json:"Name,omitempty"`
+	QueueOptions []QueueOption     `json:"QueueOptions,omitempty"`
 }
 
 func (s *AlterQueueStatement) node()      {}

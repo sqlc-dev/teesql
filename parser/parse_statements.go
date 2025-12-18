@@ -4691,9 +4691,126 @@ func (p *Parser) parseCreateQueueStatement() (*ast.CreateQueueStatement, error) 
 		Name: name,
 	}
 
+	// Check for WITH clause
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		opts, err := p.parseQueueOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.QueueOptions = opts
+	}
+
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 	return stmt, nil
+}
+
+func (p *Parser) parseQueueOptions() ([]ast.QueueOption, error) {
+	var options []ast.QueueOption
+
+	for {
+		optName := strings.ToUpper(p.curTok.Literal)
+		switch optName {
+		case "STATUS":
+			p.nextToken() // consume STATUS
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after STATUS, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.QueueStateOption{
+				OptionState: capitalizeFirst(state),
+				OptionKind:  "Status",
+			}
+			options = append(options, opt)
+
+		case "RETENTION":
+			p.nextToken() // consume RETENTION
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after RETENTION, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.QueueStateOption{
+				OptionState: capitalizeFirst(state),
+				OptionKind:  "Retention",
+			}
+			options = append(options, opt)
+
+		case "POISON_MESSAGE_HANDLING":
+			p.nextToken() // consume POISON_MESSAGE_HANDLING
+			if p.curTok.Type != TokenLParen {
+				return nil, fmt.Errorf("expected ( after POISON_MESSAGE_HANDLING, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume (
+			// Expect STATUS = ON/OFF
+			if strings.ToUpper(p.curTok.Literal) != "STATUS" {
+				return nil, fmt.Errorf("expected STATUS in POISON_MESSAGE_HANDLING, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume STATUS
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after STATUS in POISON_MESSAGE_HANDLING, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) after POISON_MESSAGE_HANDLING status, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+			opt := &ast.QueueStateOption{
+				OptionState: capitalizeFirst(state),
+				OptionKind:  "PoisonMessageHandlingStatus",
+			}
+			options = append(options, opt)
+
+		case "ACTIVATION":
+			p.nextToken() // consume ACTIVATION
+			if p.curTok.Type != TokenLParen {
+				return nil, fmt.Errorf("expected ( after ACTIVATION, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume (
+			// Check for DROP or other activation options
+			if strings.ToUpper(p.curTok.Literal) == "DROP" {
+				p.nextToken() // consume DROP
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ) after ACTIVATION DROP, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+				opt := &ast.QueueOptionSimple{
+					OptionKind: "ActivationDrop",
+				}
+				options = append(options, opt)
+			} else {
+				// Skip to end of activation clause
+				depth := 1
+				for depth > 0 && p.curTok.Type != TokenEOF {
+					if p.curTok.Type == TokenLParen {
+						depth++
+					} else if p.curTok.Type == TokenRParen {
+						depth--
+					}
+					p.nextToken()
+				}
+			}
+
+		default:
+			// Unknown option, return what we have
+			return options, nil
+		}
+
+		// Check for comma separator
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return options, nil
 }
 
 func (p *Parser) parseCreateRouteStatement() (*ast.CreateRouteStatement, error) {

@@ -5939,6 +5939,13 @@ func alterQueueStatementToJSON(s *ast.AlterQueueStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
+	if len(s.QueueOptions) > 0 {
+		opts := make([]jsonNode, len(s.QueueOptions))
+		for i, opt := range s.QueueOptions {
+			opts[i] = queueOptionToJSON(opt)
+		}
+		node["QueueOptions"] = opts
+	}
 	return node
 }
 
@@ -6155,7 +6162,34 @@ func createQueueStatementToJSON(s *ast.CreateQueueStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
+	if len(s.QueueOptions) > 0 {
+		opts := make([]jsonNode, len(s.QueueOptions))
+		for i, opt := range s.QueueOptions {
+			opts[i] = queueOptionToJSON(opt)
+		}
+		node["QueueOptions"] = opts
+	}
 	return node
+}
+
+func queueOptionToJSON(opt ast.QueueOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.QueueStateOption:
+		node := jsonNode{
+			"$type":       "QueueStateOption",
+			"OptionState": o.OptionState,
+			"OptionKind":  o.OptionKind,
+		}
+		return node
+	case *ast.QueueOptionSimple:
+		node := jsonNode{
+			"$type":      "QueueOption",
+			"OptionKind": o.OptionKind,
+		}
+		return node
+	default:
+		return jsonNode{"$type": "QueueOption"}
+	}
 }
 
 func createRouteStatementToJSON(s *ast.CreateRouteStatement) jsonNode {
