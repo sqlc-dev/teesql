@@ -4531,11 +4531,70 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 
 	stmt := &ast.CreateDatabaseStatement{
 		DatabaseName: p.parseIdentifier(),
+		AttachMode:   "None",
+	}
+
+	// Check for WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		opts, err := p.parseCreateDatabaseOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Options = opts
 	}
 
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 	return stmt, nil
+}
+
+func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error) {
+	var options []ast.CreateDatabaseOption
+
+	for {
+		optName := strings.ToUpper(p.curTok.Literal)
+		switch optName {
+		case "LEDGER":
+			p.nextToken() // consume LEDGER
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after LEDGER, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.OnOffDatabaseOption{
+				OptionKind:  "Ledger",
+				OptionState: capitalizeFirst(state),
+			}
+			options = append(options, opt)
+
+		case "CATALOG_COLLATION":
+			p.nextToken() // consume CATALOG_COLLATION
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after CATALOG_COLLATION, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+			opt := &ast.IdentifierDatabaseOption{
+				OptionKind: "CatalogCollation",
+				Value:      p.parseIdentifier(),
+			}
+			options = append(options, opt)
+
+		default:
+			// Unknown option, return what we have
+			return options, nil
+		}
+
+		// Check for comma separator
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return options, nil
 }
 
 func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) {

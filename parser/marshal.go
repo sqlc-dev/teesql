@@ -6070,7 +6070,40 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = createDatabaseOptionToJSON(opt)
+		}
+		node["Options"] = opts
+		// Only output AttachMode when there are options
+		if s.AttachMode != "" {
+			node["AttachMode"] = s.AttachMode
+		}
+	}
 	return node
+}
+
+func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.OnOffDatabaseOption:
+		return jsonNode{
+			"$type":       "OnOffDatabaseOption",
+			"OptionState": o.OptionState,
+			"OptionKind":  o.OptionKind,
+		}
+	case *ast.IdentifierDatabaseOption:
+		node := jsonNode{
+			"$type":      "IdentifierDatabaseOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = identifierToJSON(o.Value)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "CreateDatabaseOption"}
+	}
 }
 
 func createLoginStatementToJSON(s *ast.CreateLoginStatement) jsonNode {
