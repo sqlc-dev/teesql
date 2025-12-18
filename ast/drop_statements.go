@@ -152,6 +152,15 @@ type DropExternalResourcePoolStatement struct {
 func (s *DropExternalResourcePoolStatement) statement() {}
 func (s *DropExternalResourcePoolStatement) node()      {}
 
+// DropExternalModelStatement represents a DROP EXTERNAL MODEL statement
+type DropExternalModelStatement struct {
+	IsIfExists bool
+	Name       *SchemaObjectName
+}
+
+func (s *DropExternalModelStatement) statement() {}
+func (s *DropExternalModelStatement) node()      {}
+
 // DropWorkloadGroupStatement represents a DROP WORKLOAD GROUP statement
 type DropWorkloadGroupStatement struct {
 	IsIfExists bool

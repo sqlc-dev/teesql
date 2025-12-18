@@ -16,6 +16,23 @@ type DeclareVariableElement struct {
 	Nullable     *NullableConstraintDefinition `json:"Nullable,omitempty"`
 }
 
+// DeclareTableVariableStatement represents a DECLARE @var TABLE statement.
+type DeclareTableVariableStatement struct {
+	Body *DeclareTableVariableBody `json:"Body,omitempty"`
+}
+
+func (d *DeclareTableVariableStatement) node()      {}
+func (d *DeclareTableVariableStatement) statement() {}
+
+// DeclareTableVariableBody represents the body of a table variable declaration.
+type DeclareTableVariableBody struct {
+	VariableName *Identifier      `json:"VariableName,omitempty"`
+	AsDefined    bool             `json:"AsDefined,omitempty"`
+	Definition   *TableDefinition `json:"Definition,omitempty"`
+}
+
+func (d *DeclareTableVariableBody) node() {}
+
 // SqlDataTypeReference represents a SQL data type.
 type SqlDataTypeReference struct {
 	SqlDataTypeOption string            `json:"SqlDataTypeOption,omitempty"`

@@ -83,11 +83,12 @@ type TableConstraint interface {
 
 // IndexDefinition represents an index definition within CREATE TABLE
 type IndexDefinition struct {
-	Name         *Identifier
-	Columns      []*ColumnWithSortOrder
-	Unique       bool
-	IndexType    *IndexType
-	IndexOptions []*IndexExpressionOption
+	Name           *Identifier
+	Columns        []*ColumnWithSortOrder
+	Unique         bool
+	IndexType      *IndexType
+	IndexOptions   []*IndexExpressionOption
+	IncludeColumns []*ColumnReferenceExpression
 }
 
 func (i *IndexDefinition) node() {}
@@ -108,3 +109,41 @@ const (
 	SortOrderAscending
 	SortOrderDescending
 )
+
+// CheckConstraintDefinition represents a CHECK constraint
+type CheckConstraintDefinition struct {
+	ConstraintIdentifier *Identifier
+	CheckCondition       BooleanExpression
+	NotForReplication    bool
+}
+
+func (c *CheckConstraintDefinition) node()              {}
+func (c *CheckConstraintDefinition) tableConstraint()   {}
+func (c *CheckConstraintDefinition) constraintDefinition() {}
+
+// UniqueConstraintDefinition represents a UNIQUE or PRIMARY KEY constraint
+type UniqueConstraintDefinition struct {
+	ConstraintIdentifier *Identifier
+	Clustered            bool
+	IsPrimaryKey         bool
+	Columns              []*ColumnWithSortOrder
+	IndexType            *IndexType
+}
+
+func (u *UniqueConstraintDefinition) node()              {}
+func (u *UniqueConstraintDefinition) tableConstraint()   {}
+func (u *UniqueConstraintDefinition) constraintDefinition() {}
+
+// ForeignKeyConstraintDefinition represents a FOREIGN KEY constraint
+type ForeignKeyConstraintDefinition struct {
+	ConstraintIdentifier *Identifier
+	Columns              []*Identifier
+	ReferenceTableName   *SchemaObjectName
+	ReferencedColumns    []*Identifier
+	DeleteAction         string
+	UpdateAction         string
+	NotForReplication    bool
+}
+
+func (f *ForeignKeyConstraintDefinition) node()            {}
+func (f *ForeignKeyConstraintDefinition) tableConstraint() {}

@@ -58,6 +58,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return deleteStatementToJSON(s)
 	case *ast.DeclareVariableStatement:
 		return declareVariableStatementToJSON(s)
+	case *ast.DeclareTableVariableStatement:
+		return declareTableVariableStatementToJSON(s)
 	case *ast.SetVariableStatement:
 		return setVariableStatementToJSON(s)
 	case *ast.IfStatement:
@@ -176,6 +178,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropExternalTableStatementToJSON(s)
 	case *ast.DropExternalResourcePoolStatement:
 		return dropExternalResourcePoolStatementToJSON(s)
+	case *ast.DropExternalModelStatement:
+		return dropExternalModelStatementToJSON(s)
 	case *ast.DropWorkloadGroupStatement:
 		return dropWorkloadGroupStatementToJSON(s)
 	case *ast.DropWorkloadClassifierStatement:
@@ -270,6 +274,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterXmlSchemaCollectionStatementToJSON(s)
 	case *ast.AlterServerConfigurationSetSoftNumaStatement:
 		return alterServerConfigurationSetSoftNumaStatementToJSON(s)
+	case *ast.AlterServerConfigurationStatement:
+		return alterServerConfigurationStatementToJSON(s)
 	case *ast.AlterLoginAddDropCredentialStatement:
 		return alterLoginAddDropCredentialStatementToJSON(s)
 	case *ast.TryCatchStatement:
@@ -800,6 +806,13 @@ func indexDefinitionToJSON(idx *ast.IndexDefinition) jsonNode {
 			cols[i] = columnWithSortOrderToJSON(c)
 		}
 		node["Columns"] = cols
+	}
+	if len(idx.IncludeColumns) > 0 {
+		cols := make([]jsonNode, len(idx.IncludeColumns))
+		for i, c := range idx.IncludeColumns {
+			cols[i] = scalarExpressionToJSON(c)
+		}
+		node["IncludeColumns"] = cols
 	}
 	return node
 }
@@ -1969,6 +1982,30 @@ func declareVariableElementToJSON(elem *ast.DeclareVariableElement) jsonNode {
 	return node
 }
 
+func declareTableVariableStatementToJSON(s *ast.DeclareTableVariableStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DeclareTableVariableStatement",
+	}
+	if s.Body != nil {
+		node["Body"] = declareTableVariableBodyToJSON(s.Body)
+	}
+	return node
+}
+
+func declareTableVariableBodyToJSON(body *ast.DeclareTableVariableBody) jsonNode {
+	node := jsonNode{
+		"$type": "DeclareTableVariableBody",
+	}
+	if body.VariableName != nil {
+		node["VariableName"] = identifierToJSON(body.VariableName)
+	}
+	node["AsDefined"] = body.AsDefined
+	if body.Definition != nil {
+		node["Definition"] = tableDefinitionToJSON(body.Definition)
+	}
+	return node
+}
+
 func sqlDataTypeReferenceToJSON(dt *ast.SqlDataTypeReference) jsonNode {
 	node := jsonNode{
 		"$type": "SqlDataTypeReference",
@@ -1998,10 +2035,18 @@ func setVariableStatementToJSON(s *ast.SetVariableStatement) jsonNode {
 	}
 	if s.SeparatorType != "" {
 		node["SeparatorType"] = s.SeparatorType
-	} else {
-		node["SeparatorType"] = "NotSpecified"
+	}
+	if s.Identifier != nil {
+		node["Identifier"] = identifierToJSON(s.Identifier)
 	}
 	node["FunctionCallExists"] = s.FunctionCallExists
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = scalarExpressionToJSON(p)
+		}
+		node["Parameters"] = params
+	}
 	if s.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(s.Expression)
 	}
@@ -2294,17 +2339,90 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 		col.IdentityOptions = identityOpts
 	}
 
-	// Parse optional NULL/NOT NULL constraint
-	if p.curTok.Type == TokenNot {
-		p.nextToken() // consume NOT
-		if p.curTok.Type != TokenNull {
-			return nil, fmt.Errorf("expected NULL after NOT, got %s", p.curTok.Literal)
+	// Parse column constraints (NULL, NOT NULL, UNIQUE, PRIMARY KEY, DEFAULT, CHECK, CONSTRAINT)
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		if p.curTok.Type == TokenNot {
+			p.nextToken() // consume NOT
+			if p.curTok.Type == TokenNull {
+				p.nextToken() // consume NULL
+				col.Constraints = append(col.Constraints, &ast.NullableConstraintDefinition{Nullable: false})
+			}
+		} else if p.curTok.Type == TokenNull {
+			p.nextToken() // consume NULL
+			col.Constraints = append(col.Constraints, &ast.NullableConstraintDefinition{Nullable: true})
+		} else if upperLit == "UNIQUE" {
+			p.nextToken() // consume UNIQUE
+			constraint := &ast.UniqueConstraintDefinition{
+				IsPrimaryKey: false,
+			}
+			// Parse optional CLUSTERED/NONCLUSTERED
+			if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
+				constraint.Clustered = true
+				constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+				p.nextToken()
+			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
+				constraint.Clustered = false
+				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+				p.nextToken()
+			}
+			col.Constraints = append(col.Constraints, constraint)
+		} else if upperLit == "PRIMARY" {
+			p.nextToken() // consume PRIMARY
+			if p.curTok.Type == TokenKey {
+				p.nextToken() // consume KEY
+			}
+			constraint := &ast.UniqueConstraintDefinition{
+				IsPrimaryKey: true,
+			}
+			// Parse optional CLUSTERED/NONCLUSTERED
+			if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
+				constraint.Clustered = true
+				constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+				p.nextToken()
+			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
+				constraint.Clustered = false
+				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+				p.nextToken()
+			}
+			col.Constraints = append(col.Constraints, constraint)
+		} else if p.curTok.Type == TokenDefault {
+			p.nextToken() // consume DEFAULT
+			defaultConstraint := &ast.DefaultConstraintDefinition{}
+
+			// Parse the default expression
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			defaultConstraint.Expression = expr
+			col.DefaultConstraint = defaultConstraint
+		} else if upperLit == "CHECK" {
+			p.nextToken() // consume CHECK
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				cond, err := p.parseBooleanExpression()
+				if err != nil {
+					return nil, err
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+				col.Constraints = append(col.Constraints, &ast.CheckConstraintDefinition{
+					CheckCondition: cond,
+				})
+			}
+		} else if upperLit == "CONSTRAINT" {
+			p.nextToken() // skip CONSTRAINT
+			if p.curTok.Type == TokenIdent {
+				p.nextToken() // skip constraint name
+			}
+			// Continue to parse actual constraint in next iteration
+			continue
+		} else {
+			break
 		}
-		p.nextToken() // consume NULL
-		col.Constraints = append(col.Constraints, &ast.NullableConstraintDefinition{Nullable: false})
-	} else if p.curTok.Type == TokenNull {
-		p.nextToken() // consume NULL
-		col.Constraints = append(col.Constraints, &ast.NullableConstraintDefinition{Nullable: true})
 	}
 
 	return col, nil
@@ -2405,12 +2523,66 @@ func tableDefinitionToJSON(t *ast.TableDefinition) jsonNode {
 		}
 		node["ColumnDefinitions"] = cols
 	}
+	if len(t.TableConstraints) > 0 {
+		constraints := make([]jsonNode, len(t.TableConstraints))
+		for i, constraint := range t.TableConstraints {
+			constraints[i] = tableConstraintToJSON(constraint)
+		}
+		node["TableConstraints"] = constraints
+	}
 	if len(t.Indexes) > 0 {
 		indexes := make([]jsonNode, len(t.Indexes))
 		for i, idx := range t.Indexes {
 			indexes[i] = indexDefinitionToJSON(idx)
 		}
 		node["Indexes"] = indexes
+	}
+	return node
+}
+
+func tableConstraintToJSON(c ast.TableConstraint) jsonNode {
+	switch constraint := c.(type) {
+	case *ast.UniqueConstraintDefinition:
+		return uniqueConstraintToJSON(constraint)
+	case *ast.CheckConstraintDefinition:
+		return checkConstraintToJSON(constraint)
+	case *ast.ForeignKeyConstraintDefinition:
+		return foreignKeyConstraintToJSON(constraint)
+	default:
+		return jsonNode{"$type": "UnknownTableConstraint"}
+	}
+}
+
+func foreignKeyConstraintToJSON(c *ast.ForeignKeyConstraintDefinition) jsonNode {
+	node := jsonNode{
+		"$type":             "ForeignKeyConstraintDefinition",
+		"NotForReplication": c.NotForReplication,
+	}
+	if c.ConstraintIdentifier != nil {
+		node["ConstraintIdentifier"] = identifierToJSON(c.ConstraintIdentifier)
+	}
+	if c.ReferenceTableName != nil {
+		node["ReferenceTableName"] = schemaObjectNameToJSON(c.ReferenceTableName)
+	}
+	if len(c.Columns) > 0 {
+		cols := make([]jsonNode, len(c.Columns))
+		for i, col := range c.Columns {
+			cols[i] = identifierToJSON(col)
+		}
+		node["Columns"] = cols
+	}
+	if len(c.ReferencedColumns) > 0 {
+		cols := make([]jsonNode, len(c.ReferencedColumns))
+		for i, col := range c.ReferencedColumns {
+			cols[i] = identifierToJSON(col)
+		}
+		node["ReferencedColumns"] = cols
+	}
+	if c.DeleteAction != "" {
+		node["DeleteAction"] = c.DeleteAction
+	}
+	if c.UpdateAction != "" {
+		node["UpdateAction"] = c.UpdateAction
 	}
 	return node
 }
@@ -2427,6 +2599,9 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 	if c.IdentityOptions != nil {
 		node["IdentityOptions"] = identityOptionsToJSON(c.IdentityOptions)
 	}
+	if c.DefaultConstraint != nil {
+		node["DefaultConstraint"] = defaultConstraintToJSON(c.DefaultConstraint)
+	}
 	if len(c.Constraints) > 0 {
 		constraints := make([]jsonNode, len(c.Constraints))
 		for i, constraint := range c.Constraints {
@@ -2436,6 +2611,20 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 	}
 	if c.DataType != nil {
 		node["DataType"] = dataTypeReferenceToJSON(c.DataType)
+	}
+	return node
+}
+
+func defaultConstraintToJSON(d *ast.DefaultConstraintDefinition) jsonNode {
+	node := jsonNode{
+		"$type":      "DefaultConstraintDefinition",
+		"WithValues": false,
+	}
+	if d.ConstraintIdentifier != nil {
+		node["ConstraintIdentifier"] = identifierToJSON(d.ConstraintIdentifier)
+	}
+	if d.Expression != nil {
+		node["Expression"] = scalarExpressionToJSON(d.Expression)
 	}
 	return node
 }
@@ -2461,9 +2650,49 @@ func constraintDefinitionToJSON(c ast.ConstraintDefinition) jsonNode {
 			"$type":    "NullableConstraintDefinition",
 			"Nullable": constraint.Nullable,
 		}
+	case *ast.UniqueConstraintDefinition:
+		return uniqueConstraintToJSON(constraint)
+	case *ast.CheckConstraintDefinition:
+		return checkConstraintToJSON(constraint)
 	default:
 		return jsonNode{"$type": "UnknownConstraint"}
 	}
+}
+
+func uniqueConstraintToJSON(c *ast.UniqueConstraintDefinition) jsonNode {
+	node := jsonNode{
+		"$type":        "UniqueConstraintDefinition",
+		"Clustered":    c.Clustered,
+		"IsPrimaryKey": c.IsPrimaryKey,
+	}
+	if c.ConstraintIdentifier != nil {
+		node["ConstraintIdentifier"] = identifierToJSON(c.ConstraintIdentifier)
+	}
+	if c.IndexType != nil {
+		node["IndexType"] = indexTypeToJSON(c.IndexType)
+	}
+	if len(c.Columns) > 0 {
+		cols := make([]jsonNode, len(c.Columns))
+		for i, col := range c.Columns {
+			cols[i] = columnWithSortOrderToJSON(col)
+		}
+		node["Columns"] = cols
+	}
+	return node
+}
+
+func checkConstraintToJSON(c *ast.CheckConstraintDefinition) jsonNode {
+	node := jsonNode{
+		"$type":             "CheckConstraintDefinition",
+		"NotForReplication": c.NotForReplication,
+	}
+	if c.ConstraintIdentifier != nil {
+		node["ConstraintIdentifier"] = identifierToJSON(c.ConstraintIdentifier)
+	}
+	if c.CheckCondition != nil {
+		node["CheckCondition"] = booleanExpressionToJSON(c.CheckCondition)
+	}
+	return node
 }
 
 func dataTypeReferenceToJSON(d ast.DataTypeReference) jsonNode {
@@ -3229,6 +3458,36 @@ func onOffOptionValueToJSON(o *ast.OnOffOptionValue) jsonNode {
 		"$type":       "OnOffOptionValue",
 		"OptionState": o.OptionState,
 	}
+}
+
+func alterServerConfigurationStatementToJSON(s *ast.AlterServerConfigurationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterServerConfigurationStatement",
+	}
+	if s.ProcessAffinity != "" {
+		node["ProcessAffinity"] = s.ProcessAffinity
+	}
+	if len(s.ProcessAffinityRanges) > 0 {
+		ranges := make([]jsonNode, len(s.ProcessAffinityRanges))
+		for i, r := range s.ProcessAffinityRanges {
+			ranges[i] = processAffinityRangeToJSON(r)
+		}
+		node["ProcessAffinityRanges"] = ranges
+	}
+	return node
+}
+
+func processAffinityRangeToJSON(r *ast.ProcessAffinityRange) jsonNode {
+	node := jsonNode{
+		"$type": "ProcessAffinityRange",
+	}
+	if r.From != nil {
+		node["From"] = scalarExpressionToJSON(r.From)
+	}
+	if r.To != nil {
+		node["To"] = scalarExpressionToJSON(r.To)
+	}
+	return node
 }
 
 func alterLoginAddDropCredentialStatementToJSON(s *ast.AlterLoginAddDropCredentialStatement) jsonNode {
@@ -5169,6 +5428,17 @@ func dropExternalResourcePoolStatementToJSON(s *ast.DropExternalResourcePoolStat
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropExternalModelStatementToJSON(s *ast.DropExternalModelStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropExternalModelStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
 	return node
 }
