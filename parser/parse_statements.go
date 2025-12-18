@@ -4622,8 +4622,52 @@ func (p *Parser) parseCreateMessageTypeStatement() (*ast.CreateMessageTypeStatem
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Optional AUTHORIZATION
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken()
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Optional VALIDATION
+	if strings.ToUpper(p.curTok.Literal) == "VALIDATION" {
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		valMethod := strings.ToUpper(p.curTok.Literal)
+		switch valMethod {
+		case "WELL_FORMED_XML":
+			stmt.ValidationMethod = "WellFormedXml"
+			p.nextToken()
+		case "NONE":
+			stmt.ValidationMethod = "None"
+			p.nextToken()
+		case "EMPTY":
+			stmt.ValidationMethod = "Empty"
+			p.nextToken()
+		case "VALID_XML":
+			stmt.ValidationMethod = "ValidXml"
+			p.nextToken()
+			// Expect WITH SCHEMA COLLECTION
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken()
+				if strings.ToUpper(p.curTok.Literal) == "SCHEMA" {
+					p.nextToken()
+					if strings.ToUpper(p.curTok.Literal) == "COLLECTION" {
+						p.nextToken()
+						schemaName, _ := p.parseSchemaObjectName()
+						stmt.XmlSchemaCollectionName = schemaName
+					}
+				}
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
 }
 

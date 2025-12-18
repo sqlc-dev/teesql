@@ -35,6 +35,15 @@ type OnOffDatabaseOption struct {
 func (o *OnOffDatabaseOption) node()           {}
 func (o *OnOffDatabaseOption) databaseOption() {}
 
+// DelayedDurabilityDatabaseOption represents DELAYED_DURABILITY option
+type DelayedDurabilityDatabaseOption struct {
+	OptionKind string // "DelayedDurability"
+	Value      string // "Disabled", "Allowed", "Forced"
+}
+
+func (d *DelayedDurabilityDatabaseOption) node()           {}
+func (d *DelayedDurabilityDatabaseOption) databaseOption() {}
+
 // AlterDatabaseAddFileStatement represents ALTER DATABASE ... ADD FILE statement
 type AlterDatabaseAddFileStatement struct {
 	DatabaseName *Identifier

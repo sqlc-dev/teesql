@@ -791,6 +791,12 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
 		}
+	case *ast.DelayedDurabilityDatabaseOption:
+		return jsonNode{
+			"$type":      "DelayedDurabilityDatabaseOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
 	default:
 		return jsonNode{"$type": "UnknownDatabaseOption"}
 	}
@@ -6112,6 +6118,15 @@ func createMessageTypeStatementToJSON(s *ast.CreateMessageTypeStatement) jsonNod
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
+	if s.ValidationMethod != "" {
+		node["ValidationMethod"] = s.ValidationMethod
+	}
+	if s.XmlSchemaCollectionName != nil {
+		node["XmlSchemaCollectionName"] = schemaObjectNameToJSON(s.XmlSchemaCollectionName)
 	}
 	return node
 }

@@ -82,7 +82,10 @@ func (s *CreateSymmetricKeyStatement) statement() {}
 
 // CreateMessageTypeStatement represents a CREATE MESSAGE TYPE statement.
 type CreateMessageTypeStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name                    *Identifier       `json:"Name,omitempty"`
+	Owner                   *Identifier       `json:"Owner,omitempty"`
+	ValidationMethod        string            `json:"ValidationMethod,omitempty"`
+	XmlSchemaCollectionName *SchemaObjectName `json:"XmlSchemaCollectionName,omitempty"`
 }
 
 func (s *CreateMessageTypeStatement) node()      {}

@@ -1460,6 +1460,19 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				OptionState: capitalizeFirst(optionValue),
 			}
 			stmt.Options = append(stmt.Options, opt)
+		case "DELAYED_DURABILITY":
+			// This option uses = with DISABLED/ALLOWED/FORCED values
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+			}
+			p.nextToken()
+			optionValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			opt := &ast.DelayedDurabilityDatabaseOption{
+				OptionKind: "DelayedDurability",
+				Value:      capitalizeFirst(optionValue),
+			}
+			stmt.Options = append(stmt.Options, opt)
 		default:
 			// Handle generic options with = syntax (e.g., OPTIMIZED_LOCKING = ON)
 			if p.curTok.Type == TokenEquals {
