@@ -9,23 +9,74 @@ import (
 	"github.com/kyleconroy/teesql/ast"
 )
 
-func (p *Parser) parseDeclareVariableStatement() (*ast.DeclareVariableStatement, error) {
+func (p *Parser) parseDeclareVariableStatement() (ast.Statement, error) {
 	// Consume DECLARE
 	p.nextToken()
 
-	stmt := &ast.DeclareVariableStatement{}
+	// Parse variable name
+	if p.curTok.Type != TokenIdent || !strings.HasPrefix(p.curTok.Literal, "@") {
+		return nil, fmt.Errorf("expected variable name, got %s", p.curTok.Literal)
+	}
+	varName := &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+	p.nextToken()
 
-	for {
+	// Skip optional AS
+	asDefined := false
+	if p.curTok.Type == TokenAs {
+		asDefined = true
+		p.nextToken()
+	}
+
+	// Check if this is a TABLE variable
+	if p.curTok.Type == TokenTable {
+		return p.parseDeclareTableVariableStatement(varName, asDefined)
+	}
+
+	// Regular variable declaration
+	stmt := &ast.DeclareVariableStatement{}
+	elem := &ast.DeclareVariableElement{
+		VariableName: varName,
+	}
+
+	// Parse data type
+	dataType, err := p.parseDataType()
+	if err != nil {
+		return nil, err
+	}
+	elem.DataType = dataType
+
+	// Check for NULL / NOT NULL
+	if p.curTok.Type == TokenNull {
+		elem.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+		p.nextToken()
+	} else if p.curTok.Type == TokenNot {
+		p.nextToken()
+		if p.curTok.Type == TokenNull {
+			elem.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+			p.nextToken()
+		}
+	}
+
+	// Check for = initial value
+	if p.curTok.Type == TokenEquals {
+		p.nextToken()
+		val, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		elem.Value = val
+	}
+
+	stmt.Declarations = append(stmt.Declarations, elem)
+
+	// Handle additional declarations separated by comma
+	for p.curTok.Type == TokenComma {
+		p.nextToken()
 		decl, err := p.parseDeclareVariableElement()
 		if err != nil {
 			return nil, err
 		}
 		stmt.Declarations = append(stmt.Declarations, decl)
-
-		if p.curTok.Type != TokenComma {
-			break
-		}
-		p.nextToken()
 	}
 
 	// Skip optional semicolon
@@ -34,6 +85,326 @@ func (p *Parser) parseDeclareVariableStatement() (*ast.DeclareVariableStatement,
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseDeclareTableVariableStatement(varName *ast.Identifier, asDefined bool) (*ast.DeclareTableVariableStatement, error) {
+	// Consume TABLE
+	p.nextToken()
+
+	stmt := &ast.DeclareTableVariableStatement{
+		Body: &ast.DeclareTableVariableBody{
+			VariableName: varName,
+			AsDefined:    asDefined,
+		},
+	}
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TABLE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse table definition
+	tableDef, err := p.parseTableDefinitionBody()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Body.Definition = tableDef
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after table definition, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseTableDefinitionBody parses the body of a table definition (column definitions, constraints, indexes)
+// between parentheses. The opening parenthesis should already be consumed.
+func (p *Parser) parseTableDefinitionBody() (*ast.TableDefinition, error) {
+	tableDef := &ast.TableDefinition{}
+
+	// Parse column definitions, table constraints, and indexes
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		// Check for table constraints (CHECK, CONSTRAINT, PRIMARY KEY, UNIQUE, FOREIGN KEY, INDEX)
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		if upperLit == "CHECK" {
+			constraint, err := p.parseCheckConstraintInTable()
+			if err != nil {
+				return nil, err
+			}
+			tableDef.TableConstraints = append(tableDef.TableConstraints, constraint)
+		} else if upperLit == "CONSTRAINT" {
+			p.nextToken() // skip CONSTRAINT
+			p.nextToken() // skip constraint name
+			// Parse actual constraint
+			continue
+		} else if upperLit == "PRIMARY" || upperLit == "UNIQUE" || upperLit == "FOREIGN" {
+			constraint, err := p.parseTableConstraint()
+			if err != nil {
+				return nil, err
+			}
+			if constraint != nil {
+				tableDef.TableConstraints = append(tableDef.TableConstraints, constraint)
+			}
+		} else if upperLit == "INDEX" {
+			indexDef, err := p.parseInlineIndexDefinition()
+			if err != nil {
+				return nil, err
+			}
+			tableDef.Indexes = append(tableDef.Indexes, indexDef)
+		} else {
+			// Column definition
+			colDef, err := p.parseColumnDefinition()
+			if err != nil {
+				return nil, err
+			}
+			tableDef.ColumnDefinitions = append(tableDef.ColumnDefinitions, colDef)
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return tableDef, nil
+}
+
+// parseCheckConstraintInTable parses a CHECK constraint in a table definition
+func (p *Parser) parseCheckConstraintInTable() (*ast.CheckConstraintDefinition, error) {
+	// Consume CHECK
+	p.nextToken()
+
+	constraint := &ast.CheckConstraintDefinition{}
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after CHECK, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse the check condition
+	cond, err := p.parseBooleanExpression()
+	if err != nil {
+		return nil, err
+	}
+	constraint.CheckCondition = cond
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after check condition, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	return constraint, nil
+}
+
+// parseTableConstraint parses PRIMARY KEY, UNIQUE, or FOREIGN KEY constraints
+func (p *Parser) parseTableConstraint() (ast.TableConstraint, error) {
+	upperLit := strings.ToUpper(p.curTok.Literal)
+
+	if upperLit == "PRIMARY" {
+		p.nextToken() // consume PRIMARY
+		if p.curTok.Type == TokenKey {
+			p.nextToken() // consume KEY
+		}
+		constraint := &ast.UniqueConstraintDefinition{
+			IsPrimaryKey: true,
+		}
+		// Parse optional CLUSTERED/NONCLUSTERED
+		if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
+			constraint.Clustered = true
+			constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
+			constraint.Clustered = false
+			constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+			p.nextToken()
+		}
+		// Skip the column list
+		if p.curTok.Type == TokenLParen {
+			p.skipParenthesizedContent()
+		}
+		return constraint, nil
+	} else if upperLit == "UNIQUE" {
+		p.nextToken() // consume UNIQUE
+		constraint := &ast.UniqueConstraintDefinition{
+			IsPrimaryKey: false,
+		}
+		// Parse optional CLUSTERED/NONCLUSTERED
+		if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
+			constraint.Clustered = true
+			constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
+			constraint.Clustered = false
+			constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+			p.nextToken()
+		}
+		// Skip the column list
+		if p.curTok.Type == TokenLParen {
+			p.skipParenthesizedContent()
+		}
+		return constraint, nil
+	} else if upperLit == "FOREIGN" {
+		p.nextToken() // consume FOREIGN
+		if p.curTok.Type == TokenKey {
+			p.nextToken() // consume KEY
+		}
+		// Skip the constraint body for now
+		if p.curTok.Type == TokenLParen {
+			p.skipParenthesizedContent()
+		}
+		// Skip REFERENCES
+		if strings.ToUpper(p.curTok.Literal) == "REFERENCES" {
+			p.skipToEndOfStatement()
+		}
+		return &ast.ForeignKeyConstraintDefinition{}, nil
+	}
+
+	return nil, nil
+}
+
+// parseInlineIndexDefinition parses an inline INDEX definition in a table variable
+func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
+	// Consume INDEX
+	p.nextToken()
+
+	indexDef := &ast.IndexDefinition{}
+
+	// Parse index name
+	if p.curTok.Type == TokenIdent {
+		quoteType := "NotQuoted"
+		if strings.HasPrefix(p.curTok.Literal, "[") && strings.HasSuffix(p.curTok.Literal, "]") {
+			quoteType = "SquareBracket"
+		}
+		indexDef.Name = &ast.Identifier{
+			Value:     p.curTok.Literal,
+			QuoteType: quoteType,
+		}
+		p.nextToken()
+	}
+
+	// Parse optional UNIQUE
+	if strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
+		indexDef.Unique = true
+		p.nextToken()
+	}
+
+	// Parse optional CLUSTERED/NONCLUSTERED
+	if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
+		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
+		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+		p.nextToken()
+	}
+
+	// Parse column list
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			quoteType := "NotQuoted"
+			if strings.HasPrefix(p.curTok.Literal, "[") && strings.HasSuffix(p.curTok.Literal, "]") {
+				quoteType = "SquareBracket"
+			}
+			col := &ast.ColumnWithSortOrder{
+				Column: &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Count: 1,
+						Identifiers: []*ast.Identifier{
+							{Value: p.curTok.Literal, QuoteType: quoteType},
+						},
+					},
+				},
+				SortOrder: ast.SortOrderNotSpecified,
+			}
+			p.nextToken()
+
+			// Parse optional ASC/DESC
+			if strings.ToUpper(p.curTok.Literal) == "ASC" {
+				col.SortOrder = ast.SortOrderAscending
+				p.nextToken()
+			} else if strings.ToUpper(p.curTok.Literal) == "DESC" {
+				col.SortOrder = ast.SortOrderDescending
+				p.nextToken()
+			}
+
+			indexDef.Columns = append(indexDef.Columns, col)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Parse optional INCLUDE
+	if strings.ToUpper(p.curTok.Literal) == "INCLUDE" {
+		p.nextToken() // consume INCLUDE
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				quoteType := "NotQuoted"
+				if strings.HasPrefix(p.curTok.Literal, "[") && strings.HasSuffix(p.curTok.Literal, "]") {
+					quoteType = "SquareBracket"
+				}
+				includeCol := &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Count: 1,
+						Identifiers: []*ast.Identifier{
+							{Value: p.curTok.Literal, QuoteType: quoteType},
+						},
+					},
+				}
+				indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
+				p.nextToken()
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	return indexDef, nil
+}
+
+// skipParenthesizedContent skips content within parentheses, handling nested parens
+func (p *Parser) skipParenthesizedContent() {
+	if p.curTok.Type != TokenLParen {
+		return
+	}
+	p.nextToken() // consume (
+	depth := 1
+	for depth > 0 && p.curTok.Type != TokenEOF {
+		if p.curTok.Type == TokenLParen {
+			depth++
+		} else if p.curTok.Type == TokenRParen {
+			depth--
+		}
+		p.nextToken()
+	}
 }
 
 func (p *Parser) parseDeclareVariableElement() (*ast.DeclareVariableElement, error) {
@@ -355,6 +726,48 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 	}
 	stmt.Variable = &ast.VariableReference{Name: p.curTok.Literal}
 	p.nextToken()
+
+	// Check for dot or double-colon separator (SET @a.b = ... or SET @a::b ...)
+	if p.curTok.Type == TokenDot {
+		stmt.SeparatorType = "Dot"
+		p.nextToken()
+		if p.curTok.Type == TokenIdent {
+			stmt.Identifier = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+			p.nextToken()
+		}
+	} else if p.curTok.Type == TokenColonColon {
+		stmt.SeparatorType = "DoubleColon"
+		p.nextToken() // consume ::
+		if p.curTok.Type == TokenIdent {
+			stmt.Identifier = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+			p.nextToken()
+		}
+	}
+
+	// Check for function call: SET @a.b () or SET @a.b (params)
+	if p.curTok.Type == TokenLParen {
+		stmt.FunctionCallExists = true
+		p.nextToken() // consume (
+		// Parse parameters
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			param, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Parameters = append(stmt.Parameters, param)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	}
 
 	// Expect =
 	if p.curTok.Type != TokenEquals {
@@ -1894,7 +2307,17 @@ func (p *Parser) parseSaveTransactionStatement() (*ast.SaveTransactionStatement,
 	}
 
 	// Optional transaction name or variable
-	if p.curTok.Type == TokenIdent && !isKeyword(p.curTok.Literal) && p.curTok.Literal[0] != '@' {
+	if p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '@' {
+		// Variable reference
+		stmt.Name = &ast.IdentifierOrValueExpression{
+			Value: p.curTok.Literal,
+			ValueExpression: &ast.VariableReference{
+				Name: p.curTok.Literal,
+			},
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && !isKeyword(p.curTok.Literal) {
+		// Simple identifier
 		stmt.Name = &ast.IdentifierOrValueExpression{
 			Value: p.curTok.Literal,
 			Identifier: &ast.Identifier{
@@ -1903,14 +2326,16 @@ func (p *Parser) parseSaveTransactionStatement() (*ast.SaveTransactionStatement,
 			},
 		}
 		p.nextToken()
-	} else if p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '@' {
+	} else if p.curTok.Type == TokenNumber || p.curTok.Type == TokenMinus {
+		// Legacy name format: [-]number:dotted.identifier
+		name := p.parseLegacyTransactionName()
 		stmt.Name = &ast.IdentifierOrValueExpression{
-			Value: p.curTok.Literal,
-			ValueExpression: &ast.VariableReference{
-				Name: p.curTok.Literal,
+			Value: name,
+			Identifier: &ast.Identifier{
+				Value:     name,
+				QuoteType: "NotQuoted",
 			},
 		}
-		p.nextToken()
 	}
 
 	// Skip optional semicolon
@@ -1919,6 +2344,54 @@ func (p *Parser) parseSaveTransactionStatement() (*ast.SaveTransactionStatement,
 	}
 
 	return stmt, nil
+}
+
+// parseLegacyTransactionName parses legacy transaction names like "5:a.b" or "-100:[a].[b]"
+func (p *Parser) parseLegacyTransactionName() string {
+	var parts []string
+
+	// Optional minus sign
+	if p.curTok.Type == TokenMinus {
+		parts = append(parts, "-")
+		p.nextToken()
+	}
+
+	// Number part
+	if p.curTok.Type == TokenNumber {
+		parts = append(parts, p.curTok.Literal)
+		p.nextToken()
+	}
+
+	// Colon
+	if p.curTok.Type == TokenColon {
+		parts = append(parts, ":")
+		p.nextToken()
+	}
+
+	// Dotted identifier part (e.g., "a.b" or "[a].[b]")
+	for {
+		if p.curTok.Type == TokenIdent {
+			// Check if it's a bracketed identifier
+			if strings.HasPrefix(p.curTok.Literal, "[") && strings.HasSuffix(p.curTok.Literal, "]") {
+				parts = append(parts, p.curTok.Literal)
+			} else {
+				parts = append(parts, p.curTok.Literal)
+			}
+			p.nextToken()
+		} else {
+			break
+		}
+
+		// Check for dot continuation
+		if p.curTok.Type == TokenDot {
+			parts = append(parts, ".")
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return strings.Join(parts, "")
 }
 
 func (p *Parser) parseWaitForStatement() (*ast.WaitForStatement, error) {

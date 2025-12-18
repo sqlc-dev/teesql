@@ -134,9 +134,28 @@ func (p *Parser) parseDropExternalStatement() (ast.Statement, error) {
 		return p.parseDropExternalTableStatement()
 	case "RESOURCE":
 		return p.parseDropExternalResourcePoolStatement()
+	case "MODEL":
+		return p.parseDropExternalModelStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after EXTERNAL: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseDropExternalModelStatement() (*ast.DropExternalModelStatement, error) {
+	// Consume MODEL
+	p.nextToken()
+
+	stmt := &ast.DropExternalModelStatement{}
+
+	// Parse model name
+	stmt.Name, _ = p.parseSchemaObjectName()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseDropExternalLanguageStatement() (*ast.DropExternalLanguageStatement, error) {
@@ -1741,11 +1760,14 @@ func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error)
 	p.nextToken()
 
 	// Check what type of SET it is
-	if strings.ToUpper(p.curTok.Literal) == "SOFTNUMA" {
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "SOFTNUMA":
 		return p.parseAlterServerConfigurationSetSoftNumaStatement()
+	case "PROCESS":
+		return p.parseAlterServerConfigurationSetProcessAffinityStatement()
+	default:
+		return nil, fmt.Errorf("unexpected token after SET: %s", p.curTok.Literal)
 	}
-
-	return nil, fmt.Errorf("unexpected token after SET: %s", p.curTok.Literal)
 }
 
 func (p *Parser) parseAlterServerConfigurationSetSoftNumaStatement() (*ast.AlterServerConfigurationSetSoftNumaStatement, error) {
@@ -1775,6 +1797,97 @@ func (p *Parser) parseAlterServerConfigurationSetSoftNumaStatement() (*ast.Alter
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseAlterServerConfigurationSetProcessAffinityStatement() (*ast.AlterServerConfigurationStatement, error) {
+	// Consume PROCESS
+	p.nextToken()
+
+	// Expect AFFINITY
+	if strings.ToUpper(p.curTok.Literal) != "AFFINITY" {
+		return nil, fmt.Errorf("expected AFFINITY after PROCESS, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterServerConfigurationStatement{}
+
+	// Parse CPU or NUMANODE
+	affinityType := strings.ToUpper(p.curTok.Literal)
+	switch affinityType {
+	case "CPU":
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+			// Check for AUTO
+			if strings.ToUpper(p.curTok.Literal) == "AUTO" {
+				stmt.ProcessAffinity = "CpuAuto"
+				p.nextToken()
+			} else {
+				// Parse ranges
+				stmt.ProcessAffinity = "Cpu"
+				ranges, err := p.parseProcessAffinityRanges()
+				if err != nil {
+					return nil, err
+				}
+				stmt.ProcessAffinityRanges = ranges
+			}
+		}
+	case "NUMANODE":
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+			stmt.ProcessAffinity = "NumaNode"
+			ranges, err := p.parseProcessAffinityRanges()
+			if err != nil {
+				return nil, err
+			}
+			stmt.ProcessAffinityRanges = ranges
+		}
+	default:
+		return nil, fmt.Errorf("expected CPU or NUMANODE after AFFINITY, got %s", p.curTok.Literal)
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseProcessAffinityRanges() ([]*ast.ProcessAffinityRange, error) {
+	var ranges []*ast.ProcessAffinityRange
+
+	for {
+		r := &ast.ProcessAffinityRange{}
+
+		// Parse From value
+		if p.curTok.Type != TokenNumber {
+			return nil, fmt.Errorf("expected number in process affinity range, got %s", p.curTok.Literal)
+		}
+		r.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+
+		// Check for TO
+		if strings.ToUpper(p.curTok.Literal) == "TO" {
+			p.nextToken()
+			if p.curTok.Type != TokenNumber {
+				return nil, fmt.Errorf("expected number after TO, got %s", p.curTok.Literal)
+			}
+			r.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+			p.nextToken()
+		}
+
+		ranges = append(ranges, r)
+
+		// Check for comma
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken()
+	}
+
+	return ranges, nil
 }
 
 func capitalizeFirst(s string) string {
