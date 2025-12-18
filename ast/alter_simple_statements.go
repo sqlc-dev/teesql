@@ -48,7 +48,8 @@ func (s *AlterCertificateStatement) statement() {}
 
 // AlterApplicationRoleStatement represents an ALTER APPLICATION ROLE statement.
 type AlterApplicationRoleStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name                   *Identifier              `json:"Name,omitempty"`
+	ApplicationRoleOptions []*ApplicationRoleOption `json:"ApplicationRoleOptions,omitempty"`
 }
 
 func (s *AlterApplicationRoleStatement) node()      {}

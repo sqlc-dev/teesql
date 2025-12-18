@@ -101,11 +101,20 @@ func (s *CreateRemoteServiceBindingStatement) statement() {}
 
 // CreateApplicationRoleStatement represents a CREATE APPLICATION ROLE statement.
 type CreateApplicationRoleStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name                   *Identifier              `json:"Name,omitempty"`
+	ApplicationRoleOptions []*ApplicationRoleOption `json:"ApplicationRoleOptions,omitempty"`
 }
 
 func (s *CreateApplicationRoleStatement) node()      {}
 func (s *CreateApplicationRoleStatement) statement() {}
+
+// ApplicationRoleOption represents an option in CREATE/ALTER APPLICATION ROLE
+type ApplicationRoleOption struct {
+	OptionKind string                      `json:"OptionKind,omitempty"`
+	Value      *IdentifierOrValueExpression `json:"Value,omitempty"`
+}
+
+func (o *ApplicationRoleOption) node() {}
 
 // CreateFulltextCatalogStatement represents a CREATE FULLTEXT CATALOG statement.
 type CreateFulltextCatalogStatement struct {

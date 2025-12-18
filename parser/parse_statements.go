@@ -4742,9 +4742,94 @@ func (p *Parser) parseCreateApplicationRoleStatement() (*ast.CreateApplicationRo
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		opts, err := p.parseApplicationRoleOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ApplicationRoleOptions = opts
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
+}
+
+func (p *Parser) parseApplicationRoleOptions() ([]*ast.ApplicationRoleOption, error) {
+	var options []*ast.ApplicationRoleOption
+
+	for {
+		optionName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		// Expect =
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+		}
+		p.nextToken()
+
+		opt := &ast.ApplicationRoleOption{}
+
+		switch optionName {
+		case "PASSWORD":
+			opt.OptionKind = "Password"
+			// Parse string literal
+			if p.curTok.Type == TokenString {
+				val := p.curTok.Literal
+				// Strip quotes from string literal
+				if len(val) >= 2 && (val[0] == '\'' && val[len(val)-1] == '\'') {
+					val = val[1 : len(val)-1]
+				}
+				opt.Value = &ast.IdentifierOrValueExpression{
+					Value: val,
+					ValueExpression: &ast.StringLiteral{
+						Value:       val,
+						LiteralType: "String",
+					},
+				}
+				p.nextToken()
+			}
+		case "DEFAULT_SCHEMA":
+			opt.OptionKind = "DefaultSchema"
+			// Parse identifier
+			id := p.parseIdentifier()
+			opt.Value = &ast.IdentifierOrValueExpression{
+				Value:      id.Value,
+				Identifier: id,
+			}
+		case "NAME":
+			opt.OptionKind = "Name"
+			id := p.parseIdentifier()
+			opt.Value = &ast.IdentifierOrValueExpression{
+				Value:      id.Value,
+				Identifier: id,
+			}
+		case "LOGIN":
+			opt.OptionKind = "Login"
+			id := p.parseIdentifier()
+			opt.Value = &ast.IdentifierOrValueExpression{
+				Value:      id.Value,
+				Identifier: id,
+			}
+		default:
+			// Unknown option, skip
+			p.nextToken()
+		}
+
+		options = append(options, opt)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	return options, nil
 }
 
 func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {

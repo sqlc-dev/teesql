@@ -5912,6 +5912,13 @@ func alterApplicationRoleStatementToJSON(s *ast.AlterApplicationRoleStatement) j
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if len(s.ApplicationRoleOptions) > 0 {
+		opts := make([]jsonNode, len(s.ApplicationRoleOptions))
+		for i, opt := range s.ApplicationRoleOptions {
+			opts[i] = applicationRoleOptionToJSON(opt)
+		}
+		node["ApplicationRoleOptions"] = opts
+	}
 	return node
 }
 
@@ -6187,6 +6194,24 @@ func createApplicationRoleStatementToJSON(s *ast.CreateApplicationRoleStatement)
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ApplicationRoleOptions) > 0 {
+		opts := make([]jsonNode, len(s.ApplicationRoleOptions))
+		for i, opt := range s.ApplicationRoleOptions {
+			opts[i] = applicationRoleOptionToJSON(opt)
+		}
+		node["ApplicationRoleOptions"] = opts
+	}
+	return node
+}
+
+func applicationRoleOptionToJSON(opt *ast.ApplicationRoleOption) jsonNode {
+	node := jsonNode{
+		"$type":      "ApplicationRoleOption",
+		"OptionKind": opt.OptionKind,
+	}
+	if opt.Value != nil {
+		node["Value"] = identifierOrValueExpressionToJSON(opt.Value)
 	}
 	return node
 }

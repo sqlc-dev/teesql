@@ -3334,8 +3334,20 @@ func (p *Parser) parseAlterApplicationRoleStatement() (*ast.AlterApplicationRole
 	// Parse role name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		opts, err := p.parseApplicationRoleOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ApplicationRoleOptions = opts
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
