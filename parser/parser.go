@@ -198,6 +198,14 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		if strings.ToUpper(p.curTok.Literal) == "DEALLOCATE" {
 			return p.parseDeallocateCursorStatement()
 		}
+		// Check for ENABLE TRIGGER
+		if strings.ToUpper(p.curTok.Literal) == "ENABLE" {
+			return p.parseEnableDisableTriggerStatement("Enable")
+		}
+		// Check for DISABLE TRIGGER
+		if strings.ToUpper(p.curTok.Literal) == "DISABLE" {
+			return p.parseEnableDisableTriggerStatement("Disable")
+		}
 		// Check for label (identifier followed by colon)
 		return p.parseLabelOrError()
 	default:

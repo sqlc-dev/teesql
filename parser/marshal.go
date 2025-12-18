@@ -324,6 +324,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTriggerStatementToJSON(s)
 	case *ast.CreateTriggerStatement:
 		return createTriggerStatementToJSON(s)
+	case *ast.EnableDisableTriggerStatement:
+		return enableDisableTriggerStatementToJSON(s)
 	case *ast.CreateDatabaseStatement:
 		return createDatabaseStatementToJSON(s)
 	case *ast.CreateLoginStatement:
@@ -5109,6 +5111,25 @@ func triggerActionToJSON(a *ast.TriggerAction) jsonNode {
 			"$type":     "EventTypeContainer",
 			"EventType": a.EventTypeGroup.EventType,
 		}
+	}
+	return node
+}
+
+func enableDisableTriggerStatementToJSON(s *ast.EnableDisableTriggerStatement) jsonNode {
+	node := jsonNode{
+		"$type":              "EnableDisableTriggerStatement",
+		"TriggerEnforcement": s.TriggerEnforcement,
+		"All":                s.All,
+	}
+	if len(s.TriggerNames) > 0 {
+		names := make([]jsonNode, len(s.TriggerNames))
+		for i, n := range s.TriggerNames {
+			names[i] = schemaObjectNameToJSON(n)
+		}
+		node["TriggerNames"] = names
+	}
+	if s.TriggerObject != nil {
+		node["TriggerObject"] = triggerObjectToJSON(s.TriggerObject)
 	}
 	return node
 }

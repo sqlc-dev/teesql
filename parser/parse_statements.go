@@ -5229,3 +5229,77 @@ func toTitleCase(s string) string {
 	}
 	return strings.Join(parts, "")
 }
+
+// parseEnableDisableTriggerStatement parses ENABLE/DISABLE TRIGGER statements
+func (p *Parser) parseEnableDisableTriggerStatement(enforcement string) (*ast.EnableDisableTriggerStatement, error) {
+	// Consume ENABLE or DISABLE
+	p.nextToken()
+
+	// Expect TRIGGER
+	if strings.ToUpper(p.curTok.Literal) != "TRIGGER" {
+		return nil, fmt.Errorf("expected TRIGGER after %s, got %s", enforcement, p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.EnableDisableTriggerStatement{
+		TriggerEnforcement: enforcement,
+	}
+
+	// Check for ALL
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		stmt.All = true
+		p.nextToken()
+	} else {
+		stmt.All = false
+		// Parse trigger names (comma-separated)
+		for {
+			name, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			stmt.TriggerNames = append(stmt.TriggerNames, name)
+
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume comma
+		}
+	}
+
+	// Expect ON
+	if p.curTok.Type != TokenOn {
+		return nil, fmt.Errorf("expected ON after trigger names, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for ALL SERVER or DATABASE or table name
+	stmt.TriggerObject = &ast.TriggerObject{}
+
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			stmt.TriggerObject.TriggerScope = "AllServer"
+			p.nextToken()
+		} else {
+			return nil, fmt.Errorf("expected SERVER after ALL, got %s", p.curTok.Literal)
+		}
+	} else if strings.ToUpper(p.curTok.Literal) == "DATABASE" {
+		stmt.TriggerObject.TriggerScope = "Database"
+		p.nextToken()
+	} else {
+		// Parse table name
+		tableName, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		stmt.TriggerObject.Name = tableName
+		stmt.TriggerObject.TriggerScope = "Normal"
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
