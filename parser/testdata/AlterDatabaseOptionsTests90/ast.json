@@ -6,369 +6,246 @@
       "Statements": [
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "DatabaseOption",
-              "OptionKind": "Emergency"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
           "Options": [
             {
               "$type": "OnOffDatabaseOption",
-              "OptionState": "On",
-              "OptionKind": "DBChaining"
+              "OptionKind": "DbChaining",
+              "OptionState": "On"
             },
             {
               "$type": "OnOffDatabaseOption",
-              "OptionState": "Off",
-              "OptionKind": "Trustworthy"
+              "OptionKind": "Trustworthy",
+              "OptionState": "Off"
             }
           ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
           "Options": [
             {
               "$type": "OnOffDatabaseOption",
-              "OptionState": "On",
-              "OptionKind": "Trustworthy"
+              "OptionKind": "Trustworthy",
+              "OptionState": "On"
             },
             {
               "$type": "OnOffDatabaseOption",
-              "OptionState": "Off",
-              "OptionKind": "DBChaining"
+              "OptionKind": "DbChaining",
+              "OptionState": "Off"
             }
           ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
           "Options": [
             {
               "$type": "OnOffDatabaseOption",
-              "OptionState": "Off",
-              "OptionKind": "AutoUpdateStatisticsAsync"
+              "OptionKind": "AutoUpdateStatisticsAsync",
+              "OptionState": "Off"
             }
           ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "PageVerifyDatabaseOption",
-              "Value": "Checksum",
-              "OptionKind": "PageVerify"
-            },
-            {
-              "$type": "PageVerifyDatabaseOption",
-              "Value": "None",
-              "OptionKind": "PageVerify"
-            },
-            {
-              "$type": "PageVerifyDatabaseOption",
-              "Value": "TornPageDetection",
-              "OptionKind": "PageVerify"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "PartnerDatabaseOption",
-              "PartnerServer": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "some_server"
-              },
-              "PartnerOption": "PartnerServer",
-              "OptionKind": "Partner"
-            },
-            {
-              "$type": "PartnerDatabaseOption",
-              "PartnerOption": "Failover",
-              "OptionKind": "Partner"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
           },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "WitnessDatabaseOption",
-              "WitnessServer": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "witness"
-              },
-              "IsOff": false,
-              "OptionKind": "Witness"
-            },
-            {
-              "$type": "PartnerDatabaseOption",
-              "PartnerOption": "ForceServiceAllowDataLoss",
-              "OptionKind": "Partner"
-            },
-            {
-              "$type": "PartnerDatabaseOption",
-              "PartnerOption": "Resume",
-              "OptionKind": "Partner"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "DatabaseOption",
-              "OptionKind": "ErrorBrokerConversations"
-            },
-            {
-              "$type": "PartnerDatabaseOption",
-              "PartnerOption": "SafetyFull",
-              "OptionKind": "Partner"
-            },
-            {
-              "$type": "PartnerDatabaseOption",
-              "PartnerOption": "Suspend",
-              "OptionKind": "Partner"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "DatabaseOption",
-              "OptionKind": "EnableBroker"
-            },
-            {
-              "$type": "PartnerDatabaseOption",
-              "PartnerOption": "SafetyOff",
-              "OptionKind": "Partner"
-            },
-            {
-              "$type": "PartnerDatabaseOption",
-              "PartnerOption": "Timeout",
-              "Timeout": {
-                "$type": "IntegerLiteral",
-                "LiteralType": "Integer",
-                "Value": "10"
-              },
-              "OptionKind": "Partner"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "DatabaseOption",
-              "OptionKind": "DisableBroker"
-            },
-            {
-              "$type": "WitnessDatabaseOption",
-              "IsOff": true,
-              "OptionKind": "Witness"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "DatabaseOption",
-              "OptionKind": "NewBroker"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
           "Options": [
             {
               "$type": "OnOffDatabaseOption",
-              "OptionState": "On",
-              "OptionKind": "DateCorrelationOptimization"
-            },
-            {
-              "$type": "ParameterizationDatabaseOption",
-              "IsSimple": true,
-              "OptionKind": "Parameterization"
+              "OptionKind": "Partner",
+              "OptionState": "'some_server'"
             }
           ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "ParameterizationDatabaseOption",
-              "IsSimple": false,
-              "OptionKind": "Parameterization"
-            },
-            {
-              "$type": "OnOffDatabaseOption",
-              "OptionState": "Off",
-              "OptionKind": "DateCorrelationOptimization"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
           },
-          "UseCurrent": false
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "Witness",
+              "OptionState": "'witness'"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "OnOffDatabaseOption",
-              "OptionState": "On",
-              "OptionKind": "AllowSnapshotIsolation"
-            },
-            {
-              "$type": "OnOffDatabaseOption",
-              "OptionState": "On",
-              "OptionKind": "ReadCommittedSnapshot"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "OnOffDatabaseOption",
-              "OptionState": "Off",
-              "OptionKind": "ReadCommittedSnapshot"
-            },
-            {
-              "$type": "OnOffDatabaseOption",
-              "OptionState": "Off",
-              "OptionKind": "AllowSnapshotIsolation"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
           "Options": [
             {
               "$type": "OnOffDatabaseOption",
-              "OptionState": "Off",
-              "OptionKind": "SupplementalLogging"
+              "OptionKind": "DateCorrelationOptimization",
+              "OptionState": "On"
             }
           ],
-          "WithManualCutover": false,
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "AllowSnapshotIsolation",
+              "OptionState": "On"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "ReadCommittedSnapshot",
+              "OptionState": "On"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "ReadCommittedSnapshot",
+              "OptionState": "Off"
+            },
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "AllowSnapshotIsolation",
+              "OptionState": "Off"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "SupplementalLogging",
+              "OptionState": "Off"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
         }
       ]
     }

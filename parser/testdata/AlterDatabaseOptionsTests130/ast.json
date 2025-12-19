@@ -6,677 +6,261 @@
       "Statements": [
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "On",
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "Off",
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": true,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": true,
-              "OptionState": "NotSet",
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreDesiredStateOption",
-                  "Value": "ReadWrite",
-                  "OperationModeSpecified": false,
-                  "OptionKind": "Desired_State"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreDesiredStateOption",
-                  "Value": "ReadOnly",
-                  "OperationModeSpecified": false,
-                  "OptionKind": "Desired_State"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreDesiredStateOption",
-                  "Value": "ReadWrite",
-                  "OperationModeSpecified": true,
-                  "OptionKind": "Desired_State"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreDesiredStateOption",
-                  "Value": "ReadOnly",
-                  "OperationModeSpecified": true,
-                  "OptionKind": "Desired_State"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreCapturePolicyOption",
-                  "Value": "NONE",
-                  "OptionKind": "Query_Capture_Mode"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreCapturePolicyOption",
-                  "Value": "AUTO",
-                  "OptionKind": "Query_Capture_Mode"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreCapturePolicyOption",
-                  "Value": "ALL",
-                  "OptionKind": "Query_Capture_Mode"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreSizeCleanupPolicyOption",
-                  "Value": "OFF",
-                  "OptionKind": "Size_Based_Cleanup_Mode"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreSizeCleanupPolicyOption",
-                  "Value": "AUTO",
-                  "OptionKind": "Size_Based_Cleanup_Mode"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreDataFlushIntervalOption",
-                  "FlushInterval": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "25000"
-                  },
-                  "OptionKind": "Flush_Interval_Seconds"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreDataFlushIntervalOption",
-                  "FlushInterval": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "1000"
-                  },
-                  "OptionKind": "Flush_Interval_Seconds"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreIntervalLengthOption",
-                  "StatsIntervalLength": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "15"
-                  },
-                  "OptionKind": "Interval_Length_Minutes"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreMaxStorageSizeOption",
-                  "MaxQdsSize": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "2000"
-                  },
-                  "OptionKind": "Current_Storage_Size_MB"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreMaxPlansPerQueryOption",
-                  "MaxPlansPerQuery": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "200"
-                  },
-                  "OptionKind": "Max_Plans_Per_Query"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreTimeCleanupPolicyOption",
-                  "StaleQueryThreshold": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "367"
-                  },
-                  "OptionKind": "Stale_Query_Threshold_Days"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreDesiredStateOption",
-                  "Value": "ReadOnly",
-                  "OperationModeSpecified": false,
-                  "OptionKind": "Desired_State"
-                },
-                {
-                  "$type": "QueryStoreCapturePolicyOption",
-                  "Value": "ALL",
-                  "OptionKind": "Query_Capture_Mode"
-                },
-                {
-                  "$type": "QueryStoreSizeCleanupPolicyOption",
-                  "Value": "OFF",
-                  "OptionKind": "Size_Based_Cleanup_Mode"
-                },
-                {
-                  "$type": "QueryStoreIntervalLengthOption",
-                  "StatsIntervalLength": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "100"
-                  },
-                  "OptionKind": "Interval_Length_Minutes"
-                },
-                {
-                  "$type": "QueryStoreMaxStorageSizeOption",
-                  "MaxQdsSize": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "1000"
-                  },
-                  "OptionKind": "Current_Storage_Size_MB"
-                },
-                {
-                  "$type": "QueryStoreMaxPlansPerQueryOption",
-                  "MaxPlansPerQuery": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "200"
-                  },
-                  "OptionKind": "Max_Plans_Per_Query"
-                },
-                {
-                  "$type": "QueryStoreTimeCleanupPolicyOption",
-                  "StaleQueryThreshold": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "367"
-                  },
-                  "OptionKind": "Stale_Query_Threshold_Days"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "On",
-              "Options": [
-                {
-                  "$type": "QueryStoreDesiredStateOption",
-                  "Value": "ReadOnly",
-                  "OperationModeSpecified": false,
-                  "OptionKind": "Desired_State"
-                },
-                {
-                  "$type": "QueryStoreCapturePolicyOption",
-                  "Value": "ALL",
-                  "OptionKind": "Query_Capture_Mode"
-                },
-                {
-                  "$type": "QueryStoreSizeCleanupPolicyOption",
-                  "Value": "OFF",
-                  "OptionKind": "Size_Based_Cleanup_Mode"
-                },
-                {
-                  "$type": "QueryStoreIntervalLengthOption",
-                  "StatsIntervalLength": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "100"
-                  },
-                  "OptionKind": "Interval_Length_Minutes"
-                },
-                {
-                  "$type": "QueryStoreMaxStorageSizeOption",
-                  "MaxQdsSize": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "1000"
-                  },
-                  "OptionKind": "Current_Storage_Size_MB"
-                },
-                {
-                  "$type": "QueryStoreMaxPlansPerQueryOption",
-                  "MaxPlansPerQuery": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "200"
-                  },
-                  "OptionKind": "Max_Plans_Per_Query"
-                },
-                {
-                  "$type": "QueryStoreTimeCleanupPolicyOption",
-                  "StaleQueryThreshold": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "367"
-                  },
-                  "OptionKind": "Stale_Query_Threshold_Days"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
-        },
-        {
-          "$type": "AlterDatabaseSetStatement",
           "Options": [
             {
               "$type": "OnOffDatabaseOption",
-              "OptionState": "On",
-              "OptionKind": "MixedPageAllocation"
+              "OptionKind": "QueryStore",
+              "OptionState": "On"
             }
           ],
-          "WithManualCutover": false,
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
           "Options": [
             {
               "$type": "OnOffDatabaseOption",
-              "OptionState": "Off",
-              "OptionKind": "MixedPageAllocation"
+              "OptionKind": "QueryStore",
+              "OptionState": "Off"
             }
           ],
-          "WithManualCutover": false,
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "MixedPageAllocation",
+              "OptionState": "On"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "MixedPageAllocation",
+              "OptionState": "Off"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
         }
       ]
     }

@@ -6,578 +6,231 @@
       "Statements": [
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "Inherit",
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "AutomaticTuning",
+              "OptionState": "Inherit"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "Custom",
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "AutomaticTuning",
+              "OptionState": "Custom"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "Auto",
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "AutomaticTuning",
+              "OptionState": "Auto"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningCreateIndexOption",
-                  "OptionKind": "Create_Index",
-                  "Value": "On"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningCreateIndexOption",
-                  "OptionKind": "Create_Index",
-                  "Value": "Off"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningCreateIndexOption",
-                  "OptionKind": "Create_Index",
-                  "Value": "Default"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningDropIndexOption",
-                  "OptionKind": "Drop_Index",
-                  "Value": "On"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningDropIndexOption",
-                  "OptionKind": "Drop_Index",
-                  "Value": "Off"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningDropIndexOption",
-                  "OptionKind": "Drop_Index",
-                  "Value": "Default"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningForceLastGoodPlanOption",
-                  "OptionKind": "Force_Last_Good_Plan",
-                  "Value": "On"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningForceLastGoodPlanOption",
-                  "OptionKind": "Force_Last_Good_Plan",
-                  "Value": "Off"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningForceLastGoodPlanOption",
-                  "OptionKind": "Force_Last_Good_Plan",
-                  "Value": "Default"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningMaintainIndexOption",
-                  "OptionKind": "Maintain_Index",
-                  "Value": "On"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningMaintainIndexOption",
-                  "OptionKind": "Maintain_Index",
-                  "Value": "Off"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningMaintainIndexOption",
-                  "OptionKind": "Maintain_Index",
-                  "Value": "Default"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningForceLastGoodPlanOption",
-                  "OptionKind": "Force_Last_Good_Plan",
-                  "Value": "On"
-                },
-                {
-                  "$type": "AutomaticTuningCreateIndexOption",
-                  "OptionKind": "Create_Index",
-                  "Value": "Default"
-                },
-                {
-                  "$type": "AutomaticTuningMaintainIndexOption",
-                  "OptionKind": "Maintain_Index",
-                  "Value": "On"
-                },
-                {
-                  "$type": "AutomaticTuningDropIndexOption",
-                  "OptionKind": "Drop_Index",
-                  "Value": "On"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "Auto",
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "AutomaticTuning",
+              "OptionState": "Auto"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "AutomaticTuningDatabaseOption",
-              "AutomaticTuningState": "NotSet",
-              "Options": [
-                {
-                  "$type": "AutomaticTuningForceLastGoodPlanOption",
-                  "OptionKind": "Force_Last_Good_Plan",
-                  "Value": "Off"
-                }
-              ],
-              "OptionKind": "AutomaticTuning"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "NotSet",
-              "Options": [
-                {
-                  "$type": "QueryStoreDesiredStateOption",
-                  "Value": "ReadOnly",
-                  "OperationModeSpecified": false,
-                  "OptionKind": "Desired_State"
-                },
-                {
-                  "$type": "QueryStoreCapturePolicyOption",
-                  "Value": "ALL",
-                  "OptionKind": "Query_Capture_Mode"
-                },
-                {
-                  "$type": "QueryStoreSizeCleanupPolicyOption",
-                  "Value": "OFF",
-                  "OptionKind": "Size_Based_Cleanup_Mode"
-                },
-                {
-                  "$type": "QueryStoreIntervalLengthOption",
-                  "StatsIntervalLength": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "100"
-                  },
-                  "OptionKind": "Interval_Length_Minutes"
-                },
-                {
-                  "$type": "QueryStoreMaxStorageSizeOption",
-                  "MaxQdsSize": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "1000"
-                  },
-                  "OptionKind": "Current_Storage_Size_MB"
-                },
-                {
-                  "$type": "QueryStoreMaxPlansPerQueryOption",
-                  "MaxPlansPerQuery": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "200"
-                  },
-                  "OptionKind": "Max_Plans_Per_Query"
-                },
-                {
-                  "$type": "QueryStoreTimeCleanupPolicyOption",
-                  "StaleQueryThreshold": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "367"
-                  },
-                  "OptionKind": "Stale_Query_Threshold_Days"
-                },
-                {
-                  "$type": "QueryStoreWaitStatsCaptureOption",
-                  "OptionState": "On",
-                  "OptionKind": "Wait_Stats_Capture_Mode"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
           "$type": "AlterDatabaseSetStatement",
-          "Options": [
-            {
-              "$type": "QueryStoreDatabaseOption",
-              "Clear": false,
-              "ClearAll": false,
-              "OptionState": "On",
-              "Options": [
-                {
-                  "$type": "QueryStoreDesiredStateOption",
-                  "Value": "ReadOnly",
-                  "OperationModeSpecified": false,
-                  "OptionKind": "Desired_State"
-                },
-                {
-                  "$type": "QueryStoreCapturePolicyOption",
-                  "Value": "ALL",
-                  "OptionKind": "Query_Capture_Mode"
-                },
-                {
-                  "$type": "QueryStoreSizeCleanupPolicyOption",
-                  "Value": "OFF",
-                  "OptionKind": "Size_Based_Cleanup_Mode"
-                },
-                {
-                  "$type": "QueryStoreIntervalLengthOption",
-                  "StatsIntervalLength": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "100"
-                  },
-                  "OptionKind": "Interval_Length_Minutes"
-                },
-                {
-                  "$type": "QueryStoreMaxStorageSizeOption",
-                  "MaxQdsSize": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "1000"
-                  },
-                  "OptionKind": "Current_Storage_Size_MB"
-                },
-                {
-                  "$type": "QueryStoreMaxPlansPerQueryOption",
-                  "MaxPlansPerQuery": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "200"
-                  },
-                  "OptionKind": "Max_Plans_Per_Query"
-                },
-                {
-                  "$type": "QueryStoreTimeCleanupPolicyOption",
-                  "StaleQueryThreshold": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "367"
-                  },
-                  "OptionKind": "Stale_Query_Threshold_Days"
-                },
-                {
-                  "$type": "QueryStoreWaitStatsCaptureOption",
-                  "OptionState": "Off",
-                  "OptionKind": "Wait_Stats_Capture_Mode"
-                }
-              ],
-              "OptionKind": "QueryStore"
-            }
-          ],
-          "WithManualCutover": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         }
       ]
     }

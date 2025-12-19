@@ -5,78 +5,12 @@
       "$type": "TSqlBatch",
       "Statements": [
         {
-          "$type": "CreateColumnMasterKeyStatement",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "TceTestCert1V2",
-            "QuoteType": "SquareBracket"
-          },
-          "Parameters": [
-            {
-              "$type": "ColumnMasterKeyStoreProviderNameParameter",
-              "Name": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "MSSQL_CERTIFICATE_STORE"
-              },
-              "ParameterKind": "KeyStoreProviderName"
-            },
-            {
-              "$type": "ColumnMasterKeyPathParameter",
-              "Path": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "CurrentUser/My/5BCC389CAEFE46E23C784F24ECF7E449C728903F"
-              },
-              "ParameterKind": "KeyPath"
-            },
-            {
-              "$type": "ColumnMasterKeyEnclaveComputationsParameter",
-              "Signature": {
-                "$type": "BinaryLiteral",
-                "LiteralType": "Binary",
-                "IsLargeObject": false,
-                "Value": "0x6a7ddb27879bb941ce083d683a4ebd0a493cd217d9174743fc19b321256084a8"
-              },
-              "ParameterKind": "Signature"
-            }
-          ]
+          "$type": "CreateProcedureStatement",
+          "IsForReplication": false
         },
         {
-          "$type": "CreateColumnMasterKeyStatement",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "TceTestCert1V3",
-            "QuoteType": "SquareBracket"
-          },
-          "Parameters": [
-            {
-              "$type": "ColumnMasterKeyStoreProviderNameParameter",
-              "Name": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "MSSQL_CERTIFICATE_STORE"
-              },
-              "ParameterKind": "KeyStoreProviderName"
-            },
-            {
-              "$type": "ColumnMasterKeyPathParameter",
-              "Path": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "CurrentUser/My/5BCC389CAEFE46E23C784F24ECF7E449C728903F"
-              },
-              "ParameterKind": "KeyPath"
-            }
-          ]
+          "$type": "CreateProcedureStatement",
+          "IsForReplication": false
         }
       ]
     }

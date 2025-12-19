@@ -6,752 +6,764 @@
       "Statements": [
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
+          "ExternalDataSourceOptions": [
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
+              "Value": {
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
+            }
+          ],
           "Name": {
             "$type": "Identifier",
-            "Value": "eds1",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
+            "QuoteType": "NotQuoted",
+            "Value": "eds1"
           }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds2",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "RESOURCE_MANAGER_LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someResourceManagerLocation",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someResourceManagerLocation"
-                }
-              },
-              "OptionKind": "ResourceManagerLocation"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someResourceManagerLocation"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds2"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds3",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "Credential"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds3"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds4",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "DATABASE_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someShardMapName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someShardMapName"
-                }
-              },
-              "OptionKind": "DatabaseName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someShardMapName"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds4"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds5",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "SHARD_MAP_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someShardMapName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someShardMapName"
-                }
-              },
-              "OptionKind": "ShardMapName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someShardMapName"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds5"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds6",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someResourceManagerLocation",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someResourceManagerLocation"
-                }
-              },
-              "OptionKind": "ResourceManagerLocation"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "RESOURCE_MANAGER_LOCATION",
+              "Value": {
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someResourceManagerLocation"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds6"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds7",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
+              "Value": {
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "Credential"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds7"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds8",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someResourceManagerLocation",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someResourceManagerLocation"
-                }
-              },
-              "OptionKind": "ResourceManagerLocation"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "RESOURCE_MANAGER_LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someResourceManagerLocation"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
+              "Value": {
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "Credential"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds8"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds9",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
-                }
-              },
-              "OptionKind": "Credential"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someResourceManagerLocation",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someResourceManagerLocation"
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "ResourceManagerLocation"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "RESOURCE_MANAGER_LOCATION",
+              "Value": {
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someResourceManagerLocation"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds9"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds10",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
-                }
-              },
-              "OptionKind": "Credential"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someDatabaseName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someDatabaseName"
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "DatabaseName"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "DATABASE_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someShardMapName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someShardMapName"
-                }
-              },
-              "OptionKind": "ShardMapName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someDatabaseName"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "SHARD_MAP_NAME",
+              "Value": {
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someShardMapName"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds10"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds11",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
-                }
-              },
-              "OptionKind": "Credential"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someShardMapName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someShardMapName"
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "ShardMapName"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "SHARD_MAP_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someDatabaseName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someDatabaseName"
-                }
-              },
-              "OptionKind": "DatabaseName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someShardMapName"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "DATABASE_NAME",
+              "Value": {
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someDatabaseName"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds11"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds12",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someDatabaseName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someDatabaseName"
-                }
-              },
-              "OptionKind": "DatabaseName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "DATABASE_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
-                }
-              },
-              "OptionKind": "Credential"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someDatabaseName"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someShardMapName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someShardMapName"
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "ShardMapName"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "SHARD_MAP_NAME",
+              "Value": {
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someShardMapName"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds12"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds13",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someDatabaseName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someDatabaseName"
-                }
-              },
-              "OptionKind": "DatabaseName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "DATABASE_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someShardMapName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someShardMapName"
-                }
-              },
-              "OptionKind": "ShardMapName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someDatabaseName"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "SHARD_MAP_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someShardMapName"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
+              "Value": {
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "Credential"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds13"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds14",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someShardMapName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someShardMapName"
-                }
-              },
-              "OptionKind": "ShardMapName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "SHARD_MAP_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
-                }
-              },
-              "OptionKind": "Credential"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someShardMapName"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someDatabaseName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someDatabaseName"
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "DatabaseName"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "DATABASE_NAME",
+              "Value": {
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someDatabaseName"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds14"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds15",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someShardMapName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someShardMapName"
-                }
-              },
-              "OptionKind": "ShardMapName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "SHARD_MAP_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someDatabaseName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someDatabaseName"
-                }
-              },
-              "OptionKind": "DatabaseName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someShardMapName"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "DATABASE_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someDatabaseName"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
+              "Value": {
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "Credential"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds15"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds16",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someDatabaseName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someDatabaseName"
-                }
-              },
-              "OptionKind": "DatabaseName"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "DATABASE_NAME",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someDatabaseName"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
+              "Value": {
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "Credential"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds16"
+          }
         },
         {
           "$type": "AlterExternalDataSourceStatement",
-          "PreviousPushDownOption": "ON",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "eds17",
-            "QuoteType": "NotQuoted"
-          },
-          "DataSourceType": "HADOOP",
-          "Location": {
-            "$type": "StringLiteral",
-            "LiteralType": "String",
-            "IsNational": false,
-            "IsLargeObject": false,
-            "Value": "someServerLocation"
-          },
           "ExternalDataSourceOptions": [
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "LOCATION",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "cred1",
-                "Identifier": {
-                  "$type": "Identifier",
-                  "Value": "cred1",
-                  "QuoteType": "NotQuoted"
-                }
-              },
-              "OptionKind": "Credential"
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someServerLocation"
+              }
             },
             {
               "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "CREDENTIAL",
               "Value": {
-                "$type": "IdentifierOrValueExpression",
-                "Value": "someDatabaseName",
-                "ValueExpression": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "someDatabaseName"
+                "$type": "ColumnReferenceExpression",
+                "ColumnType": "Regular",
+                "MultiPartIdentifier": {
+                  "$type": "MultiPartIdentifier",
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "cred1"
+                    }
+                  ]
                 }
-              },
-              "OptionKind": "DatabaseName"
+              }
+            },
+            {
+              "$type": "ExternalDataSourceLiteralOrIdentifierOption",
+              "OptionKind": "DATABASE_NAME",
+              "Value": {
+                "$type": "StringLiteral",
+                "IsLargeObject": false,
+                "IsNational": false,
+                "LiteralType": "String",
+                "Value": "someDatabaseName"
+              }
             }
-          ]
+          ],
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "eds17"
+          }
         }
       ]
     }

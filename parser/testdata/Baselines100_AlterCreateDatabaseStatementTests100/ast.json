@@ -6,17 +6,17 @@
       "Statements": [
         {
           "$type": "AlterDatabaseAddFileGroupStatement",
-          "FileGroup": {
-            "$type": "Identifier",
-            "Value": "fg1",
-            "QuoteType": "NotQuoted"
-          },
           "ContainsFileStream": true,
           "ContainsMemoryOptimizedData": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db1"
+          },
+          "FileGroup": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "fg1"
           },
           "UseCurrent": false
         }
@@ -29,224 +29,25 @@
           "$type": "CreateDatabaseStatement",
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db1",
-            "QuoteType": "NotQuoted"
-          },
-          "FileGroups": [
-            {
-              "$type": "FileGroupDefinition",
-              "FileDeclarations": [
-                {
-                  "$type": "FileDeclaration",
-                  "Options": [
-                    {
-                      "$type": "NameFileDeclarationOption",
-                      "LogicalFileName": {
-                        "$type": "IdentifierOrValueExpression",
-                        "Value": "z1",
-                        "Identifier": {
-                          "$type": "Identifier",
-                          "Value": "z1",
-                          "QuoteType": "NotQuoted"
-                        }
-                      },
-                      "IsNewName": false,
-                      "OptionKind": "Name"
-                    },
-                    {
-                      "$type": "FileNameFileDeclarationOption",
-                      "OSFileName": {
-                        "$type": "StringLiteral",
-                        "LiteralType": "String",
-                        "IsNational": false,
-                        "IsLargeObject": false,
-                        "Value": "qqq"
-                      },
-                      "OptionKind": "FileName"
-                    }
-                  ],
-                  "IsPrimary": true
-                }
-              ],
-              "IsDefault": false,
-              "ContainsFileStream": false,
-              "ContainsMemoryOptimizedData": false
-            },
-            {
-              "$type": "FileGroupDefinition",
-              "Name": {
-                "$type": "Identifier",
-                "Value": "FileStreamPhotos",
-                "QuoteType": "NotQuoted"
-              },
-              "FileDeclarations": [
-                {
-                  "$type": "FileDeclaration",
-                  "Options": [
-                    {
-                      "$type": "NameFileDeclarationOption",
-                      "LogicalFileName": {
-                        "$type": "IdentifierOrValueExpression",
-                        "Value": "FSPhotos",
-                        "Identifier": {
-                          "$type": "Identifier",
-                          "Value": "FSPhotos",
-                          "QuoteType": "NotQuoted"
-                        }
-                      },
-                      "IsNewName": false,
-                      "OptionKind": "Name"
-                    },
-                    {
-                      "$type": "FileNameFileDeclarationOption",
-                      "OSFileName": {
-                        "$type": "StringLiteral",
-                        "LiteralType": "String",
-                        "IsNational": false,
-                        "IsLargeObject": false,
-                        "Value": "aaa"
-                      },
-                      "OptionKind": "FileName"
-                    }
-                  ],
-                  "IsPrimary": false
-                }
-              ],
-              "IsDefault": true,
-              "ContainsFileStream": true,
-              "ContainsMemoryOptimizedData": false
-            },
-            {
-              "$type": "FileGroupDefinition",
-              "Name": {
-                "$type": "Identifier",
-                "Value": "FileStreamResumes2",
-                "QuoteType": "NotQuoted"
-              },
-              "FileDeclarations": [
-                {
-                  "$type": "FileDeclaration",
-                  "Options": [
-                    {
-                      "$type": "NameFileDeclarationOption",
-                      "LogicalFileName": {
-                        "$type": "IdentifierOrValueExpression",
-                        "Value": "FileStreamResumes2",
-                        "Identifier": {
-                          "$type": "Identifier",
-                          "Value": "FileStreamResumes2",
-                          "QuoteType": "NotQuoted"
-                        }
-                      },
-                      "IsNewName": false,
-                      "OptionKind": "Name"
-                    },
-                    {
-                      "$type": "FileNameFileDeclarationOption",
-                      "OSFileName": {
-                        "$type": "StringLiteral",
-                        "LiteralType": "String",
-                        "IsNational": false,
-                        "IsLargeObject": false,
-                        "Value": "ddd"
-                      },
-                      "OptionKind": "FileName"
-                    }
-                  ],
-                  "IsPrimary": false
-                }
-              ],
-              "IsDefault": false,
-              "ContainsFileStream": true,
-              "ContainsMemoryOptimizedData": false
-            }
-          ],
-          "AttachMode": "None"
-        },
-        {
-          "$type": "CreateDatabaseStatement",
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "MyOptionsTest",
-            "QuoteType": "NotQuoted"
-          },
-          "Options": [
-            {
-              "$type": "OnOffDatabaseOption",
-              "OptionState": "On",
-              "OptionKind": "Trustworthy"
-            },
-            {
-              "$type": "OnOffDatabaseOption",
-              "OptionState": "On",
-              "OptionKind": "DBChaining"
-            }
-          ],
-          "AttachMode": "None",
-          "Collation": {
-            "$type": "Identifier",
-            "Value": "French_CI_AI",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db1"
           }
         },
         {
           "$type": "CreateDatabaseStatement",
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "AdventureWorks",
-            "QuoteType": "NotQuoted"
-          },
-          "FileGroups": [
-            {
-              "$type": "FileGroupDefinition",
-              "FileDeclarations": [
-                {
-                  "$type": "FileDeclaration",
-                  "Options": [
-                    {
-                      "$type": "FileNameFileDeclarationOption",
-                      "OSFileName": {
-                        "$type": "StringLiteral",
-                        "LiteralType": "String",
-                        "IsNational": false,
-                        "IsLargeObject": false,
-                        "Value": "c:\\Program Files\\Microsoft SQL Server\\MSSQL10.MSSQLSERVER\\MSSQL\\Data\\AdventureWorks_Data.mdf"
-                      },
-                      "OptionKind": "FileName"
-                    }
-                  ],
-                  "IsPrimary": false
-                },
-                {
-                  "$type": "FileDeclaration",
-                  "Options": [
-                    {
-                      "$type": "FileNameFileDeclarationOption",
-                      "OSFileName": {
-                        "$type": "StringLiteral",
-                        "LiteralType": "String",
-                        "IsNational": false,
-                        "IsLargeObject": false,
-                        "Value": "c:\\Program Files\\Microsoft SQL Server\\MSSQL10.MSSQLSERVER\\MSSQL\\Data\\AdventureWorks_log.ldf"
-                      },
-                      "OptionKind": "FileName"
-                    }
-                  ],
-                  "IsPrimary": false
-                }
-              ],
-              "IsDefault": false,
-              "ContainsFileStream": false,
-              "ContainsMemoryOptimizedData": false
-            }
-          ],
-          "Options": [
-            {
-              "$type": "DatabaseOption",
-              "OptionKind": "EnableBroker"
-            }
-          ],
-          "AttachMode": "Attach"
+            "QuoteType": "NotQuoted",
+            "Value": "MyOptionsTest"
+          }
+        },
+        {
+          "$type": "CreateDatabaseStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "AdventureWorks"
+          }
         }
       ]
     }

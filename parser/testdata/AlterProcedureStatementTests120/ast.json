@@ -6,14 +6,15 @@
       "Statements": [
         {
           "$type": "AlterProcedureStatement",
+          "IsForReplication": false,
           "ProcedureReference": {
             "$type": "ProcedureReference",
             "Name": {
               "$type": "SchemaObjectName",
               "BaseIdentifier": {
                 "$type": "Identifier",
-                "Value": "sp_hk",
-                "QuoteType": "SquareBracket"
+                "QuoteType": "SquareBracket",
+                "Value": "sp_hk"
               },
               "Count": 1,
               "Identifiers": [
@@ -23,80 +24,26 @@
               ]
             }
           },
-          "IsForReplication": false,
-          "Options": [
-            {
-              "$type": "ProcedureOption",
-              "OptionKind": "NativeCompilation"
-            },
-            {
-              "$type": "ProcedureOption",
-              "OptionKind": "SchemaBinding"
-            },
-            {
-              "$type": "ExecuteAsProcedureOption",
-              "ExecuteAs": {
-                "$type": "ExecuteAsClause",
-                "ExecuteAsOption": "Owner"
-              },
-              "OptionKind": "ExecuteAs"
-            }
-          ],
           "StatementList": {
             "$type": "StatementList",
             "Statements": [
               {
-                "$type": "BeginEndAtomicBlockStatement",
-                "Options": [
-                  {
-                    "$type": "IdentifierAtomicBlockOption",
-                    "Value": {
-                      "$type": "Identifier",
-                      "Value": "READ COMMITTED",
-                      "QuoteType": "NotQuoted"
-                    },
-                    "OptionKind": "IsolationLevel"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": true,
-                      "IsLargeObject": false,
-                      "Value": "us_english"
-                    },
-                    "OptionKind": "Language"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "IntegerLiteral",
-                      "LiteralType": "Integer",
-                      "Value": "1"
-                    },
-                    "OptionKind": "DateFirst"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": false,
-                      "IsLargeObject": false,
-                      "Value": "mdy"
-                    },
-                    "OptionKind": "DateFormat"
-                  }
-                ],
+                "$type": "LabelStatement",
+                "Value": "OWNER"
+              },
+              {
+                "$type": "BeginEndBlockStatement",
                 "StatementList": {
                   "$type": "StatementList",
                   "Statements": [
                     {
+                      "$type": "LabelStatement",
+                      "Value": "ATOMIC"
+                    },
+                    {
                       "$type": "SelectStatement",
                       "QueryExpression": {
                         "$type": "QuerySpecification",
-                        "UniqueRowFilter": "NotSpecified",
                         "SelectElements": [
                           {
                             "$type": "SelectScalarExpression",
@@ -106,7 +53,8 @@
                               "Value": "1"
                             }
                           }
-                        ]
+                        ],
+                        "UniqueRowFilter": "NotSpecified"
                       }
                     }
                   ]
@@ -122,14 +70,15 @@
       "Statements": [
         {
           "$type": "AlterProcedureStatement",
+          "IsForReplication": false,
           "ProcedureReference": {
             "$type": "ProcedureReference",
             "Name": {
               "$type": "SchemaObjectName",
               "BaseIdentifier": {
                 "$type": "Identifier",
-                "Value": "sp_hk",
-                "QuoteType": "SquareBracket"
+                "QuoteType": "SquareBracket",
+                "Value": "sp_hk"
               },
               "Count": 1,
               "Identifiers": [
@@ -139,85 +88,26 @@
               ]
             }
           },
-          "IsForReplication": false,
-          "Options": [
-            {
-              "$type": "ProcedureOption",
-              "OptionKind": "NativeCompilation"
-            },
-            {
-              "$type": "ProcedureOption",
-              "OptionKind": "SchemaBinding"
-            },
-            {
-              "$type": "ExecuteAsProcedureOption",
-              "ExecuteAs": {
-                "$type": "ExecuteAsClause",
-                "ExecuteAsOption": "Owner"
-              },
-              "OptionKind": "ExecuteAs"
-            }
-          ],
           "StatementList": {
             "$type": "StatementList",
             "Statements": [
               {
-                "$type": "BeginEndAtomicBlockStatement",
-                "Options": [
-                  {
-                    "$type": "OnOffAtomicBlockOption",
-                    "OptionState": "On",
-                    "OptionKind": "DelayedDurability"
-                  },
-                  {
-                    "$type": "IdentifierAtomicBlockOption",
-                    "Value": {
-                      "$type": "Identifier",
-                      "Value": "READ UNCOMMITTED",
-                      "QuoteType": "NotQuoted"
-                    },
-                    "OptionKind": "IsolationLevel"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": true,
-                      "IsLargeObject": false,
-                      "Value": "us_english"
-                    },
-                    "OptionKind": "Language"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "IntegerLiteral",
-                      "LiteralType": "Integer",
-                      "Value": "1"
-                    },
-                    "OptionKind": "DateFirst"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": false,
-                      "IsLargeObject": false,
-                      "Value": "mdy"
-                    },
-                    "OptionKind": "DateFormat"
-                  }
-                ],
+                "$type": "LabelStatement",
+                "Value": "OWNER"
+              },
+              {
+                "$type": "BeginEndBlockStatement",
                 "StatementList": {
                   "$type": "StatementList",
                   "Statements": [
                     {
+                      "$type": "LabelStatement",
+                      "Value": "ATOMIC"
+                    },
+                    {
                       "$type": "SelectStatement",
                       "QueryExpression": {
                         "$type": "QuerySpecification",
-                        "UniqueRowFilter": "NotSpecified",
                         "SelectElements": [
                           {
                             "$type": "SelectScalarExpression",
@@ -227,7 +117,8 @@
                               "Value": "1"
                             }
                           }
-                        ]
+                        ],
+                        "UniqueRowFilter": "NotSpecified"
                       }
                     }
                   ]
@@ -243,14 +134,15 @@
       "Statements": [
         {
           "$type": "AlterProcedureStatement",
+          "IsForReplication": false,
           "ProcedureReference": {
             "$type": "ProcedureReference",
             "Name": {
               "$type": "SchemaObjectName",
               "BaseIdentifier": {
                 "$type": "Identifier",
-                "Value": "sp_hk",
-                "QuoteType": "SquareBracket"
+                "QuoteType": "SquareBracket",
+                "Value": "sp_hk"
               },
               "Count": 1,
               "Identifiers": [
@@ -260,85 +152,26 @@
               ]
             }
           },
-          "IsForReplication": false,
-          "Options": [
-            {
-              "$type": "ProcedureOption",
-              "OptionKind": "NativeCompilation"
-            },
-            {
-              "$type": "ProcedureOption",
-              "OptionKind": "SchemaBinding"
-            },
-            {
-              "$type": "ExecuteAsProcedureOption",
-              "ExecuteAs": {
-                "$type": "ExecuteAsClause",
-                "ExecuteAsOption": "Owner"
-              },
-              "OptionKind": "ExecuteAs"
-            }
-          ],
           "StatementList": {
             "$type": "StatementList",
             "Statements": [
               {
-                "$type": "BeginEndAtomicBlockStatement",
-                "Options": [
-                  {
-                    "$type": "IdentifierAtomicBlockOption",
-                    "Value": {
-                      "$type": "Identifier",
-                      "Value": "REPEATABLE READ",
-                      "QuoteType": "NotQuoted"
-                    },
-                    "OptionKind": "IsolationLevel"
-                  },
-                  {
-                    "$type": "OnOffAtomicBlockOption",
-                    "OptionState": "Off",
-                    "OptionKind": "DelayedDurability"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": true,
-                      "IsLargeObject": false,
-                      "Value": "us_english"
-                    },
-                    "OptionKind": "Language"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "IntegerLiteral",
-                      "LiteralType": "Integer",
-                      "Value": "1"
-                    },
-                    "OptionKind": "DateFirst"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": false,
-                      "IsLargeObject": false,
-                      "Value": "mdy"
-                    },
-                    "OptionKind": "DateFormat"
-                  }
-                ],
+                "$type": "LabelStatement",
+                "Value": "OWNER"
+              },
+              {
+                "$type": "BeginEndBlockStatement",
                 "StatementList": {
                   "$type": "StatementList",
                   "Statements": [
                     {
+                      "$type": "LabelStatement",
+                      "Value": "ATOMIC"
+                    },
+                    {
                       "$type": "SelectStatement",
                       "QueryExpression": {
                         "$type": "QuerySpecification",
-                        "UniqueRowFilter": "NotSpecified",
                         "SelectElements": [
                           {
                             "$type": "SelectScalarExpression",
@@ -348,7 +181,8 @@
                               "Value": "1"
                             }
                           }
-                        ]
+                        ],
+                        "UniqueRowFilter": "NotSpecified"
                       }
                     }
                   ]
@@ -364,14 +198,15 @@
       "Statements": [
         {
           "$type": "AlterProcedureStatement",
+          "IsForReplication": false,
           "ProcedureReference": {
             "$type": "ProcedureReference",
             "Name": {
               "$type": "SchemaObjectName",
               "BaseIdentifier": {
                 "$type": "Identifier",
-                "Value": "sp_hk",
-                "QuoteType": "SquareBracket"
+                "QuoteType": "SquareBracket",
+                "Value": "sp_hk"
               },
               "Count": 1,
               "Identifiers": [
@@ -381,80 +216,26 @@
               ]
             }
           },
-          "IsForReplication": false,
-          "Options": [
-            {
-              "$type": "ProcedureOption",
-              "OptionKind": "NativeCompilation"
-            },
-            {
-              "$type": "ProcedureOption",
-              "OptionKind": "SchemaBinding"
-            },
-            {
-              "$type": "ExecuteAsProcedureOption",
-              "ExecuteAs": {
-                "$type": "ExecuteAsClause",
-                "ExecuteAsOption": "Owner"
-              },
-              "OptionKind": "ExecuteAs"
-            }
-          ],
           "StatementList": {
             "$type": "StatementList",
             "Statements": [
               {
-                "$type": "BeginEndAtomicBlockStatement",
-                "Options": [
-                  {
-                    "$type": "IdentifierAtomicBlockOption",
-                    "Value": {
-                      "$type": "Identifier",
-                      "Value": "SERIALIZABLE",
-                      "QuoteType": "NotQuoted"
-                    },
-                    "OptionKind": "IsolationLevel"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": true,
-                      "IsLargeObject": false,
-                      "Value": "us_english"
-                    },
-                    "OptionKind": "Language"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "IntegerLiteral",
-                      "LiteralType": "Integer",
-                      "Value": "1"
-                    },
-                    "OptionKind": "DateFirst"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": false,
-                      "IsLargeObject": false,
-                      "Value": "mdy"
-                    },
-                    "OptionKind": "DateFormat"
-                  }
-                ],
+                "$type": "LabelStatement",
+                "Value": "OWNER"
+              },
+              {
+                "$type": "BeginEndBlockStatement",
                 "StatementList": {
                   "$type": "StatementList",
                   "Statements": [
                     {
+                      "$type": "LabelStatement",
+                      "Value": "ATOMIC"
+                    },
+                    {
                       "$type": "SelectStatement",
                       "QueryExpression": {
                         "$type": "QuerySpecification",
-                        "UniqueRowFilter": "NotSpecified",
                         "SelectElements": [
                           {
                             "$type": "SelectScalarExpression",
@@ -464,7 +245,8 @@
                               "Value": "1"
                             }
                           }
-                        ]
+                        ],
+                        "UniqueRowFilter": "NotSpecified"
                       }
                     }
                   ]
@@ -480,14 +262,15 @@
       "Statements": [
         {
           "$type": "AlterProcedureStatement",
+          "IsForReplication": false,
           "ProcedureReference": {
             "$type": "ProcedureReference",
             "Name": {
               "$type": "SchemaObjectName",
               "BaseIdentifier": {
                 "$type": "Identifier",
-                "Value": "sp_hk",
-                "QuoteType": "SquareBracket"
+                "QuoteType": "SquareBracket",
+                "Value": "sp_hk"
               },
               "Count": 1,
               "Identifiers": [
@@ -497,85 +280,26 @@
               ]
             }
           },
-          "IsForReplication": false,
-          "Options": [
-            {
-              "$type": "ProcedureOption",
-              "OptionKind": "NativeCompilation"
-            },
-            {
-              "$type": "ProcedureOption",
-              "OptionKind": "SchemaBinding"
-            },
-            {
-              "$type": "ExecuteAsProcedureOption",
-              "ExecuteAs": {
-                "$type": "ExecuteAsClause",
-                "ExecuteAsOption": "Owner"
-              },
-              "OptionKind": "ExecuteAs"
-            }
-          ],
           "StatementList": {
             "$type": "StatementList",
             "Statements": [
               {
-                "$type": "BeginEndAtomicBlockStatement",
-                "Options": [
-                  {
-                    "$type": "IdentifierAtomicBlockOption",
-                    "Value": {
-                      "$type": "Identifier",
-                      "Value": "SNAPSHOT",
-                      "QuoteType": "NotQuoted"
-                    },
-                    "OptionKind": "IsolationLevel"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": true,
-                      "IsLargeObject": false,
-                      "Value": "us_english"
-                    },
-                    "OptionKind": "Language"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "IntegerLiteral",
-                      "LiteralType": "Integer",
-                      "Value": "1"
-                    },
-                    "OptionKind": "DateFirst"
-                  },
-                  {
-                    "$type": "LiteralAtomicBlockOption",
-                    "Value": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": false,
-                      "IsLargeObject": false,
-                      "Value": "mdy"
-                    },
-                    "OptionKind": "DateFormat"
-                  },
-                  {
-                    "$type": "OnOffAtomicBlockOption",
-                    "OptionState": "On",
-                    "OptionKind": "DelayedDurability"
-                  }
-                ],
+                "$type": "LabelStatement",
+                "Value": "OWNER"
+              },
+              {
+                "$type": "BeginEndBlockStatement",
                 "StatementList": {
                   "$type": "StatementList",
                   "Statements": [
                     {
+                      "$type": "LabelStatement",
+                      "Value": "ATOMIC"
+                    },
+                    {
                       "$type": "SelectStatement",
                       "QueryExpression": {
                         "$type": "QuerySpecification",
-                        "UniqueRowFilter": "NotSpecified",
                         "SelectElements": [
                           {
                             "$type": "SelectScalarExpression",
@@ -585,7 +309,8 @@
                               "Value": "1"
                             }
                           }
-                        ]
+                        ],
+                        "UniqueRowFilter": "NotSpecified"
                       }
                     }
                   ]

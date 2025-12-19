@@ -6,266 +6,35 @@
       "Statements": [
         {
           "$type": "AlterDatabaseAddFileStatement",
-          "FileDeclarations": [
-            {
-              "$type": "FileDeclaration",
-              "Options": [
-                {
-                  "$type": "NameFileDeclarationOption",
-                  "LogicalFileName": {
-                    "$type": "IdentifierOrValueExpression",
-                    "Value": "MyFile",
-                    "ValueExpression": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": false,
-                      "IsLargeObject": false,
-                      "Value": "MyFile"
-                    }
-                  },
-                  "IsNewName": false,
-                  "OptionKind": "Name"
-                }
-              ],
-              "IsPrimary": false
-            }
-          ],
-          "FileGroup": {
-            "$type": "Identifier",
-            "Value": "MY FILEGROUP",
-            "QuoteType": "SquareBracket"
-          },
-          "IsLog": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "test",
-            "QuoteType": "SquareBracket"
-          },
-          "UseCurrent": false
+            "QuoteType": "SquareBracket",
+            "Value": "test"
+          }
         },
         {
           "$type": "AlterDatabaseAddFileStatement",
-          "FileDeclarations": [
-            {
-              "$type": "FileDeclaration",
-              "Options": [
-                {
-                  "$type": "MaxSizeFileDeclarationOption",
-                  "MaxSize": {
-                    "$type": "IntegerLiteral",
-                    "LiteralType": "Integer",
-                    "Value": "300"
-                  },
-                  "Units": "GB",
-                  "Unlimited": false,
-                  "OptionKind": "MaxSize"
-                },
-                {
-                  "$type": "NameFileDeclarationOption",
-                  "LogicalFileName": {
-                    "$type": "IdentifierOrValueExpression",
-                    "Value": "MyFile",
-                    "ValueExpression": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": false,
-                      "IsLargeObject": false,
-                      "Value": "MyFile"
-                    }
-                  },
-                  "IsNewName": false,
-                  "OptionKind": "Name"
-                }
-              ],
-              "IsPrimary": false
-            }
-          ],
-          "FileGroup": {
-            "$type": "Identifier",
-            "Value": "MY FILEGROUP",
-            "QuoteType": "SquareBracket"
-          },
-          "IsLog": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "test",
-            "QuoteType": "SquareBracket"
-          },
-          "UseCurrent": false
+            "QuoteType": "SquareBracket",
+            "Value": "test"
+          }
         },
         {
           "$type": "CreateDatabaseStatement",
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "test",
-            "QuoteType": "SquareBracket"
-          },
-          "FileGroups": [
-            {
-              "$type": "FileGroupDefinition",
-              "FileDeclarations": [
-                {
-                  "$type": "FileDeclaration",
-                  "Options": [
-                    {
-                      "$type": "NameFileDeclarationOption",
-                      "LogicalFileName": {
-                        "$type": "IdentifierOrValueExpression",
-                        "Value": "PrimaryFileNoPath",
-                        "ValueExpression": {
-                          "$type": "StringLiteral",
-                          "LiteralType": "String",
-                          "IsNational": false,
-                          "IsLargeObject": false,
-                          "Value": "PrimaryFileNoPath"
-                        }
-                      },
-                      "IsNewName": false,
-                      "OptionKind": "Name"
-                    },
-                    {
-                      "$type": "MaxSizeFileDeclarationOption",
-                      "MaxSize": {
-                        "$type": "IntegerLiteral",
-                        "LiteralType": "Integer",
-                        "Value": "1"
-                      },
-                      "Units": "GB",
-                      "Unlimited": false,
-                      "OptionKind": "MaxSize"
-                    }
-                  ],
-                  "IsPrimary": true
-                }
-              ],
-              "IsDefault": false,
-              "ContainsFileStream": false,
-              "ContainsMemoryOptimizedData": false
-            }
-          ],
-          "LogOn": [
-            {
-              "$type": "FileDeclaration",
-              "Options": [
-                {
-                  "$type": "NameFileDeclarationOption",
-                  "LogicalFileName": {
-                    "$type": "IdentifierOrValueExpression",
-                    "Value": "LogFile",
-                    "ValueExpression": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": false,
-                      "IsLargeObject": false,
-                      "Value": "LogFile"
-                    }
-                  },
-                  "IsNewName": false,
-                  "OptionKind": "Name"
-                }
-              ],
-              "IsPrimary": false
-            }
-          ],
-          "AttachMode": "None"
+            "QuoteType": "SquareBracket",
+            "Value": "test"
+          }
         },
         {
           "$type": "CreateDatabaseStatement",
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "test",
-            "QuoteType": "SquareBracket"
-          },
-          "FileGroups": [
-            {
-              "$type": "FileGroupDefinition",
-              "FileDeclarations": [
-                {
-                  "$type": "FileDeclaration",
-                  "Options": [
-                    {
-                      "$type": "NameFileDeclarationOption",
-                      "LogicalFileName": {
-                        "$type": "IdentifierOrValueExpression",
-                        "Value": "PrimaryFileNoPath",
-                        "ValueExpression": {
-                          "$type": "StringLiteral",
-                          "LiteralType": "String",
-                          "IsNational": false,
-                          "IsLargeObject": false,
-                          "Value": "PrimaryFileNoPath"
-                        }
-                      },
-                      "IsNewName": false,
-                      "OptionKind": "Name"
-                    },
-                    {
-                      "$type": "MaxSizeFileDeclarationOption",
-                      "MaxSize": {
-                        "$type": "IntegerLiteral",
-                        "LiteralType": "Integer",
-                        "Value": "1"
-                      },
-                      "Units": "GB",
-                      "Unlimited": false,
-                      "OptionKind": "MaxSize"
-                    }
-                  ],
-                  "IsPrimary": true
-                },
-                {
-                  "$type": "FileDeclaration",
-                  "Options": [
-                    {
-                      "$type": "NameFileDeclarationOption",
-                      "LogicalFileName": {
-                        "$type": "IdentifierOrValueExpression",
-                        "Value": "PrimaryFileNoPath2",
-                        "ValueExpression": {
-                          "$type": "StringLiteral",
-                          "LiteralType": "String",
-                          "IsNational": false,
-                          "IsLargeObject": false,
-                          "Value": "PrimaryFileNoPath2"
-                        }
-                      },
-                      "IsNewName": false,
-                      "OptionKind": "Name"
-                    }
-                  ],
-                  "IsPrimary": false
-                }
-              ],
-              "IsDefault": false,
-              "ContainsFileStream": false,
-              "ContainsMemoryOptimizedData": false
-            }
-          ],
-          "LogOn": [
-            {
-              "$type": "FileDeclaration",
-              "Options": [
-                {
-                  "$type": "NameFileDeclarationOption",
-                  "LogicalFileName": {
-                    "$type": "IdentifierOrValueExpression",
-                    "Value": "LogFile",
-                    "ValueExpression": {
-                      "$type": "StringLiteral",
-                      "LiteralType": "String",
-                      "IsNational": false,
-                      "IsLargeObject": false,
-                      "Value": "LogFile"
-                    }
-                  },
-                  "IsNewName": false,
-                  "OptionKind": "Name"
-                }
-              ],
-              "IsPrimary": false
-            }
-          ],
-          "AttachMode": "None"
+            "QuoteType": "SquareBracket",
+            "Value": "test"
+          }
         }
       ]
     }

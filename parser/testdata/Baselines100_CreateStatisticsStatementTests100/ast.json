@@ -6,25 +6,6 @@
       "Statements": [
         {
           "$type": "CreateStatisticsStatement",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "stat",
-            "QuoteType": "SquareBracket"
-          },
-          "OnName": {
-            "$type": "SchemaObjectName",
-            "BaseIdentifier": {
-              "$type": "Identifier",
-              "Value": "t1",
-              "QuoteType": "NotQuoted"
-            },
-            "Count": 1,
-            "Identifiers": [
-              {
-                "$ref": "Identifier"
-              }
-            ]
-          },
           "Columns": [
             {
               "$type": "ColumnReferenceExpression",
@@ -35,60 +16,35 @@
                 "Identifiers": [
                   {
                     "$type": "Identifier",
-                    "Value": "c1",
-                    "QuoteType": "NotQuoted"
+                    "QuoteType": "NotQuoted",
+                    "Value": "c1"
                   }
                 ]
               }
             }
           ],
-          "StatisticsOptions": [
-            {
-              "$type": "StatisticsOption",
-              "OptionKind": "FullScan"
-            }
-          ],
-          "FilterPredicate": {
-            "$type": "BooleanIsNullExpression",
-            "IsNot": false,
-            "Expression": {
-              "$type": "ColumnReferenceExpression",
-              "ColumnType": "Regular",
-              "MultiPartIdentifier": {
-                "$type": "MultiPartIdentifier",
-                "Count": 1,
-                "Identifiers": [
-                  {
-                    "$type": "Identifier",
-                    "Value": "c1",
-                    "QuoteType": "NotQuoted"
-                  }
-                ]
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "SquareBracket",
+            "Value": "stat"
+          },
+          "OnName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "t1"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
               }
-            }
+            ]
           }
         },
         {
           "$type": "CreateStatisticsStatement",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "stat",
-            "QuoteType": "SquareBracket"
-          },
-          "OnName": {
-            "$type": "SchemaObjectName",
-            "BaseIdentifier": {
-              "$type": "Identifier",
-              "Value": "t1",
-              "QuoteType": "NotQuoted"
-            },
-            "Count": 1,
-            "Identifiers": [
-              {
-                "$ref": "Identifier"
-              }
-            ]
-          },
           "Columns": [
             {
               "$type": "ColumnReferenceExpression",
@@ -99,8 +55,8 @@
                 "Identifiers": [
                   {
                     "$type": "Identifier",
-                    "Value": "c1",
-                    "QuoteType": "NotQuoted"
+                    "QuoteType": "NotQuoted",
+                    "Value": "c1"
                   }
                 ]
               }
@@ -114,141 +70,35 @@
                 "Identifiers": [
                   {
                     "$type": "Identifier",
-                    "Value": "c2",
-                    "QuoteType": "NotQuoted"
+                    "QuoteType": "NotQuoted",
+                    "Value": "c2"
                   }
                 ]
               }
             }
           ],
-          "StatisticsOptions": [
-            {
-              "$type": "StatisticsOption",
-              "OptionKind": "FullScan"
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "SquareBracket",
+            "Value": "stat"
+          },
+          "OnName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "t1"
             },
-            {
-              "$type": "StatisticsOption",
-              "OptionKind": "NoRecompute"
-            }
-          ],
-          "FilterPredicate": {
-            "$type": "BooleanBinaryExpression",
-            "BinaryExpressionType": "And",
-            "FirstExpression": {
-              "$type": "BooleanComparisonExpression",
-              "ComparisonType": "GreaterThan",
-              "FirstExpression": {
-                "$type": "ColumnReferenceExpression",
-                "ColumnType": "Regular",
-                "MultiPartIdentifier": {
-                  "$type": "MultiPartIdentifier",
-                  "Count": 1,
-                  "Identifiers": [
-                    {
-                      "$type": "Identifier",
-                      "Value": "c1",
-                      "QuoteType": "NotQuoted"
-                    }
-                  ]
-                }
-              },
-              "SecondExpression": {
-                "$type": "CastCall",
-                "DataType": {
-                  "$type": "SqlDataTypeReference",
-                  "SqlDataTypeOption": "Int",
-                  "Name": {
-                    "$type": "SchemaObjectName",
-                    "BaseIdentifier": {
-                      "$type": "Identifier",
-                      "Value": "INT",
-                      "QuoteType": "NotQuoted"
-                    },
-                    "Count": 1,
-                    "Identifiers": [
-                      {
-                        "$ref": "Identifier"
-                      }
-                    ]
-                  }
-                },
-                "Parameter": {
-                  "$type": "IntegerLiteral",
-                  "LiteralType": "Integer",
-                  "Value": "10"
-                }
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
               }
-            },
-            "SecondExpression": {
-              "$type": "BooleanComparisonExpression",
-              "ComparisonType": "LessThan",
-              "FirstExpression": {
-                "$type": "ColumnReferenceExpression",
-                "ColumnType": "Regular",
-                "MultiPartIdentifier": {
-                  "$type": "MultiPartIdentifier",
-                  "Count": 1,
-                  "Identifiers": [
-                    {
-                      "$type": "Identifier",
-                      "Value": "c1",
-                      "QuoteType": "NotQuoted"
-                    }
-                  ]
-                }
-              },
-              "SecondExpression": {
-                "$type": "ConvertCall",
-                "DataType": {
-                  "$type": "SqlDataTypeReference",
-                  "SqlDataTypeOption": "Int",
-                  "Name": {
-                    "$type": "SchemaObjectName",
-                    "BaseIdentifier": {
-                      "$type": "Identifier",
-                      "Value": "INT",
-                      "QuoteType": "NotQuoted"
-                    },
-                    "Count": 1,
-                    "Identifiers": [
-                      {
-                        "$ref": "Identifier"
-                      }
-                    ]
-                  }
-                },
-                "Parameter": {
-                  "$type": "StringLiteral",
-                  "LiteralType": "String",
-                  "IsNational": false,
-                  "IsLargeObject": false,
-                  "Value": "aaa"
-                }
-              }
-            }
+            ]
           }
         },
         {
           "$type": "CreateStatisticsStatement",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "stat",
-            "QuoteType": "SquareBracket"
-          },
-          "OnName": {
-            "$type": "SchemaObjectName",
-            "BaseIdentifier": {
-              "$type": "Identifier",
-              "Value": "t1",
-              "QuoteType": "NotQuoted"
-            },
-            "Count": 1,
-            "Identifiers": [
-              {
-                "$ref": "Identifier"
-              }
-            ]
-          },
           "Columns": [
             {
               "$type": "ColumnReferenceExpression",
@@ -259,8 +109,8 @@
                 "Identifiers": [
                   {
                     "$type": "Identifier",
-                    "Value": "c1",
-                    "QuoteType": "NotQuoted"
+                    "QuoteType": "NotQuoted",
+                    "Value": "c1"
                   }
                 ]
               }
@@ -274,8 +124,8 @@
                 "Identifiers": [
                   {
                     "$type": "Identifier",
-                    "Value": "c2",
-                    "QuoteType": "NotQuoted"
+                    "QuoteType": "NotQuoted",
+                    "Value": "c2"
                   }
                 ]
               }
@@ -289,80 +139,35 @@
                 "Identifiers": [
                   {
                     "$type": "Identifier",
-                    "Value": "c3",
-                    "QuoteType": "NotQuoted"
+                    "QuoteType": "NotQuoted",
+                    "Value": "c3"
                   }
                 ]
               }
             }
           ],
-          "StatisticsOptions": [
-            {
-              "$type": "LiteralStatisticsOption",
-              "Literal": {
-                "$type": "IntegerLiteral",
-                "LiteralType": "Integer",
-                "Value": "12"
-              },
-              "OptionKind": "SampleRows"
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "SquareBracket",
+            "Value": "stat"
+          },
+          "OnName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "t1"
             },
-            {
-              "$type": "StatisticsOption",
-              "OptionKind": "NoRecompute"
-            }
-          ],
-          "FilterPredicate": {
-            "$type": "BooleanParenthesisExpression",
-            "Expression": {
-              "$type": "BooleanParenthesisExpression",
-              "Expression": {
-                "$type": "BooleanComparisonExpression",
-                "ComparisonType": "GreaterThan",
-                "FirstExpression": {
-                  "$type": "ColumnReferenceExpression",
-                  "ColumnType": "Regular",
-                  "MultiPartIdentifier": {
-                    "$type": "MultiPartIdentifier",
-                    "Count": 1,
-                    "Identifiers": [
-                      {
-                        "$type": "Identifier",
-                        "Value": "c1",
-                        "QuoteType": "NotQuoted"
-                      }
-                    ]
-                  }
-                },
-                "SecondExpression": {
-                  "$type": "IntegerLiteral",
-                  "LiteralType": "Integer",
-                  "Value": "5"
-                }
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
               }
-            }
+            ]
           }
         },
         {
           "$type": "CreateStatisticsStatement",
-          "Name": {
-            "$type": "Identifier",
-            "Value": "stat",
-            "QuoteType": "SquareBracket"
-          },
-          "OnName": {
-            "$type": "SchemaObjectName",
-            "BaseIdentifier": {
-              "$type": "Identifier",
-              "Value": "t1",
-              "QuoteType": "NotQuoted"
-            },
-            "Count": 1,
-            "Identifiers": [
-              {
-                "$ref": "Identifier"
-              }
-            ]
-          },
           "Columns": [
             {
               "$type": "ColumnReferenceExpression",
@@ -373,8 +178,8 @@
                 "Identifiers": [
                   {
                     "$type": "Identifier",
-                    "Value": "c1",
-                    "QuoteType": "NotQuoted"
+                    "QuoteType": "NotQuoted",
+                    "Value": "c1"
                   }
                 ]
               }
@@ -388,8 +193,8 @@
                 "Identifiers": [
                   {
                     "$type": "Identifier",
-                    "Value": "c2",
-                    "QuoteType": "NotQuoted"
+                    "QuoteType": "NotQuoted",
+                    "Value": "c2"
                   }
                 ]
               }
@@ -403,110 +208,29 @@
                 "Identifiers": [
                   {
                     "$type": "Identifier",
-                    "Value": "c3",
-                    "QuoteType": "NotQuoted"
+                    "QuoteType": "NotQuoted",
+                    "Value": "c3"
                   }
                 ]
               }
             }
           ],
-          "StatisticsOptions": [
-            {
-              "$type": "LiteralStatisticsOption",
-              "Literal": {
-                "$type": "BinaryLiteral",
-                "LiteralType": "Binary",
-                "IsLargeObject": false,
-                "Value": "0x100"
-              },
-              "OptionKind": "StatsStream"
-            }
-          ],
-          "FilterPredicate": {
-            "$type": "InPredicate",
-            "Expression": {
-              "$type": "ColumnReferenceExpression",
-              "ColumnType": "Regular",
-              "MultiPartIdentifier": {
-                "$type": "MultiPartIdentifier",
-                "Count": 1,
-                "Identifiers": [
-                  {
-                    "$type": "Identifier",
-                    "Value": "c1",
-                    "QuoteType": "NotQuoted"
-                  }
-                ]
-              }
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "SquareBracket",
+            "Value": "stat"
+          },
+          "OnName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "t1"
             },
-            "NotDefined": false,
-            "Values": [
+            "Count": 1,
+            "Identifiers": [
               {
-                "$type": "IntegerLiteral",
-                "LiteralType": "Integer",
-                "Value": "10"
-              },
-              {
-                "$type": "IntegerLiteral",
-                "LiteralType": "Integer",
-                "Value": "20"
-              },
-              {
-                "$type": "CastCall",
-                "DataType": {
-                  "$type": "SqlDataTypeReference",
-                  "SqlDataTypeOption": "Int",
-                  "Name": {
-                    "$type": "SchemaObjectName",
-                    "BaseIdentifier": {
-                      "$type": "Identifier",
-                      "Value": "INT",
-                      "QuoteType": "NotQuoted"
-                    },
-                    "Count": 1,
-                    "Identifiers": [
-                      {
-                        "$ref": "Identifier"
-                      }
-                    ]
-                  }
-                },
-                "Parameter": {
-                  "$type": "IntegerLiteral",
-                  "LiteralType": "Integer",
-                  "Value": "30"
-                }
-              },
-              {
-                "$type": "ParenthesisExpression",
-                "Expression": {
-                  "$type": "ConvertCall",
-                  "DataType": {
-                    "$type": "SqlDataTypeReference",
-                    "SqlDataTypeOption": "Int",
-                    "Name": {
-                      "$type": "SchemaObjectName",
-                      "BaseIdentifier": {
-                        "$type": "Identifier",
-                        "Value": "INT",
-                        "QuoteType": "NotQuoted"
-                      },
-                      "Count": 1,
-                      "Identifiers": [
-                        {
-                          "$ref": "Identifier"
-                        }
-                      ]
-                    }
-                  },
-                  "Parameter": {
-                    "$type": "StringLiteral",
-                    "LiteralType": "String",
-                    "IsNational": false,
-                    "IsLargeObject": false,
-                    "Value": "aaa"
-                  }
-                }
+                "$ref": "Identifier"
               }
             ]
           }

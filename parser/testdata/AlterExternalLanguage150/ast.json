@@ -6,208 +6,50 @@
       "Statements": [
         {
           "$type": "AlterExternalLanguageStatement",
-          "Operation": {
-            "$type": "Identifier",
-            "Value": "SET",
-            "QuoteType": "NotQuoted"
-          },
           "Name": {
             "$type": "Identifier",
-            "Value": "language1",
-            "QuoteType": "NotQuoted"
-          },
-          "ExternalLanguageFiles": [
-            {
-              "$type": "ExternalLanguageFileOption",
-              "Content": {
-                "$type": "BinaryLiteral",
-                "LiteralType": "Binary",
-                "IsLargeObject": false,
-                "Value": "0x504B03040A0000000000A7167F4"
-              },
-              "FileName": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "AlteredExtension.dll"
-              },
-              "Platform": {
-                "$type": "Identifier",
-                "Value": "LINUX",
-                "QuoteType": "NotQuoted"
-              }
-            }
-          ]
-        },
-        {
-          "$type": "AlterExternalLanguageStatement",
-          "Operation": {
-            "$type": "Identifier",
-            "Value": "ADD",
-            "QuoteType": "NotQuoted"
-          },
-          "Owner": {
-            "$type": "Identifier",
-            "Value": "bing",
-            "QuoteType": "NotQuoted"
-          },
-          "Name": {
-            "$type": "Identifier",
-            "Value": "language2",
-            "QuoteType": "NotQuoted"
-          },
-          "ExternalLanguageFiles": [
-            {
-              "$type": "ExternalLanguageFileOption",
-              "Content": {
-                "$type": "BinaryLiteral",
-                "LiteralType": "Binary",
-                "IsLargeObject": false,
-                "Value": "0x5678"
-              },
-              "FileName": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "AlteredExtension.dll"
-              },
-              "Platform": {
-                "$type": "Identifier",
-                "Value": "WINDOWS",
-                "QuoteType": "NotQuoted"
-              },
-              "Parameters": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": true,
-                "IsLargeObject": false,
-                "Value": "newParam"
-              },
-              "EnvironmentVariables": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": true,
-                "IsLargeObject": false,
-                "Value": "{\"altered\":\"variable\"}"
-              }
-            }
-          ]
-        },
-        {
-          "$type": "AlterExternalLanguageStatement",
-          "Operation": {
-            "$type": "Identifier",
-            "Value": "SET",
-            "QuoteType": "NotQuoted"
-          },
-          "Name": {
-            "$type": "Identifier",
-            "Value": "language3",
-            "QuoteType": "NotQuoted"
-          },
-          "ExternalLanguageFiles": [
-            {
-              "$type": "ExternalLanguageFileOption",
-              "Content": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "c:\\Path\\language3.zip"
-              },
-              "FileName": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "WindowsExtension2.dll"
-              },
-              "Platform": {
-                "$type": "Identifier",
-                "Value": "Linux",
-                "QuoteType": "NotQuoted"
-              }
-            }
-          ]
-        },
-        {
-          "$type": "AlterExternalLanguageStatement",
-          "Operation": {
-            "$type": "Identifier",
-            "Value": "SET",
-            "QuoteType": "NotQuoted"
-          },
-          "Name": {
-            "$type": "Identifier",
-            "Value": "language4",
-            "QuoteType": "SquareBracket"
-          },
-          "ExternalLanguageFiles": [
-            {
-              "$type": "ExternalLanguageFileOption",
-              "Content": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "\\\\machine-name\\dir1\\dir2\\windowsextension-new.zip"
-              },
-              "FileName": {
-                "$type": "StringLiteral",
-                "LiteralType": "String",
-                "IsNational": false,
-                "IsLargeObject": false,
-                "Value": "WindowsExtension2.dll"
-              },
-              "Platform": {
-                "$type": "Identifier",
-                "Value": "WINDOWS",
-                "QuoteType": "NotQuoted"
-              }
-            }
-          ]
-        },
-        {
-          "$type": "AlterExternalLanguageStatement",
-          "Platform": {
-            "$type": "Identifier",
-            "Value": "WINDOWS",
-            "QuoteType": "NotQuoted"
-          },
-          "Operation": {
-            "$type": "Identifier",
-            "Value": "REMOVE",
-            "QuoteType": "NotQuoted"
-          },
-          "Owner": {
-            "$type": "Identifier",
-            "Value": "bing",
-            "QuoteType": "NotQuoted"
-          },
-          "Name": {
-            "$type": "Identifier",
-            "Value": "language5",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "language1"
           }
         },
         {
           "$type": "AlterExternalLanguageStatement",
-          "Platform": {
-            "$type": "Identifier",
-            "Value": "LINUX",
-            "QuoteType": "NotQuoted"
-          },
-          "Operation": {
-            "$type": "Identifier",
-            "Value": "REMOVE",
-            "QuoteType": "NotQuoted"
-          },
           "Name": {
             "$type": "Identifier",
-            "Value": "language6",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "language2"
+          }
+        },
+        {
+          "$type": "AlterExternalLanguageStatement",
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "language3"
+          }
+        },
+        {
+          "$type": "AlterExternalLanguageStatement",
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "SquareBracket",
+            "Value": "language4"
+          }
+        },
+        {
+          "$type": "AlterExternalLanguageStatement",
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "language5"
+          }
+        },
+        {
+          "$type": "AlterExternalLanguageStatement",
+          "Name": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "language6"
           }
         }
       ]

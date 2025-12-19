@@ -6,369 +6,212 @@
       "Statements": [
         {
           "$type": "AlterDatabaseAddFileGroupStatement",
-          "FileGroup": {
-            "$type": "Identifier",
-            "Value": "fg1",
-            "QuoteType": "NotQuoted"
-          },
           "ContainsFileStream": false,
           "ContainsMemoryOptimizedData": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
+          "FileGroup": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "fg1"
           },
           "UseCurrent": false
         },
         {
           "$type": "AlterDatabaseRemoveFileGroupStatement",
-          "FileGroup": {
-            "$type": "Identifier",
-            "Value": "fg1",
-            "QuoteType": "NotQuoted"
-          },
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
+          "FileGroup": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "fg1"
           },
           "UseCurrent": false
         },
         {
           "$type": "AlterDatabaseModifyFileGroupStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
           "FileGroup": {
             "$type": "Identifier",
-            "Value": "fg1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "fg1"
           },
           "MakeDefault": false,
           "UpdatabilityOption": "ReadOnlyOld",
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
           "UseCurrent": false
         },
         {
           "$type": "AlterDatabaseModifyFileGroupStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
           "FileGroup": {
             "$type": "Identifier",
-            "Value": "fg1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "fg1"
           },
           "MakeDefault": false,
           "UpdatabilityOption": "ReadOnly",
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
           "UseCurrent": false
         },
         {
           "$type": "AlterDatabaseModifyFileGroupStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
           "FileGroup": {
             "$type": "Identifier",
-            "Value": "fg1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "fg1"
           },
           "MakeDefault": false,
           "UpdatabilityOption": "ReadWriteOld",
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
           "UseCurrent": false
         },
         {
           "$type": "AlterDatabaseModifyFileGroupStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
           "FileGroup": {
             "$type": "Identifier",
-            "Value": "fg1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "fg1"
           },
           "MakeDefault": false,
           "UpdatabilityOption": "ReadWrite",
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
           "UseCurrent": false
         },
         {
           "$type": "AlterDatabaseModifyFileGroupStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
           "FileGroup": {
             "$type": "Identifier",
-            "Value": "fg1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "fg1"
           },
           "MakeDefault": true,
-          "UpdatabilityOption": "None",
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
-          },
           "UseCurrent": false
         },
         {
           "$type": "AlterDatabaseModifyFileGroupStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "d1"
+          },
           "FileGroup": {
             "$type": "Identifier",
-            "Value": "fg1",
-            "QuoteType": "NotQuoted"
-          },
-          "NewFileGroupName": {
-            "$type": "Identifier",
-            "Value": "fg2",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "fg1"
           },
           "MakeDefault": false,
-          "UpdatabilityOption": "None",
-          "DatabaseName": {
+          "NewFileGroupName": {
             "$type": "Identifier",
-            "Value": "d1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "fg2"
           },
           "UseCurrent": false
         },
         {
           "$type": "AlterDatabaseAddFileStatement",
-          "FileDeclarations": [
-            {
-              "$type": "FileDeclaration",
-              "Options": [
-                {
-                  "$type": "NameFileDeclarationOption",
-                  "LogicalFileName": {
-                    "$type": "IdentifierOrValueExpression",
-                    "Value": "test1dat3",
-                    "Identifier": {
-                      "$type": "Identifier",
-                      "Value": "test1dat3",
-                      "QuoteType": "NotQuoted"
-                    }
-                  },
-                  "IsNewName": false,
-                  "OptionKind": "Name"
-                },
-                {
-                  "$type": "FileNameFileDeclarationOption",
-                  "OSFileName": {
-                    "$type": "StringLiteral",
-                    "LiteralType": "String",
-                    "IsNational": false,
-                    "IsLargeObject": false,
-                    "Value": "f1"
-                  },
-                  "OptionKind": "FileName"
-                }
-              ],
-              "IsPrimary": false
-            },
-            {
-              "$type": "FileDeclaration",
-              "Options": [
-                {
-                  "$type": "NameFileDeclarationOption",
-                  "LogicalFileName": {
-                    "$type": "IdentifierOrValueExpression",
-                    "Value": "test1dat4",
-                    "Identifier": {
-                      "$type": "Identifier",
-                      "Value": "test1dat4",
-                      "QuoteType": "NotQuoted"
-                    }
-                  },
-                  "IsNewName": false,
-                  "OptionKind": "Name"
-                },
-                {
-                  "$type": "FileNameFileDeclarationOption",
-                  "OSFileName": {
-                    "$type": "StringLiteral",
-                    "LiteralType": "String",
-                    "IsNational": false,
-                    "IsLargeObject": false,
-                    "Value": "f2"
-                  },
-                  "OptionKind": "FileName"
-                }
-              ],
-              "IsPrimary": false
-            }
-          ],
-          "FileGroup": {
-            "$type": "Identifier",
-            "Value": "Test1FG",
-            "QuoteType": "NotQuoted"
-          },
-          "IsLog": false,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "AdventureWorks",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
+            "QuoteType": "NotQuoted",
+            "Value": "AdventureWorks"
+          }
         },
         {
           "$type": "AlterDatabaseAddFileStatement",
-          "FileDeclarations": [
-            {
-              "$type": "FileDeclaration",
-              "Options": [
-                {
-                  "$type": "FileNameFileDeclarationOption",
-                  "OSFileName": {
-                    "$type": "StringLiteral",
-                    "LiteralType": "String",
-                    "IsNational": false,
-                    "IsLargeObject": false,
-                    "Value": "log"
-                  },
-                  "OptionKind": "FileName"
-                },
-                {
-                  "$type": "NameFileDeclarationOption",
-                  "LogicalFileName": {
-                    "$type": "IdentifierOrValueExpression",
-                    "Value": "test1log2",
-                    "Identifier": {
-                      "$type": "Identifier",
-                      "Value": "test1log2",
-                      "QuoteType": "NotQuoted"
-                    }
-                  },
-                  "IsNewName": false,
-                  "OptionKind": "Name"
-                }
-              ],
-              "IsPrimary": false
-            }
-          ],
-          "IsLog": true,
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "AdventureWorks",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
+            "QuoteType": "NotQuoted",
+            "Value": "AdventureWorks"
+          }
         },
         {
           "$type": "AlterDatabaseRemoveFileStatement",
-          "File": {
-            "$type": "Identifier",
-            "Value": "myfile",
-            "QuoteType": "NotQuoted"
-          },
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db1"
           },
-          "UseCurrent": false
+          "File": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "myfile"
+          }
         },
         {
           "$type": "AlterDatabaseModifyFileStatement",
-          "FileDeclaration": {
-            "$type": "FileDeclaration",
-            "Options": [
-              {
-                "$type": "NameFileDeclarationOption",
-                "LogicalFileName": {
-                  "$type": "IdentifierOrValueExpression",
-                  "Value": "n1",
-                  "Identifier": {
-                    "$type": "Identifier",
-                    "Value": "n1",
-                    "QuoteType": "NotQuoted"
-                  }
-                },
-                "IsNewName": false,
-                "OptionKind": "Name"
-              },
-              {
-                "$type": "NameFileDeclarationOption",
-                "LogicalFileName": {
-                  "$type": "IdentifierOrValueExpression",
-                  "Value": "n2",
-                  "Identifier": {
-                    "$type": "Identifier",
-                    "Value": "n2",
-                    "QuoteType": "NotQuoted"
-                  }
-                },
-                "IsNewName": true,
-                "OptionKind": "NewName"
-              }
-            ],
-            "IsPrimary": false
-          },
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
+            "QuoteType": "NotQuoted",
+            "Value": "db1"
+          }
         },
         {
           "$type": "AlterDatabaseModifyNameStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db1"
+          },
           "NewDatabaseName": {
             "$type": "Identifier",
-            "Value": "db2",
-            "QuoteType": "NotQuoted"
-          },
-          "DatabaseName": {
-            "$type": "Identifier",
-            "Value": "db1",
-            "QuoteType": "NotQuoted"
-          },
-          "UseCurrent": false
+            "QuoteType": "NotQuoted",
+            "Value": "db2"
+          }
         },
         {
-          "$type": "AlterDatabaseCollateStatement",
-          "Collation": {
-            "$type": "Identifier",
-            "Value": "Estonian_CS_AS",
-            "QuoteType": "NotQuoted"
-          },
+          "$type": "AlterDatabaseSetStatement",
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "db1",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "db1"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
-          "$type": "AlterDatabaseCollateStatement",
-          "Collation": {
-            "$type": "Identifier",
-            "Value": "Estonian_CS_AS",
-            "QuoteType": "NotQuoted"
-          },
+          "$type": "AlterDatabaseSetStatement",
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "SCOPED",
-            "QuoteType": "NotQuoted"
+            "QuoteType": "NotQuoted",
+            "Value": "COLLATE"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         },
         {
-          "$type": "AlterDatabaseCollateStatement",
-          "Collation": {
-            "$type": "Identifier",
-            "Value": "Estonian_CS_AS",
-            "QuoteType": "NotQuoted"
-          },
+          "$type": "AlterDatabaseSetStatement",
           "DatabaseName": {
             "$type": "Identifier",
-            "Value": "SCOPED CREDENTIAL",
-            "QuoteType": "SquareBracket"
+            "QuoteType": "SquareBracket",
+            "Value": "SCOPED CREDENTIAL"
           },
-          "UseCurrent": false
+          "UseCurrent": false,
+          "WithManualCutover": false
         }
       ]
     }

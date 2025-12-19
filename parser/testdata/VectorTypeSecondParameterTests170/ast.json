@@ -1,0 +1,370 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateTableStatement",
+          "AsEdge": false,
+          "AsFileTable": false,
+          "AsNode": false,
+          "Definition": {
+            "$type": "TableDefinition",
+            "ColumnDefinitions": [
+              {
+                "$type": "ColumnDefinition",
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "QuoteType": "NotQuoted",
+                  "Value": "embedding"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "VECTOR"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "LiteralType": "Integer",
+                      "Value": "1"
+                    }
+                  ],
+                  "SqlDataTypeOption": "Vector"
+                },
+                "IsHidden": false,
+                "IsMasked": false,
+                "IsPersisted": false,
+                "IsRowGuidCol": false
+              }
+            ]
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "tbl"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "CreateTableStatement",
+          "AsEdge": false,
+          "AsFileTable": false,
+          "AsNode": false,
+          "Definition": {
+            "$type": "TableDefinition",
+            "ColumnDefinitions": [
+              {
+                "$type": "ColumnDefinition",
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "QuoteType": "NotQuoted",
+                  "Value": "embedding"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "VECTOR"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "LiteralType": "Integer",
+                      "Value": "1"
+                    },
+                    {
+                      "$type": "ColumnReferenceExpression",
+                      "ColumnType": "Regular",
+                      "MultiPartIdentifier": {
+                        "$type": "MultiPartIdentifier",
+                        "Count": 1,
+                        "Identifiers": [
+                          {
+                            "$type": "Identifier",
+                            "QuoteType": "NotQuoted",
+                            "Value": "float32"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "SqlDataTypeOption": "Vector"
+                },
+                "IsHidden": false,
+                "IsMasked": false,
+                "IsPersisted": false,
+                "IsRowGuidCol": false
+              }
+            ]
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "tbl"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "CreateTableStatement",
+          "AsEdge": false,
+          "AsFileTable": false,
+          "AsNode": false,
+          "Definition": {
+            "$type": "TableDefinition",
+            "ColumnDefinitions": [
+              {
+                "$type": "ColumnDefinition",
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "QuoteType": "NotQuoted",
+                  "Value": "embedding"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "VECTOR"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "Parameters": [
+                    {
+                      "$type": "IntegerLiteral",
+                      "LiteralType": "Integer",
+                      "Value": "1"
+                    },
+                    {
+                      "$type": "ColumnReferenceExpression",
+                      "ColumnType": "Regular",
+                      "MultiPartIdentifier": {
+                        "$type": "MultiPartIdentifier",
+                        "Count": 1,
+                        "Identifiers": [
+                          {
+                            "$type": "Identifier",
+                            "QuoteType": "NotQuoted",
+                            "Value": "FLOAT16"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "SqlDataTypeOption": "Vector"
+                },
+                "IsHidden": false,
+                "IsMasked": false,
+                "IsPersisted": false,
+                "IsRowGuidCol": false
+              }
+            ]
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "tbl"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        },
+        {
+          "$type": "DeclareVariableStatement",
+          "Declarations": [
+            {
+              "$type": "DeclareVariableElement",
+              "DataType": {
+                "$type": "SqlDataTypeReference",
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "VECTOR"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                },
+                "Parameters": [
+                  {
+                    "$type": "IntegerLiteral",
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  }
+                ],
+                "SqlDataTypeOption": "Vector"
+              },
+              "VariableName": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "@embedding"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "DeclareVariableStatement",
+          "Declarations": [
+            {
+              "$type": "DeclareVariableElement",
+              "DataType": {
+                "$type": "SqlDataTypeReference",
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "VECTOR"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                },
+                "Parameters": [
+                  {
+                    "$type": "IntegerLiteral",
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  },
+                  {
+                    "$type": "ColumnReferenceExpression",
+                    "ColumnType": "Regular",
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "QuoteType": "NotQuoted",
+                          "Value": "FLOAT32"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "SqlDataTypeOption": "Vector"
+              },
+              "VariableName": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "@embedding"
+              }
+            }
+          ]
+        },
+        {
+          "$type": "DeclareVariableStatement",
+          "Declarations": [
+            {
+              "$type": "DeclareVariableElement",
+              "DataType": {
+                "$type": "SqlDataTypeReference",
+                "Name": {
+                  "$type": "SchemaObjectName",
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "VECTOR"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                },
+                "Parameters": [
+                  {
+                    "$type": "IntegerLiteral",
+                    "LiteralType": "Integer",
+                    "Value": "2"
+                  },
+                  {
+                    "$type": "ColumnReferenceExpression",
+                    "ColumnType": "Regular",
+                    "MultiPartIdentifier": {
+                      "$type": "MultiPartIdentifier",
+                      "Count": 1,
+                      "Identifiers": [
+                        {
+                          "$type": "Identifier",
+                          "QuoteType": "NotQuoted",
+                          "Value": "float16"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "SqlDataTypeOption": "Vector"
+              },
+              "VariableName": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "@embedding"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
