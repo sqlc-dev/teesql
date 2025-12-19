@@ -1,0 +1,185 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateTriggerStatement",
+          "IsNotForReplication": false,
+          "Name": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "trig1"
+            },
+            "Count": 2,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              },
+              {
+                "$ref": "Identifier"
+              }
+            ],
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "dbo"
+            }
+          },
+          "StatementList": {
+            "$type": "StatementList",
+            "Statements": [
+              {
+                "$type": "CreateTableStatement",
+                "AsEdge": false,
+                "AsFileTable": false,
+                "AsNode": false,
+                "Definition": {
+                  "$type": "TableDefinition",
+                  "ColumnDefinitions": [
+                    {
+                      "$type": "ColumnDefinition",
+                      "ColumnIdentifier": {
+                        "$type": "Identifier",
+                        "QuoteType": "NotQuoted",
+                        "Value": "int"
+                      },
+                      "DataType": {
+                        "$type": "SqlDataTypeReference",
+                        "Name": {
+                          "$type": "SchemaObjectName",
+                          "BaseIdentifier": {
+                            "$type": "Identifier",
+                            "QuoteType": "NotQuoted",
+                            "Value": "i1"
+                          },
+                          "Count": 1,
+                          "Identifiers": [
+                            {
+                              "$ref": "Identifier"
+                            }
+                          ]
+                        },
+                        "SqlDataTypeOption": "I1"
+                      },
+                      "IsHidden": false,
+                      "IsMasked": false,
+                      "IsPersisted": false,
+                      "IsRowGuidCol": false
+                    }
+                  ]
+                },
+                "SchemaObjectName": {
+                  "$type": "SchemaObjectName",
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "t1"
+                  },
+                  "Count": 1,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "TriggerActions": [
+            {
+              "$type": "TriggerAction",
+              "TriggerActionType": "Insert"
+            }
+          ],
+          "TriggerObject": {
+            "$type": "TriggerObject",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "employees"
+              },
+              "Count": 2,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                },
+                {
+                  "$ref": "Identifier"
+                }
+              ],
+              "SchemaIdentifier": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "dbo"
+              }
+            },
+            "TriggerScope": "Normal"
+          },
+          "TriggerType": "For",
+          "WithAppend": false
+        },
+        {
+          "$type": "CreateTableStatement",
+          "AsEdge": false,
+          "AsFileTable": false,
+          "AsNode": false,
+          "Definition": {
+            "$type": "TableDefinition",
+            "ColumnDefinitions": [
+              {
+                "$type": "ColumnDefinition",
+                "ColumnIdentifier": {
+                  "$type": "Identifier",
+                  "QuoteType": "NotQuoted",
+                  "Value": "int"
+                },
+                "DataType": {
+                  "$type": "SqlDataTypeReference",
+                  "Name": {
+                    "$type": "SchemaObjectName",
+                    "BaseIdentifier": {
+                      "$type": "Identifier",
+                      "QuoteType": "NotQuoted",
+                      "Value": "i1"
+                    },
+                    "Count": 1,
+                    "Identifiers": [
+                      {
+                        "$ref": "Identifier"
+                      }
+                    ]
+                  },
+                  "SqlDataTypeOption": "I1"
+                },
+                "IsHidden": false,
+                "IsMasked": false,
+                "IsPersisted": false,
+                "IsRowGuidCol": false
+              }
+            ]
+          },
+          "SchemaObjectName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "t1"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

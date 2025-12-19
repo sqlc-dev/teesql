@@ -1,0 +1,235 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateFunctionStatement",
+          "Name": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "ISOweek"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "ReturnType": {
+            "$type": "ScalarFunctionReturnType",
+            "DataType": {
+              "$type": "SqlDataTypeReference",
+              "Name": {
+                "$type": "SchemaObjectName",
+                "BaseIdentifier": {
+                  "$type": "Identifier",
+                  "QuoteType": "NotQuoted",
+                  "Value": "int"
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$ref": "Identifier"
+                  }
+                ]
+              },
+              "SqlDataTypeOption": "Int"
+            }
+          },
+          "StatementList": {
+            "$type": "StatementList",
+            "Statements": [
+              {
+                "$type": "BeginEndBlockStatement",
+                "StatementList": {
+                  "$type": "StatementList",
+                  "Statements": [
+                    {
+                      "$type": "LabelStatement",
+                      "Value": "BREA"
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateFunctionStatement",
+          "Name": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "QuoteType": "NotQuoted",
+              "Value": "ISOweek"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
+          },
+          "ReturnType": {
+            "$type": "ScalarFunctionReturnType",
+            "DataType": {
+              "$type": "SqlDataTypeReference",
+              "Name": {
+                "$type": "SchemaObjectName",
+                "BaseIdentifier": {
+                  "$type": "Identifier",
+                  "QuoteType": "NotQuoted",
+                  "Value": "int"
+                },
+                "Count": 1,
+                "Identifiers": [
+                  {
+                    "$ref": "Identifier"
+                  }
+                ]
+              },
+              "SqlDataTypeOption": "Int"
+            }
+          },
+          "StatementList": {
+            "$type": "StatementList",
+            "Statements": [
+              {
+                "$type": "BeginEndBlockStatement",
+                "StatementList": {
+                  "$type": "StatementList",
+                  "Statements": [
+                    {
+                      "$type": "LabelStatement",
+                      "Value": "BREA"
+                    },
+                    {
+                      "$type": "CreateTableStatement",
+                      "AsEdge": false,
+                      "AsFileTable": false,
+                      "AsNode": false,
+                      "Definition": {
+                        "$type": "TableDefinition",
+                        "ColumnDefinitions": [
+                          {
+                            "$type": "ColumnDefinition",
+                            "ColumnIdentifier": {
+                              "$type": "Identifier",
+                              "QuoteType": "NotQuoted",
+                              "Value": "c1"
+                            },
+                            "DataType": {
+                              "$type": "SqlDataTypeReference",
+                              "Name": {
+                                "$type": "SchemaObjectName",
+                                "BaseIdentifier": {
+                                  "$type": "Identifier",
+                                  "QuoteType": "NotQuoted",
+                                  "Value": "int"
+                                },
+                                "Count": 1,
+                                "Identifiers": [
+                                  {
+                                    "$ref": "Identifier"
+                                  }
+                                ]
+                              },
+                              "SqlDataTypeOption": "Int"
+                            },
+                            "IsHidden": false,
+                            "IsMasked": false,
+                            "IsPersisted": false,
+                            "IsRowGuidCol": false
+                          }
+                        ]
+                      },
+                      "SchemaObjectName": {
+                        "$type": "SchemaObjectName",
+                        "BaseIdentifier": {
+                          "$type": "Identifier",
+                          "QuoteType": "NotQuoted",
+                          "Value": "t1"
+                        },
+                        "Count": 1,
+                        "Identifiers": [
+                          {
+                            "$ref": "Identifier"
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "$type": "CreateTableStatement",
+                      "AsEdge": false,
+                      "AsFileTable": false,
+                      "AsNode": false,
+                      "Definition": {
+                        "$type": "TableDefinition",
+                        "ColumnDefinitions": [
+                          {
+                            "$type": "ColumnDefinition",
+                            "ColumnIdentifier": {
+                              "$type": "Identifier",
+                              "QuoteType": "NotQuoted",
+                              "Value": "c1"
+                            },
+                            "DataType": {
+                              "$type": "SqlDataTypeReference",
+                              "Name": {
+                                "$type": "SchemaObjectName",
+                                "BaseIdentifier": {
+                                  "$type": "Identifier",
+                                  "QuoteType": "NotQuoted",
+                                  "Value": "int"
+                                },
+                                "Count": 1,
+                                "Identifiers": [
+                                  {
+                                    "$ref": "Identifier"
+                                  }
+                                ]
+                              },
+                              "SqlDataTypeOption": "Int"
+                            },
+                            "IsHidden": false,
+                            "IsMasked": false,
+                            "IsPersisted": false,
+                            "IsRowGuidCol": false
+                          }
+                        ]
+                      },
+                      "SchemaObjectName": {
+                        "$type": "SchemaObjectName",
+                        "BaseIdentifier": {
+                          "$type": "Identifier",
+                          "QuoteType": "NotQuoted",
+                          "Value": "t2"
+                        },
+                        "Count": 1,
+                        "Identifiers": [
+                          {
+                            "$ref": "Identifier"
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

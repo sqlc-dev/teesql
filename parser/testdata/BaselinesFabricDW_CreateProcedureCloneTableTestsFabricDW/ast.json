@@ -1,0 +1,241 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateProcedureStatement",
+          "IsForReplication": false,
+          "ProcedureReference": {
+            "$type": "ProcedureReference",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "CloneEmployeeLocal"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "StatementList": {
+            "$type": "StatementList",
+            "Statements": [
+              {
+                "$type": "CreateTableStatement",
+                "AsEdge": false,
+                "AsFileTable": false,
+                "AsNode": false,
+                "SchemaObjectName": {
+                  "$type": "SchemaObjectName",
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "Employee"
+                  },
+                  "Count": 2,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    },
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ],
+                  "SchemaIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "dbo"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateProcedureStatement",
+          "IsForReplication": false,
+          "ProcedureReference": {
+            "$type": "ProcedureReference",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "CloneEmployeeFromDbo1"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "StatementList": {
+            "$type": "StatementList",
+            "Statements": [
+              {
+                "$type": "CreateTableStatement",
+                "AsEdge": false,
+                "AsFileTable": false,
+                "AsNode": false,
+                "SchemaObjectName": {
+                  "$type": "SchemaObjectName",
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "Employee"
+                  },
+                  "Count": 2,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    },
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ],
+                  "SchemaIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "dbo"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateProcedureStatement",
+          "IsForReplication": false,
+          "ProcedureReference": {
+            "$type": "ProcedureReference",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "CloneEmployeeAtTimestamp"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "StatementList": {
+            "$type": "StatementList",
+            "Statements": [
+              {
+                "$type": "CreateTableStatement",
+                "AsEdge": false,
+                "AsFileTable": false,
+                "AsNode": false,
+                "SchemaObjectName": {
+                  "$type": "SchemaObjectName",
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "Employee"
+                  },
+                  "Count": 2,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    },
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ],
+                  "SchemaIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "dbo"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "CreateProcedureStatement",
+          "IsForReplication": false,
+          "ProcedureReference": {
+            "$type": "ProcedureReference",
+            "Name": {
+              "$type": "SchemaObjectName",
+              "BaseIdentifier": {
+                "$type": "Identifier",
+                "QuoteType": "NotQuoted",
+                "Value": "CloneEmployeeFromDbo1AtTimestamp"
+              },
+              "Count": 1,
+              "Identifiers": [
+                {
+                  "$ref": "Identifier"
+                }
+              ]
+            }
+          },
+          "StatementList": {
+            "$type": "StatementList",
+            "Statements": [
+              {
+                "$type": "CreateTableStatement",
+                "AsEdge": false,
+                "AsFileTable": false,
+                "AsNode": false,
+                "SchemaObjectName": {
+                  "$type": "SchemaObjectName",
+                  "BaseIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "Employee"
+                  },
+                  "Count": 2,
+                  "Identifiers": [
+                    {
+                      "$ref": "Identifier"
+                    },
+                    {
+                      "$ref": "Identifier"
+                    }
+                  ],
+                  "SchemaIdentifier": {
+                    "$type": "Identifier",
+                    "QuoteType": "NotQuoted",
+                    "Value": "dbo"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

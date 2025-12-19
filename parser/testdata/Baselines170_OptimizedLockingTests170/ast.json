@@ -1,0 +1,44 @@
+{
+  "$type": "TSqlScript",
+  "Batches": [
+    {
+      "$type": "TSqlBatch",
+      "Statements": [
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "OptimizedLocking",
+              "OptionState": "On"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
+        },
+        {
+          "$type": "AlterDatabaseSetStatement",
+          "DatabaseName": {
+            "$type": "Identifier",
+            "QuoteType": "NotQuoted",
+            "Value": "db"
+          },
+          "Options": [
+            {
+              "$type": "OnOffDatabaseOption",
+              "OptionKind": "OptimizedLocking",
+              "OptionState": "Off"
+            }
+          ],
+          "UseCurrent": false,
+          "WithManualCutover": false
+        }
+      ]
+    }
+  ]
+}
