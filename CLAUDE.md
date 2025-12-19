@@ -60,3 +60,13 @@ Each test in `parser/testdata/` contains:
 - `metadata.json` - `{"skip": true}` or `{"skip": false}`
 - `query.sql` - T-SQL to parse
 - `ast.json` - Expected AST output
+
+## Important: Never Modify ast.json
+
+**NEVER regenerate or modify `ast.json` files.** These files contain the expected/correct AST output that the parser should produce.
+
+If a test fails because the parser output doesn't match `ast.json`:
+- Fix the **parser** to produce the correct output
+- Do NOT update `ast.json` to match what the parser currently produces
+
+The `ast.json` files are the source of truth for correct behavior.
