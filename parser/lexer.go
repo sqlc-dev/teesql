@@ -208,6 +208,7 @@ const (
 	TokenDecryption
 	TokenAsymmetric
 	TokenCertificate
+	TokenDbcc
 )
 
 // Token represents a lexical token.
@@ -704,6 +705,7 @@ var keywords = map[string]TokenType{
 	"DECRYPTION":    TokenDecryption,
 	"ASYMMETRIC":    TokenAsymmetric,
 	"CERTIFICATE":   TokenCertificate,
+	"DBCC":          TokenDbcc,
 }
 
 func lookupKeyword(ident string) TokenType {

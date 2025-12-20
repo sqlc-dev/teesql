@@ -186,6 +186,16 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropWorkloadGroupStatementToJSON(s)
 	case *ast.DropWorkloadClassifierStatement:
 		return dropWorkloadClassifierStatementToJSON(s)
+	case *ast.CreateWorkloadGroupStatement:
+		return createWorkloadGroupStatementToJSON(s)
+	case *ast.AlterWorkloadGroupStatement:
+		return alterWorkloadGroupStatementToJSON(s)
+	case *ast.AlterSequenceStatement:
+		return alterSequenceStatementToJSON(s)
+	case *ast.CreateSequenceStatement:
+		return createSequenceStatementToJSON(s)
+	case *ast.DbccStatement:
+		return dbccStatementToJSON(s)
 	case *ast.DropTypeStatement:
 		return dropTypeStatementToJSON(s)
 	case *ast.DropAggregateStatement:
@@ -5502,6 +5512,178 @@ func dropWorkloadClassifierStatementToJSON(s *ast.DropWorkloadClassifierStatemen
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	return node
+}
+
+func createWorkloadGroupStatementToJSON(s *ast.CreateWorkloadGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateWorkloadGroupStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.WorkloadGroupParameters) > 0 {
+		params := make([]jsonNode, len(s.WorkloadGroupParameters))
+		for i, p := range s.WorkloadGroupParameters {
+			params[i] = workloadGroupParameterToJSON(p)
+		}
+		node["WorkloadGroupParameters"] = params
+	}
+	if s.PoolName != nil {
+		node["PoolName"] = identifierToJSON(s.PoolName)
+	}
+	if s.ExternalPoolName != nil {
+		node["ExternalPoolName"] = identifierToJSON(s.ExternalPoolName)
+	}
+	return node
+}
+
+func alterWorkloadGroupStatementToJSON(s *ast.AlterWorkloadGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterWorkloadGroupStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.WorkloadGroupParameters) > 0 {
+		params := make([]jsonNode, len(s.WorkloadGroupParameters))
+		for i, p := range s.WorkloadGroupParameters {
+			params[i] = workloadGroupParameterToJSON(p)
+		}
+		node["WorkloadGroupParameters"] = params
+	}
+	if s.PoolName != nil {
+		node["PoolName"] = identifierToJSON(s.PoolName)
+	}
+	if s.ExternalPoolName != nil {
+		node["ExternalPoolName"] = identifierToJSON(s.ExternalPoolName)
+	}
+	return node
+}
+
+func workloadGroupParameterToJSON(p interface{}) jsonNode {
+	switch param := p.(type) {
+	case *ast.WorkloadGroupResourceParameter:
+		node := jsonNode{
+			"$type":         "WorkloadGroupResourceParameter",
+			"ParameterType": param.ParameterType,
+		}
+		if param.ParameterValue != nil {
+			node["ParameterValue"] = scalarExpressionToJSON(param.ParameterValue)
+		}
+		return node
+	case *ast.WorkloadGroupImportanceParameter:
+		return jsonNode{
+			"$type":          "WorkloadGroupImportanceParameter",
+			"ParameterType":  param.ParameterType,
+			"ParameterValue": param.ParameterValue,
+		}
+	default:
+		return jsonNode{}
+	}
+}
+
+func alterSequenceStatementToJSON(s *ast.AlterSequenceStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterSequenceStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if len(s.SequenceOptions) > 0 {
+		opts := make([]jsonNode, len(s.SequenceOptions))
+		for i, opt := range s.SequenceOptions {
+			opts[i] = sequenceOptionToJSON(opt)
+		}
+		node["SequenceOptions"] = opts
+	}
+	return node
+}
+
+func createSequenceStatementToJSON(s *ast.CreateSequenceStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateSequenceStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if len(s.SequenceOptions) > 0 {
+		opts := make([]jsonNode, len(s.SequenceOptions))
+		for i, opt := range s.SequenceOptions {
+			opts[i] = sequenceOptionToJSON(opt)
+		}
+		node["SequenceOptions"] = opts
+	}
+	return node
+}
+
+func sequenceOptionToJSON(opt interface{}) jsonNode {
+	switch o := opt.(type) {
+	case *ast.SequenceOption:
+		return jsonNode{
+			"$type":      "SequenceOption",
+			"OptionKind": o.OptionKind,
+			"NoValue":    o.NoValue,
+		}
+	case *ast.ScalarExpressionSequenceOption:
+		node := jsonNode{
+			"$type":      "ScalarExpressionSequenceOption",
+			"OptionKind": o.OptionKind,
+			"NoValue":    o.NoValue,
+		}
+		if o.OptionValue != nil {
+			node["OptionValue"] = scalarExpressionToJSON(o.OptionValue)
+		}
+		return node
+	default:
+		return jsonNode{}
+	}
+}
+
+func dbccStatementToJSON(s *ast.DbccStatement) jsonNode {
+	node := jsonNode{
+		"$type":               "DbccStatement",
+		"Command":             s.Command,
+		"ParenthesisRequired": s.ParenthesisRequired,
+		"OptionsUseJoin":      s.OptionsUseJoin,
+	}
+	if s.DllName != nil {
+		node["DllName"] = identifierToJSON(s.DllName)
+	}
+	if len(s.Literals) > 0 {
+		lits := make([]jsonNode, len(s.Literals))
+		for i, lit := range s.Literals {
+			lits[i] = dbccNamedLiteralToJSON(lit)
+		}
+		node["Literals"] = lits
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = dbccOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func dbccNamedLiteralToJSON(l *ast.DbccNamedLiteral) jsonNode {
+	node := jsonNode{
+		"$type": "DbccNamedLiteral",
+	}
+	if l.Name != "" {
+		node["Name"] = l.Name
+	}
+	if l.Value != nil {
+		node["Value"] = scalarExpressionToJSON(l.Value)
+	}
+	return node
+}
+
+func dbccOptionToJSON(o *ast.DbccOption) jsonNode {
+	return jsonNode{
+		"$type":      "DbccOption",
+		"OptionKind": o.OptionKind,
+	}
 }
 
 func dropTypeStatementToJSON(s *ast.DropTypeStatement) jsonNode {
