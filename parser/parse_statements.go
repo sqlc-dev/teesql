@@ -541,8 +541,18 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 		}, nil
 	}
 
+	// Check if this is a known SQL data type
+	sqlOption, isKnownType := getSqlDataTypeOption(typeName)
+
+	if !isKnownType {
+		// Return UserDataTypeReference for unknown types
+		return &ast.UserDataTypeReference{
+			Name: baseName,
+		}, nil
+	}
+
 	dt := &ast.SqlDataTypeReference{
-		SqlDataTypeOption: convertDataTypeOption(typeName),
+		SqlDataTypeOption: sqlOption,
 		Name:              baseName,
 	}
 
@@ -577,40 +587,57 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 	return dt, nil
 }
 
-func convertDataTypeOption(typeName string) string {
+// getSqlDataTypeOption returns the SqlDataTypeOption for a type name and whether it's a known SQL type.
+func getSqlDataTypeOption(typeName string) (string, bool) {
 	typeMap := map[string]string{
-		"INT":       "Int",
-		"INTEGER":   "Int",
-		"BIGINT":    "BigInt",
-		"SMALLINT":  "SmallInt",
-		"TINYINT":   "TinyInt",
-		"BIT":       "Bit",
-		"DECIMAL":   "Decimal",
-		"NUMERIC":   "Numeric",
-		"MONEY":     "Money",
-		"SMALLMONEY": "SmallMoney",
-		"FLOAT":     "Float",
-		"REAL":      "Real",
-		"DATETIME":  "DateTime",
-		"DATETIME2": "DateTime2",
-		"DATE":      "Date",
-		"TIME":      "Time",
-		"CHAR":      "Char",
-		"VARCHAR":   "VarChar",
-		"TEXT":      "Text",
-		"NCHAR":     "NChar",
-		"NVARCHAR":  "NVarChar",
-		"NTEXT":     "NText",
-		"BINARY":    "Binary",
-		"VARBINARY": "VarBinary",
-		"IMAGE":     "Image",
-		"CURSOR":    "Cursor",
-		"SQL_VARIANT": "Sql_Variant",
-		"TABLE":     "Table",
-		"UNIQUEIDENTIFIER": "UniqueIdentifier",
-		"XML":       "Xml",
+		"INT":               "Int",
+		"INTEGER":           "Int",
+		"BIGINT":            "BigInt",
+		"SMALLINT":          "SmallInt",
+		"TINYINT":           "TinyInt",
+		"BIT":               "Bit",
+		"DECIMAL":           "Decimal",
+		"NUMERIC":           "Numeric",
+		"MONEY":             "Money",
+		"SMALLMONEY":        "SmallMoney",
+		"FLOAT":             "Float",
+		"REAL":              "Real",
+		"DATETIME":          "DateTime",
+		"DATETIME2":         "DateTime2",
+		"DATETIMEOFFSET":    "DateTimeOffset",
+		"SMALLDATETIME":     "SmallDateTime",
+		"DATE":              "Date",
+		"TIME":              "Time",
+		"CHAR":              "Char",
+		"VARCHAR":           "VarChar",
+		"TEXT":              "Text",
+		"NCHAR":             "NChar",
+		"NVARCHAR":          "NVarChar",
+		"NTEXT":             "NText",
+		"BINARY":            "Binary",
+		"VARBINARY":         "VarBinary",
+		"IMAGE":             "Image",
+		"CURSOR":            "Cursor",
+		"SQL_VARIANT":       "Sql_Variant",
+		"TABLE":             "Table",
+		"UNIQUEIDENTIFIER":  "UniqueIdentifier",
+		"XML":               "Xml",
+		"JSON":              "Json",
+		"GEOGRAPHY":         "Geography",
+		"GEOMETRY":          "Geometry",
+		"HIERARCHYID":       "HierarchyId",
+		"ROWVERSION":        "Rowversion",
+		"TIMESTAMP":         "Timestamp",
+		"CONNECTION":        "Connection",
 	}
 	if mapped, ok := typeMap[strings.ToUpper(typeName)]; ok {
+		return mapped, true
+	}
+	return "", false
+}
+
+func convertDataTypeOption(typeName string) string {
+	if mapped, ok := getSqlDataTypeOption(typeName); ok {
 		return mapped
 	}
 	// Return with first letter capitalized
@@ -1206,6 +1233,10 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateCryptographicProviderStatement()
 		case "FEDERATION":
 			return p.parseCreateFederationStatement()
+		case "WORKLOAD":
+			return p.parseCreateWorkloadGroupStatement()
+		case "SEQUENCE":
+			return p.parseCreateSequenceStatement()
 		}
 		// Lenient: skip unknown CREATE statements
 		p.skipToEndOfStatement()
@@ -5607,4 +5638,319 @@ func (p *Parser) parseEnableDisableTriggerStatement(enforcement string) (*ast.En
 	}
 
 	return stmt, nil
+}
+
+// parseCreateWorkloadGroupStatement parses CREATE WORKLOAD GROUP statement.
+func (p *Parser) parseCreateWorkloadGroupStatement() (*ast.CreateWorkloadGroupStatement, error) {
+	// Consume WORKLOAD
+	p.nextToken()
+
+	// Consume GROUP
+	if strings.ToUpper(p.curTok.Literal) == "GROUP" {
+		p.nextToken()
+	}
+
+	stmt := &ast.CreateWorkloadGroupStatement{}
+
+	// Parse group name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+		}
+
+		// Parse parameters
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			param, err := p.parseWorkloadGroupParameter()
+			if err != nil {
+				return nil, err
+			}
+			stmt.WorkloadGroupParameters = append(stmt.WorkloadGroupParameters, param)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse USING clause (resource pool reference)
+	if strings.ToUpper(p.curTok.Literal) == "USING" {
+		p.nextToken() // consume USING
+
+		// Check if first item is EXTERNAL or pool name
+		if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+			p.nextToken() // consume EXTERNAL
+			stmt.ExternalPoolName = p.parseIdentifier()
+			// Check for comma and regular pool
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+				stmt.PoolName = p.parseIdentifier()
+			}
+		} else {
+			// Regular pool name first
+			stmt.PoolName = p.parseIdentifier()
+			// Check for comma and EXTERNAL
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+				if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+					p.nextToken() // consume EXTERNAL
+					stmt.ExternalPoolName = p.parseIdentifier()
+				}
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseWorkloadGroupParameter parses a single workload group parameter.
+func (p *Parser) parseWorkloadGroupParameter() (interface{}, error) {
+	// Parse parameter name
+	paramName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	// Parse = value
+	if p.curTok.Type == TokenEquals {
+		p.nextToken()
+	}
+
+	// Handle IMPORTANCE specially - returns string value, not expression
+	if paramName == "IMPORTANCE" {
+		importanceValue := strings.ToUpper(p.curTok.Literal)
+		// Convert to proper case
+		switch importanceValue {
+		case "LOW":
+			importanceValue = "Low"
+		case "MEDIUM":
+			importanceValue = "Medium"
+		case "HIGH":
+			importanceValue = "High"
+		}
+		p.nextToken()
+		return &ast.WorkloadGroupImportanceParameter{
+			ParameterType:  "Importance",
+			ParameterValue: importanceValue,
+		}, nil
+	}
+
+	param := &ast.WorkloadGroupResourceParameter{}
+	switch paramName {
+	case "REQUEST_MAX_MEMORY_GRANT_PERCENT":
+		param.ParameterType = "RequestMaxMemoryGrantPercent"
+	case "REQUEST_MAX_CPU_TIME_SEC":
+		param.ParameterType = "RequestMaxCpuTimeSec"
+	case "REQUEST_MEMORY_GRANT_TIMEOUT_SEC":
+		param.ParameterType = "RequestMemoryGrantTimeoutSec"
+	case "MAX_DOP", "MAXDOP":
+		param.ParameterType = "MaxDop"
+	case "GROUP_MAX_REQUESTS":
+		param.ParameterType = "GroupMaxRequests"
+	case "GROUP_MIN_MEMORY_PERCENT":
+		param.ParameterType = "GroupMinMemoryPercent"
+	case "CAP_PERCENTAGE_RESOURCE":
+		param.ParameterType = "CapPercentageResource"
+	case "MIN_PERCENTAGE_RESOURCE":
+		param.ParameterType = "MinPercentageResource"
+	case "QUERY_EXECUTION_TIMEOUT_SEC":
+		param.ParameterType = "QueryExecutionTimeoutSec"
+	default:
+		param.ParameterType = paramName
+	}
+
+	// Parse the value
+	val, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	param.ParameterValue = val
+
+	return param, nil
+}
+
+// parseDbccStatement parses a DBCC statement.
+func (p *Parser) parseDbccStatement() (*ast.DbccStatement, error) {
+	// Consume DBCC
+	p.nextToken()
+
+	stmt := &ast.DbccStatement{}
+
+	// Parse command name
+	if p.curTok.Type == TokenIdent {
+		cmdName := strings.ToUpper(p.curTok.Literal)
+		rawName := p.curTok.Literal
+		canonical, isKnown := p.getDbccCommand(cmdName)
+		if isKnown {
+			stmt.Command = canonical
+		} else {
+			// Unknown command - set DllName and use "Free" as command
+			stmt.DllName = rawName
+			stmt.Command = "Free"
+		}
+		p.nextToken()
+	}
+
+	// Check for parenthesis
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		// Check if empty parentheses
+		if p.curTok.Type == TokenRParen {
+			stmt.ParenthesisRequired = true
+			p.nextToken() // consume )
+		} else {
+			// Parse literals/parameters
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				lit := &ast.DbccNamedLiteral{}
+
+				// Check for named parameter (name = value)
+				if p.peekTok.Type == TokenEquals {
+					lit.Name = p.curTok.Literal
+					p.nextToken() // consume name
+					p.nextToken() // consume =
+				}
+
+				// Parse the value
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					break
+				}
+				lit.Value = val
+				stmt.Literals = append(stmt.Literals, lit)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Check for WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		// Parse options
+		for {
+			if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
+				break
+			}
+
+			optName := strings.ToUpper(p.curTok.Literal)
+			if optName == "" {
+				break
+			}
+
+			option := &ast.DbccOption{
+				OptionKind: p.convertDbccOptionKind(optName),
+			}
+			stmt.Options = append(stmt.Options, option)
+			p.nextToken()
+
+			// Check for comma or JOIN separator
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else if strings.ToUpper(p.curTok.Literal) == "JOIN" {
+				stmt.OptionsUseJoin = true
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// getDbccCommand returns the canonical DBCC command name and whether it's a known command.
+func (p *Parser) getDbccCommand(cmd string) (string, bool) {
+	commandMap := map[string]string{
+		"CHECKDB":              "CheckDB",
+		"CHECKTABLE":           "CheckTable",
+		"CHECKALLOC":           "CheckAlloc",
+		"CHECKCATALOG":         "CheckCatalog",
+		"CHECKIDENT":           "CheckIdent",
+		"CHECKFILEGROUP":       "CheckFileGroup",
+		"CLEANTABLE":           "CleanTable",
+		"DBREINDEX":            "DbReindex",
+		"DROPCLEANBUFFERS":     "DropCleanBuffers",
+		"FREEPROCCACHE":        "FreeProcCache",
+		"FREESESSIONCACHE":     "FreeSessionCache",
+		"FREESYSTEMCACHE":      "FreeSystemCache",
+		"INPUTBUFFER":          "InputBuffer",
+		"OPENTRAN":             "OpenTran",
+		"OUTPUTBUFFER":         "OutputBuffer",
+		"PROCCACHE":            "ProcCache",
+		"SHOW_STATISTICS":      "ShowStatistics",
+		"SHOWCONTIG":           "ShowContig",
+		"SHRINKDATABASE":       "ShrinkDatabase",
+		"SHRINKFILE":           "ShrinkFile",
+		"SQLPERF":              "SqlPerf",
+		"TRACEON":              "TraceOn",
+		"TRACEOFF":             "TraceOff",
+		"TRACESTATUS":          "TraceStatus",
+		"UPDATEUSAGE":          "UpdateUsage",
+		"USEROPTIONS":          "UserOptions",
+		"CONCURRENCYVIOLATION": "ConcurrencyViolation",
+		"MEMOBJLIST":           "MemObjList",
+		"MEMORYMAP":            "MemoryMap",
+		"FREE":                 "Free",
+		"HELP":                 "Help",
+	}
+	if canonical, ok := commandMap[cmd]; ok {
+		return canonical, true
+	}
+	return cmd, false
+}
+
+// convertDbccOptionKind converts a DBCC option name to its canonical form.
+func (p *Parser) convertDbccOptionKind(opt string) string {
+	optionMap := map[string]string{
+		"ALL_ERRORMSGS":           "AllErrorMessages",
+		"NO_INFOMSGS":             "NoInfoMessages",
+		"TABLOCK":                 "TabLock",
+		"TABLERESULTS":            "TableResults",
+		"COUNTROWS":               "CountRows",
+		"COUNT_ROWS":              "CountRows",
+		"STAT_HEADER":             "StatHeader",
+		"DENSITY_VECTOR":          "DensityVector",
+		"HISTOGRAM_STEPS":         "HistogramSteps",
+		"ESTIMATEONLY":            "EstimateOnly",
+		"FAST":                    "Fast",
+		"ALL_LEVELS":              "AllLevels",
+		"ALL_INDEXES":             "AllIndexes",
+		"PHYSICAL_ONLY":           "PhysicalOnly",
+		"DATA_PURITY":             "DataPurity",
+		"EXTENDED_LOGICAL_CHECKS": "ExtendedLogicalChecks",
+		"MARK_IN_USE_FOR_REMOVAL": "MarkInUseForRemoval",
+		"ALL_CONSTRAINTS":         "AllConstraints",
+		"STATS_STREAM":            "StatsStream",
+		"HISTOGRAM":               "Histogram",
+	}
+	if canonical, ok := optionMap[opt]; ok {
+		return canonical
+	}
+	return opt
 }

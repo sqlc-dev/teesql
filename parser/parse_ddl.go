@@ -1320,6 +1320,10 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterCryptographicProviderStatement()
 		case "FEDERATION":
 			return p.parseAlterFederationStatement()
+		case "WORKLOAD":
+			return p.parseAlterWorkloadGroupStatement()
+		case "SEQUENCE":
+			return p.parseAlterSequenceStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -3897,5 +3901,257 @@ func convertOptionKind(optionName string) string {
 		}
 	}
 	return strings.Join(parts, "")
+}
+
+// parseAlterWorkloadGroupStatement parses ALTER WORKLOAD GROUP statement.
+func (p *Parser) parseAlterWorkloadGroupStatement() (*ast.AlterWorkloadGroupStatement, error) {
+	// Consume WORKLOAD
+	p.nextToken()
+
+	// Consume GROUP
+	if strings.ToUpper(p.curTok.Literal) == "GROUP" {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterWorkloadGroupStatement{}
+
+	// Parse group name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+		}
+
+		// Parse parameters
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			param, err := p.parseWorkloadGroupParameter()
+			if err != nil {
+				return nil, err
+			}
+			stmt.WorkloadGroupParameters = append(stmt.WorkloadGroupParameters, param)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse USING clause (resource pool reference)
+	if strings.ToUpper(p.curTok.Literal) == "USING" {
+		p.nextToken() // consume USING
+		stmt.PoolName = p.parseIdentifier()
+
+		// Check for EXTERNAL
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+		if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+			p.nextToken() // consume EXTERNAL
+			stmt.ExternalPoolName = p.parseIdentifier()
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseAlterSequenceStatement parses ALTER SEQUENCE statement.
+func (p *Parser) parseAlterSequenceStatement() (*ast.AlterSequenceStatement, error) {
+	// Consume SEQUENCE
+	p.nextToken()
+
+	stmt := &ast.AlterSequenceStatement{}
+
+	// Parse sequence name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Parse sequence options
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && !p.isStatementKeyword(p.curTok.Type) {
+		option, err := p.parseSequenceOption()
+		if err != nil {
+			break
+		}
+		if option == nil {
+			break // Unrecognized option, stop parsing
+		}
+		stmt.SequenceOptions = append(stmt.SequenceOptions, option)
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseCreateSequenceStatement parses CREATE SEQUENCE statement.
+func (p *Parser) parseCreateSequenceStatement() (*ast.CreateSequenceStatement, error) {
+	// Consume SEQUENCE
+	p.nextToken()
+
+	stmt := &ast.CreateSequenceStatement{}
+
+	// Parse sequence name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Parse sequence options
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && !p.isStatementKeyword(p.curTok.Type) {
+		option, err := p.parseSequenceOption()
+		if err != nil {
+			break
+		}
+		if option == nil {
+			break // Unrecognized option, stop parsing
+		}
+		stmt.SequenceOptions = append(stmt.SequenceOptions, option)
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseSequenceOption parses a single sequence option.
+func (p *Parser) parseSequenceOption() (interface{}, error) {
+	optionName := strings.ToUpper(p.curTok.Literal)
+
+	// Check for NO prefix
+	isNo := false
+	if optionName == "NO" {
+		isNo = true
+		p.nextToken()
+		optionName = strings.ToUpper(p.curTok.Literal)
+	}
+
+	var optionKind string
+	hasValue := true
+
+	switch optionName {
+	case "RESTART":
+		optionKind = "Restart"
+		p.nextToken()
+		// Check for WITH value
+		if strings.ToUpper(p.curTok.Literal) == "WITH" {
+			p.nextToken()
+			hasValue = true
+		} else {
+			hasValue = false
+		}
+	case "INCREMENT":
+		optionKind = "Increment"
+		p.nextToken()
+		// Consume BY
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken()
+		}
+	case "MINVALUE":
+		optionKind = "MinValue"
+		p.nextToken()
+		if isNo {
+			hasValue = false
+		}
+	case "MAXVALUE":
+		optionKind = "MaxValue"
+		p.nextToken()
+		if isNo {
+			hasValue = false
+		}
+	case "CYCLE":
+		optionKind = "Cycle"
+		p.nextToken()
+		// CYCLE is always a SequenceOption (not ScalarExpressionSequenceOption)
+		return &ast.SequenceOption{
+			OptionKind: optionKind,
+			NoValue:    isNo,
+		}, nil
+	case "CACHE":
+		optionKind = "Cache"
+		p.nextToken()
+		if isNo {
+			hasValue = false
+		} else {
+			// Check if there's a numeric value following
+			if p.curTok.Type == TokenNumber {
+				// Has value
+			} else {
+				hasValue = false
+			}
+		}
+	case "START":
+		optionKind = "Start"
+		p.nextToken()
+		// Consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "WITH" {
+			p.nextToken()
+		}
+	case "AS":
+		p.nextToken()
+		// Parse data type
+		dataType, err := p.parseDataType()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.DataTypeSequenceOption{
+			OptionKind: "As",
+			DataType:   dataType,
+			NoValue:    false,
+		}, nil
+	default:
+		return nil, nil
+	}
+
+	if isNo {
+		// NO prefix means NoValue = true
+		return &ast.SequenceOption{
+			OptionKind: optionKind,
+			NoValue:    true,
+		}, nil
+	}
+
+	if !hasValue {
+		return &ast.ScalarExpressionSequenceOption{
+			OptionKind: optionKind,
+			NoValue:    false,
+		}, nil
+	}
+
+	// Parse the value
+	val, err := p.parseScalarExpression()
+	if err != nil {
+		return &ast.ScalarExpressionSequenceOption{
+			OptionKind: optionKind,
+			NoValue:    false,
+		}, nil
+	}
+
+	return &ast.ScalarExpressionSequenceOption{
+		OptionKind:  optionKind,
+		OptionValue: val,
+		NoValue:     false,
+	}, nil
 }
 

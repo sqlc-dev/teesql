@@ -52,3 +52,12 @@ type XmlDataTypeReference struct {
 
 func (x *XmlDataTypeReference) node()              {}
 func (x *XmlDataTypeReference) dataTypeReference() {}
+
+// UserDataTypeReference represents a user-defined data type reference.
+type UserDataTypeReference struct {
+	Name       *SchemaObjectName `json:"Name,omitempty"`
+	Parameters []ScalarExpression `json:"Parameters,omitempty"`
+}
+
+func (u *UserDataTypeReference) node()              {}
+func (u *UserDataTypeReference) dataTypeReference() {}
