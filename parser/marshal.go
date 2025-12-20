@@ -188,6 +188,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropWorkloadClassifierStatementToJSON(s)
 	case *ast.CreateWorkloadGroupStatement:
 		return createWorkloadGroupStatementToJSON(s)
+	case *ast.CreateWorkloadClassifierStatement:
+		return createWorkloadClassifierStatementToJSON(s)
 	case *ast.AlterWorkloadGroupStatement:
 		return alterWorkloadGroupStatementToJSON(s)
 	case *ast.AlterSequenceStatement:
@@ -1055,6 +1057,26 @@ func selectElementToJSON(elem ast.SelectElement) jsonNode {
 			node["Qualifier"] = multiPartIdentifierToJSON(e.Qualifier)
 		}
 		return node
+	case *ast.SelectSetVariable:
+		node := jsonNode{
+			"$type": "SelectSetVariable",
+		}
+		if e.Variable != nil {
+			varNode := jsonNode{
+				"$type": "VariableReference",
+			}
+			if e.Variable.Name != "" {
+				varNode["Name"] = e.Variable.Name
+			}
+			node["Variable"] = varNode
+		}
+		if e.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(e.Expression)
+		}
+		if e.AssignmentKind != "" {
+			node["AssignmentKind"] = e.AssignmentKind
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownSelectElement"}
 	}
@@ -1094,9 +1116,8 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		// Always include IsNational and IsLargeObject
 		node["IsNational"] = e.IsNational
 		node["IsLargeObject"] = e.IsLargeObject
-		if e.Value != "" {
-			node["Value"] = e.Value
-		}
+		// Always include Value for StringLiteral, even if empty
+		node["Value"] = e.Value
 		return node
 	case *ast.BinaryLiteral:
 		node := jsonNode{
@@ -2065,6 +2086,8 @@ func setVariableStatementToJSON(s *ast.SetVariableStatement) jsonNode {
 	}
 	if s.SeparatorType != "" {
 		node["SeparatorType"] = s.SeparatorType
+	} else {
+		node["SeparatorType"] = "NotSpecified"
 	}
 	if s.Identifier != nil {
 		node["Identifier"] = identifierToJSON(s.Identifier)
@@ -5568,6 +5591,116 @@ func alterWorkloadGroupStatementToJSON(s *ast.AlterWorkloadGroupStatement) jsonN
 	}
 	if s.ExternalPoolName != nil {
 		node["ExternalPoolName"] = identifierToJSON(s.ExternalPoolName)
+	}
+	return node
+}
+
+func createWorkloadClassifierStatementToJSON(s *ast.CreateWorkloadClassifierStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateWorkloadClassifierStatement",
+	}
+	if s.ClassifierName != nil {
+		node["ClassifierName"] = identifierToJSON(s.ClassifierName)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = workloadClassifierOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func stringLiteralToJSON(s *ast.StringLiteral) jsonNode {
+	node := jsonNode{
+		"$type": "StringLiteral",
+	}
+	if s.LiteralType != "" {
+		node["LiteralType"] = s.LiteralType
+	} else {
+		node["LiteralType"] = "String"
+	}
+	node["IsNational"] = s.IsNational
+	node["IsLargeObject"] = s.IsLargeObject
+	// Always include Value for StringLiteral, even if empty
+	node["Value"] = s.Value
+	return node
+}
+
+func workloadClassifierOptionToJSON(opt ast.WorkloadClassifierOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.ClassifierWorkloadGroupOption:
+		node := jsonNode{
+			"$type":      "ClassifierWorkloadGroupOption",
+			"OptionType": o.OptionType,
+		}
+		if o.WorkloadGroupName != nil {
+			node["WorkloadGroupName"] = stringLiteralToJSON(o.WorkloadGroupName)
+		}
+		return node
+	case *ast.ClassifierMemberNameOption:
+		node := jsonNode{
+			"$type":      "ClassifierMemberNameOption",
+			"OptionType": o.OptionType,
+		}
+		if o.MemberName != nil {
+			node["MemberName"] = stringLiteralToJSON(o.MemberName)
+		}
+		return node
+	case *ast.ClassifierWlmContextOption:
+		node := jsonNode{
+			"$type":      "ClassifierWlmContextOption",
+			"OptionType": o.OptionType,
+		}
+		if o.WlmContext != nil {
+			node["WlmContext"] = stringLiteralToJSON(o.WlmContext)
+		}
+		return node
+	case *ast.ClassifierStartTimeOption:
+		node := jsonNode{
+			"$type":      "ClassifierStartTimeOption",
+			"OptionType": o.OptionType,
+		}
+		if o.Time != nil {
+			node["Time"] = wlmTimeLiteralToJSON(o.Time)
+		}
+		return node
+	case *ast.ClassifierEndTimeOption:
+		node := jsonNode{
+			"$type":      "ClassifierEndTimeOption",
+			"OptionType": o.OptionType,
+		}
+		if o.Time != nil {
+			node["Time"] = wlmTimeLiteralToJSON(o.Time)
+		}
+		return node
+	case *ast.ClassifierWlmLabelOption:
+		node := jsonNode{
+			"$type":      "ClassifierWlmLabelOption",
+			"OptionType": o.OptionType,
+		}
+		if o.WlmLabel != nil {
+			node["WlmLabel"] = stringLiteralToJSON(o.WlmLabel)
+		}
+		return node
+	case *ast.ClassifierImportanceOption:
+		return jsonNode{
+			"$type":      "ClassifierImportanceOption",
+			"Importance": o.Importance,
+			"OptionType": o.OptionType,
+		}
+	default:
+		return jsonNode{}
+	}
+}
+
+func wlmTimeLiteralToJSON(t *ast.WlmTimeLiteral) jsonNode {
+	node := jsonNode{
+		"$type": "WlmTimeLiteral",
+	}
+	if t.TimeString != nil {
+		node["TimeString"] = stringLiteralToJSON(t.TimeString)
 	}
 	return node
 }

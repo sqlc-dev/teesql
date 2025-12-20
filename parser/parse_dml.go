@@ -548,26 +548,66 @@ func (p *Parser) parseSetClauses() ([]ast.SetClause, error) {
 	return clauses, nil
 }
 
+// isCompoundAssignment checks if the current token is a compound assignment operator
+func (p *Parser) isCompoundAssignment() bool {
+	switch p.curTok.Type {
+	case TokenEquals, TokenConcatEquals, TokenPlusEquals, TokenMinusEquals,
+		TokenStarEquals, TokenSlashEquals, TokenModuloEquals,
+		TokenAndEquals, TokenOrEquals, TokenXorEquals:
+		return true
+	}
+	return false
+}
+
+// getAssignmentKind returns the AssignmentKind for the current compound assignment token
+func (p *Parser) getAssignmentKind() string {
+	switch p.curTok.Type {
+	case TokenEquals:
+		return "Equals"
+	case TokenConcatEquals:
+		return "ConcatEquals"
+	case TokenPlusEquals:
+		return "AddEquals"
+	case TokenMinusEquals:
+		return "SubtractEquals"
+	case TokenStarEquals:
+		return "MultiplyEquals"
+	case TokenSlashEquals:
+		return "DivideEquals"
+	case TokenModuloEquals:
+		return "ModEquals"
+	case TokenAndEquals:
+		return "BitwiseAndEquals"
+	case TokenOrEquals:
+		return "BitwiseOrEquals"
+	case TokenXorEquals:
+		return "BitwiseXorEquals"
+	}
+	return "Equals"
+}
+
 func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 	clause := &ast.AssignmentSetClause{AssignmentKind: "Equals"}
 
-	// Could be @var = col = value, @var = value, or col = value
+	// Could be @var = col = value, @var = value, @var ||= value, or col = value, col ||= value
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		varName := p.curTok.Literal
 		p.nextToken()
-		if p.curTok.Type == TokenEquals {
+		if p.isCompoundAssignment() {
+			clause.AssignmentKind = p.getAssignmentKind()
 			clause.Variable = &ast.VariableReference{Name: varName}
 			p.nextToken()
 
-			// Check if next is column = value (SET @a = col = value)
+			// Check if next is column = value or column ||= value (SET @a = col = value)
 			if p.curTok.Type == TokenIdent && !strings.HasPrefix(p.curTok.Literal, "@") {
-				// Could be @a = col = value or @a = expr
+				// Could be @a = col = value, @a = col ||= value or @a = expr
 				savedTok := p.curTok
 				col, err := p.parseMultiPartIdentifierAsColumn()
 				if err != nil {
 					return nil, err
 				}
-				if p.curTok.Type == TokenEquals {
+				if p.isCompoundAssignment() {
+					clause.AssignmentKind = p.getAssignmentKind()
 					clause.Column = col
 					p.nextToken()
 					val, err := p.parseScalarExpression()
@@ -587,7 +627,7 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 				return clause, nil
 			}
 
-			// Just @var = value
+			// Just @var = value or @var ||= value
 			val, err := p.parseScalarExpression()
 			if err != nil {
 				return nil, err
@@ -597,17 +637,19 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 		}
 	}
 
-	// col = value
+	// col = value or col ||= value
 	col, err := p.parseMultiPartIdentifierAsColumn()
 	if err != nil {
 		return nil, err
 	}
 	clause.Column = col
 
-	if p.curTok.Type != TokenEquals {
+	if p.isCompoundAssignment() {
+		clause.AssignmentKind = p.getAssignmentKind()
+		p.nextToken()
+	} else {
 		return nil, fmt.Errorf("expected =, got %s", p.curTok.Literal)
 	}
-	p.nextToken()
 
 	val, err := p.parseScalarExpression()
 	if err != nil {

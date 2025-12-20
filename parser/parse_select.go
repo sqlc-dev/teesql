@@ -372,6 +372,60 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		return &ast.SelectStarExpression{}, nil
 	}
 
+	// Check for variable assignment: @var = expr or @var ||= expr
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		varName := p.curTok.Literal
+		p.nextToken() // consume variable
+
+		// Check if this is an assignment
+		if p.isCompoundAssignment() {
+			ssv := &ast.SelectSetVariable{
+				Variable:       &ast.VariableReference{Name: varName},
+				AssignmentKind: p.getAssignmentKind(),
+			}
+			p.nextToken() // consume assignment operator
+
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			ssv.Expression = expr
+			return ssv, nil
+		}
+
+		// Not an assignment, treat as regular scalar expression starting with variable
+		// We need to "un-consume" the variable and let parseScalarExpression handle it
+		// Create the variable reference and use it as the expression
+		varRef := &ast.VariableReference{Name: varName}
+		sse := &ast.SelectScalarExpression{Expression: varRef}
+
+		// Check for column alias
+		if p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '[' {
+			alias := p.parseIdentifier()
+			sse.ColumnName = &ast.IdentifierOrValueExpression{
+				Value:      alias.Value,
+				Identifier: alias,
+			}
+		} else if p.curTok.Type == TokenAs {
+			p.nextToken()
+			alias := p.parseIdentifier()
+			sse.ColumnName = &ast.IdentifierOrValueExpression{
+				Value:      alias.Value,
+				Identifier: alias,
+			}
+		} else if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "FROM" && upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "INTO" && upper != "UNION" && upper != "EXCEPT" && upper != "INTERSECT" && upper != "GO" {
+				alias := p.parseIdentifier()
+				sse.ColumnName = &ast.IdentifierOrValueExpression{
+					Value:      alias.Value,
+					Identifier: alias,
+				}
+			}
+		}
+		return sse, nil
+	}
+
 	// Otherwise parse a scalar expression
 	expr, err := p.parseScalarExpression()
 	if err != nil {
@@ -487,12 +541,15 @@ func (p *Parser) parseAdditiveExpression() (ast.ScalarExpression, error) {
 		return nil, err
 	}
 
-	for p.curTok.Type == TokenPlus || p.curTok.Type == TokenMinus {
+	for p.curTok.Type == TokenPlus || p.curTok.Type == TokenMinus || p.curTok.Type == TokenDoublePipe {
 		var opType string
-		if p.curTok.Type == TokenPlus {
+		switch p.curTok.Type {
+		case TokenPlus:
 			opType = "Add"
-		} else {
+		case TokenMinus:
 			opType = "Subtract"
+		case TokenDoublePipe:
+			opType = "Concat"
 		}
 		p.nextToken()
 
