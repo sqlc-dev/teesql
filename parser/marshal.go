@@ -2731,9 +2731,21 @@ func dataTypeReferenceToJSON(d ast.DataTypeReference) jsonNode {
 		return sqlDataTypeReferenceToJSON(dt)
 	case *ast.XmlDataTypeReference:
 		return xmlDataTypeReferenceToJSON(dt)
+	case *ast.UserDataTypeReference:
+		return userDataTypeReferenceToJSON(dt)
 	default:
 		return jsonNode{"$type": "UnknownDataType"}
 	}
+}
+
+func userDataTypeReferenceToJSON(dt *ast.UserDataTypeReference) jsonNode {
+	node := jsonNode{
+		"$type": "UserDataTypeReference",
+	}
+	if dt.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(dt.Name)
+	}
+	return node
 }
 
 func xmlDataTypeReferenceToJSON(dt *ast.XmlDataTypeReference) jsonNode {

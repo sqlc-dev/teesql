@@ -541,8 +541,18 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 		}, nil
 	}
 
+	// Check if this is a known SQL data type
+	sqlOption, isKnownType := getSqlDataTypeOption(typeName)
+
+	if !isKnownType {
+		// Return UserDataTypeReference for unknown types
+		return &ast.UserDataTypeReference{
+			Name: baseName,
+		}, nil
+	}
+
 	dt := &ast.SqlDataTypeReference{
-		SqlDataTypeOption: convertDataTypeOption(typeName),
+		SqlDataTypeOption: sqlOption,
 		Name:              baseName,
 	}
 
@@ -577,40 +587,57 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 	return dt, nil
 }
 
-func convertDataTypeOption(typeName string) string {
+// getSqlDataTypeOption returns the SqlDataTypeOption for a type name and whether it's a known SQL type.
+func getSqlDataTypeOption(typeName string) (string, bool) {
 	typeMap := map[string]string{
-		"INT":       "Int",
-		"INTEGER":   "Int",
-		"BIGINT":    "BigInt",
-		"SMALLINT":  "SmallInt",
-		"TINYINT":   "TinyInt",
-		"BIT":       "Bit",
-		"DECIMAL":   "Decimal",
-		"NUMERIC":   "Numeric",
-		"MONEY":     "Money",
-		"SMALLMONEY": "SmallMoney",
-		"FLOAT":     "Float",
-		"REAL":      "Real",
-		"DATETIME":  "DateTime",
-		"DATETIME2": "DateTime2",
-		"DATE":      "Date",
-		"TIME":      "Time",
-		"CHAR":      "Char",
-		"VARCHAR":   "VarChar",
-		"TEXT":      "Text",
-		"NCHAR":     "NChar",
-		"NVARCHAR":  "NVarChar",
-		"NTEXT":     "NText",
-		"BINARY":    "Binary",
-		"VARBINARY": "VarBinary",
-		"IMAGE":     "Image",
-		"CURSOR":    "Cursor",
-		"SQL_VARIANT": "Sql_Variant",
-		"TABLE":     "Table",
-		"UNIQUEIDENTIFIER": "UniqueIdentifier",
-		"XML":       "Xml",
+		"INT":               "Int",
+		"INTEGER":           "Int",
+		"BIGINT":            "BigInt",
+		"SMALLINT":          "SmallInt",
+		"TINYINT":           "TinyInt",
+		"BIT":               "Bit",
+		"DECIMAL":           "Decimal",
+		"NUMERIC":           "Numeric",
+		"MONEY":             "Money",
+		"SMALLMONEY":        "SmallMoney",
+		"FLOAT":             "Float",
+		"REAL":              "Real",
+		"DATETIME":          "DateTime",
+		"DATETIME2":         "DateTime2",
+		"DATETIMEOFFSET":    "DateTimeOffset",
+		"SMALLDATETIME":     "SmallDateTime",
+		"DATE":              "Date",
+		"TIME":              "Time",
+		"CHAR":              "Char",
+		"VARCHAR":           "VarChar",
+		"TEXT":              "Text",
+		"NCHAR":             "NChar",
+		"NVARCHAR":          "NVarChar",
+		"NTEXT":             "NText",
+		"BINARY":            "Binary",
+		"VARBINARY":         "VarBinary",
+		"IMAGE":             "Image",
+		"CURSOR":            "Cursor",
+		"SQL_VARIANT":       "Sql_Variant",
+		"TABLE":             "Table",
+		"UNIQUEIDENTIFIER":  "UniqueIdentifier",
+		"XML":               "Xml",
+		"JSON":              "Json",
+		"GEOGRAPHY":         "Geography",
+		"GEOMETRY":          "Geometry",
+		"HIERARCHYID":       "HierarchyId",
+		"ROWVERSION":        "Rowversion",
+		"TIMESTAMP":         "Timestamp",
+		"CONNECTION":        "Connection",
 	}
 	if mapped, ok := typeMap[strings.ToUpper(typeName)]; ok {
+		return mapped, true
+	}
+	return "", false
+}
+
+func convertDataTypeOption(typeName string) string {
+	if mapped, ok := getSqlDataTypeOption(typeName); ok {
 		return mapped
 	}
 	// Return with first letter capitalized
