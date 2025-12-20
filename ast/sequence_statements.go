@@ -18,6 +18,15 @@ type ScalarExpressionSequenceOption struct {
 
 func (o *ScalarExpressionSequenceOption) node() {}
 
+// DataTypeSequenceOption represents a sequence option with a data type (AS clause).
+type DataTypeSequenceOption struct {
+	OptionKind string
+	DataType   DataTypeReference
+	NoValue    bool
+}
+
+func (o *DataTypeSequenceOption) node() {}
+
 // CreateSequenceStatement represents a CREATE SEQUENCE statement.
 type CreateSequenceStatement struct {
 	Name            *SchemaObjectName

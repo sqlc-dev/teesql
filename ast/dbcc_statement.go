@@ -3,7 +3,7 @@ package ast
 
 // DbccStatement represents a DBCC statement.
 type DbccStatement struct {
-	DllName             *Identifier
+	DllName             string
 	Command             string
 	ParenthesisRequired bool
 	Literals            []*DbccNamedLiteral

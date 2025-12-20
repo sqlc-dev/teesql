@@ -5761,44 +5761,58 @@ func (p *Parser) parseDbccStatement() (*ast.DbccStatement, error) {
 	stmt := &ast.DbccStatement{}
 
 	// Parse command name
-	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLParen {
-		stmt.Command = p.convertDbccCommand(strings.ToUpper(p.curTok.Literal))
+	if p.curTok.Type == TokenIdent {
+		cmdName := strings.ToUpper(p.curTok.Literal)
+		rawName := p.curTok.Literal
+		canonical, isKnown := p.getDbccCommand(cmdName)
+		if isKnown {
+			stmt.Command = canonical
+		} else {
+			// Unknown command - set DllName and use "Free" as command
+			stmt.DllName = rawName
+			stmt.Command = "Free"
+		}
 		p.nextToken()
 	}
 
 	// Check for parenthesis
 	if p.curTok.Type == TokenLParen {
-		stmt.ParenthesisRequired = true
 		p.nextToken() // consume (
 
-		// Parse literals/parameters
-		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-			lit := &ast.DbccNamedLiteral{}
-
-			// Check for named parameter (name = value)
-			if p.peekTok.Type == TokenEquals {
-				lit.Name = p.curTok.Literal
-				p.nextToken() // consume name
-				p.nextToken() // consume =
-			}
-
-			// Parse the value
-			val, err := p.parseScalarExpression()
-			if err != nil {
-				break
-			}
-			lit.Value = val
-			stmt.Literals = append(stmt.Literals, lit)
-
-			if p.curTok.Type == TokenComma {
-				p.nextToken()
-			} else {
-				break
-			}
-		}
-
+		// Check if empty parentheses
 		if p.curTok.Type == TokenRParen {
+			stmt.ParenthesisRequired = true
 			p.nextToken() // consume )
+		} else {
+			// Parse literals/parameters
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				lit := &ast.DbccNamedLiteral{}
+
+				// Check for named parameter (name = value)
+				if p.peekTok.Type == TokenEquals {
+					lit.Name = p.curTok.Literal
+					p.nextToken() // consume name
+					p.nextToken() // consume =
+				}
+
+				// Parse the value
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					break
+				}
+				lit.Value = val
+				stmt.Literals = append(stmt.Literals, lit)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		}
 	}
 
@@ -5843,8 +5857,8 @@ func (p *Parser) parseDbccStatement() (*ast.DbccStatement, error) {
 	return stmt, nil
 }
 
-// convertDbccCommand converts a DBCC command name to its canonical form.
-func (p *Parser) convertDbccCommand(cmd string) string {
+// getDbccCommand returns the canonical DBCC command name and whether it's a known command.
+func (p *Parser) getDbccCommand(cmd string) (string, bool) {
 	commandMap := map[string]string{
 		"CHECKDB":              "CheckDB",
 		"CHECKTABLE":           "CheckTable",
@@ -5879,9 +5893,9 @@ func (p *Parser) convertDbccCommand(cmd string) string {
 		"HELP":                 "Help",
 	}
 	if canonical, ok := commandMap[cmd]; ok {
-		return canonical
+		return canonical, true
 	}
-	return cmd
+	return cmd, false
 }
 
 // convertDbccOptionKind converts a DBCC option name to its canonical form.
@@ -5892,6 +5906,7 @@ func (p *Parser) convertDbccOptionKind(opt string) string {
 		"TABLOCK":                 "TabLock",
 		"TABLERESULTS":            "TableResults",
 		"COUNTROWS":               "CountRows",
+		"COUNT_ROWS":              "CountRows",
 		"STAT_HEADER":             "StatHeader",
 		"DENSITY_VECTOR":          "DensityVector",
 		"HISTOGRAM_STEPS":         "HistogramSteps",
@@ -5903,6 +5918,9 @@ func (p *Parser) convertDbccOptionKind(opt string) string {
 		"DATA_PURITY":             "DataPurity",
 		"EXTENDED_LOGICAL_CHECKS": "ExtendedLogicalChecks",
 		"MARK_IN_USE_FOR_REMOVAL": "MarkInUseForRemoval",
+		"ALL_CONSTRAINTS":         "AllConstraints",
+		"STATS_STREAM":            "StatsStream",
+		"HISTOGRAM":               "Histogram",
 	}
 	if canonical, ok := optionMap[opt]; ok {
 		return canonical

@@ -5634,6 +5634,16 @@ func sequenceOptionToJSON(opt interface{}) jsonNode {
 			node["OptionValue"] = scalarExpressionToJSON(o.OptionValue)
 		}
 		return node
+	case *ast.DataTypeSequenceOption:
+		node := jsonNode{
+			"$type":      "DataTypeSequenceOption",
+			"OptionKind": o.OptionKind,
+			"NoValue":    o.NoValue,
+		}
+		if o.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(o.DataType)
+		}
+		return node
 	default:
 		return jsonNode{}
 	}
@@ -5646,8 +5656,8 @@ func dbccStatementToJSON(s *ast.DbccStatement) jsonNode {
 		"ParenthesisRequired": s.ParenthesisRequired,
 		"OptionsUseJoin":      s.OptionsUseJoin,
 	}
-	if s.DllName != nil {
-		node["DllName"] = identifierToJSON(s.DllName)
+	if s.DllName != "" {
+		node["DllName"] = s.DllName
 	}
 	if len(s.Literals) > 0 {
 		lits := make([]jsonNode, len(s.Literals))

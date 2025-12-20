@@ -4083,7 +4083,11 @@ func (p *Parser) parseSequenceOption() (interface{}, error) {
 	case "CYCLE":
 		optionKind = "Cycle"
 		p.nextToken()
-		hasValue = false
+		// CYCLE is always a SequenceOption (not ScalarExpressionSequenceOption)
+		return &ast.SequenceOption{
+			OptionKind: optionKind,
+			NoValue:    isNo,
+		}, nil
 	case "CACHE":
 		optionKind = "Cache"
 		p.nextToken()
@@ -4097,6 +4101,25 @@ func (p *Parser) parseSequenceOption() (interface{}, error) {
 				hasValue = false
 			}
 		}
+	case "START":
+		optionKind = "Start"
+		p.nextToken()
+		// Consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "WITH" {
+			p.nextToken()
+		}
+	case "AS":
+		p.nextToken()
+		// Parse data type
+		dataType, err := p.parseDataType()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.DataTypeSequenceOption{
+			OptionKind: "As",
+			DataType:   dataType,
+			NoValue:    false,
+		}, nil
 	default:
 		return nil, nil
 	}
