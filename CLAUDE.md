@@ -60,3 +60,7 @@ Each test in `parser/testdata/` contains:
 - `metadata.json` - `{"skip": true}` or `{"skip": false}`
 - `query.sql` - T-SQL to parse
 - `ast.json` - Expected AST output
+
+## Important Rules
+
+- **NEVER modify `ast.json` files** - These are golden files containing the expected output. If tests fail due to JSON mismatches, fix the Go code to match the expected output, not the other way around.

@@ -85,6 +85,19 @@ const (
 	TokenRBrace
 	TokenLeftShift
 	TokenRightShift
+	TokenPipe           // |
+	TokenDoublePipe     // ||
+	TokenConcatEquals   // ||=
+	TokenBitwiseAnd     // &
+	TokenPlusEquals     // +=
+	TokenMinusEquals    // -=
+	TokenStarEquals     // *=
+	TokenSlashEquals    // /=
+	TokenModuloEquals   // %=
+	TokenAndEquals      // &=
+	TokenOrEquals       // |=
+	TokenXorEquals      // ^=
+	TokenCaret          // ^
 
 	// DML Keywords
 	TokenInsert
@@ -265,9 +278,16 @@ func (l *Lexer) NextToken() Token {
 		tok.Type = TokenEOF
 		tok.Literal = ""
 	case '*':
-		tok.Type = TokenStar
-		tok.Literal = "*"
-		l.readChar()
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = TokenStarEquals
+			tok.Literal = "*="
+			l.readChar()
+		} else {
+			tok.Type = TokenStar
+			tok.Literal = "*"
+			l.readChar()
+		}
 	case ',':
 		tok.Type = TokenComma
 		tok.Literal = ","
@@ -355,21 +375,94 @@ func (l *Lexer) NextToken() Token {
 		tok.Literal = "}"
 		l.readChar()
 	case '+':
-		tok.Type = TokenPlus
-		tok.Literal = "+"
-		l.readChar()
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = TokenPlusEquals
+			tok.Literal = "+="
+			l.readChar()
+		} else {
+			tok.Type = TokenPlus
+			tok.Literal = "+"
+			l.readChar()
+		}
 	case '-':
-		tok.Type = TokenMinus
-		tok.Literal = "-"
-		l.readChar()
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = TokenMinusEquals
+			tok.Literal = "-="
+			l.readChar()
+		} else {
+			tok.Type = TokenMinus
+			tok.Literal = "-"
+			l.readChar()
+		}
 	case '/':
-		tok.Type = TokenSlash
-		tok.Literal = "/"
-		l.readChar()
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = TokenSlashEquals
+			tok.Literal = "/="
+			l.readChar()
+		} else {
+			tok.Type = TokenSlash
+			tok.Literal = "/"
+			l.readChar()
+		}
 	case '%':
-		tok.Type = TokenModulo
-		tok.Literal = "%"
-		l.readChar()
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = TokenModuloEquals
+			tok.Literal = "%="
+			l.readChar()
+		} else {
+			tok.Type = TokenModulo
+			tok.Literal = "%"
+			l.readChar()
+		}
+	case '|':
+		if l.peekChar() == '|' {
+			l.readChar() // consume first |
+			if l.peekChar() == '=' {
+				l.readChar() // consume second |
+				tok.Type = TokenConcatEquals
+				tok.Literal = "||="
+				l.readChar() // consume =
+			} else {
+				tok.Type = TokenDoublePipe
+				tok.Literal = "||"
+				l.readChar() // consume second |
+			}
+		} else if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = TokenOrEquals
+			tok.Literal = "|="
+			l.readChar()
+		} else {
+			tok.Type = TokenPipe
+			tok.Literal = "|"
+			l.readChar()
+		}
+	case '&':
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = TokenAndEquals
+			tok.Literal = "&="
+			l.readChar()
+		} else {
+			tok.Type = TokenBitwiseAnd
+			tok.Literal = "&"
+			l.readChar()
+		}
+	case '^':
+		if l.peekChar() == '=' {
+			l.readChar()
+			tok.Type = TokenXorEquals
+			tok.Literal = "^="
+			l.readChar()
+		} else {
+			tok.Type = TokenCaret
+			tok.Literal = "^"
+			l.readChar()
+		}
 	case '\'':
 		tok = l.readString()
 	default:

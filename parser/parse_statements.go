@@ -814,11 +814,13 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 		return stmt, nil
 	}
 
-	// Expect =
-	if p.curTok.Type != TokenEquals {
+	// Expect = or compound assignment operator
+	if p.isCompoundAssignment() {
+		stmt.AssignmentKind = p.getAssignmentKind()
+		p.nextToken()
+	} else {
 		return nil, fmt.Errorf("expected =, got %s", p.curTok.Literal)
 	}
-	p.nextToken()
 
 	// Check for CURSOR definition
 	if p.curTok.Type == TokenCursor {
@@ -1234,6 +1236,11 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		case "FEDERATION":
 			return p.parseCreateFederationStatement()
 		case "WORKLOAD":
+			// Check if it's CLASSIFIER or GROUP
+			nextWord := strings.ToUpper(p.peekTok.Literal)
+			if nextWord == "CLASSIFIER" {
+				return p.parseCreateWorkloadClassifierStatement()
+			}
 			return p.parseCreateWorkloadGroupStatement()
 		case "SEQUENCE":
 			return p.parseCreateSequenceStatement()
@@ -3568,17 +3575,52 @@ func (p *Parser) parseSendStatement() (*ast.SendStatement, error) {
 	p.nextToken() // consume CONVERSATION
 
 	// Parse conversation handle(s)
-	for {
+	// Syntax: (@var) OR (@var1, @var2, ...) OR ((@var))
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		// Check for double parens: ((...))
+		if p.curTok.Type == TokenLParen {
+			// Double paren case - parse as single ParenthesisExpression
+			p.nextToken() // consume inner (
+			inner, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume inner )
+			}
+			stmt.ConversationHandles = append(stmt.ConversationHandles, &ast.ParenthesisExpression{Expression: inner})
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume outer )
+			}
+		} else {
+			// Parse comma-separated list of expressions
+			for {
+				handle, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				stmt.ConversationHandles = append(stmt.ConversationHandles, handle)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume comma
+					continue
+				}
+				break
+			}
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+		}
+	} else {
+		// Non-parenthesized expression
 		handle, err := p.parseScalarExpression()
 		if err != nil {
 			return nil, err
 		}
 		stmt.ConversationHandles = append(stmt.ConversationHandles, handle)
-
-		if p.curTok.Type != TokenComma {
-			break
-		}
-		p.nextToken() // consume comma
 	}
 
 	// Optional MESSAGE TYPE
@@ -5734,6 +5776,12 @@ func (p *Parser) parseWorkloadGroupParameter() (interface{}, error) {
 		switch importanceValue {
 		case "LOW":
 			importanceValue = "Low"
+		case "BELOW_NORMAL":
+			importanceValue = "Below_Normal"
+		case "NORMAL":
+			importanceValue = "Normal"
+		case "ABOVE_NORMAL":
+			importanceValue = "Above_Normal"
 		case "MEDIUM":
 			importanceValue = "Medium"
 		case "HIGH":
@@ -5766,6 +5814,10 @@ func (p *Parser) parseWorkloadGroupParameter() (interface{}, error) {
 		param.ParameterType = "MinPercentageResource"
 	case "QUERY_EXECUTION_TIMEOUT_SEC":
 		param.ParameterType = "QueryExecutionTimeoutSec"
+	case "REQUEST_MIN_RESOURCE_GRANT_PERCENT":
+		param.ParameterType = "RequestMinResourceGrantPercent"
+	case "REQUEST_MAX_RESOURCE_GRANT_PERCENT":
+		param.ParameterType = "RequestMaxResourceGrantPercent"
 	default:
 		param.ParameterType = paramName
 	}
@@ -5778,6 +5830,170 @@ func (p *Parser) parseWorkloadGroupParameter() (interface{}, error) {
 	param.ParameterValue = val
 
 	return param, nil
+}
+
+// parseCreateWorkloadClassifierStatement parses CREATE WORKLOAD CLASSIFIER statement.
+func (p *Parser) parseCreateWorkloadClassifierStatement() (*ast.CreateWorkloadClassifierStatement, error) {
+	// Consume WORKLOAD
+	p.nextToken()
+
+	// Consume CLASSIFIER
+	if strings.ToUpper(p.curTok.Literal) == "CLASSIFIER" {
+		p.nextToken()
+	}
+
+	stmt := &ast.CreateWorkloadClassifierStatement{}
+
+	// Parse classifier name
+	stmt.ClassifierName = p.parseIdentifier()
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+		}
+
+		// Parse options
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			opt, err := p.parseWorkloadClassifierOption()
+			if err != nil {
+				return nil, err
+			}
+			if opt != nil {
+				stmt.Options = append(stmt.Options, opt)
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseWorkloadClassifierOption parses a single workload classifier option.
+func (p *Parser) parseWorkloadClassifierOption() (ast.WorkloadClassifierOption, error) {
+	// Parse option name
+	optName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	// Parse = value
+	if p.curTok.Type == TokenEquals {
+		p.nextToken()
+	}
+
+	switch optName {
+	case "WORKLOAD_GROUP":
+		opt := &ast.ClassifierWorkloadGroupOption{
+			OptionType: "WorkloadGroup",
+		}
+		strLit, err := p.parseStringLiteral()
+		if err != nil {
+			return nil, err
+		}
+		opt.WorkloadGroupName = strLit
+		return opt, nil
+
+	case "MEMBERNAME":
+		opt := &ast.ClassifierMemberNameOption{
+			OptionType: "MemberName",
+		}
+		strLit, err := p.parseStringLiteral()
+		if err != nil {
+			return nil, err
+		}
+		opt.MemberName = strLit
+		return opt, nil
+
+	case "WLM_CONTEXT":
+		opt := &ast.ClassifierWlmContextOption{
+			OptionType: "WlmContext",
+		}
+		strLit, err := p.parseStringLiteral()
+		if err != nil {
+			return nil, err
+		}
+		opt.WlmContext = strLit
+		return opt, nil
+
+	case "START_TIME":
+		opt := &ast.ClassifierStartTimeOption{
+			OptionType: "StartTime",
+		}
+		strLit, err := p.parseStringLiteral()
+		if err != nil {
+			return nil, err
+		}
+		opt.Time = &ast.WlmTimeLiteral{
+			TimeString: strLit,
+		}
+		return opt, nil
+
+	case "END_TIME":
+		opt := &ast.ClassifierEndTimeOption{
+			OptionType: "EndTime",
+		}
+		strLit, err := p.parseStringLiteral()
+		if err != nil {
+			return nil, err
+		}
+		opt.Time = &ast.WlmTimeLiteral{
+			TimeString: strLit,
+		}
+		return opt, nil
+
+	case "WLM_LABEL":
+		opt := &ast.ClassifierWlmLabelOption{
+			OptionType: "WlmLabel",
+		}
+		strLit, err := p.parseStringLiteral()
+		if err != nil {
+			return nil, err
+		}
+		opt.WlmLabel = strLit
+		return opt, nil
+
+	case "IMPORTANCE":
+		opt := &ast.ClassifierImportanceOption{
+			OptionType: "Importance",
+		}
+		importanceValue := strings.ToUpper(p.curTok.Literal)
+		switch importanceValue {
+		case "LOW":
+			opt.Importance = "Low"
+		case "BELOW_NORMAL":
+			opt.Importance = "Below_Normal"
+		case "NORMAL":
+			opt.Importance = "Normal"
+		case "ABOVE_NORMAL":
+			opt.Importance = "Above_Normal"
+		case "HIGH":
+			opt.Importance = "High"
+		default:
+			opt.Importance = importanceValue
+		}
+		p.nextToken()
+		return opt, nil
+
+	default:
+		// Skip unknown option
+		if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			p.nextToken()
+		}
+		return nil, nil
+	}
 }
 
 // parseDbccStatement parses a DBCC statement.
