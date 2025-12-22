@@ -71,6 +71,35 @@ Output:
 }
 ```
 
-## License
+## Using encoding/json
 
-MIT
+You can also use the standard library directly:
+
+```go
+package main
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	"github.com/sqlc-dev/teesql/parser"
+)
+
+func main() {
+	sql := "SELECT 1"
+
+	script, err := parser.Parse(context.Background(), strings.NewReader(sql))
+	if err != nil {
+		panic(err)
+	}
+
+	out, err := json.MarshalIndent(script, "", "  ")
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(out))
+}
+```
