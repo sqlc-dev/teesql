@@ -1,11 +1,11 @@
 # teesql
 
-A T-SQL parser for Go that produces JSON AST output compatible with Microsoft's SqlScriptDOM.
+A T-SQL parser for Go that produces JSON AST output compatible with Microsoft's [SqlScriptDOM](https://learn.microsoft.com/en-us/dotnet/api/microsoft.sqlserver.transactsql.scriptdom).
 
 ## Installation
 
 ```bash
-go get github.com/kyleconroy/teesql
+go get github.com/sqlc-dev/teesql
 ```
 
 ## Usage
@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kyleconroy/teesql/parser"
+	"github.com/sqlc-dev/teesql/parser"
 )
 
 func main() {
