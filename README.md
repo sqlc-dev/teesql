@@ -1,5 +1,7 @@
 # teesql
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/sqlc-dev/teesql.svg)](https://pkg.go.dev/github.com/sqlc-dev/teesql)
+
 A T-SQL parser for Go that produces JSON AST output compatible with Microsoft's [SqlScriptDOM](https://learn.microsoft.com/en-us/dotnet/api/microsoft.sqlserver.transactsql.scriptdom).
 
 ## Installation
