@@ -4192,6 +4192,8 @@ func (p *Parser) parseCreateExternalDataSourceStatement() (*ast.CreateExternalDa
 
 	// Parse WITH clause
 	if p.curTok.Type == TokenWith {
+		// Default to EXTERNAL_GENERICS if WITH clause exists but no TYPE specified
+		stmt.DataSourceType = "EXTERNAL_GENERICS"
 		p.nextToken() // consume WITH
 		if p.curTok.Type != TokenLParen {
 			return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
@@ -4199,19 +4201,48 @@ func (p *Parser) parseCreateExternalDataSourceStatement() (*ast.CreateExternalDa
 		p.nextToken() // consume (
 
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-			opt := &ast.ExternalDataSourceOption{
-				OptionKind: p.curTok.Literal,
-			}
+			optName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume option name
 			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			switch optName {
+			case "TYPE":
+				// TYPE sets DataSourceType
+				stmt.DataSourceType = strings.ToUpper(p.curTok.Literal)
 				p.nextToken()
-				val, err := p.parseScalarExpression()
+			case "LOCATION":
+				// LOCATION sets Location as StringLiteral
+				strLit, err := p.parseStringLiteral()
 				if err != nil {
 					return nil, err
 				}
-				opt.Value = val
+				stmt.Location = strLit
+			default:
+				// All other options go into ExternalDataSourceOptions
+				opt := &ast.ExternalDataSourceLiteralOrIdentifierOption{
+					OptionKind: externalDataSourceOptionKindToPascalCase(optName),
+					Value:      &ast.IdentifierOrValueExpression{},
+				}
+
+				// Determine if value is identifier or string literal
+				if p.curTok.Type == TokenString {
+					strLit, err := p.parseStringLiteral()
+					if err != nil {
+						return nil, err
+					}
+					opt.Value.Value = strLit.Value
+					opt.Value.ValueExpression = strLit
+				} else {
+					// It's an identifier
+					ident := p.parseIdentifier()
+					opt.Value.Value = ident.Value
+					opt.Value.Identifier = ident
+				}
+				stmt.ExternalDataSourceOptions = append(stmt.ExternalDataSourceOptions, opt)
 			}
-			stmt.Options = append(stmt.Options, opt)
+
 			if p.curTok.Type == TokenComma {
 				p.nextToken()
 			}
@@ -4225,6 +4256,26 @@ func (p *Parser) parseCreateExternalDataSourceStatement() (*ast.CreateExternalDa
 		p.nextToken()
 	}
 	return stmt, nil
+}
+
+// externalDataSourceOptionKindToPascalCase converts option names to PascalCase
+func externalDataSourceOptionKindToPascalCase(optName string) string {
+	switch strings.ToUpper(optName) {
+	case "CREDENTIAL":
+		return "Credential"
+	case "RESOURCE_MANAGER_LOCATION":
+		return "ResourceManagerLocation"
+	case "DATABASE_NAME":
+		return "DatabaseName"
+	case "SHARD_MAP_NAME":
+		return "ShardMapName"
+	case "CONNECTION_OPTIONS":
+		return "ConnectionOptions"
+	case "PUSHDOWN":
+		return "Pushdown"
+	default:
+		return optName
+	}
 }
 
 func (p *Parser) parseCreateExternalFileFormatStatement() (*ast.CreateExternalFileFormatStatement, error) {
