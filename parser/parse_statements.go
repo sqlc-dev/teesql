@@ -1246,6 +1246,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateSequenceStatement()
 		case "SPATIAL":
 			return p.parseCreateSpatialIndexStatement()
+		case "SERVER":
+			return p.parseCreateServerRoleStatement()
 		}
 		// Lenient: skip unknown CREATE statements
 		p.skipToEndOfStatement()
@@ -1364,6 +1366,35 @@ func (p *Parser) parseCreateRoleStatement() (*ast.CreateRoleStatement, error) {
 	p.nextToken()
 
 	stmt := &ast.CreateRoleStatement{}
+
+	// Parse role name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for optional AUTHORIZATION
+	if p.curTok.Type == TokenAuthorization {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateServerRoleStatement() (*ast.CreateServerRoleStatement, error) {
+	// Consume SERVER
+	p.nextToken()
+
+	// Expect ROLE
+	if strings.ToUpper(p.curTok.Literal) != "ROLE" {
+		return nil, fmt.Errorf("expected ROLE after SERVER, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ROLE
+
+	stmt := &ast.CreateServerRoleStatement{}
 
 	// Parse role name
 	stmt.Name = p.parseIdentifier()

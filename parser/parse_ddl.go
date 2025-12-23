@@ -1776,9 +1776,14 @@ func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error)
 	// Consume SERVER
 	p.nextToken()
 
+	// Check if it's ALTER SERVER ROLE or ALTER SERVER CONFIGURATION
+	if strings.ToUpper(p.curTok.Literal) == "ROLE" {
+		return p.parseAlterServerRoleStatement()
+	}
+
 	// Expect CONFIGURATION
 	if strings.ToUpper(p.curTok.Literal) != "CONFIGURATION" {
-		return nil, fmt.Errorf("expected CONFIGURATION after SERVER, got %s", p.curTok.Literal)
+		return nil, fmt.Errorf("expected CONFIGURATION or ROLE after SERVER, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
 
@@ -2991,6 +2996,65 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 	p.nextToken()
 
 	stmt := &ast.AlterRoleStatement{}
+
+	// Parse role name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse action: ADD MEMBER, DROP MEMBER, or WITH NAME =
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "ADD":
+		p.nextToken() // consume ADD
+		if strings.ToUpper(p.curTok.Literal) != "MEMBER" {
+			return nil, fmt.Errorf("expected MEMBER after ADD, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume MEMBER
+		action := &ast.AddMemberAlterRoleAction{}
+		action.Member = p.parseIdentifier()
+		stmt.Action = action
+
+	case "DROP":
+		p.nextToken() // consume DROP
+		if strings.ToUpper(p.curTok.Literal) != "MEMBER" {
+			return nil, fmt.Errorf("expected MEMBER after DROP, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume MEMBER
+		action := &ast.DropMemberAlterRoleAction{}
+		action.Member = p.parseIdentifier()
+		stmt.Action = action
+
+	case "WITH":
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) != "NAME" {
+			return nil, fmt.Errorf("expected NAME after WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume NAME
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after NAME, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume =
+		action := &ast.RenameAlterRoleAction{}
+		action.NewName = p.parseIdentifier()
+		stmt.Action = action
+
+	default:
+		// Handle incomplete statement
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement, error) {
+	// Consume ROLE
+	p.nextToken()
+
+	stmt := &ast.AlterServerRoleStatement{}
 
 	// Parse role name
 	stmt.Name = p.parseIdentifier()

@@ -2,9 +2,10 @@ package ast
 
 // GrantStatement represents a GRANT statement
 type GrantStatement struct {
-	Permissions     []*Permission
-	Principals      []*SecurityPrincipal
-	WithGrantOption bool
+	Permissions          []*Permission
+	Principals           []*SecurityPrincipal
+	WithGrantOption      bool
+	SecurityTargetObject *SecurityTargetObject
 }
 
 func (s *GrantStatement) node()      {}
