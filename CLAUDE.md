@@ -2,67 +2,44 @@
 
 ## Next Steps
 
-To continue implementing parser support for skipped tests, consult:
+To find the next test to work on, run:
 
-```
-skipped_tests_by_size.txt
+```bash
+go run ./cmd/next-test
 ```
 
-This file lists all skipped tests ordered by query file size (smallest first). Smaller tests are generally simpler to implement.
+This tool finds all tests with `todo: true` in their metadata and returns the one with the shortest `query.sql` file.
 
 ## Workflow
 
-1. Pick tests from `skipped_tests_by_size.txt` starting from the top
+1. Run `go run ./cmd/next-test` to find the next test to implement
 2. Check the test's `query.sql` to understand what SQL needs parsing
 3. Check the test's `ast.json` to understand the expected output format
 4. Implement the necessary AST types in `ast/`
 5. Add parser logic in `parser/parser.go`
 6. Add JSON marshaling functions in `parser/parser.go`
-7. Enable the test by setting `{"skip": false}` in its `metadata.json`
+7. Enable the test by removing `todo: true` from its `metadata.json` (set it to `{}`)
 8. Run `go test ./parser/...` to verify
-9. **Check if other skipped tests now pass** (see below)
-10. **Update `skipped_tests_by_size.txt`** after enabling tests
+9. **Check if other todo tests now pass** (see below)
 
-## Checking for Newly Passing Skipped Tests
+## Checking for Newly Passing Todo Tests
 
 After implementing parser changes, run:
 
 ```bash
-go test ./parser/... -only-skipped -v 2>&1 | grep "PASS:"
+go test ./parser/... -only-todo -v 2>&1 | grep "PASS:"
 ```
 
-This shows any skipped tests that now pass. Enable those tests by setting `{"skip": false}` in their `metadata.json`.
+This shows any todo tests that now pass. Enable those tests by removing `todo: true` from their `metadata.json`.
 
 Available test flags:
-- `-only-skipped` - Run only skipped tests (find newly passing tests)
-- `-run-skipped` - Run skipped tests along with normal tests
-
-## Updating skipped_tests_by_size.txt
-
-After enabling tests, regenerate the file. The script only includes tests that:
-- Have `"skip": true` in metadata.json
-- Do NOT have `"invalid_syntax"` in metadata.json (these can't be implemented)
-- Have an `ast.json` file (tests without it are unparseable)
-
-```bash
-cd parser/testdata
-ls -d */ | while read dir; do
-  dir="${dir%/}"
-  if [ -f "$dir/metadata.json" ] && [ -f "$dir/ast.json" ] && [ -f "$dir/query.sql" ]; then
-    if grep -q '"skip": true' "$dir/metadata.json" 2>/dev/null; then
-      if grep -qv '"invalid_syntax"' "$dir/metadata.json" 2>/dev/null; then
-        size=$(wc -c < "$dir/query.sql")
-        echo "$size $dir"
-      fi
-    fi
-  fi
-done | sort -n > ../../skipped_tests_by_size.txt
-```
+- `-only-todo` - Run only todo/invalid_syntax tests (find newly passing tests)
+- `-run-todo` - Run todo/invalid_syntax tests along with normal tests
 
 ## Test Structure
 
 Each test in `parser/testdata/` contains:
-- `metadata.json` - `{"skip": true}` or `{"skip": false}`
+- `metadata.json` - `{}` for enabled tests, `{"todo": true}` for pending tests, or `{"invalid_syntax": true}` for tests with invalid SQL
 - `query.sql` - T-SQL to parse
 - `ast.json` - Expected AST output
 

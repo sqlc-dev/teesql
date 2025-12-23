@@ -11,14 +11,15 @@ import (
 )
 
 type testMetadata struct {
-	Skip bool `json:"skip"`
+	Todo          bool `json:"todo"`
+	InvalidSyntax bool `json:"invalid_syntax"`
 }
 
-// Test flags for running skipped tests
-// Usage: go test ./parser/... -run-skipped     # run all tests including skipped
-// Usage: go test ./parser/... -only-skipped    # run only skipped tests (find newly passing tests)
-var runSkippedTests = flag.Bool("run-skipped", false, "run skipped tests along with normal tests")
-var onlySkippedTests = flag.Bool("only-skipped", false, "run only skipped tests (useful to find tests that now pass)")
+// Test flags for running todo/invalid_syntax tests
+// Usage: go test ./parser/... -run-todo     # run all tests including todo tests
+// Usage: go test ./parser/... -only-todo    # run only todo tests (find newly passing tests)
+var runTodoTests = flag.Bool("run-todo", false, "run todo tests along with normal tests")
+var onlyTodoTests = flag.Bool("only-todo", false, "run only todo tests (useful to find tests that now pass)")
 
 func TestParse(t *testing.T) {
 	entries, err := os.ReadDir("testdata")
@@ -35,7 +36,7 @@ func TestParse(t *testing.T) {
 		t.Run(testName, func(t *testing.T) {
 			testDir := filepath.Join("testdata", testName)
 
-			// Check metadata.json for skip flag
+			// Check metadata.json for todo/invalid_syntax flags
 			metadataPath := filepath.Join(testDir, "metadata.json")
 			metadataData, err := os.ReadFile(metadataPath)
 			if err != nil {
@@ -47,11 +48,13 @@ func TestParse(t *testing.T) {
 				t.Fatalf("failed to parse metadata.json: %v", err)
 			}
 
-			if metadata.Skip && !*runSkippedTests && !*onlySkippedTests {
-				t.Skip("skipped via metadata.json")
+			// Skip tests marked with todo or invalid_syntax unless running with -run-todo or -only-todo
+			shouldSkip := metadata.Todo || metadata.InvalidSyntax
+			if shouldSkip && !*runTodoTests && !*onlyTodoTests {
+				t.Skip("skipped via metadata.json (todo or invalid_syntax)")
 			}
-			if !metadata.Skip && *onlySkippedTests {
-				t.Skip("not a skipped test")
+			if !shouldSkip && *onlyTodoTests {
+				t.Skip("not a todo/invalid_syntax test")
 			}
 
 			// Read the test SQL file
