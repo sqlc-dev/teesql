@@ -2391,7 +2391,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 	col.ColumnIdentifier = p.parseIdentifier()
 
 	// Parse data type - be lenient if no data type is provided
-	dataType, err := p.parseDataType()
+	dataType, err := p.parseDataTypeReference()
 	if err != nil {
 		// Lenient: return column definition without data type
 		return col, nil
