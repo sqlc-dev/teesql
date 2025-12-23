@@ -412,6 +412,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTableSwitchStatementToJSON(s)
 	case *ast.AlterTableConstraintModificationStatement:
 		return alterTableConstraintModificationStatementToJSON(s)
+	case *ast.AlterTableSetStatement:
+		return alterTableSetStatementToJSON(s)
 	case *ast.InsertBulkStatement:
 		return insertBulkStatementToJSON(s)
 	case *ast.BulkInsertStatement:
@@ -6134,6 +6136,60 @@ func alterTableConstraintModificationStatementToJSON(s *ast.AlterTableConstraint
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
+	return node
+}
+
+func alterTableSetStatementToJSON(s *ast.AlterTableSetStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterTableSetStatement",
+	}
+	if len(s.Options) > 0 {
+		var options []jsonNode
+		for _, opt := range s.Options {
+			options = append(options, tableOptionToJSON(opt))
+		}
+		node["Options"] = options
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func tableOptionToJSON(opt ast.TableOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.SystemVersioningTableOption:
+		return systemVersioningTableOptionToJSON(o)
+	default:
+		return jsonNode{"$type": "UnknownTableOption"}
+	}
+}
+
+func systemVersioningTableOptionToJSON(o *ast.SystemVersioningTableOption) jsonNode {
+	node := jsonNode{
+		"$type":                   "SystemVersioningTableOption",
+		"OptionState":             o.OptionState,
+		"ConsistencyCheckEnabled": o.ConsistencyCheckEnabled,
+	}
+	if o.HistoryTable != nil {
+		node["HistoryTable"] = schemaObjectNameToJSON(o.HistoryTable)
+	}
+	if o.RetentionPeriod != nil {
+		node["RetentionPeriod"] = retentionPeriodDefinitionToJSON(o.RetentionPeriod)
+	}
+	node["OptionKind"] = o.OptionKind
+	return node
+}
+
+func retentionPeriodDefinitionToJSON(r *ast.RetentionPeriodDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "RetentionPeriodDefinition",
+	}
+	if r.Duration != nil {
+		node["Duration"] = scalarExpressionToJSON(r.Duration)
+	}
+	node["Units"] = r.Units
+	node["IsInfinity"] = r.IsInfinity
 	return node
 }
 
