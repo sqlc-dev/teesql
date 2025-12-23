@@ -2132,6 +2132,11 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 		return p.parseAlterTableConstraintModificationStatement(tableName)
 	}
 
+	// Check for SET
+	if strings.ToUpper(p.curTok.Literal) == "SET" {
+		return p.parseAlterTableSetStatement(tableName)
+	}
+
 	return nil, fmt.Errorf("unexpected token in ALTER TABLE: %s", p.curTok.Literal)
 }
 
@@ -2683,6 +2688,172 @@ func (p *Parser) parseAlterTableConstraintModificationStatement(tableName *ast.S
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableSetStatement, error) {
+	stmt := &ast.AlterTableSetStatement{
+		SchemaObjectName: tableName,
+	}
+
+	// Consume SET
+	p.nextToken()
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after SET, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse options
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optionName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		if optionName == "SYSTEM_VERSIONING" {
+			opt, err := p.parseSystemVersioningTableOption()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = append(stmt.Options, opt)
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	// Consume )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseSystemVersioningTableOption() (*ast.SystemVersioningTableOption, error) {
+	opt := &ast.SystemVersioningTableOption{
+		OptionKind:              "LockEscalation",
+		ConsistencyCheckEnabled: "NotSet",
+	}
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after SYSTEM_VERSIONING, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse ON or OFF
+	stateVal := strings.ToUpper(p.curTok.Literal)
+	if stateVal == "ON" {
+		opt.OptionState = "On"
+	} else if stateVal == "OFF" {
+		opt.OptionState = "Off"
+	} else {
+		return nil, fmt.Errorf("expected ON or OFF after =, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for optional sub-options in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			subOptName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+
+			switch subOptName {
+			case "HISTORY_TABLE":
+				histTable, err := p.parseSchemaObjectName()
+				if err != nil {
+					return nil, err
+				}
+				opt.HistoryTable = histTable
+
+			case "DATA_CONSISTENCY_CHECK":
+				checkVal := strings.ToUpper(p.curTok.Literal)
+				if checkVal == "ON" {
+					opt.ConsistencyCheckEnabled = "On"
+				} else if checkVal == "OFF" {
+					opt.ConsistencyCheckEnabled = "Off"
+				}
+				p.nextToken()
+
+			case "HISTORY_RETENTION_PERIOD":
+				retPeriod, err := p.parseRetentionPeriodDefinition()
+				if err != nil {
+					return nil, err
+				}
+				opt.RetentionPeriod = retPeriod
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		// Consume )
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	return opt, nil
+}
+
+func (p *Parser) parseRetentionPeriodDefinition() (*ast.RetentionPeriodDefinition, error) {
+	ret := &ast.RetentionPeriodDefinition{}
+
+	// Check for INFINITE
+	if strings.ToUpper(p.curTok.Literal) == "INFINITE" {
+		ret.IsInfinity = true
+		ret.Units = "Day" // Default unit for INFINITE
+		p.nextToken()
+		return ret, nil
+	}
+
+	// Parse numeric duration
+	ret.IsInfinity = false
+
+	// Parse integer literal
+	if p.curTok.Type == TokenNumber {
+		lit := &ast.IntegerLiteral{
+			LiteralType: "Integer",
+			Value:       p.curTok.Literal,
+		}
+		ret.Duration = lit
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected number for retention period, got %s", p.curTok.Literal)
+	}
+
+	// Parse unit
+	unitVal := strings.ToUpper(p.curTok.Literal)
+	switch unitVal {
+	case "DAY", "DAYS":
+		ret.Units = "Day"
+	case "WEEK", "WEEKS":
+		ret.Units = "Week"
+	case "MONTH":
+		ret.Units = "Month"
+	case "MONTHS":
+		ret.Units = "Months"
+	case "YEAR", "YEARS":
+		ret.Units = "Year"
+	default:
+		return nil, fmt.Errorf("unexpected unit %s for retention period", unitVal)
+	}
+	p.nextToken()
+
+	return ret, nil
 }
 
 func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
