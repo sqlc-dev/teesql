@@ -1242,7 +1242,26 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.UniqueRowFilter != "" {
 			node["UniqueRowFilter"] = e.UniqueRowFilter
 		}
+		if e.OverClause != nil {
+			node["OverClause"] = jsonNode{
+				"$type": "OverClause",
+			}
+		}
 		node["WithArrayWrapper"] = e.WithArrayWrapper
+		return node
+	case *ast.UserDefinedTypePropertyAccess:
+		node := jsonNode{
+			"$type": "UserDefinedTypePropertyAccess",
+		}
+		if e.CallTarget != nil {
+			node["CallTarget"] = callTargetToJSON(e.CallTarget)
+		}
+		if e.PropertyName != nil {
+			node["PropertyName"] = identifierToJSON(e.PropertyName)
+		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
+		}
 		return node
 	case *ast.BinaryExpression:
 		node := jsonNode{
