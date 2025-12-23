@@ -62,3 +62,14 @@ type OrderBulkInsertOption struct {
 func (o *OrderBulkInsertOption) bulkInsertOption() {}
 
 // Note: ColumnWithSortOrder is defined in create_table_statement.go
+
+// BulkOpenRowset represents an OPENROWSET (BULK ...) table reference.
+type BulkOpenRowset struct {
+	DataFiles []ScalarExpression `json:"DataFiles,omitempty"`
+	Options   []BulkInsertOption `json:"Options,omitempty"`
+	Alias     *Identifier        `json:"Alias,omitempty"`
+	ForPath   bool               `json:"ForPath"`
+}
+
+func (b *BulkOpenRowset) node()           {}
+func (b *BulkOpenRowset) tableReference() {}

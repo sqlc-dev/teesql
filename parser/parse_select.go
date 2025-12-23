@@ -1070,7 +1070,7 @@ func (p *Parser) parseFromClause() (*ast.FromClause, error) {
 
 func (p *Parser) parseTableReference() (ast.TableReference, error) {
 	// Parse the base table reference
-	baseRef, err := p.parseNamedTableReference()
+	baseRef, err := p.parseSingleTableReference()
 	if err != nil {
 		return nil, err
 	}
@@ -1086,7 +1086,7 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 			}
 			p.nextToken() // consume JOIN
 
-			right, err := p.parseNamedTableReference()
+			right, err := p.parseSingleTableReference()
 			if err != nil {
 				return nil, err
 			}
@@ -1135,7 +1135,7 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 		}
 		p.nextToken() // consume JOIN
 
-		right, err := p.parseNamedTableReference()
+		right, err := p.parseSingleTableReference()
 		if err != nil {
 			return nil, err
 		}
@@ -1160,6 +1160,25 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 	}
 
 	return left, nil
+}
+
+func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
+	// Check for OPENROWSET
+	if p.curTok.Type == TokenOpenRowset {
+		return p.parseOpenRowset()
+	}
+
+	// Check for variable table reference
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		name := p.curTok.Literal
+		p.nextToken()
+		return &ast.VariableTableReference{
+			Variable: &ast.VariableReference{Name: name},
+			ForPath:  false,
+		}, nil
+	}
+
+	return p.parseNamedTableReference()
 }
 
 func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
