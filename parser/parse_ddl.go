@@ -2149,7 +2149,7 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 	}
 
 	// Parse multiple elements separated by commas
-	// Format: DROP [COLUMN] name, [CONSTRAINT] name, [INDEX] name, ...
+	// Format: DROP [COLUMN] name [WITH (options)], [CONSTRAINT] name [WITH (options)], ...
 	var currentElementType string = "NotSpecified"
 
 	for {
@@ -2179,6 +2179,27 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 			Name:             p.parseIdentifier(),
 			IsIfExists:       false,
 		}
+
+		// Check for WITH clause with drop options
+		if strings.ToUpper(p.curTok.Literal) == "WITH" {
+			p.nextToken() // consume WITH
+			if p.curTok.Type != TokenLParen {
+				return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume (
+
+			options, err := p.parseDropClusteredConstraintOptions()
+			if err != nil {
+				return nil, err
+			}
+			element.DropClusteredConstraintOptions = options
+
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) after options, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+		}
+
 		stmt.AlterTableDropTableElements = append(stmt.AlterTableDropTableElements, element)
 
 		// After adding an element, reset type to NotSpecified for next element
@@ -2199,6 +2220,117 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseDropClusteredConstraintOptions() ([]ast.DropClusteredConstraintOption, error) {
+	var options []ast.DropClusteredConstraintOption
+
+	for {
+		optionName := strings.ToUpper(p.curTok.Literal)
+
+		switch optionName {
+		case "ONLINE":
+			p.nextToken() // consume ONLINE
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after ONLINE, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			var state string
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "ON":
+				state = "On"
+			case "OFF":
+				state = "Off"
+			default:
+				return nil, fmt.Errorf("expected ON or OFF, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+
+			options = append(options, &ast.DropClusteredConstraintStateOption{
+				OptionKind:  "Online",
+				OptionState: state,
+			})
+
+		case "MAXDOP":
+			p.nextToken() // consume MAXDOP
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after MAXDOP, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			value := &ast.IntegerLiteral{
+				LiteralType: "Integer",
+				Value:       p.curTok.Literal,
+			}
+			p.nextToken()
+
+			options = append(options, &ast.DropClusteredConstraintValueOption{
+				OptionKind:  "MaxDop",
+				OptionValue: value,
+			})
+
+		case "MOVE":
+			p.nextToken() // consume MOVE
+			if strings.ToUpper(p.curTok.Literal) != "TO" {
+				return nil, fmt.Errorf("expected TO after MOVE, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume TO
+
+			fgOrPs := &ast.FileGroupOrPartitionScheme{}
+			fgOrPs.Name = &ast.IdentifierOrValueExpression{}
+
+			// Parse filegroup name - can be identifier or string literal
+			if p.curTok.Type == TokenString {
+				strLit, err := p.parseStringLiteral()
+				if err != nil {
+					return nil, err
+				}
+				fgOrPs.Name.Value = strLit.Value
+				fgOrPs.Name.ValueExpression = strLit
+			} else {
+				ident := p.parseIdentifier()
+				fgOrPs.Name.Value = ident.Value
+				fgOrPs.Name.Identifier = ident
+			}
+
+			// Check for partition scheme columns (column_name, ...)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for {
+					col := p.parseIdentifier()
+					fgOrPs.PartitionSchemeColumns = append(fgOrPs.PartitionSchemeColumns, col)
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ) after partition columns, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+			}
+
+			options = append(options, &ast.DropClusteredConstraintMoveOption{
+				OptionKind:  "MoveTo",
+				OptionValue: fgOrPs,
+			})
+
+		default:
+			return nil, fmt.Errorf("unexpected option in WITH clause: %s", p.curTok.Literal)
+		}
+
+		// Check for comma to continue or end
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else {
+			break
+		}
+	}
+
+	return options, nil
 }
 
 func (p *Parser) parseAlterTableAlterIndexStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableAlterIndexStatement, error) {
