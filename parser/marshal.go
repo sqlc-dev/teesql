@@ -2493,6 +2493,32 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 		p.nextToken()
 	}
 
+	// Parse optional ON filegroup and TEXTIMAGE_ON filegroup clauses
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if p.curTok.Type == TokenOn {
+			p.nextToken() // consume ON
+			// Parse filegroup identifier
+			ident := p.parseIdentifier()
+			stmt.OnFileGroupOrPartitionScheme = &ast.FileGroupOrPartitionScheme{
+				Name: &ast.IdentifierOrValueExpression{
+					Value:      ident.Value,
+					Identifier: ident,
+				},
+			}
+		} else if upperLit == "TEXTIMAGE_ON" {
+			p.nextToken() // consume TEXTIMAGE_ON
+			// Parse filegroup identifier
+			ident := p.parseIdentifier()
+			stmt.TextImageOn = &ast.IdentifierOrValueExpression{
+				Value:      ident.Value,
+				Identifier: ident,
+			}
+		} else {
+			break
+		}
+	}
+
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
@@ -2556,6 +2582,10 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					p.nextToken() // consume REPLICATION
 					identityOpts.NotForReplication = true
 				}
+			} else if p.curTok.Type == TokenNull {
+				// NOT NULL after IDENTITY - handle it here since NOT was already consumed
+				p.nextToken() // consume NULL
+				col.Constraints = append(col.Constraints, &ast.NullableConstraintDefinition{Nullable: false})
 			}
 		}
 
@@ -2874,6 +2904,12 @@ func createTableStatementToJSON(s *ast.CreateTableStatement) jsonNode {
 	}
 	if s.Definition != nil {
 		node["Definition"] = tableDefinitionToJSON(s.Definition)
+	}
+	if s.OnFileGroupOrPartitionScheme != nil {
+		node["OnFileGroupOrPartitionScheme"] = fileGroupOrPartitionSchemeToJSON(s.OnFileGroupOrPartitionScheme)
+	}
+	if s.TextImageOn != nil {
+		node["TextImageOn"] = identifierOrValueExpressionToJSON(s.TextImageOn)
 	}
 	return node
 }
