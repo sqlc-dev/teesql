@@ -966,6 +966,60 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		p.nextToken() // consume dot
 	}
 
+	// Check for :: (user-defined type method call): a.b::func()
+	if p.curTok.Type == TokenColonColon && len(identifiers) > 0 {
+		p.nextToken() // consume ::
+
+		// Parse function name
+		if p.curTok.Type != TokenIdent {
+			return nil, fmt.Errorf("expected function name after ::, got %s", p.curTok.Literal)
+		}
+		funcName := &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+		p.nextToken()
+
+		// Expect (
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after function name, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Build SchemaObjectName from identifiers
+		schemaObjName := identifiersToSchemaObjectName(identifiers)
+
+		fc := &ast.FunctionCall{
+			CallTarget: &ast.UserDefinedTypeCallTarget{
+				SchemaObjectName: schemaObjName,
+			},
+			FunctionName:     funcName,
+			UniqueRowFilter:  "NotSpecified",
+			WithArrayWrapper: false,
+		}
+
+		// Parse parameters
+		if p.curTok.Type != TokenRParen {
+			for {
+				param, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				fc.Parameters = append(fc.Parameters, param)
+
+				if p.curTok.Type != TokenComma {
+					break
+				}
+				p.nextToken() // consume comma
+			}
+		}
+
+		// Expect )
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) in function call, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+
+		return fc, nil
+	}
+
 	// If followed by ( it's a function call
 	if p.curTok.Type == TokenLParen {
 		return p.parseFunctionCallFromIdentifiers(identifiers)
@@ -1951,6 +2005,37 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		FirstExpression:  left,
 		SecondExpression: right,
 	}, nil
+}
+
+// identifiersToSchemaObjectName converts a slice of identifiers to a SchemaObjectName.
+// For 1 identifier: BaseIdentifier
+// For 2 identifiers: SchemaIdentifier.BaseIdentifier
+// For 3 identifiers: DatabaseIdentifier.SchemaIdentifier.BaseIdentifier
+// For 4 identifiers: ServerIdentifier.DatabaseIdentifier.SchemaIdentifier.BaseIdentifier
+func identifiersToSchemaObjectName(identifiers []*ast.Identifier) *ast.SchemaObjectName {
+	son := &ast.SchemaObjectName{
+		Count:       len(identifiers),
+		Identifiers: identifiers,
+	}
+
+	switch len(identifiers) {
+	case 1:
+		son.BaseIdentifier = identifiers[0]
+	case 2:
+		son.SchemaIdentifier = identifiers[0]
+		son.BaseIdentifier = identifiers[1]
+	case 3:
+		son.DatabaseIdentifier = identifiers[0]
+		son.SchemaIdentifier = identifiers[1]
+		son.BaseIdentifier = identifiers[2]
+	case 4:
+		son.ServerIdentifier = identifiers[0]
+		son.DatabaseIdentifier = identifiers[1]
+		son.SchemaIdentifier = identifiers[2]
+		son.BaseIdentifier = identifiers[3]
+	}
+
+	return son
 }
 
 // ======================= New Statement Parsing Functions =======================
