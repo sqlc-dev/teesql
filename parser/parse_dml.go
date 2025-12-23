@@ -832,12 +832,20 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 		}
 	}
 
-	// col = value or col ||= value
-	col, err := p.parseMultiPartIdentifierAsColumn()
-	if err != nil {
-		return nil, err
+	// Check for $ROWGUID pseudo-column
+	if p.curTok.Type == TokenIdent && strings.EqualFold(p.curTok.Literal, "$ROWGUID") {
+		clause.Column = &ast.ColumnReferenceExpression{
+			ColumnType: "PseudoColumnRowGuid",
+		}
+		p.nextToken()
+	} else {
+		// col = value or col ||= value
+		col, err := p.parseMultiPartIdentifierAsColumn()
+		if err != nil {
+			return nil, err
+		}
+		clause.Column = col
 	}
-	clause.Column = col
 
 	if p.isCompoundAssignment() {
 		clause.AssignmentKind = p.getAssignmentKind()
