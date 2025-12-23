@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/kyleconroy/teesql/ast"
+	"github.com/sqlc-dev/teesql/ast"
 )
 
 // Parse parses T-SQL from the given reader and returns an AST Script.

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kyleconroy/teesql/ast"
+	"github.com/sqlc-dev/teesql/ast"
 )
 
 // jsonNode represents a generic JSON node from the AST JSON format.

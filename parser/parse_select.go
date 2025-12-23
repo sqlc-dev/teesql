@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kyleconroy/teesql/ast"
+	"github.com/sqlc-dev/teesql/ast"
 )
 
 func (p *Parser) parsePrintStatement() (*ast.PrintStatement, error) {

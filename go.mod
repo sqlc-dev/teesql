@@ -1,3 +1,3 @@
-module github.com/kyleconroy/teesql
+module github.com/sqlc-dev/teesql
 
 go 1.21
