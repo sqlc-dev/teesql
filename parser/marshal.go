@@ -1876,6 +1876,12 @@ func executeSpecificationToJSON(spec *ast.ExecuteSpecification) jsonNode {
 	if spec.Variable != nil {
 		node["Variable"] = scalarExpressionToJSON(spec.Variable)
 	}
+	if spec.LinkedServer != nil {
+		node["LinkedServer"] = identifierToJSON(spec.LinkedServer)
+	}
+	if spec.ExecuteContext != nil {
+		node["ExecuteContext"] = executeContextToJSON(spec.ExecuteContext)
+	}
 	if spec.ExecutableEntity != nil {
 		node["ExecutableEntity"] = executableEntityToJSON(spec.ExecutableEntity)
 	}
@@ -1890,6 +1896,25 @@ func executableEntityToJSON(entity ast.ExecutableEntity) jsonNode {
 		}
 		if e.ProcedureReference != nil {
 			node["ProcedureReference"] = procedureReferenceNameToJSON(e.ProcedureReference)
+		}
+		if len(e.Parameters) > 0 {
+			params := make([]jsonNode, len(e.Parameters))
+			for i, p := range e.Parameters {
+				params[i] = executeParameterToJSON(p)
+			}
+			node["Parameters"] = params
+		}
+		return node
+	case *ast.ExecutableStringList:
+		node := jsonNode{
+			"$type": "ExecutableStringList",
+		}
+		if len(e.Strings) > 0 {
+			strs := make([]jsonNode, len(e.Strings))
+			for i, s := range e.Strings {
+				strs[i] = scalarExpressionToJSON(s)
+			}
+			node["Strings"] = strs
 		}
 		if len(e.Parameters) > 0 {
 			params := make([]jsonNode, len(e.Parameters))

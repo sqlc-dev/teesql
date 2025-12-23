@@ -10,8 +10,10 @@ func (e *ExecuteStatement) statement() {}
 
 // ExecuteSpecification contains the details of an EXECUTE.
 type ExecuteSpecification struct {
-	Variable        *VariableReference      `json:"Variable,omitempty"`
-	ExecutableEntity ExecutableEntity       `json:"ExecutableEntity,omitempty"`
+	Variable         *VariableReference `json:"Variable,omitempty"`
+	LinkedServer     *Identifier        `json:"LinkedServer,omitempty"`
+	ExecuteContext   *ExecuteContext    `json:"ExecuteContext,omitempty"`
+	ExecutableEntity ExecutableEntity   `json:"ExecutableEntity,omitempty"`
 }
 
 // ExecutableEntity is an interface for executable entities.
@@ -26,6 +28,15 @@ type ExecutableProcedureReference struct {
 }
 
 func (e *ExecutableProcedureReference) executableEntity() {}
+
+// ExecutableStringList represents an EXECUTE with a string expression list.
+// e.g., EXECUTE ('SELECT * FROM t1', param1, param2)
+type ExecutableStringList struct {
+	Strings    []ScalarExpression  `json:"Strings,omitempty"`
+	Parameters []*ExecuteParameter `json:"Parameters,omitempty"`
+}
+
+func (e *ExecutableStringList) executableEntity() {}
 
 // ProcedureReferenceName holds either a variable or a procedure reference.
 type ProcedureReferenceName struct {
