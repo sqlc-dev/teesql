@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/kyleconroy/teesql/ast"
+	"github.com/sqlc-dev/teesql/ast"
 )
 
 func (p *Parser) parseDeclareVariableStatement() (ast.Statement, error) {
