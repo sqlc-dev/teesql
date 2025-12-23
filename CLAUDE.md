@@ -39,16 +39,21 @@ Available test flags:
 
 ## Updating skipped_tests_by_size.txt
 
-After enabling tests, regenerate the file:
+After enabling tests, regenerate the file. The script only includes tests that:
+- Have `"skip": true` in metadata.json
+- Do NOT have `"invalid_syntax"` in metadata.json (these can't be implemented)
+- Have an `ast.json` file (tests without it are unparseable)
 
 ```bash
 cd parser/testdata
-for dir in */; do
-  if [ -f "$dir/metadata.json" ] && grep -q '"skip": true' "$dir/metadata.json" 2>/dev/null; then
-    if [ -f "$dir/query.sql" ]; then
-      size=$(wc -c < "$dir/query.sql")
-      name="${dir%/}"
-      echo "$size $name"
+ls -d */ | while read dir; do
+  dir="${dir%/}"
+  if [ -f "$dir/metadata.json" ] && [ -f "$dir/ast.json" ] && [ -f "$dir/query.sql" ]; then
+    if grep -q '"skip": true' "$dir/metadata.json" 2>/dev/null; then
+      if grep -qv '"invalid_syntax"' "$dir/metadata.json" 2>/dev/null; then
+        size=$(wc -c < "$dir/query.sql")
+        echo "$size $dir"
+      fi
     fi
   fi
 done | sort -n > ../../skipped_tests_by_size.txt
