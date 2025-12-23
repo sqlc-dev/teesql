@@ -232,6 +232,25 @@ func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
 		}
 	}
 
+	// Parse optional column list (e.g., AS a(c1, c2))
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		for {
+			if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+				result.Columns = append(result.Columns, p.parseIdentifier())
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+				continue
+			}
+			break
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after column list, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+	}
+
 	return result, nil
 }
 

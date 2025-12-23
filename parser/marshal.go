@@ -1530,6 +1530,13 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			}
 			node["Options"] = opts
 		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, c := range r.Columns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["Columns"] = cols
+		}
 		if r.Alias != nil {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
