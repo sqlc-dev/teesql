@@ -288,6 +288,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterXmlSchemaCollectionStatementToJSON(s)
 	case *ast.AlterServerConfigurationSetSoftNumaStatement:
 		return alterServerConfigurationSetSoftNumaStatementToJSON(s)
+	case *ast.AlterServerConfigurationSetExternalAuthenticationStatement:
+		return alterServerConfigurationSetExternalAuthenticationStatementToJSON(s)
 	case *ast.AlterServerConfigurationStatement:
 		return alterServerConfigurationStatementToJSON(s)
 	case *ast.AlterLoginAddDropCredentialStatement:
@@ -3576,6 +3578,59 @@ func onOffOptionValueToJSON(o *ast.OnOffOptionValue) jsonNode {
 		"$type":       "OnOffOptionValue",
 		"OptionState": o.OptionState,
 	}
+}
+
+func alterServerConfigurationSetExternalAuthenticationStatementToJSON(s *ast.AlterServerConfigurationSetExternalAuthenticationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterServerConfigurationSetExternalAuthenticationStatement",
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = alterServerConfigurationExternalAuthenticationContainerOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func alterServerConfigurationExternalAuthenticationContainerOptionToJSON(o *ast.AlterServerConfigurationExternalAuthenticationContainerOption) jsonNode {
+	node := jsonNode{
+		"$type": "AlterServerConfigurationExternalAuthenticationContainerOption",
+	}
+	if len(o.Suboptions) > 0 {
+		suboptions := make([]jsonNode, len(o.Suboptions))
+		for i, s := range o.Suboptions {
+			suboptions[i] = alterServerConfigurationExternalAuthenticationOptionToJSON(s)
+		}
+		node["Suboptions"] = suboptions
+	}
+	node["OptionKind"] = o.OptionKind
+	if o.OptionValue != nil {
+		node["OptionValue"] = onOffOptionValueToJSON(o.OptionValue)
+	}
+	return node
+}
+
+func alterServerConfigurationExternalAuthenticationOptionToJSON(o *ast.AlterServerConfigurationExternalAuthenticationOption) jsonNode {
+	node := jsonNode{
+		"$type":      "AlterServerConfigurationExternalAuthenticationOption",
+		"OptionKind": o.OptionKind,
+	}
+	if o.OptionValue != nil {
+		node["OptionValue"] = literalOptionValueToJSON(o.OptionValue)
+	}
+	return node
+}
+
+func literalOptionValueToJSON(o *ast.LiteralOptionValue) jsonNode {
+	node := jsonNode{
+		"$type": "LiteralOptionValue",
+	}
+	if o.Value != nil {
+		node["Value"] = scalarExpressionToJSON(o.Value)
+	}
+	return node
 }
 
 func alterServerConfigurationStatementToJSON(s *ast.AlterServerConfigurationStatement) jsonNode {

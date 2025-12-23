@@ -39,3 +39,35 @@ type OnOffOptionValue struct {
 }
 
 func (o *OnOffOptionValue) node() {}
+
+// AlterServerConfigurationSetExternalAuthenticationStatement represents ALTER SERVER CONFIGURATION SET EXTERNAL AUTHENTICATION statement
+type AlterServerConfigurationSetExternalAuthenticationStatement struct {
+	Options []*AlterServerConfigurationExternalAuthenticationContainerOption
+}
+
+func (a *AlterServerConfigurationSetExternalAuthenticationStatement) node()      {}
+func (a *AlterServerConfigurationSetExternalAuthenticationStatement) statement() {}
+
+// AlterServerConfigurationExternalAuthenticationContainerOption represents the container option for external authentication
+type AlterServerConfigurationExternalAuthenticationContainerOption struct {
+	OptionKind  string                                               // "OnOff"
+	OptionValue *OnOffOptionValue                                    // ON or OFF
+	Suboptions  []*AlterServerConfigurationExternalAuthenticationOption // suboptions inside parentheses
+}
+
+func (a *AlterServerConfigurationExternalAuthenticationContainerOption) node() {}
+
+// AlterServerConfigurationExternalAuthenticationOption represents an external authentication suboption
+type AlterServerConfigurationExternalAuthenticationOption struct {
+	OptionKind  string             // "UseIdentity", "CredentialName"
+	OptionValue *LiteralOptionValue // optional, for CredentialName
+}
+
+func (a *AlterServerConfigurationExternalAuthenticationOption) node() {}
+
+// LiteralOptionValue represents a literal option value
+type LiteralOptionValue struct {
+	Value ScalarExpression
+}
+
+func (l *LiteralOptionValue) node() {}

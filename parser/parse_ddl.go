@@ -1794,6 +1794,8 @@ func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error)
 		return p.parseAlterServerConfigurationSetSoftNumaStatement()
 	case "PROCESS":
 		return p.parseAlterServerConfigurationSetProcessAffinityStatement()
+	case "EXTERNAL":
+		return p.parseAlterServerConfigurationSetExternalAuthenticationStatement()
 	default:
 		return nil, fmt.Errorf("unexpected token after SET: %s", p.curTok.Literal)
 	}
@@ -1819,6 +1821,95 @@ func (p *Parser) parseAlterServerConfigurationSetSoftNumaStatement() (*ast.Alter
 		},
 	}
 	stmt.Options = append(stmt.Options, option)
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterServerConfigurationSetExternalAuthenticationStatement() (*ast.AlterServerConfigurationSetExternalAuthenticationStatement, error) {
+	// Consume EXTERNAL
+	p.nextToken()
+
+	// Expect AUTHENTICATION
+	if strings.ToUpper(p.curTok.Literal) != "AUTHENTICATION" {
+		return nil, fmt.Errorf("expected AUTHENTICATION after EXTERNAL, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterServerConfigurationSetExternalAuthenticationStatement{}
+
+	// Parse ON or OFF
+	optionState := strings.ToUpper(p.curTok.Literal)
+	if optionState != "ON" && optionState != "OFF" {
+		return nil, fmt.Errorf("expected ON or OFF after AUTHENTICATION, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	containerOption := &ast.AlterServerConfigurationExternalAuthenticationContainerOption{
+		OptionKind: "OnOff",
+		OptionValue: &ast.OnOffOptionValue{
+			OptionState: capitalizeFirst(optionState),
+		},
+	}
+
+	// Check for suboptions in parentheses (only for ON)
+	if optionState == "ON" && p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		// Parse suboptions
+		for {
+			suboption := &ast.AlterServerConfigurationExternalAuthenticationOption{}
+
+			optionName := strings.ToUpper(p.curTok.Literal)
+			switch optionName {
+			case "USE_IDENTITY":
+				suboption.OptionKind = "UseIdentity"
+				p.nextToken()
+			case "CREDENTIAL_NAME":
+				suboption.OptionKind = "CredentialName"
+				p.nextToken()
+
+				// Expect =
+				if p.curTok.Type != TokenEquals {
+					return nil, fmt.Errorf("expected = after CREDENTIAL_NAME, got %s", p.curTok.Literal)
+				}
+				p.nextToken()
+
+				// Parse string literal
+				if p.curTok.Type != TokenString {
+					return nil, fmt.Errorf("expected string literal for CREDENTIAL_NAME value, got %s", p.curTok.Literal)
+				}
+				strLit, err := p.parseStringLiteral()
+				if err != nil {
+					return nil, err
+				}
+				suboption.OptionValue = &ast.LiteralOptionValue{
+					Value: strLit,
+				}
+			default:
+				return nil, fmt.Errorf("unexpected option in EXTERNAL AUTHENTICATION: %s", p.curTok.Literal)
+			}
+
+			containerOption.Suboptions = append(containerOption.Suboptions, suboption)
+
+			// Check for comma or closing paren
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+				continue
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+				break
+			}
+			return nil, fmt.Errorf("expected , or ) in EXTERNAL AUTHENTICATION options, got %s", p.curTok.Literal)
+		}
+	}
+
+	stmt.Options = append(stmt.Options, containerOption)
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
