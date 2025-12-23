@@ -17,8 +17,8 @@ func (s *SetVariableStatement) statement() {}
 
 // CursorDefinition represents a cursor definition.
 type CursorDefinition struct {
-	Options []*CursorOption `json:"Options,omitempty"`
-	Select  QueryExpression `json:"Select,omitempty"`
+	Options []*CursorOption  `json:"Options,omitempty"`
+	Select  *SelectStatement `json:"Select,omitempty"`
 }
 
 // CursorOption represents a cursor option like SCROLL or DYNAMIC.

@@ -1663,7 +1663,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		return node
 	case *ast.BooleanLikeExpression:
 		node := jsonNode{
-			"$type": "BooleanLikeExpression",
+			"$type": "LikePredicate",
 		}
 		if e.FirstExpression != nil {
 			node["FirstExpression"] = scalarExpressionToJSON(e.FirstExpression)
@@ -1675,6 +1675,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			node["EscapeExpression"] = scalarExpressionToJSON(e.EscapeExpression)
 		}
 		node["NotDefined"] = e.NotDefined
+		node["OdbcEscape"] = e.OdbcEscape
 		return node
 	case *ast.BooleanTernaryExpression:
 		node := jsonNode{
@@ -2216,7 +2217,7 @@ func cursorDefinitionToJSON(cd *ast.CursorDefinition) jsonNode {
 		node["Options"] = opts
 	}
 	if cd.Select != nil {
-		node["Select"] = queryExpressionToJSON(cd.Select)
+		node["Select"] = selectStatementToJSON(cd.Select)
 	}
 	return node
 }
@@ -7552,12 +7553,7 @@ func declareCursorDefinitionToJSON(d *ast.CursorDefinition) jsonNode {
 		node["Options"] = opts
 	}
 	if d.Select != nil {
-		// For DeclareCursorStatement, we need to wrap the QueryExpression in a SelectStatement format
-		selectNode := jsonNode{
-			"$type":           "SelectStatement",
-			"QueryExpression": queryExpressionToJSON(d.Select),
-		}
-		node["Select"] = selectNode
+		node["Select"] = selectStatementToJSON(d.Select)
 	}
 	return node
 }

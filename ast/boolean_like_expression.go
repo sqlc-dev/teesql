@@ -6,6 +6,7 @@ type BooleanLikeExpression struct {
 	SecondExpression ScalarExpression
 	EscapeExpression ScalarExpression
 	NotDefined       bool
+	OdbcEscape       bool
 }
 
 func (b *BooleanLikeExpression) node()              {}
