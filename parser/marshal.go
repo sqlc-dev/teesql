@@ -282,6 +282,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterSchemaStatementToJSON(s)
 	case *ast.AlterRoleStatement:
 		return alterRoleStatementToJSON(s)
+	case *ast.CreateServerRoleStatement:
+		return createServerRoleStatementToJSON(s)
+	case *ast.AlterServerRoleStatement:
+		return alterServerRoleStatementToJSON(s)
 	case *ast.AlterRemoteServiceBindingStatement:
 		return alterRemoteServiceBindingStatementToJSON(s)
 	case *ast.AlterXmlSchemaCollectionStatement:
@@ -2655,11 +2659,13 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 
 	// Parse permission(s)
 	perm := &ast.Permission{}
-	for p.curTok.Type != TokenTo && p.curTok.Type != TokenEOF {
+	for p.curTok.Type != TokenTo && p.curTok.Type != TokenOn && p.curTok.Type != TokenEOF {
 		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenCreate ||
 			p.curTok.Type == TokenProcedure || p.curTok.Type == TokenView ||
 			p.curTok.Type == TokenSelect || p.curTok.Type == TokenInsert ||
-			p.curTok.Type == TokenUpdate || p.curTok.Type == TokenDelete {
+			p.curTok.Type == TokenUpdate || p.curTok.Type == TokenDelete ||
+			p.curTok.Type == TokenAlter || p.curTok.Type == TokenExecute ||
+			p.curTok.Type == TokenDrop {
 			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
@@ -2675,6 +2681,150 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 	}
 	if len(perm.Identifiers) > 0 {
 		stmt.Permissions = append(stmt.Permissions, perm)
+	}
+
+	// Check for ON clause (SecurityTargetObject)
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+
+		stmt.SecurityTargetObject = &ast.SecurityTargetObject{}
+		stmt.SecurityTargetObject.ObjectKind = "NotSpecified"
+
+		// Parse object kind and ::
+		// Object kinds can be: SERVER ROLE, APPLICATION ROLE, ASYMMETRIC KEY, SYMMETRIC KEY, etc.
+		objectKind := strings.ToUpper(p.curTok.Literal)
+		switch objectKind {
+		case "SERVER":
+			p.nextToken() // consume SERVER
+			if strings.ToUpper(p.curTok.Literal) == "ROLE" {
+				p.nextToken() // consume ROLE
+				stmt.SecurityTargetObject.ObjectKind = "ServerRole"
+			} else {
+				stmt.SecurityTargetObject.ObjectKind = "Server"
+			}
+		case "APPLICATION":
+			p.nextToken() // consume APPLICATION
+			if strings.ToUpper(p.curTok.Literal) == "ROLE" {
+				p.nextToken() // consume ROLE
+			}
+			stmt.SecurityTargetObject.ObjectKind = "ApplicationRole"
+		case "ASYMMETRIC":
+			p.nextToken() // consume ASYMMETRIC
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			stmt.SecurityTargetObject.ObjectKind = "AsymmetricKey"
+		case "SYMMETRIC":
+			p.nextToken() // consume SYMMETRIC
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			stmt.SecurityTargetObject.ObjectKind = "SymmetricKey"
+		case "REMOTE":
+			p.nextToken() // consume REMOTE
+			if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
+				p.nextToken() // consume SERVICE
+				if strings.ToUpper(p.curTok.Literal) == "BINDING" {
+					p.nextToken() // consume BINDING
+				}
+			}
+			stmt.SecurityTargetObject.ObjectKind = "RemoteServiceBinding"
+		case "FULLTEXT":
+			p.nextToken() // consume FULLTEXT
+			if strings.ToUpper(p.curTok.Literal) == "CATALOG" {
+				p.nextToken() // consume CATALOG
+			}
+			stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
+		case "MESSAGE":
+			p.nextToken() // consume MESSAGE
+			if strings.ToUpper(p.curTok.Literal) == "TYPE" {
+				p.nextToken() // consume TYPE
+			}
+			stmt.SecurityTargetObject.ObjectKind = "MessageType"
+		case "XML":
+			p.nextToken() // consume XML
+			if strings.ToUpper(p.curTok.Literal) == "SCHEMA" {
+				p.nextToken() // consume SCHEMA
+				if strings.ToUpper(p.curTok.Literal) == "COLLECTION" {
+					p.nextToken() // consume COLLECTION
+				}
+			}
+			stmt.SecurityTargetObject.ObjectKind = "XmlSchemaCollection"
+		case "SEARCH":
+			p.nextToken() // consume SEARCH
+			if strings.ToUpper(p.curTok.Literal) == "PROPERTY" {
+				p.nextToken() // consume PROPERTY
+				if strings.ToUpper(p.curTok.Literal) == "LIST" {
+					p.nextToken() // consume LIST
+				}
+			}
+			stmt.SecurityTargetObject.ObjectKind = "SearchPropertyList"
+		case "AVAILABILITY":
+			p.nextToken() // consume AVAILABILITY
+			if strings.ToUpper(p.curTok.Literal) == "GROUP" {
+				p.nextToken() // consume GROUP
+			}
+			stmt.SecurityTargetObject.ObjectKind = "AvailabilityGroup"
+		case "TYPE":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Type"
+		case "OBJECT":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Object"
+		case "ASSEMBLY":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Assembly"
+		case "CERTIFICATE":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Certificate"
+		case "CONTRACT":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Contract"
+		case "DATABASE":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Database"
+		case "ENDPOINT":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Endpoint"
+		case "LOGIN":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Login"
+		case "ROLE":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Role"
+		case "ROUTE":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Route"
+		case "SCHEMA":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Schema"
+		case "SERVICE":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "Service"
+		case "USER":
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "User"
+		}
+
+		// Expect ::
+		if p.curTok.Type == TokenColonColon {
+			p.nextToken() // consume ::
+
+			// Parse object name as multi-part identifier
+			stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
+			multiPart := &ast.MultiPartIdentifier{}
+			for {
+				id := p.parseIdentifier()
+				multiPart.Identifiers = append(multiPart.Identifiers, id)
+				if p.curTok.Type == TokenDot {
+					p.nextToken() // consume .
+				} else {
+					break
+				}
+			}
+			multiPart.Count = len(multiPart.Identifiers)
+			stmt.SecurityTargetObject.ObjectName.MultiPartIdentifier = multiPart
+		}
 	}
 
 	// Expect TO
@@ -2965,12 +3115,36 @@ func grantStatementToJSON(s *ast.GrantStatement) jsonNode {
 		}
 		node["Permissions"] = perms
 	}
+	if s.SecurityTargetObject != nil {
+		node["SecurityTargetObject"] = securityTargetObjectToJSON(s.SecurityTargetObject)
+	}
 	if len(s.Principals) > 0 {
 		principals := make([]jsonNode, len(s.Principals))
 		for i, p := range s.Principals {
 			principals[i] = securityPrincipalToJSON(p)
 		}
 		node["Principals"] = principals
+	}
+	return node
+}
+
+func securityTargetObjectToJSON(s *ast.SecurityTargetObject) jsonNode {
+	node := jsonNode{
+		"$type":      "SecurityTargetObject",
+		"ObjectKind": s.ObjectKind,
+	}
+	if s.ObjectName != nil {
+		node["ObjectName"] = securityTargetObjectNameToJSON(s.ObjectName)
+	}
+	return node
+}
+
+func securityTargetObjectNameToJSON(s *ast.SecurityTargetObjectName) jsonNode {
+	node := jsonNode{
+		"$type": "SecurityTargetObjectName",
+	}
+	if s.MultiPartIdentifier != nil {
+		node["MultiPartIdentifier"] = multiPartIdentifierToJSON(s.MultiPartIdentifier)
 	}
 	return node
 }
@@ -3576,6 +3750,32 @@ func alterRoleActionToJSON(a ast.AlterRoleAction) jsonNode {
 	default:
 		return jsonNode{"$type": "UnknownAlterRoleAction"}
 	}
+}
+
+func createServerRoleStatementToJSON(s *ast.CreateServerRoleStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateServerRoleStatement",
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterServerRoleStatementToJSON(s *ast.AlterServerRoleStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterServerRoleStatement",
+	}
+	if s.Action != nil {
+		node["Action"] = alterRoleActionToJSON(s.Action)
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
 }
 
 func alterRemoteServiceBindingStatementToJSON(s *ast.AlterRemoteServiceBindingStatement) jsonNode {
