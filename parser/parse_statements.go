@@ -4525,9 +4525,129 @@ func (p *Parser) parseCreateEventNotificationFromEvent() (*ast.CreateEventNotifi
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
+	// Parse ON <scope>
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		stmt.Scope = &ast.EventNotificationObjectScope{}
+
+		scopeUpper := strings.ToUpper(p.curTok.Literal)
+		switch scopeUpper {
+		case "SERVER":
+			stmt.Scope.Target = "Server"
+			p.nextToken()
+		case "DATABASE":
+			stmt.Scope.Target = "Database"
+			p.nextToken()
+		case "QUEUE":
+			stmt.Scope.Target = "Queue"
+			p.nextToken()
+			// Parse queue name
+			stmt.Scope.QueueName, _ = p.parseSchemaObjectName()
+		}
+	}
+
+	// Parse optional WITH FAN_IN
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "FAN_IN" {
+			stmt.WithFanIn = true
+			p.nextToken() // consume FAN_IN
+		}
+	}
+
+	// Parse FOR <event_type_or_group_list>
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+
+		// Parse comma-separated list of event types/groups
+		for {
+			eventName := p.curTok.Literal
+			p.nextToken()
+
+			// Convert event name to PascalCase and determine if it's a group or type
+			pascalName := eventNameToPascalCase(eventName)
+
+			// If name ends with "Events" (after conversion), it's a group
+			if strings.HasSuffix(strings.ToUpper(eventName), "_EVENTS") || strings.HasSuffix(strings.ToUpper(eventName), "EVENTS") {
+				stmt.EventTypeGroups = append(stmt.EventTypeGroups, &ast.EventGroupContainer{
+					EventGroup: pascalName,
+				})
+			} else {
+				stmt.EventTypeGroups = append(stmt.EventTypeGroups, &ast.EventTypeContainer{
+					EventType: pascalName,
+				})
+			}
+
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume comma
+		}
+	}
+
+	// Parse TO SERVICE 'service_name', 'broker_instance'
+	if strings.ToUpper(p.curTok.Literal) == "TO" {
+		p.nextToken() // consume TO
+		if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
+			p.nextToken() // consume SERVICE
+
+			// Parse broker service name (string literal)
+			if p.curTok.Type == TokenString {
+				litVal := p.curTok.Literal
+				// Strip surrounding quotes
+				if len(litVal) >= 2 && litVal[0] == '\'' && litVal[len(litVal)-1] == '\'' {
+					litVal = litVal[1 : len(litVal)-1]
+				}
+				stmt.BrokerService = &ast.StringLiteral{
+					LiteralType:   "String",
+					IsNational:    false,
+					IsLargeObject: false,
+					Value:         litVal,
+				}
+				p.nextToken()
+			}
+
+			// Parse comma and broker instance specifier
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+
+				if p.curTok.Type == TokenString {
+					litVal := p.curTok.Literal
+					// Strip surrounding quotes
+					if len(litVal) >= 2 && litVal[0] == '\'' && litVal[len(litVal)-1] == '\'' {
+						litVal = litVal[1 : len(litVal)-1]
+					}
+					stmt.BrokerInstanceSpecifier = &ast.StringLiteral{
+						LiteralType:   "String",
+						IsNational:    false,
+						IsLargeObject: false,
+						Value:         litVal,
+					}
+					p.nextToken()
+				}
+			}
+		}
+	}
+
+	// Skip any remaining tokens
 	p.skipToEndOfStatement()
 	return stmt, nil
+}
+
+// eventNameToPascalCase converts an event name like "Object_Created" or "DDL_CREDENTIAL_EVENTS" to PascalCase.
+func eventNameToPascalCase(name string) string {
+	// Split by underscore
+	parts := strings.Split(name, "_")
+	var result strings.Builder
+	for _, part := range parts {
+		if len(part) == 0 {
+			continue
+		}
+		// Capitalize first letter, lowercase rest
+		result.WriteString(strings.ToUpper(part[:1]))
+		result.WriteString(strings.ToLower(part[1:]))
+	}
+	return result.String()
 }
 
 func (p *Parser) parseCreatePartitionFunctionFromPartition() (*ast.CreatePartitionFunctionStatement, error) {

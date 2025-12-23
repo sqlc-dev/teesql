@@ -7005,7 +7005,53 @@ func createEventNotificationStatementToJSON(s *ast.CreateEventNotificationStatem
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.Scope != nil {
+		node["Scope"] = eventNotificationObjectScopeToJSON(s.Scope)
+		// Include WithFanIn when Scope is present
+		node["WithFanIn"] = s.WithFanIn
+	}
+	if len(s.EventTypeGroups) > 0 {
+		groups := make([]jsonNode, len(s.EventTypeGroups))
+		for i, g := range s.EventTypeGroups {
+			groups[i] = eventTypeGroupContainerToJSON(g)
+		}
+		node["EventTypeGroups"] = groups
+	}
+	if s.BrokerService != nil {
+		node["BrokerService"] = stringLiteralToJSON(s.BrokerService)
+	}
+	if s.BrokerInstanceSpecifier != nil {
+		node["BrokerInstanceSpecifier"] = stringLiteralToJSON(s.BrokerInstanceSpecifier)
+	}
 	return node
+}
+
+func eventNotificationObjectScopeToJSON(s *ast.EventNotificationObjectScope) jsonNode {
+	node := jsonNode{
+		"$type":  "EventNotificationObjectScope",
+		"Target": s.Target,
+	}
+	if s.QueueName != nil {
+		node["QueueName"] = schemaObjectNameToJSON(s.QueueName)
+	}
+	return node
+}
+
+func eventTypeGroupContainerToJSON(c ast.EventTypeGroupContainer) jsonNode {
+	switch v := c.(type) {
+	case *ast.EventTypeContainer:
+		return jsonNode{
+			"$type":     "EventTypeContainer",
+			"EventType": v.EventType,
+		}
+	case *ast.EventGroupContainer:
+		return jsonNode{
+			"$type":      "EventGroupContainer",
+			"EventGroup": v.EventGroup,
+		}
+	default:
+		return jsonNode{"$type": "Unknown"}
+	}
 }
 
 func alterDatabaseAddFileStatementToJSON(s *ast.AlterDatabaseAddFileStatement) jsonNode {
