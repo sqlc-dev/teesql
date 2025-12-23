@@ -155,6 +155,7 @@ const (
 	// Security keywords
 	TokenGrant
 	TokenRevoke
+	TokenDeny
 	TokenTo
 	TokenPublic
 
@@ -816,6 +817,7 @@ var keywords = map[string]TokenType{
 	"MAXDOP":        TokenMaxdop,
 	"GRANT":         TokenGrant,
 	"REVOKE":        TokenRevoke,
+	"DENY":          TokenDeny,
 	"TO":            TokenTo,
 	"PUBLIC":        TokenPublic,
 	"COMMIT":        TokenCommit,

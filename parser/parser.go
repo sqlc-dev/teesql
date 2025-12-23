@@ -127,6 +127,10 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseContinueStatement()
 	case TokenGrant:
 		return p.parseGrantStatement()
+	case TokenRevoke:
+		return p.parseRevokeStatement()
+	case TokenDeny:
+		return p.parseDenyStatement()
 	case TokenCommit:
 		return p.parseCommitTransactionStatement()
 	case TokenRollback:
