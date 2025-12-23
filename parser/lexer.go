@@ -466,7 +466,10 @@ func (l *Lexer) NextToken() Token {
 	case '\'':
 		tok = l.readString()
 	default:
-		if isLetter(l.ch) || l.ch == '_' || l.ch == '@' || l.ch == '#' {
+		// Handle $ only if followed by a letter (for pseudo-columns like $ROWGUID)
+		if l.ch == '$' && isLetter(l.peekChar()) {
+			tok = l.readIdentifier()
+		} else if isLetter(l.ch) || l.ch == '_' || l.ch == '@' || l.ch == '#' {
 			tok = l.readIdentifier()
 		} else if isDigit(l.ch) {
 			tok = l.readNumber()
@@ -516,7 +519,7 @@ func (l *Lexer) skipWhitespaceAndComments() {
 
 func (l *Lexer) readIdentifier() Token {
 	startPos := l.pos
-	for isLetter(l.ch) || isDigit(l.ch) || l.ch == '_' || l.ch == '@' || l.ch == '#' {
+	for isLetter(l.ch) || isDigit(l.ch) || l.ch == '_' || l.ch == '@' || l.ch == '#' || l.ch == '$' {
 		l.readChar()
 	}
 	literal := l.input[startPos:l.pos]
