@@ -483,11 +483,84 @@ func (l *Lexer) NextToken() Token {
 	return tok
 }
 
+// isWhitespace checks if the current position contains whitespace.
+// T-SQL treats many control characters and Unicode spaces as whitespace.
+func (l *Lexer) isWhitespace() bool {
+	if l.ch == 0 {
+		return false
+	}
+	// ASCII whitespace and control characters (0x01-0x20 range, excluding 0x00)
+	// T-SQL treats most ASCII control characters as whitespace
+	if l.ch <= 0x20 {
+		return true
+	}
+	// Check for multi-byte UTF-8 whitespace sequences
+	if l.ch >= 0x80 {
+		// Try to decode rune at current position
+		r, _ := l.peekRune()
+		// unicode.IsSpace covers most whitespace, but T-SQL also treats
+		// Zero Width Space (U+200B) as whitespace
+		return unicode.IsSpace(r) || r == 0x200B
+	}
+	return false
+}
+
+// peekRune returns the rune at the current position without advancing.
+func (l *Lexer) peekRune() (rune, int) {
+	if l.pos >= len(l.input) {
+		return 0, 0
+	}
+	// Fast path for ASCII
+	if l.input[l.pos] < 0x80 {
+		return rune(l.input[l.pos]), 1
+	}
+	// Decode UTF-8
+	r, size := decodeRuneAt(l.input, l.pos)
+	return r, size
+}
+
+// decodeRuneAt decodes a UTF-8 rune at the given position.
+func decodeRuneAt(s string, pos int) (rune, int) {
+	if pos >= len(s) {
+		return 0, 0
+	}
+	b := s[pos]
+	if b < 0x80 {
+		return rune(b), 1
+	}
+	// 2-byte sequence
+	if b&0xE0 == 0xC0 && pos+1 < len(s) {
+		return rune(b&0x1F)<<6 | rune(s[pos+1]&0x3F), 2
+	}
+	// 3-byte sequence
+	if b&0xF0 == 0xE0 && pos+2 < len(s) {
+		return rune(b&0x0F)<<12 | rune(s[pos+1]&0x3F)<<6 | rune(s[pos+2]&0x3F), 3
+	}
+	// 4-byte sequence
+	if b&0xF8 == 0xF0 && pos+3 < len(s) {
+		return rune(b&0x07)<<18 | rune(s[pos+1]&0x3F)<<12 | rune(s[pos+2]&0x3F)<<6 | rune(s[pos+3]&0x3F), 4
+	}
+	return rune(b), 1
+}
+
+// skipWhitespaceChar advances past one whitespace character (which may be multi-byte).
+func (l *Lexer) skipWhitespaceChar() {
+	if l.ch < 0x80 {
+		l.readChar()
+		return
+	}
+	// Multi-byte UTF-8: advance by rune size
+	_, size := l.peekRune()
+	for i := 0; i < size; i++ {
+		l.readChar()
+	}
+}
+
 func (l *Lexer) skipWhitespaceAndComments() {
 	for {
-		// Skip whitespace
-		for l.ch != 0 && (l.ch == ' ' || l.ch == '\t' || l.ch == '\n' || l.ch == '\r') {
-			l.readChar()
+		// Skip whitespace (including Unicode whitespace)
+		for l.ch != 0 && l.isWhitespace() {
+			l.skipWhitespaceChar()
 		}
 
 		// Skip line comments (-- ...)
@@ -641,7 +714,8 @@ func isHexDigit(ch byte) bool {
 }
 
 func isLetter(ch byte) bool {
-	return unicode.IsLetter(rune(ch))
+	// Only ASCII letters - don't treat UTF-8 leading bytes as letters
+	return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')
 }
 
 func isDigit(ch byte) bool {
