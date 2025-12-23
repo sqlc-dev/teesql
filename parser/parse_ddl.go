@@ -3819,8 +3819,7 @@ func (p *Parser) parseAlterExternalDataSourceStatement() (*ast.AlterExternalData
 			break
 		}
 
-		opt := &ast.ExternalDataSourceOption{}
-		opt.OptionKind = strings.ToUpper(p.curTok.Literal)
+		optName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
 
 		// Expect =
@@ -3828,23 +3827,25 @@ func (p *Parser) parseAlterExternalDataSourceStatement() (*ast.AlterExternalData
 			p.nextToken()
 		}
 
+		opt := &ast.ExternalDataSourceLiteralOrIdentifierOption{
+			OptionKind: externalDataSourceOptionKindToPascalCase(optName),
+			Value:      &ast.IdentifierOrValueExpression{},
+		}
+
 		// Parse value
 		if p.curTok.Type == TokenString {
-			val, _ := p.parseStringLiteral()
-			opt.Value = val
+			strLit, _ := p.parseStringLiteral()
+			opt.Value.Value = strLit.Value
+			opt.Value.ValueExpression = strLit
 		} else if p.curTok.Type == TokenIdent {
-			opt.Value = &ast.ColumnReferenceExpression{
-				ColumnType: "Regular",
-				MultiPartIdentifier: &ast.MultiPartIdentifier{
-					Count:       1,
-					Identifiers: []*ast.Identifier{p.parseIdentifier()},
-				},
-			}
+			ident := p.parseIdentifier()
+			opt.Value.Value = ident.Value
+			opt.Value.Identifier = ident
 		} else {
 			p.nextToken()
 		}
 
-		stmt.Options = append(stmt.Options, opt)
+		stmt.ExternalDataSourceOptions = append(stmt.ExternalDataSourceOptions, opt)
 
 		if p.curTok.Type == TokenComma {
 			p.nextToken()

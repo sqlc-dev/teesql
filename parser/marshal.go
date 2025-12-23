@@ -6057,6 +6057,32 @@ func createExternalDataSourceStatementToJSON(s *ast.CreateExternalDataSourceStat
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.DataSourceType != "" {
+		node["DataSourceType"] = s.DataSourceType
+	}
+	if s.Location != nil {
+		node["Location"] = stringLiteralToJSON(s.Location)
+	}
+	if len(s.ExternalDataSourceOptions) > 0 {
+		var options []jsonNode
+		for _, opt := range s.ExternalDataSourceOptions {
+			options = append(options, externalDataSourceOptionToJSON(opt))
+		}
+		node["ExternalDataSourceOptions"] = options
+	}
+	return node
+}
+
+func externalDataSourceOptionToJSON(opt *ast.ExternalDataSourceLiteralOrIdentifierOption) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalDataSourceLiteralOrIdentifierOption",
+	}
+	if opt.Value != nil {
+		node["Value"] = identifierOrValueExpressionToJSON(opt.Value)
+	}
+	if opt.OptionKind != "" {
+		node["OptionKind"] = opt.OptionKind
+	}
 	return node
 }
 
@@ -7124,25 +7150,12 @@ func alterExternalDataSourceStatementToJSON(s *ast.AlterExternalDataSourceStatem
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	if len(s.Options) > 0 {
-		opts := make([]jsonNode, len(s.Options))
-		for i, o := range s.Options {
+	if len(s.ExternalDataSourceOptions) > 0 {
+		opts := make([]jsonNode, len(s.ExternalDataSourceOptions))
+		for i, o := range s.ExternalDataSourceOptions {
 			opts[i] = externalDataSourceOptionToJSON(o)
 		}
 		node["ExternalDataSourceOptions"] = opts
-	}
-	return node
-}
-
-func externalDataSourceOptionToJSON(o *ast.ExternalDataSourceOption) jsonNode {
-	node := jsonNode{
-		"$type": "ExternalDataSourceLiteralOrIdentifierOption",
-	}
-	if o.OptionKind != "" {
-		node["OptionKind"] = o.OptionKind
-	}
-	if o.Value != nil {
-		node["Value"] = scalarExpressionToJSON(o.Value)
 	}
 	return node
 }

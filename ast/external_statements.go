@@ -2,17 +2,19 @@ package ast
 
 // CreateExternalDataSourceStatement represents CREATE EXTERNAL DATA SOURCE statement
 type CreateExternalDataSourceStatement struct {
-	Name    *Identifier
-	Options []*ExternalDataSourceOption
+	Name                      *Identifier
+	DataSourceType            string // HADOOP, RDBMS, SHARD_MAP_MANAGER, BLOB_STORAGE, EXTERNAL_GENERICS
+	Location                  *StringLiteral
+	ExternalDataSourceOptions []*ExternalDataSourceLiteralOrIdentifierOption
 }
 
 func (s *CreateExternalDataSourceStatement) node()      {}
 func (s *CreateExternalDataSourceStatement) statement() {}
 
-// ExternalDataSourceOption represents an option for external data source
-type ExternalDataSourceOption struct {
-	OptionKind string
-	Value      ScalarExpression
+// ExternalDataSourceLiteralOrIdentifierOption represents an option for external data source
+type ExternalDataSourceLiteralOrIdentifierOption struct {
+	OptionKind string // Credential, ResourceManagerLocation, DatabaseName, ShardMapName
+	Value      *IdentifierOrValueExpression
 }
 
 // CreateExternalFileFormatStatement represents CREATE EXTERNAL FILE FORMAT statement
@@ -97,8 +99,8 @@ type ExternalLibraryOption struct {
 
 // AlterExternalDataSourceStatement represents ALTER EXTERNAL DATA SOURCE statement
 type AlterExternalDataSourceStatement struct {
-	Name    *Identifier
-	Options []*ExternalDataSourceOption
+	Name                      *Identifier
+	ExternalDataSourceOptions []*ExternalDataSourceLiteralOrIdentifierOption
 }
 
 func (s *AlterExternalDataSourceStatement) node()      {}
