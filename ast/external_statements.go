@@ -17,19 +17,34 @@ type ExternalDataSourceOption struct {
 
 // CreateExternalFileFormatStatement represents CREATE EXTERNAL FILE FORMAT statement
 type CreateExternalFileFormatStatement struct {
-	Name    *Identifier
-	Options []*ExternalFileFormatOption
+	Name                      *Identifier
+	FormatType                string
+	ExternalFileFormatOptions []ExternalFileFormatOption
 }
 
 func (s *CreateExternalFileFormatStatement) node()      {}
 func (s *CreateExternalFileFormatStatement) statement() {}
 
-// ExternalFileFormatOption represents an option for external file format
-type ExternalFileFormatOption struct {
-	OptionKind string
-	Value      ScalarExpression
-	SubOptions []*ExternalFileFormatOption
+// ExternalFileFormatOption is an interface for external file format options
+type ExternalFileFormatOption interface {
+	externalFileFormatOption()
 }
+
+// ExternalFileFormatContainerOption represents a container option with suboptions
+type ExternalFileFormatContainerOption struct {
+	OptionKind string
+	Suboptions []ExternalFileFormatOption
+}
+
+func (o *ExternalFileFormatContainerOption) externalFileFormatOption() {}
+
+// ExternalFileFormatLiteralOption represents a literal value option
+type ExternalFileFormatLiteralOption struct {
+	OptionKind string
+	Value      *StringLiteral
+}
+
+func (o *ExternalFileFormatLiteralOption) externalFileFormatOption() {}
 
 // CreateExternalTableStatement represents CREATE EXTERNAL TABLE statement
 type CreateExternalTableStatement struct {

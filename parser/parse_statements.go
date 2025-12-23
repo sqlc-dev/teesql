@@ -4248,19 +4248,44 @@ func (p *Parser) parseCreateExternalFileFormatStatement() (*ast.CreateExternalFi
 		p.nextToken() // consume (
 
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-			opt := &ast.ExternalFileFormatOption{
-				OptionKind: p.curTok.Literal,
-			}
+			optName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume option name
-			if p.curTok.Type == TokenEquals {
-				p.nextToken()
-				val, err := p.parseScalarExpression()
-				if err != nil {
-					return nil, err
+
+			if optName == "FORMAT_TYPE" {
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
 				}
-				opt.Value = val
+				// Parse format type value and convert to PascalCase
+				stmt.FormatType = p.formatTypeToPascalCase(p.curTok.Literal)
+				p.nextToken() // consume value
+			} else if optName == "FORMAT_OPTIONS" {
+				// Parse container option with suboptions
+				opt := &ast.ExternalFileFormatContainerOption{
+					OptionKind: "FormatOptions",
+				}
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						subOpt := p.parseExternalFileFormatSuboption()
+						if subOpt != nil {
+							opt.Suboptions = append(opt.Suboptions, subOpt)
+						}
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+				stmt.ExternalFileFormatOptions = append(stmt.ExternalFileFormatOptions, opt)
+			} else {
+				// Skip other options for now
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+					p.nextToken() // consume value
+				}
 			}
-			stmt.Options = append(stmt.Options, opt)
 			if p.curTok.Type == TokenComma {
 				p.nextToken()
 			}
@@ -4274,6 +4299,67 @@ func (p *Parser) parseCreateExternalFileFormatStatement() (*ast.CreateExternalFi
 		p.nextToken()
 	}
 	return stmt, nil
+}
+
+func (p *Parser) formatTypeToPascalCase(s string) string {
+	upper := strings.ToUpper(s)
+	switch upper {
+	case "DELTA":
+		return "Delta"
+	case "DELIMITEDTEXT":
+		return "DelimitedText"
+	case "PARQUET":
+		return "Parquet"
+	case "ORC":
+		return "Orc"
+	case "RCFILE":
+		return "RcFile"
+	case "JSON":
+		return "Json"
+	default:
+		return s
+	}
+}
+
+func (p *Parser) parseExternalFileFormatSuboption() ast.ExternalFileFormatOption {
+	optName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume option name
+
+	// Map to option kind
+	optionKind := p.externalFileFormatOptionKind(optName)
+
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+		val, _ := p.parseStringLiteral()
+		return &ast.ExternalFileFormatLiteralOption{
+			OptionKind: optionKind,
+			Value:      val,
+		}
+	}
+	return nil
+}
+
+func (p *Parser) externalFileFormatOptionKind(name string) string {
+	switch strings.ToUpper(name) {
+	case "PARSER_VERSION":
+		return "ParserVersion"
+	case "FIELD_TERMINATOR":
+		return "FieldTerminator"
+	case "STRING_DELIMITER":
+		return "StringDelimiter"
+	case "DATE_FORMAT":
+		return "DateFormat"
+	case "USE_TYPE_DEFAULT":
+		return "UseTypeDefault"
+	case "ENCODING":
+		return "Encoding"
+	case "DATA_COMPRESSION":
+		return "DataCompression"
+	case "FIRST_ROW":
+		return "FirstRow"
+	default:
+		return name
+	}
 }
 
 func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableStatement, error) {

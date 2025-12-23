@@ -6067,7 +6067,46 @@ func createExternalFileFormatStatementToJSON(s *ast.CreateExternalFileFormatStat
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.FormatType != "" {
+		node["FormatType"] = s.FormatType
+	}
+	if len(s.ExternalFileFormatOptions) > 0 {
+		var options []jsonNode
+		for _, opt := range s.ExternalFileFormatOptions {
+			options = append(options, externalFileFormatOptionToJSON(opt))
+		}
+		node["ExternalFileFormatOptions"] = options
+	}
 	return node
+}
+
+func externalFileFormatOptionToJSON(opt ast.ExternalFileFormatOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.ExternalFileFormatContainerOption:
+		node := jsonNode{
+			"$type":      "ExternalFileFormatContainerOption",
+			"OptionKind": o.OptionKind,
+		}
+		if len(o.Suboptions) > 0 {
+			var subs []jsonNode
+			for _, sub := range o.Suboptions {
+				subs = append(subs, externalFileFormatOptionToJSON(sub))
+			}
+			node["Suboptions"] = subs
+		}
+		return node
+	case *ast.ExternalFileFormatLiteralOption:
+		node := jsonNode{
+			"$type":      "ExternalFileFormatLiteralOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = stringLiteralToJSON(o.Value)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownExternalFileFormatOption"}
+	}
 }
 
 func createExternalTableStatementToJSON(s *ast.CreateExternalTableStatement) jsonNode {
