@@ -124,7 +124,7 @@ func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 	return ref, nil
 }
 
-func (p *Parser) parseOpenRowset() (*ast.InternalOpenRowset, error) {
+func (p *Parser) parseOpenRowset() (ast.TableReference, error) {
 	// Consume OPENROWSET
 	p.nextToken()
 
@@ -132,6 +132,11 @@ func (p *Parser) parseOpenRowset() (*ast.InternalOpenRowset, error) {
 		return nil, fmt.Errorf("expected ( after OPENROWSET, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
+
+	// Check for BULK form
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "BULK" {
+		return p.parseBulkOpenRowset()
+	}
 
 	// Parse identifier
 	if p.curTok.Type != TokenIdent {
@@ -160,6 +165,196 @@ func (p *Parser) parseOpenRowset() (*ast.InternalOpenRowset, error) {
 		VarArgs:    varArgs,
 		ForPath:    false,
 	}, nil
+}
+
+func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
+	// We're positioned on BULK, consume it
+	p.nextToken()
+
+	result := &ast.BulkOpenRowset{
+		ForPath: false,
+	}
+
+	// Parse data file(s) - could be a single string or parenthesized list
+	if p.curTok.Type == TokenLParen {
+		// Multiple data files
+		p.nextToken()
+		for {
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			result.DataFiles = append(result.DataFiles, expr)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+				// Allow trailing comma
+				if p.curTok.Type == TokenRParen {
+					break
+				}
+				continue
+			}
+			break
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after data files, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+	} else {
+		// Single data file
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		result.DataFiles = append(result.DataFiles, expr)
+	}
+
+	// Parse options (comma-separated)
+	for p.curTok.Type == TokenComma {
+		p.nextToken()
+		opt, err := p.parseOpenRowsetBulkOption()
+		if err != nil {
+			return nil, err
+		}
+		result.Options = append(result.Options, opt)
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after OPENROWSET BULK, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
+}
+
+func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
+	upper := strings.ToUpper(p.curTok.Literal)
+
+	// Handle simple options (SINGLE_BLOB, SINGLE_CLOB, SINGLE_NCLOB)
+	switch upper {
+	case "SINGLE_BLOB":
+		p.nextToken()
+		return &ast.BulkInsertOptionBase{OptionKind: "SingleBlob"}, nil
+	case "SINGLE_CLOB":
+		p.nextToken()
+		return &ast.BulkInsertOptionBase{OptionKind: "SingleClob"}, nil
+	case "SINGLE_NCLOB":
+		p.nextToken()
+		return &ast.BulkInsertOptionBase{OptionKind: "SingleNClob"}, nil
+	}
+
+	// Handle ORDER option
+	if upper == "ORDER" {
+		p.nextToken()
+		return p.parseOpenRowsetOrderOption()
+	}
+
+	// Handle KEY=VALUE options
+	optionKind := p.getOpenRowsetOptionKind(upper)
+	p.nextToken()
+
+	if p.curTok.Type == TokenEquals {
+		p.nextToken()
+		value, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.LiteralBulkInsertOption{
+			OptionKind: optionKind,
+			Value:      value,
+		}, nil
+	}
+
+	return &ast.BulkInsertOptionBase{OptionKind: optionKind}, nil
+}
+
+func (p *Parser) getOpenRowsetOptionKind(name string) string {
+	optionMap := map[string]string{
+		"FORMATFILE":       "FormatFile",
+		"FORMAT":           "Format",
+		"CODEPAGE":         "CodePage",
+		"ROWS_PER_BATCH":   "RowsPerBatch",
+		"LASTROW":          "LastRow",
+		"FIRSTROW":         "FirstRow",
+		"MAXERRORS":        "MaxErrors",
+		"ERRORFILE":        "ErrorFile",
+		"FIELDQUOTE":       "FieldQuote",
+		"FIELDTERMINATOR":  "FieldTerminator",
+		"ROWTERMINATOR":    "RowTerminator",
+		"ESCAPECHAR":       "EscapeChar",
+		"DATA_COMPRESSION": "DataCompression",
+		"PARSER_VERSION":   "ParserVersion",
+		"HEADER_ROW":       "HeaderRow",
+		"DATAFILETYPE":     "DataFileType",
+		"ROWSET_OPTIONS":   "RowsetOptions",
+	}
+	if kind, ok := optionMap[name]; ok {
+		return kind
+	}
+	return name
+}
+
+func (p *Parser) parseOpenRowsetOrderOption() (*ast.OrderBulkInsertOption, error) {
+	result := &ast.OrderBulkInsertOption{
+		OptionKind: "Order",
+	}
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after ORDER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse column list with sort order
+	for {
+		col := &ast.ColumnWithSortOrder{
+			SortOrder: ast.SortOrderNotSpecified,
+		}
+
+		// Parse column reference
+		colRef, err := p.parseMultiPartIdentifierAsColumn()
+		if err != nil {
+			return nil, err
+		}
+		col.Column = colRef
+
+		// Check for ASC/DESC
+		if p.curTok.Type == TokenAsc {
+			col.SortOrder = ast.SortOrderAscending
+			p.nextToken()
+		} else if p.curTok.Type == TokenDesc {
+			col.SortOrder = ast.SortOrderDescending
+			p.nextToken()
+		}
+
+		result.Columns = append(result.Columns, col)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			continue
+		}
+		break
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after ORDER columns, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for UNIQUE
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
+		result.IsUnique = true
+		p.nextToken()
+	}
+
+	return result, nil
 }
 
 func (p *Parser) parseFunctionParameters() ([]ast.ScalarExpression, error) {

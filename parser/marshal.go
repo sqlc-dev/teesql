@@ -1510,6 +1510,29 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		node["ForPath"] = r.ForPath
 		return node
+	case *ast.BulkOpenRowset:
+		node := jsonNode{
+			"$type": "BulkOpenRowset",
+		}
+		if len(r.DataFiles) > 0 {
+			files := make([]jsonNode, len(r.DataFiles))
+			for i, f := range r.DataFiles {
+				files[i] = scalarExpressionToJSON(f)
+			}
+			node["DataFiles"] = files
+		}
+		if len(r.Options) > 0 {
+			opts := make([]jsonNode, len(r.Options))
+			for i, o := range r.Options {
+				opts[i] = bulkInsertOptionToJSON(o)
+			}
+			node["Options"] = opts
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
 	default:
 		return jsonNode{"$type": "UnknownTableReference"}
 	}
@@ -6157,6 +6180,7 @@ func bulkInsertOptionToJSON(opt ast.BulkInsertOption) jsonNode {
 		node := jsonNode{
 			"$type":      "OrderBulkInsertOption",
 			"OptionKind": "Order",
+			"IsUnique":   o.IsUnique,
 		}
 		if len(o.Columns) > 0 {
 			cols := make([]jsonNode, len(o.Columns))
@@ -6164,9 +6188,6 @@ func bulkInsertOptionToJSON(opt ast.BulkInsertOption) jsonNode {
 				cols[i] = columnWithSortOrderToJSON(col)
 			}
 			node["Columns"] = cols
-		}
-		if o.IsUnique {
-			node["IsUnique"] = o.IsUnique
 		}
 		return node
 	default:
