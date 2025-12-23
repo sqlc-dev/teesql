@@ -685,7 +685,8 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
 		p.nextToken()
-		return &ast.ParenthesisExpression{Expression: expr}, nil
+		// Check for property access after parenthesized expression: (c1).SomeProperty
+		return p.parsePostExpressionAccess(&ast.ParenthesisExpression{Expression: expr})
 	case TokenCase:
 		return p.parseCaseExpression()
 	default:
@@ -966,58 +967,75 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		p.nextToken() // consume dot
 	}
 
-	// Check for :: (user-defined type method call): a.b::func()
+	// Check for :: (user-defined type method call or property access): a.b::func() or a::prop
 	if p.curTok.Type == TokenColonColon && len(identifiers) > 0 {
 		p.nextToken() // consume ::
 
-		// Parse function name
+		// Parse function/property name
 		if p.curTok.Type != TokenIdent {
-			return nil, fmt.Errorf("expected function name after ::, got %s", p.curTok.Literal)
+			return nil, fmt.Errorf("expected identifier after ::, got %s", p.curTok.Literal)
 		}
-		funcName := &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+		name := &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
 		p.nextToken()
-
-		// Expect (
-		if p.curTok.Type != TokenLParen {
-			return nil, fmt.Errorf("expected ( after function name, got %s", p.curTok.Literal)
-		}
-		p.nextToken() // consume (
 
 		// Build SchemaObjectName from identifiers
 		schemaObjName := identifiersToSchemaObjectName(identifiers)
 
-		fc := &ast.FunctionCall{
+		// If followed by ( it's a method call, otherwise property access
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+
+			fc := &ast.FunctionCall{
+				CallTarget: &ast.UserDefinedTypeCallTarget{
+					SchemaObjectName: schemaObjName,
+				},
+				FunctionName:     name,
+				UniqueRowFilter:  "NotSpecified",
+				WithArrayWrapper: false,
+			}
+
+			// Parse parameters
+			if p.curTok.Type != TokenRParen {
+				for {
+					param, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					fc.Parameters = append(fc.Parameters, param)
+
+					if p.curTok.Type != TokenComma {
+						break
+					}
+					p.nextToken() // consume comma
+				}
+			}
+
+			// Expect )
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) in function call, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+
+			// Check for OVER clause or property access after method call
+			return p.parsePostExpressionAccess(fc)
+		}
+
+		// Property access: t::a
+		propAccess := &ast.UserDefinedTypePropertyAccess{
 			CallTarget: &ast.UserDefinedTypeCallTarget{
 				SchemaObjectName: schemaObjName,
 			},
-			FunctionName:     funcName,
-			UniqueRowFilter:  "NotSpecified",
-			WithArrayWrapper: false,
+			PropertyName: name,
 		}
 
-		// Parse parameters
-		if p.curTok.Type != TokenRParen {
-			for {
-				param, err := p.parseScalarExpression()
-				if err != nil {
-					return nil, err
-				}
-				fc.Parameters = append(fc.Parameters, param)
-
-				if p.curTok.Type != TokenComma {
-					break
-				}
-				p.nextToken() // consume comma
-			}
+		// Check for COLLATE clause
+		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+			p.nextToken() // consume COLLATE
+			propAccess.Collation = p.parseIdentifier()
 		}
 
-		// Expect )
-		if p.curTok.Type != TokenRParen {
-			return nil, fmt.Errorf("expected ) in function call, got %s", p.curTok.Literal)
-		}
-		p.nextToken()
-
-		return fc, nil
+		// Check for chained property access
+		return p.parsePostExpressionAccess(propAccess)
 	}
 
 	// If followed by ( it's a function call
@@ -1046,7 +1064,7 @@ func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) 
 	return nil, fmt.Errorf("expected column reference, got function call")
 }
 
-func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier) (*ast.FunctionCall, error) {
+func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier) (ast.ScalarExpression, error) {
 	fc := &ast.FunctionCall{
 		UniqueRowFilter:  "NotSpecified",
 		WithArrayWrapper: false,
@@ -1070,6 +1088,15 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 	// Consume (
 	p.nextToken()
 
+	// Check for ALL or DISTINCT
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		fc.UniqueRowFilter = "All"
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "DISTINCT" {
+		fc.UniqueRowFilter = "Distinct"
+		p.nextToken()
+	}
+
 	// Parse parameters
 	if p.curTok.Type != TokenRParen {
 		for {
@@ -1092,7 +1119,105 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 	}
 	p.nextToken()
 
-	return fc, nil
+	// Check for OVER clause or property access after function call
+	return p.parsePostExpressionAccess(fc)
+}
+
+// parsePostExpressionAccess handles chained property access (.PropertyName), COLLATE clauses, and OVER clauses
+// after an expression (function call, parenthesized expression, or property access).
+func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.ScalarExpression, error) {
+	// Loop to handle chained property access like .SomeProperty.AnotherProperty
+	for {
+		// Check for .PropertyName pattern (property access)
+		if p.curTok.Type == TokenDot {
+			p.nextToken() // consume .
+
+			if p.curTok.Type != TokenIdent {
+				return nil, fmt.Errorf("expected property name after ., got %s", p.curTok.Literal)
+			}
+			propName := &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+			p.nextToken()
+
+			// Check if it's a method call: .method()
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+
+				fc := &ast.FunctionCall{
+					CallTarget: &ast.ExpressionCallTarget{
+						Expression: expr,
+					},
+					FunctionName:     propName,
+					UniqueRowFilter:  "NotSpecified",
+					WithArrayWrapper: false,
+				}
+
+				// Parse parameters
+				if p.curTok.Type != TokenRParen {
+					for {
+						param, err := p.parseScalarExpression()
+						if err != nil {
+							return nil, err
+						}
+						fc.Parameters = append(fc.Parameters, param)
+
+						if p.curTok.Type != TokenComma {
+							break
+						}
+						p.nextToken() // consume comma
+					}
+				}
+
+				// Expect )
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ) in method call, got %s", p.curTok.Literal)
+				}
+				p.nextToken()
+
+				expr = fc
+				continue
+			}
+
+			// Property access: .PropertyName
+			propAccess := &ast.UserDefinedTypePropertyAccess{
+				CallTarget: &ast.ExpressionCallTarget{
+					Expression: expr,
+				},
+				PropertyName: propName,
+			}
+
+			// Check for COLLATE clause
+			if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+				p.nextToken() // consume COLLATE
+				propAccess.Collation = p.parseIdentifier()
+			}
+
+			expr = propAccess
+			continue
+		}
+
+		// Check for OVER clause for function calls
+		if fc, ok := expr.(*ast.FunctionCall); ok && strings.ToUpper(p.curTok.Literal) == "OVER" {
+			p.nextToken() // consume OVER
+
+			if p.curTok.Type != TokenLParen {
+				return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume (
+
+			// For now, just skip to closing paren (basic OVER() support)
+			// TODO: Parse partition by, order by, and window frame
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+
+			fc.OverClause = &ast.OverClause{}
+		}
+
+		break
+	}
+
+	return expr, nil
 }
 
 func (p *Parser) parseFromClause() (*ast.FromClause, error) {
