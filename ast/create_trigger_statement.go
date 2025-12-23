@@ -18,5 +18,8 @@ func (s *CreateTriggerStatement) node()      {}
 
 // EventTypeContainer represents an event type container
 type EventTypeContainer struct {
-	EventType string
+	EventType string `json:"EventType,omitempty"`
 }
+
+func (c *EventTypeContainer) node()                    {}
+func (c *EventTypeContainer) eventTypeGroupContainer() {}

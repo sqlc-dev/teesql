@@ -215,9 +215,36 @@ type CreateXmlIndexStatement struct {
 func (s *CreateXmlIndexStatement) node()      {}
 func (s *CreateXmlIndexStatement) statement() {}
 
+// EventNotificationObjectScope represents the scope of an event notification (SERVER, DATABASE, or QUEUE).
+type EventNotificationObjectScope struct {
+	Target    string            `json:"Target,omitempty"` // "Server", "Database", or "Queue"
+	QueueName *SchemaObjectName `json:"QueueName,omitempty"`
+}
+
+func (s *EventNotificationObjectScope) node() {}
+
+// EventTypeGroupContainer is an interface for event type/group containers.
+type EventTypeGroupContainer interface {
+	node()
+	eventTypeGroupContainer()
+}
+
+// EventGroupContainer represents a group of events.
+type EventGroupContainer struct {
+	EventGroup string `json:"EventGroup,omitempty"`
+}
+
+func (c *EventGroupContainer) node()                    {}
+func (c *EventGroupContainer) eventTypeGroupContainer() {}
+
 // CreateEventNotificationStatement represents a CREATE EVENT NOTIFICATION statement.
 type CreateEventNotificationStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name                    *Identifier                   `json:"Name,omitempty"`
+	Scope                   *EventNotificationObjectScope `json:"Scope,omitempty"`
+	WithFanIn               bool                          `json:"WithFanIn,omitempty"`
+	EventTypeGroups         []EventTypeGroupContainer     `json:"EventTypeGroups,omitempty"`
+	BrokerService           *StringLiteral                `json:"BrokerService,omitempty"`
+	BrokerInstanceSpecifier *StringLiteral                `json:"BrokerInstanceSpecifier,omitempty"`
 }
 
 func (s *CreateEventNotificationStatement) node()      {}
