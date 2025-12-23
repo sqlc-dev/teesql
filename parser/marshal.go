@@ -941,9 +941,39 @@ func optimizerHintToJSON(h ast.OptimizerHintBase) jsonNode {
 			node["HintKind"] = hint.HintKind
 		}
 		return node
+	case *ast.OptimizeForOptimizerHint:
+		node := jsonNode{
+			"$type": "OptimizeForOptimizerHint",
+		}
+		if len(hint.Pairs) > 0 {
+			pairs := make([]jsonNode, len(hint.Pairs))
+			for i, pair := range hint.Pairs {
+				pairs[i] = variableValuePairToJSON(pair)
+			}
+			node["Pairs"] = pairs
+		}
+		node["IsForUnknown"] = hint.IsForUnknown
+		if hint.HintKind != "" {
+			node["HintKind"] = hint.HintKind
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownOptimizerHint"}
 	}
+}
+
+func variableValuePairToJSON(p *ast.VariableValuePair) jsonNode {
+	node := jsonNode{
+		"$type": "VariableValuePair",
+	}
+	if p.Variable != nil {
+		node["Variable"] = scalarExpressionToJSON(p.Variable)
+	}
+	if p.Value != nil {
+		node["Value"] = scalarExpressionToJSON(p.Value)
+	}
+	node["IsForUnknown"] = p.IsForUnknown
+	return node
 }
 
 func queryExpressionToJSON(qe ast.QueryExpression) jsonNode {

@@ -1283,28 +1283,17 @@ func (p *Parser) parseOptionClause() ([]ast.OptimizerHintBase, error) {
 
 	// Parse hints
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLabel {
-			hintKind := convertHintKind(p.curTok.Literal)
+		if p.curTok.Type == TokenComma {
 			p.nextToken()
+			continue
+		}
 
-			// Check if this is a literal hint (LABEL = value, etc.)
-			if p.curTok.Type == TokenEquals {
-				p.nextToken() // consume =
-				value, err := p.parseScalarExpression()
-				if err != nil {
-					return nil, err
-				}
-				hints = append(hints, &ast.LiteralOptimizerHint{
-					HintKind: hintKind,
-					Value:    value,
-				})
-			} else {
-				hints = append(hints, &ast.OptimizerHint{HintKind: hintKind})
-			}
-		} else if p.curTok.Type == TokenComma {
-			p.nextToken()
-		} else {
-			p.nextToken()
+		hint, err := p.parseOptimizerHint()
+		if err != nil {
+			return nil, err
+		}
+		if hint != nil {
+			hints = append(hints, hint)
 		}
 	}
 
@@ -1314,6 +1303,225 @@ func (p *Parser) parseOptionClause() ([]ast.OptimizerHintBase, error) {
 	}
 
 	return hints, nil
+}
+
+func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
+	// Handle both identifiers and keywords that can appear as optimizer hints
+	// USE is a keyword (TokenUse), so we need to handle it specially
+	if p.curTok.Type == TokenUse {
+		p.nextToken() // consume USE
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PLAN" {
+			p.nextToken() // consume PLAN
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: "UsePlan", Value: value}, nil
+		}
+		return &ast.OptimizerHint{HintKind: "Use"}, nil
+	}
+
+	if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLabel {
+		// Skip unknown tokens to avoid infinite loop
+		p.nextToken()
+		return nil, nil
+	}
+
+	upper := strings.ToUpper(p.curTok.Literal)
+
+	switch upper {
+	case "PARAMETERIZATION":
+		p.nextToken() // consume PARAMETERIZATION
+		if p.curTok.Type == TokenIdent {
+			subUpper := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			if subUpper == "SIMPLE" {
+				return &ast.OptimizerHint{HintKind: "ParameterizationSimple"}, nil
+			} else if subUpper == "FORCED" {
+				return &ast.OptimizerHint{HintKind: "ParameterizationForced"}, nil
+			}
+		}
+		return &ast.OptimizerHint{HintKind: "Parameterization"}, nil
+
+	case "MAXRECURSION":
+		p.nextToken() // consume MAXRECURSION
+		value, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.LiteralOptimizerHint{HintKind: "MaxRecursion", Value: value}, nil
+
+	case "OPTIMIZE":
+		p.nextToken() // consume OPTIMIZE
+		if p.curTok.Type == TokenIdent {
+			subUpper := strings.ToUpper(p.curTok.Literal)
+			if subUpper == "FOR" {
+				p.nextToken() // consume FOR
+				return p.parseOptimizeForHint()
+			} else if subUpper == "CORRELATED" {
+				p.nextToken() // consume CORRELATED
+				if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNION" {
+					p.nextToken() // consume UNION
+					if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ALL" {
+						p.nextToken() // consume ALL
+					}
+				}
+				return &ast.OptimizerHint{HintKind: "OptimizeCorrelatedUnionAll"}, nil
+			}
+		}
+		return &ast.OptimizerHint{HintKind: "Optimize"}, nil
+
+	case "CHECKCONSTRAINTS":
+		p.nextToken() // consume CHECKCONSTRAINTS
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PLAN" {
+			p.nextToken() // consume PLAN
+			return &ast.OptimizerHint{HintKind: "CheckConstraintsPlan"}, nil
+		}
+		return &ast.OptimizerHint{HintKind: "CheckConstraints"}, nil
+
+	case "LABEL":
+		p.nextToken() // consume LABEL
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: "Label", Value: value}, nil
+		}
+		return &ast.OptimizerHint{HintKind: "Label"}, nil
+
+	case "MAX_GRANT_PERCENT":
+		p.nextToken() // consume MAX_GRANT_PERCENT
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: "MaxGrantPercent", Value: value}, nil
+		}
+		return &ast.OptimizerHint{HintKind: "MaxGrantPercent"}, nil
+
+	case "MIN_GRANT_PERCENT":
+		p.nextToken() // consume MIN_GRANT_PERCENT
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: "MinGrantPercent", Value: value}, nil
+		}
+		return &ast.OptimizerHint{HintKind: "MinGrantPercent"}, nil
+
+	case "FAST":
+		p.nextToken() // consume FAST
+		// FAST can take a numeric argument
+		if p.curTok.Type == TokenNumber {
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}, nil
+		}
+		return &ast.OptimizerHint{HintKind: "Fast"}, nil
+
+	default:
+		// Handle generic hints
+		hintKind := convertHintKind(p.curTok.Literal)
+		p.nextToken()
+
+		// Check if this is a literal hint (LABEL = value, etc.)
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}, nil
+		}
+		return &ast.OptimizerHint{HintKind: hintKind}, nil
+	}
+}
+
+func (p *Parser) parseOptimizeForHint() (ast.OptimizerHintBase, error) {
+	hint := &ast.OptimizeForOptimizerHint{
+		HintKind:     "OptimizeFor",
+		IsForUnknown: false,
+	}
+
+	// Check for UNKNOWN
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNKNOWN" {
+		p.nextToken()
+		hint.IsForUnknown = true
+		return hint, nil
+	}
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after OPTIMIZE FOR, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse variable-value pairs
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			continue
+		}
+
+		pair, err := p.parseVariableValuePair()
+		if err != nil {
+			return nil, err
+		}
+		if pair != nil {
+			hint.Pairs = append(hint.Pairs, pair)
+		}
+	}
+
+	// Consume )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	return hint, nil
+}
+
+func (p *Parser) parseVariableValuePair() (*ast.VariableValuePair, error) {
+	// Expect @variable (variables are TokenIdent starting with @)
+	if p.curTok.Type != TokenIdent || !strings.HasPrefix(p.curTok.Literal, "@") {
+		return nil, nil
+	}
+
+	pair := &ast.VariableValuePair{
+		Variable: &ast.VariableReference{
+			Name: p.curTok.Literal,
+		},
+		IsForUnknown: false,
+	}
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		// Could be UNKNOWN
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNKNOWN" {
+			p.nextToken()
+			pair.IsForUnknown = true
+			return pair, nil
+		}
+		return nil, fmt.Errorf("expected = after variable, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume =
+
+	// Parse the value
+	value, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	pair.Value = value
+
+	return pair, nil
 }
 
 // convertHintKind converts hint identifiers to their canonical names
