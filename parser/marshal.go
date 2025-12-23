@@ -346,6 +346,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createLoginStatementToJSON(s)
 	case *ast.CreateIndexStatement:
 		return createIndexStatementToJSON(s)
+	case *ast.CreateSpatialIndexStatement:
+		return createSpatialIndexStatementToJSON(s)
 	case *ast.CreateAsymmetricKeyStatement:
 		return createAsymmetricKeyStatementToJSON(s)
 	case *ast.CreateSymmetricKeyStatement:
@@ -5185,6 +5187,108 @@ func createColumnStoreIndexStatementToJSON(s *ast.CreateColumnStoreIndexStatemen
 	return node
 }
 
+func createSpatialIndexStatementToJSON(s *ast.CreateSpatialIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateSpatialIndexStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Object != nil {
+		node["Object"] = schemaObjectNameToJSON(s.Object)
+	}
+	if s.SpatialColumnName != nil {
+		node["SpatialColumnName"] = identifierToJSON(s.SpatialColumnName)
+	}
+	if s.SpatialIndexingScheme != "" {
+		node["SpatialIndexingScheme"] = s.SpatialIndexingScheme
+	}
+	if s.OnFileGroup != nil {
+		node["OnFileGroup"] = identifierOrValueExpressionToJSON(s.OnFileGroup)
+	}
+	if len(s.SpatialIndexOptions) > 0 {
+		opts := make([]jsonNode, len(s.SpatialIndexOptions))
+		for i, opt := range s.SpatialIndexOptions {
+			opts[i] = spatialIndexOptionToJSON(opt)
+		}
+		node["SpatialIndexOptions"] = opts
+	}
+	return node
+}
+
+func spatialIndexOptionToJSON(opt ast.SpatialIndexOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.SpatialIndexRegularOption:
+		node := jsonNode{
+			"$type": "SpatialIndexRegularOption",
+		}
+		if o.Option != nil {
+			node["Option"] = indexOptionToJSON(o.Option)
+		}
+		return node
+	case *ast.BoundingBoxSpatialIndexOption:
+		node := jsonNode{
+			"$type": "BoundingBoxSpatialIndexOption",
+		}
+		if len(o.BoundingBoxParameters) > 0 {
+			params := make([]jsonNode, len(o.BoundingBoxParameters))
+			for i, p := range o.BoundingBoxParameters {
+				params[i] = boundingBoxParameterToJSON(p)
+			}
+			node["BoundingBoxParameters"] = params
+		}
+		return node
+	case *ast.GridsSpatialIndexOption:
+		node := jsonNode{
+			"$type": "GridsSpatialIndexOption",
+		}
+		if len(o.GridParameters) > 0 {
+			params := make([]jsonNode, len(o.GridParameters))
+			for i, p := range o.GridParameters {
+				params[i] = gridParameterToJSON(p)
+			}
+			node["GridParameters"] = params
+		}
+		return node
+	case *ast.CellsPerObjectSpatialIndexOption:
+		node := jsonNode{
+			"$type": "CellsPerObjectSpatialIndexOption",
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownSpatialIndexOption"}
+	}
+}
+
+func boundingBoxParameterToJSON(p *ast.BoundingBoxParameter) jsonNode {
+	node := jsonNode{
+		"$type": "BoundingBoxParameter",
+	}
+	if p.Parameter != "" {
+		node["Parameter"] = p.Parameter
+	}
+	if p.Value != nil {
+		node["Value"] = scalarExpressionToJSON(p.Value)
+	}
+	return node
+}
+
+func gridParameterToJSON(p *ast.GridParameter) jsonNode {
+	node := jsonNode{
+		"$type": "GridParameter",
+	}
+	if p.Parameter != "" {
+		node["Parameter"] = p.Parameter
+	}
+	if p.Value != "" {
+		node["Value"] = p.Value
+	}
+	return node
+}
+
 func alterFunctionStatementToJSON(s *ast.AlterFunctionStatement) jsonNode {
 	node := jsonNode{
 		"$type": "AlterFunctionStatement",
@@ -5377,6 +5481,26 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 			"$type":      "IndexExpressionOption",
 			"OptionKind": o.OptionKind,
 			"Expression": scalarExpressionToJSON(o.Expression),
+		}
+	case *ast.DataCompressionOption:
+		node := jsonNode{
+			"$type":            "DataCompressionOption",
+			"CompressionLevel": o.CompressionLevel,
+			"OptionKind":       o.OptionKind,
+		}
+		if len(o.PartitionRanges) > 0 {
+			ranges := make([]jsonNode, len(o.PartitionRanges))
+			for i, r := range o.PartitionRanges {
+				ranges[i] = compressionPartitionRangeToJSON(r)
+			}
+			node["PartitionRanges"] = ranges
+		}
+		return node
+	case *ast.IgnoreDupKeyIndexOption:
+		return jsonNode{
+			"$type":       "IgnoreDupKeyIndexOption",
+			"OptionState": o.OptionState,
+			"OptionKind":  o.OptionKind,
 		}
 	default:
 		return jsonNode{"$type": "UnknownIndexOption"}
