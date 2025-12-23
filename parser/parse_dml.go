@@ -232,6 +232,25 @@ func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
 		}
 	}
 
+	// Parse optional column list (e.g., AS a(c1, c2))
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		for {
+			if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+				result.Columns = append(result.Columns, p.parseIdentifier())
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+				continue
+			}
+			break
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after column list, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+	}
+
 	return result, nil
 }
 
@@ -579,6 +598,32 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 
 	spec := &ast.ExecuteSpecification{}
 
+	// Check for EXECUTE ('string') form - ExecutableStringList
+	if p.curTok.Type == TokenLParen {
+		strList, err := p.parseExecutableStringList()
+		if err != nil {
+			return nil, err
+		}
+		spec.ExecutableEntity = strList
+
+		// Parse optional AS USER/LOGIN context
+		if p.curTok.Type == TokenAs {
+			ctx, err := p.parseExecuteContextForSpec()
+			if err != nil {
+				return nil, err
+			}
+			spec.ExecuteContext = ctx
+		}
+
+		// Parse optional AT LinkedServer
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "AT" {
+			p.nextToken()
+			spec.LinkedServer = p.parseIdentifier()
+		}
+
+		return spec, nil
+	}
+
 	// Check for return variable assignment @var =
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		varName := p.curTok.Literal
@@ -634,6 +679,115 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 
 	spec.ExecutableEntity = procRef
 	return spec, nil
+}
+
+func (p *Parser) parseExecutableStringList() (*ast.ExecutableStringList, error) {
+	// We're positioned on (, consume it
+	p.nextToken()
+
+	strList := &ast.ExecutableStringList{}
+
+	// Parse the first string expression (may be concatenated with +)
+	for {
+		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			// parseScalarExpression handles the + concatenation, so we get a BinaryExpression
+			// But we need to flatten it to individual StringLiterals for the Strings array
+			p.flattenStringExpression(expr, &strList.Strings)
+		} else {
+			break
+		}
+
+		// Check for comma (parameters follow) or closing paren
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			break
+		}
+		if p.curTok.Type == TokenRParen {
+			break
+		}
+	}
+
+	// Parse parameters (after the first comma)
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param, err := p.parseExecuteParameter()
+		if err != nil {
+			return nil, err
+		}
+		strList.Parameters = append(strList.Parameters, param)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken()
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after EXECUTE string list, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	return strList, nil
+}
+
+func (p *Parser) flattenStringExpression(expr ast.ScalarExpression, strings *[]ast.ScalarExpression) {
+	switch e := expr.(type) {
+	case *ast.BinaryExpression:
+		// Recursively flatten for + concatenation
+		p.flattenStringExpression(e.FirstExpression, strings)
+		p.flattenStringExpression(e.SecondExpression, strings)
+	default:
+		*strings = append(*strings, expr)
+	}
+}
+
+func (p *Parser) parseExecuteContextForSpec() (*ast.ExecuteContext, error) {
+	// We're positioned on AS, consume it
+	p.nextToken()
+
+	ctx := &ast.ExecuteContext{}
+
+	upper := strings.ToUpper(p.curTok.Literal)
+	switch upper {
+	case "USER":
+		ctx.Kind = "User"
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			ctx.Principal = expr
+		}
+	case "LOGIN":
+		ctx.Kind = "Login"
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			ctx.Principal = expr
+		}
+	case "CALLER":
+		ctx.Kind = "Caller"
+		p.nextToken()
+	case "OWNER":
+		ctx.Kind = "Owner"
+		p.nextToken()
+	case "SELF":
+		ctx.Kind = "Self"
+		p.nextToken()
+	default:
+		return nil, fmt.Errorf("expected USER, LOGIN, CALLER, OWNER, or SELF after AS, got %s", p.curTok.Literal)
+	}
+
+	return ctx, nil
 }
 
 func (p *Parser) parseExecuteParameter() (*ast.ExecuteParameter, error) {

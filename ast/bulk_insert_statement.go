@@ -67,6 +67,7 @@ func (o *OrderBulkInsertOption) bulkInsertOption() {}
 type BulkOpenRowset struct {
 	DataFiles []ScalarExpression `json:"DataFiles,omitempty"`
 	Options   []BulkInsertOption `json:"Options,omitempty"`
+	Columns   []*Identifier      `json:"Columns,omitempty"`
 	Alias     *Identifier        `json:"Alias,omitempty"`
 	ForPath   bool               `json:"ForPath"`
 }
