@@ -1244,6 +1244,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateWorkloadGroupStatement()
 		case "SEQUENCE":
 			return p.parseCreateSequenceStatement()
+		case "SPATIAL":
+			return p.parseCreateSpatialIndexStatement()
 		}
 		// Lenient: skip unknown CREATE statements
 		p.skipToEndOfStatement()
@@ -4957,6 +4959,286 @@ func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) 
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 	return stmt, nil
+}
+
+func (p *Parser) parseCreateSpatialIndexStatement() (*ast.CreateSpatialIndexStatement, error) {
+	p.nextToken() // consume SPATIAL
+	if p.curTok.Type == TokenIndex {
+		p.nextToken() // consume INDEX
+	}
+
+	stmt := &ast.CreateSpatialIndexStatement{
+		Name:                  p.parseIdentifier(),
+		SpatialIndexingScheme: "None",
+	}
+
+	// Parse ON table_name(column_name)
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		stmt.Object, _ = p.parseSchemaObjectName()
+
+		// Parse (column_name)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			stmt.SpatialColumnName = p.parseIdentifier()
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse USING clause for spatial indexing scheme
+	if strings.ToUpper(p.curTok.Literal) == "USING" {
+		p.nextToken() // consume USING
+		scheme := strings.ToUpper(p.curTok.Literal)
+		switch scheme {
+		case "GEOMETRY_GRID":
+			stmt.SpatialIndexingScheme = "GeometryGrid"
+		case "GEOGRAPHY_GRID":
+			stmt.SpatialIndexingScheme = "GeographyGrid"
+		case "GEOMETRY_AUTO_GRID":
+			stmt.SpatialIndexingScheme = "GeometryAutoGrid"
+		case "GEOGRAPHY_AUTO_GRID":
+			stmt.SpatialIndexingScheme = "GeographyAutoGrid"
+		}
+		p.nextToken() // consume scheme
+	}
+
+	// Parse WITH clause for options
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+		}
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+			optName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume option name
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			switch optName {
+			case "DATA_COMPRESSION":
+				compression := strings.ToUpper(p.curTok.Literal)
+				compressionLevel := "None"
+				switch compression {
+				case "NONE":
+					compressionLevel = "None"
+				case "ROW":
+					compressionLevel = "Row"
+				case "PAGE":
+					compressionLevel = "Page"
+				case "COLUMNSTORE":
+					compressionLevel = "ColumnStore"
+				case "COLUMNSTORE_ARCHIVE":
+					compressionLevel = "ColumnStoreArchive"
+				}
+				p.nextToken() // consume compression level
+
+				opt := &ast.SpatialIndexRegularOption{
+					Option: &ast.DataCompressionOption{
+						CompressionLevel: compressionLevel,
+						OptionKind:       "DataCompression",
+					},
+				}
+				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, opt)
+
+			case "BOUNDING_BOX":
+				bbOpt := p.parseBoundingBoxOption()
+				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, bbOpt)
+
+			case "GRIDS":
+				gridsOpt := p.parseGridsOption()
+				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, gridsOpt)
+
+			case "CELLS_PER_OBJECT":
+				expr, _ := p.parseScalarExpression()
+				cellsOpt := &ast.CellsPerObjectSpatialIndexOption{
+					Value: expr,
+				}
+				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, cellsOpt)
+
+			case "PAD_INDEX", "SORT_IN_TEMPDB", "ALLOW_ROW_LOCKS", "ALLOW_PAGE_LOCKS", "DROP_EXISTING", "ONLINE", "STATISTICS_NORECOMPUTE", "STATISTICS_INCREMENTAL":
+				optState := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume ON/OFF
+				opt := &ast.SpatialIndexRegularOption{
+					Option: &ast.IndexStateOption{
+						OptionKind:  p.getIndexOptionKind(optName),
+						OptionState: p.capitalizeFirst(strings.ToLower(optState)),
+					},
+				}
+				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, opt)
+
+			case "MAXDOP", "FILLFACTOR":
+				expr, _ := p.parseScalarExpression()
+				opt := &ast.SpatialIndexRegularOption{
+					Option: &ast.IndexExpressionOption{
+						OptionKind: p.getIndexOptionKind(optName),
+						Expression: expr,
+					},
+				}
+				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, opt)
+
+			case "IGNORE_DUP_KEY":
+				optState := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume ON/OFF
+				opt := &ast.SpatialIndexRegularOption{
+					Option: &ast.IgnoreDupKeyIndexOption{
+						OptionKind:  "IgnoreDupKey",
+						OptionState: p.capitalizeFirst(strings.ToLower(optState)),
+					},
+				}
+				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, opt)
+
+			default:
+				// Skip unknown option value
+				if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
+					p.nextToken()
+				}
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse ON filegroup clause
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		stmt.OnFileGroup, _ = p.parseIdentifierOrValueExpression()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseBoundingBoxOption() *ast.BoundingBoxSpatialIndexOption {
+	opt := &ast.BoundingBoxSpatialIndexOption{}
+
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+	}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param := &ast.BoundingBoxParameter{Parameter: "None"}
+
+		// Check if it's named parameter (XMIN, YMIN, etc.)
+		paramName := strings.ToUpper(p.curTok.Literal)
+		switch paramName {
+		case "XMIN":
+			param.Parameter = "XMin"
+			p.nextToken()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+		case "YMIN":
+			param.Parameter = "YMin"
+			p.nextToken()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+		case "XMAX":
+			param.Parameter = "XMax"
+			p.nextToken()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+		case "YMAX":
+			param.Parameter = "YMax"
+			p.nextToken()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+		}
+
+		param.Value, _ = p.parseScalarExpression()
+		opt.BoundingBoxParameters = append(opt.BoundingBoxParameters, param)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return opt
+}
+
+func (p *Parser) parseGridsOption() *ast.GridsSpatialIndexOption {
+	opt := &ast.GridsSpatialIndexOption{}
+
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+	}
+
+	levelIndex := 1
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param := &ast.GridParameter{Parameter: "None"}
+
+		// Check if it's named parameter (LEVEL_1, LEVEL_2, etc.)
+		paramName := strings.ToUpper(p.curTok.Literal)
+		switch paramName {
+		case "LEVEL_1":
+			param.Parameter = "Level1"
+			p.nextToken()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+		case "LEVEL_2":
+			param.Parameter = "Level2"
+			p.nextToken()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+		case "LEVEL_3":
+			param.Parameter = "Level3"
+			p.nextToken()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+		case "LEVEL_4":
+			param.Parameter = "Level4"
+			p.nextToken()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+		}
+
+		// Parse the grid value (LOW, MEDIUM, HIGH)
+		valueStr := strings.ToUpper(p.curTok.Literal)
+		switch valueStr {
+		case "LOW":
+			param.Value = "Low"
+		case "MEDIUM":
+			param.Value = "Medium"
+		case "HIGH":
+			param.Value = "High"
+		default:
+			param.Value = p.capitalizeFirst(strings.ToLower(valueStr))
+		}
+		p.nextToken() // consume value
+
+		opt.GridParameters = append(opt.GridParameters, param)
+		levelIndex++
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return opt
 }
 
 func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeyStatement, error) {
