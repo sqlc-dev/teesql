@@ -601,7 +601,62 @@ func alterTableDropTableElementToJSON(e *ast.AlterTableDropTableElement) jsonNod
 	if e.Name != nil {
 		node["Name"] = identifierToJSON(e.Name)
 	}
+	if len(e.DropClusteredConstraintOptions) > 0 {
+		options := make([]jsonNode, len(e.DropClusteredConstraintOptions))
+		for i, o := range e.DropClusteredConstraintOptions {
+			options[i] = dropClusteredConstraintOptionToJSON(o)
+		}
+		node["DropClusteredConstraintOptions"] = options
+	}
 	node["IsIfExists"] = e.IsIfExists
+	return node
+}
+
+func dropClusteredConstraintOptionToJSON(o ast.DropClusteredConstraintOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.DropClusteredConstraintStateOption:
+		return jsonNode{
+			"$type":       "DropClusteredConstraintStateOption",
+			"OptionState": opt.OptionState,
+			"OptionKind":  opt.OptionKind,
+		}
+	case *ast.DropClusteredConstraintMoveOption:
+		node := jsonNode{
+			"$type":      "DropClusteredConstraintMoveOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.OptionValue != nil {
+			node["OptionValue"] = fileGroupOrPartitionSchemeToJSON(opt.OptionValue)
+		}
+		return node
+	case *ast.DropClusteredConstraintValueOption:
+		node := jsonNode{
+			"$type":      "DropClusteredConstraintValueOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.OptionValue != nil {
+			node["OptionValue"] = scalarExpressionToJSON(opt.OptionValue)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownDropClusteredConstraintOption"}
+	}
+}
+
+func fileGroupOrPartitionSchemeToJSON(fg *ast.FileGroupOrPartitionScheme) jsonNode {
+	node := jsonNode{
+		"$type": "FileGroupOrPartitionScheme",
+	}
+	if fg.Name != nil {
+		node["Name"] = identifierOrValueExpressionToJSON(fg.Name)
+	}
+	if len(fg.PartitionSchemeColumns) > 0 {
+		cols := make([]jsonNode, len(fg.PartitionSchemeColumns))
+		for i, c := range fg.PartitionSchemeColumns {
+			cols[i] = identifierToJSON(c)
+		}
+		node["PartitionSchemeColumns"] = cols
+	}
 	return node
 }
 
