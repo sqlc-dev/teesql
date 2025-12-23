@@ -846,7 +846,7 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 			if err != nil {
 				return nil, err
 			}
-			cursorDef.Select = qe
+			cursorDef.Select = &ast.SelectStatement{QueryExpression: qe}
 		}
 		stmt.CursorDefinition = cursorDef
 	} else {
@@ -5838,13 +5838,12 @@ func (p *Parser) parseDeclareCursorStatementContinued(cursorName *ast.Identifier
 		p.nextToken()
 	}
 
-	// Parse SELECT statement and extract its QueryExpression
+	// Parse SELECT statement
 	selectStmt, err := p.parseSelectStatement()
 	if err != nil {
 		return nil, err
 	}
-	// CursorDefinition.Select is a QueryExpression, so we extract it from the SelectStatement
-	stmt.CursorDefinition.Select = selectStmt.QueryExpression
+	stmt.CursorDefinition.Select = selectStmt
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
