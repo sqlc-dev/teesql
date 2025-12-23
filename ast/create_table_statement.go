@@ -2,11 +2,13 @@ package ast
 
 // CreateTableStatement represents a CREATE TABLE statement
 type CreateTableStatement struct {
-	SchemaObjectName *SchemaObjectName
-	AsEdge           bool
-	AsFileTable      bool
-	AsNode           bool
-	Definition       *TableDefinition
+	SchemaObjectName             *SchemaObjectName
+	AsEdge                       bool
+	AsFileTable                  bool
+	AsNode                       bool
+	Definition                   *TableDefinition
+	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme
+	TextImageOn                  *IdentifierOrValueExpression
 }
 
 func (s *CreateTableStatement) node()      {}
