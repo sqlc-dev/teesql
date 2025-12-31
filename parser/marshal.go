@@ -6482,22 +6482,17 @@ func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
 
 	// Check for login option
 	if strings.ToUpper(p.curTok.Literal) == "FOR" || strings.ToUpper(p.curTok.Literal) == "FROM" {
-		isFor := strings.ToUpper(p.curTok.Literal) == "FOR"
 		p.nextToken()
 
 		loginOption := &ast.UserLoginOption{}
 
 		switch strings.ToUpper(p.curTok.Literal) {
 		case "LOGIN":
-			if isFor {
-				loginOption.UserLoginOptionType = "ForLogin"
-			} else {
-				loginOption.UserLoginOptionType = "FromLogin"
-			}
+			loginOption.UserLoginOptionType = "Login"
 			p.nextToken()
 			loginOption.Identifier = p.parseIdentifier()
 		case "CERTIFICATE":
-			loginOption.UserLoginOptionType = "FromCertificate"
+			loginOption.UserLoginOptionType = "Certificate"
 			p.nextToken()
 			loginOption.Identifier = p.parseIdentifier()
 		case "ASYMMETRIC":
@@ -6505,7 +6500,7 @@ func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
 			if strings.ToUpper(p.curTok.Literal) == "KEY" {
 				p.nextToken() // consume KEY
 			}
-			loginOption.UserLoginOptionType = "FromAsymmetricKey"
+			loginOption.UserLoginOptionType = "AsymmetricKey"
 			loginOption.Identifier = p.parseIdentifier()
 		case "EXTERNAL":
 			p.nextToken() // consume EXTERNAL
