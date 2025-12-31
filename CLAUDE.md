@@ -31,16 +31,6 @@ go test ./parser/... -check-todo -v
 
 This runs todo tests and **automatically updates `metadata.json`** for any tests that now pass (removes the `todo: true` flag). Look for "ENABLED:" in the output to see which tests were updated.
 
-To just see which tests pass without updating files:
-```bash
-go test ./parser/... -only-todo -v 2>&1 | grep "PASS:"
-```
-
-Available test flags:
-- `-check-todo` - Run todo tests and auto-update metadata.json for passing tests
-- `-only-todo` - Run only todo/invalid_syntax tests (find newly passing tests)
-- `-run-todo` - Run todo/invalid_syntax tests along with normal tests
-
 ## Test Structure
 
 Each test in `parser/testdata/` contains:

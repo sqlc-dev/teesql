@@ -15,12 +15,8 @@ type testMetadata struct {
 	InvalidSyntax bool `json:"invalid_syntax"`
 }
 
-// Test flags for running todo/invalid_syntax tests
-// Usage: go test ./parser/... -run-todo     # run all tests including todo tests
-// Usage: go test ./parser/... -only-todo    # run only todo tests (find newly passing tests)
+// Test flag for running todo tests and auto-enabling passing ones
 // Usage: go test ./parser/... -check-todo   # run todo tests and auto-update metadata.json for passing tests
-var runTodoTests = flag.Bool("run-todo", false, "run todo tests along with normal tests")
-var onlyTodoTests = flag.Bool("only-todo", false, "run only todo tests (useful to find tests that now pass)")
 var checkTodoTests = flag.Bool("check-todo", false, "run todo tests and auto-update metadata.json for passing tests")
 
 func TestParse(t *testing.T) {
@@ -50,16 +46,16 @@ func TestParse(t *testing.T) {
 				t.Fatalf("failed to parse metadata.json: %v", err)
 			}
 
-			// Skip tests marked with todo or invalid_syntax unless running with -run-todo, -only-todo, or -check-todo
+			// Skip tests marked with todo or invalid_syntax unless running with -check-todo
 			shouldSkip := metadata.Todo || metadata.InvalidSyntax
-			if shouldSkip && !*runTodoTests && !*onlyTodoTests && !*checkTodoTests {
+			if shouldSkip && !*checkTodoTests {
 				t.Skip("skipped via metadata.json (todo or invalid_syntax)")
 			}
-			if !shouldSkip && (*onlyTodoTests || *checkTodoTests) {
+			if !shouldSkip && *checkTodoTests {
 				t.Skip("not a todo/invalid_syntax test")
 			}
 
-			// For -check-todo, we need to track if the test passes to update metadata
+			// For -check-todo, track if the test passes to update metadata (only for todo, not invalid_syntax)
 			checkTodoMode := *checkTodoTests && metadata.Todo && !metadata.InvalidSyntax
 
 			// Read the test SQL file
