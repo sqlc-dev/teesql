@@ -185,6 +185,8 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseOpenStatement()
 	case TokenDbcc:
 		return p.parseDbccStatement()
+	case TokenAdd:
+		return p.parseAddStatement()
 	case TokenSemicolon:
 		p.nextToken()
 		return nil, nil

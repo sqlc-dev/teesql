@@ -114,6 +114,14 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropAsymmetricKeyStatement()
 	case "SYMMETRIC":
 		return p.parseDropSymmetricKeyStatement()
+	case "SIGNATURE":
+		return p.parseDropSignatureStatement(false)
+	case "COUNTER":
+		p.nextToken() // consume COUNTER
+		if strings.ToUpper(p.curTok.Literal) != "SIGNATURE" {
+			return nil, fmt.Errorf("expected SIGNATURE after COUNTER, got %s", p.curTok.Literal)
+		}
+		return p.parseDropSignatureStatement(true)
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -5670,5 +5678,205 @@ func (p *Parser) parseSequenceOption() (interface{}, error) {
 		OptionValue: val,
 		NoValue:     false,
 	}, nil
+}
+
+func (p *Parser) parseAddStatement() (ast.Statement, error) {
+	// Consume ADD
+	p.nextToken()
+
+	upper := strings.ToUpper(p.curTok.Literal)
+	switch upper {
+	case "SIGNATURE":
+		return p.parseAddSignatureStatement(false)
+	case "COUNTER":
+		p.nextToken() // consume COUNTER
+		if strings.ToUpper(p.curTok.Literal) != "SIGNATURE" {
+			return nil, fmt.Errorf("expected SIGNATURE after COUNTER, got %s", p.curTok.Literal)
+		}
+		return p.parseAddSignatureStatement(true)
+	}
+
+	return nil, fmt.Errorf("unexpected token after ADD: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseAddSignatureStatement(isCounter bool) (*ast.AddSignatureStatement, error) {
+	// Consume SIGNATURE
+	p.nextToken()
+
+	stmt := &ast.AddSignatureStatement{
+		IsCounter:   isCounter,
+		ElementKind: "NotSpecified",
+	}
+
+	// Expect TO
+	if strings.ToUpper(p.curTok.Literal) != "TO" {
+		return nil, fmt.Errorf("expected TO after SIGNATURE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse element kind if present (OBJECT::, ASSEMBLY::, DATABASE::)
+	stmt.ElementKind, stmt.Element = p.parseSignatureElement()
+
+	// Expect BY
+	if strings.ToUpper(p.curTok.Literal) != "BY" {
+		return nil, fmt.Errorf("expected BY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse crypto mechanisms
+	cryptos, err := p.parseSignatureCryptoMechanisms()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Cryptos = cryptos
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropSignatureStatement(isCounter bool) (*ast.DropSignatureStatement, error) {
+	// Consume SIGNATURE
+	p.nextToken()
+
+	stmt := &ast.DropSignatureStatement{
+		IsCounter:   isCounter,
+		ElementKind: "NotSpecified",
+	}
+
+	// Expect FROM
+	if strings.ToUpper(p.curTok.Literal) != "FROM" {
+		return nil, fmt.Errorf("expected FROM after SIGNATURE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse element kind if present (OBJECT::, ASSEMBLY::, DATABASE::)
+	stmt.ElementKind, stmt.Element = p.parseSignatureElement()
+
+	// Expect BY
+	if strings.ToUpper(p.curTok.Literal) != "BY" {
+		return nil, fmt.Errorf("expected BY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse crypto mechanisms
+	cryptos, err := p.parseSignatureCryptoMechanisms()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Cryptos = cryptos
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseSignatureElement() (string, *ast.SchemaObjectName) {
+	// Check for element kind prefix (OBJECT::, ASSEMBLY::, DATABASE::)
+	elementKind := "NotSpecified"
+
+	upper := strings.ToUpper(p.curTok.Literal)
+	if upper == "OBJECT" || upper == "ASSEMBLY" || upper == "DATABASE" {
+		// Look ahead for ::
+		if p.peekTok.Type == TokenColonColon {
+			switch upper {
+			case "OBJECT":
+				elementKind = "Object"
+			case "ASSEMBLY":
+				elementKind = "Assembly"
+			case "DATABASE":
+				elementKind = "Database"
+			}
+			p.nextToken() // consume kind
+			p.nextToken() // consume ::
+		}
+	}
+
+	// Parse the element name
+	element, _ := p.parseSchemaObjectName()
+
+	return elementKind, element
+}
+
+func (p *Parser) parseSignatureCryptoMechanisms() ([]*ast.CryptoMechanism, error) {
+	var cryptos []*ast.CryptoMechanism
+
+	for {
+		crypto, err := p.parseSignatureCryptoMechanism()
+		if err != nil {
+			return nil, err
+		}
+		if crypto != nil {
+			cryptos = append(cryptos, crypto)
+		}
+
+		// Check for comma to continue
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			continue
+		}
+		break
+	}
+
+	return cryptos, nil
+}
+
+func (p *Parser) parseSignatureCryptoMechanism() (*ast.CryptoMechanism, error) {
+	crypto := &ast.CryptoMechanism{}
+
+	upper := strings.ToUpper(p.curTok.Literal)
+
+	switch upper {
+	case "CERTIFICATE":
+		crypto.CryptoMechanismType = "Certificate"
+		p.nextToken()
+		crypto.Identifier = p.parseIdentifier()
+	case "ASYMMETRIC":
+		p.nextToken() // consume ASYMMETRIC
+		if strings.ToUpper(p.curTok.Literal) != "KEY" {
+			return nil, fmt.Errorf("expected KEY after ASYMMETRIC, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume KEY
+		crypto.CryptoMechanismType = "AsymmetricKey"
+		crypto.Identifier = p.parseIdentifier()
+	case "PASSWORD":
+		crypto.CryptoMechanismType = "Password"
+		p.nextToken() // consume PASSWORD
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			crypto.PasswordOrSignature = val
+		}
+	default:
+		return nil, nil
+	}
+
+	// Check for WITH PASSWORD = or WITH SIGNATURE =
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		optUpper := strings.ToUpper(p.curTok.Literal)
+		if optUpper == "PASSWORD" || optUpper == "SIGNATURE" {
+			p.nextToken() // consume PASSWORD/SIGNATURE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				crypto.PasswordOrSignature = val
+			}
+		}
+	}
+
+	return crypto, nil
 }
 

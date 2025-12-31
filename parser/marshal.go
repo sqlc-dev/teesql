@@ -506,6 +506,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return fetchCursorStatementToJSON(s)
 	case *ast.DeclareCursorStatement:
 		return declareCursorStatementToJSON(s)
+	case *ast.AddSignatureStatement:
+		return addSignatureStatementToJSON(s)
+	case *ast.DropSignatureStatement:
+		return dropSignatureStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -11348,6 +11352,44 @@ func declareCursorDefinitionToJSON(d *ast.CursorDefinition) jsonNode {
 	}
 	if d.Select != nil {
 		node["Select"] = selectStatementToJSON(d.Select)
+	}
+	return node
+}
+
+func addSignatureStatementToJSON(s *ast.AddSignatureStatement) jsonNode {
+	node := jsonNode{
+		"$type":     "AddSignatureStatement",
+		"IsCounter": s.IsCounter,
+	}
+	node["ElementKind"] = s.ElementKind
+	if s.Element != nil {
+		node["Element"] = schemaObjectNameToJSON(s.Element)
+	}
+	if len(s.Cryptos) > 0 {
+		cryptos := make([]jsonNode, len(s.Cryptos))
+		for i, c := range s.Cryptos {
+			cryptos[i] = cryptoMechanismToJSON(c)
+		}
+		node["Cryptos"] = cryptos
+	}
+	return node
+}
+
+func dropSignatureStatementToJSON(s *ast.DropSignatureStatement) jsonNode {
+	node := jsonNode{
+		"$type":     "DropSignatureStatement",
+		"IsCounter": s.IsCounter,
+	}
+	node["ElementKind"] = s.ElementKind
+	if s.Element != nil {
+		node["Element"] = schemaObjectNameToJSON(s.Element)
+	}
+	if len(s.Cryptos) > 0 {
+		cryptos := make([]jsonNode, len(s.Cryptos))
+		for i, c := range s.Cryptos {
+			cryptos[i] = cryptoMechanismToJSON(c)
+		}
+		node["Cryptos"] = cryptos
 	}
 	return node
 }
