@@ -6817,12 +6817,23 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 		p.nextToken()
 	}
 
-	// Parse statement list
+	// Skip leading semicolons
+	for p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	// Parse statement list (all statements until GO/EOF)
 	stmtList := &ast.StatementList{}
 	for p.curTok.Type != TokenEOF {
 		// Check for GO or end of batch
 		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO" {
 			break
+		}
+
+		// Skip semicolons between statements
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+			continue
 		}
 
 		innerStmt, err := p.parseStatement()
@@ -6832,9 +6843,6 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 		if innerStmt != nil {
 			stmtList.Statements = append(stmtList.Statements, innerStmt)
 		}
-
-		// For simple triggers, stop after parsing one statement
-		break
 	}
 	stmt.StatementList = stmtList
 

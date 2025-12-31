@@ -1165,6 +1165,11 @@ func (p *Parser) parseTryCatchStatement() (*ast.TryCatchStatement, error) {
 
 	// Parse statements until END TRY
 	for p.curTok.Type != TokenEnd && p.curTok.Type != TokenEOF {
+		// Skip semicolons
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+			continue
+		}
 		s, err := p.parseStatement()
 		if err != nil {
 			return nil, err
@@ -1194,6 +1199,11 @@ func (p *Parser) parseTryCatchStatement() (*ast.TryCatchStatement, error) {
 
 	// Parse catch statements until END CATCH
 	for p.curTok.Type != TokenEnd && p.curTok.Type != TokenEOF {
+		// Skip semicolons
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+			continue
+		}
 		s, err := p.parseStatement()
 		if err != nil {
 			return nil, err
