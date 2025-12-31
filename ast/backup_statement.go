@@ -50,6 +50,15 @@ type BackupServiceMasterKeyStatement struct {
 func (s *BackupServiceMasterKeyStatement) statement() {}
 func (s *BackupServiceMasterKeyStatement) node()      {}
 
+// BackupMasterKeyStatement represents a BACKUP MASTER KEY statement
+type BackupMasterKeyStatement struct {
+	File     ScalarExpression
+	Password ScalarExpression
+}
+
+func (s *BackupMasterKeyStatement) statement() {}
+func (s *BackupMasterKeyStatement) node()      {}
+
 // RestoreServiceMasterKeyStatement represents a RESTORE SERVICE MASTER KEY statement
 type RestoreServiceMasterKeyStatement struct {
 	File     ScalarExpression

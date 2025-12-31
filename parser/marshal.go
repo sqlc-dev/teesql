@@ -354,6 +354,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return backupCertificateStatementToJSON(s)
 	case *ast.BackupServiceMasterKeyStatement:
 		return backupServiceMasterKeyStatementToJSON(s)
+	case *ast.BackupMasterKeyStatement:
+		return backupMasterKeyStatementToJSON(s)
 	case *ast.RestoreServiceMasterKeyStatement:
 		return restoreServiceMasterKeyStatementToJSON(s)
 	case *ast.RestoreMasterKeyStatement:
@@ -8166,6 +8168,19 @@ func backupCertificateStatementToJSON(s *ast.BackupCertificateStatement) jsonNod
 func backupServiceMasterKeyStatementToJSON(s *ast.BackupServiceMasterKeyStatement) jsonNode {
 	node := jsonNode{
 		"$type": "BackupServiceMasterKeyStatement",
+	}
+	if s.File != nil {
+		node["File"] = scalarExpressionToJSON(s.File)
+	}
+	if s.Password != nil {
+		node["Password"] = scalarExpressionToJSON(s.Password)
+	}
+	return node
+}
+
+func backupMasterKeyStatementToJSON(s *ast.BackupMasterKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "BackupMasterKeyStatement",
 	}
 	if s.File != nil {
 		node["File"] = scalarExpressionToJSON(s.File)

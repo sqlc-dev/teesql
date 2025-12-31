@@ -4922,6 +4922,11 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		return p.parseBackupServiceMasterKeyStatement()
 	}
 
+	// Check for MASTER KEY
+	if strings.ToUpper(p.curTok.Literal) == "MASTER" {
+		return p.parseBackupMasterKeyStatement()
+	}
+
 	// Check for DATABASE or LOG
 	isLog := false
 	if p.curTok.Type == TokenDatabase {
@@ -5272,6 +5277,70 @@ func (p *Parser) parseBackupServiceMasterKeyStatement() (*ast.BackupServiceMaste
 	// Expect TO
 	if p.curTok.Type != TokenTo {
 		return nil, fmt.Errorf("expected TO after SERVICE MASTER KEY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect FILE
+	if strings.ToUpper(p.curTok.Literal) != "FILE" {
+		return nil, fmt.Errorf("expected FILE after TO, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after FILE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse file path
+	file, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.File = file
+
+	// Parse ENCRYPTION BY PASSWORD clause
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			pwd, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Password = pwd
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseBackupMasterKeyStatement() (*ast.BackupMasterKeyStatement, error) {
+	// Consume MASTER
+	p.nextToken()
+
+	// Expect KEY
+	if p.curTok.Type != TokenKey {
+		return nil, fmt.Errorf("expected KEY after MASTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.BackupMasterKeyStatement{}
+
+	// Expect TO
+	if p.curTok.Type != TokenTo {
+		return nil, fmt.Errorf("expected TO after MASTER KEY, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
 
