@@ -184,6 +184,24 @@ type CreationDispositionKeyOption struct {
 func (c *CreationDispositionKeyOption) node()      {}
 func (c *CreationDispositionKeyOption) keyOption() {}
 
+// KeySourceKeyOption represents a KEY_SOURCE key option.
+type KeySourceKeyOption struct {
+	PassPhrase ScalarExpression `json:"PassPhrase,omitempty"`
+	OptionKind string           `json:"OptionKind,omitempty"`
+}
+
+func (k *KeySourceKeyOption) node()      {}
+func (k *KeySourceKeyOption) keyOption() {}
+
+// IdentityValueKeyOption represents an IDENTITY_VALUE key option.
+type IdentityValueKeyOption struct {
+	IdentityPhrase ScalarExpression `json:"IdentityPhrase,omitempty"`
+	OptionKind     string           `json:"OptionKind,omitempty"`
+}
+
+func (i *IdentityValueKeyOption) node()      {}
+func (i *IdentityValueKeyOption) keyOption() {}
+
 // CryptoMechanism represents an encryption mechanism (CERTIFICATE, KEY, PASSWORD, etc.)
 type CryptoMechanism struct {
 	CryptoMechanismType string           `json:"CryptoMechanismType,omitempty"` // "Certificate", "SymmetricKey", "AsymmetricKey", "Password"
@@ -195,9 +213,10 @@ func (c *CryptoMechanism) node() {}
 
 // CreateSymmetricKeyStatement represents a CREATE SYMMETRIC KEY statement.
 type CreateSymmetricKeyStatement struct {
-	KeyOptions          []KeyOption        `json:"KeyOptions,omitempty"`
-	Provider            *Identifier        `json:"Provider,omitempty"`
-	Name                *Identifier        `json:"Name,omitempty"`
+	KeyOptions           []KeyOption        `json:"KeyOptions,omitempty"`
+	Owner                *Identifier        `json:"Owner,omitempty"`
+	Provider             *Identifier        `json:"Provider,omitempty"`
+	Name                 *Identifier        `json:"Name,omitempty"`
 	EncryptingMechanisms []*CryptoMechanism `json:"EncryptingMechanisms,omitempty"`
 }
 

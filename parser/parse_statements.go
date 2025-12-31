@@ -7369,6 +7369,12 @@ func (p *Parser) parseCreateSymmetricKeyStatement() (*ast.CreateSymmetricKeyStat
 		Name: p.parseIdentifier(),
 	}
 
+	// Check for AUTHORIZATION clause
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
 	// Check for FROM PROVIDER clause
 	if p.curTok.Type == TokenFrom && strings.ToUpper(p.peekTok.Literal) == "PROVIDER" {
 		p.nextToken() // consume FROM
@@ -7427,7 +7433,7 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 			if p.curTok.Type == TokenEquals {
 				p.nextToken() // consume =
 			}
-			algo := strings.ToUpper(p.curTok.Literal)
+			algo := normalizeAlgorithmName(p.curTok.Literal)
 			p.nextToken() // consume algorithm name
 			opt := &ast.AlgorithmKeyOption{
 				Algorithm:  algo,
@@ -7448,6 +7454,30 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 			}
 			options = append(options, opt)
 
+		case "KEY_SOURCE":
+			p.nextToken() // consume KEY_SOURCE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			passPhrase, _ := p.parseScalarExpression()
+			opt := &ast.KeySourceKeyOption{
+				PassPhrase: passPhrase,
+				OptionKind: "KeySource",
+			}
+			options = append(options, opt)
+
+		case "IDENTITY_VALUE":
+			p.nextToken() // consume IDENTITY_VALUE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			identityPhrase, _ := p.parseScalarExpression()
+			opt := &ast.IdentityValueKeyOption{
+				IdentityPhrase: identityPhrase,
+				OptionKind:     "IdentityValue",
+			}
+			options = append(options, opt)
+
 		default:
 			return options, nil
 		}
@@ -7460,6 +7490,44 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 	}
 
 	return options, nil
+}
+
+// normalizeAlgorithmName converts algorithm names to their canonical ScriptDom form.
+func normalizeAlgorithmName(name string) string {
+	switch strings.ToUpper(name) {
+	case "DES":
+		return "Des"
+	case "TRIPLE_DES":
+		return "TripleDes"
+	case "TRIPLE_DES_3KEY":
+		return "TripleDes3Key"
+	case "RC2":
+		return "RC2"
+	case "RC4":
+		return "RC4"
+	case "RC4_128":
+		return "RC4_128"
+	case "DESX":
+		return "Desx"
+	case "AES_128":
+		return "Aes128"
+	case "AES_192":
+		return "Aes192"
+	case "AES_256":
+		return "Aes256"
+	case "RSA_512":
+		return "RSA_512"
+	case "RSA_1024":
+		return "RSA_1024"
+	case "RSA_2048":
+		return "RSA_2048"
+	case "RSA_3072":
+		return "RSA_3072"
+	case "RSA_4096":
+		return "RSA_4096"
+	default:
+		return strings.ToUpper(name)
+	}
 }
 
 func (p *Parser) parseCryptoMechanisms() ([]*ast.CryptoMechanism, error) {

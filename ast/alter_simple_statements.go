@@ -265,7 +265,9 @@ func (s *AlterFulltextIndexStatement) statement() {}
 
 // AlterSymmetricKeyStatement represents an ALTER SYMMETRIC KEY statement.
 type AlterSymmetricKeyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name                 *Identifier        `json:"Name,omitempty"`
+	IsAdd                bool               `json:"IsAdd"`
+	EncryptingMechanisms []*CryptoMechanism `json:"EncryptingMechanisms,omitempty"`
 }
 
 func (s *AlterSymmetricKeyStatement) node()      {}

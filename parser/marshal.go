@@ -10634,8 +10634,19 @@ func alterSymmetricKeyStatementToJSON(s *ast.AlterSymmetricKeyStatement) jsonNod
 	node := jsonNode{
 		"$type": "AlterSymmetricKeyStatement",
 	}
+	// Only include IsAdd when there are encrypting mechanisms (meaning an action was specified)
+	if len(s.EncryptingMechanisms) > 0 {
+		node["IsAdd"] = s.IsAdd
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.EncryptingMechanisms) > 0 {
+		mechs := make([]jsonNode, len(s.EncryptingMechanisms))
+		for i, m := range s.EncryptingMechanisms {
+			mechs[i] = cryptoMechanismToJSON(m)
+		}
+		node["EncryptingMechanisms"] = mechs
 	}
 	return node
 }
@@ -10957,6 +10968,24 @@ func keyOptionToJSON(opt ast.KeyOption) interface{} {
 			"IsCreateNew": o.IsCreateNew,
 			"OptionKind":  o.OptionKind,
 		}
+	case *ast.KeySourceKeyOption:
+		node := jsonNode{
+			"$type":      "KeySourceKeyOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.PassPhrase != nil {
+			node["PassPhrase"] = scalarExpressionToJSON(o.PassPhrase)
+		}
+		return node
+	case *ast.IdentityValueKeyOption:
+		node := jsonNode{
+			"$type":      "IdentityValueKeyOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.IdentityPhrase != nil {
+			node["IdentityPhrase"] = scalarExpressionToJSON(o.IdentityPhrase)
+		}
+		return node
 	default:
 		return nil
 	}
@@ -10972,6 +11001,9 @@ func createSymmetricKeyStatementToJSON(s *ast.CreateSymmetricKeyStatement) jsonN
 			opts[i] = keyOptionToJSON(opt)
 		}
 		node["KeyOptions"] = opts
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
 	}
 	if s.Provider != nil {
 		node["Provider"] = identifierToJSON(s.Provider)

@@ -5190,8 +5190,93 @@ func (p *Parser) parseAlterSymmetricKeyStatement() (*ast.AlterSymmetricKeyStatem
 	// Parse key name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse ADD or DROP
+	hasAction := false
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "ADD" {
+		stmt.IsAdd = true
+		hasAction = true
+		p.nextToken()
+	} else if upperLit == "DROP" {
+		stmt.IsAdd = false
+		hasAction = true
+		p.nextToken()
+	}
+
+	// Only parse ENCRYPTION BY and mechanisms if there was an ADD or DROP
+	if hasAction {
+		// Expect ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+			p.nextToken() // consume ENCRYPTION
+		}
+
+		// Expect BY
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+
+		// Parse encrypting mechanisms
+		for {
+			mechType := strings.ToUpper(p.curTok.Literal)
+			mechanism := &ast.CryptoMechanism{}
+			parsed := true
+
+			switch mechType {
+			case "PASSWORD":
+				p.nextToken()
+				mechanism.CryptoMechanismType = "Password"
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				pwd, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				mechanism.PasswordOrSignature = pwd
+
+			case "CERTIFICATE":
+				p.nextToken()
+				mechanism.CryptoMechanismType = "Certificate"
+				mechanism.Identifier = p.parseIdentifier()
+
+			case "SYMMETRIC":
+				p.nextToken()
+				if p.curTok.Type == TokenKey {
+					p.nextToken() // consume KEY
+				}
+				mechanism.CryptoMechanismType = "SymmetricKey"
+				mechanism.Identifier = p.parseIdentifier()
+
+			case "ASYMMETRIC":
+				p.nextToken()
+				if p.curTok.Type == TokenKey {
+					p.nextToken() // consume KEY
+				}
+				mechanism.CryptoMechanismType = "AsymmetricKey"
+				mechanism.Identifier = p.parseIdentifier()
+
+			default:
+				parsed = false
+			}
+
+			if !parsed {
+				break
+			}
+
+			stmt.EncryptingMechanisms = append(stmt.EncryptingMechanisms, mechanism)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
