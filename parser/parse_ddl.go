@@ -3790,6 +3790,49 @@ func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {
 	// Parse service name
 	stmt.Name = p.parseIdentifier()
 
+	// Check for ON QUEUE clause
+	if p.curTok.Type == TokenOn && strings.ToUpper(p.peekTok.Literal) == "QUEUE" {
+		p.nextToken() // consume ON
+		p.nextToken() // consume QUEUE
+		queueName, _ := p.parseSchemaObjectName()
+		stmt.QueueName = queueName
+	}
+
+	// Check for contract modifications (ADD CONTRACT, DROP CONTRACT)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		var contracts []*ast.ServiceContract
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			action := "None"
+			upperLit := strings.ToUpper(p.curTok.Literal)
+			if upperLit == "ADD" {
+				action = "Add"
+				p.nextToken() // consume ADD
+				if strings.ToUpper(p.curTok.Literal) == "CONTRACT" {
+					p.nextToken() // consume CONTRACT
+				}
+			} else if upperLit == "DROP" {
+				action = "Drop"
+				p.nextToken() // consume DROP
+				if strings.ToUpper(p.curTok.Literal) == "CONTRACT" {
+					p.nextToken() // consume CONTRACT
+				}
+			}
+			contract := &ast.ServiceContract{
+				Name:   p.parseIdentifier(),
+				Action: action,
+			}
+			contracts = append(contracts, contract)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+		stmt.ServiceContracts = contracts
+	}
+
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 

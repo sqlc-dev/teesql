@@ -26,7 +26,9 @@ func (s *AlterEndpointStatement) statement() {}
 
 // AlterServiceStatement represents an ALTER SERVICE statement.
 type AlterServiceStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name             *Identifier        `json:"Name,omitempty"`
+	QueueName        *SchemaObjectName  `json:"QueueName,omitempty"`
+	ServiceContracts []*ServiceContract `json:"ServiceContracts,omitempty"`
 }
 
 func (s *AlterServiceStatement) node()      {}

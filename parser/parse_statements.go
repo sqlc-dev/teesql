@@ -6855,6 +6855,40 @@ func (p *Parser) parseCreateServiceStatement() (*ast.CreateServiceStatement, err
 		Name: p.parseIdentifier(),
 	}
 
+	// Check for AUTHORIZATION clause
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Check for ON QUEUE clause
+	if p.curTok.Type == TokenOn && strings.ToUpper(p.peekTok.Literal) == "QUEUE" {
+		p.nextToken() // consume ON
+		p.nextToken() // consume QUEUE
+		queueName, _ := p.parseSchemaObjectName()
+		stmt.QueueName = queueName
+	}
+
+	// Check for contract list (c1, c2, ...)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		var contracts []*ast.ServiceContract
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			contract := &ast.ServiceContract{
+				Name:   p.parseIdentifier(),
+				Action: "None",
+			}
+			contracts = append(contracts, contract)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+		stmt.ServiceContracts = contracts
+	}
+
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 	return stmt, nil

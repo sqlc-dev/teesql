@@ -32,9 +32,20 @@ type CreateLoginStatement struct {
 func (s *CreateLoginStatement) node()      {}
 func (s *CreateLoginStatement) statement() {}
 
+// ServiceContract represents a contract in CREATE/ALTER SERVICE.
+type ServiceContract struct {
+	Name   *Identifier `json:"Name,omitempty"`
+	Action string      `json:"Action,omitempty"` // "Add", "Drop", "None"
+}
+
+func (s *ServiceContract) node() {}
+
 // CreateServiceStatement represents a CREATE SERVICE statement.
 type CreateServiceStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Owner            *Identifier        `json:"Owner,omitempty"`
+	Name             *Identifier        `json:"Name,omitempty"`
+	QueueName        *SchemaObjectName  `json:"QueueName,omitempty"`
+	ServiceContracts []*ServiceContract `json:"ServiceContracts,omitempty"`
 }
 
 func (s *CreateServiceStatement) node()      {}

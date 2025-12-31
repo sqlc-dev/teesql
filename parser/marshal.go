@@ -8764,6 +8764,16 @@ func alterServiceStatementToJSON(s *ast.AlterServiceStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.QueueName != nil {
+		node["QueueName"] = schemaObjectNameToJSON(s.QueueName)
+	}
+	if len(s.ServiceContracts) > 0 {
+		contracts := make([]jsonNode, len(s.ServiceContracts))
+		for i, c := range s.ServiceContracts {
+			contracts[i] = serviceContractToJSON(c)
+		}
+		node["ServiceContracts"] = contracts
+	}
 	return node
 }
 
@@ -9331,9 +9341,33 @@ func createServiceStatementToJSON(s *ast.CreateServiceStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateServiceStatement",
 	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.QueueName != nil {
+		node["QueueName"] = schemaObjectNameToJSON(s.QueueName)
+	}
+	if len(s.ServiceContracts) > 0 {
+		contracts := make([]jsonNode, len(s.ServiceContracts))
+		for i, c := range s.ServiceContracts {
+			contracts[i] = serviceContractToJSON(c)
+		}
+		node["ServiceContracts"] = contracts
+	}
+	return node
+}
+
+func serviceContractToJSON(c *ast.ServiceContract) jsonNode {
+	node := jsonNode{
+		"$type": "ServiceContract",
+	}
+	if c.Name != nil {
+		node["Name"] = identifierToJSON(c.Name)
+	}
+	node["Action"] = c.Action
 	return node
 }
 
