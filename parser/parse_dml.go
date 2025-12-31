@@ -551,6 +551,10 @@ func (p *Parser) parseTableHints() ([]ast.TableHintType, error) {
 		if p.curTok.Type == TokenComma {
 			p.nextToken()
 		} else if p.curTok.Type != TokenRParen {
+			// Check if the next token is a valid table hint (space-separated hints)
+			if p.curTok.Type == TokenIdent && isTableHintKeyword(strings.ToUpper(p.curTok.Literal)) {
+				continue // Continue parsing space-separated hints
+			}
 			break
 		}
 	}
@@ -560,6 +564,19 @@ func (p *Parser) parseTableHints() ([]ast.TableHintType, error) {
 	}
 
 	return hints, nil
+}
+
+// isTableHintKeyword checks if a string is a valid table hint keyword
+func isTableHintKeyword(name string) bool {
+	switch name {
+	case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READPAST",
+		"READUNCOMMITTED", "REPEATABLEREAD", "ROWLOCK", "SERIALIZABLE",
+		"SNAPSHOT", "TABLOCK", "TABLOCKX", "UPDLOCK", "XLOCK", "NOWAIT",
+		"INDEX", "FORCESEEK", "FORCESCAN", "KEEPIDENTITY", "KEEPDEFAULTS",
+		"IGNORE_CONSTRAINTS", "IGNORE_TRIGGERS", "NOEXPAND", "SPATIAL_WINDOW_MAX_CELLS":
+		return true
+	}
+	return false
 }
 
 func convertTableHintKind(hint string) string {
