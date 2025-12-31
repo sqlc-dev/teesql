@@ -5818,9 +5818,61 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 	}
 	stmt.DatabaseName = dbName
 
+	// Parse optional FILE = or FILEGROUP = before FROM
+	for strings.ToUpper(p.curTok.Literal) == "FILE" || strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+		itemKind := "Files"
+		if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+			itemKind = "FileGroups"
+		}
+		p.nextToken() // consume FILE/FILEGROUP
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after FILE/FILEGROUP, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume =
+
+		fileInfo := &ast.BackupRestoreFileInfo{ItemKind: itemKind}
+		// Parse the file name
+		var item ast.ScalarExpression
+		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+			// Strip surrounding quotes
+			val := p.curTok.Literal
+			if len(val) >= 2 && ((val[0] == '\'' && val[len(val)-1] == '\'') || (val[0] == '"' && val[len(val)-1] == '"')) {
+				val = val[1 : len(val)-1]
+			}
+			item = &ast.StringLiteral{
+				LiteralType:   "String",
+				Value:         val,
+				IsNational:    p.curTok.Type == TokenNationalString,
+				IsLargeObject: false,
+			}
+			p.nextToken()
+		} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+			item = &ast.VariableReference{Name: p.curTok.Literal}
+			p.nextToken()
+		} else {
+			ident := p.parseIdentifier()
+			item = &ast.ColumnReferenceExpression{
+				ColumnType: "Regular",
+				MultiPartIdentifier: &ast.MultiPartIdentifier{
+					Identifiers: []*ast.Identifier{ident},
+					Count:       1,
+				},
+			}
+		}
+		fileInfo.Items = append(fileInfo.Items, item)
+		stmt.Files = append(stmt.Files, fileInfo)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
 	// Check for optional FROM clause
 	if strings.ToUpper(p.curTok.Literal) != "FROM" {
-		// No FROM clause - just the database name with no devices
+		// No FROM clause - check for WITH clause
+		if p.curTok.Type == TokenWith {
+			goto parseWithClause
+		}
 		// Skip optional semicolon
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
@@ -5852,28 +5904,56 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 		}
 
 		// Parse device name
-		deviceName := &ast.IdentifierOrValueExpression{}
-		if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-			varRef := &ast.VariableReference{Name: p.curTok.Literal}
-			p.nextToken()
-			deviceName.Value = varRef.Name
-			deviceName.ValueExpression = varRef
-		} else if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
-			strLit := &ast.StringLiteral{
-				LiteralType:   "String",
-				Value:         p.curTok.Literal,
-				IsNational:    p.curTok.Type == TokenNationalString,
-				IsLargeObject: false,
+		if device.DeviceType == "Disk" || device.DeviceType == "URL" {
+			// For DISK and URL, use PhysicalDevice with the string literal directly
+			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+				// Strip the surrounding quotes from the literal
+				val := p.curTok.Literal
+				if len(val) >= 2 && ((val[0] == '\'' && val[len(val)-1] == '\'') || (val[0] == '"' && val[len(val)-1] == '"')) {
+					val = val[1 : len(val)-1]
+				}
+				strLit := &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         val,
+					IsNational:    p.curTok.Type == TokenNationalString,
+					IsLargeObject: false,
+				}
+				device.PhysicalDevice = strLit
+				p.nextToken()
+			} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+				varRef := &ast.VariableReference{Name: p.curTok.Literal}
+				device.PhysicalDevice = varRef
+				p.nextToken()
 			}
-			deviceName.Value = strLit.Value
-			deviceName.ValueExpression = strLit
-			p.nextToken()
 		} else {
-			ident := p.parseIdentifier()
-			deviceName.Value = ident.Value
-			deviceName.Identifier = ident
+			// For other device types, use LogicalDevice
+			deviceName := &ast.IdentifierOrValueExpression{}
+			if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+				varRef := &ast.VariableReference{Name: p.curTok.Literal}
+				p.nextToken()
+				deviceName.Value = varRef.Name
+				deviceName.ValueExpression = varRef
+			} else if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+				val := p.curTok.Literal
+				if len(val) >= 2 && ((val[0] == '\'' && val[len(val)-1] == '\'') || (val[0] == '"' && val[len(val)-1] == '"')) {
+					val = val[1 : len(val)-1]
+				}
+				strLit := &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         val,
+					IsNational:    p.curTok.Type == TokenNationalString,
+					IsLargeObject: false,
+				}
+				deviceName.Value = strLit.Value
+				deviceName.ValueExpression = strLit
+				p.nextToken()
+			} else {
+				ident := p.parseIdentifier()
+				deviceName.Value = ident.Value
+				deviceName.Identifier = ident
+			}
+			device.LogicalDevice = deviceName
 		}
-		device.LogicalDevice = deviceName
 		stmt.Devices = append(stmt.Devices, device)
 
 		if p.curTok.Type == TokenComma {
@@ -5884,6 +5964,7 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 	}
 
 	// Parse WITH clause
+parseWithClause:
 	if p.curTok.Type == TokenWith {
 		p.nextToken()
 
@@ -5936,8 +6017,87 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 				}
 				stmt.Options = append(stmt.Options, fsOpt)
 
+			case "STOPATMARK", "STOPBEFOREMARK":
+				opt := &ast.StopRestoreOption{
+					OptionKind: "StopAt",
+					IsStopAt:   optionName == "STOPATMARK",
+				}
+				if optionName == "STOPBEFOREMARK" {
+					opt.OptionKind = "Stop"
+				}
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					opt.Mark = expr
+				}
+				// Check for AFTER clause
+				if strings.ToUpper(p.curTok.Literal) == "AFTER" {
+					p.nextToken()
+					afterExpr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					opt.After = afterExpr
+				}
+				stmt.Options = append(stmt.Options, opt)
+
+			case "STANDBY":
+				opt := &ast.ScalarExpressionRestoreOption{
+					OptionKind: "Standby",
+				}
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					opt.Value = expr
+				}
+				stmt.Options = append(stmt.Options, opt)
+
+			case "KEEP_TEMPORAL_RETENTION", "NOREWIND", "NOUNLOAD", "STATS",
+				"RECOVERY", "NORECOVERY", "REPLACE", "RESTART", "REWIND",
+				"UNLOAD", "CHECKSUM", "NO_CHECKSUM", "STOP_ON_ERROR",
+				"CONTINUE_AFTER_ERROR":
+				// Map option names to proper casing
+				optKind := optionName
+				switch optionName {
+				case "KEEP_TEMPORAL_RETENTION":
+					optKind = "KeepTemporalRetention"
+				case "NOREWIND":
+					optKind = "NoRewind"
+				case "NOUNLOAD":
+					optKind = "NoUnload"
+				case "STATS":
+					optKind = "Stats"
+				case "RECOVERY":
+					optKind = "Recovery"
+				case "NORECOVERY":
+					optKind = "NoRecovery"
+				case "REPLACE":
+					optKind = "Replace"
+				case "RESTART":
+					optKind = "Restart"
+				case "REWIND":
+					optKind = "Rewind"
+				case "UNLOAD":
+					optKind = "Unload"
+				case "CHECKSUM":
+					optKind = "Checksum"
+				case "NO_CHECKSUM":
+					optKind = "NoChecksum"
+				case "STOP_ON_ERROR":
+					optKind = "StopOnError"
+				case "CONTINUE_AFTER_ERROR":
+					optKind = "ContinueAfterError"
+				}
+				stmt.Options = append(stmt.Options, &ast.SimpleRestoreOption{OptionKind: optKind})
+
 			default:
-				// Generic option
+				// Generic option with optional value
 				opt := &ast.GeneralSetCommandRestoreOption{
 					OptionKind: optionName,
 				}
@@ -7900,12 +8060,34 @@ func restoreStatementToJSON(s *ast.RestoreStatement) jsonNode {
 		}
 		node["Devices"] = devices
 	}
+	if len(s.Files) > 0 {
+		files := make([]jsonNode, len(s.Files))
+		for i, f := range s.Files {
+			files[i] = backupRestoreFileInfoToJSON(f)
+		}
+		node["Files"] = files
+	}
 	if len(s.Options) > 0 {
 		options := make([]jsonNode, len(s.Options))
 		for i, o := range s.Options {
 			options[i] = restoreOptionToJSON(o)
 		}
 		node["Options"] = options
+	}
+	return node
+}
+
+func backupRestoreFileInfoToJSON(f *ast.BackupRestoreFileInfo) jsonNode {
+	node := jsonNode{
+		"$type":    "BackupRestoreFileInfo",
+		"ItemKind": f.ItemKind,
+	}
+	if len(f.Items) > 0 {
+		items := make([]jsonNode, len(f.Items))
+		for i, item := range f.Items {
+			items[i] = scalarExpressionToJSON(item)
+		}
+		node["Items"] = items
 	}
 	return node
 }
@@ -8068,6 +8250,45 @@ func restoreOptionToJSON(o ast.RestoreOption) jsonNode {
 		}
 		if opt.OptionValue != nil {
 			node["OptionValue"] = scalarExpressionToJSON(opt.OptionValue)
+		}
+		return node
+	case *ast.SimpleRestoreOption:
+		return jsonNode{
+			"$type":      "RestoreOption",
+			"OptionKind": opt.OptionKind,
+		}
+	case *ast.StopRestoreOption:
+		node := jsonNode{
+			"$type":      "StopRestoreOption",
+			"OptionKind": opt.OptionKind,
+			"IsStopAt":   opt.IsStopAt,
+		}
+		if opt.Mark != nil {
+			node["Mark"] = scalarExpressionToJSON(opt.Mark)
+		}
+		if opt.After != nil {
+			node["After"] = scalarExpressionToJSON(opt.After)
+		}
+		return node
+	case *ast.ScalarExpressionRestoreOption:
+		node := jsonNode{
+			"$type":      "ScalarExpressionRestoreOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		return node
+	case *ast.MoveRestoreOption:
+		node := jsonNode{
+			"$type":      "MoveRestoreOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.LogicalFileName != nil {
+			node["LogicalFileName"] = identifierOrValueExpressionToJSON(opt.LogicalFileName)
+		}
+		if opt.OSFileName != nil {
+			node["OSFileName"] = identifierOrValueExpressionToJSON(opt.OSFileName)
 		}
 		return node
 	default:
