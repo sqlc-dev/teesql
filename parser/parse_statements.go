@@ -4980,6 +4980,86 @@ func (p *Parser) parseOpenStatement() (ast.Statement, error) {
 		}
 		p.nextToken() // consume KEY
 		stmt := &ast.OpenSymmetricKeyStatement{Name: p.parseIdentifier()}
+
+		// Parse DECRYPTION BY <mechanism>
+		if p.curTok.Type == TokenDecryption {
+			p.nextToken() // consume DECRYPTION
+			if p.curTok.Type == TokenBy {
+				p.nextToken() // consume BY
+			}
+			mechanism := &ast.CryptoMechanism{}
+			upperLit := strings.ToUpper(p.curTok.Literal)
+
+			switch upperLit {
+			case "CERTIFICATE":
+				p.nextToken() // consume CERTIFICATE
+				mechanism.CryptoMechanismType = "Certificate"
+				mechanism.Identifier = p.parseIdentifier()
+				// Check for optional WITH PASSWORD
+				if p.curTok.Type == TokenWith {
+					p.nextToken() // consume WITH
+					if p.curTok.Type == TokenPassword {
+						p.nextToken() // consume PASSWORD
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						if p.curTok.Type == TokenNationalString {
+							str, _ := p.parseNationalStringFromToken()
+							mechanism.PasswordOrSignature = str
+						} else if p.curTok.Type == TokenString {
+							mechanism.PasswordOrSignature = p.parseStringLiteralValue()
+							p.nextToken()
+						}
+					}
+				}
+			case "ASYMMETRIC":
+				p.nextToken() // consume ASYMMETRIC
+				if p.curTok.Type == TokenKey {
+					p.nextToken() // consume KEY
+				}
+				mechanism.CryptoMechanismType = "AsymmetricKey"
+				mechanism.Identifier = p.parseIdentifier()
+				// Check for optional WITH PASSWORD
+				if p.curTok.Type == TokenWith {
+					p.nextToken() // consume WITH
+					if p.curTok.Type == TokenPassword {
+						p.nextToken() // consume PASSWORD
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						if p.curTok.Type == TokenNationalString {
+							str, _ := p.parseNationalStringFromToken()
+							mechanism.PasswordOrSignature = str
+						} else if p.curTok.Type == TokenString {
+							mechanism.PasswordOrSignature = p.parseStringLiteralValue()
+							p.nextToken()
+						}
+					}
+				}
+			case "SYMMETRIC":
+				p.nextToken() // consume SYMMETRIC
+				if p.curTok.Type == TokenKey {
+					p.nextToken() // consume KEY
+				}
+				mechanism.CryptoMechanismType = "SymmetricKey"
+				mechanism.Identifier = p.parseIdentifier()
+			case "PASSWORD":
+				p.nextToken() // consume PASSWORD
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				mechanism.CryptoMechanismType = "Password"
+				if p.curTok.Type == TokenNationalString {
+					str, _ := p.parseNationalStringFromToken()
+					mechanism.PasswordOrSignature = str
+				} else if p.curTok.Type == TokenString {
+					mechanism.PasswordOrSignature = p.parseStringLiteralValue()
+					p.nextToken()
+				}
+			}
+			stmt.DecryptionMechanism = mechanism
+		}
+
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}

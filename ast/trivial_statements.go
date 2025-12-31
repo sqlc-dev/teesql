@@ -77,8 +77,7 @@ func (s *OpenMasterKeyStatement) statement() {}
 // OpenSymmetricKeyStatement represents OPEN SYMMETRIC KEY statement
 type OpenSymmetricKeyStatement struct {
 	Name                *Identifier
-	DecryptionMechanism string // "Key", "Certificate", "Password", "AsymmetricKey"
-	DecryptionKey       ScalarExpression
+	DecryptionMechanism *CryptoMechanism
 }
 
 func (s *OpenSymmetricKeyStatement) node()      {}

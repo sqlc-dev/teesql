@@ -4559,11 +4559,8 @@ func openSymmetricKeyStatementToJSON(s *ast.OpenSymmetricKeyStatement) jsonNode 
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	if s.DecryptionMechanism != "" {
-		node["DecryptionMechanism"] = s.DecryptionMechanism
-	}
-	if s.DecryptionKey != nil {
-		node["DecryptionKey"] = scalarExpressionToJSON(s.DecryptionKey)
+	if s.DecryptionMechanism != nil {
+		node["DecryptionMechanism"] = cryptoMechanismToJSON(s.DecryptionMechanism)
 	}
 	return node
 }
