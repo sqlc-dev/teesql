@@ -1424,13 +1424,136 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	} else if p.curTok.Type == TokenIdent {
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" {
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" {
 			ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
 			p.nextToken()
 		}
 	}
 
+	// Parse optional table hints WITH (hint, hint, ...)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				hint, err := p.parseTableHint()
+				if err != nil {
+					return nil, err
+				}
+				if hint != nil {
+					ref.TableHints = append(ref.TableHints, hint)
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else if p.curTok.Type != TokenRParen {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
 	return ref, nil
+}
+
+// parseTableHint parses a single table hint
+func (p *Parser) parseTableHint() (ast.TableHintType, error) {
+	hintName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume hint name
+
+	// INDEX hint with values
+	if hintName == "INDEX" {
+		hint := &ast.IndexTableHint{
+			HintKind: "Index",
+		}
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				var iov *ast.IdentifierOrValueExpression
+				if p.curTok.Type == TokenNumber {
+					iov = &ast.IdentifierOrValueExpression{
+						Value: p.curTok.Literal,
+						ValueExpression: &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						},
+					}
+					p.nextToken()
+				} else if p.curTok.Type == TokenIdent {
+					iov = &ast.IdentifierOrValueExpression{
+						Value: p.curTok.Literal,
+						Identifier: &ast.Identifier{
+							Value:     p.curTok.Literal,
+							QuoteType: "NotQuoted",
+						},
+					}
+					p.nextToken()
+				}
+				if iov != nil {
+					hint.IndexValues = append(hint.IndexValues, iov)
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else if p.curTok.Type != TokenRParen {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+		return hint, nil
+	}
+
+	// Map hint names to HintKind
+	hintKind := getTableHintKind(hintName)
+	if hintKind == "" {
+		return nil, nil // Unknown hint
+	}
+
+	return &ast.TableHint{
+		HintKind: hintKind,
+	}, nil
+}
+
+// getTableHintKind maps SQL hint names to their AST HintKind values
+func getTableHintKind(name string) string {
+	switch name {
+	case "HOLDLOCK":
+		return "HoldLock"
+	case "NOLOCK":
+		return "NoLock"
+	case "PAGLOCK":
+		return "PagLock"
+	case "READCOMMITTED":
+		return "ReadCommitted"
+	case "READPAST":
+		return "ReadPast"
+	case "READUNCOMMITTED":
+		return "ReadUncommitted"
+	case "REPEATABLEREAD":
+		return "RepeatableRead"
+	case "ROWLOCK":
+		return "Rowlock"
+	case "SERIALIZABLE":
+		return "Serializable"
+	case "SNAPSHOT":
+		return "Snapshot"
+	case "TABLOCK":
+		return "TabLock"
+	case "TABLOCKX":
+		return "TabLockX"
+	case "UPDLOCK":
+		return "UpdLock"
+	case "XLOCK":
+		return "XLock"
+	case "NOWAIT":
+		return "NoWait"
+	default:
+		return ""
+	}
 }
 
 func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
@@ -1580,6 +1703,16 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		return &ast.OptimizerHint{HintKind: hintKind}, nil
 	}
 
+	// Handle TABLE HINT optimizer hint
+	if p.curTok.Type == TokenTable {
+		p.nextToken() // consume TABLE
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "HINT" {
+			p.nextToken() // consume HINT
+			return p.parseTableHintsOptimizerHint()
+		}
+		return &ast.OptimizerHint{HintKind: "Table"}, nil
+	}
+
 	if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLabel {
 		// Skip unknown tokens to avoid infinite loop
 		p.nextToken()
@@ -1715,6 +1848,53 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		}
 		return &ast.OptimizerHint{HintKind: hintKind}, nil
 	}
+}
+
+func (p *Parser) parseTableHintsOptimizerHint() (ast.OptimizerHintBase, error) {
+	hint := &ast.TableHintsOptimizerHint{
+		HintKind: "TableHints",
+	}
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TABLE HINT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse object name
+	objectName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	hint.ObjectName = objectName
+
+	// Expect comma
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume comma
+	}
+
+	// Parse table hints
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			continue
+		}
+
+		tableHint, err := p.parseTableHint()
+		if err != nil {
+			return nil, err
+		}
+		if tableHint != nil {
+			hint.TableHints = append(hint.TableHints, tableHint)
+		}
+	}
+
+	// Consume )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	return hint, nil
 }
 
 func (p *Parser) parseOptimizeForHint() (ast.OptimizerHintBase, error) {

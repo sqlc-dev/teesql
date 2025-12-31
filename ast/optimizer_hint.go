@@ -7,3 +7,13 @@ type OptimizerHint struct {
 
 func (*OptimizerHint) node()          {}
 func (*OptimizerHint) optimizerHint() {}
+
+// TableHintsOptimizerHint represents a TABLE HINT optimizer hint.
+type TableHintsOptimizerHint struct {
+	HintKind   string            `json:"HintKind,omitempty"`
+	ObjectName *SchemaObjectName `json:"ObjectName,omitempty"`
+	TableHints []TableHintType   `json:"TableHints,omitempty"`
+}
+
+func (*TableHintsOptimizerHint) node()          {}
+func (*TableHintsOptimizerHint) optimizerHint() {}

@@ -425,7 +425,7 @@ func (p *Parser) parseFunctionParameters() ([]ast.ScalarExpression, error) {
 	return params, nil
 }
 
-func (p *Parser) parseTableHints() ([]*ast.TableHint, error) {
+func (p *Parser) parseTableHints() ([]ast.TableHintType, error) {
 	// Consume WITH
 	p.nextToken()
 
@@ -434,15 +434,19 @@ func (p *Parser) parseTableHints() ([]*ast.TableHint, error) {
 	}
 	p.nextToken()
 
-	var hints []*ast.TableHint
+	var hints []ast.TableHintType
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenHoldlock || p.curTok.Type == TokenNowait {
-			hintKind := convertTableHintKind(p.curTok.Literal)
-			hints = append(hints, &ast.TableHint{HintKind: hintKind})
-			p.nextToken()
+		hint, err := p.parseTableHint()
+		if err != nil {
+			return nil, err
+		}
+		if hint != nil {
+			hints = append(hints, hint)
 		}
 		if p.curTok.Type == TokenComma {
 			p.nextToken()
+		} else if p.curTok.Type != TokenRParen {
+			break
 		}
 	}
 

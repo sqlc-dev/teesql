@@ -4,7 +4,7 @@ package ast
 type NamedTableReference struct {
 	SchemaObject *SchemaObjectName `json:"SchemaObject,omitempty"`
 	Alias        *Identifier       `json:"Alias,omitempty"`
-	TableHints   []*TableHint      `json:"TableHints,omitempty"`
+	TableHints   []TableHintType   `json:"TableHints,omitempty"`
 	ForPath      bool              `json:"ForPath,omitempty"`
 }
 

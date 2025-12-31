@@ -1046,6 +1046,24 @@ func optimizerHintToJSON(h ast.OptimizerHintBase) jsonNode {
 			node["HintKind"] = hint.HintKind
 		}
 		return node
+	case *ast.TableHintsOptimizerHint:
+		node := jsonNode{
+			"$type": "TableHintsOptimizerHint",
+		}
+		if hint.ObjectName != nil {
+			node["ObjectName"] = schemaObjectNameToJSON(hint.ObjectName)
+		}
+		if len(hint.TableHints) > 0 {
+			hints := make([]jsonNode, len(hint.TableHints))
+			for i, h := range hint.TableHints {
+				hints[i] = tableHintToJSON(h)
+			}
+			node["TableHints"] = hints
+		}
+		if hint.HintKind != "" {
+			node["HintKind"] = hint.HintKind
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownOptimizerHint"}
 	}
@@ -1956,14 +1974,34 @@ func expressionWithSortOrderToJSON(ewso *ast.ExpressionWithSortOrder) jsonNode {
 
 // ======================= New Statement JSON Functions =======================
 
-func tableHintToJSON(h *ast.TableHint) jsonNode {
-	node := jsonNode{
-		"$type": "TableHint",
+func tableHintToJSON(h ast.TableHintType) jsonNode {
+	switch th := h.(type) {
+	case *ast.TableHint:
+		node := jsonNode{
+			"$type": "TableHint",
+		}
+		if th.HintKind != "" {
+			node["HintKind"] = th.HintKind
+		}
+		return node
+	case *ast.IndexTableHint:
+		node := jsonNode{
+			"$type": "IndexTableHint",
+		}
+		if len(th.IndexValues) > 0 {
+			values := make([]jsonNode, len(th.IndexValues))
+			for i, v := range th.IndexValues {
+				values[i] = identifierOrValueExpressionToJSON(v)
+			}
+			node["IndexValues"] = values
+		}
+		if th.HintKind != "" {
+			node["HintKind"] = th.HintKind
+		}
+		return node
+	default:
+		return jsonNode{"$type": "TableHint"}
 	}
-	if h.HintKind != "" {
-		node["HintKind"] = h.HintKind
-	}
-	return node
 }
 
 func insertStatementToJSON(s *ast.InsertStatement) jsonNode {
