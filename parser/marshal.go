@@ -5602,6 +5602,13 @@ func createProcedureStatementToJSON(s *ast.CreateProcedureStatement) jsonNode {
 	if s.ProcedureReference != nil {
 		node["ProcedureReference"] = procedureReferenceToJSON(s.ProcedureReference)
 	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			options[i] = procedureOptionToJSON(opt)
+		}
+		node["Options"] = options
+	}
 	if len(s.Parameters) > 0 {
 		params := make([]jsonNode, len(s.Parameters))
 		for i, p := range s.Parameters {
@@ -5609,8 +5616,58 @@ func createProcedureStatementToJSON(s *ast.CreateProcedureStatement) jsonNode {
 		}
 		node["Parameters"] = params
 	}
+	if s.MethodSpecifier != nil {
+		node["MethodSpecifier"] = methodSpecifierToJSON(s.MethodSpecifier)
+	}
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func procedureOptionToJSON(opt ast.ProcedureOptionBase) jsonNode {
+	switch o := opt.(type) {
+	case *ast.ProcedureOption:
+		return jsonNode{
+			"$type":      "ProcedureOption",
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.ExecuteAsProcedureOption:
+		node := jsonNode{
+			"$type":      "ExecuteAsProcedureOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.ExecuteAs != nil {
+			node["ExecuteAs"] = executeAsClauseToJSON(o.ExecuteAs)
+		}
+		return node
+	}
+	return jsonNode{}
+}
+
+func executeAsClauseToJSON(e *ast.ExecuteAsClause) jsonNode {
+	node := jsonNode{
+		"$type":           "ExecuteAsClause",
+		"ExecuteAsOption": e.ExecuteAsOption,
+	}
+	if e.Literal != nil {
+		node["Literal"] = stringLiteralToJSON(e.Literal)
+	}
+	return node
+}
+
+func methodSpecifierToJSON(m *ast.MethodSpecifier) jsonNode {
+	node := jsonNode{
+		"$type": "MethodSpecifier",
+	}
+	if m.AssemblyName != nil {
+		node["AssemblyName"] = identifierToJSON(m.AssemblyName)
+	}
+	if m.ClassName != nil {
+		node["ClassName"] = identifierToJSON(m.ClassName)
+	}
+	if m.MethodName != nil {
+		node["MethodName"] = identifierToJSON(m.MethodName)
 	}
 	return node
 }
