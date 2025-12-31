@@ -14,6 +14,7 @@ func (s *GrantStatement) statement() {}
 // Permission represents a permission in GRANT/REVOKE
 type Permission struct {
 	Identifiers []*Identifier
+	Columns     []*Identifier
 }
 
 func (p *Permission) node() {}

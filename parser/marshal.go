@@ -3944,8 +3944,16 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
 			multiPart := &ast.MultiPartIdentifier{}
 			for {
-				id := p.parseIdentifier()
-				multiPart.Identifiers = append(multiPart.Identifiers, id)
+				// Handle double dots (e.g., a.b..d) by adding empty identifier
+				if p.curTok.Type == TokenDot {
+					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
+						Value:     "",
+						QuoteType: "NotQuoted",
+					})
+				} else {
+					id := p.parseIdentifier()
+					multiPart.Identifiers = append(multiPart.Identifiers, id)
+				}
 				if p.curTok.Type == TokenDot {
 					p.nextToken() // consume .
 				} else {
@@ -4033,12 +4041,32 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			p.curTok.Type == TokenSelect || p.curTok.Type == TokenInsert ||
 			p.curTok.Type == TokenUpdate || p.curTok.Type == TokenDelete ||
 			p.curTok.Type == TokenAlter || p.curTok.Type == TokenExecute ||
-			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal {
+			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal ||
+			p.curTok.Type == TokenAll {
 			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
 			})
 			p.nextToken()
+		} else if p.curTok.Type == TokenLParen {
+			// Parse column list for permission
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				if p.curTok.Type == TokenIdent {
+					perm.Columns = append(perm.Columns, &ast.Identifier{
+						Value:     p.curTok.Literal,
+						QuoteType: "NotQuoted",
+					})
+					p.nextToken()
+				} else if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		} else if p.curTok.Type == TokenComma {
 			stmt.Permissions = append(stmt.Permissions, perm)
 			perm = &ast.Permission{}
@@ -4181,8 +4209,16 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
 			multiPart := &ast.MultiPartIdentifier{}
 			for {
-				id := p.parseIdentifier()
-				multiPart.Identifiers = append(multiPart.Identifiers, id)
+				// Handle double dots (e.g., a.b..d) by adding empty identifier
+				if p.curTok.Type == TokenDot {
+					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
+						Value:     "",
+						QuoteType: "NotQuoted",
+					})
+				} else {
+					id := p.parseIdentifier()
+					multiPart.Identifiers = append(multiPart.Identifiers, id)
+				}
 				if p.curTok.Type == TokenDot {
 					p.nextToken() // consume .
 				} else {
@@ -4405,8 +4441,16 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
 			multiPart := &ast.MultiPartIdentifier{}
 			for {
-				id := p.parseIdentifier()
-				multiPart.Identifiers = append(multiPart.Identifiers, id)
+				// Handle double dots (e.g., a.b..d) by adding empty identifier
+				if p.curTok.Type == TokenDot {
+					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
+						Value:     "",
+						QuoteType: "NotQuoted",
+					})
+				} else {
+					id := p.parseIdentifier()
+					multiPart.Identifiers = append(multiPart.Identifiers, id)
+				}
 				if p.curTok.Type == TokenDot {
 					p.nextToken() // consume .
 				} else {
@@ -4916,6 +4960,13 @@ func permissionToJSON(p *ast.Permission) jsonNode {
 			ids[i] = identifierToJSON(id)
 		}
 		node["Identifiers"] = ids
+	}
+	if len(p.Columns) > 0 {
+		cols := make([]jsonNode, len(p.Columns))
+		for i, col := range p.Columns {
+			cols[i] = identifierToJSON(col)
+		}
+		node["Columns"] = cols
 	}
 	return node
 }
