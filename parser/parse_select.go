@@ -472,6 +472,14 @@ func (p *Parser) parseIdentifier() *ast.Identifier {
 	if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
 		quoteType = "SquareBracket"
 		literal = literal[1 : len(literal)-1]
+		// Unescape ]] to ]
+		literal = strings.ReplaceAll(literal, "]]", "]")
+	} else if len(literal) >= 2 && literal[0] == '"' && literal[len(literal)-1] == '"' {
+		// Handle double-quoted identifiers
+		quoteType = "DoubleQuote"
+		literal = literal[1 : len(literal)-1]
+		// Unescape "" to "
+		literal = strings.ReplaceAll(literal, "\"\"", "\"")
 	}
 
 	id := &ast.Identifier{
