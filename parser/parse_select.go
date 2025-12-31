@@ -1438,10 +1438,14 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 		}
 	}
 
-	// Parse optional table hints WITH (hint, hint, ...)
+	// Parse optional table hints WITH (hint, hint, ...) or old-style (hint, hint, ...)
 	if p.curTok.Type == TokenWith {
 		p.nextToken() // consume WITH
-		if p.curTok.Type == TokenLParen {
+	}
+	if p.curTok.Type == TokenLParen {
+		// Check if this looks like hints (first token is a hint keyword)
+		// Save position to peek
+		if p.peekIsTableHint() {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
@@ -1454,6 +1458,10 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
 				} else if p.curTok.Type != TokenRParen {
+					// Check if the next token is a valid table hint (space-separated hints)
+					if p.isTableHintToken() {
+						continue // Continue parsing space-separated hints
+					}
 					break
 				}
 			}
@@ -1562,6 +1570,46 @@ func getTableHintKind(name string) string {
 	default:
 		return ""
 	}
+}
+
+// isTableHintToken checks if the current token is a valid table hint keyword
+func (p *Parser) isTableHintToken() bool {
+	// Check for keyword tokens that are table hints
+	if p.curTok.Type == TokenHoldlock || p.curTok.Type == TokenNowait {
+		return true
+	}
+	// Check for identifiers that are table hints
+	if p.curTok.Type == TokenIdent {
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READPAST",
+			"READUNCOMMITTED", "REPEATABLEREAD", "ROWLOCK", "SERIALIZABLE",
+			"SNAPSHOT", "TABLOCK", "TABLOCKX", "UPDLOCK", "XLOCK", "NOWAIT",
+			"INDEX", "FORCESEEK", "FORCESCAN", "KEEPIDENTITY", "KEEPDEFAULTS",
+			"IGNORE_CONSTRAINTS", "IGNORE_TRIGGERS", "NOEXPAND", "SPATIAL_WINDOW_MAX_CELLS":
+			return true
+		}
+	}
+	return false
+}
+
+// peekIsTableHint checks if the peek token (next token after current) is a valid table hint keyword
+func (p *Parser) peekIsTableHint() bool {
+	// Check for keyword tokens that are table hints
+	if p.peekTok.Type == TokenHoldlock || p.peekTok.Type == TokenNowait || p.peekTok.Type == TokenIndex {
+		return true
+	}
+	// Check for identifiers that are table hints
+	if p.peekTok.Type == TokenIdent {
+		switch strings.ToUpper(p.peekTok.Literal) {
+		case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READPAST",
+			"READUNCOMMITTED", "REPEATABLEREAD", "ROWLOCK", "SERIALIZABLE",
+			"SNAPSHOT", "TABLOCK", "TABLOCKX", "UPDLOCK", "XLOCK", "NOWAIT",
+			"INDEX", "FORCESEEK", "FORCESCAN", "KEEPIDENTITY", "KEEPDEFAULTS",
+			"IGNORE_CONSTRAINTS", "IGNORE_TRIGGERS", "NOEXPAND", "SPATIAL_WINDOW_MAX_CELLS":
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
