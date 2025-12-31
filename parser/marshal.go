@@ -11502,6 +11502,23 @@ func createAssemblyStatementToJSON(s *ast.CreateAssemblyStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, param := range s.Parameters {
+			params[i] = scalarExpressionToJSON(param)
+		}
+		node["Parameters"] = params
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = assemblyOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
 	return node
 }
 

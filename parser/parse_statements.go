@@ -8189,8 +8189,60 @@ func (p *Parser) parseCreateAssemblyStatement() (*ast.CreateAssemblyStatement, e
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Check for AUTHORIZATION clause
+	if p.curTok.Type == TokenAuthorization {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Parse FROM clause
+	if strings.ToUpper(p.curTok.Literal) == "FROM" {
+		p.nextToken() // consume FROM
+		// Parse list of expressions (variable references, string literals, binary expressions)
+		for {
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				break
+			}
+			stmt.Parameters = append(stmt.Parameters, expr)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		// Parse PERMISSION_SET = value
+		if strings.ToUpper(p.curTok.Literal) == "PERMISSION_SET" {
+			p.nextToken() // consume PERMISSION_SET
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			option := &ast.PermissionSetAssemblyOption{
+				OptionKind: "PermissionSet",
+			}
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "SAFE":
+				option.PermissionSetOption = "Safe"
+			case "EXTERNAL_ACCESS":
+				option.PermissionSetOption = "ExternalAccess"
+			case "UNSAFE":
+				option.PermissionSetOption = "Unsafe"
+			}
+			p.nextToken()
+			stmt.Options = append(stmt.Options, option)
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
 }
 

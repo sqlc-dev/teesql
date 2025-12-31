@@ -111,7 +111,10 @@ func (s *CreateEndpointStatement) statement() {}
 
 // CreateAssemblyStatement represents a CREATE ASSEMBLY statement.
 type CreateAssemblyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name       *Identifier           `json:"Name,omitempty"`
+	Owner      *Identifier           `json:"Owner,omitempty"`
+	Parameters []ScalarExpression    `json:"Parameters,omitempty"`
+	Options    []AssemblyOptionBase  `json:"Options,omitempty"`
 }
 
 func (s *CreateAssemblyStatement) node()      {}
