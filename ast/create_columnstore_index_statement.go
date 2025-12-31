@@ -9,7 +9,7 @@ type CreateColumnStoreIndexStatement struct {
 	Columns           []*ColumnReferenceExpression
 	OrderedColumns    []*ColumnReferenceExpression
 	IndexOptions      []IndexOption
-	FilterClause      ScalarExpression
+	FilterClause      BooleanExpression
 	OnPartition       *PartitionSpecifier
 }
 

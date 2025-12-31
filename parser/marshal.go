@@ -5759,8 +5759,8 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 		}
 	}
 
-	// Parse optional ORDER clause
-	if strings.ToUpper(p.curTok.Literal) == "ORDER" {
+	// Parse optional ORDER clause (Azure Synapse/DW syntax - ORDER directly after ON table)
+	if p.curTok.Type == TokenOrder || strings.ToUpper(p.curTok.Literal) == "ORDER" {
 		p.nextToken() // consume ORDER
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
@@ -5786,19 +5786,110 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 		}
 	}
 
-	// Skip optional WITH clause for now
+	// Parse optional WHERE clause (filtered index)
+	if p.curTok.Type == TokenWhere {
+		p.nextToken() // consume WHERE
+		pred, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.FilterClause = pred
+	}
+
+	// Parse optional WITH clause
 	if p.curTok.Type == TokenWith {
-		// TODO: parse WITH options
-		p.nextToken()
+		p.nextToken() // consume WITH
 		if p.curTok.Type == TokenLParen {
-			p.nextToken()
-			depth := 1
-			for depth > 0 && p.curTok.Type != TokenEOF {
-				if p.curTok.Type == TokenLParen {
-					depth++
-				} else if p.curTok.Type == TokenRParen {
-					depth--
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+					continue
 				}
+
+				optName := strings.ToUpper(p.curTok.Literal)
+				switch optName {
+				case "COMPRESSION_DELAY":
+					p.nextToken() // consume COMPRESSION_DELAY
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					opt := &ast.CompressionDelayIndexOption{
+						Expression: expr,
+						TimeUnit:   "Unitless",
+						OptionKind: "CompressionDelay",
+					}
+					// Check for MINUTE/MINUTES
+					if strings.ToUpper(p.curTok.Literal) == "MINUTE" {
+						opt.TimeUnit = "Minute"
+						p.nextToken()
+					} else if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+						opt.TimeUnit = "Minutes"
+						p.nextToken()
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, opt)
+
+				case "SORT_IN_TEMPDB":
+					p.nextToken() // consume SORT_IN_TEMPDB
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					state := "NotSet"
+					if p.curTok.Type == TokenOn {
+						state = "On"
+						p.nextToken()
+					} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+						state = "Off"
+						p.nextToken()
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, &ast.IndexStateOption{
+						OptionKind:  "SortInTempDB",
+						OptionState: state,
+					})
+
+				case "ORDER":
+					p.nextToken() // consume ORDER
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+						orderOpt := &ast.OrderIndexOption{
+							OptionKind: "Order",
+						}
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							colRef := &ast.ColumnReferenceExpression{
+								ColumnType: "Regular",
+								MultiPartIdentifier: &ast.MultiPartIdentifier{
+									Identifiers: []*ast.Identifier{p.parseIdentifier()},
+								},
+							}
+							colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
+							orderOpt.Columns = append(orderOpt.Columns, colRef)
+
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							} else {
+								break
+							}
+						}
+						if p.curTok.Type == TokenRParen {
+							p.nextToken()
+						}
+						stmt.IndexOptions = append(stmt.IndexOptions, orderOpt)
+					}
+
+				default:
+					// Skip unknown options
+					p.nextToken()
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+						p.nextToken() // skip value
+					}
+				}
+			}
+			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
 		}
@@ -6887,6 +6978,16 @@ func createColumnStoreIndexStatementToJSON(s *ast.CreateColumnStoreIndexStatemen
 		}
 		node["Columns"] = cols
 	}
+	if s.FilterClause != nil {
+		node["FilterPredicate"] = booleanExpressionToJSON(s.FilterClause)
+	}
+	if len(s.IndexOptions) > 0 {
+		opts := make([]jsonNode, len(s.IndexOptions))
+		for i, opt := range s.IndexOptions {
+			opts[i] = columnStoreIndexOptionToJSON(opt)
+		}
+		node["IndexOptions"] = opts
+	}
 	if len(s.OrderedColumns) > 0 {
 		cols := make([]jsonNode, len(s.OrderedColumns))
 		for i, col := range s.OrderedColumns {
@@ -6895,6 +6996,42 @@ func createColumnStoreIndexStatementToJSON(s *ast.CreateColumnStoreIndexStatemen
 		node["OrderedColumns"] = cols
 	}
 	return node
+}
+
+func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.CompressionDelayIndexOption:
+		node := jsonNode{
+			"$type":      "CompressionDelayIndexOption",
+			"OptionKind": o.OptionKind,
+			"TimeUnit":   o.TimeUnit,
+		}
+		if o.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(o.Expression)
+		}
+		return node
+	case *ast.OrderIndexOption:
+		node := jsonNode{
+			"$type":      "OrderIndexOption",
+			"OptionKind": o.OptionKind,
+		}
+		if len(o.Columns) > 0 {
+			cols := make([]jsonNode, len(o.Columns))
+			for i, col := range o.Columns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		return node
+	case *ast.IndexStateOption:
+		return jsonNode{
+			"$type":       "IndexStateOption",
+			"OptionKind":  o.OptionKind,
+			"OptionState": o.OptionState,
+		}
+	default:
+		return jsonNode{"$type": "UnknownIndexOption"}
+	}
 }
 
 func createSpatialIndexStatementToJSON(s *ast.CreateSpatialIndexStatement) jsonNode {
