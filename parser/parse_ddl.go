@@ -122,6 +122,8 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 			return nil, fmt.Errorf("expected SIGNATURE after COUNTER, got %s", p.curTok.Literal)
 		}
 		return p.parseDropSignatureStatement(true)
+	case "SENSITIVITY":
+		return p.parseDropSensitivityClassificationStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -6107,6 +6109,8 @@ func (p *Parser) parseAddStatement() (ast.Statement, error) {
 			return nil, fmt.Errorf("expected SIGNATURE after COUNTER, got %s", p.curTok.Literal)
 		}
 		return p.parseAddSignatureStatement(true)
+	case "SENSITIVITY":
+		return p.parseAddSensitivityClassificationStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after ADD: %s", p.curTok.Literal)
@@ -6188,6 +6192,165 @@ func (p *Parser) parseDropSignatureStatement(isCounter bool) (*ast.DropSignature
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseAddSensitivityClassificationStatement() (*ast.AddSensitivityClassificationStatement, error) {
+	// Consume SENSITIVITY
+	p.nextToken()
+
+	if strings.ToUpper(p.curTok.Literal) != "CLASSIFICATION" {
+		return nil, fmt.Errorf("expected CLASSIFICATION after SENSITIVITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume CLASSIFICATION
+
+	if strings.ToUpper(p.curTok.Literal) != "TO" {
+		return nil, fmt.Errorf("expected TO after CLASSIFICATION, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume TO
+
+	stmt := &ast.AddSensitivityClassificationStatement{}
+
+	// Parse column references (comma-separated)
+	for {
+		colRef := p.parseColumnReferenceForSensitivity()
+		stmt.Columns = append(stmt.Columns, colRef)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else {
+			break
+		}
+	}
+
+	// Parse WITH clause
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Parse options
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			opt := &ast.SensitivityClassificationOption{}
+
+			// Parse option type
+			optType := strings.ToUpper(p.curTok.Literal)
+			switch optType {
+			case "LABEL":
+				opt.Type = "Label"
+			case "LABEL_ID":
+				opt.Type = "LabelId"
+			case "INFORMATION_TYPE":
+				opt.Type = "InformationType"
+			case "INFORMATION_TYPE_ID":
+				opt.Type = "InformationTypeId"
+			case "RANK":
+				opt.Type = "Rank"
+			default:
+				return nil, fmt.Errorf("unexpected sensitivity classification option: %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume option type
+
+			// Expect =
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			// Parse value
+			if p.curTok.Type == TokenString {
+				value := p.curTok.Literal
+				// Remove quotes
+				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+					value = value[1 : len(value)-1]
+				}
+				opt.Value = &ast.StringLiteral{
+					LiteralType:   "String",
+					IsNational:    false,
+					IsLargeObject: false,
+					Value:         value,
+				}
+				p.nextToken()
+			} else {
+				// Identifier literal (for RANK = HIGH, etc.)
+				opt.Value = &ast.IdentifierLiteral{
+					LiteralType: "Identifier",
+					QuoteType:   "NotQuoted",
+					Value:       strings.ToUpper(p.curTok.Literal),
+				}
+				p.nextToken()
+			}
+
+			stmt.Options = append(stmt.Options, opt)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropSensitivityClassificationStatement() (*ast.DropSensitivityClassificationStatement, error) {
+	// Consume SENSITIVITY
+	p.nextToken()
+
+	if strings.ToUpper(p.curTok.Literal) != "CLASSIFICATION" {
+		return nil, fmt.Errorf("expected CLASSIFICATION after SENSITIVITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume CLASSIFICATION
+
+	if strings.ToUpper(p.curTok.Literal) != "FROM" {
+		return nil, fmt.Errorf("expected FROM after CLASSIFICATION, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume FROM
+
+	stmt := &ast.DropSensitivityClassificationStatement{}
+
+	// Parse column references (comma-separated)
+	for {
+		colRef := p.parseColumnReferenceForSensitivity()
+		stmt.Columns = append(stmt.Columns, colRef)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else {
+			break
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseColumnReferenceForSensitivity() *ast.ColumnReferenceExpression {
+	colRef := &ast.ColumnReferenceExpression{
+		ColumnType: "Regular",
+	}
+
+	var identifiers []*ast.Identifier
+	for {
+		ident := p.parseIdentifier()
+		identifiers = append(identifiers, ident)
+
+		if p.curTok.Type == TokenDot {
+			p.nextToken() // consume .
+		} else {
+			break
+		}
+	}
+
+	colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+		Count:       len(identifiers),
+		Identifiers: identifiers,
+	}
+
+	return colRef
 }
 
 func (p *Parser) parseSignatureElement() (string, *ast.SchemaObjectName) {

@@ -520,6 +520,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return addSignatureStatementToJSON(s)
 	case *ast.DropSignatureStatement:
 		return dropSignatureStatementToJSON(s)
+	case *ast.AddSensitivityClassificationStatement:
+		return addSensitivityClassificationStatementToJSON(s)
+	case *ast.DropSensitivityClassificationStatement:
+		return dropSensitivityClassificationStatementToJSON(s)
 	default:
 		return jsonNode{"$type": "UnknownStatement"}
 	}
@@ -1343,6 +1347,20 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["LiteralType"] = e.LiteralType
 		}
 		node["IsLargeObject"] = e.IsLargeObject
+		if e.Value != "" {
+			node["Value"] = e.Value
+		}
+		return node
+	case *ast.IdentifierLiteral:
+		node := jsonNode{
+			"$type": "IdentifierLiteral",
+		}
+		if e.LiteralType != "" {
+			node["LiteralType"] = e.LiteralType
+		}
+		if e.QuoteType != "" {
+			node["QuoteType"] = e.QuoteType
+		}
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
@@ -12274,6 +12292,52 @@ func dropSignatureStatementToJSON(s *ast.DropSignatureStatement) jsonNode {
 			cryptos[i] = cryptoMechanismToJSON(c)
 		}
 		node["Cryptos"] = cryptos
+	}
+	return node
+}
+
+func addSensitivityClassificationStatementToJSON(s *ast.AddSensitivityClassificationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AddSensitivityClassificationStatement",
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = sensitivityClassificationOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, col := range s.Columns {
+			cols[i] = columnReferenceExpressionToJSON(col)
+		}
+		node["Columns"] = cols
+	}
+	return node
+}
+
+func dropSensitivityClassificationStatementToJSON(s *ast.DropSensitivityClassificationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropSensitivityClassificationStatement",
+	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, col := range s.Columns {
+			cols[i] = columnReferenceExpressionToJSON(col)
+		}
+		node["Columns"] = cols
+	}
+	return node
+}
+
+func sensitivityClassificationOptionToJSON(opt *ast.SensitivityClassificationOption) jsonNode {
+	node := jsonNode{
+		"$type": "SensitivityClassificationOption",
+		"Type":  opt.Type,
+	}
+	if opt.Value != nil {
+		node["Value"] = scalarExpressionToJSON(opt.Value)
 	}
 	return node
 }
