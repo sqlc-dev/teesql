@@ -3968,6 +3968,9 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 		if p.curTok.Type == TokenPublic {
 			principal.PrincipalType = "Public"
 			p.nextToken()
+		} else if p.curTok.Type == TokenNull {
+			principal.PrincipalType = "Null"
+			p.nextToken()
 		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			principal.PrincipalType = "Identifier"
 			// parseIdentifier already calls nextToken()
@@ -3982,6 +3985,18 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 		} else {
 			break
 		}
+	}
+
+	// Check for WITH GRANT OPTION
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "GRANT" {
+			p.nextToken() // consume GRANT
+			if strings.ToUpper(p.curTok.Literal) == "OPTION" {
+				p.nextToken() // consume OPTION
+			}
+		}
+		stmt.WithGrantOption = true
 	}
 
 	// Skip optional semicolon
@@ -4185,10 +4200,13 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 	}
 
 	// Parse principal(s)
-	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && strings.ToUpper(p.curTok.Literal) != "CASCADE" {
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && strings.ToUpper(p.curTok.Literal) != "CASCADE" && strings.ToUpper(p.curTok.Literal) != "AS" {
 		principal := &ast.SecurityPrincipal{}
 		if p.curTok.Type == TokenPublic {
 			principal.PrincipalType = "Public"
+			p.nextToken()
+		} else if p.curTok.Type == TokenNull {
+			principal.PrincipalType = "Null"
 			p.nextToken()
 		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			principal.PrincipalType = "Identifier"
@@ -4209,6 +4227,12 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 	if strings.ToUpper(p.curTok.Literal) == "CASCADE" {
 		stmt.CascadeOption = true
 		p.nextToken()
+	}
+
+	// Check for AS
+	if strings.ToUpper(p.curTok.Literal) == "AS" {
+		p.nextToken() // consume AS
+		stmt.AsClause = p.parseIdentifier()
 	}
 
 	// Skip optional semicolon
@@ -4404,6 +4428,9 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 		principal := &ast.SecurityPrincipal{}
 		if p.curTok.Type == TokenPublic {
 			principal.PrincipalType = "Public"
+			p.nextToken()
+		} else if p.curTok.Type == TokenNull {
+			principal.PrincipalType = "Null"
 			p.nextToken()
 		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			principal.PrincipalType = "Identifier"
@@ -4826,6 +4853,9 @@ func revokeStatementToJSON(s *ast.RevokeStatement) jsonNode {
 			principals[i] = securityPrincipalToJSON(p)
 		}
 		node["Principals"] = principals
+	}
+	if s.AsClause != nil {
+		node["AsClause"] = identifierToJSON(s.AsClause)
 	}
 	return node
 }

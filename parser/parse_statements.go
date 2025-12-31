@@ -2880,7 +2880,7 @@ func (p *Parser) parseCreateSchemaStatement() (*ast.CreateSchemaStatement, error
 			break
 		}
 		// Parse schema element statements
-		if p.curTok.Type == TokenCreate || p.curTok.Type == TokenGrant {
+		if p.curTok.Type == TokenCreate || p.curTok.Type == TokenGrant || p.curTok.Type == TokenDeny || p.curTok.Type == TokenRevoke {
 			elemStmt, err := p.parseStatement()
 			if err != nil {
 				break
