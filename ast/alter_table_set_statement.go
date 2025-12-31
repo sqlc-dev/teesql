@@ -35,3 +35,12 @@ type RetentionPeriodDefinition struct {
 }
 
 func (r *RetentionPeriodDefinition) node() {}
+
+// MemoryOptimizedTableOption represents MEMORY_OPTIMIZED option
+type MemoryOptimizedTableOption struct {
+	OptionKind  string // "MemoryOptimized"
+	OptionState string // "On", "Off"
+}
+
+func (o *MemoryOptimizedTableOption) tableOption() {}
+func (o *MemoryOptimizedTableOption) node()        {}

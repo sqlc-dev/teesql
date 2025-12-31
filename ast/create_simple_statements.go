@@ -339,6 +339,7 @@ func (s *CreateTypeUdtStatement) statement() {}
 type CreateTypeTableStatement struct {
 	Name       *SchemaObjectName `json:"Name,omitempty"`
 	Definition *TableDefinition  `json:"Definition,omitempty"`
+	Options    []TableOption     `json:"Options,omitempty"`
 }
 
 func (s *CreateTypeTableStatement) node()      {}

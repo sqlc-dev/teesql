@@ -8281,6 +8281,44 @@ func (p *Parser) parseCreateTypeStatement() (ast.Statement, error) {
 				if p.curTok.Type == TokenRParen {
 					p.nextToken()
 				}
+				// Parse optional WITH clause for table options
+				if p.curTok.Type == TokenWith {
+					p.nextToken() // consume WITH
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+						// Parse options
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							optUpper := strings.ToUpper(p.curTok.Literal)
+							if optUpper == "MEMORY_OPTIMIZED" {
+								p.nextToken() // consume MEMORY_OPTIMIZED
+								if p.curTok.Type == TokenEquals {
+									p.nextToken() // consume =
+								}
+								stateUpper := strings.ToUpper(p.curTok.Literal)
+								state := "On"
+								if stateUpper == "OFF" {
+									state = "Off"
+								}
+								p.nextToken() // consume ON/OFF
+								stmt.Options = append(stmt.Options, &ast.MemoryOptimizedTableOption{
+									OptionKind:  "MemoryOptimized",
+									OptionState: state,
+								})
+							} else {
+								// Skip unknown option
+								p.nextToken()
+							}
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							} else {
+								break
+							}
+						}
+						if p.curTok.Type == TokenRParen {
+							p.nextToken()
+						}
+					}
+				}
 				// Skip semicolon if present
 				if p.curTok.Type == TokenSemicolon {
 					p.nextToken()

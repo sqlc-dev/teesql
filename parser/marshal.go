@@ -4297,6 +4297,12 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		return node
 	case *ast.SystemVersioningTableOption:
 		return systemVersioningTableOptionToJSON(o)
+	case *ast.MemoryOptimizedTableOption:
+		return jsonNode{
+			"$type":       "MemoryOptimizedTableOption",
+			"OptionKind":  o.OptionKind,
+			"OptionState": o.OptionState,
+		}
 	default:
 		return jsonNode{"$type": "UnknownTableOption"}
 	}
@@ -10992,6 +10998,13 @@ func createTypeTableStatementToJSON(s *ast.CreateTypeTableStatement) jsonNode {
 	}
 	if s.Definition != nil {
 		node["Definition"] = tableDefinitionToJSON(s.Definition)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			opts[i] = tableOptionToJSON(o)
+		}
+		node["Options"] = opts
 	}
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
