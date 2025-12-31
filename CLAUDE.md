@@ -18,23 +18,18 @@ This tool finds all tests with `todo: true` in their metadata and returns the on
 4. Implement the necessary AST types in `ast/`
 5. Add parser logic in `parser/parser.go`
 6. Add JSON marshaling functions in `parser/parser.go`
-7. Enable the test by removing `todo: true` from its `metadata.json` (set it to `{}`)
-8. Run `go test ./parser/...` to verify
-9. **Check if other todo tests now pass** (see below)
+7. Run `go test ./parser/... -check-todo -v` to auto-enable passing todo tests
+8. Run `go test ./parser/...` to verify all enabled tests pass
 
 ## Checking for Newly Passing Todo Tests
 
 After implementing parser changes, run:
 
 ```bash
-go test ./parser/... -only-todo -v 2>&1 | grep "PASS:"
+go test ./parser/... -check-todo -v
 ```
 
-This shows any todo tests that now pass. Enable those tests by removing `todo: true` from their `metadata.json`.
-
-Available test flags:
-- `-only-todo` - Run only todo/invalid_syntax tests (find newly passing tests)
-- `-run-todo` - Run todo/invalid_syntax tests along with normal tests
+This runs todo tests and **automatically updates `metadata.json`** for any tests that now pass (removes the `todo: true` flag). Look for "ENABLED:" in the output to see which tests were updated.
 
 ## Test Structure
 
