@@ -368,6 +368,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterFunctionStatementToJSON(s)
 	case *ast.CreateFunctionStatement:
 		return createFunctionStatementToJSON(s)
+	case *ast.CreateOrAlterFunctionStatement:
+		return createOrAlterFunctionStatementToJSON(s)
 	case *ast.AlterTriggerStatement:
 		return alterTriggerStatementToJSON(s)
 	case *ast.CreateTriggerStatement:
@@ -6653,6 +6655,64 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 			DataType: returnDataType,
 		}
 
+		// Parse optional WITH clause for function options
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			for {
+				upperOpt := strings.ToUpper(p.curTok.Literal)
+				switch upperOpt {
+				case "INLINE":
+					p.nextToken() // consume INLINE
+					// Expect = ON|OFF
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					optState := strings.ToUpper(p.curTok.Literal)
+					state := "On"
+					if optState == "OFF" {
+						state = "Off"
+					}
+					p.nextToken() // consume ON/OFF
+					stmt.Options = append(stmt.Options, &ast.InlineFunctionOption{
+						OptionKind:  "Inline",
+						OptionState: state,
+					})
+				case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION", "CALLED":
+					optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
+					p.nextToken()
+					// Handle CALLED ON NULL INPUT
+					if optKind == "Called" {
+						for strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+							p.nextToken()
+						}
+						optKind = "CalledOnNullInput"
+					}
+					stmt.Options = append(stmt.Options, &ast.FunctionOption{
+						OptionKind: optKind,
+					})
+				case "RETURNS":
+					// Handle RETURNS NULL ON NULL INPUT
+					for strings.ToUpper(p.curTok.Literal) == "RETURNS" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+						p.nextToken()
+					}
+					stmt.Options = append(stmt.Options, &ast.FunctionOption{
+						OptionKind: "ReturnsNullOnNullInput",
+					})
+				default:
+					// Unknown option - skip it
+					if p.curTok.Type == TokenIdent {
+						p.nextToken()
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume comma
+				} else {
+					break
+				}
+			}
+		}
+
 		// Parse AS
 		if p.curTok.Type == TokenAs {
 			p.nextToken()
@@ -7108,6 +7168,64 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 		DataType: returnDataType,
 	}
 
+	// Parse optional WITH clause for function options
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		for {
+			upperOpt := strings.ToUpper(p.curTok.Literal)
+			switch upperOpt {
+			case "INLINE":
+				p.nextToken() // consume INLINE
+				// Expect = ON|OFF
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				optState := strings.ToUpper(p.curTok.Literal)
+				state := "On"
+				if optState == "OFF" {
+					state = "Off"
+				}
+				p.nextToken() // consume ON/OFF
+				stmt.Options = append(stmt.Options, &ast.InlineFunctionOption{
+					OptionKind:  "Inline",
+					OptionState: state,
+				})
+			case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION", "CALLED":
+				optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
+				p.nextToken()
+				// Handle CALLED ON NULL INPUT
+				if optKind == "Called" {
+					for strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+						p.nextToken()
+					}
+					optKind = "CalledOnNullInput"
+				}
+				stmt.Options = append(stmt.Options, &ast.FunctionOption{
+					OptionKind: optKind,
+				})
+			case "RETURNS":
+				// Handle RETURNS NULL ON NULL INPUT
+				for strings.ToUpper(p.curTok.Literal) == "RETURNS" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+					p.nextToken()
+				}
+				stmt.Options = append(stmt.Options, &ast.FunctionOption{
+					OptionKind: "ReturnsNullOnNullInput",
+				})
+			default:
+				// Unknown option - skip it
+				if p.curTok.Type == TokenIdent {
+					p.nextToken()
+				}
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+			} else {
+				break
+			}
+		}
+	}
+
 	// Parse AS
 	if p.curTok.Type == TokenAs {
 		p.nextToken()
@@ -7127,6 +7245,181 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 	}
 
 	return stmt, nil
+}
+
+// parseCreateOrAlterFunctionStatement parses a CREATE OR ALTER FUNCTION statement
+func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFunctionStatement, error) {
+	// Consume FUNCTION
+	p.nextToken()
+
+	stmt := &ast.CreateOrAlterFunctionStatement{}
+
+	// Parse function name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Parse parameters in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			param := &ast.ProcedureParameter{
+				IsVarying: false,
+				Modifier:  "None",
+			}
+
+			// Parse parameter name
+			if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+				param.VariableName = &ast.Identifier{
+					Value:     p.curTok.Literal,
+					QuoteType: "NotQuoted",
+				}
+				p.nextToken()
+			}
+
+			// Parse data type if present
+			if p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma {
+				dataType, err := p.parseDataTypeReference()
+				if err != nil {
+					return nil, err
+				}
+				param.DataType = dataType
+			}
+
+			// Check for READONLY modifier
+			if strings.ToUpper(p.curTok.Literal) == "READONLY" {
+				param.Modifier = "ReadOnly"
+				p.nextToken()
+			}
+
+			stmt.Parameters = append(stmt.Parameters, param)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Expect RETURNS - if not present, be lenient and skip
+	if p.curTok.Type != TokenReturns {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken()
+
+	// Parse return type
+	returnDataType, err := p.parseDataTypeReference()
+	if err != nil {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	stmt.ReturnType = &ast.ScalarFunctionReturnType{
+		DataType: returnDataType,
+	}
+
+	// Parse optional WITH clause for function options
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		for {
+			upperOpt := strings.ToUpper(p.curTok.Literal)
+			switch upperOpt {
+			case "INLINE":
+				p.nextToken() // consume INLINE
+				// Expect = ON|OFF
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				optState := strings.ToUpper(p.curTok.Literal)
+				state := "On"
+				if optState == "OFF" {
+					state = "Off"
+				}
+				p.nextToken() // consume ON/OFF
+				stmt.Options = append(stmt.Options, &ast.InlineFunctionOption{
+					OptionKind:  "Inline",
+					OptionState: state,
+				})
+			case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION", "CALLED":
+				optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
+				p.nextToken()
+				// Handle CALLED ON NULL INPUT
+				if optKind == "Called" {
+					for strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+						p.nextToken()
+					}
+					optKind = "CalledOnNullInput"
+				}
+				stmt.Options = append(stmt.Options, &ast.FunctionOption{
+					OptionKind: optKind,
+				})
+			case "RETURNS":
+				// Handle RETURNS NULL ON NULL INPUT
+				for strings.ToUpper(p.curTok.Literal) == "RETURNS" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+					p.nextToken()
+				}
+				stmt.Options = append(stmt.Options, &ast.FunctionOption{
+					OptionKind: "ReturnsNullOnNullInput",
+				})
+			default:
+				// Unknown option - skip it
+				if p.curTok.Type == TokenIdent {
+					p.nextToken()
+				}
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+			} else {
+				break
+			}
+		}
+	}
+
+	// Parse AS
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+	}
+
+	// Parse statement list
+	stmtList, err := p.parseFunctionStatementList()
+	if err != nil {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	stmt.StatementList = stmtList
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseCreateOrAlterProcedureStatement parses a CREATE OR ALTER PROCEDURE statement
+func (p *Parser) parseCreateOrAlterProcedureStatement() (*ast.CreateProcedureStatement, error) {
+	// For now, delegate to regular CREATE PROCEDURE parsing
+	return p.parseCreateProcedureStatement()
+}
+
+// parseCreateOrAlterViewStatement parses a CREATE OR ALTER VIEW statement
+func (p *Parser) parseCreateOrAlterViewStatement() (*ast.CreateViewStatement, error) {
+	// For now, delegate to regular CREATE VIEW parsing
+	return p.parseCreateViewStatement()
+}
+
+// parseCreateOrAlterTriggerStatement parses a CREATE OR ALTER TRIGGER statement
+func (p *Parser) parseCreateOrAlterTriggerStatement() (*ast.CreateTriggerStatement, error) {
+	// For now, delegate to regular CREATE TRIGGER parsing
+	return p.parseCreateTriggerStatement()
 }
 
 // parseCreateTriggerStatement parses a CREATE TRIGGER statement
@@ -7825,7 +8118,7 @@ func alterFunctionStatementToJSON(s *ast.AlterFunctionStatement) jsonNode {
 	if len(s.Options) > 0 {
 		opts := make([]jsonNode, len(s.Options))
 		for i, o := range s.Options {
-			opts[i] = functionOptionToJSON(o)
+			opts[i] = functionOptionBaseToJSON(o)
 		}
 		node["Options"] = opts
 	}
@@ -7849,6 +8142,25 @@ func functionOptionToJSON(o *ast.FunctionOption) jsonNode {
 	}
 }
 
+func inlineFunctionOptionToJSON(o *ast.InlineFunctionOption) jsonNode {
+	return jsonNode{
+		"$type":       "InlineFunctionOption",
+		"OptionState": o.OptionState,
+		"OptionKind":  o.OptionKind,
+	}
+}
+
+func functionOptionBaseToJSON(o ast.FunctionOptionBase) jsonNode {
+	switch opt := o.(type) {
+	case *ast.FunctionOption:
+		return functionOptionToJSON(opt)
+	case *ast.InlineFunctionOption:
+		return inlineFunctionOptionToJSON(opt)
+	default:
+		return jsonNode{"$type": "UnknownFunctionOption"}
+	}
+}
+
 func createFunctionStatementToJSON(s *ast.CreateFunctionStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateFunctionStatement",
@@ -7865,6 +8177,43 @@ func createFunctionStatementToJSON(s *ast.CreateFunctionStatement) jsonNode {
 	}
 	if s.ReturnType != nil {
 		node["ReturnType"] = functionReturnTypeToJSON(s.ReturnType)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = functionOptionBaseToJSON(o)
+		}
+		node["Options"] = options
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func createOrAlterFunctionStatementToJSON(s *ast.CreateOrAlterFunctionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateOrAlterFunctionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = procedureParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	if s.ReturnType != nil {
+		node["ReturnType"] = functionReturnTypeToJSON(s.ReturnType)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = functionOptionBaseToJSON(o)
+		}
+		node["Options"] = options
 	}
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)

@@ -5,7 +5,7 @@ type AlterFunctionStatement struct {
 	Name          *SchemaObjectName
 	Parameters    []*ProcedureParameter
 	ReturnType    FunctionReturnType
-	Options       []*FunctionOption
+	Options       []FunctionOptionBase
 	StatementList *StatementList
 }
 
@@ -17,7 +17,7 @@ type CreateFunctionStatement struct {
 	Name          *SchemaObjectName
 	Parameters    []*ProcedureParameter
 	ReturnType    FunctionReturnType
-	Options       []*FunctionOption
+	Options       []FunctionOptionBase
 	StatementList *StatementList
 }
 
@@ -50,8 +50,37 @@ type SelectFunctionReturnType struct {
 
 func (r *SelectFunctionReturnType) functionReturnTypeNode() {}
 
-// FunctionOption represents a function option
-type FunctionOption struct {
-	OptionKind  string
-	OptionState string
+// FunctionOptionBase is an interface for function options
+type FunctionOptionBase interface {
+	Node
+	functionOption()
 }
+
+// FunctionOption represents a function option (like ENCRYPTION, SCHEMABINDING)
+type FunctionOption struct {
+	OptionKind string
+}
+
+func (o *FunctionOption) node()           {}
+func (o *FunctionOption) functionOption() {}
+
+// InlineFunctionOption represents an INLINE function option
+type InlineFunctionOption struct {
+	OptionKind  string // "Inline"
+	OptionState string // "On", "Off"
+}
+
+func (o *InlineFunctionOption) node()           {}
+func (o *InlineFunctionOption) functionOption() {}
+
+// CreateOrAlterFunctionStatement represents a CREATE OR ALTER FUNCTION statement
+type CreateOrAlterFunctionStatement struct {
+	Name          *SchemaObjectName
+	Parameters    []*ProcedureParameter
+	ReturnType    FunctionReturnType
+	Options       []FunctionOptionBase
+	StatementList *StatementList
+}
+
+func (s *CreateOrAlterFunctionStatement) statement() {}
+func (s *CreateOrAlterFunctionStatement) node()      {}

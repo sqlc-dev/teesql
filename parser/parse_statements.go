@@ -1514,6 +1514,27 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 	p.nextToken()
 
 	switch p.curTok.Type {
+	case TokenOr:
+		// Handle CREATE OR ALTER
+		p.nextToken() // consume OR
+		if strings.ToUpper(p.curTok.Literal) != "ALTER" {
+			return nil, fmt.Errorf("expected ALTER after CREATE OR, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ALTER
+		switch p.curTok.Type {
+		case TokenFunction:
+			return p.parseCreateOrAlterFunctionStatement()
+		case TokenProcedure:
+			return p.parseCreateOrAlterProcedureStatement()
+		case TokenView:
+			return p.parseCreateOrAlterViewStatement()
+		case TokenTrigger:
+			return p.parseCreateOrAlterTriggerStatement()
+		default:
+			// Lenient: skip unknown CREATE OR ALTER statements
+			p.skipToEndOfStatement()
+			return &ast.CreateProcedureStatement{}, nil
+		}
 	case TokenTable:
 		return p.parseCreateTableStatement()
 	case TokenView:
