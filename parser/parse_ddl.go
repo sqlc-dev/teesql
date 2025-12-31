@@ -1082,7 +1082,9 @@ func (p *Parser) parseDropTriggerStatement() (*ast.DropTriggerStatement, error) 
 	// Consume TRIGGER
 	p.nextToken()
 
-	stmt := &ast.DropTriggerStatement{}
+	stmt := &ast.DropTriggerStatement{
+		TriggerScope: "Normal", // Default to Normal for regular DROP TRIGGER
+	}
 
 	// Check for IF EXISTS
 	if strings.ToUpper(p.curTok.Literal) == "IF" {
@@ -2737,9 +2739,229 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 		p.nextToken() // consume CONSTRAINT
 		// Parse constraint name
 		constraintName := p.parseIdentifier()
-		_ = constraintName // We'll use this later when we implement full constraint support
-		// Skip to end of statement (lenient parsing for incomplete constraints)
-		p.skipToEndOfStatement()
+
+		// Check what type of constraint follows
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		switch upperLit {
+		case "PRIMARY":
+			p.nextToken() // consume PRIMARY
+			if p.curTok.Type == TokenKey {
+				p.nextToken() // consume KEY
+			}
+			constraint := &ast.UniqueConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+				IsPrimaryKey:         true,
+			}
+			// Parse optional CLUSTERED/NONCLUSTERED
+			for {
+				upperOpt := strings.ToUpper(p.curTok.Literal)
+				if upperOpt == "CLUSTERED" {
+					constraint.Clustered = true
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+					p.nextToken()
+				} else if upperOpt == "NONCLUSTERED" {
+					constraint.Clustered = false
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		// Parse column list - only add constraint if we have a column list
+			hasColumnsPK := false
+			if p.curTok.Type == TokenLParen {
+				hasColumnsPK = true
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colRef := &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+					}
+					colName := p.parseIdentifier()
+					colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{colName},
+						Count:       1,
+					}
+					sortOrder := ast.SortOrderNotSpecified
+					upperSort := strings.ToUpper(p.curTok.Literal)
+					if upperSort == "ASC" {
+						sortOrder = ast.SortOrderAscending
+						p.nextToken()
+					} else if upperSort == "DESC" {
+						sortOrder = ast.SortOrderDescending
+						p.nextToken()
+					}
+					constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+						Column:    colRef,
+						SortOrder: sortOrder,
+					})
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+			// Parse NOT ENFORCED
+			if strings.ToUpper(p.curTok.Literal) == "NOT" {
+				p.nextToken()
+				if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
+					p.nextToken()
+					f := false
+					constraint.IsEnforced = &f
+				}
+			}
+			// Only add constraint if we successfully parsed a column list
+			if hasColumnsPK {
+				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+			}
+
+		case "UNIQUE":
+			p.nextToken() // consume UNIQUE
+			constraint := &ast.UniqueConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+				IsPrimaryKey:         false,
+			}
+			// Parse optional CLUSTERED/NONCLUSTERED
+			for {
+				upperOpt := strings.ToUpper(p.curTok.Literal)
+				if upperOpt == "CLUSTERED" {
+					constraint.Clustered = true
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+					p.nextToken()
+				} else if upperOpt == "NONCLUSTERED" {
+					constraint.Clustered = false
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			// Parse column list - only add constraint if we have a column list
+			hasColumnsUQ := false
+			if p.curTok.Type == TokenLParen {
+				hasColumnsUQ = true
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colRef := &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+					}
+					colName := p.parseIdentifier()
+					colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{colName},
+						Count:       1,
+					}
+					sortOrder := ast.SortOrderNotSpecified
+					upperSort := strings.ToUpper(p.curTok.Literal)
+					if upperSort == "ASC" {
+						sortOrder = ast.SortOrderAscending
+						p.nextToken()
+					} else if upperSort == "DESC" {
+						sortOrder = ast.SortOrderDescending
+						p.nextToken()
+					}
+					constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+						Column:    colRef,
+						SortOrder: sortOrder,
+					})
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+			// Parse NOT ENFORCED
+			if strings.ToUpper(p.curTok.Literal) == "NOT" {
+				p.nextToken()
+				if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
+					p.nextToken()
+					f := false
+					constraint.IsEnforced = &f
+				}
+			}
+			// Only add constraint if we successfully parsed a column list
+			if hasColumnsUQ {
+				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+			}
+
+		case "FOREIGN":
+			p.nextToken() // consume FOREIGN
+			if p.curTok.Type == TokenKey {
+				p.nextToken() // consume KEY
+			}
+			constraint := &ast.ForeignKeyConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+			}
+			// Parse column list - track if we have a complete constraint
+			hasColumnsFK := false
+			hasReferences := false
+			if p.curTok.Type == TokenLParen {
+				hasColumnsFK = true
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					ident := p.parseIdentifier()
+					constraint.Columns = append(constraint.Columns, ident)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			// Parse REFERENCES
+			if strings.ToUpper(p.curTok.Literal) == "REFERENCES" {
+				hasReferences = true
+				p.nextToken()
+				refName, err := p.parseSchemaObjectName()
+				if err != nil {
+					return nil, err
+				}
+				constraint.ReferenceTableName = refName
+				// Parse referenced column list
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						ident := p.parseIdentifier()
+						constraint.ReferencedColumns = append(constraint.ReferencedColumns, ident)
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			}
+			// Parse NOT ENFORCED
+			if strings.ToUpper(p.curTok.Literal) == "NOT" {
+				p.nextToken()
+				if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
+					p.nextToken()
+					f := false
+					constraint.IsEnforced = &f
+				}
+			}
+			// Only add constraint if we have columns and references
+			if hasColumnsFK && hasReferences {
+				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+			}
+
+		default:
+			// Unknown constraint type - skip to end of statement
+			p.skipToEndOfStatement()
+		}
 		return stmt, nil
 	}
 

@@ -4388,6 +4388,10 @@ func foreignKeyConstraintToJSON(c *ast.ForeignKeyConstraintDefinition) jsonNode 
 		updateAction = "NotSpecified"
 	}
 	node["UpdateAction"] = updateAction
+	// Output IsEnforced if it's explicitly set
+	if c.IsEnforced != nil {
+		node["IsEnforced"] = *c.IsEnforced
+	}
 	return node
 }
 
@@ -4477,6 +4481,10 @@ func uniqueConstraintToJSON(c *ast.UniqueConstraintDefinition) jsonNode {
 	// Output Clustered if it's true, or if IndexType is set (meaning NONCLUSTERED was explicitly specified)
 	if c.Clustered || c.IndexType != nil {
 		node["Clustered"] = c.Clustered
+	}
+	// Output IsEnforced if it's explicitly set
+	if c.IsEnforced != nil {
+		node["IsEnforced"] = *c.IsEnforced
 	}
 	if c.ConstraintIdentifier != nil {
 		node["ConstraintIdentifier"] = identifierToJSON(c.ConstraintIdentifier)

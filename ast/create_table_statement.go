@@ -140,6 +140,7 @@ type UniqueConstraintDefinition struct {
 	ConstraintIdentifier *Identifier
 	Clustered            bool
 	IsPrimaryKey         bool
+	IsEnforced           *bool // nil = not specified (default enforced), true = ENFORCED, false = NOT ENFORCED
 	Columns              []*ColumnWithSortOrder
 	IndexType            *IndexType
 }
@@ -157,6 +158,7 @@ type ForeignKeyConstraintDefinition struct {
 	DeleteAction         string
 	UpdateAction         string
 	NotForReplication    bool
+	IsEnforced           *bool // nil = not specified (default enforced), true = ENFORCED, false = NOT ENFORCED
 }
 
 func (f *ForeignKeyConstraintDefinition) node()            {}
