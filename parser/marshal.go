@@ -8240,16 +8240,61 @@ func dropIndexClauseToJSON(c *ast.DropIndexClause) jsonNode {
 		return node
 	}
 
-	// Otherwise use DropIndexClauseBase for backwards-compatible syntax
+	// Otherwise use BackwardsCompatibleDropIndexClause for backwards-compatible syntax
 	node := jsonNode{
-		"$type": "DropIndexClauseBase",
+		"$type": "BackwardsCompatibleDropIndexClause",
 	}
 	if c.LegacyIndex != nil {
-		node["Index"] = schemaObjectNameToJSON(c.LegacyIndex)
+		node["Index"] = childObjectNameToJSON(c.LegacyIndex)
 	} else if c.Index != nil {
 		// Just index name without object - use identifier
 		node["Index"] = identifierToJSON(c.Index)
 	}
+	return node
+}
+
+// childObjectNameToJSON converts a SchemaObjectName to a ChildObjectName JSON format
+// where the BaseIdentifier is the parent and the last identifier becomes ChildIdentifier
+func childObjectNameToJSON(s *ast.SchemaObjectName) jsonNode {
+	node := jsonNode{
+		"$type": "ChildObjectName",
+		"Count": s.Count,
+	}
+
+	// For ChildObjectName: BaseIdentifier is the parent, ChildIdentifier is the actual child
+	if s.Count >= 2 {
+		// For 2-part: BaseIdentifier.ChildIdentifier
+		if s.SchemaIdentifier != nil {
+			node["BaseIdentifier"] = identifierToJSON(s.SchemaIdentifier)
+		}
+		if s.BaseIdentifier != nil {
+			node["ChildIdentifier"] = identifierToJSON(s.BaseIdentifier)
+		}
+	}
+
+	// For 3+ parts: add DatabaseIdentifier/SchemaIdentifier
+	if s.Count >= 3 {
+		if s.DatabaseIdentifier != nil {
+			node["SchemaIdentifier"] = identifierToJSON(s.DatabaseIdentifier)
+		}
+	}
+
+	if s.Count >= 4 {
+		if s.ServerIdentifier != nil {
+			node["DatabaseIdentifier"] = identifierToJSON(s.ServerIdentifier)
+		}
+	}
+
+	// Add identifiers array
+	if len(s.Identifiers) > 0 {
+		idents := make([]jsonNode, len(s.Identifiers))
+		for i, id := range s.Identifiers {
+			idents[i] = jsonNode{"$ref": "Identifier"}
+			_ = id
+		}
+		node["Identifiers"] = idents
+	}
+
 	return node
 }
 
@@ -8296,7 +8341,7 @@ func dropStatisticsStatementToJSON(s *ast.DropStatisticsStatement) jsonNode {
 	if len(s.Objects) > 0 {
 		objects := make([]jsonNode, len(s.Objects))
 		for i, obj := range s.Objects {
-			objects[i] = schemaObjectNameToJSON(obj)
+			objects[i] = childObjectNameToJSON(obj)
 		}
 		node["Objects"] = objects
 	}

@@ -1172,6 +1172,8 @@ func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
 			clause.LegacyIndex = &ast.SchemaObjectName{
 				SchemaIdentifier: indexName,
 				BaseIdentifier:   childName,
+				Count:            2,
+				Identifiers:      []*ast.Identifier{indexName, childName},
 			}
 		} else {
 			// Just index name without ON or dot
