@@ -310,15 +310,30 @@ func (p *Parser) parseTopRowFilter() (*ast.TopRowFilter, error) {
 	// Check for parenthesized expression
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
-		expr, err := p.parseScalarExpression()
-		if err != nil {
-			return nil, err
+
+		// Check for subquery (SELECT ...)
+		if p.curTok.Type == TokenSelect {
+			qe, err := p.parseQueryExpression()
+			if err != nil {
+				return nil, err
+			}
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+			top.Expression = &ast.ScalarSubquery{QueryExpression: qe}
+		} else {
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			// Wrap in ParenthesisExpression
+			top.Expression = &ast.ParenthesisExpression{Expression: expr}
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
 		}
-		top.Expression = expr
-		if p.curTok.Type != TokenRParen {
-			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
-		}
-		p.nextToken() // consume )
 	} else {
 		// Parse literal expression
 		expr, err := p.parsePrimaryExpression()

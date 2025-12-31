@@ -1985,9 +1985,10 @@ func insertStatementToJSON(s *ast.InsertStatement) jsonNode {
 
 func insertSpecificationToJSON(spec *ast.InsertSpecification) jsonNode {
 	node := jsonNode{
-		"$type": "InsertSpecification",
+		"$type":        "InsertSpecification",
+		"InsertOption": "None",
 	}
-	if spec.InsertOption != "" && spec.InsertOption != "None" {
+	if spec.InsertOption != "" {
 		node["InsertOption"] = spec.InsertOption
 	}
 	if spec.InsertSource != nil {
@@ -1996,12 +1997,59 @@ func insertSpecificationToJSON(spec *ast.InsertSpecification) jsonNode {
 	if spec.Target != nil {
 		node["Target"] = tableReferenceToJSON(spec.Target)
 	}
+	if spec.TopRowFilter != nil {
+		node["TopRowFilter"] = topRowFilterToJSON(spec.TopRowFilter)
+	}
+	if spec.OutputClause != nil {
+		node["OutputClause"] = outputClauseToJSON(spec.OutputClause)
+	}
+	if spec.OutputIntoClause != nil {
+		node["OutputIntoClause"] = outputIntoClauseToJSON(spec.OutputIntoClause)
+	}
 	if len(spec.Columns) > 0 {
 		cols := make([]jsonNode, len(spec.Columns))
 		for i, c := range spec.Columns {
 			cols[i] = scalarExpressionToJSON(c)
 		}
 		node["Columns"] = cols
+	}
+	return node
+}
+
+func outputClauseToJSON(oc *ast.OutputClause) jsonNode {
+	node := jsonNode{
+		"$type": "OutputClause",
+	}
+	if len(oc.SelectColumns) > 0 {
+		cols := make([]jsonNode, len(oc.SelectColumns))
+		for i, c := range oc.SelectColumns {
+			cols[i] = selectElementToJSON(c)
+		}
+		node["SelectColumns"] = cols
+	}
+	return node
+}
+
+func outputIntoClauseToJSON(oic *ast.OutputIntoClause) jsonNode {
+	node := jsonNode{
+		"$type": "OutputIntoClause",
+	}
+	if len(oic.SelectColumns) > 0 {
+		cols := make([]jsonNode, len(oic.SelectColumns))
+		for i, c := range oic.SelectColumns {
+			cols[i] = selectElementToJSON(c)
+		}
+		node["SelectColumns"] = cols
+	}
+	if oic.IntoTable != nil {
+		node["IntoTable"] = tableReferenceToJSON(oic.IntoTable)
+	}
+	if len(oic.IntoTableColumns) > 0 {
+		cols := make([]jsonNode, len(oic.IntoTableColumns))
+		for i, c := range oic.IntoTableColumns {
+			cols[i] = columnReferenceExpressionToJSON(c)
+		}
+		node["IntoTableColumns"] = cols
 	}
 	return node
 }

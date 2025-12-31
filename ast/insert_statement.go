@@ -11,10 +11,25 @@ func (i *InsertStatement) statement() {}
 
 // InsertSpecification contains the details of an INSERT.
 type InsertSpecification struct {
-	InsertOption string             `json:"InsertOption,omitempty"`
-	InsertSource InsertSource       `json:"InsertSource,omitempty"`
-	Target       TableReference     `json:"Target,omitempty"`
-	Columns      []*ColumnReferenceExpression `json:"Columns,omitempty"`
+	InsertOption     string                       `json:"InsertOption,omitempty"`
+	InsertSource     InsertSource                 `json:"InsertSource,omitempty"`
+	Target           TableReference               `json:"Target,omitempty"`
+	Columns          []*ColumnReferenceExpression `json:"Columns,omitempty"`
+	TopRowFilter     *TopRowFilter                `json:"TopRowFilter,omitempty"`
+	OutputClause     *OutputClause                `json:"OutputClause,omitempty"`
+	OutputIntoClause *OutputIntoClause            `json:"OutputIntoClause,omitempty"`
+}
+
+// OutputClause represents an OUTPUT clause.
+type OutputClause struct {
+	SelectColumns []SelectElement `json:"SelectColumns,omitempty"`
+}
+
+// OutputIntoClause represents an OUTPUT INTO clause.
+type OutputIntoClause struct {
+	SelectColumns    []SelectElement              `json:"SelectColumns,omitempty"`
+	IntoTable        TableReference               `json:"IntoTable,omitempty"`
+	IntoTableColumns []*ColumnReferenceExpression `json:"IntoTableColumns,omitempty"`
 }
 
 // InsertSource is an interface for INSERT sources.
