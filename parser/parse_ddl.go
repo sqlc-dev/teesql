@@ -5696,6 +5696,7 @@ func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibrary
 		p.nextToken() // consume SET
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
+			var currentFileOption *ast.ExternalLibraryFileOption
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				optName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken() // consume option name
@@ -5708,9 +5709,13 @@ func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibrary
 						if err != nil {
 							return nil, err
 						}
-						stmt.ExternalLibraryFiles = append(stmt.ExternalLibraryFiles, &ast.ExternalLibraryFileOption{
+						currentFileOption = &ast.ExternalLibraryFileOption{
 							Content: content,
-						})
+						}
+						stmt.ExternalLibraryFiles = append(stmt.ExternalLibraryFiles, currentFileOption)
+					} else if optName == "PLATFORM" && currentFileOption != nil {
+						// PLATFORM is an identifier, not a string
+						currentFileOption.Platform = p.parseIdentifier()
 					}
 				}
 
