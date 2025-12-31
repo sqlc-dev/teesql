@@ -104,11 +104,20 @@ func TestParse(t *testing.T) {
 
 			// If running with -check-todo and the test passed, update metadata.json to remove todo flag
 			if checkTodoMode && !t.Failed() {
-				newMetadata := "{}\n"
-				if err := os.WriteFile(metadataPath, []byte(newMetadata), 0644); err != nil {
-					t.Errorf("failed to update metadata.json: %v", err)
+				// Re-parse as map to preserve any extra fields
+				var metadataMap map[string]any
+				if err := json.Unmarshal(metadataData, &metadataMap); err != nil {
+					t.Errorf("failed to parse metadata.json as map: %v", err)
 				} else {
-					t.Logf("ENABLED: updated %s (removed todo flag)", metadataPath)
+					delete(metadataMap, "todo")
+					updatedMetadata, err := json.MarshalIndent(metadataMap, "", "  ")
+					if err != nil {
+						t.Errorf("failed to marshal metadata: %v", err)
+					} else if err := os.WriteFile(metadataPath, append(updatedMetadata, '\n'), 0644); err != nil {
+						t.Errorf("failed to update metadata.json: %v", err)
+					} else {
+						t.Logf("ENABLED: updated %s (removed todo flag)", metadataPath)
+					}
 				}
 			}
 		})
