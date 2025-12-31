@@ -993,10 +993,19 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 			case "LANGUAGE":
 				// Parse the language value
 				if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+					value := p.curTok.Literal
+					isNational := p.curTok.Type == TokenNationalString
+					// Strip the N prefix and quotes from national strings
+					if isNational && len(value) >= 3 && (value[0] == 'N' || value[0] == 'n') && value[1] == '\'' {
+						value = value[2 : len(value)-1]
+					} else if len(value) >= 2 && value[0] == '\'' {
+						// Strip quotes from regular strings
+						value = value[1 : len(value)-1]
+					}
 					strLit := &ast.StringLiteral{
 						LiteralType:   "String",
-						Value:         p.curTok.Literal,
-						IsNational:    p.curTok.Type == TokenNationalString,
+						Value:         value,
+						IsNational:    isNational,
 						IsLargeObject: false,
 					}
 					p.nextToken()

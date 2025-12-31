@@ -689,6 +689,10 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		return p.parsePostExpressionAccess(&ast.ParenthesisExpression{Expression: expr})
 	case TokenCase:
 		return p.parseCaseExpression()
+	case TokenStar:
+		// Wildcard column reference (e.g., * in count(*))
+		p.nextToken()
+		return &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}, nil
 	default:
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	}
