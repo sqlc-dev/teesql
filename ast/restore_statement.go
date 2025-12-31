@@ -15,7 +15,7 @@ func (s *RestoreStatement) node()      {}
 // DeviceInfo represents a backup device
 type DeviceInfo struct {
 	LogicalDevice      *IdentifierOrValueExpression
-	PhysicalDevice     *IdentifierOrValueExpression
+	PhysicalDevice     ScalarExpression
 	DeviceType         string // "None", "Disk", "Tape", "Pipe", "VirtualDevice", "Database", "URL"
 	PhysicalDeviceType string
 }

@@ -43,3 +43,45 @@ type FunctionCall struct {
 
 func (*FunctionCall) node()             {}
 func (*FunctionCall) scalarExpression() {}
+
+// CastCall represents a CAST expression: CAST(expression AS data_type)
+type CastCall struct {
+	DataType   DataTypeReference `json:"DataType,omitempty"`
+	Parameter  ScalarExpression  `json:"Parameter,omitempty"`
+	Collation  *Identifier       `json:"Collation,omitempty"`
+}
+
+func (*CastCall) node()             {}
+func (*CastCall) scalarExpression() {}
+
+// ConvertCall represents a CONVERT expression: CONVERT(data_type, expression [, style])
+type ConvertCall struct {
+	DataType  DataTypeReference `json:"DataType,omitempty"`
+	Parameter ScalarExpression  `json:"Parameter,omitempty"`
+	Style     ScalarExpression  `json:"Style,omitempty"`
+	Collation *Identifier       `json:"Collation,omitempty"`
+}
+
+func (*ConvertCall) node()             {}
+func (*ConvertCall) scalarExpression() {}
+
+// TryCastCall represents a TRY_CAST expression
+type TryCastCall struct {
+	DataType   DataTypeReference `json:"DataType,omitempty"`
+	Parameter  ScalarExpression  `json:"Parameter,omitempty"`
+	Collation  *Identifier       `json:"Collation,omitempty"`
+}
+
+func (*TryCastCall) node()             {}
+func (*TryCastCall) scalarExpression() {}
+
+// TryConvertCall represents a TRY_CONVERT expression
+type TryConvertCall struct {
+	DataType  DataTypeReference `json:"DataType,omitempty"`
+	Parameter ScalarExpression  `json:"Parameter,omitempty"`
+	Style     ScalarExpression  `json:"Style,omitempty"`
+	Collation *Identifier       `json:"Collation,omitempty"`
+}
+
+func (*TryConvertCall) node()             {}
+func (*TryConvertCall) scalarExpression() {}

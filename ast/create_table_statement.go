@@ -25,17 +25,18 @@ func (t *TableDefinition) node() {}
 
 // ColumnDefinition represents a column definition in CREATE TABLE
 type ColumnDefinition struct {
-	ColumnIdentifier *Identifier
-	DataType         DataTypeReference
-	Collation        *Identifier
-	DefaultConstraint *DefaultConstraintDefinition
-	IdentityOptions  *IdentityOptions
-	Constraints      []ConstraintDefinition
-	IsPersisted      bool
-	IsRowGuidCol     bool
-	IsHidden         bool
-	IsMasked         bool
-	Nullable         *NullableConstraintDefinition
+	ColumnIdentifier         *Identifier
+	DataType                 DataTypeReference
+	ComputedColumnExpression ScalarExpression
+	Collation                *Identifier
+	DefaultConstraint        *DefaultConstraintDefinition
+	IdentityOptions          *IdentityOptions
+	Constraints              []ConstraintDefinition
+	IsPersisted              bool
+	IsRowGuidCol             bool
+	IsHidden                 bool
+	IsMasked                 bool
+	Nullable                 *NullableConstraintDefinition
 }
 
 func (c *ColumnDefinition) node() {}

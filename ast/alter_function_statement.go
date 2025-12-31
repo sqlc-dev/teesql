@@ -43,9 +43,9 @@ type TableValuedFunctionReturnType struct {
 
 func (r *TableValuedFunctionReturnType) functionReturnTypeNode() {}
 
-// SelectFunctionReturnType represents a SELECT function return type
+// SelectFunctionReturnType represents a SELECT function return type (inline table-valued function)
 type SelectFunctionReturnType struct {
-	// Simplified - will be expanded later
+	SelectStatement *SelectStatement
 }
 
 func (r *SelectFunctionReturnType) functionReturnTypeNode() {}

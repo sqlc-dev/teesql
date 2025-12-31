@@ -23,6 +23,15 @@ func (p *Parser) parseInsertStatement() (ast.Statement, error) {
 		},
 	}
 
+	// Check for TOP clause
+	if p.curTok.Type == TokenTop {
+		top, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		stmt.InsertSpecification.TopRowFilter = top
+	}
+
 	// Check for INTO or OVER
 	if p.curTok.Type == TokenInto {
 		stmt.InsertSpecification.InsertOption = "Into"
@@ -46,6 +55,20 @@ func (p *Parser) parseInsertStatement() (ast.Statement, error) {
 			return nil, err
 		}
 		stmt.InsertSpecification.Columns = cols
+	}
+
+	// Parse OUTPUT clauses (can have OUTPUT INTO followed by OUTPUT)
+	for p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		outputClause, outputIntoClause, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		if outputIntoClause != nil {
+			stmt.InsertSpecification.OutputIntoClause = outputIntoClause
+		}
+		if outputClause != nil {
+			stmt.InsertSpecification.OutputClause = outputClause
+		}
 	}
 
 	// Parse insert source
@@ -402,7 +425,7 @@ func (p *Parser) parseFunctionParameters() ([]ast.ScalarExpression, error) {
 	return params, nil
 }
 
-func (p *Parser) parseTableHints() ([]*ast.TableHint, error) {
+func (p *Parser) parseTableHints() ([]ast.TableHintType, error) {
 	// Consume WITH
 	p.nextToken()
 
@@ -411,15 +434,19 @@ func (p *Parser) parseTableHints() ([]*ast.TableHint, error) {
 	}
 	p.nextToken()
 
-	var hints []*ast.TableHint
+	var hints []ast.TableHintType
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenHoldlock || p.curTok.Type == TokenNowait {
-			hintKind := convertTableHintKind(p.curTok.Literal)
-			hints = append(hints, &ast.TableHint{HintKind: hintKind})
-			p.nextToken()
+		hint, err := p.parseTableHint()
+		if err != nil {
+			return nil, err
+		}
+		if hint != nil {
+			hints = append(hints, hint)
 		}
 		if p.curTok.Type == TokenComma {
 			p.nextToken()
+		} else if p.curTok.Type != TokenRParen {
+			break
 		}
 	}
 
@@ -1662,5 +1689,89 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 	}
 
 	return stmt, nil
+}
+
+// parseOutputClause parses an OUTPUT clause (with optional INTO).
+// Returns (outputClause, outputIntoClause, error).
+// If INTO is present, outputIntoClause is set; otherwise outputClause is set.
+func (p *Parser) parseOutputClause() (*ast.OutputClause, *ast.OutputIntoClause, error) {
+	// Consume OUTPUT
+	p.nextToken()
+
+	// Parse select columns
+	var selectColumns []ast.SelectElement
+	for {
+		elem, err := p.parseSelectElement()
+		if err != nil {
+			return nil, nil, err
+		}
+		selectColumns = append(selectColumns, elem)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Check for INTO
+	if p.curTok.Type == TokenInto {
+		p.nextToken() // consume INTO
+
+		// Parse target table (variable or table name)
+		var intoTable ast.TableReference
+		if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+			name := p.curTok.Literal
+			p.nextToken()
+			intoTable = &ast.VariableTableReference{
+				Variable: &ast.VariableReference{Name: name},
+				ForPath:  false,
+			}
+		} else {
+			son, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, nil, err
+			}
+			intoTable = &ast.NamedTableReference{
+				SchemaObject: son,
+				ForPath:      false,
+			}
+		}
+
+		// Parse optional column list
+		var intoColumns []*ast.ColumnReferenceExpression
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colRef := &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{p.parseIdentifier()},
+					},
+				}
+				colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
+				intoColumns = append(intoColumns, colRef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+
+		return nil, &ast.OutputIntoClause{
+			SelectColumns:    selectColumns,
+			IntoTable:        intoTable,
+			IntoTableColumns: intoColumns,
+		}, nil
+	}
+
+	return &ast.OutputClause{
+		SelectColumns: selectColumns,
+	}, nil, nil
 }
 

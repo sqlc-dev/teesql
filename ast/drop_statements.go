@@ -232,3 +232,13 @@ type DropAssemblyStatement struct {
 
 func (s *DropAssemblyStatement) statement() {}
 func (s *DropAssemblyStatement) node()      {}
+
+// DropAsymmetricKeyStatement represents a DROP ASYMMETRIC KEY statement
+type DropAsymmetricKeyStatement struct {
+	IsIfExists        bool        `json:"IsIfExists"`
+	Name              *Identifier `json:"Name,omitempty"`
+	RemoveProviderKey bool        `json:"RemoveProviderKey"`
+}
+
+func (s *DropAsymmetricKeyStatement) statement() {}
+func (s *DropAsymmetricKeyStatement) node()      {}

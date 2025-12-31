@@ -34,3 +34,22 @@ type IndexExpressionOption struct {
 
 func (i *IndexExpressionOption) indexOption() {}
 func (i *IndexExpressionOption) node()        {}
+
+// CompressionDelayIndexOption represents a COMPRESSION_DELAY option
+type CompressionDelayIndexOption struct {
+	Expression ScalarExpression
+	TimeUnit   string // "Unitless", "Minute", "Minutes"
+	OptionKind string // "CompressionDelay"
+}
+
+func (c *CompressionDelayIndexOption) indexOption() {}
+func (c *CompressionDelayIndexOption) node()        {}
+
+// OrderIndexOption represents an ORDER option for clustered columnstore indexes
+type OrderIndexOption struct {
+	Columns    []*ColumnReferenceExpression
+	OptionKind string // "Order"
+}
+
+func (o *OrderIndexOption) indexOption() {}
+func (o *OrderIndexOption) node()        {}

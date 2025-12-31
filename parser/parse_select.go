@@ -83,12 +83,13 @@ func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
 	stmt := &ast.SelectStatement{}
 
 	// Parse query expression (handles UNION, parens, etc.)
-	qe, into, err := p.parseQueryExpressionWithInto()
+	qe, into, on, err := p.parseQueryExpressionWithInto()
 	if err != nil {
 		return nil, err
 	}
 	stmt.QueryExpression = qe
 	stmt.Into = into
+	stmt.On = on
 
 	// Parse optional OPTION clause
 	if p.curTok.Type == TokenOption {
@@ -108,15 +109,15 @@ func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
 }
 
 func (p *Parser) parseQueryExpression() (ast.QueryExpression, error) {
-	qe, _, err := p.parseQueryExpressionWithInto()
+	qe, _, _, err := p.parseQueryExpressionWithInto()
 	return qe, err
 }
 
-func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.SchemaObjectName, error) {
+func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.SchemaObjectName, *ast.Identifier, error) {
 	// Parse primary query expression (could be SELECT or parenthesized)
-	left, into, err := p.parsePrimaryQueryExpression()
+	left, into, on, err := p.parsePrimaryQueryExpression()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	// Track if we have any binary operations
@@ -144,14 +145,15 @@ func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.Schem
 		}
 
 		// Parse the right side
-		right, rightInto, err := p.parsePrimaryQueryExpression()
+		right, rightInto, rightOn, err := p.parsePrimaryQueryExpression()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 
 		// INTO can only appear in the first query of a UNION
 		if rightInto != nil && into == nil {
 			into = rightInto
+			on = rightOn
 		}
 
 		bqe := &ast.BinaryQueryExpression{
@@ -168,7 +170,7 @@ func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.Schem
 	if p.curTok.Type == TokenOrder {
 		obc, err := p.parseOrderByClause()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 
 		if hasBinaryOp {
@@ -184,39 +186,45 @@ func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.Schem
 		}
 	}
 
-	return left, into, nil
+	return left, into, on, nil
 }
 
-func (p *Parser) parsePrimaryQueryExpression() (ast.QueryExpression, *ast.SchemaObjectName, error) {
+func (p *Parser) parsePrimaryQueryExpression() (ast.QueryExpression, *ast.SchemaObjectName, *ast.Identifier, error) {
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
-		qe, into, err := p.parseQueryExpressionWithInto()
+		qe, into, on, err := p.parseQueryExpressionWithInto()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		if p.curTok.Type != TokenRParen {
-			return nil, nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			return nil, nil, nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume )
-		return &ast.QueryParenthesisExpression{QueryExpression: qe}, into, nil
+		return &ast.QueryParenthesisExpression{QueryExpression: qe}, into, on, nil
 	}
 
 	return p.parseQuerySpecificationWithInto()
 }
 
-func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *ast.SchemaObjectName, error) {
+func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *ast.SchemaObjectName, *ast.Identifier, error) {
 	qs, err := p.parseQuerySpecificationCore()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	// Check for INTO clause after SELECT elements, before FROM
 	var into *ast.SchemaObjectName
+	var on *ast.Identifier
 	if p.curTok.Type == TokenInto {
 		p.nextToken() // consume INTO
 		into, err = p.parseSchemaObjectName()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
+		}
+		// Check for ON filegroup clause
+		if strings.ToUpper(p.curTok.Literal) == "ON" {
+			p.nextToken() // consume ON
+			on = p.parseIdentifier()
 		}
 	}
 
@@ -224,7 +232,7 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 	if p.curTok.Type == TokenFrom {
 		fromClause, err := p.parseFromClause()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		qs.FromClause = fromClause
 	}
@@ -233,7 +241,7 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 	if p.curTok.Type == TokenWhere {
 		whereClause, err := p.parseWhereClause()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		qs.WhereClause = whereClause
 	}
@@ -242,7 +250,7 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 	if p.curTok.Type == TokenGroup {
 		groupByClause, err := p.parseGroupByClause()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		qs.GroupByClause = groupByClause
 	}
@@ -251,7 +259,7 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 	if p.curTok.Type == TokenHaving {
 		havingClause, err := p.parseHavingClause()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		qs.HavingClause = havingClause
 	}
@@ -259,7 +267,7 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 	// Note: ORDER BY is parsed at the top level in parseQueryExpressionWithInto
 	// to correctly handle UNION/EXCEPT/INTERSECT cases
 
-	return qs, into, nil
+	return qs, into, on, nil
 }
 
 func (p *Parser) parseQuerySpecificationCore() (*ast.QuerySpecification, error) {
@@ -310,15 +318,30 @@ func (p *Parser) parseTopRowFilter() (*ast.TopRowFilter, error) {
 	// Check for parenthesized expression
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
-		expr, err := p.parseScalarExpression()
-		if err != nil {
-			return nil, err
+
+		// Check for subquery (SELECT ...)
+		if p.curTok.Type == TokenSelect {
+			qe, err := p.parseQueryExpression()
+			if err != nil {
+				return nil, err
+			}
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+			top.Expression = &ast.ScalarSubquery{QueryExpression: qe}
+		} else {
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			// Wrap in ParenthesisExpression
+			top.Expression = &ast.ParenthesisExpression{Expression: expr}
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
 		}
-		top.Expression = expr
-		if p.curTok.Type != TokenRParen {
-			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
-		}
-		p.nextToken() // consume )
 	} else {
 		// Parse literal expression
 		expr, err := p.parsePrimaryExpression()
@@ -472,6 +495,14 @@ func (p *Parser) parseIdentifier() *ast.Identifier {
 	if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
 		quoteType = "SquareBracket"
 		literal = literal[1 : len(literal)-1]
+		// Unescape ]] to ]
+		literal = strings.ReplaceAll(literal, "]]", "]")
+	} else if len(literal) >= 2 && literal[0] == '"' && literal[len(literal)-1] == '"' {
+		// Handle double-quoted identifiers
+		quoteType = "DoubleQuote"
+		literal = literal[1 : len(literal)-1]
+		// Unescape "" to "
+		literal = strings.ReplaceAll(literal, "\"\"", "\"")
 	}
 
 	id := &ast.Identifier{
@@ -643,6 +674,20 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			p.nextToken() // consume N
 			return p.parseNationalStringLiteral()
 		}
+		// Check for CAST/CONVERT special functions
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper == "CAST" && p.peekTok.Type == TokenLParen {
+			return p.parseCastCall()
+		}
+		if upper == "CONVERT" && p.peekTok.Type == TokenLParen {
+			return p.parseConvertCall()
+		}
+		if upper == "TRY_CAST" && p.peekTok.Type == TokenLParen {
+			return p.parseTryCastCall()
+		}
+		if upper == "TRY_CONVERT" && p.peekTok.Type == TokenLParen {
+			return p.parseTryConvertCall()
+		}
 		return p.parseColumnReferenceOrFunctionCall()
 	case TokenNumber:
 		val := p.curTok.Literal
@@ -689,6 +734,10 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		return p.parsePostExpressionAccess(&ast.ParenthesisExpression{Expression: expr})
 	case TokenCase:
 		return p.parseCaseExpression()
+	case TokenStar:
+		// Wildcard column reference (e.g., * in count(*))
+		p.nextToken()
+		return &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}, nil
 	default:
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	}
@@ -1383,13 +1432,136 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	} else if p.curTok.Type == TokenIdent {
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" {
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" {
 			ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
 			p.nextToken()
 		}
 	}
 
+	// Parse optional table hints WITH (hint, hint, ...)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				hint, err := p.parseTableHint()
+				if err != nil {
+					return nil, err
+				}
+				if hint != nil {
+					ref.TableHints = append(ref.TableHints, hint)
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else if p.curTok.Type != TokenRParen {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
 	return ref, nil
+}
+
+// parseTableHint parses a single table hint
+func (p *Parser) parseTableHint() (ast.TableHintType, error) {
+	hintName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume hint name
+
+	// INDEX hint with values
+	if hintName == "INDEX" {
+		hint := &ast.IndexTableHint{
+			HintKind: "Index",
+		}
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				var iov *ast.IdentifierOrValueExpression
+				if p.curTok.Type == TokenNumber {
+					iov = &ast.IdentifierOrValueExpression{
+						Value: p.curTok.Literal,
+						ValueExpression: &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						},
+					}
+					p.nextToken()
+				} else if p.curTok.Type == TokenIdent {
+					iov = &ast.IdentifierOrValueExpression{
+						Value: p.curTok.Literal,
+						Identifier: &ast.Identifier{
+							Value:     p.curTok.Literal,
+							QuoteType: "NotQuoted",
+						},
+					}
+					p.nextToken()
+				}
+				if iov != nil {
+					hint.IndexValues = append(hint.IndexValues, iov)
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else if p.curTok.Type != TokenRParen {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+		return hint, nil
+	}
+
+	// Map hint names to HintKind
+	hintKind := getTableHintKind(hintName)
+	if hintKind == "" {
+		return nil, nil // Unknown hint
+	}
+
+	return &ast.TableHint{
+		HintKind: hintKind,
+	}, nil
+}
+
+// getTableHintKind maps SQL hint names to their AST HintKind values
+func getTableHintKind(name string) string {
+	switch name {
+	case "HOLDLOCK":
+		return "HoldLock"
+	case "NOLOCK":
+		return "NoLock"
+	case "PAGLOCK":
+		return "PagLock"
+	case "READCOMMITTED":
+		return "ReadCommitted"
+	case "READPAST":
+		return "ReadPast"
+	case "READUNCOMMITTED":
+		return "ReadUncommitted"
+	case "REPEATABLEREAD":
+		return "RepeatableRead"
+	case "ROWLOCK":
+		return "Rowlock"
+	case "SERIALIZABLE":
+		return "Serializable"
+	case "SNAPSHOT":
+		return "Snapshot"
+	case "TABLOCK":
+		return "TabLock"
+	case "TABLOCKX":
+		return "TabLockX"
+	case "UPDLOCK":
+		return "UpdLock"
+	case "XLOCK":
+		return "XLock"
+	case "NOWAIT":
+		return "NoWait"
+	default:
+		return ""
+	}
 }
 
 func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
@@ -1519,6 +1691,36 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		return &ast.OptimizerHint{HintKind: "Use"}, nil
 	}
 
+	// Handle keyword tokens that can be optimizer hints (ORDER, GROUP, etc.)
+	if p.curTok.Type == TokenOrder || p.curTok.Type == TokenGroup {
+		hintKind := convertHintKind(p.curTok.Literal)
+		firstWord := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		// Check for two-word hints like ORDER GROUP
+		if (firstWord == "ORDER" || firstWord == "HASH" || firstWord == "MERGE" ||
+			firstWord == "CONCAT" || firstWord == "LOOP" || firstWord == "FORCE") &&
+			(p.curTok.Type == TokenIdent || p.curTok.Type == TokenGroup) {
+			secondWord := strings.ToUpper(p.curTok.Literal)
+			if secondWord == "GROUP" || secondWord == "JOIN" || secondWord == "UNION" ||
+				secondWord == "ORDER" {
+				hintKind = hintKind + convertHintKind(p.curTok.Literal)
+				p.nextToken()
+			}
+		}
+		return &ast.OptimizerHint{HintKind: hintKind}, nil
+	}
+
+	// Handle TABLE HINT optimizer hint
+	if p.curTok.Type == TokenTable {
+		p.nextToken() // consume TABLE
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "HINT" {
+			p.nextToken() // consume HINT
+			return p.parseTableHintsOptimizerHint()
+		}
+		return &ast.OptimizerHint{HintKind: "Table"}, nil
+	}
+
 	if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLabel {
 		// Skip unknown tokens to avoid infinite loop
 		p.nextToken()
@@ -1628,7 +1830,20 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 	default:
 		// Handle generic hints
 		hintKind := convertHintKind(p.curTok.Literal)
+		firstWord := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
+
+		// Check for two-word hints like ORDER GROUP, HASH GROUP, etc.
+		if (firstWord == "ORDER" || firstWord == "HASH" || firstWord == "MERGE" ||
+			firstWord == "CONCAT" || firstWord == "LOOP" || firstWord == "FORCE") &&
+			p.curTok.Type == TokenIdent {
+			secondWord := strings.ToUpper(p.curTok.Literal)
+			if secondWord == "GROUP" || secondWord == "JOIN" || secondWord == "UNION" ||
+				secondWord == "ORDER" {
+				hintKind = hintKind + convertHintKind(p.curTok.Literal)
+				p.nextToken()
+			}
+		}
 
 		// Check if this is a literal hint (LABEL = value, etc.)
 		if p.curTok.Type == TokenEquals {
@@ -1641,6 +1856,53 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		}
 		return &ast.OptimizerHint{HintKind: hintKind}, nil
 	}
+}
+
+func (p *Parser) parseTableHintsOptimizerHint() (ast.OptimizerHintBase, error) {
+	hint := &ast.TableHintsOptimizerHint{
+		HintKind: "TableHints",
+	}
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TABLE HINT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse object name
+	objectName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	hint.ObjectName = objectName
+
+	// Expect comma
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume comma
+	}
+
+	// Parse table hints
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			continue
+		}
+
+		tableHint, err := p.parseTableHint()
+		if err != nil {
+			return nil, err
+		}
+		if tableHint != nil {
+			hint.TableHints = append(hint.TableHints, tableHint)
+		}
+	}
+
+	// Consume )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	return hint, nil
 }
 
 func (p *Parser) parseOptimizeForHint() (ast.OptimizerHintBase, error) {
@@ -2165,3 +2427,207 @@ func identifiersToSchemaObjectName(identifiers []*ast.Identifier) *ast.SchemaObj
 
 // ======================= New Statement Parsing Functions =======================
 
+
+// parseCastCall parses a CAST expression: CAST(expression AS data_type)
+func (p *Parser) parseCastCall() (ast.ScalarExpression, error) {
+	p.nextToken() // consume CAST
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse the expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		return nil, fmt.Errorf("expected AS in CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume AS
+
+	// Parse the data type
+	dt, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	cast := &ast.CastCall{
+		DataType:  dt,
+		Parameter: expr,
+	}
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		cast.Collation = p.parseIdentifier()
+	}
+
+	return cast, nil
+}
+
+// parseConvertCall parses a CONVERT expression: CONVERT(data_type, expression [, style])
+func (p *Parser) parseConvertCall() (ast.ScalarExpression, error) {
+	p.nextToken() // consume CONVERT
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse the data type first
+	dt, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , in CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse the expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	convert := &ast.ConvertCall{
+		DataType:  dt,
+		Parameter: expr,
+	}
+
+	// Check for optional style parameter
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		style, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		convert.Style = style
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		convert.Collation = p.parseIdentifier()
+	}
+
+	return convert, nil
+}
+
+// parseTryCastCall parses a TRY_CAST expression
+func (p *Parser) parseTryCastCall() (ast.ScalarExpression, error) {
+	p.nextToken() // consume TRY_CAST
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TRY_CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse the expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		return nil, fmt.Errorf("expected AS in TRY_CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume AS
+
+	// Parse the data type
+	dt, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in TRY_CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	cast := &ast.TryCastCall{
+		DataType:  dt,
+		Parameter: expr,
+	}
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		cast.Collation = p.parseIdentifier()
+	}
+
+	return cast, nil
+}
+
+// parseTryConvertCall parses a TRY_CONVERT expression
+func (p *Parser) parseTryConvertCall() (ast.ScalarExpression, error) {
+	p.nextToken() // consume TRY_CONVERT
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TRY_CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse the data type first
+	dt, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , in TRY_CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse the expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	convert := &ast.TryConvertCall{
+		DataType:  dt,
+		Parameter: expr,
+	}
+
+	// Check for optional style parameter
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		style, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		convert.Style = style
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in TRY_CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		convert.Collation = p.parseIdentifier()
+	}
+
+	return convert, nil
+}

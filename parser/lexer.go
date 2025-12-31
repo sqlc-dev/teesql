@@ -466,12 +466,24 @@ func (l *Lexer) NextToken() Token {
 		}
 	case '\'':
 		tok = l.readString()
+	case '"':
+		tok = l.readDoubleQuotedIdentifier()
 	default:
 		// Handle $ only if followed by a letter (for pseudo-columns like $ROWGUID)
 		if l.ch == '$' && isLetter(l.peekChar()) {
 			tok = l.readIdentifier()
 		} else if isLetter(l.ch) || l.ch == '_' || l.ch == '@' || l.ch == '#' {
 			tok = l.readIdentifier()
+		} else if l.ch >= 0x80 {
+			// Check for Unicode letter at start of identifier
+			r, _ := l.peekRune()
+			if unicode.IsLetter(r) {
+				tok = l.readIdentifier()
+			} else {
+				tok.Type = TokenError
+				tok.Literal = string(l.ch)
+				l.readChar()
+			}
 		} else if isDigit(l.ch) {
 			tok = l.readNumber()
 		} else {
@@ -591,10 +603,51 @@ func (l *Lexer) skipWhitespaceAndComments() {
 	}
 }
 
+// isIdentifierChar checks if the current position is a valid identifier character.
+// Handles both ASCII and Unicode letters.
+func (l *Lexer) isIdentifierChar(first bool) bool {
+	if l.ch == 0 {
+		return false
+	}
+	// ASCII fast path
+	if l.ch < 0x80 {
+		if isLetter(l.ch) || l.ch == '_' || l.ch == '@' || l.ch == '#' {
+			return true
+		}
+		if !first && (isDigit(l.ch) || l.ch == '$') {
+			return true
+		}
+		// $ is valid at start only when followed by a letter (pseudo-columns like $ROWGUID)
+		// But in an identifier context, $ is valid inside the identifier
+		if l.ch == '$' {
+			return true
+		}
+		return false
+	}
+	// UTF-8: decode rune and check if it's a letter
+	r, _ := l.peekRune()
+	return unicode.IsLetter(r)
+}
+
+// advanceIdentifierChar advances past the current identifier character (which may be multi-byte).
+func (l *Lexer) advanceIdentifierChar() {
+	if l.ch < 0x80 {
+		l.readChar()
+		return
+	}
+	// Multi-byte UTF-8: advance by rune size
+	_, size := l.peekRune()
+	for i := 0; i < size; i++ {
+		l.readChar()
+	}
+}
+
 func (l *Lexer) readIdentifier() Token {
 	startPos := l.pos
-	for isLetter(l.ch) || isDigit(l.ch) || l.ch == '_' || l.ch == '@' || l.ch == '#' || l.ch == '$' {
-		l.readChar()
+	first := true
+	for l.isIdentifierChar(first) {
+		l.advanceIdentifierChar()
+		first = false
 	}
 	literal := l.input[startPos:l.pos]
 
@@ -613,11 +666,43 @@ func (l *Lexer) readIdentifier() Token {
 func (l *Lexer) readBracketedIdentifier() Token {
 	startPos := l.pos
 	l.readChar() // skip opening [
-	for l.ch != 0 && l.ch != ']' {
+	for l.ch != 0 {
+		if l.ch == ']' {
+			if l.peekChar() == ']' {
+				// Escaped bracket ]], consume both and continue
+				l.readChar()
+				l.readChar()
+				continue
+			}
+			// Closing bracket
+			l.readChar() // skip closing ]
+			break
+		}
 		l.readChar()
 	}
-	if l.ch == ']' {
-		l.readChar() // skip closing ]
+	return Token{
+		Type:    TokenIdent,
+		Literal: l.input[startPos:l.pos],
+		Pos:     startPos,
+	}
+}
+
+func (l *Lexer) readDoubleQuotedIdentifier() Token {
+	startPos := l.pos
+	l.readChar() // skip opening "
+	for l.ch != 0 {
+		if l.ch == '"' {
+			if l.peekChar() == '"' {
+				// Escaped quote "", consume both and continue
+				l.readChar()
+				l.readChar()
+				continue
+			}
+			// Closing quote
+			l.readChar() // skip closing "
+			break
+		}
+		l.readChar()
 	}
 	return Token{
 		Type:    TokenIdent,

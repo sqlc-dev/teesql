@@ -57,7 +57,11 @@ func (s *AlterApplicationRoleStatement) statement() {}
 
 // AlterAsymmetricKeyStatement represents an ALTER ASYMMETRIC KEY statement.
 type AlterAsymmetricKeyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name               *Identifier      `json:"Name,omitempty"`
+	Kind               string           `json:"Kind,omitempty"`
+	AttestedBy         ScalarExpression `json:"AttestedBy,omitempty"`
+	EncryptionPassword ScalarExpression `json:"EncryptionPassword,omitempty"`
+	DecryptionPassword ScalarExpression `json:"DecryptionPassword,omitempty"`
 }
 
 func (s *AlterAsymmetricKeyStatement) node()      {}
@@ -91,6 +95,19 @@ type AlterPartitionFunctionStatement struct {
 
 func (s *AlterPartitionFunctionStatement) node()      {}
 func (s *AlterPartitionFunctionStatement) statement() {}
+
+// CreateFullTextCatalogStatement represents a CREATE FULLTEXT CATALOG statement.
+type CreateFullTextCatalogStatement struct {
+	Name      *Identifier                   `json:"Name,omitempty"`
+	FileGroup *Identifier                   `json:"FileGroup,omitempty"`
+	Path      ScalarExpression              `json:"Path,omitempty"`
+	Owner     *Identifier                   `json:"Owner,omitempty"`
+	Options   []*OnOffFullTextCatalogOption `json:"Options,omitempty"`
+	IsDefault bool                          `json:"IsDefault"`
+}
+
+func (s *CreateFullTextCatalogStatement) node()      {}
+func (s *CreateFullTextCatalogStatement) statement() {}
 
 // AlterFulltextCatalogStatement represents an ALTER FULLTEXT CATALOG statement.
 type AlterFulltextCatalogStatement struct {

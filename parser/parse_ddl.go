@@ -110,6 +110,8 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropAssemblyStatement()
 	case "CRYPTOGRAPHIC":
 		return p.parseDropCryptographicProviderStatement()
+	case "ASYMMETRIC":
+		return p.parseDropAsymmetricKeyStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -642,6 +644,50 @@ func (p *Parser) parseDropAssemblyStatement() (*ast.DropAssemblyStatement, error
 			break
 		}
 		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropAsymmetricKeyStatement() (*ast.DropAsymmetricKeyStatement, error) {
+	// Consume ASYMMETRIC
+	p.nextToken()
+
+	// Expect KEY
+	if strings.ToUpper(p.curTok.Literal) == "KEY" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropAsymmetricKeyStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse key name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for REMOVE PROVIDER KEY
+	if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
+		p.nextToken() // consume REMOVE
+		if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+			p.nextToken() // consume PROVIDER
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			stmt.RemoveProviderKey = true
+		}
 	}
 
 	// Skip optional semicolon
@@ -1577,6 +1623,29 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 	// Consume MODIFY
 	p.nextToken()
 
+	// Check for Azure-style MODIFY (options) syntax
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		createOpts, err := p.parseAzureDatabaseOptions()
+		if err != nil {
+			return nil, err
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+		// Convert CreateDatabaseOption to DatabaseOption
+		opts := make([]ast.DatabaseOption, len(createOpts))
+		for i, o := range createOpts {
+			opts[i] = o.(ast.DatabaseOption)
+		}
+		stmt := &ast.AlterDatabaseSetStatement{
+			DatabaseName: dbName,
+			Options:      opts,
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "FILE":
 		p.nextToken() // consume FILE
@@ -1776,14 +1845,17 @@ func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error)
 	// Consume SERVER
 	p.nextToken()
 
-	// Check if it's ALTER SERVER ROLE or ALTER SERVER CONFIGURATION
-	if strings.ToUpper(p.curTok.Literal) == "ROLE" {
+	// Check if it's ALTER SERVER ROLE, ALTER SERVER AUDIT, or ALTER SERVER CONFIGURATION
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "ROLE":
 		return p.parseAlterServerRoleStatement()
+	case "AUDIT":
+		return p.parseAlterServerAuditStatement()
 	}
 
 	// Expect CONFIGURATION
 	if strings.ToUpper(p.curTok.Literal) != "CONFIGURATION" {
-		return nil, fmt.Errorf("expected CONFIGURATION or ROLE after SERVER, got %s", p.curTok.Literal)
+		return nil, fmt.Errorf("expected CONFIGURATION, ROLE, or AUDIT after SERVER, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
 
@@ -3109,6 +3181,81 @@ func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement,
 	return stmt, nil
 }
 
+func (p *Parser) parseAlterServerAuditStatement() (*ast.AlterServerAuditStatement, error) {
+	// AUDIT keyword should be current token, consume it
+	p.nextToken()
+
+	stmt := &ast.AlterServerAuditStatement{}
+
+	// Parse audit name
+	stmt.AuditName = p.parseIdentifier()
+
+	// Check for REMOVE WHERE
+	if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
+		p.nextToken() // consume REMOVE
+		if strings.ToUpper(p.curTok.Literal) == "WHERE" {
+			p.nextToken() // consume WHERE
+			stmt.RemoveWhere = true
+			// Skip optional semicolon
+			if p.curTok.Type == TokenSemicolon {
+				p.nextToken()
+			}
+			return stmt, nil
+		}
+		return nil, fmt.Errorf("expected WHERE after REMOVE, got %s", p.curTok.Literal)
+	}
+
+	// Parse TO clause (audit target)
+	if strings.ToUpper(p.curTok.Literal) == "TO" {
+		p.nextToken() // consume TO
+		target, err := p.parseAuditTarget()
+		if err != nil {
+			return nil, err
+		}
+		stmt.AuditTarget = target
+	}
+
+	// Parse WITH clause (options)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				opt, err := p.parseAuditOption()
+				if err != nil {
+					return nil, err
+				}
+				stmt.Options = append(stmt.Options, opt)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse WHERE clause (predicate)
+	if strings.ToUpper(p.curTok.Literal) == "WHERE" {
+		p.nextToken() // consume WHERE
+		pred, err := p.parseAuditPredicate()
+		if err != nil {
+			return nil, err
+		}
+		stmt.PredicateExpression = pred
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseAlterRemoteServiceBindingStatement() (*ast.AlterRemoteServiceBindingStatement, error) {
 	// Consume REMOTE
 	p.nextToken()
@@ -3825,8 +3972,89 @@ func (p *Parser) parseAlterAsymmetricKeyStatement() (*ast.AlterAsymmetricKeyStat
 	// Parse key name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse the action
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "REMOVE":
+		p.nextToken() // consume REMOVE
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "PRIVATE":
+			p.nextToken() // consume PRIVATE
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			stmt.Kind = "RemovePrivateKey"
+		case "ATTESTED":
+			p.nextToken() // consume ATTESTED
+			if strings.ToUpper(p.curTok.Literal) == "OPTION" {
+				p.nextToken() // consume OPTION
+			}
+			stmt.Kind = "RemoveAttestedOption"
+		}
+	case "ATTESTED":
+		p.nextToken() // consume ATTESTED
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		attestedBy, _ := p.parseStringLiteral()
+		stmt.AttestedBy = attestedBy
+		stmt.Kind = "AttestedBy"
+	case "WITH":
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "PRIVATE" {
+			p.nextToken() // consume PRIVATE
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+		}
+		stmt.Kind = "WithPrivateKey"
+		// Parse (ENCRYPTION BY PASSWORD = '...', DECRYPTION BY PASSWORD = '...')
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "ENCRYPTION":
+					p.nextToken() // consume ENCRYPTION
+					if strings.ToUpper(p.curTok.Literal) == "BY" {
+						p.nextToken() // consume BY
+					}
+					if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+						p.nextToken() // consume PASSWORD
+					}
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					pwd, _ := p.parseStringLiteral()
+					stmt.EncryptionPassword = pwd
+				case "DECRYPTION":
+					p.nextToken() // consume DECRYPTION
+					if strings.ToUpper(p.curTok.Literal) == "BY" {
+						p.nextToken() // consume BY
+					}
+					if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+						p.nextToken() // consume PASSWORD
+					}
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					pwd, _ := p.parseStringLiteral()
+					stmt.DecryptionPassword = pwd
+				default:
+					p.nextToken()
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
@@ -4342,8 +4570,77 @@ func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibrary
 	// Parse name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse optional AUTHORIZATION clause
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Parse SET clause
+	if strings.ToUpper(p.curTok.Literal) == "SET" {
+		p.nextToken() // consume SET
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume option name
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+
+					if optName == "CONTENT" {
+						content, err := p.parseScalarExpression()
+						if err != nil {
+							return nil, err
+						}
+						stmt.ExternalLibraryFiles = append(stmt.ExternalLibraryFiles, &ast.ExternalLibraryFileOption{
+							Content: content,
+						})
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume option name
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+
+					if optName == "LANGUAGE" && p.curTok.Type == TokenString {
+						strLit, _ := p.parseStringLiteral()
+						stmt.Language = strLit
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
@@ -4567,8 +4864,8 @@ func (p *Parser) parseSequenceOption() (interface{}, error) {
 		}
 	case "AS":
 		p.nextToken()
-		// Parse data type
-		dataType, err := p.parseDataType()
+		// Parse data type - use parseDataTypeReference to preserve UserDataTypeReference
+		dataType, err := p.parseDataTypeReference()
 		if err != nil {
 			return nil, err
 		}

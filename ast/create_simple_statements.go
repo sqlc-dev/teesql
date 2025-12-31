@@ -5,6 +5,7 @@ type CreateDatabaseStatement struct {
 	DatabaseName *Identifier            `json:"DatabaseName,omitempty"`
 	Options      []CreateDatabaseOption `json:"Options,omitempty"`
 	AttachMode   string                 `json:"AttachMode,omitempty"` // "None", "Attach", "AttachRebuildLog"
+	CopyOf       *MultiPartIdentifier   `json:"CopyOf,omitempty"`     // For AS COPY OF syntax
 }
 
 func (s *CreateDatabaseStatement) node()      {}
@@ -92,11 +93,62 @@ func (s *CreateCertificateStatement) statement() {}
 
 // CreateAsymmetricKeyStatement represents a CREATE ASYMMETRIC KEY statement.
 type CreateAsymmetricKeyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name                *Identifier            `json:"Name,omitempty"`
+	KeySource           EncryptionSource       `json:"KeySource,omitempty"`
+	EncryptionAlgorithm string                 `json:"EncryptionAlgorithm,omitempty"`
+	Password            ScalarExpression       `json:"Password,omitempty"`
 }
 
 func (s *CreateAsymmetricKeyStatement) node()      {}
 func (s *CreateAsymmetricKeyStatement) statement() {}
+
+// EncryptionSource is an interface for key sources.
+type EncryptionSource interface {
+	Node
+	encryptionSource()
+}
+
+// ProviderEncryptionSource represents a key source from a provider.
+type ProviderEncryptionSource struct {
+	Name       *Identifier `json:"Name,omitempty"`
+	KeyOptions []KeyOption `json:"KeyOptions,omitempty"`
+}
+
+func (p *ProviderEncryptionSource) node()             {}
+func (p *ProviderEncryptionSource) encryptionSource() {}
+
+// KeyOption is an interface for key options.
+type KeyOption interface {
+	Node
+	keyOption()
+}
+
+// AlgorithmKeyOption represents an ALGORITHM key option.
+type AlgorithmKeyOption struct {
+	Algorithm  string `json:"Algorithm,omitempty"`
+	OptionKind string `json:"OptionKind,omitempty"`
+}
+
+func (a *AlgorithmKeyOption) node()      {}
+func (a *AlgorithmKeyOption) keyOption() {}
+
+// ProviderKeyNameKeyOption represents a PROVIDER_KEY_NAME key option.
+type ProviderKeyNameKeyOption struct {
+	KeyName    ScalarExpression `json:"KeyName,omitempty"`
+	OptionKind string           `json:"OptionKind,omitempty"`
+}
+
+func (p *ProviderKeyNameKeyOption) node()      {}
+func (p *ProviderKeyNameKeyOption) keyOption() {}
+
+// CreationDispositionKeyOption represents a CREATION_DISPOSITION key option.
+type CreationDispositionKeyOption struct {
+	IsCreateNew bool   `json:"IsCreateNew,omitempty"`
+	OptionKind  string `json:"OptionKind,omitempty"`
+}
+
+func (c *CreationDispositionKeyOption) node()      {}
+func (c *CreationDispositionKeyOption) keyOption() {}
 
 // CreateSymmetricKeyStatement represents a CREATE SYMMETRIC KEY statement.
 type CreateSymmetricKeyStatement struct {
@@ -205,6 +257,34 @@ type CreateTypeStatement struct {
 
 func (s *CreateTypeStatement) node()      {}
 func (s *CreateTypeStatement) statement() {}
+
+// CreateTypeUddtStatement represents a CREATE TYPE ... FROM statement (user-defined data type).
+type CreateTypeUddtStatement struct {
+	Name               *SchemaObjectName
+	DataType           DataTypeReference
+	NullableConstraint *NullableConstraintDefinition
+}
+
+func (s *CreateTypeUddtStatement) node()      {}
+func (s *CreateTypeUddtStatement) statement() {}
+
+// CreateTypeUdtStatement represents a CREATE TYPE ... EXTERNAL NAME statement (CLR user-defined type).
+type CreateTypeUdtStatement struct {
+	Name         *SchemaObjectName
+	AssemblyName *AssemblyName
+}
+
+func (s *CreateTypeUdtStatement) node()      {}
+func (s *CreateTypeUdtStatement) statement() {}
+
+// CreateTypeTableStatement represents a CREATE TYPE ... AS TABLE statement (table type).
+type CreateTypeTableStatement struct {
+	Name       *SchemaObjectName `json:"Name,omitempty"`
+	Definition *TableDefinition  `json:"Definition,omitempty"`
+}
+
+func (s *CreateTypeTableStatement) node()      {}
+func (s *CreateTypeTableStatement) statement() {}
 
 // CreateXmlIndexStatement represents a CREATE XML INDEX statement.
 type CreateXmlIndexStatement struct {
