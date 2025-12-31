@@ -986,10 +986,13 @@ func indexDefinitionToJSON(idx *ast.IndexDefinition) jsonNode {
 }
 
 func indexTypeToJSON(t *ast.IndexType) jsonNode {
-	return jsonNode{
-		"$type":         "IndexType",
-		"IndexTypeKind": t.IndexTypeKind,
+	node := jsonNode{
+		"$type": "IndexType",
 	}
+	if t.IndexTypeKind != "" {
+		node["IndexTypeKind"] = t.IndexTypeKind
+	}
+	return node
 }
 
 func columnWithSortOrderToJSON(c *ast.ColumnWithSortOrder) jsonNode {
@@ -3334,6 +3337,16 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 		} else if upperLit == "COLLATE" {
 			p.nextToken() // consume COLLATE
 			col.Collation = p.parseIdentifier()
+		} else if upperLit == "INDEX" {
+			p.nextToken() // consume INDEX
+			indexDef := &ast.IndexDefinition{
+				IndexType: &ast.IndexType{},
+			}
+			// Parse index name
+			if p.curTok.Type == TokenIdent {
+				indexDef.Name = p.parseIdentifier()
+			}
+			col.Index = indexDef
 		} else {
 			break
 		}
@@ -4456,6 +4469,9 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 	}
 	if c.Collation != nil {
 		node["Collation"] = identifierToJSON(c.Collation)
+	}
+	if c.Index != nil {
+		node["Index"] = indexDefinitionToJSON(c.Index)
 	}
 	return node
 }

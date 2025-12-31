@@ -248,9 +248,42 @@ func (p *Parser) parseTableConstraint() (ast.TableConstraint, error) {
 			constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 			p.nextToken()
 		}
-		// Skip the column list
+		// Parse the column list
 		if p.curTok.Type == TokenLParen {
-			p.skipParenthesizedContent()
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colRef := &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+				}
+				// Parse column name
+				colName := p.parseIdentifier()
+				colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+					Identifiers: []*ast.Identifier{colName},
+					Count:       1,
+				}
+				// Check for sort order
+				sortOrder := ast.SortOrderNotSpecified
+				upperColNext := strings.ToUpper(p.curTok.Literal)
+				if upperColNext == "ASC" {
+					sortOrder = ast.SortOrderAscending
+					p.nextToken()
+				} else if upperColNext == "DESC" {
+					sortOrder = ast.SortOrderDescending
+					p.nextToken()
+				}
+				constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+					Column:    colRef,
+					SortOrder: sortOrder,
+				})
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
 		}
 		return constraint, nil
 	} else if upperLit == "UNIQUE" {
@@ -334,15 +367,7 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 
 	// Parse index name
 	if p.curTok.Type == TokenIdent {
-		quoteType := "NotQuoted"
-		if strings.HasPrefix(p.curTok.Literal, "[") && strings.HasSuffix(p.curTok.Literal, "]") {
-			quoteType = "SquareBracket"
-		}
-		indexDef.Name = &ast.Identifier{
-			Value:     p.curTok.Literal,
-			QuoteType: quoteType,
-		}
-		p.nextToken()
+		indexDef.Name = p.parseIdentifier()
 	}
 
 	// Parse optional UNIQUE
@@ -351,36 +376,40 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		p.nextToken()
 	}
 
-	// Parse optional CLUSTERED/NONCLUSTERED
+	// Parse optional CLUSTERED/NONCLUSTERED [HASH]
 	if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
 		p.nextToken()
+		// Check for HASH
+		if strings.ToUpper(p.curTok.Literal) == "HASH" {
+			indexDef.IndexType.IndexTypeKind = "ClusteredHash"
+			p.nextToken()
+		}
 	} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 		p.nextToken()
+		// Check for HASH
+		if strings.ToUpper(p.curTok.Literal) == "HASH" {
+			indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
+			p.nextToken()
+		}
 	}
 
 	// Parse column list
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-			quoteType := "NotQuoted"
-			if strings.HasPrefix(p.curTok.Literal, "[") && strings.HasSuffix(p.curTok.Literal, "]") {
-				quoteType = "SquareBracket"
-			}
+			colIdent := p.parseIdentifier()
 			col := &ast.ColumnWithSortOrder{
 				Column: &ast.ColumnReferenceExpression{
 					ColumnType: "Regular",
 					MultiPartIdentifier: &ast.MultiPartIdentifier{
 						Count: 1,
-						Identifiers: []*ast.Identifier{
-							{Value: p.curTok.Literal, QuoteType: quoteType},
-						},
+						Identifiers: []*ast.Identifier{colIdent},
 					},
 				},
 				SortOrder: ast.SortOrderNotSpecified,
 			}
-			p.nextToken()
 
 			// Parse optional ASC/DESC
 			if strings.ToUpper(p.curTok.Literal) == "ASC" {
@@ -410,22 +439,54 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				quoteType := "NotQuoted"
-				if strings.HasPrefix(p.curTok.Literal, "[") && strings.HasSuffix(p.curTok.Literal, "]") {
-					quoteType = "SquareBracket"
-				}
+				colIdent := p.parseIdentifier()
 				includeCol := &ast.ColumnReferenceExpression{
 					ColumnType: "Regular",
 					MultiPartIdentifier: &ast.MultiPartIdentifier{
 						Count: 1,
-						Identifiers: []*ast.Identifier{
-							{Value: p.curTok.Literal, QuoteType: quoteType},
-						},
+						Identifiers: []*ast.Identifier{colIdent},
 					},
 				}
 				indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
-				p.nextToken()
 
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Parse optional WITH options
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optionName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume option name
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				// Parse option value
+				if optionName == "BUCKET_COUNT" {
+					opt := &ast.IndexExpressionOption{
+						OptionKind: "BucketCount",
+						Expression: &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						},
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+					p.nextToken()
+				} else {
+					// Skip other options
+					p.nextToken()
+				}
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
 				} else {

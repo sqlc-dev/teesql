@@ -43,6 +43,7 @@ type ColumnDefinition struct {
 	DefaultConstraint        *DefaultConstraintDefinition
 	IdentityOptions          *IdentityOptions
 	Constraints              []ConstraintDefinition
+	Index                    *IndexDefinition
 	IsPersisted              bool
 	IsRowGuidCol             bool
 	IsHidden                 bool
