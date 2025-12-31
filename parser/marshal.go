@@ -7179,86 +7179,207 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 	}
 	p.nextToken()
 
-	// Parse return type
-	returnDataType, err := p.parseDataTypeReference()
-	if err != nil {
-		p.skipToEndOfStatement()
-		return stmt, nil
-	}
-	stmt.ReturnType = &ast.ScalarFunctionReturnType{
-		DataType: returnDataType,
-	}
+	// Check if RETURNS TABLE (table-valued function)
+	if strings.ToUpper(p.curTok.Literal) == "TABLE" {
+		p.nextToken()
 
-	// Parse optional WITH clause for function options
-	if p.curTok.Type == TokenWith {
-		p.nextToken() // consume WITH
-		for {
-			upperOpt := strings.ToUpper(p.curTok.Literal)
-			switch upperOpt {
-			case "INLINE":
-				p.nextToken() // consume INLINE
-				// Expect = ON|OFF
-				if p.curTok.Type == TokenEquals {
-					p.nextToken() // consume =
+		// Check for column definitions in parentheses
+		if p.curTok.Type == TokenLParen {
+			p.nextToken()
+			tableReturnType := &ast.TableValuedFunctionReturnType{
+				DeclareTableVariableBody: &ast.DeclareTableVariableBody{
+					AsDefined: false,
+					Definition: &ast.TableDefinition{
+						ColumnDefinitions: []*ast.ColumnDefinition{},
+					},
+				},
+			}
+
+			// Parse column definitions
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colDef := &ast.ColumnDefinition{
+					IsPersisted:  false,
+					IsRowGuidCol: false,
+					IsHidden:     false,
+					IsMasked:     false,
 				}
-				optState := strings.ToUpper(p.curTok.Literal)
-				state := "On"
-				if optState == "OFF" {
-					state = "Off"
+
+				// Parse column name
+				colDef.ColumnIdentifier = p.parseIdentifier()
+
+				// Parse data type
+				if p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma {
+					dataType, err := p.parseDataTypeReference()
+					if err != nil {
+						return nil, err
+					}
+					colDef.DataType = dataType
 				}
-				p.nextToken() // consume ON/OFF
-				stmt.Options = append(stmt.Options, &ast.InlineFunctionOption{
-					OptionKind:  "Inline",
-					OptionState: state,
-				})
-			case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION", "CALLED":
-				optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
+
+				tableReturnType.DeclareTableVariableBody.Definition.ColumnDefinitions = append(
+					tableReturnType.DeclareTableVariableBody.Definition.ColumnDefinitions,
+					colDef,
+				)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
 				p.nextToken()
-				// Handle CALLED ON NULL INPUT
-				if optKind == "Called" {
-					for strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+			}
+
+			stmt.ReturnType = tableReturnType
+		} else {
+			// Simple RETURNS TABLE without column definitions
+			stmt.ReturnType = &ast.TableValuedFunctionReturnType{}
+		}
+
+		// Parse optional WITH clause for function options
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			p.parseFunctionOptions(stmt)
+		}
+
+		// Parse optional ORDER clause for CLR table-valued functions
+		if strings.ToUpper(p.curTok.Literal) == "ORDER" {
+			p.nextToken() // consume ORDER
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				orderHint := &ast.OrderBulkInsertOption{
+					OptionKind: "Order",
+					IsUnique:   false,
+				}
+
+				// Parse columns with sort order
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colWithSort := &ast.ColumnWithSortOrder{
+						Column: &ast.ColumnReferenceExpression{
+							ColumnType: "Regular",
+							MultiPartIdentifier: &ast.MultiPartIdentifier{
+								Count:       1,
+								Identifiers: []*ast.Identifier{p.parseIdentifier()},
+							},
+						},
+						SortOrder: ast.SortOrderNotSpecified,
+					}
+
+					// Check for ASC/DESC
+					upperSort := strings.ToUpper(p.curTok.Literal)
+					if upperSort == "ASC" {
+						colWithSort.SortOrder = ast.SortOrderAscending
+						p.nextToken()
+					} else if upperSort == "DESC" {
+						colWithSort.SortOrder = ast.SortOrderDescending
 						p.nextToken()
 					}
-					optKind = "CalledOnNullInput"
-				}
-				stmt.Options = append(stmt.Options, &ast.FunctionOption{
-					OptionKind: optKind,
-				})
-			case "RETURNS":
-				// Handle RETURNS NULL ON NULL INPUT
-				for strings.ToUpper(p.curTok.Literal) == "RETURNS" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
-					p.nextToken()
-				}
-				stmt.Options = append(stmt.Options, &ast.FunctionOption{
-					OptionKind: "ReturnsNullOnNullInput",
-				})
-			default:
-				// Unknown option - skip it
-				if p.curTok.Type == TokenIdent {
-					p.nextToken()
-				}
-			}
 
-			if p.curTok.Type == TokenComma {
-				p.nextToken() // consume comma
-			} else {
-				break
+					orderHint.Columns = append(orderHint.Columns, colWithSort)
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+
+				stmt.OrderHint = orderHint
 			}
 		}
-	}
 
-	// Parse AS
-	if p.curTok.Type == TokenAs {
-		p.nextToken()
-	}
+		// Parse AS
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+		}
 
-	// Parse statement list
-	stmtList, err := p.parseFunctionStatementList()
-	if err != nil {
-		p.skipToEndOfStatement()
-		return stmt, nil
+		// Check for EXTERNAL NAME (CLR function)
+		if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+			p.nextToken() // consume EXTERNAL
+			if strings.ToUpper(p.curTok.Literal) == "NAME" {
+				p.nextToken() // consume NAME
+			}
+
+			// Parse assembly.class.method
+			stmt.MethodSpecifier = &ast.MethodSpecifier{}
+			stmt.MethodSpecifier.AssemblyName = p.parseIdentifier()
+			if p.curTok.Type == TokenDot {
+				p.nextToken()
+				stmt.MethodSpecifier.ClassName = p.parseIdentifier()
+			}
+			if p.curTok.Type == TokenDot {
+				p.nextToken()
+				stmt.MethodSpecifier.MethodName = p.parseIdentifier()
+			}
+		} else if strings.ToUpper(p.curTok.Literal) == "RETURN" {
+			// Inline table-valued function: RETURN SELECT...
+			p.nextToken()
+			selectStmt, err := p.parseStatement()
+			if err != nil {
+				return nil, err
+			}
+			if sel, ok := selectStmt.(*ast.SelectStatement); ok {
+				stmt.ReturnType = &ast.SelectFunctionReturnType{
+					SelectStatement: sel,
+				}
+			}
+		}
+	} else {
+		// Scalar function - parse return type
+		returnDataType, err := p.parseDataTypeReference()
+		if err != nil {
+			p.skipToEndOfStatement()
+			return stmt, nil
+		}
+		stmt.ReturnType = &ast.ScalarFunctionReturnType{
+			DataType: returnDataType,
+		}
+
+		// Parse optional WITH clause for function options
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			p.parseFunctionOptions(stmt)
+		}
+
+		// Parse AS
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+		}
+
+		// Check for EXTERNAL NAME (CLR scalar function)
+		if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+			p.nextToken() // consume EXTERNAL
+			if strings.ToUpper(p.curTok.Literal) == "NAME" {
+				p.nextToken() // consume NAME
+			}
+
+			// Parse assembly.class.method
+			stmt.MethodSpecifier = &ast.MethodSpecifier{}
+			stmt.MethodSpecifier.AssemblyName = p.parseIdentifier()
+			if p.curTok.Type == TokenDot {
+				p.nextToken()
+				stmt.MethodSpecifier.ClassName = p.parseIdentifier()
+			}
+			if p.curTok.Type == TokenDot {
+				p.nextToken()
+				stmt.MethodSpecifier.MethodName = p.parseIdentifier()
+			}
+		} else {
+			// Parse statement list
+			stmtList, err := p.parseFunctionStatementList()
+			if err != nil {
+				p.skipToEndOfStatement()
+				return stmt, nil
+			}
+			stmt.StatementList = stmtList
+		}
 	}
-	stmt.StatementList = stmtList
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -7266,6 +7387,106 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 	}
 
 	return stmt, nil
+}
+
+// parseFunctionOptions parses function WITH options
+func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
+	for {
+		upperOpt := strings.ToUpper(p.curTok.Literal)
+		switch upperOpt {
+		case "INLINE":
+			p.nextToken() // consume INLINE
+			// Expect = ON|OFF
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			optState := strings.ToUpper(p.curTok.Literal)
+			state := "On"
+			if optState == "OFF" {
+				state = "Off"
+			}
+			p.nextToken() // consume ON/OFF
+			stmt.Options = append(stmt.Options, &ast.InlineFunctionOption{
+				OptionKind:  "Inline",
+				OptionState: state,
+			})
+		case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION":
+			optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
+			p.nextToken()
+			stmt.Options = append(stmt.Options, &ast.FunctionOption{
+				OptionKind: optKind,
+			})
+		case "CALLED":
+			p.nextToken() // consume CALLED
+			// Handle CALLED ON NULL INPUT
+			for strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+				p.nextToken()
+			}
+			stmt.Options = append(stmt.Options, &ast.FunctionOption{
+				OptionKind: "CalledOnNullInput",
+			})
+		case "RETURNS":
+			// Handle RETURNS NULL ON NULL INPUT
+			for strings.ToUpper(p.curTok.Literal) == "RETURNS" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+				p.nextToken()
+			}
+			stmt.Options = append(stmt.Options, &ast.FunctionOption{
+				OptionKind: "ReturnsNullOnNullInput",
+			})
+		case "EXECUTE":
+			p.nextToken() // consume EXECUTE
+			if p.curTok.Type == TokenAs {
+				p.nextToken() // consume AS
+			}
+			execAsOpt := &ast.ExecuteAsFunctionOption{
+				OptionKind: "ExecuteAs",
+				ExecuteAs:  &ast.ExecuteAsClause{},
+			}
+			upperOption := strings.ToUpper(p.curTok.Literal)
+			switch upperOption {
+			case "CALLER":
+				execAsOpt.ExecuteAs.ExecuteAsOption = "Caller"
+				p.nextToken()
+			case "SELF":
+				execAsOpt.ExecuteAs.ExecuteAsOption = "Self"
+				p.nextToken()
+			case "OWNER":
+				execAsOpt.ExecuteAs.ExecuteAsOption = "Owner"
+				p.nextToken()
+			default:
+				// String literal for user name
+				if p.curTok.Type == TokenString {
+					execAsOpt.ExecuteAs.ExecuteAsOption = "String"
+					value := p.curTok.Literal
+					// Strip quotes
+					if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+						value = value[1 : len(value)-1]
+					}
+					execAsOpt.ExecuteAs.Literal = &ast.StringLiteral{
+						LiteralType:   "String",
+						IsNational:    false,
+						IsLargeObject: false,
+						Value:         value,
+					}
+					p.nextToken()
+				}
+			}
+			stmt.Options = append(stmt.Options, execAsOpt)
+		default:
+			// Unknown option or end of options - break out
+			if p.curTok.Type == TokenIdent && upperOpt != "ORDER" && upperOpt != "AS" {
+				p.nextToken()
+			} else {
+				return
+			}
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else {
+			break
+		}
+	}
 }
 
 // parseCreateOrAlterFunctionStatement parses a CREATE OR ALTER FUNCTION statement
@@ -8177,9 +8398,38 @@ func functionOptionBaseToJSON(o ast.FunctionOptionBase) jsonNode {
 		return functionOptionToJSON(opt)
 	case *ast.InlineFunctionOption:
 		return inlineFunctionOptionToJSON(opt)
+	case *ast.ExecuteAsFunctionOption:
+		return executeAsFunctionOptionToJSON(opt)
 	default:
 		return jsonNode{"$type": "UnknownFunctionOption"}
 	}
+}
+
+func executeAsFunctionOptionToJSON(o *ast.ExecuteAsFunctionOption) jsonNode {
+	node := jsonNode{
+		"$type":      "ExecuteAsFunctionOption",
+		"OptionKind": o.OptionKind,
+	}
+	if o.ExecuteAs != nil {
+		node["ExecuteAs"] = executeAsClauseToJSON(o.ExecuteAs)
+	}
+	return node
+}
+
+func orderBulkInsertOptionToJSON(o *ast.OrderBulkInsertOption) jsonNode {
+	node := jsonNode{
+		"$type":      "OrderBulkInsertOption",
+		"OptionKind": "Order",
+		"IsUnique":   o.IsUnique,
+	}
+	if len(o.Columns) > 0 {
+		cols := make([]jsonNode, len(o.Columns))
+		for i, col := range o.Columns {
+			cols[i] = columnWithSortOrderToJSON(col)
+		}
+		node["Columns"] = cols
+	}
+	return node
 }
 
 func createFunctionStatementToJSON(s *ast.CreateFunctionStatement) jsonNode {
@@ -8205,6 +8455,12 @@ func createFunctionStatementToJSON(s *ast.CreateFunctionStatement) jsonNode {
 			options[i] = functionOptionBaseToJSON(o)
 		}
 		node["Options"] = options
+	}
+	if s.OrderHint != nil {
+		node["OrderHint"] = orderBulkInsertOptionToJSON(s.OrderHint)
+	}
+	if s.MethodSpecifier != nil {
+		node["MethodSpecifier"] = methodSpecifierToJSON(s.MethodSpecifier)
 	}
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
@@ -8258,6 +8514,14 @@ func functionReturnTypeToJSON(r ast.FunctionReturnType) jsonNode {
 		}
 		if rt.SelectStatement != nil {
 			node["SelectStatement"] = selectStatementToJSON(rt.SelectStatement)
+		}
+		return node
+	case *ast.TableValuedFunctionReturnType:
+		node := jsonNode{
+			"$type": "TableValuedFunctionReturnType",
+		}
+		if rt.DeclareTableVariableBody != nil {
+			node["DeclareTableVariableBody"] = declareTableVariableBodyToJSON(rt.DeclareTableVariableBody)
 		}
 		return node
 	default:

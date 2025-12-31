@@ -14,11 +14,13 @@ func (s *AlterFunctionStatement) node()      {}
 
 // CreateFunctionStatement represents a CREATE FUNCTION statement
 type CreateFunctionStatement struct {
-	Name          *SchemaObjectName
-	Parameters    []*ProcedureParameter
-	ReturnType    FunctionReturnType
-	Options       []FunctionOptionBase
-	StatementList *StatementList
+	Name            *SchemaObjectName
+	Parameters      []*ProcedureParameter
+	ReturnType      FunctionReturnType
+	Options         []FunctionOptionBase
+	StatementList   *StatementList
+	OrderHint       *OrderBulkInsertOption // For CLR table-valued functions
+	MethodSpecifier *MethodSpecifier       // For CLR functions (AS EXTERNAL NAME)
 }
 
 func (s *CreateFunctionStatement) statement() {}
@@ -38,7 +40,7 @@ func (r *ScalarFunctionReturnType) functionReturnTypeNode() {}
 
 // TableValuedFunctionReturnType represents a table-valued function return type
 type TableValuedFunctionReturnType struct {
-	// Simplified - will be expanded later
+	DeclareTableVariableBody *DeclareTableVariableBody
 }
 
 func (r *TableValuedFunctionReturnType) functionReturnTypeNode() {}
@@ -72,6 +74,15 @@ type InlineFunctionOption struct {
 
 func (o *InlineFunctionOption) node()           {}
 func (o *InlineFunctionOption) functionOption() {}
+
+// ExecuteAsFunctionOption represents an EXECUTE AS function option
+type ExecuteAsFunctionOption struct {
+	OptionKind string           // "ExecuteAs"
+	ExecuteAs  *ExecuteAsClause // The EXECUTE AS clause
+}
+
+func (o *ExecuteAsFunctionOption) node()           {}
+func (o *ExecuteAsFunctionOption) functionOption() {}
 
 // CreateOrAlterFunctionStatement represents a CREATE OR ALTER FUNCTION statement
 type CreateOrAlterFunctionStatement struct {
