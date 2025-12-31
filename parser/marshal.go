@@ -1375,6 +1375,13 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 				"$type": "OverClause",
 			}
 		}
+		if len(e.IgnoreRespectNulls) > 0 {
+			idents := make([]jsonNode, len(e.IgnoreRespectNulls))
+			for i, ident := range e.IgnoreRespectNulls {
+				idents[i] = identifierToJSON(ident)
+			}
+			node["IgnoreRespectNulls"] = idents
+		}
 		node["WithArrayWrapper"] = e.WithArrayWrapper
 		return node
 	case *ast.UserDefinedTypePropertyAccess:

@@ -1323,6 +1323,29 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 			continue // continue to check for more clauses like OVER
 		}
 
+		// Check for RESPECT NULLS or IGNORE NULLS for window functions
+		if fc, ok := expr.(*ast.FunctionCall); ok {
+			upperLit := strings.ToUpper(p.curTok.Literal)
+			if upperLit == "RESPECT" || upperLit == "IGNORE" {
+				// Parse RESPECT NULLS or IGNORE NULLS
+				firstIdent := &ast.Identifier{
+					Value:     strings.ToUpper(p.curTok.Literal),
+					QuoteType: "NotQuoted",
+				}
+				p.nextToken() // consume RESPECT/IGNORE
+
+				if strings.ToUpper(p.curTok.Literal) == "NULLS" {
+					secondIdent := &ast.Identifier{
+						Value:     strings.ToUpper(p.curTok.Literal),
+						QuoteType: "NotQuoted",
+					}
+					p.nextToken() // consume NULLS
+					fc.IgnoreRespectNulls = []*ast.Identifier{firstIdent, secondIdent}
+				}
+				continue // continue to check for OVER clause
+			}
+		}
+
 		// Check for OVER clause for function calls
 		if fc, ok := expr.(*ast.FunctionCall); ok && strings.ToUpper(p.curTok.Literal) == "OVER" {
 			p.nextToken() // consume OVER
