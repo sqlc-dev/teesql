@@ -6210,12 +6210,7 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "CATALOG":
-		p.nextToken() // consume CATALOG
-		stmt := &ast.CreateFulltextCatalogStatement{
-			Name: p.parseIdentifier(),
-		}
-		p.skipToEndOfStatement()
-		return stmt, nil
+		return p.parseCreateFulltextCatalogStatement()
 	case "INDEX":
 		p.nextToken() // consume INDEX
 		// FULLTEXT INDEX ON table_name
@@ -6230,12 +6225,92 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 		return stmt, nil
 	default:
 		// Just create a catalog statement as default
-		stmt := &ast.CreateFulltextCatalogStatement{
+		stmt := &ast.CreateFullTextCatalogStatement{
 			Name: p.parseIdentifier(),
 		}
 		p.skipToEndOfStatement()
 		return stmt, nil
 	}
+}
+
+func (p *Parser) parseCreateFulltextCatalogStatement() (*ast.CreateFullTextCatalogStatement, error) {
+	p.nextToken() // consume CATALOG
+
+	stmt := &ast.CreateFullTextCatalogStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Parse optional clauses
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && !p.isBatchSeparator() {
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "ON":
+			p.nextToken() // consume ON
+			if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+				p.nextToken() // consume FILEGROUP
+				stmt.FileGroup = p.parseIdentifier()
+			}
+		case "IN":
+			p.nextToken() // consume IN
+			if strings.ToUpper(p.curTok.Literal) == "PATH" {
+				p.nextToken() // consume PATH
+				path, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				stmt.Path = path
+			}
+		case "WITH":
+			p.nextToken() // consume WITH
+			// Parse options like ACCENT_SENSITIVITY = ON/OFF
+			for {
+				if strings.ToUpper(p.curTok.Literal) == "ACCENT_SENSITIVITY" {
+					p.nextToken() // consume ACCENT_SENSITIVITY
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					opt := &ast.OnOffFullTextCatalogOption{
+						OptionKind: "AccentSensitivity",
+					}
+					if strings.ToUpper(p.curTok.Literal) == "ON" {
+						opt.OptionState = "On"
+					} else {
+						opt.OptionState = "Off"
+					}
+					p.nextToken() // consume ON/OFF
+					stmt.Options = append(stmt.Options, opt)
+				} else {
+					break
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		case "AS":
+			p.nextToken() // consume AS
+			if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+				p.nextToken() // consume DEFAULT
+				stmt.IsDefault = true
+			}
+		case "AUTHORIZATION":
+			p.nextToken() // consume AUTHORIZATION
+			stmt.Owner = p.parseIdentifier()
+		default:
+			// Unknown clause, skip this token
+			if p.curTok.Type == TokenSemicolon || p.isBatchSeparator() {
+				break
+			}
+			p.nextToken()
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseCreateRemoteServiceBindingStatement() (*ast.CreateRemoteServiceBindingStatement, error) {

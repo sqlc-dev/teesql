@@ -470,6 +470,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterPartitionFunctionStatementToJSON(s)
 	case *ast.AlterFulltextCatalogStatement:
 		return alterFulltextCatalogStatementToJSON(s)
+	case *ast.CreateFullTextCatalogStatement:
+		return createFullTextCatalogStatementToJSON(s)
 	case *ast.AlterFulltextIndexStatement:
 		return alterFulltextIndexStatementToJSON(s)
 	case *ast.AlterSymmetricKeyStatement:
@@ -8485,6 +8487,42 @@ func alterFulltextCatalogStatementToJSON(s *ast.AlterFulltextCatalogStatement) j
 	}
 	if s.Action != "" {
 		node["Action"] = s.Action
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			optNode := jsonNode{
+				"$type": "OnOffFullTextCatalogOption",
+			}
+			if opt.OptionState != "" {
+				optNode["OptionState"] = opt.OptionState
+			}
+			if opt.OptionKind != "" {
+				optNode["OptionKind"] = opt.OptionKind
+			}
+			opts[i] = optNode
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func createFullTextCatalogStatementToJSON(s *ast.CreateFullTextCatalogStatement) jsonNode {
+	node := jsonNode{
+		"$type":     "CreateFullTextCatalogStatement",
+		"IsDefault": s.IsDefault,
+	}
+	if s.FileGroup != nil {
+		node["FileGroup"] = identifierToJSON(s.FileGroup)
+	}
+	if s.Path != nil {
+		node["Path"] = scalarExpressionToJSON(s.Path)
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)

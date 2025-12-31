@@ -92,6 +92,19 @@ type AlterPartitionFunctionStatement struct {
 func (s *AlterPartitionFunctionStatement) node()      {}
 func (s *AlterPartitionFunctionStatement) statement() {}
 
+// CreateFullTextCatalogStatement represents a CREATE FULLTEXT CATALOG statement.
+type CreateFullTextCatalogStatement struct {
+	Name      *Identifier                   `json:"Name,omitempty"`
+	FileGroup *Identifier                   `json:"FileGroup,omitempty"`
+	Path      ScalarExpression              `json:"Path,omitempty"`
+	Owner     *Identifier                   `json:"Owner,omitempty"`
+	Options   []*OnOffFullTextCatalogOption `json:"Options,omitempty"`
+	IsDefault bool                          `json:"IsDefault"`
+}
+
+func (s *CreateFullTextCatalogStatement) node()      {}
+func (s *CreateFullTextCatalogStatement) statement() {}
+
 // AlterFulltextCatalogStatement represents an ALTER FULLTEXT CATALOG statement.
 type AlterFulltextCatalogStatement struct {
 	Name    *Identifier                   `json:"Name,omitempty"`
