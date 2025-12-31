@@ -2370,8 +2370,33 @@ func (p *Parser) parseBooleanAndExpression() (ast.BooleanExpression, error) {
 }
 
 func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) {
-	// Check for parenthesized boolean expression
+	// Check for parenthesized expression - could be boolean or scalar subquery
 	if p.curTok.Type == TokenLParen {
+		// Peek ahead to see if it's a subquery (SELECT)
+		if p.peekTok.Type == TokenSelect {
+			// Parse as scalar subquery that will be used in a comparison
+			p.nextToken() // consume (
+			qe, err := p.parseQueryExpression()
+			if err != nil {
+				return nil, err
+			}
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+
+			subquery := &ast.ScalarSubquery{QueryExpression: qe}
+
+			// Now check for comparison operators
+			if p.isComparisonOperator() {
+				return p.parseComparisonAfterLeft(subquery)
+			}
+			// If no comparison, this might be used in other contexts
+			// For now, treat it as an error if used standalone
+			return nil, fmt.Errorf("scalar subquery must be followed by a comparison operator")
+		}
+
+		// Parse as parenthesized boolean expression
 		p.nextToken() // consume (
 
 		// Parse inner boolean expression
@@ -2535,6 +2560,51 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 	}
 
 	// Check for comparison operator
+	var compType string
+	switch p.curTok.Type {
+	case TokenEquals:
+		compType = "Equals"
+	case TokenNotEqual:
+		compType = "NotEqualToBrackets"
+	case TokenLessThan:
+		compType = "LessThan"
+	case TokenGreaterThan:
+		compType = "GreaterThan"
+	case TokenLessOrEqual:
+		compType = "LessThanOrEqualTo"
+	case TokenGreaterOrEqual:
+		compType = "GreaterThanOrEqualTo"
+	default:
+		return nil, fmt.Errorf("expected comparison operator, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse right scalar expression
+	right, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.BooleanComparisonExpression{
+		ComparisonType:   compType,
+		FirstExpression:  left,
+		SecondExpression: right,
+	}, nil
+}
+
+// isComparisonOperator checks if the current token is a comparison operator
+func (p *Parser) isComparisonOperator() bool {
+	switch p.curTok.Type {
+	case TokenEquals, TokenNotEqual, TokenLessThan, TokenGreaterThan,
+		TokenLessOrEqual, TokenGreaterOrEqual:
+		return true
+	default:
+		return false
+	}
+}
+
+// parseComparisonAfterLeft parses a comparison expression after the left operand is already parsed
+func (p *Parser) parseComparisonAfterLeft(left ast.ScalarExpression) (ast.BooleanExpression, error) {
 	var compType string
 	switch p.curTok.Type {
 	case TokenEquals:
