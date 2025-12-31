@@ -18,8 +18,10 @@ type testMetadata struct {
 // Test flags for running todo/invalid_syntax tests
 // Usage: go test ./parser/... -run-todo     # run all tests including todo tests
 // Usage: go test ./parser/... -only-todo    # run only todo tests (find newly passing tests)
+// Usage: go test ./parser/... -check-todo   # run todo tests and auto-update metadata.json for passing tests
 var runTodoTests = flag.Bool("run-todo", false, "run todo tests along with normal tests")
 var onlyTodoTests = flag.Bool("only-todo", false, "run only todo tests (useful to find tests that now pass)")
+var checkTodoTests = flag.Bool("check-todo", false, "run todo tests and auto-update metadata.json for passing tests")
 
 func TestParse(t *testing.T) {
 	entries, err := os.ReadDir("testdata")
@@ -48,14 +50,17 @@ func TestParse(t *testing.T) {
 				t.Fatalf("failed to parse metadata.json: %v", err)
 			}
 
-			// Skip tests marked with todo or invalid_syntax unless running with -run-todo or -only-todo
+			// Skip tests marked with todo or invalid_syntax unless running with -run-todo, -only-todo, or -check-todo
 			shouldSkip := metadata.Todo || metadata.InvalidSyntax
-			if shouldSkip && !*runTodoTests && !*onlyTodoTests {
+			if shouldSkip && !*runTodoTests && !*onlyTodoTests && !*checkTodoTests {
 				t.Skip("skipped via metadata.json (todo or invalid_syntax)")
 			}
-			if !shouldSkip && *onlyTodoTests {
+			if !shouldSkip && (*onlyTodoTests || *checkTodoTests) {
 				t.Skip("not a todo/invalid_syntax test")
 			}
+
+			// For -check-todo, we need to track if the test passes to update metadata
+			checkTodoMode := *checkTodoTests && metadata.Todo && !metadata.InvalidSyntax
 
 			// Read the test SQL file
 			sqlPath := filepath.Join(testDir, "query.sql")
@@ -99,6 +104,16 @@ func TestParse(t *testing.T) {
 
 			if string(gotNormalized) != string(expectedNormalized) {
 				t.Errorf("JSON mismatch:\ngot:\n%s\n\nexpected:\n%s", gotNormalized, expectedNormalized)
+			}
+
+			// If running with -check-todo and the test passed, update metadata.json to remove todo flag
+			if checkTodoMode && !t.Failed() {
+				newMetadata := "{}\n"
+				if err := os.WriteFile(metadataPath, []byte(newMetadata), 0644); err != nil {
+					t.Errorf("failed to update metadata.json: %v", err)
+				} else {
+					t.Logf("ENABLED: updated %s (removed todo flag)", metadataPath)
+				}
 			}
 		})
 	}
