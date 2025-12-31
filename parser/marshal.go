@@ -1853,9 +1853,44 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		node["ForPath"] = r.ForPath
 		return node
+	case *ast.PredictTableReference:
+		node := jsonNode{
+			"$type": "PredictTableReference",
+		}
+		if r.ModelVariable != nil {
+			node["ModelVariable"] = scalarExpressionToJSON(r.ModelVariable)
+		}
+		if r.DataSource != nil {
+			node["DataSource"] = tableReferenceToJSON(r.DataSource)
+		}
+		if r.RunTime != nil {
+			node["RunTime"] = identifierToJSON(r.RunTime)
+		}
+		if len(r.SchemaDeclarationItems) > 0 {
+			items := make([]jsonNode, len(r.SchemaDeclarationItems))
+			for i, item := range r.SchemaDeclarationItems {
+				items[i] = schemaDeclarationItemToJSON(item)
+			}
+			node["SchemaDeclarationItems"] = items
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
 	default:
 		return jsonNode{"$type": "UnknownTableReference"}
 	}
+}
+
+func schemaDeclarationItemToJSON(item *ast.SchemaDeclarationItem) jsonNode {
+	node := jsonNode{
+		"$type": "SchemaDeclarationItem",
+	}
+	if item.ColumnDefinition != nil {
+		node["ColumnDefinition"] = columnDefinitionBaseToJSON(item.ColumnDefinition)
+	}
+	return node
 }
 
 func schemaObjectNameToJSON(son *ast.SchemaObjectName) jsonNode {

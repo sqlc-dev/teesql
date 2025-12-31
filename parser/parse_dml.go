@@ -146,8 +146,8 @@ func (p *Parser) parseInsertStatement() (ast.Statement, error) {
 		p.nextToken()
 	}
 
-	// Parse target
-	target, err := p.parseDMLTarget()
+	// Parse target - use parseInsertTarget which doesn't treat () as function params
+	target, err := p.parseInsertTarget()
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 		return nil, err
 	}
 
-	// Check for function call (has parentheses)
+	// Check for function call (has parentheses) - used by UPDATE/DELETE targets
 	if p.curTok.Type == TokenLParen {
 		params, err := p.parseFunctionParameters()
 		if err != nil {
@@ -247,6 +247,63 @@ func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 			return nil, err
 		}
 		ref.TableHints = hints
+	}
+
+	return ref, nil
+}
+
+// parseInsertTarget parses the target for INSERT statements.
+// Unlike parseDMLTarget, it does NOT treat parentheses as function parameters
+// because in INSERT statements, parentheses after the table name are column names.
+func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
+	// Check for variable
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		name := p.curTok.Literal
+		p.nextToken()
+		return &ast.VariableTableReference{
+			Variable: &ast.VariableReference{Name: name},
+			ForPath:  false,
+		}, nil
+	}
+
+	// Check for OPENROWSET
+	if p.curTok.Type == TokenOpenRowset {
+		return p.parseOpenRowset()
+	}
+
+	// Parse schema object name
+	son, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+
+	// For INSERT targets, parentheses are column names, not function parameters
+	// So we don't parse them here - the caller handles the column list
+
+	ref := &ast.NamedTableReference{
+		SchemaObject: son,
+		ForPath:      false,
+	}
+
+	// Check for table hints WITH (...)
+	if p.curTok.Type == TokenWith {
+		hints, err := p.parseTableHints()
+		if err != nil {
+			return nil, err
+		}
+		ref.TableHints = hints
+	}
+
+	// Check for alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		// Alias without AS - but need to check it's not a keyword
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "SELECT" && upper != "VALUES" && upper != "DEFAULT" && upper != "OUTPUT" && upper != "EXEC" && upper != "EXECUTE" {
+			ref.Alias = p.parseIdentifier()
+		}
 	}
 
 	return ref, nil

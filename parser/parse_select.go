@@ -388,6 +388,7 @@ func (p *Parser) parseSelectElements() ([]ast.SelectElement, error) {
 	return elements, nil
 }
 
+
 func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 	// Check for *
 	if p.curTok.Type == TokenStar {
@@ -463,6 +464,19 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 	expr, err := p.parseScalarExpression()
 	if err != nil {
 		return nil, err
+	}
+
+	// Check for qualified star: expression followed by .*
+	// This happens when parseColumnReferenceOrFunctionCall stopped before consuming .*
+	if p.curTok.Type == TokenDot && p.peekTok.Type == TokenStar {
+		// Convert expression to qualified star
+		if colRef, ok := expr.(*ast.ColumnReferenceExpression); ok {
+			p.nextToken() // consume .
+			p.nextToken() // consume *
+			return &ast.SelectStarExpression{
+				Qualifier: colRef.MultiPartIdentifier,
+			}, nil
+		}
 	}
 
 	sse := &ast.SelectScalarExpression{Expression: expr}
@@ -1058,6 +1072,11 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		if p.curTok.Type != TokenDot {
 			break
 		}
+		// Check if this is a qualified star like d.* - if so, don't consume the dot
+		// Let the caller handle the .* pattern
+		if p.peekTok.Type == TokenStar {
+			break
+		}
 		p.nextToken() // consume dot
 	}
 
@@ -1496,6 +1515,11 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 	// Check for OPENROWSET
 	if p.curTok.Type == TokenOpenRowset {
 		return p.parseOpenRowset()
+	}
+
+	// Check for PREDICT
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PREDICT" {
+		return p.parsePredictTableReference()
 	}
 
 	// Check for variable table reference
@@ -3029,4 +3053,120 @@ func (p *Parser) parseTryConvertCall() (ast.ScalarExpression, error) {
 	}
 
 	return convert, nil
+}
+
+// parsePredictTableReference parses PREDICT(...) in FROM clause
+// PREDICT(MODEL = expression, DATA = table AS alias, RUNTIME=ident) WITH (columns) AS alias
+func (p *Parser) parsePredictTableReference() (*ast.PredictTableReference, error) {
+	p.nextToken() // consume PREDICT
+
+	ref := &ast.PredictTableReference{
+		ForPath: false,
+	}
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after PREDICT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse arguments: MODEL = expr, DATA = table AS alias, RUNTIME = ident
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		argName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume argument name
+
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		switch argName {
+		case "MODEL":
+			// MODEL can be a subquery or variable
+			if p.curTok.Type == TokenLParen {
+				// Subquery
+				p.nextToken() // consume (
+				qe, err := p.parseQueryExpression()
+				if err != nil {
+					return nil, err
+				}
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+				ref.ModelVariable = &ast.ScalarSubquery{QueryExpression: qe}
+			} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+				// Variable
+				ref.ModelVariable = &ast.VariableReference{Name: p.curTok.Literal}
+				p.nextToken()
+			}
+		case "DATA":
+			// DATA = table AS alias
+			son, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			dataSource := &ast.NamedTableReference{
+				SchemaObject: son,
+				ForPath:      false,
+			}
+			// Check for AS alias
+			if p.curTok.Type == TokenAs {
+				p.nextToken()
+				dataSource.Alias = p.parseIdentifier()
+			}
+			ref.DataSource = dataSource
+		case "RUNTIME":
+			ref.RunTime = p.parseIdentifier()
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	// Parse optional WITH clause for output schema
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				item := &ast.SchemaDeclarationItem{
+					ColumnDefinition: &ast.ColumnDefinitionBase{},
+				}
+				item.ColumnDefinition.ColumnIdentifier = p.parseIdentifier()
+
+				// Parse data type
+				dataType, err := p.parseDataTypeReference()
+				if err != nil {
+					return nil, err
+				}
+				item.ColumnDefinition.DataType = dataType
+
+				ref.SchemaDeclarationItems = append(ref.SchemaDeclarationItems, item)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse optional AS alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	}
+
+	return ref, nil
 }
