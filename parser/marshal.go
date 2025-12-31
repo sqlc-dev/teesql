@@ -9555,8 +9555,31 @@ func alterExternalLibraryStatementToJSON(s *ast.AlterExternalLibraryStatement) j
 	node := jsonNode{
 		"$type": "AlterExternalLibraryStatement",
 	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Language != nil {
+		node["Language"] = stringLiteralToJSON(s.Language)
+	}
+	if len(s.ExternalLibraryFiles) > 0 {
+		files := make([]jsonNode, len(s.ExternalLibraryFiles))
+		for i, f := range s.ExternalLibraryFiles {
+			files[i] = externalLibraryFileOptionToJSON(f)
+		}
+		node["ExternalLibraryFiles"] = files
+	}
+	return node
+}
+
+func externalLibraryFileOptionToJSON(f *ast.ExternalLibraryFileOption) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalLibraryFileOption",
+	}
+	if f.Content != nil {
+		node["Content"] = scalarExpressionToJSON(f.Content)
 	}
 	return node
 }

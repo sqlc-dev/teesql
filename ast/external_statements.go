@@ -117,9 +117,17 @@ func (s *AlterExternalLanguageStatement) statement() {}
 
 // AlterExternalLibraryStatement represents ALTER EXTERNAL LIBRARY statement
 type AlterExternalLibraryStatement struct {
-	Name    *Identifier
-	Options []*ExternalLibraryOption
+	Name                 *Identifier
+	Owner                *Identifier
+	Language             *StringLiteral
+	ExternalLibraryFiles []*ExternalLibraryFileOption
+	Options              []*ExternalLibraryOption
 }
 
 func (s *AlterExternalLibraryStatement) node()      {}
 func (s *AlterExternalLibraryStatement) statement() {}
+
+// ExternalLibraryFileOption represents a file option for external library
+type ExternalLibraryFileOption struct {
+	Content ScalarExpression
+}

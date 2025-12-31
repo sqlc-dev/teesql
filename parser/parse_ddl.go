@@ -4420,8 +4420,77 @@ func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibrary
 	// Parse name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse optional AUTHORIZATION clause
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Parse SET clause
+	if strings.ToUpper(p.curTok.Literal) == "SET" {
+		p.nextToken() // consume SET
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume option name
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+
+					if optName == "CONTENT" {
+						content, err := p.parseScalarExpression()
+						if err != nil {
+							return nil, err
+						}
+						stmt.ExternalLibraryFiles = append(stmt.ExternalLibraryFiles, &ast.ExternalLibraryFileOption{
+							Content: content,
+						})
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume option name
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+
+					if optName == "LANGUAGE" && p.curTok.Type == TokenString {
+						strLit, _ := p.parseStringLiteral()
+						stmt.Language = strLit
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
