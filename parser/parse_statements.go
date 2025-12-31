@@ -6404,14 +6404,29 @@ func (p *Parser) parseFileDeclarationOptions() ([]ast.FileDeclarationOption, err
 			if p.curTok.Type == TokenEquals {
 				p.nextToken() // consume =
 			}
-			id := p.parseIdentifier()
-			opt := &ast.NameFileDeclarationOption{
-				LogicalFileName: &ast.IdentifierOrValueExpression{
-					Value:      id.Value,
-					Identifier: id,
-				},
-				IsNewName:  false,
-				OptionKind: "Name",
+			var opt *ast.NameFileDeclarationOption
+			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+				// Parse as string literal
+				strLit, _ := p.parseStringLiteral()
+				opt = &ast.NameFileDeclarationOption{
+					LogicalFileName: &ast.IdentifierOrValueExpression{
+						Value:           strLit.Value,
+						ValueExpression: strLit,
+					},
+					IsNewName:  false,
+					OptionKind: "Name",
+				}
+			} else {
+				// Parse as identifier
+				id := p.parseIdentifier()
+				opt = &ast.NameFileDeclarationOption{
+					LogicalFileName: &ast.IdentifierOrValueExpression{
+						Value:      id.Value,
+						Identifier: id,
+					},
+					IsNewName:  false,
+					OptionKind: "Name",
+				}
 			}
 			opts = append(opts, opt)
 

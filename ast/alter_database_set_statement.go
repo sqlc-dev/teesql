@@ -87,7 +87,11 @@ func (l *LiteralDatabaseOption) createDatabaseOption() {}
 
 // AlterDatabaseAddFileStatement represents ALTER DATABASE ... ADD FILE statement
 type AlterDatabaseAddFileStatement struct {
-	DatabaseName *Identifier
+	DatabaseName     *Identifier
+	FileDeclarations []*FileDeclaration
+	FileGroup        *Identifier
+	IsLog            bool
+	UseCurrent       bool
 }
 
 func (a *AlterDatabaseAddFileStatement) node()      {}

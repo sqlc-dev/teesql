@@ -10016,8 +10016,33 @@ func alterDatabaseAddFileStatementToJSON(s *ast.AlterDatabaseAddFileStatement) j
 	node := jsonNode{
 		"$type": "AlterDatabaseAddFileStatement",
 	}
+	// Check if we have any complete file declarations (with options)
+	hasCompleteDeclarations := false
+	for _, fd := range s.FileDeclarations {
+		if len(fd.Options) > 0 {
+			hasCompleteDeclarations = true
+			break
+		}
+	}
+	if hasCompleteDeclarations {
+		decls := make([]jsonNode, len(s.FileDeclarations))
+		for i, fd := range s.FileDeclarations {
+			decls[i] = fileDeclarationToJSON(fd)
+		}
+		node["FileDeclarations"] = decls
+	}
+	if s.FileGroup != nil {
+		node["FileGroup"] = identifierToJSON(s.FileGroup)
+	}
+	// Only include IsLog/UseCurrent if we have complete declarations
+	if hasCompleteDeclarations {
+		node["IsLog"] = s.IsLog
+	}
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	if hasCompleteDeclarations {
+		node["UseCurrent"] = s.UseCurrent
 	}
 	return node
 }

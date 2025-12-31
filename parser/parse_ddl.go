@@ -1626,6 +1626,21 @@ func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Sta
 		p.nextToken() // consume FILE
 		stmt := &ast.AlterDatabaseAddFileStatement{
 			DatabaseName: dbName,
+			IsLog:        false,
+		}
+		// Parse file declarations
+		decls, err := p.parseFileDeclarationList(false)
+		if err != nil {
+			return nil, err
+		}
+		stmt.FileDeclarations = decls
+		// Parse TO FILEGROUP
+		if strings.ToUpper(p.curTok.Literal) == "TO" {
+			p.nextToken() // consume TO
+			if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+				p.nextToken() // consume FILEGROUP
+			}
+			stmt.FileGroup = p.parseIdentifier()
 		}
 		p.skipToEndOfStatement()
 		return stmt, nil
@@ -1636,7 +1651,14 @@ func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Sta
 		}
 		stmt := &ast.AlterDatabaseAddFileStatement{
 			DatabaseName: dbName,
+			IsLog:        true,
 		}
+		// Parse file declarations
+		decls, err := p.parseFileDeclarationList(false)
+		if err != nil {
+			return nil, err
+		}
+		stmt.FileDeclarations = decls
 		p.skipToEndOfStatement()
 		return stmt, nil
 	case "FILEGROUP":
