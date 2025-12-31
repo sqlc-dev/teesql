@@ -2958,7 +2958,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 		p.nextToken()
 	}
 
-	// Parse optional ON filegroup and TEXTIMAGE_ON filegroup clauses
+	// Parse optional ON filegroup, TEXTIMAGE_ON, FILESTREAM_ON, and WITH clauses
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 		if p.curTok.Type == TokenOn {
@@ -2973,11 +2973,89 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 			}
 		} else if upperLit == "TEXTIMAGE_ON" {
 			p.nextToken() // consume TEXTIMAGE_ON
-			// Parse filegroup identifier
-			ident := p.parseIdentifier()
-			stmt.TextImageOn = &ast.IdentifierOrValueExpression{
-				Value:      ident.Value,
-				Identifier: ident,
+			// Parse filegroup identifier or string literal
+			if p.curTok.Type == TokenString {
+				value := p.curTok.Literal
+				// Strip quotes from string literal
+				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+					value = value[1 : len(value)-1]
+				}
+				stmt.TextImageOn = &ast.IdentifierOrValueExpression{
+					Value: value,
+					ValueExpression: &ast.StringLiteral{
+						LiteralType: "String",
+						Value:       value,
+					},
+				}
+				p.nextToken()
+			} else {
+				ident := p.parseIdentifier()
+				stmt.TextImageOn = &ast.IdentifierOrValueExpression{
+					Value:      ident.Value,
+					Identifier: ident,
+				}
+			}
+		} else if upperLit == "FILESTREAM_ON" {
+			p.nextToken() // consume FILESTREAM_ON
+			// Parse filegroup identifier or string literal
+			if p.curTok.Type == TokenString {
+				value := p.curTok.Literal
+				// Strip quotes from string literal
+				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+					value = value[1 : len(value)-1]
+				}
+				stmt.FileStreamOn = &ast.IdentifierOrValueExpression{
+					Value: value,
+					ValueExpression: &ast.StringLiteral{
+						LiteralType: "String",
+						Value:       value,
+					},
+				}
+				p.nextToken()
+			} else {
+				ident := p.parseIdentifier()
+				stmt.FileStreamOn = &ast.IdentifierOrValueExpression{
+					Value:      ident.Value,
+					Identifier: ident,
+				}
+			}
+		} else if p.curTok.Type == TokenWith {
+			// Parse WITH clause with table options
+			p.nextToken() // consume WITH
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse table options
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optionName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken() // consume option name
+
+					if optionName == "DATA_COMPRESSION" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						opt, err := p.parseDataCompressionOption()
+						if err != nil {
+							break
+						}
+						stmt.Options = append(stmt.Options, &ast.TableDataCompressionOption{
+							DataCompressionOption: opt,
+							OptionKind:            "DataCompression",
+						})
+					} else {
+						// Skip unknown option value
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						p.nextToken()
+					}
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
 			}
 		} else {
 			break
@@ -2990,6 +3068,79 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseDataCompressionOption() (*ast.DataCompressionOption, error) {
+	opt := &ast.DataCompressionOption{
+		OptionKind: "DataCompression",
+	}
+
+	// Parse compression level: NONE, ROW, PAGE, COLUMNSTORE, COLUMNSTORE_ARCHIVE
+	levelStr := strings.ToUpper(p.curTok.Literal)
+	switch levelStr {
+	case "NONE":
+		opt.CompressionLevel = "None"
+	case "ROW":
+		opt.CompressionLevel = "Row"
+	case "PAGE":
+		opt.CompressionLevel = "Page"
+	case "COLUMNSTORE":
+		opt.CompressionLevel = "ColumnStore"
+	case "COLUMNSTORE_ARCHIVE":
+		opt.CompressionLevel = "ColumnStoreArchive"
+	default:
+		opt.CompressionLevel = levelStr
+	}
+	p.nextToken()
+
+	// Parse optional ON PARTITIONS clause
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		if strings.ToUpper(p.curTok.Literal) == "PARTITIONS" {
+			p.nextToken() // consume PARTITIONS
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse partition ranges
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					pr := &ast.CompressionPartitionRange{}
+
+					// Parse From
+					if p.curTok.Type == TokenNumber {
+						pr.From = &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						}
+						p.nextToken()
+					}
+
+					// Check for TO
+					if strings.ToUpper(p.curTok.Literal) == "TO" {
+						p.nextToken() // consume TO
+						if p.curTok.Type == TokenNumber {
+							pr.To = &ast.IntegerLiteral{
+								LiteralType: "Integer",
+								Value:       p.curTok.Literal,
+							}
+							p.nextToken()
+						}
+					}
+
+					opt.PartitionRanges = append(opt.PartitionRanges, pr)
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+		}
+	}
+
+	return opt, nil
 }
 
 func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
@@ -4094,6 +4245,63 @@ func createTableStatementToJSON(s *ast.CreateTableStatement) jsonNode {
 	if s.TextImageOn != nil {
 		node["TextImageOn"] = identifierOrValueExpressionToJSON(s.TextImageOn)
 	}
+	if s.FileStreamOn != nil {
+		node["FileStreamOn"] = identifierOrValueExpressionToJSON(s.FileStreamOn)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = tableOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func tableOptionToJSON(opt ast.TableOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.TableDataCompressionOption:
+		node := jsonNode{
+			"$type":      "TableDataCompressionOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.DataCompressionOption != nil {
+			node["DataCompressionOption"] = dataCompressionOptionToJSON(o.DataCompressionOption)
+		}
+		return node
+	case *ast.SystemVersioningTableOption:
+		return systemVersioningTableOptionToJSON(o)
+	default:
+		return jsonNode{"$type": "UnknownTableOption"}
+	}
+}
+
+func dataCompressionOptionToJSON(opt *ast.DataCompressionOption) jsonNode {
+	node := jsonNode{
+		"$type":            "DataCompressionOption",
+		"CompressionLevel": opt.CompressionLevel,
+		"OptionKind":       opt.OptionKind,
+	}
+	if len(opt.PartitionRanges) > 0 {
+		ranges := make([]jsonNode, len(opt.PartitionRanges))
+		for i, pr := range opt.PartitionRanges {
+			ranges[i] = compressionPartitionRangeToJSON(pr)
+		}
+		node["PartitionRanges"] = ranges
+	}
+	return node
+}
+
+func compressionPartitionRangeToJSON(pr *ast.CompressionPartitionRange) jsonNode {
+	node := jsonNode{
+		"$type": "CompressionPartitionRange",
+	}
+	if pr.From != nil {
+		node["From"] = scalarExpressionToJSON(pr.From)
+	}
+	if pr.To != nil {
+		node["To"] = scalarExpressionToJSON(pr.To)
+	}
 	return node
 }
 
@@ -4591,19 +4799,6 @@ func truncateTableStatementToJSON(s *ast.TruncateTableStatement) jsonNode {
 			ranges[i] = compressionPartitionRangeToJSON(pr)
 		}
 		node["PartitionRanges"] = ranges
-	}
-	return node
-}
-
-func compressionPartitionRangeToJSON(pr *ast.CompressionPartitionRange) jsonNode {
-	node := jsonNode{
-		"$type": "CompressionPartitionRange",
-	}
-	if pr.From != nil {
-		node["From"] = scalarExpressionToJSON(pr.From)
-	}
-	if pr.To != nil {
-		node["To"] = scalarExpressionToJSON(pr.To)
 	}
 	return node
 }
@@ -8632,15 +8827,6 @@ func alterTableSetStatementToJSON(s *ast.AlterTableSetStatement) jsonNode {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
 	return node
-}
-
-func tableOptionToJSON(opt ast.TableOption) jsonNode {
-	switch o := opt.(type) {
-	case *ast.SystemVersioningTableOption:
-		return systemVersioningTableOptionToJSON(o)
-	default:
-		return jsonNode{"$type": "UnknownTableOption"}
-	}
 }
 
 func systemVersioningTableOptionToJSON(o *ast.SystemVersioningTableOption) jsonNode {

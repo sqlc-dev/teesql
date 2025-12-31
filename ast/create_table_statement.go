@@ -9,7 +9,18 @@ type CreateTableStatement struct {
 	Definition                   *TableDefinition
 	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme
 	TextImageOn                  *IdentifierOrValueExpression
+	FileStreamOn                 *IdentifierOrValueExpression
+	Options                      []TableOption
 }
+
+// TableDataCompressionOption represents a DATA_COMPRESSION option
+type TableDataCompressionOption struct {
+	DataCompressionOption *DataCompressionOption
+	OptionKind            string
+}
+
+func (t *TableDataCompressionOption) node()        {}
+func (t *TableDataCompressionOption) tableOption() {}
 
 func (s *CreateTableStatement) node()      {}
 func (s *CreateTableStatement) statement() {}
