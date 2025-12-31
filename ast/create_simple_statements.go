@@ -2,11 +2,24 @@ package ast
 
 // CreateDatabaseStatement represents a CREATE DATABASE statement.
 type CreateDatabaseStatement struct {
-	DatabaseName *Identifier            `json:"DatabaseName,omitempty"`
-	Options      []CreateDatabaseOption `json:"Options,omitempty"`
-	AttachMode   string                 `json:"AttachMode,omitempty"` // "None", "Attach", "AttachRebuildLog"
-	CopyOf       *MultiPartIdentifier   `json:"CopyOf,omitempty"`     // For AS COPY OF syntax
+	DatabaseName *Identifier                `json:"DatabaseName,omitempty"`
+	Options      []CreateDatabaseOption     `json:"Options,omitempty"`
+	AttachMode   string                     `json:"AttachMode,omitempty"` // "None", "Attach", "AttachRebuildLog"
+	CopyOf       *MultiPartIdentifier       `json:"CopyOf,omitempty"`     // For AS COPY OF syntax
+	FileGroups   []*FileGroupDefinition     `json:"FileGroups,omitempty"`
+	LogOn        []*FileDeclaration         `json:"LogOn,omitempty"`
+	Collation    *Identifier                `json:"Collation,omitempty"`
+	Containment  *ContainmentDatabaseOption `json:"Containment,omitempty"`
 }
+
+// ContainmentDatabaseOption represents CONTAINMENT = NONE/PARTIAL
+type ContainmentDatabaseOption struct {
+	Value      string // "None" or "Partial"
+	OptionKind string // Always "Containment"
+}
+
+func (c *ContainmentDatabaseOption) node()                 {}
+func (c *ContainmentDatabaseOption) createDatabaseOption() {}
 
 func (s *CreateDatabaseStatement) node()      {}
 func (s *CreateDatabaseStatement) statement() {}
@@ -19,9 +32,20 @@ type CreateLoginStatement struct {
 func (s *CreateLoginStatement) node()      {}
 func (s *CreateLoginStatement) statement() {}
 
+// ServiceContract represents a contract in CREATE/ALTER SERVICE.
+type ServiceContract struct {
+	Name   *Identifier `json:"Name,omitempty"`
+	Action string      `json:"Action,omitempty"` // "Add", "Drop", "None"
+}
+
+func (s *ServiceContract) node() {}
+
 // CreateServiceStatement represents a CREATE SERVICE statement.
 type CreateServiceStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Owner            *Identifier        `json:"Owner,omitempty"`
+	Name             *Identifier        `json:"Name,omitempty"`
+	QueueName        *SchemaObjectName  `json:"QueueName,omitempty"`
+	ServiceContracts []*ServiceContract `json:"ServiceContracts,omitempty"`
 }
 
 func (s *CreateServiceStatement) node()      {}
@@ -61,11 +85,21 @@ func (s *CreateQueueStatement) statement() {}
 
 // CreateRouteStatement represents a CREATE ROUTE statement.
 type CreateRouteStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name         *Identifier    `json:"Name,omitempty"`
+	Owner        *Identifier    `json:"Owner,omitempty"`
+	RouteOptions []*RouteOption `json:"RouteOptions,omitempty"`
 }
 
 func (s *CreateRouteStatement) node()      {}
 func (s *CreateRouteStatement) statement() {}
+
+// RouteOption represents an option in CREATE/ALTER ROUTE statement.
+type RouteOption struct {
+	OptionKind string           `json:"OptionKind,omitempty"`
+	Literal    ScalarExpression `json:"Literal,omitempty"`
+}
+
+func (r *RouteOption) node() {}
 
 // CreateEndpointStatement represents a CREATE ENDPOINT statement.
 type CreateEndpointStatement struct {
@@ -150,13 +184,35 @@ type CreationDispositionKeyOption struct {
 func (c *CreationDispositionKeyOption) node()      {}
 func (c *CreationDispositionKeyOption) keyOption() {}
 
+// CryptoMechanism represents an encryption mechanism (CERTIFICATE, KEY, PASSWORD, etc.)
+type CryptoMechanism struct {
+	CryptoMechanismType string           `json:"CryptoMechanismType,omitempty"` // "Certificate", "SymmetricKey", "AsymmetricKey", "Password"
+	Identifier          *Identifier      `json:"Identifier,omitempty"`
+	PasswordOrSignature ScalarExpression `json:"PasswordOrSignature,omitempty"`
+}
+
+func (c *CryptoMechanism) node() {}
+
 // CreateSymmetricKeyStatement represents a CREATE SYMMETRIC KEY statement.
 type CreateSymmetricKeyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	KeyOptions          []KeyOption        `json:"KeyOptions,omitempty"`
+	Provider            *Identifier        `json:"Provider,omitempty"`
+	Name                *Identifier        `json:"Name,omitempty"`
+	EncryptingMechanisms []*CryptoMechanism `json:"EncryptingMechanisms,omitempty"`
 }
 
 func (s *CreateSymmetricKeyStatement) node()      {}
 func (s *CreateSymmetricKeyStatement) statement() {}
+
+// DropSymmetricKeyStatement represents a DROP SYMMETRIC KEY statement.
+type DropSymmetricKeyStatement struct {
+	RemoveProviderKey bool        `json:"RemoveProviderKey,omitempty"`
+	Name              *Identifier `json:"Name,omitempty"`
+	IsIfExists        bool        `json:"IsIfExists"`
+}
+
+func (s *DropSymmetricKeyStatement) node()      {}
+func (s *DropSymmetricKeyStatement) statement() {}
 
 // CreateMessageTypeStatement represents a CREATE MESSAGE TYPE statement.
 type CreateMessageTypeStatement struct {
@@ -171,7 +227,9 @@ func (s *CreateMessageTypeStatement) statement() {}
 
 // CreateRemoteServiceBindingStatement represents a CREATE REMOTE SERVICE BINDING statement.
 type CreateRemoteServiceBindingStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name    *Identifier                  `json:"Name,omitempty"`
+	Service ScalarExpression             `json:"Service,omitempty"`
+	Options []RemoteServiceBindingOption `json:"Options,omitempty"`
 }
 
 func (s *CreateRemoteServiceBindingStatement) node()      {}

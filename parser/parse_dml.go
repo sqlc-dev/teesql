@@ -8,6 +8,111 @@ import (
 	"github.com/sqlc-dev/teesql/ast"
 )
 
+func (p *Parser) parseWithStatement() (ast.Statement, error) {
+	// Consume WITH
+	p.nextToken()
+
+	withClause := &ast.WithCtesAndXmlNamespaces{}
+
+	// Parse CHANGE_TRACKING_CONTEXT or CTEs
+	for {
+		if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING_CONTEXT" {
+			p.nextToken() // consume CHANGE_TRACKING_CONTEXT
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				expr, _ := p.parseScalarExpression()
+				withClause.ChangeTrackingContext = expr
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			// Parse CTE: name (columns) AS (query)
+			cte := &ast.CommonTableExpression{
+				ExpressionName: p.parseIdentifier(),
+			}
+
+			// Parse optional column list
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					cte.Columns = append(cte.Columns, p.parseIdentifier())
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+
+			// Expect AS
+			if p.curTok.Type == TokenAs {
+				p.nextToken() // consume AS
+			}
+
+			// Parse query in parentheses
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				queryExpr, err := p.parseQueryExpression()
+				if err != nil {
+					return nil, err
+				}
+				cte.QueryExpression = queryExpr
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+
+			withClause.CommonTableExpressions = append(withClause.CommonTableExpressions, cte)
+		} else {
+			break
+		}
+
+		// Check for comma (more CTEs)
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Now dispatch to the appropriate statement parser
+	switch p.curTok.Type {
+	case TokenInsert:
+		stmt, err := p.parseInsertStatement()
+		if err != nil {
+			return nil, err
+		}
+		if ins, ok := stmt.(*ast.InsertStatement); ok {
+			ins.WithCtesAndXmlNamespaces = withClause
+		}
+		return stmt, nil
+	case TokenUpdate:
+		stmt, err := p.parseUpdateOrUpdateStatisticsStatement()
+		if err != nil {
+			return nil, err
+		}
+		if upd, ok := stmt.(*ast.UpdateStatement); ok {
+			upd.WithCtesAndXmlNamespaces = withClause
+		}
+		return stmt, nil
+	case TokenDelete:
+		stmt, err := p.parseDeleteStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.WithCtesAndXmlNamespaces = withClause
+		return stmt, nil
+	case TokenSelect:
+		// For SELECT, we need to handle it differently
+		// Skip for now - return the select without CTE
+		return p.parseSelectStatement()
+	}
+
+	return nil, fmt.Errorf("expected INSERT, UPDATE, DELETE, or SELECT after WITH clause, got %s", p.curTok.Literal)
+}
+
 func (p *Parser) parseInsertStatement() (ast.Statement, error) {
 	// Consume INSERT
 	p.nextToken()
@@ -446,6 +551,10 @@ func (p *Parser) parseTableHints() ([]ast.TableHintType, error) {
 		if p.curTok.Type == TokenComma {
 			p.nextToken()
 		} else if p.curTok.Type != TokenRParen {
+			// Check if the next token is a valid table hint (space-separated hints)
+			if p.curTok.Type == TokenIdent && isTableHintKeyword(strings.ToUpper(p.curTok.Literal)) {
+				continue // Continue parsing space-separated hints
+			}
 			break
 		}
 	}
@@ -455,6 +564,19 @@ func (p *Parser) parseTableHints() ([]ast.TableHintType, error) {
 	}
 
 	return hints, nil
+}
+
+// isTableHintKeyword checks if a string is a valid table hint keyword
+func isTableHintKeyword(name string) bool {
+	switch name {
+	case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READPAST",
+		"READUNCOMMITTED", "REPEATABLEREAD", "ROWLOCK", "SERIALIZABLE",
+		"SNAPSHOT", "TABLOCK", "TABLOCKX", "UPDLOCK", "XLOCK", "NOWAIT",
+		"INDEX", "FORCESEEK", "FORCESCAN", "KEEPIDENTITY", "KEEPDEFAULTS",
+		"IGNORE_CONSTRAINTS", "IGNORE_TRIGGERS", "NOEXPAND", "SPATIAL_WINDOW_MAX_CELLS":
+		return true
+	}
+	return false
 }
 
 func convertTableHintKind(hint string) string {
@@ -714,23 +836,25 @@ func (p *Parser) parseExecutableStringList() (*ast.ExecutableStringList, error) 
 
 	strList := &ast.ExecutableStringList{}
 
-	// Parse the first string expression (may be concatenated with +)
-	for {
-		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+	// Parse the string expressions (may be strings, variables, or concatenations with +)
+	// Strings are added to Strings, other parameters (after comma) go to Parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		isVariable := p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@")
+		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString || isVariable {
 			expr, err := p.parseScalarExpression()
 			if err != nil {
 				return nil, err
 			}
-			// parseScalarExpression handles the + concatenation, so we get a BinaryExpression
-			// But we need to flatten it to individual StringLiterals for the Strings array
+			// Flatten concatenated expressions to individual parts for the Strings array
 			p.flattenStringExpression(expr, &strList.Strings)
 		} else {
 			break
 		}
 
-		// Check for comma (parameters follow) or closing paren
+		// Check for comma or closing paren
 		if p.curTok.Type == TokenComma {
 			p.nextToken()
+			// After comma, we switch to parsing parameters
 			break
 		}
 		if p.curTok.Type == TokenRParen {
@@ -738,7 +862,7 @@ func (p *Parser) parseExecutableStringList() (*ast.ExecutableStringList, error) 
 		}
 	}
 
-	// Parse parameters (after the first comma)
+	// Parse parameters (after the first comma following strings)
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 		param, err := p.parseExecuteParameter()
 		if err != nil {

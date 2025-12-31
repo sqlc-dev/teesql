@@ -43,9 +43,11 @@ func (o *TriggerOption) triggerOption() {}
 
 // ExecuteAsClause represents an EXECUTE AS clause
 type ExecuteAsClause struct {
-	ExecuteAsOption string // Caller, Self, Owner, or specific user
-	Principal       ScalarExpression
+	ExecuteAsOption string           // Caller, Self, Owner, String
+	Literal         *StringLiteral   // Used when ExecuteAsOption is "String"
 }
+
+func (e *ExecuteAsClause) node() {}
 
 // ExecuteAsTriggerOption represents an EXECUTE AS trigger option
 type ExecuteAsTriggerOption struct {

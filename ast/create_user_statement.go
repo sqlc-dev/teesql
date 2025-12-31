@@ -44,3 +44,15 @@ type DefaultSchemaPrincipalOption struct {
 }
 
 func (o *DefaultSchemaPrincipalOption) userOptionNode() {}
+
+// PasswordAlterPrincipalOption represents a password option for ALTER USER
+type PasswordAlterPrincipalOption struct {
+	Password    *StringLiteral
+	OldPassword *StringLiteral
+	MustChange  bool
+	Unlock      bool
+	Hashed      bool
+	OptionKind  string
+}
+
+func (o *PasswordAlterPrincipalOption) userOptionNode() {}

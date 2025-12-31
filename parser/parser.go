@@ -87,6 +87,8 @@ func (p *Parser) parseBatch() (*ast.Batch, error) {
 
 func (p *Parser) parseStatement() (ast.Statement, error) {
 	switch p.curTok.Type {
+	case TokenWith:
+		return p.parseWithStatement()
 	case TokenSelect, TokenLParen:
 		return p.parseSelectStatement()
 	case TokenInsert:

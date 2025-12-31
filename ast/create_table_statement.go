@@ -9,7 +9,18 @@ type CreateTableStatement struct {
 	Definition                   *TableDefinition
 	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme
 	TextImageOn                  *IdentifierOrValueExpression
+	FileStreamOn                 *IdentifierOrValueExpression
+	Options                      []TableOption
 }
+
+// TableDataCompressionOption represents a DATA_COMPRESSION option
+type TableDataCompressionOption struct {
+	DataCompressionOption *DataCompressionOption
+	OptionKind            string
+}
+
+func (t *TableDataCompressionOption) node()        {}
+func (t *TableDataCompressionOption) tableOption() {}
 
 func (s *CreateTableStatement) node()      {}
 func (s *CreateTableStatement) statement() {}
@@ -129,6 +140,7 @@ type UniqueConstraintDefinition struct {
 	ConstraintIdentifier *Identifier
 	Clustered            bool
 	IsPrimaryKey         bool
+	IsEnforced           *bool // nil = not specified (default enforced), true = ENFORCED, false = NOT ENFORCED
 	Columns              []*ColumnWithSortOrder
 	IndexType            *IndexType
 }
@@ -146,6 +158,7 @@ type ForeignKeyConstraintDefinition struct {
 	DeleteAction         string
 	UpdateAction         string
 	NotForReplication    bool
+	IsEnforced           *bool // nil = not specified (default enforced), true = ENFORCED, false = NOT ENFORCED
 }
 
 func (f *ForeignKeyConstraintDefinition) node()            {}

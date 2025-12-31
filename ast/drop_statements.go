@@ -57,8 +57,8 @@ func (s *DropTriggerStatement) node()      {}
 
 // DropIndexStatement represents a DROP INDEX statement
 type DropIndexStatement struct {
-	IsIfExists bool
-	Indexes    []*DropIndexClause
+	IsIfExists       bool
+	DropIndexClauses []*DropIndexClause
 }
 
 func (s *DropIndexStatement) statement() {}
@@ -66,10 +66,45 @@ func (s *DropIndexStatement) node()      {}
 
 // DropIndexClause represents a single index to drop
 type DropIndexClause struct {
-	Index     *SchemaObjectName // For backwards-compatible syntax: table.index
-	IndexName *Identifier       // For new syntax: index ON table
-	Object    *SchemaObjectName // Table name for ON clause syntax
+	Index   *Identifier       // Index name for new syntax
+	Object  *SchemaObjectName // Table name for ON clause syntax
+	Options []DropIndexOption
+	// Legacy fields for backwards-compatible syntax (table.index)
+	LegacyIndex *SchemaObjectName
 }
+
+// DropIndexOption is the interface for DROP INDEX options
+type DropIndexOption interface {
+	Node
+	dropIndexOption()
+}
+
+// OnlineIndexOption represents the ONLINE option
+type OnlineIndexOption struct {
+	OptionState string // On, Off
+	OptionKind  string // Online
+}
+
+func (o *OnlineIndexOption) node()            {}
+func (o *OnlineIndexOption) dropIndexOption() {}
+
+// MoveToDropIndexOption represents the MOVE TO option
+type MoveToDropIndexOption struct {
+	MoveTo     *FileGroupOrPartitionScheme
+	OptionKind string // MoveTo
+}
+
+func (o *MoveToDropIndexOption) node()            {}
+func (o *MoveToDropIndexOption) dropIndexOption() {}
+
+// FileStreamOnDropIndexOption represents the FILESTREAM_ON option
+type FileStreamOnDropIndexOption struct {
+	FileStreamOn *IdentifierOrValueExpression
+	OptionKind   string // FileStreamOn
+}
+
+func (o *FileStreamOnDropIndexOption) node()            {}
+func (o *FileStreamOnDropIndexOption) dropIndexOption() {}
 
 // DropStatisticsStatement represents a DROP STATISTICS statement
 type DropStatisticsStatement struct {

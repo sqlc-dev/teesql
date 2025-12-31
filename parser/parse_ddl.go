@@ -112,6 +112,8 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropCryptographicProviderStatement()
 	case "ASYMMETRIC":
 		return p.parseDropAsymmetricKeyStatement()
+	case "SYMMETRIC":
+		return p.parseDropSymmetricKeyStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -698,6 +700,50 @@ func (p *Parser) parseDropAsymmetricKeyStatement() (*ast.DropAsymmetricKeyStatem
 	return stmt, nil
 }
 
+func (p *Parser) parseDropSymmetricKeyStatement() (*ast.DropSymmetricKeyStatement, error) {
+	// Consume SYMMETRIC
+	p.nextToken()
+
+	// Expect KEY
+	if strings.ToUpper(p.curTok.Literal) == "KEY" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropSymmetricKeyStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse key name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for REMOVE PROVIDER KEY
+	if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
+		p.nextToken() // consume REMOVE
+		if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+			p.nextToken() // consume PROVIDER
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			stmt.RemoveProviderKey = true
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
@@ -1036,7 +1082,9 @@ func (p *Parser) parseDropTriggerStatement() (*ast.DropTriggerStatement, error) 
 	// Consume TRIGGER
 	p.nextToken()
 
-	stmt := &ast.DropTriggerStatement{}
+	stmt := &ast.DropTriggerStatement{
+		TriggerScope: "Normal", // Default to Normal for regular DROP TRIGGER
+	}
 
 	// Check for IF EXISTS
 	if strings.ToUpper(p.curTok.Literal) == "IF" {
@@ -1117,22 +1165,36 @@ func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
 			if err != nil {
 				return nil, err
 			}
-			clause.IndexName = indexName
+			clause.Index = indexName
 			clause.Object = tableName
 		} else if p.curTok.Type == TokenDot {
 			// Old backwards-compatible syntax: table.index
 			p.nextToken() // consume dot
 			childName := p.parseIdentifier()
-			clause.Index = &ast.SchemaObjectName{
+			clause.LegacyIndex = &ast.SchemaObjectName{
 				SchemaIdentifier: indexName,
 				BaseIdentifier:   childName,
+				Count:            2,
+				Identifiers:      []*ast.Identifier{indexName, childName},
 			}
 		} else {
 			// Just index name without ON or dot
-			clause.IndexName = indexName
+			clause.Index = indexName
 		}
 
-		stmt.Indexes = append(stmt.Indexes, clause)
+		// Parse WITH options if present
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				clause.Options = p.parseDropIndexOptions()
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+		}
+
+		stmt.DropIndexClauses = append(stmt.DropIndexClauses, clause)
 
 		if p.curTok.Type != TokenComma {
 			break
@@ -1146,6 +1208,105 @@ func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
+	var options []ast.DropIndexOption
+
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		switch upperLit {
+		case "ONLINE":
+			p.nextToken() // consume ONLINE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			optState := "Off"
+			if strings.ToUpper(p.curTok.Literal) == "ON" {
+				optState = "On"
+			}
+			p.nextToken()
+			options = append(options, &ast.OnlineIndexOption{
+				OptionState: optState,
+				OptionKind:  "Online",
+			})
+		case "MOVE":
+			p.nextToken() // consume MOVE
+			if strings.ToUpper(p.curTok.Literal) == "TO" {
+				p.nextToken() // consume TO
+			}
+			moveTo := &ast.FileGroupOrPartitionScheme{}
+			// Parse filegroup name
+			fgName := p.parseIdentifier()
+			moveTo.Name = &ast.IdentifierOrValueExpression{
+				Value:      fgName.Value,
+				Identifier: fgName,
+			}
+			// Check for partition columns
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				var cols []*ast.Identifier
+				for {
+					cols = append(cols, p.parseIdentifier())
+					if p.curTok.Type != TokenComma {
+						break
+					}
+					p.nextToken()
+				}
+				moveTo.PartitionSchemeColumns = cols
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			options = append(options, &ast.MoveToDropIndexOption{
+				MoveTo:     moveTo,
+				OptionKind: "MoveTo",
+			})
+		case "FILESTREAM_ON":
+			p.nextToken() // consume FILESTREAM_ON
+			ident := p.parseIdentifier()
+			options = append(options, &ast.FileStreamOnDropIndexOption{
+				FileStreamOn: &ast.IdentifierOrValueExpression{
+					Value:      ident.Value,
+					Identifier: ident,
+				},
+				OptionKind: "FileStreamOn",
+			})
+		case "DATA_COMPRESSION":
+			p.nextToken() // consume DATA_COMPRESSION
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			level := "None"
+			upperLevel := strings.ToUpper(p.curTok.Literal)
+			switch upperLevel {
+			case "ROW":
+				level = "Row"
+			case "PAGE":
+				level = "Page"
+			case "NONE":
+				level = "None"
+			}
+			p.nextToken()
+			options = append(options, &ast.DataCompressionOption{
+				CompressionLevel: level,
+				OptionKind:       "DataCompression",
+			})
+		default:
+			// Unknown option, skip
+			p.nextToken()
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else if p.curTok.Type == TokenRParen {
+			break
+		} else if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
+			break
+		}
+	}
+
+	return options
 }
 
 func (p *Parser) parseDropStatisticsStatement() (*ast.DropStatisticsStatement, error) {
@@ -1580,6 +1741,21 @@ func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Sta
 		p.nextToken() // consume FILE
 		stmt := &ast.AlterDatabaseAddFileStatement{
 			DatabaseName: dbName,
+			IsLog:        false,
+		}
+		// Parse file declarations
+		decls, err := p.parseFileDeclarationList(false)
+		if err != nil {
+			return nil, err
+		}
+		stmt.FileDeclarations = decls
+		// Parse TO FILEGROUP
+		if strings.ToUpper(p.curTok.Literal) == "TO" {
+			p.nextToken() // consume TO
+			if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+				p.nextToken() // consume FILEGROUP
+			}
+			stmt.FileGroup = p.parseIdentifier()
 		}
 		p.skipToEndOfStatement()
 		return stmt, nil
@@ -1590,7 +1766,14 @@ func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Sta
 		}
 		stmt := &ast.AlterDatabaseAddFileStatement{
 			DatabaseName: dbName,
+			IsLog:        true,
 		}
+		// Parse file declarations
+		decls, err := p.parseFileDeclarationList(false)
+		if err != nil {
+			return nil, err
+		}
+		stmt.FileDeclarations = decls
 		p.skipToEndOfStatement()
 		return stmt, nil
 	case "FILEGROUP":
@@ -2556,9 +2739,229 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 		p.nextToken() // consume CONSTRAINT
 		// Parse constraint name
 		constraintName := p.parseIdentifier()
-		_ = constraintName // We'll use this later when we implement full constraint support
-		// Skip to end of statement (lenient parsing for incomplete constraints)
-		p.skipToEndOfStatement()
+
+		// Check what type of constraint follows
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		switch upperLit {
+		case "PRIMARY":
+			p.nextToken() // consume PRIMARY
+			if p.curTok.Type == TokenKey {
+				p.nextToken() // consume KEY
+			}
+			constraint := &ast.UniqueConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+				IsPrimaryKey:         true,
+			}
+			// Parse optional CLUSTERED/NONCLUSTERED
+			for {
+				upperOpt := strings.ToUpper(p.curTok.Literal)
+				if upperOpt == "CLUSTERED" {
+					constraint.Clustered = true
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+					p.nextToken()
+				} else if upperOpt == "NONCLUSTERED" {
+					constraint.Clustered = false
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		// Parse column list - only add constraint if we have a column list
+			hasColumnsPK := false
+			if p.curTok.Type == TokenLParen {
+				hasColumnsPK = true
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colRef := &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+					}
+					colName := p.parseIdentifier()
+					colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{colName},
+						Count:       1,
+					}
+					sortOrder := ast.SortOrderNotSpecified
+					upperSort := strings.ToUpper(p.curTok.Literal)
+					if upperSort == "ASC" {
+						sortOrder = ast.SortOrderAscending
+						p.nextToken()
+					} else if upperSort == "DESC" {
+						sortOrder = ast.SortOrderDescending
+						p.nextToken()
+					}
+					constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+						Column:    colRef,
+						SortOrder: sortOrder,
+					})
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+			// Parse NOT ENFORCED
+			if strings.ToUpper(p.curTok.Literal) == "NOT" {
+				p.nextToken()
+				if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
+					p.nextToken()
+					f := false
+					constraint.IsEnforced = &f
+				}
+			}
+			// Only add constraint if we successfully parsed a column list
+			if hasColumnsPK {
+				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+			}
+
+		case "UNIQUE":
+			p.nextToken() // consume UNIQUE
+			constraint := &ast.UniqueConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+				IsPrimaryKey:         false,
+			}
+			// Parse optional CLUSTERED/NONCLUSTERED
+			for {
+				upperOpt := strings.ToUpper(p.curTok.Literal)
+				if upperOpt == "CLUSTERED" {
+					constraint.Clustered = true
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+					p.nextToken()
+				} else if upperOpt == "NONCLUSTERED" {
+					constraint.Clustered = false
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			// Parse column list - only add constraint if we have a column list
+			hasColumnsUQ := false
+			if p.curTok.Type == TokenLParen {
+				hasColumnsUQ = true
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colRef := &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+					}
+					colName := p.parseIdentifier()
+					colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{colName},
+						Count:       1,
+					}
+					sortOrder := ast.SortOrderNotSpecified
+					upperSort := strings.ToUpper(p.curTok.Literal)
+					if upperSort == "ASC" {
+						sortOrder = ast.SortOrderAscending
+						p.nextToken()
+					} else if upperSort == "DESC" {
+						sortOrder = ast.SortOrderDescending
+						p.nextToken()
+					}
+					constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+						Column:    colRef,
+						SortOrder: sortOrder,
+					})
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+			// Parse NOT ENFORCED
+			if strings.ToUpper(p.curTok.Literal) == "NOT" {
+				p.nextToken()
+				if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
+					p.nextToken()
+					f := false
+					constraint.IsEnforced = &f
+				}
+			}
+			// Only add constraint if we successfully parsed a column list
+			if hasColumnsUQ {
+				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+			}
+
+		case "FOREIGN":
+			p.nextToken() // consume FOREIGN
+			if p.curTok.Type == TokenKey {
+				p.nextToken() // consume KEY
+			}
+			constraint := &ast.ForeignKeyConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+			}
+			// Parse column list - track if we have a complete constraint
+			hasColumnsFK := false
+			hasReferences := false
+			if p.curTok.Type == TokenLParen {
+				hasColumnsFK = true
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					ident := p.parseIdentifier()
+					constraint.Columns = append(constraint.Columns, ident)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			// Parse REFERENCES
+			if strings.ToUpper(p.curTok.Literal) == "REFERENCES" {
+				hasReferences = true
+				p.nextToken()
+				refName, err := p.parseSchemaObjectName()
+				if err != nil {
+					return nil, err
+				}
+				constraint.ReferenceTableName = refName
+				// Parse referenced column list
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						ident := p.parseIdentifier()
+						constraint.ReferencedColumns = append(constraint.ReferencedColumns, ident)
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			}
+			// Parse NOT ENFORCED
+			if strings.ToUpper(p.curTok.Literal) == "NOT" {
+				p.nextToken()
+				if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
+					p.nextToken()
+					f := false
+					constraint.IsEnforced = &f
+				}
+			}
+			// Only add constraint if we have columns and references
+			if hasColumnsFK && hasReferences {
+				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+			}
+
+		default:
+			// Unknown constraint type - skip to end of statement
+			p.skipToEndOfStatement()
+		}
 		return stmt, nil
 	}
 
@@ -3708,8 +4111,71 @@ func (p *Parser) parseAlterUserStatement() (*ast.AlterUserStatement, error) {
 	// Parse user name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+
+		for {
+			optionName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			// Handle PASSWORD specially for ALTER USER (can have OLD_PASSWORD)
+			if optionName == "PASSWORD" {
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				passwordOpt := &ast.PasswordAlterPrincipalOption{
+					OptionKind: "Password",
+				}
+				if p.curTok.Type == TokenString {
+					passwordOpt.Password = p.parseStringLiteralValue()
+					p.nextToken()
+				}
+				// Check for OLD_PASSWORD
+				if strings.ToUpper(p.curTok.Literal) == "OLD_PASSWORD" {
+					p.nextToken() // consume OLD_PASSWORD
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+					}
+					if p.curTok.Type == TokenString {
+						passwordOpt.OldPassword = p.parseStringLiteralValue()
+						p.nextToken()
+					}
+				}
+				stmt.UserOptions = append(stmt.UserOptions, passwordOpt)
+			} else {
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+
+				value, err := p.parseScalarExpression()
+				if err != nil {
+					break
+				}
+
+				// Check if value is a simple identifier
+				var opt ast.UserOption
+				if colRef, ok := value.(*ast.ColumnReferenceExpression); ok && colRef.MultiPartIdentifier != nil && len(colRef.MultiPartIdentifier.Identifiers) == 1 {
+					opt = &ast.IdentifierPrincipalOption{
+						OptionKind: convertUserOptionKind(optionName),
+						Identifier: colRef.MultiPartIdentifier.Identifiers[0],
+					}
+				} else {
+					opt = &ast.LiteralPrincipalOption{
+						OptionKind: convertUserOptionKind(optionName),
+						Value:      value,
+					}
+				}
+				stmt.UserOptions = append(stmt.UserOptions, opt)
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
 
 	return stmt, nil
 }
@@ -3723,8 +4189,16 @@ func (p *Parser) parseAlterRouteStatement() (*ast.AlterRouteStatement, error) {
 	// Parse route name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		stmt.RouteOptions = p.parseRouteOptions()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
@@ -3749,12 +4223,258 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 	p.nextToken()
 
 	stmt := &ast.AlterEndpointStatement{}
+	hasOptions := false
 
 	// Parse endpoint name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse endpoint options (STATE, AFFINITY)
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+		upper := strings.ToUpper(p.curTok.Literal)
+
+		switch upper {
+		case "STATE":
+			hasOptions = true
+			p.nextToken() // consume STATE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			stateUpper := strings.ToUpper(p.curTok.Literal)
+			switch stateUpper {
+			case "STARTED":
+				stmt.State = "Started"
+			case "STOPPED":
+				stmt.State = "Stopped"
+			case "DISABLED":
+				stmt.State = "Disabled"
+			}
+			p.nextToken()
+
+		case "AFFINITY":
+			hasOptions = true
+			p.nextToken() // consume AFFINITY
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			affinity := &ast.EndpointAffinity{}
+			affinityUpper := strings.ToUpper(p.curTok.Literal)
+			switch affinityUpper {
+			case "NONE":
+				affinity.Kind = "None"
+				p.nextToken()
+			case "ADMIN":
+				affinity.Kind = "Admin"
+				p.nextToken()
+			default:
+				// Integer affinity
+				affinity.Kind = "Integer"
+				if p.curTok.Type == TokenNumber {
+					affinity.Value = &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					}
+					p.nextToken()
+				}
+			}
+			stmt.Affinity = affinity
+
+		case "AS":
+			hasOptions = true
+			p.nextToken() // consume AS
+			// Protocol type (TCP, HTTP)
+			protocolUpper := strings.ToUpper(p.curTok.Literal)
+			switch protocolUpper {
+			case "TCP":
+				stmt.Protocol = "Tcp"
+			case "HTTP":
+				stmt.Protocol = "Http"
+			}
+			p.nextToken()
+			// Parse protocol options (listener_port = value)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					opt := &ast.LiteralEndpointProtocolOption{}
+					switch optName {
+					case "LISTENER_PORT":
+						opt.Kind = "TcpListenerPort"
+					case "LISTENER_IP":
+						opt.Kind = "TcpListenerIP"
+					default:
+						opt.Kind = optName
+					}
+					if p.curTok.Type == TokenNumber {
+						opt.Value = &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						}
+						p.nextToken()
+					} else if p.curTok.Type == TokenString {
+						opt.Value = &ast.StringLiteral{
+							LiteralType: "String",
+							Value:       p.curTok.Literal,
+						}
+						p.nextToken()
+					}
+					stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+
+		case "FOR":
+			hasOptions = true
+			p.nextToken() // consume FOR
+			// Endpoint type (SOAP, SERVICE_BROKER, etc.)
+			endpointTypeUpper := strings.ToUpper(p.curTok.Literal)
+			switch endpointTypeUpper {
+			case "SOAP":
+				stmt.EndpointType = "Soap"
+			case "SERVICE_BROKER":
+				stmt.EndpointType = "ServiceBroker"
+			case "DATABASE_MIRRORING":
+				stmt.EndpointType = "DatabaseMirroring"
+			case "TSQL":
+				stmt.EndpointType = "Tsql"
+			default:
+				stmt.EndpointType = endpointTypeUpper
+			}
+			p.nextToken()
+			// Parse payload options
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					actionUpper := strings.ToUpper(p.curTok.Literal)
+					if actionUpper == "ADD" || actionUpper == "ALTER" || actionUpper == "DROP" {
+						p.nextToken() // consume ADD/ALTER/DROP
+						// Parse WEBMETHOD
+						if strings.ToUpper(p.curTok.Literal) == "WEBMETHOD" {
+							p.nextToken() // consume WEBMETHOD
+							method := &ast.SoapMethod{
+								Format: "NotSpecified",
+								Schema: "NotSpecified",
+							}
+							switch actionUpper {
+							case "ADD":
+								method.Action = "Add"
+								method.Kind = "WebMethod"
+							case "ALTER":
+								method.Action = "Alter"
+								method.Kind = "WebMethod"
+							case "DROP":
+								method.Action = "Drop"
+								method.Kind = "None"
+							}
+							// Parse alias (string literal)
+							if p.curTok.Type == TokenString {
+								method.Alias = p.parseStringLiteralValue()
+								p.nextToken()
+							}
+							// Parse method options
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									optName := strings.ToUpper(p.curTok.Literal)
+									p.nextToken()
+									if p.curTok.Type == TokenEquals {
+										p.nextToken() // consume =
+									}
+									if optName == "NAME" && p.curTok.Type == TokenString {
+										method.Name = p.parseStringLiteralValue()
+										p.nextToken()
+									} else if optName == "FORMAT" {
+										formatUpper := strings.ToUpper(p.curTok.Literal)
+										switch formatUpper {
+										case "ALL_RESULTS":
+											method.Format = "AllResults"
+										case "ROWSETS_ONLY":
+											method.Format = "RowsetsOnly"
+										case "NONE":
+											method.Format = "None"
+										default:
+											method.Format = formatUpper
+										}
+										p.nextToken()
+									} else if optName == "SCHEMA" {
+										schemaUpper := strings.ToUpper(p.curTok.Literal)
+										switch schemaUpper {
+										case "DEFAULT":
+											method.Schema = "Default"
+										case "NONE":
+											method.Schema = "None"
+										case "STANDARD":
+											method.Schema = "Standard"
+										default:
+											method.Schema = schemaUpper
+										}
+										p.nextToken()
+									} else {
+										p.nextToken()
+									}
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+							}
+							stmt.PayloadOptions = append(stmt.PayloadOptions, method)
+						}
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else if p.curTok.Type != TokenRParen {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+
+		case ",":
+			p.nextToken()
+
+		default:
+			// Unknown token, break out
+			if hasOptions {
+				// Set defaults for unspecified fields when options were parsed
+				if stmt.State == "" {
+					stmt.State = "NotSpecified"
+				}
+				if stmt.Protocol == "" {
+					stmt.Protocol = "None"
+				}
+				if stmt.EndpointType == "" {
+					stmt.EndpointType = "NotSpecified"
+				}
+			}
+			return stmt, nil
+		}
+	}
+
+	// Set defaults for unspecified fields when options were parsed
+	if hasOptions {
+		if stmt.State == "" {
+			stmt.State = "NotSpecified"
+		}
+		if stmt.Protocol == "" {
+			stmt.Protocol = "None"
+		}
+		if stmt.EndpointType == "" {
+			stmt.EndpointType = "NotSpecified"
+		}
+	}
 
 	return stmt, nil
 }
@@ -3789,6 +4509,49 @@ func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {
 
 	// Parse service name
 	stmt.Name = p.parseIdentifier()
+
+	// Check for ON QUEUE clause
+	if p.curTok.Type == TokenOn && strings.ToUpper(p.peekTok.Literal) == "QUEUE" {
+		p.nextToken() // consume ON
+		p.nextToken() // consume QUEUE
+		queueName, _ := p.parseSchemaObjectName()
+		stmt.QueueName = queueName
+	}
+
+	// Check for contract modifications (ADD CONTRACT, DROP CONTRACT)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		var contracts []*ast.ServiceContract
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			action := "None"
+			upperLit := strings.ToUpper(p.curTok.Literal)
+			if upperLit == "ADD" {
+				action = "Add"
+				p.nextToken() // consume ADD
+				if strings.ToUpper(p.curTok.Literal) == "CONTRACT" {
+					p.nextToken() // consume CONTRACT
+				}
+			} else if upperLit == "DROP" {
+				action = "Drop"
+				p.nextToken() // consume DROP
+				if strings.ToUpper(p.curTok.Literal) == "CONTRACT" {
+					p.nextToken() // consume CONTRACT
+				}
+			}
+			contract := &ast.ServiceContract{
+				Name:   p.parseIdentifier(),
+				Action: action,
+			}
+			contracts = append(contracts, contract)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+		stmt.ServiceContracts = contracts
+	}
 
 	// Skip rest of statement
 	p.skipToEndOfStatement()
