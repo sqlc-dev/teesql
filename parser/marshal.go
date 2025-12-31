@@ -292,6 +292,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createServerRoleStatementToJSON(s)
 	case *ast.AlterServerRoleStatement:
 		return alterServerRoleStatementToJSON(s)
+	case *ast.CreateServerAuditStatement:
+		return createServerAuditStatementToJSON(s)
+	case *ast.AlterServerAuditStatement:
+		return alterServerAuditStatementToJSON(s)
 	case *ast.AlterRemoteServiceBindingStatement:
 		return alterRemoteServiceBindingStatementToJSON(s)
 	case *ast.AlterXmlSchemaCollectionStatement:
@@ -1514,6 +1518,14 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["ElseExpression"] = scalarExpressionToJSON(e.ElseExpression)
 		}
 		return node
+	case *ast.SourceDeclaration:
+		node := jsonNode{
+			"$type": "SourceDeclaration",
+		}
+		if e.Value != nil {
+			node["Value"] = eventSessionObjectNameToJSON(e.Value)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownScalarExpression"}
 	}
@@ -1544,6 +1556,16 @@ func multiPartIdentifierToJSON(mpi *ast.MultiPartIdentifier) jsonNode {
 			ids[i] = identifierToJSON(id)
 		}
 		node["Identifiers"] = ids
+	}
+	return node
+}
+
+func eventSessionObjectNameToJSON(e *ast.EventSessionObjectName) jsonNode {
+	node := jsonNode{
+		"$type": "EventSessionObjectName",
+	}
+	if e.MultiPartIdentifier != nil {
+		node["MultiPartIdentifier"] = multiPartIdentifierToJSON(e.MultiPartIdentifier)
 	}
 	return node
 }
@@ -4715,6 +4737,121 @@ func alterServerRoleStatementToJSON(s *ast.AlterServerRoleStatement) jsonNode {
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	return node
+}
+
+func createServerAuditStatementToJSON(s *ast.CreateServerAuditStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateServerAuditStatement",
+	}
+	if s.AuditName != nil {
+		node["AuditName"] = identifierToJSON(s.AuditName)
+	}
+	if s.AuditTarget != nil {
+		node["AuditTarget"] = auditTargetToJSON(s.AuditTarget)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = auditOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	if s.PredicateExpression != nil {
+		node["PredicateExpression"] = booleanExpressionToJSON(s.PredicateExpression)
+	}
+	return node
+}
+
+func alterServerAuditStatementToJSON(s *ast.AlterServerAuditStatement) jsonNode {
+	node := jsonNode{
+		"$type":       "AlterServerAuditStatement",
+		"RemoveWhere": s.RemoveWhere,
+	}
+	if s.AuditName != nil {
+		node["AuditName"] = identifierToJSON(s.AuditName)
+	}
+	if s.AuditTarget != nil {
+		node["AuditTarget"] = auditTargetToJSON(s.AuditTarget)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = auditOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	if s.PredicateExpression != nil {
+		node["PredicateExpression"] = booleanExpressionToJSON(s.PredicateExpression)
+	}
+	return node
+}
+
+func auditTargetToJSON(t *ast.AuditTarget) jsonNode {
+	node := jsonNode{
+		"$type":      "AuditTarget",
+		"TargetKind": t.TargetKind,
+	}
+	if len(t.TargetOptions) > 0 {
+		opts := make([]jsonNode, len(t.TargetOptions))
+		for i, o := range t.TargetOptions {
+			opts[i] = auditTargetOptionToJSON(o)
+		}
+		node["TargetOptions"] = opts
+	}
+	return node
+}
+
+func auditTargetOptionToJSON(o ast.AuditTargetOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.LiteralAuditTargetOption:
+		node := jsonNode{
+			"$type":      "LiteralAuditTargetOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownAuditTargetOption"}
+	}
+}
+
+func auditOptionToJSON(o ast.AuditOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.OnFailureAuditOption:
+		return jsonNode{
+			"$type":           "OnFailureAuditOption",
+			"OnFailureAction": opt.OnFailureAction,
+			"OptionKind":      opt.OptionKind,
+		}
+	case *ast.QueueDelayAuditOption:
+		node := jsonNode{
+			"$type":      "QueueDelayAuditOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Delay != nil {
+			node["Delay"] = scalarExpressionToJSON(opt.Delay)
+		}
+		return node
+	case *ast.StateAuditOption:
+		return jsonNode{
+			"$type":      "StateAuditOption",
+			"Value":      opt.Value,
+			"OptionKind": opt.OptionKind,
+		}
+	case *ast.AuditGuidAuditOption:
+		node := jsonNode{
+			"$type":      "AuditGuidAuditOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Guid != nil {
+			node["Guid"] = scalarExpressionToJSON(opt.Guid)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownAuditOption"}
+	}
 }
 
 func alterRemoteServiceBindingStatementToJSON(s *ast.AlterRemoteServiceBindingStatement) jsonNode {

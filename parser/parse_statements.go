@@ -1370,7 +1370,16 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		case "SPATIAL":
 			return p.parseCreateSpatialIndexStatement()
 		case "SERVER":
-			return p.parseCreateServerRoleStatement()
+			// Check if it's SERVER ROLE or SERVER AUDIT
+			p.nextToken() // consume SERVER
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "ROLE":
+				return p.parseCreateServerRoleStatementContinued()
+			case "AUDIT":
+				return p.parseCreateServerAuditStatement()
+			default:
+				return nil, fmt.Errorf("expected ROLE or AUDIT after SERVER, got %s", p.curTok.Literal)
+			}
 		}
 		// Lenient: skip unknown CREATE statements
 		p.skipToEndOfStatement()
@@ -1517,6 +1526,16 @@ func (p *Parser) parseCreateServerRoleStatement() (*ast.CreateServerRoleStatemen
 	}
 	p.nextToken() // consume ROLE
 
+	return p.parseCreateServerRoleStatementBody()
+}
+
+func (p *Parser) parseCreateServerRoleStatementContinued() (*ast.CreateServerRoleStatement, error) {
+	// ROLE keyword should be current token, consume it
+	p.nextToken()
+	return p.parseCreateServerRoleStatementBody()
+}
+
+func (p *Parser) parseCreateServerRoleStatementBody() (*ast.CreateServerRoleStatement, error) {
 	stmt := &ast.CreateServerRoleStatement{}
 
 	// Parse role name
@@ -1534,6 +1553,304 @@ func (p *Parser) parseCreateServerRoleStatement() (*ast.CreateServerRoleStatemen
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseCreateServerAuditStatement() (*ast.CreateServerAuditStatement, error) {
+	// AUDIT keyword should be current token, consume it
+	p.nextToken()
+
+	stmt := &ast.CreateServerAuditStatement{}
+
+	// Parse audit name
+	stmt.AuditName = p.parseIdentifier()
+
+	// Parse TO clause (audit target)
+	if strings.ToUpper(p.curTok.Literal) == "TO" {
+		p.nextToken() // consume TO
+		target, err := p.parseAuditTarget()
+		if err != nil {
+			return nil, err
+		}
+		stmt.AuditTarget = target
+	}
+
+	// Parse WITH clause (options)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				opt, err := p.parseAuditOption()
+				if err != nil {
+					return nil, err
+				}
+				stmt.Options = append(stmt.Options, opt)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse WHERE clause (predicate)
+	if strings.ToUpper(p.curTok.Literal) == "WHERE" {
+		p.nextToken() // consume WHERE
+		pred, err := p.parseAuditPredicate()
+		if err != nil {
+			return nil, err
+		}
+		stmt.PredicateExpression = pred
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAuditTarget() (*ast.AuditTarget, error) {
+	target := &ast.AuditTarget{}
+
+	// Parse target kind (FILE, APPLICATION_LOG, SECURITY_LOG)
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "FILE":
+		target.TargetKind = "File"
+	case "APPLICATION_LOG":
+		target.TargetKind = "ApplicationLog"
+	case "SECURITY_LOG":
+		target.TargetKind = "SecurityLog"
+	default:
+		target.TargetKind = capitalizeFirst(p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse target options in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			opt, err := p.parseAuditTargetOption()
+			if err != nil {
+				return nil, err
+			}
+			target.TargetOptions = append(target.TargetOptions, opt)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	return target, nil
+}
+
+func (p *Parser) parseAuditTargetOption() (ast.AuditTargetOption, error) {
+	optName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after audit target option, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse value
+	val, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	optKind := ""
+	switch optName {
+	case "FILEPATH":
+		optKind = "FilePath"
+	case "MAX_FILES":
+		optKind = "MaxFiles"
+	case "MAX_ROLLOVER_FILES":
+		optKind = "MaxRolloverFiles"
+	case "MAXSIZE":
+		optKind = "MaxSize"
+	case "RESERVE_DISK_SPACE":
+		optKind = "ReserveDiskSpace"
+	default:
+		optKind = capitalizeFirst(strings.ToLower(optName))
+	}
+
+	return &ast.LiteralAuditTargetOption{
+		OptionKind: optKind,
+		Value:      val,
+	}, nil
+}
+
+func (p *Parser) parseAuditOption() (ast.AuditOption, error) {
+	optName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	switch optName {
+	case "ON_FAILURE":
+		// Expect =
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after ON_FAILURE, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		action := ""
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "CONTINUE":
+			action = "Continue"
+		case "SHUTDOWN":
+			action = "Shutdown"
+		case "FAIL_OPERATION":
+			action = "FailOperation"
+		default:
+			action = capitalizeFirst(strings.ToLower(p.curTok.Literal))
+		}
+		p.nextToken()
+		return &ast.OnFailureAuditOption{
+			OptionKind:      "OnFailure",
+			OnFailureAction: action,
+		}, nil
+	case "QUEUE_DELAY":
+		// Expect =
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after QUEUE_DELAY, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		val, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.QueueDelayAuditOption{
+			OptionKind: "QueueDelay",
+			Delay:      val,
+		}, nil
+	case "STATE":
+		// Expect =
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after STATE, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		value := capitalizeFirst(strings.ToLower(p.curTok.Literal))
+		p.nextToken()
+		return &ast.StateAuditOption{
+			OptionKind: "State",
+			Value:      value,
+		}, nil
+	case "AUDIT_GUID":
+		// Expect =
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after AUDIT_GUID, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		val, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.AuditGuidAuditOption{
+			OptionKind: "AuditGuid",
+			Guid:       val,
+		}, nil
+	default:
+		return nil, fmt.Errorf("unknown audit option: %s", optName)
+	}
+}
+
+func (p *Parser) parseAuditPredicate() (ast.BooleanExpression, error) {
+	return p.parseAuditBooleanExpression()
+}
+
+func (p *Parser) parseAuditBooleanExpression() (ast.BooleanExpression, error) {
+	// Parse first operand
+	left, err := p.parseAuditBooleanPrimary()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for AND/OR
+	for strings.ToUpper(p.curTok.Literal) == "AND" || strings.ToUpper(p.curTok.Literal) == "OR" {
+		op := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+		right, err := p.parseAuditBooleanPrimary()
+		if err != nil {
+			return nil, err
+		}
+		var binaryType string
+		if op == "AND" {
+			binaryType = "And"
+		} else {
+			binaryType = "Or"
+		}
+		left = &ast.BooleanBinaryExpression{
+			BinaryExpressionType: binaryType,
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
+}
+
+func (p *Parser) parseAuditBooleanPrimary() (ast.BooleanExpression, error) {
+	// For audit predicates, the left side is a SourceDeclaration
+	// which wraps an EventSessionObjectName
+	var identifiers []*ast.Identifier
+	identifiers = append(identifiers, p.parseIdentifier())
+
+	// Check for multi-part identifier
+	for p.curTok.Type == TokenDot {
+		p.nextToken() // consume .
+		identifiers = append(identifiers, p.parseIdentifier())
+	}
+
+	sourceDecl := &ast.SourceDeclaration{
+		Value: &ast.EventSessionObjectName{
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Count:       len(identifiers),
+				Identifiers: identifiers,
+			},
+		},
+	}
+
+	// Now parse comparison operator and right side
+	compType := ""
+	switch p.curTok.Type {
+	case TokenEquals:
+		compType = "Equals"
+	case TokenNotEqual:
+		compType = "NotEqualToBrackets"
+	case TokenLessThan:
+		compType = "LessThan"
+	case TokenGreaterThan:
+		compType = "GreaterThan"
+	case TokenLessOrEqual:
+		compType = "LessThanOrEqualTo"
+	case TokenGreaterOrEqual:
+		compType = "GreaterThanOrEqualTo"
+	default:
+		return nil, fmt.Errorf("expected comparison operator, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse right side
+	right, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.BooleanComparisonExpression{
+		ComparisonType:   compType,
+		FirstExpression:  sourceDecl,
+		SecondExpression: right,
+	}, nil
 }
 
 func (p *Parser) parseCreateContractStatement() (*ast.CreateContractStatement, error) {

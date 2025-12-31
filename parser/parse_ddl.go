@@ -1776,14 +1776,17 @@ func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error)
 	// Consume SERVER
 	p.nextToken()
 
-	// Check if it's ALTER SERVER ROLE or ALTER SERVER CONFIGURATION
-	if strings.ToUpper(p.curTok.Literal) == "ROLE" {
+	// Check if it's ALTER SERVER ROLE, ALTER SERVER AUDIT, or ALTER SERVER CONFIGURATION
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "ROLE":
 		return p.parseAlterServerRoleStatement()
+	case "AUDIT":
+		return p.parseAlterServerAuditStatement()
 	}
 
 	// Expect CONFIGURATION
 	if strings.ToUpper(p.curTok.Literal) != "CONFIGURATION" {
-		return nil, fmt.Errorf("expected CONFIGURATION or ROLE after SERVER, got %s", p.curTok.Literal)
+		return nil, fmt.Errorf("expected CONFIGURATION, ROLE, or AUDIT after SERVER, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
 
@@ -3099,6 +3102,81 @@ func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement,
 		// Handle incomplete statement
 		p.skipToEndOfStatement()
 		return stmt, nil
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterServerAuditStatement() (*ast.AlterServerAuditStatement, error) {
+	// AUDIT keyword should be current token, consume it
+	p.nextToken()
+
+	stmt := &ast.AlterServerAuditStatement{}
+
+	// Parse audit name
+	stmt.AuditName = p.parseIdentifier()
+
+	// Check for REMOVE WHERE
+	if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
+		p.nextToken() // consume REMOVE
+		if strings.ToUpper(p.curTok.Literal) == "WHERE" {
+			p.nextToken() // consume WHERE
+			stmt.RemoveWhere = true
+			// Skip optional semicolon
+			if p.curTok.Type == TokenSemicolon {
+				p.nextToken()
+			}
+			return stmt, nil
+		}
+		return nil, fmt.Errorf("expected WHERE after REMOVE, got %s", p.curTok.Literal)
+	}
+
+	// Parse TO clause (audit target)
+	if strings.ToUpper(p.curTok.Literal) == "TO" {
+		p.nextToken() // consume TO
+		target, err := p.parseAuditTarget()
+		if err != nil {
+			return nil, err
+		}
+		stmt.AuditTarget = target
+	}
+
+	// Parse WITH clause (options)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				opt, err := p.parseAuditOption()
+				if err != nil {
+					return nil, err
+				}
+				stmt.Options = append(stmt.Options, opt)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse WHERE clause (predicate)
+	if strings.ToUpper(p.curTok.Literal) == "WHERE" {
+		p.nextToken() // consume WHERE
+		pred, err := p.parseAuditPredicate()
+		if err != nil {
+			return nil, err
+		}
+		stmt.PredicateExpression = pred
 	}
 
 	// Skip optional semicolon
