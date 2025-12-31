@@ -5964,6 +5964,18 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 		}
 		param.DataType = dataType
 
+		// Check for NULL or NOT NULL
+		if p.curTok.Type == TokenNull {
+			param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+			p.nextToken()
+		} else if p.curTok.Type == TokenNot {
+			p.nextToken() // consume NOT
+			if p.curTok.Type == TokenNull {
+				param.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+				p.nextToken()
+			}
+		}
+
 		stmt.Parameters = append(stmt.Parameters, param)
 
 		if p.curTok.Type == TokenComma {
