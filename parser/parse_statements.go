@@ -553,25 +553,29 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 		Identifiers:    []*ast.Identifier{baseId},
 	}
 
-	// Check for XML with schema collection: XML(schema_collection)
-	if strings.ToUpper(typeName) == "XML" && p.curTok.Type == TokenLParen {
-		p.nextToken() // consume (
+	// Check for XML type - returns XmlDataTypeReference
+	if strings.ToUpper(typeName) == "XML" {
+		xmlRef := &ast.XmlDataTypeReference{
+			XmlDataTypeOption: "None",
+			Name:              baseName,
+		}
+		// Check for schema collection: XML(schema_collection)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
 
-		// Parse the schema collection name
-		schemaName, err := p.parseSchemaObjectName()
-		if err != nil {
-			return nil, err
+			// Parse the schema collection name
+			schemaName, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			xmlRef.XmlSchemaCollection = schemaName
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
 		}
 
-		if p.curTok.Type == TokenRParen {
-			p.nextToken()
-		}
-
-		return &ast.XmlDataTypeReference{
-			XmlDataTypeOption:   "None",
-			XmlSchemaCollection: schemaName,
-			Name:                baseName,
-		}, nil
+		return xmlRef, nil
 	}
 
 	// Check if this is a known SQL data type
@@ -4612,16 +4616,25 @@ func (p *Parser) parseReceiveStatement() (*ast.ReceiveStatement, error) {
 		p.nextToken()
 	}
 
-	// Optional WHERE clause
+	// Optional WHERE clause - RECEIVE uses simplified WHERE: CONVERSATION_GROUP_ID = value or CONVERSATION_HANDLE = value
 	if p.curTok.Type == TokenWhere {
 		p.nextToken() // consume WHERE
 
 		// Check for conversation_group_id
-		if strings.ToLower(p.curTok.Literal) == "conversation_group_id" {
+		if strings.ToUpper(p.curTok.Literal) == "CONVERSATION_GROUP_ID" {
 			stmt.IsConversationGroupIdWhere = true
+			p.nextToken() // consume CONVERSATION_GROUP_ID
+		} else if strings.ToUpper(p.curTok.Literal) == "CONVERSATION_HANDLE" {
+			p.nextToken() // consume CONVERSATION_HANDLE
 		}
 
-		where, err := p.parseBooleanExpression()
+		// Skip equals sign
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+
+		// Parse the value (usually a variable reference)
+		where, err := p.parseScalarExpression()
 		if err != nil {
 			return nil, err
 		}

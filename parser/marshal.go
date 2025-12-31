@@ -4932,7 +4932,7 @@ func receiveStatementToJSON(s *ast.ReceiveStatement) jsonNode {
 		node["Into"] = variableTableReferenceToJSON(s.Into)
 	}
 	if s.Where != nil {
-		node["Where"] = booleanExpressionToJSON(s.Where)
+		node["Where"] = scalarExpressionToJSON(s.Where)
 	}
 	node["IsConversationGroupIdWhere"] = s.IsConversationGroupIdWhere
 	return node
