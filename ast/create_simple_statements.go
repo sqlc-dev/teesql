@@ -407,3 +407,18 @@ type CreateEventNotificationStatement struct {
 
 func (s *CreateEventNotificationStatement) node()      {}
 func (s *CreateEventNotificationStatement) statement() {}
+
+// CreateDatabaseEncryptionKeyStatement represents a CREATE DATABASE ENCRYPTION KEY statement.
+type CreateDatabaseEncryptionKeyStatement struct {
+	Algorithm string           `json:"Algorithm,omitempty"`
+	Encryptor *CryptoMechanism `json:"Encryptor,omitempty"`
+}
+
+func (s *CreateDatabaseEncryptionKeyStatement) node()      {}
+func (s *CreateDatabaseEncryptionKeyStatement) statement() {}
+
+// DropDatabaseEncryptionKeyStatement represents a DROP DATABASE ENCRYPTION KEY statement.
+type DropDatabaseEncryptionKeyStatement struct{}
+
+func (s *DropDatabaseEncryptionKeyStatement) node()      {}
+func (s *DropDatabaseEncryptionKeyStatement) statement() {}

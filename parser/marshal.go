@@ -380,6 +380,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return enableDisableTriggerStatementToJSON(s)
 	case *ast.CreateDatabaseStatement:
 		return createDatabaseStatementToJSON(s)
+	case *ast.CreateDatabaseEncryptionKeyStatement:
+		return createDatabaseEncryptionKeyStatementToJSON(s)
+	case *ast.AlterDatabaseEncryptionKeyStatement:
+		return alterDatabaseEncryptionKeyStatementToJSON(s)
+	case *ast.DropDatabaseEncryptionKeyStatement:
+		return dropDatabaseEncryptionKeyStatementToJSON(s)
 	case *ast.CreateLoginStatement:
 		return createLoginStatementToJSON(s)
 	case *ast.CreateIndexStatement:
@@ -10735,6 +10741,39 @@ func containmentDatabaseOptionToJSON(c *ast.ContainmentDatabaseOption) jsonNode 
 		"$type":      "ContainmentDatabaseOption",
 		"Value":      c.Value,
 		"OptionKind": c.OptionKind,
+	}
+}
+
+func createDatabaseEncryptionKeyStatementToJSON(s *ast.CreateDatabaseEncryptionKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateDatabaseEncryptionKeyStatement",
+	}
+	if s.Encryptor != nil {
+		node["Encryptor"] = cryptoMechanismToJSON(s.Encryptor)
+	}
+	if s.Algorithm != "" {
+		node["Algorithm"] = s.Algorithm
+	}
+	return node
+}
+
+func alterDatabaseEncryptionKeyStatementToJSON(s *ast.AlterDatabaseEncryptionKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "AlterDatabaseEncryptionKeyStatement",
+		"Regenerate": s.Regenerate,
+	}
+	if s.Encryptor != nil {
+		node["Encryptor"] = cryptoMechanismToJSON(s.Encryptor)
+	}
+	if s.Algorithm != "" {
+		node["Algorithm"] = s.Algorithm
+	}
+	return node
+}
+
+func dropDatabaseEncryptionKeyStatementToJSON(s *ast.DropDatabaseEncryptionKeyStatement) jsonNode {
+	return jsonNode{
+		"$type": "DropDatabaseEncryptionKeyStatement",
 	}
 }
 

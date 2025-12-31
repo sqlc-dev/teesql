@@ -756,6 +756,19 @@ func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
 
+	// Check for DATABASE ENCRYPTION KEY
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if p.curTok.Type == TokenKey {
+			p.nextToken() // consume KEY
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return &ast.DropDatabaseEncryptionKeyStatement{}, nil
+	}
+
 	// Check for DATABASE SCOPED CREDENTIAL (look ahead to confirm)
 	if p.curTok.Type == TokenScoped && p.peekTok.Type == TokenCredential {
 		p.nextToken() // consume SCOPED
@@ -1605,6 +1618,11 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
 
+	// Check for DATABASE ENCRYPTION KEY
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		return p.parseAlterDatabaseEncryptionKeyStatement()
+	}
+
 	// Check for SCOPED CREDENTIAL or SCOPED CONFIGURATION
 	if p.curTok.Type == TokenScoped {
 		p.nextToken() // consume SCOPED
@@ -1643,6 +1661,74 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 	// Lenient: skip unknown database names (like $(tempdb) SQLCMD variables)
 	p.skipToEndOfStatement()
 	return &ast.AlterDatabaseSetStatement{}, nil
+}
+
+func (p *Parser) parseAlterDatabaseEncryptionKeyStatement() (*ast.AlterDatabaseEncryptionKeyStatement, error) {
+	// curTok is ENCRYPTION
+	p.nextToken() // consume ENCRYPTION
+
+	// Consume KEY
+	if p.curTok.Type == TokenKey {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterDatabaseEncryptionKeyStatement{
+		Algorithm: "None", // Default when not specified
+	}
+
+	// Check for REGENERATE
+	if strings.ToUpper(p.curTok.Literal) == "REGENERATE" {
+		stmt.Regenerate = true
+		p.nextToken() // consume REGENERATE
+	}
+
+	// WITH ALGORITHM = ...
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+	}
+
+	if strings.ToUpper(p.curTok.Literal) == "ALGORITHM" {
+		p.nextToken() // consume ALGORITHM
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		stmt.Algorithm = normalizeAlgorithmName(p.curTok.Literal)
+		p.nextToken()
+	}
+
+	// ENCRYPTION BY SERVER CERTIFICATE|ASYMMETRIC KEY name
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+
+		mechanism := &ast.CryptoMechanism{}
+		mechType := strings.ToUpper(p.curTok.Literal)
+		if mechType == "CERTIFICATE" {
+			p.nextToken()
+			mechanism.CryptoMechanismType = "Certificate"
+			mechanism.Identifier = p.parseIdentifier()
+		} else if mechType == "ASYMMETRIC" {
+			p.nextToken()
+			if p.curTok.Type == TokenKey {
+				p.nextToken() // consume KEY
+			}
+			mechanism.CryptoMechanismType = "AsymmetricKey"
+			mechanism.Identifier = p.parseIdentifier()
+		}
+		stmt.Encryptor = mechanism
+	}
+
+	// Skip to end of statement
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.AlterDatabaseSetStatement, error) {

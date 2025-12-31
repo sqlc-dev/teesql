@@ -3069,6 +3069,66 @@ func (p *Parser) parseCreateCredentialStatement(isDatabaseScoped bool) (*ast.Cre
 	return stmt, nil
 }
 
+func (p *Parser) parseCreateDatabaseEncryptionKeyStatement() (*ast.CreateDatabaseEncryptionKeyStatement, error) {
+	// curTok is ENCRYPTION
+	p.nextToken() // consume ENCRYPTION
+
+	// Consume KEY
+	if p.curTok.Type == TokenKey {
+		p.nextToken()
+	}
+
+	stmt := &ast.CreateDatabaseEncryptionKeyStatement{}
+
+	// WITH ALGORITHM = ...
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+	}
+
+	if strings.ToUpper(p.curTok.Literal) == "ALGORITHM" {
+		p.nextToken() // consume ALGORITHM
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		stmt.Algorithm = normalizeAlgorithmName(p.curTok.Literal)
+		p.nextToken()
+	}
+
+	// ENCRYPTION BY SERVER CERTIFICATE|ASYMMETRIC KEY name
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+
+		mechanism := &ast.CryptoMechanism{}
+		mechType := strings.ToUpper(p.curTok.Literal)
+		if mechType == "CERTIFICATE" {
+			p.nextToken()
+			mechanism.CryptoMechanismType = "Certificate"
+			mechanism.Identifier = p.parseIdentifier()
+		} else if mechType == "ASYMMETRIC" {
+			p.nextToken()
+			if p.curTok.Type == TokenKey {
+				p.nextToken() // consume KEY
+			}
+			mechanism.CryptoMechanismType = "AsymmetricKey"
+			mechanism.Identifier = p.parseIdentifier()
+		}
+		stmt.Encryptor = mechanism
+	}
+
+	// Skip to end of statement
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseCreateDatabaseScopedCredentialStatement() (*ast.CreateCredentialStatement, error) {
 	// Already consumed CREATE, curTok is DATABASE
 	p.nextToken() // consume DATABASE
@@ -6337,6 +6397,11 @@ func (p *Parser) parseCreatePartitionSchemeStatementFromPartition() (*ast.Create
 
 func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 	p.nextToken() // consume DATABASE
+
+	// Check for DATABASE ENCRYPTION KEY
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		return p.parseCreateDatabaseEncryptionKeyStatement()
+	}
 
 	// Check for DATABASE SCOPED CREDENTIAL
 	if strings.ToUpper(p.curTok.Literal) == "SCOPED" {

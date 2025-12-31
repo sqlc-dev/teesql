@@ -293,3 +293,13 @@ type RenameEntityStatement struct {
 
 func (s *RenameEntityStatement) node()      {}
 func (s *RenameEntityStatement) statement() {}
+
+// AlterDatabaseEncryptionKeyStatement represents an ALTER DATABASE ENCRYPTION KEY statement.
+type AlterDatabaseEncryptionKeyStatement struct {
+	Regenerate bool             `json:"Regenerate"`
+	Algorithm  string           `json:"Algorithm,omitempty"`
+	Encryptor  *CryptoMechanism `json:"Encryptor,omitempty"`
+}
+
+func (s *AlterDatabaseEncryptionKeyStatement) node()      {}
+func (s *AlterDatabaseEncryptionKeyStatement) statement() {}
