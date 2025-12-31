@@ -564,7 +564,7 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 			if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "MAX" {
 				dt.Parameters = append(dt.Parameters, &ast.MaxLiteral{
 					LiteralType: "Max",
-					Value:       "MAX",
+					Value:       p.curTok.Literal,
 				})
 				p.nextToken()
 			} else {
