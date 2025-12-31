@@ -83,12 +83,13 @@ func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
 	stmt := &ast.SelectStatement{}
 
 	// Parse query expression (handles UNION, parens, etc.)
-	qe, into, err := p.parseQueryExpressionWithInto()
+	qe, into, on, err := p.parseQueryExpressionWithInto()
 	if err != nil {
 		return nil, err
 	}
 	stmt.QueryExpression = qe
 	stmt.Into = into
+	stmt.On = on
 
 	// Parse optional OPTION clause
 	if p.curTok.Type == TokenOption {
@@ -108,15 +109,15 @@ func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
 }
 
 func (p *Parser) parseQueryExpression() (ast.QueryExpression, error) {
-	qe, _, err := p.parseQueryExpressionWithInto()
+	qe, _, _, err := p.parseQueryExpressionWithInto()
 	return qe, err
 }
 
-func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.SchemaObjectName, error) {
+func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.SchemaObjectName, *ast.Identifier, error) {
 	// Parse primary query expression (could be SELECT or parenthesized)
-	left, into, err := p.parsePrimaryQueryExpression()
+	left, into, on, err := p.parsePrimaryQueryExpression()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	// Track if we have any binary operations
@@ -144,14 +145,15 @@ func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.Schem
 		}
 
 		// Parse the right side
-		right, rightInto, err := p.parsePrimaryQueryExpression()
+		right, rightInto, rightOn, err := p.parsePrimaryQueryExpression()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 
 		// INTO can only appear in the first query of a UNION
 		if rightInto != nil && into == nil {
 			into = rightInto
+			on = rightOn
 		}
 
 		bqe := &ast.BinaryQueryExpression{
@@ -168,7 +170,7 @@ func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.Schem
 	if p.curTok.Type == TokenOrder {
 		obc, err := p.parseOrderByClause()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 
 		if hasBinaryOp {
@@ -184,39 +186,45 @@ func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.Schem
 		}
 	}
 
-	return left, into, nil
+	return left, into, on, nil
 }
 
-func (p *Parser) parsePrimaryQueryExpression() (ast.QueryExpression, *ast.SchemaObjectName, error) {
+func (p *Parser) parsePrimaryQueryExpression() (ast.QueryExpression, *ast.SchemaObjectName, *ast.Identifier, error) {
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
-		qe, into, err := p.parseQueryExpressionWithInto()
+		qe, into, on, err := p.parseQueryExpressionWithInto()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		if p.curTok.Type != TokenRParen {
-			return nil, nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			return nil, nil, nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume )
-		return &ast.QueryParenthesisExpression{QueryExpression: qe}, into, nil
+		return &ast.QueryParenthesisExpression{QueryExpression: qe}, into, on, nil
 	}
 
 	return p.parseQuerySpecificationWithInto()
 }
 
-func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *ast.SchemaObjectName, error) {
+func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *ast.SchemaObjectName, *ast.Identifier, error) {
 	qs, err := p.parseQuerySpecificationCore()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	// Check for INTO clause after SELECT elements, before FROM
 	var into *ast.SchemaObjectName
+	var on *ast.Identifier
 	if p.curTok.Type == TokenInto {
 		p.nextToken() // consume INTO
 		into, err = p.parseSchemaObjectName()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
+		}
+		// Check for ON filegroup clause
+		if strings.ToUpper(p.curTok.Literal) == "ON" {
+			p.nextToken() // consume ON
+			on = p.parseIdentifier()
 		}
 	}
 
@@ -224,7 +232,7 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 	if p.curTok.Type == TokenFrom {
 		fromClause, err := p.parseFromClause()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		qs.FromClause = fromClause
 	}
@@ -233,7 +241,7 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 	if p.curTok.Type == TokenWhere {
 		whereClause, err := p.parseWhereClause()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		qs.WhereClause = whereClause
 	}
@@ -242,7 +250,7 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 	if p.curTok.Type == TokenGroup {
 		groupByClause, err := p.parseGroupByClause()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		qs.GroupByClause = groupByClause
 	}
@@ -251,7 +259,7 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 	if p.curTok.Type == TokenHaving {
 		havingClause, err := p.parseHavingClause()
 		if err != nil {
-			return nil, nil, err
+			return nil, nil, nil, err
 		}
 		qs.HavingClause = havingClause
 	}
@@ -259,7 +267,7 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 	// Note: ORDER BY is parsed at the top level in parseQueryExpressionWithInto
 	// to correctly handle UNION/EXCEPT/INTERSECT cases
 
-	return qs, into, nil
+	return qs, into, on, nil
 }
 
 func (p *Parser) parseQuerySpecificationCore() (*ast.QuerySpecification, error) {

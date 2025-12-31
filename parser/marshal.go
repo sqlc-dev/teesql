@@ -1028,6 +1028,9 @@ func selectStatementToJSON(s *ast.SelectStatement) jsonNode {
 	if s.Into != nil {
 		node["Into"] = schemaObjectNameToJSON(s.Into)
 	}
+	if s.On != nil {
+		node["On"] = identifierToJSON(s.On)
+	}
 	if len(s.OptimizerHints) > 0 {
 		hints := make([]jsonNode, len(s.OptimizerHints))
 		for i, h := range s.OptimizerHints {

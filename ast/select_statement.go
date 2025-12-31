@@ -4,6 +4,7 @@ package ast
 type SelectStatement struct {
 	QueryExpression QueryExpression     `json:"QueryExpression,omitempty"`
 	Into            *SchemaObjectName   `json:"Into,omitempty"`
+	On              *Identifier         `json:"On,omitempty"`
 	OptimizerHints  []OptimizerHintBase `json:"OptimizerHints,omitempty"`
 }
 
