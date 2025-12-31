@@ -206,6 +206,25 @@ type CreateTypeStatement struct {
 func (s *CreateTypeStatement) node()      {}
 func (s *CreateTypeStatement) statement() {}
 
+// CreateTypeUddtStatement represents a CREATE TYPE ... FROM statement (user-defined data type).
+type CreateTypeUddtStatement struct {
+	Name               *SchemaObjectName
+	DataType           DataTypeReference
+	NullableConstraint *NullableConstraintDefinition
+}
+
+func (s *CreateTypeUddtStatement) node()      {}
+func (s *CreateTypeUddtStatement) statement() {}
+
+// CreateTypeUdtStatement represents a CREATE TYPE ... EXTERNAL NAME statement (CLR user-defined type).
+type CreateTypeUdtStatement struct {
+	Name         *SchemaObjectName
+	AssemblyName *AssemblyName
+}
+
+func (s *CreateTypeUdtStatement) node()      {}
+func (s *CreateTypeUdtStatement) statement() {}
+
 // CreateXmlIndexStatement represents a CREATE XML INDEX statement.
 type CreateXmlIndexStatement struct {
 	Name   *Identifier       `json:"Name,omitempty"`

@@ -388,6 +388,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createStatisticsStatementToJSON(s)
 	case *ast.CreateTypeStatement:
 		return createTypeStatementToJSON(s)
+	case *ast.CreateTypeUddtStatement:
+		return createTypeUddtStatementToJSON(s)
+	case *ast.CreateTypeUdtStatement:
+		return createTypeUdtStatementToJSON(s)
 	case *ast.CreateXmlIndexStatement:
 		return createXmlIndexStatementToJSON(s)
 	case *ast.CreatePartitionFunctionStatement:
@@ -8193,6 +8197,35 @@ func createStatisticsStatementToJSON(s *ast.CreateStatisticsStatement) jsonNode 
 func createTypeStatementToJSON(s *ast.CreateTypeStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateTypeStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	return node
+}
+
+func createTypeUddtStatementToJSON(s *ast.CreateTypeUddtStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateTypeUddtStatement",
+	}
+	if s.DataType != nil {
+		node["DataType"] = dataTypeReferenceToJSON(s.DataType)
+	}
+	if s.NullableConstraint != nil {
+		node["NullableConstraint"] = nullableConstraintToJSON(s.NullableConstraint)
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	return node
+}
+
+func createTypeUdtStatementToJSON(s *ast.CreateTypeUdtStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateTypeUdtStatement",
+	}
+	if s.AssemblyName != nil {
+		node["AssemblyName"] = assemblyNameToJSON(s.AssemblyName)
 	}
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)

@@ -5844,17 +5844,74 @@ func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatemen
 	return stmt, nil
 }
 
-func (p *Parser) parseCreateTypeStatement() (*ast.CreateTypeStatement, error) {
+func (p *Parser) parseCreateTypeStatement() (ast.Statement, error) {
 	p.nextToken() // consume TYPE
 
 	name, _ := p.parseSchemaObjectName()
-	stmt := &ast.CreateTypeStatement{
-		Name: name,
-	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
-	return stmt, nil
+	// Check what follows the type name
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "FROM":
+		// CREATE TYPE ... FROM (User-Defined Data Type)
+		p.nextToken() // consume FROM
+		dataType, err := p.parseDataTypeReference()
+		if err != nil {
+			return nil, err
+		}
+		stmt := &ast.CreateTypeUddtStatement{
+			Name:     name,
+			DataType: dataType,
+		}
+		// Check for NULL / NOT NULL
+		if p.curTok.Type == TokenNull {
+			stmt.NullableConstraint = &ast.NullableConstraintDefinition{Nullable: true}
+			p.nextToken()
+		} else if p.curTok.Type == TokenNot {
+			p.nextToken() // consume NOT
+			if p.curTok.Type == TokenNull {
+				p.nextToken() // consume NULL
+			}
+			stmt.NullableConstraint = &ast.NullableConstraintDefinition{Nullable: false}
+		}
+		// Skip semicolon if present
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	case "EXTERNAL":
+		// CREATE TYPE ... EXTERNAL NAME (CLR User-Defined Type)
+		p.nextToken() // consume EXTERNAL
+		if strings.ToUpper(p.curTok.Literal) != "NAME" {
+			return nil, fmt.Errorf("expected NAME after EXTERNAL, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume NAME
+		// Parse assembly name (could be [AssemblyName] or AssemblyName.[ClassName])
+		assemblyName := &ast.AssemblyName{}
+		firstIdent := p.parseIdentifier()
+		assemblyName.Name = firstIdent
+		// Check for dot and class name
+		if p.curTok.Type == TokenDot {
+			p.nextToken() // consume dot
+			className := p.parseIdentifier()
+			assemblyName.ClassName = className
+		}
+		stmt := &ast.CreateTypeUdtStatement{
+			Name:         name,
+			AssemblyName: assemblyName,
+		}
+		// Skip semicolon if present
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	default:
+		// Generic CREATE TYPE statement
+		stmt := &ast.CreateTypeStatement{
+			Name: name,
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
 }
 
 func (p *Parser) parseCreateXmlIndexStatement() (*ast.CreateXmlIndexStatement, error) {
