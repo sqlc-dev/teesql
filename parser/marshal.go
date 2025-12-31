@@ -3306,6 +3306,9 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			}
 			// Continue to parse actual constraint in next iteration
 			continue
+		} else if upperLit == "COLLATE" {
+			p.nextToken() // consume COLLATE
+			col.Collation = p.parseIdentifier()
 		} else {
 			break
 		}
@@ -4415,6 +4418,9 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 	}
 	if c.DataType != nil {
 		node["DataType"] = dataTypeReferenceToJSON(c.DataType)
+	}
+	if c.Collation != nil {
+		node["Collation"] = identifierToJSON(c.Collation)
 	}
 	return node
 }
