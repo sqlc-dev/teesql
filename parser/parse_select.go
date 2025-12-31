@@ -1508,7 +1508,29 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		}, nil
 	}
 
-	return p.parseNamedTableReference()
+	// Check for table-valued function (identifier followed by parentheses that's not a table hint)
+	// Parse schema object name first, then check if it's followed by function call parentheses
+	son, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for function call (has parentheses with non-hint content)
+	if p.curTok.Type == TokenLParen && !p.peekIsTableHint() {
+		params, err := p.parseFunctionParameters()
+		if err != nil {
+			return nil, err
+		}
+		ref := &ast.SchemaObjectFunctionTableReference{
+			SchemaObject: son,
+			Parameters:   params,
+			ForPath:      false,
+		}
+		return ref, nil
+	}
+
+	// It's a regular named table reference
+	return p.parseNamedTableReferenceWithName(son)
 }
 
 func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
@@ -1563,6 +1585,66 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 					// Check if the next token is a valid table hint (space-separated hints)
 					if p.isTableHintToken() {
 						continue // Continue parsing space-separated hints
+					}
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	return ref, nil
+}
+
+// parseNamedTableReferenceWithName parses a named table reference when the schema object name has already been parsed
+func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*ast.NamedTableReference, error) {
+	ref := &ast.NamedTableReference{
+		SchemaObject: son,
+		ForPath:      false,
+	}
+
+	// Parse optional alias (AS alias or just alias)
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLBracket {
+			return nil, fmt.Errorf("expected identifier after AS, got %s", p.curTok.Literal)
+		}
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+		// Could be an alias without AS, but need to be careful not to consume keywords
+		if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" {
+				ref.Alias = p.parseIdentifier()
+			}
+		} else {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	// Parse optional table hints WITH (hint, hint, ...) or old-style (hint, hint, ...)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+	}
+	if p.curTok.Type == TokenLParen {
+		// Check if this looks like hints (first token is a hint keyword)
+		if p.peekIsTableHint() {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				hint, err := p.parseTableHint()
+				if err != nil {
+					return nil, err
+				}
+				if hint != nil {
+					ref.TableHints = append(ref.TableHints, hint)
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else if p.curTok.Type != TokenRParen {
+					if p.isTableHintToken() {
+						continue
 					}
 					break
 				}
