@@ -1815,6 +1815,10 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			}
 			return &ast.LiteralOptimizerHint{HintKind: "UsePlan", Value: value}, nil
 		}
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "HINT" {
+			p.nextToken() // consume HINT
+			return p.parseUseHintList()
+		}
 		return &ast.OptimizerHint{HintKind: "Use"}, nil
 	}
 
@@ -1954,6 +1958,10 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		}
 		return &ast.OptimizerHint{HintKind: "Fast"}, nil
 
+	case "NO_PERFORMANCE_SPOOL":
+		p.nextToken() // consume NO_PERFORMANCE_SPOOL
+		return &ast.OptimizerHint{HintKind: "NoPerformanceSpool"}, nil
+
 	default:
 		// Handle generic hints
 		hintKind := convertHintKind(p.curTok.Literal)
@@ -1983,6 +1991,44 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		}
 		return &ast.OptimizerHint{HintKind: hintKind}, nil
 	}
+}
+
+func (p *Parser) parseUseHintList() (ast.OptimizerHintBase, error) {
+	hint := &ast.UseHintList{
+		HintKind: "Unspecified",
+	}
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after USE HINT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse hint string literals
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			continue
+		}
+
+		if p.curTok.Type == TokenString {
+			str := p.parseStringLiteralValue()
+			p.nextToken()
+			hint.Hints = append(hint.Hints, str)
+		} else if p.curTok.Type == TokenNationalString {
+			str, _ := p.parseNationalStringFromToken()
+			hint.Hints = append(hint.Hints, str)
+		} else {
+			break
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	return hint, nil
 }
 
 func (p *Parser) parseTableHintsOptimizerHint() (ast.OptimizerHintBase, error) {

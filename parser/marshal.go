@@ -1102,6 +1102,21 @@ func optimizerHintToJSON(h ast.OptimizerHintBase) jsonNode {
 			node["HintKind"] = hint.HintKind
 		}
 		return node
+	case *ast.UseHintList:
+		node := jsonNode{
+			"$type": "UseHintList",
+		}
+		if len(hint.Hints) > 0 {
+			hints := make([]jsonNode, len(hint.Hints))
+			for i, h := range hint.Hints {
+				hints[i] = scalarExpressionToJSON(h)
+			}
+			node["Hints"] = hints
+		}
+		if hint.HintKind != "" {
+			node["HintKind"] = hint.HintKind
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownOptimizerHint"}
 	}

@@ -17,3 +17,12 @@ type TableHintsOptimizerHint struct {
 
 func (*TableHintsOptimizerHint) node()          {}
 func (*TableHintsOptimizerHint) optimizerHint() {}
+
+// UseHintList represents a USE HINT optimizer hint with a list of hint strings.
+type UseHintList struct {
+	HintKind string             `json:"HintKind,omitempty"`
+	Hints    []ScalarExpression `json:"Hints,omitempty"`
+}
+
+func (*UseHintList) node()          {}
+func (*UseHintList) optimizerHint() {}
