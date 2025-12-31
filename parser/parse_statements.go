@@ -7551,9 +7551,97 @@ func (p *Parser) parseCreateRouteStatement() (*ast.CreateRouteStatement, error) 
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse optional AUTHORIZATION clause
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		stmt.RouteOptions = p.parseRouteOptions()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
+}
+
+func (p *Parser) parseRouteOptions() []*ast.RouteOption {
+	var options []*ast.RouteOption
+
+	for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+		optionName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume option name
+
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		var optionKind string
+		switch optionName {
+		case "BROKER_INSTANCE":
+			optionKind = "BrokerInstance"
+		case "SERVICE_NAME":
+			optionKind = "ServiceName"
+		case "LIFETIME":
+			optionKind = "Lifetime"
+		case "ADDRESS":
+			optionKind = "Address"
+		case "MIRROR_ADDRESS":
+			optionKind = "MirrorAddress"
+		default:
+			// Unknown option, skip
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+			continue
+		}
+
+		// Parse literal value
+		var literal ast.ScalarExpression
+		if p.curTok.Type == TokenString {
+			value := p.curTok.Literal
+			// Strip quotes
+			if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+				value = value[1 : len(value)-1]
+			}
+			literal = &ast.StringLiteral{
+				LiteralType: "String",
+				Value:       value,
+			}
+			p.nextToken()
+		} else if p.curTok.Type == TokenNumber {
+			literal = &ast.IntegerLiteral{
+				LiteralType: "Integer",
+				Value:       p.curTok.Literal,
+			}
+			p.nextToken()
+		} else {
+			// Unknown value, try to skip
+			p.nextToken()
+		}
+
+		if literal != nil {
+			options = append(options, &ast.RouteOption{
+				OptionKind: optionKind,
+				Literal:    literal,
+			})
+		}
+
+		// Skip comma if present
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return options
 }
 
 func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, error) {

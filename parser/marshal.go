@@ -9137,6 +9137,13 @@ func alterRouteStatementToJSON(s *ast.AlterRouteStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if len(s.RouteOptions) > 0 {
+		opts := make([]jsonNode, len(s.RouteOptions))
+		for i, opt := range s.RouteOptions {
+			opts[i] = routeOptionToJSON(opt)
+		}
+		node["RouteOptions"] = opts
+	}
 	return node
 }
 
@@ -9933,8 +9940,29 @@ func createRouteStatementToJSON(s *ast.CreateRouteStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateRouteStatement",
 	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.RouteOptions) > 0 {
+		opts := make([]jsonNode, len(s.RouteOptions))
+		for i, opt := range s.RouteOptions {
+			opts[i] = routeOptionToJSON(opt)
+		}
+		node["RouteOptions"] = opts
+	}
+	return node
+}
+
+func routeOptionToJSON(opt *ast.RouteOption) jsonNode {
+	node := jsonNode{
+		"$type":      "RouteOption",
+		"OptionKind": opt.OptionKind,
+	}
+	if opt.Literal != nil {
+		node["Literal"] = scalarExpressionToJSON(opt.Literal)
 	}
 	return node
 }

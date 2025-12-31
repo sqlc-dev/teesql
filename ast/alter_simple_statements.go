@@ -2,7 +2,8 @@ package ast
 
 // AlterRouteStatement represents an ALTER ROUTE statement.
 type AlterRouteStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name         *Identifier    `json:"Name,omitempty"`
+	RouteOptions []*RouteOption `json:"RouteOptions,omitempty"`
 }
 
 func (s *AlterRouteStatement) node()      {}

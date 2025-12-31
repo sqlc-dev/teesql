@@ -85,11 +85,21 @@ func (s *CreateQueueStatement) statement() {}
 
 // CreateRouteStatement represents a CREATE ROUTE statement.
 type CreateRouteStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name         *Identifier    `json:"Name,omitempty"`
+	Owner        *Identifier    `json:"Owner,omitempty"`
+	RouteOptions []*RouteOption `json:"RouteOptions,omitempty"`
 }
 
 func (s *CreateRouteStatement) node()      {}
 func (s *CreateRouteStatement) statement() {}
+
+// RouteOption represents an option in CREATE/ALTER ROUTE statement.
+type RouteOption struct {
+	OptionKind string           `json:"OptionKind,omitempty"`
+	Literal    ScalarExpression `json:"Literal,omitempty"`
+}
+
+func (r *RouteOption) node() {}
 
 // CreateEndpointStatement represents a CREATE ENDPOINT statement.
 type CreateEndpointStatement struct {

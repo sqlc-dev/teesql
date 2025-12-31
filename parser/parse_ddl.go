@@ -3854,8 +3854,16 @@ func (p *Parser) parseAlterRouteStatement() (*ast.AlterRouteStatement, error) {
 	// Parse route name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		stmt.RouteOptions = p.parseRouteOptions()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
