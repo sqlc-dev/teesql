@@ -3912,6 +3912,11 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		return p.parseBackupCertificateStatement()
 	}
 
+	// Check for SERVICE MASTER KEY
+	if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
+		return p.parseBackupServiceMasterKeyStatement()
+	}
+
 	// Check for DATABASE or LOG
 	isLog := false
 	if p.curTok.Type == TokenDatabase {
@@ -4230,6 +4235,76 @@ func (p *Parser) parseBackupCertificateStatement() (*ast.BackupCertificateStatem
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseBackupServiceMasterKeyStatement() (*ast.BackupServiceMasterKeyStatement, error) {
+	// Consume SERVICE
+	p.nextToken()
+
+	// Expect MASTER
+	if strings.ToUpper(p.curTok.Literal) != "MASTER" {
+		return nil, fmt.Errorf("expected MASTER after SERVICE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect KEY
+	if p.curTok.Type != TokenKey {
+		return nil, fmt.Errorf("expected KEY after MASTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.BackupServiceMasterKeyStatement{}
+
+	// Expect TO
+	if p.curTok.Type != TokenTo {
+		return nil, fmt.Errorf("expected TO after SERVICE MASTER KEY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect FILE
+	if strings.ToUpper(p.curTok.Literal) != "FILE" {
+		return nil, fmt.Errorf("expected FILE after TO, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after FILE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse file path
+	file, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.File = file
+
+	// Parse ENCRYPTION BY PASSWORD clause
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			pwd, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Password = pwd
 		}
 	}
 

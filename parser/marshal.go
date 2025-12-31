@@ -336,6 +336,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return backupTransactionLogStatementToJSON(s)
 	case *ast.BackupCertificateStatement:
 		return backupCertificateStatementToJSON(s)
+	case *ast.BackupServiceMasterKeyStatement:
+		return backupServiceMasterKeyStatementToJSON(s)
+	case *ast.RestoreServiceMasterKeyStatement:
+		return restoreServiceMasterKeyStatementToJSON(s)
+	case *ast.RestoreMasterKeyStatement:
+		return restoreMasterKeyStatementToJSON(s)
 	case *ast.CreateUserStatement:
 		return createUserStatementToJSON(s)
 	case *ast.CreateAggregateStatement:
@@ -4921,10 +4927,20 @@ func nullableConstraintToJSON(n *ast.NullableConstraintDefinition) jsonNode {
 	}
 }
 
-// parseRestoreStatement parses a RESTORE DATABASE statement
-func (p *Parser) parseRestoreStatement() (*ast.RestoreStatement, error) {
+// parseRestoreStatement parses a RESTORE statement
+func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 	// Consume RESTORE
 	p.nextToken()
+
+	// Check for SERVICE MASTER KEY
+	if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
+		return p.parseRestoreServiceMasterKeyStatement()
+	}
+
+	// Check for MASTER KEY
+	if strings.ToUpper(p.curTok.Literal) == "MASTER" {
+		return p.parseRestoreMasterKeyStatement()
+	}
 
 	stmt := &ast.RestoreStatement{}
 
@@ -5095,6 +5111,171 @@ func (p *Parser) parseRestoreStatement() (*ast.RestoreStatement, error) {
 				break
 			}
 		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseRestoreServiceMasterKeyStatement() (*ast.RestoreServiceMasterKeyStatement, error) {
+	// Consume SERVICE
+	p.nextToken()
+
+	// Expect MASTER
+	if strings.ToUpper(p.curTok.Literal) != "MASTER" {
+		return nil, fmt.Errorf("expected MASTER after SERVICE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect KEY
+	if p.curTok.Type != TokenKey {
+		return nil, fmt.Errorf("expected KEY after MASTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.RestoreServiceMasterKeyStatement{}
+
+	// Expect FROM
+	if strings.ToUpper(p.curTok.Literal) != "FROM" {
+		return nil, fmt.Errorf("expected FROM after SERVICE MASTER KEY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect FILE
+	if strings.ToUpper(p.curTok.Literal) != "FILE" {
+		return nil, fmt.Errorf("expected FILE after FROM, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after FILE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse file path
+	file, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.File = file
+
+	// Parse DECRYPTION BY PASSWORD clause
+	if strings.ToUpper(p.curTok.Literal) == "DECRYPTION" {
+		p.nextToken() // consume DECRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			pwd, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Password = pwd
+		}
+	}
+
+	// Check for FORCE
+	if strings.ToUpper(p.curTok.Literal) == "FORCE" {
+		stmt.IsForce = true
+		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseRestoreMasterKeyStatement() (*ast.RestoreMasterKeyStatement, error) {
+	// Consume MASTER
+	p.nextToken()
+
+	// Expect KEY
+	if p.curTok.Type != TokenKey {
+		return nil, fmt.Errorf("expected KEY after MASTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.RestoreMasterKeyStatement{}
+
+	// Expect FROM
+	if strings.ToUpper(p.curTok.Literal) != "FROM" {
+		return nil, fmt.Errorf("expected FROM after MASTER KEY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect FILE
+	if strings.ToUpper(p.curTok.Literal) != "FILE" {
+		return nil, fmt.Errorf("expected FILE after FROM, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after FILE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse file path
+	file, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.File = file
+
+	// Parse DECRYPTION BY PASSWORD clause
+	if strings.ToUpper(p.curTok.Literal) == "DECRYPTION" {
+		p.nextToken() // consume DECRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			pwd, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Password = pwd
+		}
+	}
+
+	// Parse ENCRYPTION BY PASSWORD clause
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			pwd, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.EncryptionPassword = pwd
+		}
+	}
+
+	// Check for FORCE
+	if strings.ToUpper(p.curTok.Literal) == "FORCE" {
+		stmt.IsForce = true
+		p.nextToken()
 	}
 
 	// Skip optional semicolon
@@ -6223,6 +6404,50 @@ func backupCertificateStatementToJSON(s *ast.BackupCertificateStatement) jsonNod
 	}
 	if s.DecryptionPassword != nil {
 		node["DecryptionPassword"] = scalarExpressionToJSON(s.DecryptionPassword)
+	}
+	return node
+}
+
+func backupServiceMasterKeyStatementToJSON(s *ast.BackupServiceMasterKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "BackupServiceMasterKeyStatement",
+	}
+	if s.File != nil {
+		node["File"] = scalarExpressionToJSON(s.File)
+	}
+	if s.Password != nil {
+		node["Password"] = scalarExpressionToJSON(s.Password)
+	}
+	return node
+}
+
+func restoreServiceMasterKeyStatementToJSON(s *ast.RestoreServiceMasterKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type":   "RestoreServiceMasterKeyStatement",
+		"IsForce": s.IsForce,
+	}
+	if s.File != nil {
+		node["File"] = scalarExpressionToJSON(s.File)
+	}
+	if s.Password != nil {
+		node["Password"] = scalarExpressionToJSON(s.Password)
+	}
+	return node
+}
+
+func restoreMasterKeyStatementToJSON(s *ast.RestoreMasterKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type":   "RestoreMasterKeyStatement",
+		"IsForce": s.IsForce,
+	}
+	if s.EncryptionPassword != nil {
+		node["EncryptionPassword"] = scalarExpressionToJSON(s.EncryptionPassword)
+	}
+	if s.File != nil {
+		node["File"] = scalarExpressionToJSON(s.File)
+	}
+	if s.Password != nil {
+		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
 	return node
 }

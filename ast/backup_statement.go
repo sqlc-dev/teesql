@@ -40,3 +40,33 @@ type BackupCertificateStatement struct {
 
 func (s *BackupCertificateStatement) statement() {}
 func (s *BackupCertificateStatement) node()      {}
+
+// BackupServiceMasterKeyStatement represents a BACKUP SERVICE MASTER KEY statement
+type BackupServiceMasterKeyStatement struct {
+	File     ScalarExpression
+	Password ScalarExpression
+}
+
+func (s *BackupServiceMasterKeyStatement) statement() {}
+func (s *BackupServiceMasterKeyStatement) node()      {}
+
+// RestoreServiceMasterKeyStatement represents a RESTORE SERVICE MASTER KEY statement
+type RestoreServiceMasterKeyStatement struct {
+	File     ScalarExpression
+	Password ScalarExpression
+	IsForce  bool
+}
+
+func (s *RestoreServiceMasterKeyStatement) statement() {}
+func (s *RestoreServiceMasterKeyStatement) node()      {}
+
+// RestoreMasterKeyStatement represents a RESTORE MASTER KEY statement
+type RestoreMasterKeyStatement struct {
+	File               ScalarExpression
+	Password           ScalarExpression
+	EncryptionPassword ScalarExpression
+	IsForce            bool
+}
+
+func (s *RestoreMasterKeyStatement) statement() {}
+func (s *RestoreMasterKeyStatement) node()      {}
