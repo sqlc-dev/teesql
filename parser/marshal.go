@@ -8204,9 +8204,9 @@ func dropIndexStatementToJSON(s *ast.DropIndexStatement) jsonNode {
 		"$type":      "DropIndexStatement",
 		"IsIfExists": s.IsIfExists,
 	}
-	if len(s.Indexes) > 0 {
-		clauses := make([]jsonNode, len(s.Indexes))
-		for i, clause := range s.Indexes {
+	if len(s.DropIndexClauses) > 0 {
+		clauses := make([]jsonNode, len(s.DropIndexClauses))
+		for i, clause := range s.DropIndexClauses {
 			clauses[i] = dropIndexClauseToJSON(clause)
 		}
 		node["DropIndexClauses"] = clauses
@@ -8220,10 +8220,17 @@ func dropIndexClauseToJSON(c *ast.DropIndexClause) jsonNode {
 		node := jsonNode{
 			"$type": "DropIndexClause",
 		}
-		if c.IndexName != nil {
-			node["Index"] = identifierToJSON(c.IndexName)
+		if c.Index != nil {
+			node["Index"] = identifierToJSON(c.Index)
 		}
 		node["Object"] = schemaObjectNameToJSON(c.Object)
+		if len(c.Options) > 0 {
+			options := make([]jsonNode, len(c.Options))
+			for i, opt := range c.Options {
+				options[i] = dropIndexOptionToJSON(opt)
+			}
+			node["Options"] = options
+		}
 		return node
 	}
 
@@ -8231,13 +8238,49 @@ func dropIndexClauseToJSON(c *ast.DropIndexClause) jsonNode {
 	node := jsonNode{
 		"$type": "DropIndexClauseBase",
 	}
-	if c.Index != nil {
-		node["Index"] = schemaObjectNameToJSON(c.Index)
-	} else if c.IndexName != nil {
+	if c.LegacyIndex != nil {
+		node["Index"] = schemaObjectNameToJSON(c.LegacyIndex)
+	} else if c.Index != nil {
 		// Just index name without object - use identifier
-		node["Index"] = identifierToJSON(c.IndexName)
+		node["Index"] = identifierToJSON(c.Index)
 	}
 	return node
+}
+
+func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.OnlineIndexOption:
+		return jsonNode{
+			"$type":       "OnlineIndexOption",
+			"OptionState": o.OptionState,
+			"OptionKind":  o.OptionKind,
+		}
+	case *ast.MoveToDropIndexOption:
+		node := jsonNode{
+			"$type":      "MoveToDropIndexOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.MoveTo != nil {
+			node["MoveTo"] = fileGroupOrPartitionSchemeToJSON(o.MoveTo)
+		}
+		return node
+	case *ast.FileStreamOnDropIndexOption:
+		node := jsonNode{
+			"$type":      "FileStreamOnDropIndexOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.FileStreamOn != nil {
+			node["FileStreamOn"] = identifierOrValueExpressionToJSON(o.FileStreamOn)
+		}
+		return node
+	case *ast.DataCompressionOption:
+		return jsonNode{
+			"$type":            "DataCompressionOption",
+			"CompressionLevel": o.CompressionLevel,
+			"OptionKind":       o.OptionKind,
+		}
+	}
+	return jsonNode{}
 }
 
 func dropStatisticsStatementToJSON(s *ast.DropStatisticsStatement) jsonNode {

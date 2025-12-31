@@ -1163,22 +1163,34 @@ func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
 			if err != nil {
 				return nil, err
 			}
-			clause.IndexName = indexName
+			clause.Index = indexName
 			clause.Object = tableName
 		} else if p.curTok.Type == TokenDot {
 			// Old backwards-compatible syntax: table.index
 			p.nextToken() // consume dot
 			childName := p.parseIdentifier()
-			clause.Index = &ast.SchemaObjectName{
+			clause.LegacyIndex = &ast.SchemaObjectName{
 				SchemaIdentifier: indexName,
 				BaseIdentifier:   childName,
 			}
 		} else {
 			// Just index name without ON or dot
-			clause.IndexName = indexName
+			clause.Index = indexName
 		}
 
-		stmt.Indexes = append(stmt.Indexes, clause)
+		// Parse WITH options if present
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				clause.Options = p.parseDropIndexOptions()
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+		}
+
+		stmt.DropIndexClauses = append(stmt.DropIndexClauses, clause)
 
 		if p.curTok.Type != TokenComma {
 			break
@@ -1192,6 +1204,105 @@ func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
+	var options []ast.DropIndexOption
+
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		switch upperLit {
+		case "ONLINE":
+			p.nextToken() // consume ONLINE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			optState := "Off"
+			if strings.ToUpper(p.curTok.Literal) == "ON" {
+				optState = "On"
+			}
+			p.nextToken()
+			options = append(options, &ast.OnlineIndexOption{
+				OptionState: optState,
+				OptionKind:  "Online",
+			})
+		case "MOVE":
+			p.nextToken() // consume MOVE
+			if strings.ToUpper(p.curTok.Literal) == "TO" {
+				p.nextToken() // consume TO
+			}
+			moveTo := &ast.FileGroupOrPartitionScheme{}
+			// Parse filegroup name
+			fgName := p.parseIdentifier()
+			moveTo.Name = &ast.IdentifierOrValueExpression{
+				Value:      fgName.Value,
+				Identifier: fgName,
+			}
+			// Check for partition columns
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				var cols []*ast.Identifier
+				for {
+					cols = append(cols, p.parseIdentifier())
+					if p.curTok.Type != TokenComma {
+						break
+					}
+					p.nextToken()
+				}
+				moveTo.PartitionSchemeColumns = cols
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			options = append(options, &ast.MoveToDropIndexOption{
+				MoveTo:     moveTo,
+				OptionKind: "MoveTo",
+			})
+		case "FILESTREAM_ON":
+			p.nextToken() // consume FILESTREAM_ON
+			ident := p.parseIdentifier()
+			options = append(options, &ast.FileStreamOnDropIndexOption{
+				FileStreamOn: &ast.IdentifierOrValueExpression{
+					Value:      ident.Value,
+					Identifier: ident,
+				},
+				OptionKind: "FileStreamOn",
+			})
+		case "DATA_COMPRESSION":
+			p.nextToken() // consume DATA_COMPRESSION
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			level := "None"
+			upperLevel := strings.ToUpper(p.curTok.Literal)
+			switch upperLevel {
+			case "ROW":
+				level = "Row"
+			case "PAGE":
+				level = "Page"
+			case "NONE":
+				level = "None"
+			}
+			p.nextToken()
+			options = append(options, &ast.DataCompressionOption{
+				CompressionLevel: level,
+				OptionKind:       "DataCompression",
+			})
+		default:
+			// Unknown option, skip
+			p.nextToken()
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else if p.curTok.Type == TokenRParen {
+			break
+		} else if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
+			break
+		}
+	}
+
+	return options
 }
 
 func (p *Parser) parseDropStatisticsStatement() (*ast.DropStatisticsStatement, error) {

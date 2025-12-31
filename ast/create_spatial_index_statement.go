@@ -74,8 +74,9 @@ type DataCompressionOption struct {
 	PartitionRanges  []*CompressionPartitionRange
 }
 
-func (d *DataCompressionOption) node()        {}
-func (d *DataCompressionOption) indexOption() {}
+func (d *DataCompressionOption) node()            {}
+func (d *DataCompressionOption) indexOption()     {}
+func (d *DataCompressionOption) dropIndexOption() {}
 
 // IgnoreDupKeyIndexOption represents the IGNORE_DUP_KEY option
 type IgnoreDupKeyIndexOption struct {
