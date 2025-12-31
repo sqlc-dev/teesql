@@ -1539,6 +1539,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterWorkloadGroupStatement()
 		case "SEQUENCE":
 			return p.parseAlterSequenceStatement()
+		case "SEARCH":
+			return p.parseAlterSearchPropertyListStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -6050,3 +6052,138 @@ func (p *Parser) parseSignatureCryptoMechanism() (*ast.CryptoMechanism, error) {
 	return crypto, nil
 }
 
+func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchPropertyListStatement, error) {
+	// Consume SEARCH
+	p.nextToken()
+	// Consume PROPERTY
+	if strings.ToUpper(p.curTok.Literal) == "PROPERTY" {
+		p.nextToken()
+	}
+	// Consume LIST
+	if strings.ToUpper(p.curTok.Literal) == "LIST" {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterSearchPropertyListStatement{}
+
+	// Parse the list name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse action: ADD or DROP
+	actionType := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume ADD or DROP
+
+	switch actionType {
+	case "ADD":
+		addAction := &ast.AddSearchPropertyListAction{}
+		// Parse property name (string literal)
+		if p.curTok.Type == TokenString {
+			value := p.curTok.Literal
+			if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+				value = value[1 : len(value)-1]
+			}
+			addAction.PropertyName = &ast.StringLiteral{
+				LiteralType:   "String",
+				IsNational:    false,
+				IsLargeObject: false,
+				Value:         value,
+			}
+			p.nextToken()
+		}
+		// Parse WITH clause
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse options
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optUpper := strings.ToUpper(p.curTok.Literal)
+					switch optUpper {
+					case "PROPERTY_SET_GUID":
+						p.nextToken() // consume PROPERTY_SET_GUID
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenString {
+							value := p.curTok.Literal
+							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+								value = value[1 : len(value)-1]
+							}
+							addAction.Guid = &ast.StringLiteral{
+								LiteralType:   "String",
+								IsNational:    false,
+								IsLargeObject: false,
+								Value:         value,
+							}
+							p.nextToken()
+						}
+					case "PROPERTY_INT_ID":
+						p.nextToken() // consume PROPERTY_INT_ID
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenNumber {
+							addAction.Id = &ast.IntegerLiteral{
+								LiteralType: "Integer",
+								Value:       p.curTok.Literal,
+							}
+							p.nextToken()
+						}
+					case "PROPERTY_DESCRIPTION":
+						p.nextToken() // consume PROPERTY_DESCRIPTION
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenString {
+							value := p.curTok.Literal
+							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+								value = value[1 : len(value)-1]
+							}
+							addAction.Description = &ast.StringLiteral{
+								LiteralType:   "String",
+								IsNational:    false,
+								IsLargeObject: false,
+								Value:         value,
+							}
+							p.nextToken()
+						}
+					default:
+						p.nextToken() // skip unknown option
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+		}
+		stmt.Action = addAction
+
+	case "DROP":
+		dropAction := &ast.DropSearchPropertyListAction{}
+		// Parse property name (string literal)
+		if p.curTok.Type == TokenString {
+			value := p.curTok.Literal
+			if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+				value = value[1 : len(value)-1]
+			}
+			dropAction.PropertyName = &ast.StringLiteral{
+				LiteralType:   "String",
+				IsNational:    false,
+				IsLargeObject: false,
+				Value:         value,
+			}
+			p.nextToken()
+		}
+		stmt.Action = dropAction
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}

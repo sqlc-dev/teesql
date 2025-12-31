@@ -466,6 +466,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterUserStatementToJSON(s)
 	case *ast.AlterRouteStatement:
 		return alterRouteStatementToJSON(s)
+	case *ast.AlterSearchPropertyListStatement:
+		return alterSearchPropertyListStatementToJSON(s)
 	case *ast.AlterAssemblyStatement:
 		return alterAssemblyStatementToJSON(s)
 	case *ast.AlterEndpointStatement:
@@ -9944,6 +9946,51 @@ func alterRouteStatementToJSON(s *ast.AlterRouteStatement) jsonNode {
 		node["RouteOptions"] = opts
 	}
 	return node
+}
+
+func alterSearchPropertyListStatementToJSON(s *ast.AlterSearchPropertyListStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterSearchPropertyListStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Action != nil {
+		node["Action"] = searchPropertyListActionToJSON(s.Action)
+	}
+	return node
+}
+
+func searchPropertyListActionToJSON(a ast.SearchPropertyListAction) jsonNode {
+	switch action := a.(type) {
+	case *ast.AddSearchPropertyListAction:
+		node := jsonNode{
+			"$type": "AddSearchPropertyListAction",
+		}
+		if action.PropertyName != nil {
+			node["PropertyName"] = stringLiteralToJSON(action.PropertyName)
+		}
+		if action.Guid != nil {
+			node["Guid"] = stringLiteralToJSON(action.Guid)
+		}
+		if action.Id != nil {
+			node["Id"] = scalarExpressionToJSON(action.Id)
+		}
+		if action.Description != nil {
+			node["Description"] = stringLiteralToJSON(action.Description)
+		}
+		return node
+	case *ast.DropSearchPropertyListAction:
+		node := jsonNode{
+			"$type": "DropSearchPropertyListAction",
+		}
+		if action.PropertyName != nil {
+			node["PropertyName"] = stringLiteralToJSON(action.PropertyName)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownSearchPropertyListAction"}
+	}
 }
 
 func alterAssemblyStatementToJSON(s *ast.AlterAssemblyStatement) jsonNode {

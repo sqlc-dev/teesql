@@ -62,6 +62,40 @@ type PermissionSetAssemblyOption struct {
 func (o *PermissionSetAssemblyOption) node()           {}
 func (o *PermissionSetAssemblyOption) assemblyOption() {}
 
+// AlterSearchPropertyListStatement represents an ALTER SEARCH PROPERTY LIST statement.
+type AlterSearchPropertyListStatement struct {
+	Name   *Identifier                  `json:"Name,omitempty"`
+	Action SearchPropertyListAction     `json:"Action,omitempty"`
+}
+
+func (s *AlterSearchPropertyListStatement) node()      {}
+func (s *AlterSearchPropertyListStatement) statement() {}
+
+// SearchPropertyListAction is the interface for search property list actions.
+type SearchPropertyListAction interface {
+	Node
+	searchPropertyListAction()
+}
+
+// AddSearchPropertyListAction represents an ADD action in ALTER SEARCH PROPERTY LIST.
+type AddSearchPropertyListAction struct {
+	PropertyName *StringLiteral `json:"PropertyName,omitempty"`
+	Guid         *StringLiteral `json:"Guid,omitempty"`
+	Id           *IntegerLiteral `json:"Id,omitempty"`
+	Description  *StringLiteral `json:"Description,omitempty"`
+}
+
+func (a *AddSearchPropertyListAction) node()                     {}
+func (a *AddSearchPropertyListAction) searchPropertyListAction() {}
+
+// DropSearchPropertyListAction represents a DROP action in ALTER SEARCH PROPERTY LIST.
+type DropSearchPropertyListAction struct {
+	PropertyName *StringLiteral `json:"PropertyName,omitempty"`
+}
+
+func (a *DropSearchPropertyListAction) node()                     {}
+func (a *DropSearchPropertyListAction) searchPropertyListAction() {}
+
 // AlterEndpointStatement represents an ALTER ENDPOINT statement.
 type AlterEndpointStatement struct {
 	Name            *Identifier             `json:"Name,omitempty"`
