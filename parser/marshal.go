@@ -3265,6 +3265,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 	}
 
 	// Parse column constraints (NULL, NOT NULL, UNIQUE, PRIMARY KEY, DEFAULT, CHECK, CONSTRAINT)
+	var constraintName *ast.Identifier
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 
@@ -3280,8 +3281,10 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 		} else if upperLit == "UNIQUE" {
 			p.nextToken() // consume UNIQUE
 			constraint := &ast.UniqueConstraintDefinition{
-				IsPrimaryKey: false,
+				IsPrimaryKey:         false,
+				ConstraintIdentifier: constraintName,
 			}
+			constraintName = nil // clear for next constraint
 			// Parse optional CLUSTERED/NONCLUSTERED
 			if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 				constraint.Clustered = true
@@ -3291,6 +3294,17 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				constraint.Clustered = false
 				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 				p.nextToken()
+			}
+			// Parse WITH (index_options)
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken() // consume WITH
+				constraint.IndexOptions = p.parseConstraintIndexOptions()
+			}
+			// Parse ON filegroup/partition_scheme
+			if p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+				fg, _ := p.parseFileGroupOrPartitionScheme()
+				constraint.OnFileGroupOrPartitionScheme = fg
 			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "PRIMARY" {
@@ -3299,8 +3313,10 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				p.nextToken() // consume KEY
 			}
 			constraint := &ast.UniqueConstraintDefinition{
-				IsPrimaryKey: true,
+				IsPrimaryKey:         true,
+				ConstraintIdentifier: constraintName,
 			}
+			constraintName = nil // clear for next constraint
 			// Parse optional CLUSTERED/NONCLUSTERED
 			if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 				constraint.Clustered = true
@@ -3310,6 +3326,17 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				constraint.Clustered = false
 				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 				p.nextToken()
+			}
+			// Parse WITH (index_options)
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken() // consume WITH
+				constraint.IndexOptions = p.parseConstraintIndexOptions()
+			}
+			// Parse ON filegroup/partition_scheme
+			if p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+				fg, _ := p.parseFileGroupOrPartitionScheme()
+				constraint.OnFileGroupOrPartitionScheme = fg
 			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if p.curTok.Type == TokenDefault {
@@ -3339,10 +3366,9 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				})
 			}
 		} else if upperLit == "CONSTRAINT" {
-			p.nextToken() // skip CONSTRAINT
-			if p.curTok.Type == TokenIdent {
-				p.nextToken() // skip constraint name
-			}
+			p.nextToken() // consume CONSTRAINT
+			// Parse and save constraint name for next constraint
+			constraintName = p.parseIdentifier()
 			// Continue to parse actual constraint in next iteration
 			continue
 		} else if upperLit == "COLLATE" {
@@ -3468,6 +3494,19 @@ func (p *Parser) parsePrimaryKeyConstraint() (*ast.UniqueConstraintDefinition, e
 		}
 	}
 
+	// Parse WITH (index_options) or WITH option = value
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		constraint.IndexOptions = p.parseConstraintIndexOptions()
+	}
+
+	// Parse ON filegroup/partition_scheme
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		fg, _ := p.parseFileGroupOrPartitionScheme()
+		constraint.OnFileGroupOrPartitionScheme = fg
+	}
+
 	return constraint, nil
 }
 
@@ -3509,7 +3548,99 @@ func (p *Parser) parseUniqueConstraint() (*ast.UniqueConstraintDefinition, error
 		}
 	}
 
+	// Parse WITH (index_options) or WITH option = value
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		constraint.IndexOptions = p.parseConstraintIndexOptions()
+	}
+
+	// Parse ON filegroup/partition_scheme
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		fg, _ := p.parseFileGroupOrPartitionScheme()
+		constraint.OnFileGroupOrPartitionScheme = fg
+	}
+
 	return constraint, nil
+}
+
+// parseConstraintIndexOptions parses index options for constraints
+// Handles both WITH (option = value, ...) and WITH option = value formats
+func (p *Parser) parseConstraintIndexOptions() []ast.IndexOption {
+	var options []ast.IndexOption
+
+	// Check if we have parenthesized options
+	hasParens := p.curTok.Type == TokenLParen
+	if hasParens {
+		p.nextToken() // consume (
+	}
+
+	for {
+		if hasParens && p.curTok.Type == TokenRParen {
+			break
+		}
+		if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
+			break
+		}
+		// Stop if we hit ON (for ON filegroup clause)
+		if p.curTok.Type == TokenOn {
+			break
+		}
+		// Stop if we hit a comma that's part of table definition (not option list)
+		if !hasParens && p.curTok.Type == TokenComma {
+			break
+		}
+		// Stop if we hit closing paren that's part of table definition
+		if !hasParens && p.curTok.Type == TokenRParen {
+			break
+		}
+
+		optionName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		// Check for = sign
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		// Check for ON/OFF or value
+		valueToken := p.curTok
+		valueStr := strings.ToUpper(valueToken.Literal)
+		p.nextToken()
+
+		if optionName == "IGNORE_DUP_KEY" {
+			opt := &ast.IgnoreDupKeyIndexOption{
+				OptionKind:  "IgnoreDupKey",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			}
+			options = append(options, opt)
+		} else if valueStr == "ON" || valueStr == "OFF" {
+			opt := &ast.IndexStateOption{
+				OptionKind:  p.getIndexOptionKind(optionName),
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			}
+			options = append(options, opt)
+		} else {
+			// Expression option like FILLFACTOR = 34
+			opt := &ast.IndexExpressionOption{
+				OptionKind: p.getIndexOptionKind(optionName),
+				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+			}
+			options = append(options, opt)
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else if !hasParens {
+			break
+		}
+	}
+
+	if hasParens && p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return options
 }
 
 // parseForeignKeyConstraint parses FOREIGN KEY (columns) REFERENCES table (columns)
@@ -4544,18 +4675,28 @@ func uniqueConstraintToJSON(c *ast.UniqueConstraintDefinition) jsonNode {
 	if c.IsEnforced != nil {
 		node["IsEnforced"] = *c.IsEnforced
 	}
-	if c.ConstraintIdentifier != nil {
-		node["ConstraintIdentifier"] = identifierToJSON(c.ConstraintIdentifier)
-	}
-	if c.IndexType != nil {
-		node["IndexType"] = indexTypeToJSON(c.IndexType)
-	}
 	if len(c.Columns) > 0 {
 		cols := make([]jsonNode, len(c.Columns))
 		for i, col := range c.Columns {
 			cols[i] = columnWithSortOrderToJSON(col)
 		}
 		node["Columns"] = cols
+	}
+	if len(c.IndexOptions) > 0 {
+		opts := make([]jsonNode, len(c.IndexOptions))
+		for i, opt := range c.IndexOptions {
+			opts[i] = indexOptionToJSON(opt)
+		}
+		node["IndexOptions"] = opts
+	}
+	if c.OnFileGroupOrPartitionScheme != nil {
+		node["OnFileGroupOrPartitionScheme"] = fileGroupOrPartitionSchemeToJSON(c.OnFileGroupOrPartitionScheme)
+	}
+	if c.IndexType != nil {
+		node["IndexType"] = indexTypeToJSON(c.IndexType)
+	}
+	if c.ConstraintIdentifier != nil {
+		node["ConstraintIdentifier"] = identifierToJSON(c.ConstraintIdentifier)
 	}
 	return node
 }

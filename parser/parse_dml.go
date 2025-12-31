@@ -1696,13 +1696,10 @@ func (p *Parser) parseIdentifierOrValueExpression() (*ast.IdentifierOrValueExpre
 		}
 		p.nextToken()
 	} else if p.curTok.Type == TokenIdent {
-		// Identifier
-		result.Value = p.curTok.Literal
-		result.Identifier = &ast.Identifier{
-			Value:     p.curTok.Literal,
-			QuoteType: "NotQuoted",
-		}
-		p.nextToken()
+		// Identifier - use parseIdentifier to handle bracketed identifiers properly
+		ident := p.parseIdentifier()
+		result.Value = ident.Value
+		result.Identifier = ident
 	} else if p.curTok.Type == TokenEOF {
 		// Handle incomplete statement - return empty identifier
 		result.Value = ""
