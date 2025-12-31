@@ -1285,6 +1285,68 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
 		return node
+	case *ast.CastCall:
+		node := jsonNode{
+			"$type": "CastCall",
+		}
+		if e.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(e.DataType)
+		}
+		if e.Parameter != nil {
+			node["Parameter"] = scalarExpressionToJSON(e.Parameter)
+		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
+		}
+		return node
+	case *ast.ConvertCall:
+		node := jsonNode{
+			"$type": "ConvertCall",
+		}
+		if e.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(e.DataType)
+		}
+		if e.Parameter != nil {
+			node["Parameter"] = scalarExpressionToJSON(e.Parameter)
+		}
+		if e.Style != nil {
+			node["Style"] = scalarExpressionToJSON(e.Style)
+		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
+		}
+		return node
+	case *ast.TryCastCall:
+		node := jsonNode{
+			"$type": "TryCastCall",
+		}
+		if e.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(e.DataType)
+		}
+		if e.Parameter != nil {
+			node["Parameter"] = scalarExpressionToJSON(e.Parameter)
+		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
+		}
+		return node
+	case *ast.TryConvertCall:
+		node := jsonNode{
+			"$type": "TryConvertCall",
+		}
+		if e.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(e.DataType)
+		}
+		if e.Parameter != nil {
+			node["Parameter"] = scalarExpressionToJSON(e.Parameter)
+		}
+		if e.Style != nil {
+			node["Style"] = scalarExpressionToJSON(e.Style)
+		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
+		}
+		return node
 	case *ast.BinaryExpression:
 		node := jsonNode{
 			"$type": "BinaryExpression",
@@ -6759,6 +6821,13 @@ func createFunctionStatementToJSON(s *ast.CreateFunctionStatement) jsonNode {
 	}
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = procedureParameterToJSON(p)
+		}
+		node["Parameters"] = params
 	}
 	if s.ReturnType != nil {
 		node["ReturnType"] = functionReturnTypeToJSON(s.ReturnType)

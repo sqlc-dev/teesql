@@ -643,6 +643,20 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			p.nextToken() // consume N
 			return p.parseNationalStringLiteral()
 		}
+		// Check for CAST/CONVERT special functions
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper == "CAST" && p.peekTok.Type == TokenLParen {
+			return p.parseCastCall()
+		}
+		if upper == "CONVERT" && p.peekTok.Type == TokenLParen {
+			return p.parseConvertCall()
+		}
+		if upper == "TRY_CAST" && p.peekTok.Type == TokenLParen {
+			return p.parseTryCastCall()
+		}
+		if upper == "TRY_CONVERT" && p.peekTok.Type == TokenLParen {
+			return p.parseTryConvertCall()
+		}
 		return p.parseColumnReferenceOrFunctionCall()
 	case TokenNumber:
 		val := p.curTok.Literal
@@ -2169,3 +2183,207 @@ func identifiersToSchemaObjectName(identifiers []*ast.Identifier) *ast.SchemaObj
 
 // ======================= New Statement Parsing Functions =======================
 
+
+// parseCastCall parses a CAST expression: CAST(expression AS data_type)
+func (p *Parser) parseCastCall() (ast.ScalarExpression, error) {
+	p.nextToken() // consume CAST
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse the expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		return nil, fmt.Errorf("expected AS in CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume AS
+
+	// Parse the data type
+	dt, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	cast := &ast.CastCall{
+		DataType:  dt,
+		Parameter: expr,
+	}
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		cast.Collation = p.parseIdentifier()
+	}
+
+	return cast, nil
+}
+
+// parseConvertCall parses a CONVERT expression: CONVERT(data_type, expression [, style])
+func (p *Parser) parseConvertCall() (ast.ScalarExpression, error) {
+	p.nextToken() // consume CONVERT
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse the data type first
+	dt, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , in CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse the expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	convert := &ast.ConvertCall{
+		DataType:  dt,
+		Parameter: expr,
+	}
+
+	// Check for optional style parameter
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		style, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		convert.Style = style
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		convert.Collation = p.parseIdentifier()
+	}
+
+	return convert, nil
+}
+
+// parseTryCastCall parses a TRY_CAST expression
+func (p *Parser) parseTryCastCall() (ast.ScalarExpression, error) {
+	p.nextToken() // consume TRY_CAST
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TRY_CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse the expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		return nil, fmt.Errorf("expected AS in TRY_CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume AS
+
+	// Parse the data type
+	dt, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in TRY_CAST, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	cast := &ast.TryCastCall{
+		DataType:  dt,
+		Parameter: expr,
+	}
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		cast.Collation = p.parseIdentifier()
+	}
+
+	return cast, nil
+}
+
+// parseTryConvertCall parses a TRY_CONVERT expression
+func (p *Parser) parseTryConvertCall() (ast.ScalarExpression, error) {
+	p.nextToken() // consume TRY_CONVERT
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TRY_CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse the data type first
+	dt, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , in TRY_CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse the expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	convert := &ast.TryConvertCall{
+		DataType:  dt,
+		Parameter: expr,
+	}
+
+	// Check for optional style parameter
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		style, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		convert.Style = style
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in TRY_CONVERT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		convert.Collation = p.parseIdentifier()
+	}
+
+	return convert, nil
+}

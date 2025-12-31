@@ -629,6 +629,7 @@ func getSqlDataTypeOption(typeName string) (string, bool) {
 		"ROWVERSION":        "Rowversion",
 		"TIMESTAMP":         "Timestamp",
 		"CONNECTION":        "Connection",
+		"VECTOR":            "Vector",
 	}
 	if mapped, ok := typeMap[strings.ToUpper(typeName)]; ok {
 		return mapped, true
