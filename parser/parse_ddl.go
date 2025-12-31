@@ -4385,11 +4385,12 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 			}
 
 		default:
-			// Unknown token, skip
-			p.nextToken()
+			// Unknown token - break out
+			goto done
 		}
 	}
 
+done:
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()

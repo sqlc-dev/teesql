@@ -10234,9 +10234,23 @@ func alterAssemblyStatementToJSON(s *ast.AlterAssemblyStatement) jsonNode {
 	node := jsonNode{
 		"$type": "AlterAssemblyStatement",
 	}
-	// Only include IsDropAll if there are parameters, drop files, add files, options, or it's true
+	// Include IsDropAll if there are any files/params/options, or if it's true
 	if s.IsDropAll || len(s.DropFiles) > 0 || len(s.AddFiles) > 0 || len(s.Parameters) > 0 || len(s.Options) > 0 {
 		node["IsDropAll"] = s.IsDropAll
+	}
+	if len(s.DropFiles) > 0 {
+		files := make([]jsonNode, len(s.DropFiles))
+		for i, f := range s.DropFiles {
+			files[i] = stringLiteralToJSON(f)
+		}
+		node["DropFiles"] = files
+	}
+	if len(s.AddFiles) > 0 {
+		files := make([]jsonNode, len(s.AddFiles))
+		for i, f := range s.AddFiles {
+			files[i] = addFileSpecToJSON(f)
+		}
+		node["AddFiles"] = files
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
@@ -10254,20 +10268,6 @@ func alterAssemblyStatementToJSON(s *ast.AlterAssemblyStatement) jsonNode {
 			opts[i] = assemblyOptionToJSON(o)
 		}
 		node["Options"] = opts
-	}
-	if len(s.AddFiles) > 0 {
-		files := make([]jsonNode, len(s.AddFiles))
-		for i, f := range s.AddFiles {
-			files[i] = addFileSpecToJSON(f)
-		}
-		node["AddFiles"] = files
-	}
-	if len(s.DropFiles) > 0 {
-		files := make([]jsonNode, len(s.DropFiles))
-		for i, f := range s.DropFiles {
-			files[i] = stringLiteralToJSON(f)
-		}
-		node["DropFiles"] = files
 	}
 	return node
 }
