@@ -330,6 +330,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return restoreStatementToJSON(s)
 	case *ast.BackupDatabaseStatement:
 		return backupDatabaseStatementToJSON(s)
+	case *ast.BackupTransactionLogStatement:
+		return backupTransactionLogStatementToJSON(s)
 	case *ast.BackupCertificateStatement:
 		return backupCertificateStatementToJSON(s)
 	case *ast.CreateUserStatement:
@@ -4884,7 +4886,7 @@ func (p *Parser) parseRestoreStatement() (*ast.RestoreStatement, error) {
 		stmt.Kind = "Database"
 		p.nextToken()
 	case "LOG":
-		stmt.Kind = "Log"
+		stmt.Kind = "TransactionLog"
 		p.nextToken()
 	default:
 		stmt.Kind = "Database"
@@ -4905,9 +4907,14 @@ func (p *Parser) parseRestoreStatement() (*ast.RestoreStatement, error) {
 	}
 	stmt.DatabaseName = dbName
 
-	// Expect FROM
+	// Check for optional FROM clause
 	if strings.ToUpper(p.curTok.Literal) != "FROM" {
-		return nil, fmt.Errorf("expected FROM, got %s", p.curTok.Literal)
+		// No FROM clause - just the database name with no devices
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
 	}
 	p.nextToken()
 
@@ -6076,6 +6083,30 @@ func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
 	return node
 }
 
+func backupTransactionLogStatementToJSON(s *ast.BackupTransactionLogStatement) jsonNode {
+	node := jsonNode{
+		"$type": "BackupTransactionLogStatement",
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierOrValueExpressionToJSON(s.DatabaseName)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = backupOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	if len(s.Devices) > 0 {
+		devices := make([]jsonNode, len(s.Devices))
+		for i, d := range s.Devices {
+			devices[i] = deviceInfoToJSON(d)
+		}
+		node["Devices"] = devices
+	}
+	return node
+}
+
 func backupCertificateStatementToJSON(s *ast.BackupCertificateStatement) jsonNode {
 	node := jsonNode{
 		"$type": "BackupCertificateStatement",
@@ -6119,7 +6150,7 @@ func deviceInfoToJSON(d *ast.DeviceInfo) jsonNode {
 		node["LogicalDevice"] = identifierOrValueExpressionToJSON(d.LogicalDevice)
 	}
 	if d.PhysicalDevice != nil {
-		node["PhysicalDevice"] = identifierOrValueExpressionToJSON(d.PhysicalDevice)
+		node["PhysicalDevice"] = scalarExpressionToJSON(d.PhysicalDevice)
 	}
 	return node
 }

@@ -11,6 +11,17 @@ func (s *BackupDatabaseStatement) statementNode() {}
 func (s *BackupDatabaseStatement) statement()     {}
 func (s *BackupDatabaseStatement) node()          {}
 
+// BackupTransactionLogStatement represents a BACKUP LOG statement
+type BackupTransactionLogStatement struct {
+	DatabaseName *IdentifierOrValueExpression
+	Devices      []*DeviceInfo
+	Options      []*BackupOption
+}
+
+func (s *BackupTransactionLogStatement) statementNode() {}
+func (s *BackupTransactionLogStatement) statement()     {}
+func (s *BackupTransactionLogStatement) node()          {}
+
 // BackupOption represents a backup option
 type BackupOption struct {
 	OptionKind string // Compression, NoCompression, StopOnError, ContinueAfterError, etc.

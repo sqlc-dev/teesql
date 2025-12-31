@@ -3799,25 +3799,30 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		return p.parseBackupCertificateStatement()
 	}
 
-	stmt := &ast.BackupDatabaseStatement{}
-
-	// Expect DATABASE
-	if p.curTok.Type != TokenDatabase {
-		return nil, fmt.Errorf("expected DATABASE after BACKUP, got %s", p.curTok.Literal)
+	// Check for DATABASE or LOG
+	isLog := false
+	if p.curTok.Type == TokenDatabase {
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "LOG" {
+		isLog = true
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected DATABASE or LOG after BACKUP, got %s", p.curTok.Literal)
 	}
-	p.nextToken()
 
 	// Parse database name
+	var dbName *ast.IdentifierOrValueExpression
 	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
-		stmt.DatabaseName = &ast.IdentifierOrValueExpression{
+		dbName = &ast.IdentifierOrValueExpression{
 			Value: p.curTok.Literal,
 			ValueExpression: &ast.VariableReference{
 				Name: p.curTok.Literal,
 			},
 		}
+		p.nextToken()
 	} else {
 		id := p.parseIdentifier()
-		stmt.DatabaseName = &ast.IdentifierOrValueExpression{
+		dbName = &ast.IdentifierOrValueExpression{
 			Value:      id.Value,
 			Identifier: id,
 		}
@@ -3830,6 +3835,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 	p.nextToken()
 
 	// Parse devices
+	var devices []*ast.DeviceInfo
 	for {
 		device := &ast.DeviceInfo{
 			DeviceType: "None",
@@ -3837,7 +3843,9 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 
 		// Check for device type (DISK, TAPE, URL, etc.)
 		deviceType := strings.ToUpper(p.curTok.Literal)
+		hasPhysicalType := false
 		if deviceType == "DISK" || deviceType == "TAPE" || deviceType == "URL" || deviceType == "VIRTUAL_DEVICE" {
+			hasPhysicalType = true
 			switch deviceType {
 			case "DISK":
 				device.DeviceType = "Disk"
@@ -3855,33 +3863,52 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 			p.nextToken()
 		}
 
-		// Parse logical device name (identifier or variable)
-		if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
-			device.LogicalDevice = &ast.IdentifierOrValueExpression{
-				Value: p.curTok.Literal,
-				ValueExpression: &ast.VariableReference{
+		// Parse device name
+		if hasPhysicalType {
+			// Physical device: use PhysicalDevice field with ScalarExpression
+			if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+				device.PhysicalDevice = &ast.VariableReference{
 					Name: p.curTok.Literal,
-				},
-			}
-			p.nextToken()
-		} else if p.curTok.Type == TokenString {
-			str, err := p.parseStringLiteral()
-			if err != nil {
-				return nil, err
-			}
-			device.LogicalDevice = &ast.IdentifierOrValueExpression{
-				Value:           str.Value,
-				ValueExpression: str,
+				}
+				p.nextToken()
+			} else if p.curTok.Type == TokenString {
+				str, err := p.parseStringLiteral()
+				if err != nil {
+					return nil, err
+				}
+				device.PhysicalDevice = str
+			} else {
+				return nil, fmt.Errorf("expected string or variable for physical device, got %s", p.curTok.Literal)
 			}
 		} else {
-			id := p.parseIdentifier()
-			device.LogicalDevice = &ast.IdentifierOrValueExpression{
-				Value:      id.Value,
-				Identifier: id,
+			// Logical device: use LogicalDevice field with IdentifierOrValueExpression
+			if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+				device.LogicalDevice = &ast.IdentifierOrValueExpression{
+					Value: p.curTok.Literal,
+					ValueExpression: &ast.VariableReference{
+						Name: p.curTok.Literal,
+					},
+				}
+				p.nextToken()
+			} else if p.curTok.Type == TokenString {
+				str, err := p.parseStringLiteral()
+				if err != nil {
+					return nil, err
+				}
+				device.LogicalDevice = &ast.IdentifierOrValueExpression{
+					Value:           str.Value,
+					ValueExpression: str,
+				}
+			} else {
+				id := p.parseIdentifier()
+				device.LogicalDevice = &ast.IdentifierOrValueExpression{
+					Value:      id.Value,
+					Identifier: id,
+				}
 			}
 		}
 
-		stmt.Devices = append(stmt.Devices, device)
+		devices = append(devices, device)
 
 		// Check for comma (more devices)
 		if p.curTok.Type == TokenComma {
@@ -3892,6 +3919,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 	}
 
 	// Parse optional WITH clause
+	var options []*ast.BackupOption
 	if p.curTok.Type == TokenWith {
 		p.nextToken()
 
@@ -3935,7 +3963,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 				option.Value = val
 			}
 
-			stmt.Options = append(stmt.Options, option)
+			options = append(options, option)
 
 			if p.curTok.Type == TokenComma {
 				p.nextToken()
@@ -3950,7 +3978,18 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	if isLog {
+		return &ast.BackupTransactionLogStatement{
+			DatabaseName: dbName,
+			Devices:      devices,
+			Options:      options,
+		}, nil
+	}
+	return &ast.BackupDatabaseStatement{
+		DatabaseName: dbName,
+		Devices:      devices,
+		Options:      options,
+	}, nil
 }
 
 func (p *Parser) parseBackupCertificateStatement() (*ast.BackupCertificateStatement, error) {
