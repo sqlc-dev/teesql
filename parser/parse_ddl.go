@@ -3972,8 +3972,89 @@ func (p *Parser) parseAlterAsymmetricKeyStatement() (*ast.AlterAsymmetricKeyStat
 	// Parse key name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse the action
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "REMOVE":
+		p.nextToken() // consume REMOVE
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "PRIVATE":
+			p.nextToken() // consume PRIVATE
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			stmt.Kind = "RemovePrivateKey"
+		case "ATTESTED":
+			p.nextToken() // consume ATTESTED
+			if strings.ToUpper(p.curTok.Literal) == "OPTION" {
+				p.nextToken() // consume OPTION
+			}
+			stmt.Kind = "RemoveAttestedOption"
+		}
+	case "ATTESTED":
+		p.nextToken() // consume ATTESTED
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		attestedBy, _ := p.parseStringLiteral()
+		stmt.AttestedBy = attestedBy
+		stmt.Kind = "AttestedBy"
+	case "WITH":
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "PRIVATE" {
+			p.nextToken() // consume PRIVATE
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+		}
+		stmt.Kind = "WithPrivateKey"
+		// Parse (ENCRYPTION BY PASSWORD = '...', DECRYPTION BY PASSWORD = '...')
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "ENCRYPTION":
+					p.nextToken() // consume ENCRYPTION
+					if strings.ToUpper(p.curTok.Literal) == "BY" {
+						p.nextToken() // consume BY
+					}
+					if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+						p.nextToken() // consume PASSWORD
+					}
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					pwd, _ := p.parseStringLiteral()
+					stmt.EncryptionPassword = pwd
+				case "DECRYPTION":
+					p.nextToken() // consume DECRYPTION
+					if strings.ToUpper(p.curTok.Literal) == "BY" {
+						p.nextToken() // consume BY
+					}
+					if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+						p.nextToken() // consume PASSWORD
+					}
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					pwd, _ := p.parseStringLiteral()
+					stmt.DecryptionPassword = pwd
+				default:
+					p.nextToken()
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }

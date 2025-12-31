@@ -57,7 +57,11 @@ func (s *AlterApplicationRoleStatement) statement() {}
 
 // AlterAsymmetricKeyStatement represents an ALTER ASYMMETRIC KEY statement.
 type AlterAsymmetricKeyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name               *Identifier      `json:"Name,omitempty"`
+	Kind               string           `json:"Kind,omitempty"`
+	AttestedBy         ScalarExpression `json:"AttestedBy,omitempty"`
+	EncryptionPassword ScalarExpression `json:"EncryptionPassword,omitempty"`
+	DecryptionPassword ScalarExpression `json:"DecryptionPassword,omitempty"`
 }
 
 func (s *AlterAsymmetricKeyStatement) node()      {}

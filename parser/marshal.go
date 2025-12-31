@@ -8752,6 +8752,18 @@ func alterAsymmetricKeyStatementToJSON(s *ast.AlterAsymmetricKeyStatement) jsonN
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.AttestedBy != nil {
+		node["AttestedBy"] = scalarExpressionToJSON(s.AttestedBy)
+	}
+	if s.Kind != "" {
+		node["Kind"] = s.Kind
+	}
+	if s.EncryptionPassword != nil {
+		node["EncryptionPassword"] = scalarExpressionToJSON(s.EncryptionPassword)
+	}
+	if s.DecryptionPassword != nil {
+		node["DecryptionPassword"] = scalarExpressionToJSON(s.DecryptionPassword)
+	}
 	return node
 }
 
