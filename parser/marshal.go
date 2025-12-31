@@ -6268,6 +6268,41 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 	case "SET":
 		stmt.AlterIndexType = "Set"
 		p.nextToken()
+		// Parse SET options (SET (...))
+		if p.curTok.Type == TokenLParen {
+			p.nextToken()
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optionName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					valueStr := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+
+					if valueStr == "ON" || valueStr == "OFF" {
+						opt := &ast.IndexStateOption{
+							OptionKind:  p.getIndexOptionKind(optionName),
+							OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+						}
+						stmt.IndexOptions = append(stmt.IndexOptions, opt)
+					} else {
+						opt := &ast.IndexExpressionOption{
+							OptionKind: p.getIndexOptionKind(optionName),
+							Expression: &ast.IntegerLiteral{Value: valueStr},
+						}
+						stmt.IndexOptions = append(stmt.IndexOptions, opt)
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
 	case "RESUME":
 		stmt.AlterIndexType = "Resume"
 		p.nextToken()
@@ -6355,20 +6390,21 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 
 func (p *Parser) getIndexOptionKind(optionName string) string {
 	optionMap := map[string]string{
-		"PAD_INDEX":             "PadIndex",
-		"FILLFACTOR":            "FillFactor",
-		"SORT_IN_TEMPDB":        "SortInTempDB",
-		"IGNORE_DUP_KEY":        "IgnoreDupKey",
-		"STATISTICS_NORECOMPUTE": "StatisticsNoRecompute",
-		"DROP_EXISTING":         "DropExisting",
-		"ONLINE":                "Online",
-		"ALLOW_ROW_LOCKS":       "AllowRowLocks",
-		"ALLOW_PAGE_LOCKS":      "AllowPageLocks",
-		"MAXDOP":                "MaxDop",
-		"DATA_COMPRESSION":      "DataCompression",
-		"RESUMABLE":             "Resumable",
-		"MAX_DURATION":          "MaxDuration",
-		"WAIT_AT_LOW_PRIORITY":  "WaitAtLowPriority",
+		"PAD_INDEX":                   "PadIndex",
+		"FILLFACTOR":                  "FillFactor",
+		"SORT_IN_TEMPDB":              "SortInTempDB",
+		"IGNORE_DUP_KEY":              "IgnoreDupKey",
+		"STATISTICS_NORECOMPUTE":      "StatisticsNoRecompute",
+		"DROP_EXISTING":               "DropExisting",
+		"ONLINE":                      "Online",
+		"ALLOW_ROW_LOCKS":             "AllowRowLocks",
+		"ALLOW_PAGE_LOCKS":            "AllowPageLocks",
+		"MAXDOP":                      "MaxDop",
+		"DATA_COMPRESSION":            "DataCompression",
+		"RESUMABLE":                   "Resumable",
+		"MAX_DURATION":                "MaxDuration",
+		"WAIT_AT_LOW_PRIORITY":        "WaitAtLowPriority",
+		"OPTIMIZE_FOR_SEQUENTIAL_KEY": "OptimizeForSequentialKey",
 	}
 	if kind, ok := optionMap[optionName]; ok {
 		return kind
