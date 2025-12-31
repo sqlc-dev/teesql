@@ -212,6 +212,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropRoleStatementToJSON(s)
 	case *ast.DropAssemblyStatement:
 		return dropAssemblyStatementToJSON(s)
+	case *ast.DropAsymmetricKeyStatement:
+		return dropAsymmetricKeyStatementToJSON(s)
 	case *ast.CreateTableStatement:
 		return createTableStatementToJSON(s)
 	case *ast.GrantStatement:
@@ -8251,6 +8253,18 @@ func dropAssemblyStatementToJSON(s *ast.DropAssemblyStatement) jsonNode {
 	return node
 }
 
+func dropAsymmetricKeyStatementToJSON(s *ast.DropAsymmetricKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type":             "DropAsymmetricKeyStatement",
+		"RemoveProviderKey": s.RemoveProviderKey,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
 func alterTableTriggerModificationStatementToJSON(s *ast.AlterTableTriggerModificationStatement) jsonNode {
 	node := jsonNode{
 		"$type":              "AlterTableTriggerModificationStatement",
@@ -8986,7 +9000,70 @@ func createAsymmetricKeyStatementToJSON(s *ast.CreateAsymmetricKeyStatement) jso
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.KeySource != nil {
+		node["KeySource"] = encryptionSourceToJSON(s.KeySource)
+	}
+	if s.EncryptionAlgorithm != "" {
+		node["EncryptionAlgorithm"] = s.EncryptionAlgorithm
+	}
+	if s.Password != nil {
+		node["Password"] = scalarExpressionToJSON(s.Password)
+	}
 	return node
+}
+
+func encryptionSourceToJSON(source ast.EncryptionSource) interface{} {
+	switch s := source.(type) {
+	case *ast.ProviderEncryptionSource:
+		return providerEncryptionSourceToJSON(s)
+	default:
+		return nil
+	}
+}
+
+func providerEncryptionSourceToJSON(s *ast.ProviderEncryptionSource) jsonNode {
+	node := jsonNode{
+		"$type": "ProviderEncryptionSource",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.KeyOptions) > 0 {
+		options := make([]interface{}, len(s.KeyOptions))
+		for i, opt := range s.KeyOptions {
+			options[i] = keyOptionToJSON(opt)
+		}
+		node["KeyOptions"] = options
+	}
+	return node
+}
+
+func keyOptionToJSON(opt ast.KeyOption) interface{} {
+	switch o := opt.(type) {
+	case *ast.AlgorithmKeyOption:
+		return jsonNode{
+			"$type":      "AlgorithmKeyOption",
+			"Algorithm":  o.Algorithm,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.ProviderKeyNameKeyOption:
+		node := jsonNode{
+			"$type":      "ProviderKeyNameKeyOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.KeyName != nil {
+			node["KeyName"] = scalarExpressionToJSON(o.KeyName)
+		}
+		return node
+	case *ast.CreationDispositionKeyOption:
+		return jsonNode{
+			"$type":       "CreationDispositionKeyOption",
+			"IsCreateNew": o.IsCreateNew,
+			"OptionKind":  o.OptionKind,
+		}
+	default:
+		return nil
+	}
 }
 
 func createSymmetricKeyStatementToJSON(s *ast.CreateSymmetricKeyStatement) jsonNode {

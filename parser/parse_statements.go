@@ -5946,8 +5946,114 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Check for FROM PROVIDER
+	if p.curTok.Type == TokenFrom {
+		p.nextToken() // consume FROM
+		if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+			p.nextToken() // consume PROVIDER
+			source := &ast.ProviderEncryptionSource{
+				Name: p.parseIdentifier(),
+			}
+			stmt.EncryptionAlgorithm = "None"
+
+			// Check for WITH options
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				for {
+					optName := strings.ToUpper(p.curTok.Literal)
+					switch optName {
+					case "ALGORITHM":
+						p.nextToken() // consume ALGORITHM
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						alg := strings.ToUpper(p.curTok.Literal)
+						// Map algorithm names to proper case
+						algMap := map[string]string{
+							"DES":         "Des",
+							"RC2":         "RC2",
+							"RC4":         "RC4",
+							"RC4_128":     "RC4_128",
+							"TRIPLE_DES":  "TripleDes",
+							"AES_128":     "Aes128",
+							"AES_192":     "Aes192",
+							"AES_256":     "Aes256",
+							"RSA_512":     "Rsa512",
+							"RSA_1024":    "Rsa1024",
+							"RSA_2048":    "Rsa2048",
+							"RSA_3072":    "Rsa3072",
+							"RSA_4096":    "Rsa4096",
+							"DESX":        "DesX",
+							"TRIPLE_DES_3KEY": "TripleDes3Key",
+						}
+						mappedAlg := alg
+						if mapped, ok := algMap[alg]; ok {
+							mappedAlg = mapped
+						}
+						source.KeyOptions = append(source.KeyOptions, &ast.AlgorithmKeyOption{
+							Algorithm:  mappedAlg,
+							OptionKind: "Algorithm",
+						})
+						p.nextToken()
+					case "PROVIDER_KEY_NAME":
+						p.nextToken() // consume PROVIDER_KEY_NAME
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						keyName, _ := p.parseStringLiteral()
+						source.KeyOptions = append(source.KeyOptions, &ast.ProviderKeyNameKeyOption{
+							KeyName:    keyName,
+							OptionKind: "ProviderKeyName",
+						})
+					case "CREATION_DISPOSITION":
+						p.nextToken() // consume CREATION_DISPOSITION
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						isCreateNew := strings.ToUpper(p.curTok.Literal) == "CREATE_NEW"
+						source.KeyOptions = append(source.KeyOptions, &ast.CreationDispositionKeyOption{
+							IsCreateNew: isCreateNew,
+							OptionKind:  "CreationDisposition",
+						})
+						p.nextToken()
+					default:
+						goto doneWithOptions
+					}
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken() // consume comma
+					} else if strings.ToUpper(p.curTok.Literal) != "ALGORITHM" &&
+						strings.ToUpper(p.curTok.Literal) != "PROVIDER_KEY_NAME" &&
+						strings.ToUpper(p.curTok.Literal) != "CREATION_DISPOSITION" {
+						break
+					}
+				}
+			doneWithOptions:
+			}
+			stmt.KeySource = source
+		}
+	}
+
+	// Check for ENCRYPTION BY PASSWORD
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+		}
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		password, _ := p.parseStringLiteral()
+		stmt.Password = password
+	}
+
+	// Skip optional semicolon and rest of statement
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 	return stmt, nil
 }
 

@@ -110,6 +110,8 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropAssemblyStatement()
 	case "CRYPTOGRAPHIC":
 		return p.parseDropCryptographicProviderStatement()
+	case "ASYMMETRIC":
+		return p.parseDropAsymmetricKeyStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -642,6 +644,50 @@ func (p *Parser) parseDropAssemblyStatement() (*ast.DropAssemblyStatement, error
 			break
 		}
 		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropAsymmetricKeyStatement() (*ast.DropAsymmetricKeyStatement, error) {
+	// Consume ASYMMETRIC
+	p.nextToken()
+
+	// Expect KEY
+	if strings.ToUpper(p.curTok.Literal) == "KEY" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropAsymmetricKeyStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse key name
+	stmt.Name = p.parseIdentifier()
+
+	// Check for REMOVE PROVIDER KEY
+	if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
+		p.nextToken() // consume REMOVE
+		if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+			p.nextToken() // consume PROVIDER
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			stmt.RemoveProviderKey = true
+		}
 	}
 
 	// Skip optional semicolon
