@@ -226,6 +226,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return predicateSetStatementToJSON(s)
 	case *ast.SetStatisticsStatement:
 		return setStatisticsStatementToJSON(s)
+	case *ast.SetRowCountStatement:
+		return setRowCountStatementToJSON(s)
+	case *ast.SetOffsetsStatement:
+		return setOffsetsStatementToJSON(s)
 	case *ast.CommitTransactionStatement:
 		return commitTransactionStatementToJSON(s)
 	case *ast.RollbackTransactionStatement:
@@ -4281,7 +4285,7 @@ func securityPrincipalToJSON(p *ast.SecurityPrincipal) jsonNode {
 func predicateSetStatementToJSON(s *ast.PredicateSetStatement) jsonNode {
 	return jsonNode{
 		"$type":   "PredicateSetStatement",
-		"Options": string(s.Options),
+		"Options": s.Options,
 		"IsOn":    s.IsOn,
 	}
 }
@@ -4289,7 +4293,25 @@ func predicateSetStatementToJSON(s *ast.PredicateSetStatement) jsonNode {
 func setStatisticsStatementToJSON(s *ast.SetStatisticsStatement) jsonNode {
 	return jsonNode{
 		"$type":   "SetStatisticsStatement",
-		"Options": string(s.Options),
+		"Options": s.Options,
+		"IsOn":    s.IsOn,
+	}
+}
+
+func setRowCountStatementToJSON(s *ast.SetRowCountStatement) jsonNode {
+	node := jsonNode{
+		"$type": "SetRowCountStatement",
+	}
+	if s.NumberRows != nil {
+		node["NumberRows"] = scalarExpressionToJSON(s.NumberRows)
+	}
+	return node
+}
+
+func setOffsetsStatementToJSON(s *ast.SetOffsetsStatement) jsonNode {
+	return jsonNode{
+		"$type":   "SetOffsetsStatement",
+		"Options": s.Options,
 		"IsOn":    s.IsOn,
 	}
 }

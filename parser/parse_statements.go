@@ -685,113 +685,42 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 	// Consume SET
 	p.nextToken()
 
-	// Check for predicate SET options like SET ANSI_NULLS ON/OFF
+	// Check for special SET statements
 	if p.curTok.Type == TokenIdent {
 		optionName := strings.ToUpper(p.curTok.Literal)
-		var setOpt ast.SetOptions
-		switch optionName {
-		case "ANSI_DEFAULTS":
-			setOpt = ast.SetOptionsAnsiDefaults
-		case "ANSI_NULLS":
-			setOpt = ast.SetOptionsAnsiNulls
-		case "ANSI_NULL_DFLT_OFF":
-			setOpt = ast.SetOptionsAnsiNullDfltOff
-		case "ANSI_NULL_DFLT_ON":
-			setOpt = ast.SetOptionsAnsiNullDfltOn
-		case "ANSI_PADDING":
-			setOpt = ast.SetOptionsAnsiPadding
-		case "ANSI_WARNINGS":
-			setOpt = ast.SetOptionsAnsiWarnings
-		case "ARITHABORT":
-			setOpt = ast.SetOptionsArithAbort
-		case "ARITHIGNORE":
-			setOpt = ast.SetOptionsArithIgnore
-		case "CONCAT_NULL_YIELDS_NULL":
-			setOpt = ast.SetOptionsConcatNullYieldsNull
-		case "CURSOR_CLOSE_ON_COMMIT":
-			setOpt = ast.SetOptionsCursorCloseOnCommit
-		case "FMTONLY":
-			setOpt = ast.SetOptionsFmtOnly
-		case "FORCEPLAN":
-			setOpt = ast.SetOptionsForceplan
-		case "IMPLICIT_TRANSACTIONS":
-			setOpt = ast.SetOptionsImplicitTransactions
-		case "NOCOUNT":
-			setOpt = ast.SetOptionsNoCount
-		case "NOEXEC":
-			setOpt = ast.SetOptionsNoExec
-		case "NO_BROWSETABLE":
-			setOpt = ast.SetOptionsNoBrowsetable
-		case "NUMERIC_ROUNDABORT":
-			setOpt = ast.SetOptionsNumericRoundAbort
-		case "PARSEONLY":
-			setOpt = ast.SetOptionsParseOnly
-		case "QUOTED_IDENTIFIER":
-			setOpt = ast.SetOptionsQuotedIdentifier
-		case "REMOTE_PROC_TRANSACTIONS":
-			setOpt = ast.SetOptionsRemoteProcTransactions
-		case "SHOWPLAN_ALL":
-			setOpt = ast.SetOptionsShowplanAll
-		case "SHOWPLAN_TEXT":
-			setOpt = ast.SetOptionsShowplanText
-		case "SHOWPLAN_XML":
-			setOpt = ast.SetOptionsShowplanXml
-		case "STATISTICS":
-			// Handle SET STATISTICS IO/PROFILE/TIME/XML - returns SetStatisticsStatement
-			p.nextToken() // consume STATISTICS
-			var statOpt ast.SetOptions
-			if p.curTok.Type == TokenTime {
-				statOpt = ast.SetOptionsTime
-			} else if p.curTok.Type == TokenIdent {
-				switch strings.ToUpper(p.curTok.Literal) {
-				case "IO":
-					statOpt = ast.SetOptionsIO
-				case "PROFILE":
-					statOpt = ast.SetOptionsProfile
-				case "XML":
-					statOpt = ast.SetOptionsStatisticsXml
-				}
-			}
-			if statOpt != "" {
-				p.nextToken() // consume the statistic option
-				isOn := false
-				if p.curTok.Type == TokenOn || (p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ON") {
-					isOn = true
-					p.nextToken()
-				} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OFF" {
-					isOn = false
-					p.nextToken()
-				}
-				if p.curTok.Type == TokenSemicolon {
-					p.nextToken()
-				}
-				return &ast.SetStatisticsStatement{
-					Options: statOpt,
-					IsOn:    isOn,
-				}, nil
-			}
-		case "XACT_ABORT":
-			setOpt = ast.SetOptionsXactAbort
-		}
-		if setOpt != "" {
-			p.nextToken() // consume option name
-			isOn := false
-			// ON is tokenized as TokenOn, not TokenIdent
-			if p.curTok.Type == TokenOn || (p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ON") {
-				isOn = true
+
+		// Handle SET ROWCOUNT
+		if optionName == "ROWCOUNT" {
+			p.nextToken() // consume ROWCOUNT
+			var numRows ast.ScalarExpression
+			if strings.HasPrefix(p.curTok.Literal, "@") {
+				numRows = &ast.VariableReference{Name: p.curTok.Literal}
 				p.nextToken()
-			} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OFF" {
-				isOn = false
+			} else {
+				numRows = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
 				p.nextToken()
 			}
-			// Skip optional semicolon
 			if p.curTok.Type == TokenSemicolon {
 				p.nextToken()
 			}
-			return &ast.PredicateSetStatement{
-				Options: setOpt,
-				IsOn:    isOn,
-			}, nil
+			return &ast.SetRowCountStatement{NumberRows: numRows}, nil
+		}
+
+		// Handle SET STATISTICS
+		if optionName == "STATISTICS" {
+			return p.parseSetStatisticsStatement()
+		}
+
+		// Handle SET OFFSETS
+		if optionName == "OFFSETS" {
+			return p.parseSetOffsetsStatement()
+		}
+
+		// Handle predicate SET options like SET ANSI_NULLS ON/OFF
+		// These can have multiple options with commas
+		setOpt := p.mapPredicateSetOption(optionName)
+		if setOpt != "" {
+			return p.parsePredicateSetStatement(setOpt)
 		}
 	}
 
@@ -897,6 +826,279 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 	}
 
 	return stmt, nil
+}
+
+// mapPredicateSetOption maps option names to their SetOptions values
+func (p *Parser) mapPredicateSetOption(name string) string {
+	switch name {
+	case "ANSI_DEFAULTS":
+		return "AnsiDefaults"
+	case "ANSI_NULLS":
+		return "AnsiNulls"
+	case "ANSI_NULL_DFLT_OFF":
+		return "AnsiNullDfltOff"
+	case "ANSI_NULL_DFLT_ON":
+		return "AnsiNullDfltOn"
+	case "ANSI_PADDING":
+		return "AnsiPadding"
+	case "ANSI_WARNINGS":
+		return "AnsiWarnings"
+	case "ARITHABORT":
+		return "ArithAbort"
+	case "ARITHIGNORE":
+		return "ArithIgnore"
+	case "CONCAT_NULL_YIELDS_NULL":
+		return "ConcatNullYieldsNull"
+	case "CURSOR_CLOSE_ON_COMMIT":
+		return "CursorCloseOnCommit"
+	case "FMTONLY":
+		return "FmtOnly"
+	case "FORCEPLAN":
+		return "ForcePlan"
+	case "IMPLICIT_TRANSACTIONS":
+		return "ImplicitTransactions"
+	case "NOCOUNT":
+		return "NoCount"
+	case "NOEXEC":
+		return "NoExec"
+	case "NO_BROWSETABLE":
+		return "NoBrowsetable"
+	case "NUMERIC_ROUNDABORT":
+		return "NumericRoundAbort"
+	case "PARSEONLY":
+		return "ParseOnly"
+	case "QUOTED_IDENTIFIER":
+		return "QuotedIdentifier"
+	case "REMOTE_PROC_TRANSACTIONS":
+		return "RemoteProcTransactions"
+	case "SHOWPLAN_ALL":
+		return "ShowPlanAll"
+	case "SHOWPLAN_TEXT":
+		return "ShowPlanText"
+	case "SHOWPLAN_XML":
+		return "ShowPlanXml"
+	case "XACT_ABORT":
+		return "XactAbort"
+	default:
+		return ""
+	}
+}
+
+// predicateSetOptionOrder defines the sort order for predicate SET options
+var predicateSetOptionOrder = map[string]int{
+	"AnsiNulls":             1,
+	"AnsiNullDfltOff":       2,
+	"AnsiNullDfltOn":        3,
+	"AnsiPadding":           4,
+	"AnsiWarnings":          5,
+	"ConcatNullYieldsNull":  6,
+	"CursorCloseOnCommit":   7,
+	"ImplicitTransactions":  8,
+	"QuotedIdentifier":      9,
+	"ArithAbort":            10,
+	"ArithIgnore":           11,
+	"FmtOnly":               12,
+	"NoCount":               13,
+	"NoExec":                14,
+	"NumericRoundAbort":     15,
+	"ParseOnly":             16,
+	"AnsiDefaults":          17,
+	"ForcePlan":             18,
+	"ShowPlanAll":           19,
+	"ShowPlanText":          20,
+	"ShowPlanXml":           21,
+	"NoBrowsetable":         22,
+	"RemoteProcTransactions": 23,
+	"XactAbort":             24,
+}
+
+// parsePredicateSetStatement parses SET option1, option2, ... ON/OFF
+func (p *Parser) parsePredicateSetStatement(firstOpt string) (*ast.PredicateSetStatement, error) {
+	options := []string{firstOpt}
+	p.nextToken() // consume first option
+
+	// Check for more options with commas
+	for p.curTok.Type == TokenComma {
+		p.nextToken() // consume comma
+		if p.curTok.Type == TokenIdent {
+			nextOpt := p.mapPredicateSetOption(strings.ToUpper(p.curTok.Literal))
+			if nextOpt != "" {
+				options = append(options, nextOpt)
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Sort options according to ScriptDom order
+	sort.Slice(options, func(i, j int) bool {
+		return predicateSetOptionOrder[options[i]] < predicateSetOptionOrder[options[j]]
+	})
+
+	// Parse ON/OFF
+	isOn := false
+	if p.curTok.Type == TokenOn || (p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ON") {
+		isOn = true
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OFF" {
+		isOn = false
+		p.nextToken()
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return &ast.PredicateSetStatement{
+		Options: strings.Join(options, ", "),
+		IsOn:    isOn,
+	}, nil
+}
+
+// parseSetStatisticsStatement parses SET STATISTICS opt1, opt2, ... ON/OFF
+func (p *Parser) parseSetStatisticsStatement() (*ast.SetStatisticsStatement, error) {
+	p.nextToken() // consume STATISTICS
+
+	// Map statistics options
+	mapStatOpt := func(name string) string {
+		switch name {
+		case "IO":
+			return "IO"
+		case "PROFILE":
+			return "Profile"
+		case "TIME":
+			return "Time"
+		case "XML":
+			return "Xml"
+		default:
+			return ""
+		}
+	}
+
+	var options []string
+	for {
+		var optName string
+		if p.curTok.Type == TokenTime {
+			optName = "Time"
+		} else if p.curTok.Type == TokenIdent {
+			optName = mapStatOpt(strings.ToUpper(p.curTok.Literal))
+		}
+		if optName == "" {
+			break
+		}
+		options = append(options, optName)
+		p.nextToken()
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Parse ON/OFF
+	isOn := false
+	if p.curTok.Type == TokenOn || (p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ON") {
+		isOn = true
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OFF" {
+		isOn = false
+		p.nextToken()
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return &ast.SetStatisticsStatement{
+		Options: strings.Join(options, ", "),
+		IsOn:    isOn,
+	}, nil
+}
+
+// setOffsetsOptionOrder defines the sort order for SET OFFSETS options
+var setOffsetsOptionOrder = map[string]int{
+	"Select":    1,
+	"From":      2,
+	"Order":     3,
+	"Compute":   4,
+	"Table":     5,
+	"Procedure": 6,
+	"Execute":   7,
+	"Statement": 8,
+	"Param":     9,
+}
+
+// parseSetOffsetsStatement parses SET OFFSETS opt1, opt2, ... ON/OFF
+func (p *Parser) parseSetOffsetsStatement() (*ast.SetOffsetsStatement, error) {
+	p.nextToken() // consume OFFSETS
+
+	// Map offset options - these can be either tokens or identifiers
+	mapOffsetOpt := func() string {
+		switch p.curTok.Type {
+		case TokenSelect:
+			return "Select"
+		case TokenFrom:
+			return "From"
+		case TokenOrder:
+			return "Order"
+		case TokenTable:
+			return "Table"
+		case TokenProcedure:
+			return "Procedure"
+		case TokenExecute:
+			return "Execute"
+		case TokenIdent:
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "COMPUTE":
+				return "Compute"
+			case "STATEMENT":
+				return "Statement"
+			case "PARAM":
+				return "Param"
+			}
+		}
+		return ""
+	}
+
+	var options []string
+	for {
+		optName := mapOffsetOpt()
+		if optName == "" {
+			break
+		}
+		options = append(options, optName)
+		p.nextToken()
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Sort options according to ScriptDom order
+	sort.Slice(options, func(i, j int) bool {
+		return setOffsetsOptionOrder[options[i]] < setOffsetsOptionOrder[options[j]]
+	})
+
+	// Parse ON/OFF
+	isOn := false
+	if p.curTok.Type == TokenOn || (p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ON") {
+		isOn = true
+		p.nextToken()
+	} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OFF" {
+		isOn = false
+		p.nextToken()
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return &ast.SetOffsetsStatement{
+		Options: strings.Join(options, ", "),
+		IsOn:    isOn,
+	}, nil
 }
 
 func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {
