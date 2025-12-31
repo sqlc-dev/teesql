@@ -95,7 +95,8 @@ func (s *CreateExternalLibraryStatement) statement() {}
 
 // ExternalLibraryFileOption represents a file option for external library
 type ExternalLibraryFileOption struct {
-	Content ScalarExpression
+	Content  ScalarExpression
+	Platform *Identifier
 }
 
 // ExternalLibraryOption represents an option for external library

@@ -5054,8 +5054,10 @@ func (p *Parser) parseCreateExternalLibraryStatement() (*ast.CreateExternalLibra
 		p.nextToken() // consume FROM
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
+			fileOption := &ast.ExternalLibraryFileOption{}
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				if strings.ToUpper(p.curTok.Literal) == "CONTENT" {
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "CONTENT":
 					p.nextToken() // consume CONTENT
 					if p.curTok.Type == TokenEquals {
 						p.nextToken() // consume =
@@ -5064,15 +5066,22 @@ func (p *Parser) parseCreateExternalLibraryStatement() (*ast.CreateExternalLibra
 					if err != nil {
 						return nil, err
 					}
-					stmt.ExternalLibraryFiles = append(stmt.ExternalLibraryFiles, &ast.ExternalLibraryFileOption{
-						Content: content,
-					})
-				} else {
+					fileOption.Content = content
+				case "PLATFORM":
+					p.nextToken() // consume PLATFORM
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					fileOption.Platform = p.parseIdentifier()
+				default:
 					p.nextToken()
 				}
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
 				}
+			}
+			if fileOption.Content != nil {
+				stmt.ExternalLibraryFiles = append(stmt.ExternalLibraryFiles, fileOption)
 			}
 			if p.curTok.Type == TokenRParen {
 				p.nextToken() // consume )

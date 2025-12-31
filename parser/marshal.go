@@ -8532,6 +8532,9 @@ func externalLibraryFileOptionToJSON(f *ast.ExternalLibraryFileOption) jsonNode 
 	if f.Content != nil {
 		node["Content"] = scalarExpressionToJSON(f.Content)
 	}
+	if f.Platform != nil {
+		node["Platform"] = identifierToJSON(f.Platform)
+	}
 	return node
 }
 
