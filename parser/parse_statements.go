@@ -7797,11 +7797,21 @@ func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatemen
 		}
 	}
 
+	// Parse optional WHERE clause (filter predicate)
+	if p.curTok.Type == TokenWhere {
+		p.nextToken() // consume WHERE
+		pred, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.FilterPredicate = pred
+	}
+
 	// Parse optional WITH clause (reuse UPDATE STATISTICS options logic)
 	if p.curTok.Type == TokenWith {
 		p.nextToken() // consume WITH
 
-		for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF && p.curTok.Type != TokenWhere {
+		for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
 			optionName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume option name
 
@@ -7824,6 +7834,18 @@ func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatemen
 				p.nextToken() // consume PERCENT or ROWS
 				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
 					OptionKind: "Sample" + strings.Title(strings.ToLower(mode)),
+					Literal:    value,
+				})
+			case "STATS_STREAM":
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				value, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
+					OptionKind: "StatsStream",
 					Literal:    value,
 				})
 			case "INCREMENTAL":
@@ -7853,9 +7875,9 @@ func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatemen
 		}
 	}
 
-	// Skip optional WHERE clause and rest of statement
-	if p.curTok.Type == TokenWhere || p.curTok.Type == TokenSemicolon {
-		p.skipToEndOfStatement()
+	// Skip any remaining tokens
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
 	}
 
 	return stmt, nil

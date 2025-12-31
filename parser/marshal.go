@@ -1902,7 +1902,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		return node
 	case *ast.BooleanInExpression:
 		node := jsonNode{
-			"$type": "BooleanInExpression",
+			"$type": "InPredicate",
 		}
 		if e.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(e.Expression)
