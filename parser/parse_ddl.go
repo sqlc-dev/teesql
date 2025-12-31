@@ -4714,8 +4714,8 @@ func (p *Parser) parseSequenceOption() (interface{}, error) {
 		}
 	case "AS":
 		p.nextToken()
-		// Parse data type
-		dataType, err := p.parseDataType()
+		// Parse data type - use parseDataTypeReference to preserve UserDataTypeReference
+		dataType, err := p.parseDataTypeReference()
 		if err != nil {
 			return nil, err
 		}
