@@ -2,10 +2,13 @@ package ast
 
 // CreateDatabaseStatement represents a CREATE DATABASE statement.
 type CreateDatabaseStatement struct {
-	DatabaseName *Identifier            `json:"DatabaseName,omitempty"`
-	Options      []CreateDatabaseOption `json:"Options,omitempty"`
-	AttachMode   string                 `json:"AttachMode,omitempty"` // "None", "Attach", "AttachRebuildLog"
-	CopyOf       *MultiPartIdentifier   `json:"CopyOf,omitempty"`     // For AS COPY OF syntax
+	DatabaseName *Identifier              `json:"DatabaseName,omitempty"`
+	Options      []CreateDatabaseOption   `json:"Options,omitempty"`
+	AttachMode   string                   `json:"AttachMode,omitempty"` // "None", "Attach", "AttachRebuildLog"
+	CopyOf       *MultiPartIdentifier     `json:"CopyOf,omitempty"`     // For AS COPY OF syntax
+	FileGroups   []*FileGroupDefinition   `json:"FileGroups,omitempty"`
+	LogOn        []*FileDeclaration       `json:"LogOn,omitempty"`
+	Collation    *Identifier              `json:"Collation,omitempty"`
 }
 
 func (s *CreateDatabaseStatement) node()      {}

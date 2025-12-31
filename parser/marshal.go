@@ -8985,14 +8985,123 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 		}
 		node["Options"] = opts
 	}
-	// AttachMode is output when there are Options or CopyOf
-	if (len(s.Options) > 0 || s.CopyOf != nil) && s.AttachMode != "" {
+	if len(s.FileGroups) > 0 {
+		fgs := make([]jsonNode, len(s.FileGroups))
+		for i, fg := range s.FileGroups {
+			fgs[i] = fileGroupDefinitionToJSON(fg)
+		}
+		node["FileGroups"] = fgs
+	}
+	if len(s.LogOn) > 0 {
+		logs := make([]jsonNode, len(s.LogOn))
+		for i, fd := range s.LogOn {
+			logs[i] = fileDeclarationToJSON(fd)
+		}
+		node["LogOn"] = logs
+	}
+	// AttachMode is output when there are FileGroups, Options, Collation, or CopyOf
+	if len(s.FileGroups) > 0 || len(s.Options) > 0 || s.Collation != nil || s.CopyOf != nil {
 		node["AttachMode"] = s.AttachMode
 	}
 	if s.CopyOf != nil {
 		node["CopyOf"] = multiPartIdentifierToJSON(s.CopyOf)
 	}
+	if s.Collation != nil {
+		node["Collation"] = identifierToJSON(s.Collation)
+	}
 	return node
+}
+
+func fileGroupDefinitionToJSON(fg *ast.FileGroupDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "FileGroupDefinition",
+	}
+	if fg.Name != nil {
+		node["Name"] = identifierToJSON(fg.Name)
+	}
+	if len(fg.FileDeclarations) > 0 {
+		decls := make([]jsonNode, len(fg.FileDeclarations))
+		for i, fd := range fg.FileDeclarations {
+			decls[i] = fileDeclarationToJSON(fd)
+		}
+		node["FileDeclarations"] = decls
+	}
+	node["IsDefault"] = fg.IsDefault
+	node["ContainsFileStream"] = fg.ContainsFileStream
+	node["ContainsMemoryOptimizedData"] = fg.ContainsMemoryOptimizedData
+	return node
+}
+
+func fileDeclarationToJSON(fd *ast.FileDeclaration) jsonNode {
+	node := jsonNode{
+		"$type": "FileDeclaration",
+	}
+	if len(fd.Options) > 0 {
+		opts := make([]jsonNode, len(fd.Options))
+		for i, opt := range fd.Options {
+			opts[i] = fileDeclarationOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	node["IsPrimary"] = fd.IsPrimary
+	return node
+}
+
+func fileDeclarationOptionToJSON(opt ast.FileDeclarationOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.NameFileDeclarationOption:
+		node := jsonNode{
+			"$type":      "NameFileDeclarationOption",
+			"IsNewName":  o.IsNewName,
+			"OptionKind": o.OptionKind,
+		}
+		if o.LogicalFileName != nil {
+			node["LogicalFileName"] = identifierOrValueExpressionToJSON(o.LogicalFileName)
+		}
+		return node
+	case *ast.FileNameFileDeclarationOption:
+		node := jsonNode{
+			"$type":      "FileNameFileDeclarationOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.OSFileName != nil {
+			node["OSFileName"] = stringLiteralToJSON(o.OSFileName)
+		}
+		return node
+	case *ast.SizeFileDeclarationOption:
+		node := jsonNode{
+			"$type":      "SizeFileDeclarationOption",
+			"Units":      o.Units,
+			"OptionKind": o.OptionKind,
+		}
+		if o.Size != nil {
+			node["Size"] = scalarExpressionToJSON(o.Size)
+		}
+		return node
+	case *ast.MaxSizeFileDeclarationOption:
+		node := jsonNode{
+			"$type":      "MaxSizeFileDeclarationOption",
+			"Units":      o.Units,
+			"Unlimited":  o.Unlimited,
+			"OptionKind": o.OptionKind,
+		}
+		if o.MaxSize != nil {
+			node["MaxSize"] = scalarExpressionToJSON(o.MaxSize)
+		}
+		return node
+	case *ast.FileGrowthFileDeclarationOption:
+		node := jsonNode{
+			"$type":      "FileGrowthFileDeclarationOption",
+			"Units":      o.Units,
+			"OptionKind": o.OptionKind,
+		}
+		if o.GrowthIncrement != nil {
+			node["GrowthIncrement"] = scalarExpressionToJSON(o.GrowthIncrement)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "FileDeclarationOption"}
+	}
 }
 
 func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {

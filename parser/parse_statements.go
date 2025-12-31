@@ -5594,6 +5594,48 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 		}
 	}
 
+	// Check for ON clause (file groups)
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		fileGroups, err := p.parseFileGroups()
+		if err != nil {
+			return nil, err
+		}
+		stmt.FileGroups = fileGroups
+	}
+
+	// Check for LOG ON clause
+	if strings.ToUpper(p.curTok.Literal) == "LOG" {
+		p.nextToken() // consume LOG
+		if p.curTok.Type == TokenOn {
+			p.nextToken() // consume ON
+			logDecls, err := p.parseFileDeclarationList(false)
+			if err != nil {
+				return nil, err
+			}
+			stmt.LogOn = logDecls
+		}
+	}
+
+	// Check for COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		stmt.Collation = p.parseIdentifier()
+	}
+
+	// Check for FOR ATTACH clause
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "ATTACH":
+			stmt.AttachMode = "Attach"
+			p.nextToken()
+		case "ATTACH_REBUILD_LOG":
+			stmt.AttachMode = "AttachRebuildLog"
+			p.nextToken()
+		}
+	}
+
 	// Check for WITH clause
 	if p.curTok.Type == TokenWith {
 		p.nextToken() // consume WITH
@@ -5728,6 +5770,294 @@ func (p *Parser) parseAzureDatabaseOptions() ([]ast.CreateDatabaseOption, error)
 	}
 
 	return options, nil
+}
+
+// parseFileGroups parses the file group definitions in CREATE DATABASE ON clause
+func (p *Parser) parseFileGroups() ([]*ast.FileGroupDefinition, error) {
+	var fileGroups []*ast.FileGroupDefinition
+
+	for {
+		fg := &ast.FileGroupDefinition{}
+		isPrimary := false
+
+		// Check for PRIMARY keyword or FILEGROUP keyword
+		switch strings.ToUpper(p.curTok.Literal) {
+		case "PRIMARY":
+			isPrimary = true
+			p.nextToken() // consume PRIMARY
+		case "FILEGROUP":
+			p.nextToken() // consume FILEGROUP
+			fg.Name = p.parseIdentifier()
+			// Check for CONTAINS FILESTREAM or CONTAINS MEMORY_OPTIMIZED_DATA
+			if strings.ToUpper(p.curTok.Literal) == "CONTAINS" {
+				p.nextToken() // consume CONTAINS
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "FILESTREAM":
+					fg.ContainsFileStream = true
+					p.nextToken()
+				case "MEMORY_OPTIMIZED_DATA":
+					fg.ContainsMemoryOptimizedData = true
+					p.nextToken()
+				}
+			}
+			// Check for DEFAULT keyword
+			if p.curTok.Type == TokenDefault {
+				fg.IsDefault = true
+				p.nextToken()
+			}
+		}
+
+		// Parse file declarations for this group
+		decls, err := p.parseFileDeclarationList(isPrimary)
+		if err != nil {
+			return nil, err
+		}
+		fg.FileDeclarations = decls
+		fileGroups = append(fileGroups, fg)
+
+		// Check if there's a comma followed by another FILEGROUP
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+			// Check if next is FILEGROUP - if so, continue the loop
+			if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+				continue
+			}
+			// Otherwise it might be another file in primary, so we need to handle that
+			// by going back and adding it to the first filegroup
+			// Actually, this case means there are more files after the comma
+			// Check if it's a new filegroup or more declarations for the first group
+		}
+
+		// Check for FILEGROUP keyword for next group
+		if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+			continue
+		}
+
+		break
+	}
+
+	return fileGroups, nil
+}
+
+// parseFileDeclarationList parses a comma-separated list of file declarations
+func (p *Parser) parseFileDeclarationList(firstIsPrimary bool) ([]*ast.FileDeclaration, error) {
+	var decls []*ast.FileDeclaration
+
+	isFirst := true
+	for {
+		// Expect opening paren for file declaration
+		if p.curTok.Type != TokenLParen {
+			break
+		}
+		p.nextToken() // consume (
+
+		decl := &ast.FileDeclaration{}
+		if isFirst && firstIsPrimary {
+			decl.IsPrimary = true
+		}
+		isFirst = false
+
+		// Parse file options
+		opts, err := p.parseFileDeclarationOptions()
+		if err != nil {
+			return nil, err
+		}
+		decl.Options = opts
+
+		// Expect closing paren
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+
+		decls = append(decls, decl)
+
+		// Check for comma
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+			// If next token is FILEGROUP or LOG, break out
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper == "FILEGROUP" || upper == "LOG" {
+				break
+			}
+			// Otherwise, continue parsing more declarations
+			continue
+		}
+
+		break
+	}
+
+	return decls, nil
+}
+
+// parseFileDeclarationOptions parses the options inside a file declaration
+func (p *Parser) parseFileDeclarationOptions() ([]ast.FileDeclarationOption, error) {
+	var opts []ast.FileDeclarationOption
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			continue
+		}
+
+		optName := strings.ToUpper(p.curTok.Literal)
+
+		switch optName {
+		case "NAME":
+			p.nextToken() // consume NAME
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			id := p.parseIdentifier()
+			opt := &ast.NameFileDeclarationOption{
+				LogicalFileName: &ast.IdentifierOrValueExpression{
+					Value:      id.Value,
+					Identifier: id,
+				},
+				IsNewName:  false,
+				OptionKind: "Name",
+			}
+			opts = append(opts, opt)
+
+		case "NEWNAME":
+			p.nextToken() // consume NEWNAME
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			id := p.parseIdentifier()
+			opt := &ast.NameFileDeclarationOption{
+				LogicalFileName: &ast.IdentifierOrValueExpression{
+					Value:      id.Value,
+					Identifier: id,
+				},
+				IsNewName:  true,
+				OptionKind: "NewName",
+			}
+			opts = append(opts, opt)
+
+		case "FILENAME":
+			p.nextToken() // consume FILENAME
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			strLit, _ := p.parseStringLiteral()
+			opt := &ast.FileNameFileDeclarationOption{
+				OSFileName: strLit,
+				OptionKind: "FileName",
+			}
+			opts = append(opts, opt)
+
+		case "SIZE":
+			p.nextToken() // consume SIZE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			size, units := p.parseSizeValue()
+			opt := &ast.SizeFileDeclarationOption{
+				Size:       size,
+				Units:      units,
+				OptionKind: "Size",
+			}
+			opts = append(opts, opt)
+
+		case "MAXSIZE":
+			p.nextToken() // consume MAXSIZE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			// Check for UNLIMITED
+			if strings.ToUpper(p.curTok.Literal) == "UNLIMITED" {
+				p.nextToken()
+				opt := &ast.MaxSizeFileDeclarationOption{
+					Units:      "Unspecified",
+					Unlimited:  true,
+					OptionKind: "MaxSize",
+				}
+				opts = append(opts, opt)
+			} else {
+				size, units := p.parseSizeValue()
+				opt := &ast.MaxSizeFileDeclarationOption{
+					MaxSize:    size,
+					Units:      units,
+					Unlimited:  false,
+					OptionKind: "MaxSize",
+				}
+				opts = append(opts, opt)
+			}
+
+		case "FILEGROWTH":
+			p.nextToken() // consume FILEGROWTH
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			size, units := p.parseSizeValue()
+			opt := &ast.FileGrowthFileDeclarationOption{
+				GrowthIncrement: size,
+				Units:           units,
+				OptionKind:      "FileGrowth",
+			}
+			opts = append(opts, opt)
+
+		default:
+			// Unknown option, break
+			return opts, nil
+		}
+	}
+
+	return opts, nil
+}
+
+// parseSizeValue parses a size value with optional unit (e.g., "10", "5 MB", "15%")
+func (p *Parser) parseSizeValue() (ast.ScalarExpression, string) {
+	value := p.curTok.Literal
+	p.nextToken() // consume value
+
+	// Check if unit is attached to value (e.g., "5MB", "15%")
+	upperVal := strings.ToUpper(value)
+	if strings.HasSuffix(upperVal, "%") {
+		numVal := strings.TrimSuffix(value, "%")
+		return &ast.IntegerLiteral{LiteralType: "Integer", Value: numVal}, "Percent"
+	}
+	if strings.HasSuffix(upperVal, "KB") {
+		numVal := strings.TrimSuffix(upperVal, "KB")
+		return &ast.IntegerLiteral{LiteralType: "Integer", Value: numVal}, "KB"
+	}
+	if strings.HasSuffix(upperVal, "MB") {
+		numVal := strings.TrimSuffix(upperVal, "MB")
+		return &ast.IntegerLiteral{LiteralType: "Integer", Value: numVal}, "MB"
+	}
+	if strings.HasSuffix(upperVal, "GB") {
+		numVal := strings.TrimSuffix(upperVal, "GB")
+		return &ast.IntegerLiteral{LiteralType: "Integer", Value: numVal}, "GB"
+	}
+	if strings.HasSuffix(upperVal, "TB") {
+		numVal := strings.TrimSuffix(upperVal, "TB")
+		return &ast.IntegerLiteral{LiteralType: "Integer", Value: numVal}, "TB"
+	}
+
+	// Check for separate unit token
+	units := "Unspecified"
+	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenModulo {
+		unitStr := strings.ToUpper(p.curTok.Literal)
+		switch unitStr {
+		case "KB":
+			units = "KB"
+			p.nextToken()
+		case "MB":
+			units = "MB"
+			p.nextToken()
+		case "GB":
+			units = "GB"
+			p.nextToken()
+		case "TB":
+			units = "TB"
+			p.nextToken()
+		case "%":
+			units = "Percent"
+			p.nextToken()
+		}
+	}
+
+	return &ast.IntegerLiteral{LiteralType: "Integer", Value: value}, units
 }
 
 func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) {
