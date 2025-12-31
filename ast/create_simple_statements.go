@@ -277,6 +277,15 @@ type CreateTypeUdtStatement struct {
 func (s *CreateTypeUdtStatement) node()      {}
 func (s *CreateTypeUdtStatement) statement() {}
 
+// CreateTypeTableStatement represents a CREATE TYPE ... AS TABLE statement (table type).
+type CreateTypeTableStatement struct {
+	Name       *SchemaObjectName `json:"Name,omitempty"`
+	Definition *TableDefinition  `json:"Definition,omitempty"`
+}
+
+func (s *CreateTypeTableStatement) node()      {}
+func (s *CreateTypeTableStatement) statement() {}
+
 // CreateXmlIndexStatement represents a CREATE XML INDEX statement.
 type CreateXmlIndexStatement struct {
 	Name   *Identifier       `json:"Name,omitempty"`

@@ -406,6 +406,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createTypeUddtStatementToJSON(s)
 	case *ast.CreateTypeUdtStatement:
 		return createTypeUdtStatementToJSON(s)
+	case *ast.CreateTypeTableStatement:
+		return createTypeTableStatementToJSON(s)
 	case *ast.CreateXmlIndexStatement:
 		return createXmlIndexStatementToJSON(s)
 	case *ast.CreatePartitionFunctionStatement:
@@ -2816,6 +2818,23 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 	// Parse column name (parseIdentifier already calls nextToken)
 	col.ColumnIdentifier = p.parseIdentifier()
 
+	// Check for computed column (AS expression)
+	if strings.ToUpper(p.curTok.Literal) == "AS" {
+		p.nextToken() // consume AS
+		// Parse computed column expression
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		col.ComputedColumnExpression = expr
+		// Check for PERSISTED
+		if strings.ToUpper(p.curTok.Literal) == "PERSISTED" {
+			col.IsPersisted = true
+			p.nextToken() // consume PERSISTED
+		}
+		return col, nil
+	}
+
 	// Parse data type - be lenient if no data type is provided
 	dataType, err := p.parseDataTypeReference()
 	if err != nil {
@@ -3990,6 +4009,9 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 		"IsMasked":         c.IsMasked,
 		"ColumnIdentifier": identifierToJSON(c.ColumnIdentifier),
 	}
+	if c.ComputedColumnExpression != nil {
+		node["ComputedColumnExpression"] = scalarExpressionToJSON(c.ComputedColumnExpression)
+	}
 	if c.IdentityOptions != nil {
 		node["IdentityOptions"] = identityOptionsToJSON(c.IdentityOptions)
 	}
@@ -4056,8 +4078,11 @@ func constraintDefinitionToJSON(c ast.ConstraintDefinition) jsonNode {
 func uniqueConstraintToJSON(c *ast.UniqueConstraintDefinition) jsonNode {
 	node := jsonNode{
 		"$type":        "UniqueConstraintDefinition",
-		"Clustered":    c.Clustered,
 		"IsPrimaryKey": c.IsPrimaryKey,
+	}
+	// Output Clustered if it's true, or if IndexType is set (meaning NONCLUSTERED was explicitly specified)
+	if c.Clustered || c.IndexType != nil {
+		node["Clustered"] = c.Clustered
 	}
 	if c.ConstraintIdentifier != nil {
 		node["ConstraintIdentifier"] = identifierToJSON(c.ConstraintIdentifier)
@@ -6566,11 +6591,17 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 
 			// Parse data type if present
 			if p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma {
-				dataType, err := p.parseDataType()
+				dataType, err := p.parseDataTypeReference()
 				if err != nil {
 					return nil, err
 				}
 				param.DataType = dataType
+			}
+
+			// Check for READONLY modifier
+			if strings.ToUpper(p.curTok.Literal) == "READONLY" {
+				param.Modifier = "ReadOnly"
+				p.nextToken()
 			}
 
 			stmt.Parameters = append(stmt.Parameters, param)
@@ -6595,7 +6626,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 	p.nextToken()
 
 	// Parse return type
-	returnDataType, err := p.parseDataType()
+	returnDataType, err := p.parseDataTypeReference()
 	if err != nil {
 		p.skipToEndOfStatement()
 		return stmt, nil
@@ -9340,6 +9371,19 @@ func createTypeUdtStatementToJSON(s *ast.CreateTypeUdtStatement) jsonNode {
 	}
 	if s.AssemblyName != nil {
 		node["AssemblyName"] = assemblyNameToJSON(s.AssemblyName)
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	return node
+}
+
+func createTypeTableStatementToJSON(s *ast.CreateTypeTableStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateTypeTableStatement",
+	}
+	if s.Definition != nil {
+		node["Definition"] = tableDefinitionToJSON(s.Definition)
 	}
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)

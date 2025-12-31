@@ -268,9 +268,42 @@ func (p *Parser) parseTableConstraint() (ast.TableConstraint, error) {
 			constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 			p.nextToken()
 		}
-		// Skip the column list
+		// Parse the column list
 		if p.curTok.Type == TokenLParen {
-			p.skipParenthesizedContent()
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colRef := &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+				}
+				// Parse column name
+				colName := p.parseIdentifier()
+				colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+					Identifiers: []*ast.Identifier{colName},
+					Count:       1,
+				}
+				// Check for sort order
+				sortOrder := ast.SortOrderNotSpecified
+				upperColNext := strings.ToUpper(p.curTok.Literal)
+				if upperColNext == "ASC" {
+					sortOrder = ast.SortOrderAscending
+					p.nextToken()
+				} else if upperColNext == "DESC" {
+					sortOrder = ast.SortOrderDescending
+					p.nextToken()
+				}
+				constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+					Column:    colRef,
+					SortOrder: sortOrder,
+				})
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
 		}
 		return constraint, nil
 	} else if upperLit == "FOREIGN" {
@@ -6811,6 +6844,39 @@ func (p *Parser) parseCreateTypeStatement() (ast.Statement, error) {
 			p.nextToken()
 		}
 		return stmt, nil
+	case "AS":
+		// Check if this is AS TABLE
+		p.nextToken() // consume AS
+		if strings.ToUpper(p.curTok.Literal) == "TABLE" {
+			p.nextToken() // consume TABLE
+			// Parse the table definition
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				tableDef, err := p.parseTableDefinitionBody()
+				if err != nil {
+					stmt := &ast.CreateTypeStatement{
+						Name: name,
+					}
+					p.skipToEndOfStatement()
+					return stmt, nil
+				}
+				stmt := &ast.CreateTypeTableStatement{
+					Name:       name,
+					Definition: tableDef,
+				}
+				// Skip closing paren if present
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+				// Skip semicolon if present
+				if p.curTok.Type == TokenSemicolon {
+					p.nextToken()
+				}
+				return stmt, nil
+			}
+		}
+		// Fall through to generic type
+		fallthrough
 	default:
 		// Generic CREATE TYPE statement
 		stmt := &ast.CreateTypeStatement{
