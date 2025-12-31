@@ -2049,6 +2049,9 @@ func insertStatementToJSON(s *ast.InsertStatement) jsonNode {
 	if s.InsertSpecification != nil {
 		node["InsertSpecification"] = insertSpecificationToJSON(s.InsertSpecification)
 	}
+	if s.WithCtesAndXmlNamespaces != nil {
+		node["WithCtesAndXmlNamespaces"] = withCtesAndXmlNamespacesToJSON(s.WithCtesAndXmlNamespaces)
+	}
 	if len(s.OptimizerHints) > 0 {
 		hints := make([]jsonNode, len(s.OptimizerHints))
 		for i, h := range s.OptimizerHints {
@@ -2284,6 +2287,9 @@ func updateStatementToJSON(s *ast.UpdateStatement) jsonNode {
 	if s.UpdateSpecification != nil {
 		node["UpdateSpecification"] = updateSpecificationToJSON(s.UpdateSpecification)
 	}
+	if s.WithCtesAndXmlNamespaces != nil {
+		node["WithCtesAndXmlNamespaces"] = withCtesAndXmlNamespacesToJSON(s.WithCtesAndXmlNamespaces)
+	}
 	if len(s.OptimizerHints) > 0 {
 		hints := make([]jsonNode, len(s.OptimizerHints))
 		for i, h := range s.OptimizerHints {
@@ -2348,12 +2354,52 @@ func deleteStatementToJSON(s *ast.DeleteStatement) jsonNode {
 	if s.DeleteSpecification != nil {
 		node["DeleteSpecification"] = deleteSpecificationToJSON(s.DeleteSpecification)
 	}
+	if s.WithCtesAndXmlNamespaces != nil {
+		node["WithCtesAndXmlNamespaces"] = withCtesAndXmlNamespacesToJSON(s.WithCtesAndXmlNamespaces)
+	}
 	if len(s.OptimizerHints) > 0 {
 		hints := make([]jsonNode, len(s.OptimizerHints))
 		for i, h := range s.OptimizerHints {
 			hints[i] = optimizerHintToJSON(h)
 		}
 		node["OptimizerHints"] = hints
+	}
+	return node
+}
+
+func withCtesAndXmlNamespacesToJSON(w *ast.WithCtesAndXmlNamespaces) jsonNode {
+	node := jsonNode{
+		"$type": "WithCtesAndXmlNamespaces",
+	}
+	if len(w.CommonTableExpressions) > 0 {
+		ctes := make([]jsonNode, len(w.CommonTableExpressions))
+		for i, cte := range w.CommonTableExpressions {
+			ctes[i] = commonTableExpressionToJSON(cte)
+		}
+		node["CommonTableExpressions"] = ctes
+	}
+	if w.ChangeTrackingContext != nil {
+		node["ChangeTrackingContext"] = scalarExpressionToJSON(w.ChangeTrackingContext)
+	}
+	return node
+}
+
+func commonTableExpressionToJSON(cte *ast.CommonTableExpression) jsonNode {
+	node := jsonNode{
+		"$type": "CommonTableExpression",
+	}
+	if cte.ExpressionName != nil {
+		node["ExpressionName"] = identifierToJSON(cte.ExpressionName)
+	}
+	if len(cte.Columns) > 0 {
+		cols := make([]jsonNode, len(cte.Columns))
+		for i, col := range cte.Columns {
+			cols[i] = identifierToJSON(col)
+		}
+		node["Columns"] = cols
+	}
+	if cte.QueryExpression != nil {
+		node["QueryExpression"] = queryExpressionToJSON(cte.QueryExpression)
 	}
 	return node
 }

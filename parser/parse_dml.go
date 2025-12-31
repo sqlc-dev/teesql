@@ -8,6 +8,111 @@ import (
 	"github.com/sqlc-dev/teesql/ast"
 )
 
+func (p *Parser) parseWithStatement() (ast.Statement, error) {
+	// Consume WITH
+	p.nextToken()
+
+	withClause := &ast.WithCtesAndXmlNamespaces{}
+
+	// Parse CHANGE_TRACKING_CONTEXT or CTEs
+	for {
+		if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING_CONTEXT" {
+			p.nextToken() // consume CHANGE_TRACKING_CONTEXT
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				expr, _ := p.parseScalarExpression()
+				withClause.ChangeTrackingContext = expr
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			// Parse CTE: name (columns) AS (query)
+			cte := &ast.CommonTableExpression{
+				ExpressionName: p.parseIdentifier(),
+			}
+
+			// Parse optional column list
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					cte.Columns = append(cte.Columns, p.parseIdentifier())
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+
+			// Expect AS
+			if p.curTok.Type == TokenAs {
+				p.nextToken() // consume AS
+			}
+
+			// Parse query in parentheses
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				queryExpr, err := p.parseQueryExpression()
+				if err != nil {
+					return nil, err
+				}
+				cte.QueryExpression = queryExpr
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+
+			withClause.CommonTableExpressions = append(withClause.CommonTableExpressions, cte)
+		} else {
+			break
+		}
+
+		// Check for comma (more CTEs)
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Now dispatch to the appropriate statement parser
+	switch p.curTok.Type {
+	case TokenInsert:
+		stmt, err := p.parseInsertStatement()
+		if err != nil {
+			return nil, err
+		}
+		if ins, ok := stmt.(*ast.InsertStatement); ok {
+			ins.WithCtesAndXmlNamespaces = withClause
+		}
+		return stmt, nil
+	case TokenUpdate:
+		stmt, err := p.parseUpdateOrUpdateStatisticsStatement()
+		if err != nil {
+			return nil, err
+		}
+		if upd, ok := stmt.(*ast.UpdateStatement); ok {
+			upd.WithCtesAndXmlNamespaces = withClause
+		}
+		return stmt, nil
+	case TokenDelete:
+		stmt, err := p.parseDeleteStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.WithCtesAndXmlNamespaces = withClause
+		return stmt, nil
+	case TokenSelect:
+		// For SELECT, we need to handle it differently
+		// Skip for now - return the select without CTE
+		return p.parseSelectStatement()
+	}
+
+	return nil, fmt.Errorf("expected INSERT, UPDATE, DELETE, or SELECT after WITH clause, got %s", p.curTok.Literal)
+}
+
 func (p *Parser) parseInsertStatement() (ast.Statement, error) {
 	// Consume INSERT
 	p.nextToken()
