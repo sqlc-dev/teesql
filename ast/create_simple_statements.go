@@ -5,6 +5,7 @@ type CreateDatabaseStatement struct {
 	DatabaseName *Identifier            `json:"DatabaseName,omitempty"`
 	Options      []CreateDatabaseOption `json:"Options,omitempty"`
 	AttachMode   string                 `json:"AttachMode,omitempty"` // "None", "Attach", "AttachRebuildLog"
+	CopyOf       *MultiPartIdentifier   `json:"CopyOf,omitempty"`     // For AS COPY OF syntax
 }
 
 func (s *CreateDatabaseStatement) node()      {}

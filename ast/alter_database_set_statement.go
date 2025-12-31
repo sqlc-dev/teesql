@@ -64,6 +64,27 @@ func (o *OnOffDatabaseOption) createDatabaseOption()            {}
 func (i *IdentifierDatabaseOption) createDatabaseOption()       {}
 func (d *DelayedDurabilityDatabaseOption) createDatabaseOption() {}
 
+// MaxSizeDatabaseOption represents a MAXSIZE option.
+type MaxSizeDatabaseOption struct {
+	OptionKind string           `json:"OptionKind,omitempty"`
+	MaxSize    ScalarExpression `json:"MaxSize,omitempty"`
+	Units      string           `json:"Units,omitempty"` // "GB", "TB", etc.
+}
+
+func (m *MaxSizeDatabaseOption) node()                 {}
+func (m *MaxSizeDatabaseOption) databaseOption()       {}
+func (m *MaxSizeDatabaseOption) createDatabaseOption() {}
+
+// LiteralDatabaseOption represents a database option with a literal value (e.g., EDITION).
+type LiteralDatabaseOption struct {
+	OptionKind string           `json:"OptionKind,omitempty"`
+	Value      ScalarExpression `json:"Value,omitempty"`
+}
+
+func (l *LiteralDatabaseOption) node()                 {}
+func (l *LiteralDatabaseOption) databaseOption()       {}
+func (l *LiteralDatabaseOption) createDatabaseOption() {}
+
 // AlterDatabaseAddFileStatement represents ALTER DATABASE ... ADD FILE statement
 type AlterDatabaseAddFileStatement struct {
 	DatabaseName *Identifier

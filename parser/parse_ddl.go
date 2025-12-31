@@ -1577,6 +1577,29 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 	// Consume MODIFY
 	p.nextToken()
 
+	// Check for Azure-style MODIFY (options) syntax
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		createOpts, err := p.parseAzureDatabaseOptions()
+		if err != nil {
+			return nil, err
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+		// Convert CreateDatabaseOption to DatabaseOption
+		opts := make([]ast.DatabaseOption, len(createOpts))
+		for i, o := range createOpts {
+			opts[i] = o.(ast.DatabaseOption)
+		}
+		stmt := &ast.AlterDatabaseSetStatement{
+			DatabaseName: dbName,
+			Options:      opts,
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "FILE":
 		p.nextToken() // consume FILE

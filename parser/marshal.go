@@ -898,6 +898,31 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
 		}
+	case *ast.MaxSizeDatabaseOption:
+		node := jsonNode{
+			"$type": "MaxSizeDatabaseOption",
+		}
+		if o.MaxSize != nil {
+			node["MaxSize"] = scalarExpressionToJSON(o.MaxSize)
+		}
+		if o.Units != "" {
+			node["Units"] = o.Units
+		}
+		if o.OptionKind != "" {
+			node["OptionKind"] = o.OptionKind
+		}
+		return node
+	case *ast.LiteralDatabaseOption:
+		node := jsonNode{
+			"$type": "LiteralDatabaseOption",
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		if o.OptionKind != "" {
+			node["OptionKind"] = o.OptionKind
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownDatabaseOption"}
 	}
@@ -8873,10 +8898,13 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 			opts[i] = createDatabaseOptionToJSON(opt)
 		}
 		node["Options"] = opts
-		// Only output AttachMode when there are options
-		if s.AttachMode != "" {
-			node["AttachMode"] = s.AttachMode
-		}
+	}
+	// AttachMode is output when there are Options or CopyOf
+	if (len(s.Options) > 0 || s.CopyOf != nil) && s.AttachMode != "" {
+		node["AttachMode"] = s.AttachMode
+	}
+	if s.CopyOf != nil {
+		node["CopyOf"] = multiPartIdentifierToJSON(s.CopyOf)
 	}
 	return node
 }
@@ -8896,6 +8924,31 @@ func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 		}
 		if o.Value != nil {
 			node["Value"] = identifierToJSON(o.Value)
+		}
+		return node
+	case *ast.MaxSizeDatabaseOption:
+		node := jsonNode{
+			"$type": "MaxSizeDatabaseOption",
+		}
+		if o.MaxSize != nil {
+			node["MaxSize"] = scalarExpressionToJSON(o.MaxSize)
+		}
+		if o.Units != "" {
+			node["Units"] = o.Units
+		}
+		if o.OptionKind != "" {
+			node["OptionKind"] = o.OptionKind
+		}
+		return node
+	case *ast.LiteralDatabaseOption:
+		node := jsonNode{
+			"$type": "LiteralDatabaseOption",
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		if o.OptionKind != "" {
+			node["OptionKind"] = o.OptionKind
 		}
 		return node
 	default:

@@ -5451,6 +5451,43 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 		AttachMode:   "None",
 	}
 
+	// Check for Azure-style parenthesized options (maxsize=1gb, edition='web')
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		opts, err := p.parseAzureDatabaseOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Options = opts
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Check for AS COPY OF syntax
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		if strings.ToUpper(p.curTok.Literal) == "COPY" {
+			p.nextToken() // consume COPY
+			if p.curTok.Type == TokenOf {
+				p.nextToken() // consume OF
+				// Parse multi-part identifier (server.database or just database)
+				multiPart := &ast.MultiPartIdentifier{}
+				for {
+					id := p.parseIdentifier()
+					multiPart.Identifiers = append(multiPart.Identifiers, id)
+					if p.curTok.Type == TokenDot {
+						p.nextToken() // consume dot
+					} else {
+						break
+					}
+				}
+				multiPart.Count = len(multiPart.Identifiers)
+				stmt.CopyOf = multiPart
+			}
+		}
+	}
+
 	// Check for WITH clause
 	if p.curTok.Type == TokenWith {
 		p.nextToken() // consume WITH
@@ -5458,7 +5495,7 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 		if err != nil {
 			return nil, err
 		}
-		stmt.Options = opts
+		stmt.Options = append(stmt.Options, opts...)
 	}
 
 	// Skip rest of statement
@@ -5508,6 +5545,79 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 			p.nextToken()
 		} else {
 			break
+		}
+	}
+
+	return options, nil
+}
+
+func (p *Parser) parseAzureDatabaseOptions() ([]ast.CreateDatabaseOption, error) {
+	var options []ast.CreateDatabaseOption
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			continue
+		}
+
+		optName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume option name
+
+		// Expect =
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		switch optName {
+		case "MAXSIZE":
+			// Parse maxsize value and unit (e.g., "1gb", "5 gb")
+			maxSizeValue := p.curTok.Literal
+			p.nextToken() // consume value
+
+			// Check for unit (GB, TB, etc.) - might be attached or separate
+			var units string
+			upperVal := strings.ToUpper(maxSizeValue)
+			if strings.HasSuffix(upperVal, "GB") {
+				units = "GB"
+				maxSizeValue = strings.TrimSuffix(upperVal, "GB")
+			} else if strings.HasSuffix(upperVal, "TB") {
+				units = "TB"
+				maxSizeValue = strings.TrimSuffix(upperVal, "TB")
+			} else if strings.HasSuffix(upperVal, "MB") {
+				units = "MB"
+				maxSizeValue = strings.TrimSuffix(upperVal, "MB")
+			} else {
+				// Unit might be separate token
+				if p.curTok.Type == TokenIdent {
+					units = strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+				}
+			}
+
+			opt := &ast.MaxSizeDatabaseOption{
+				OptionKind: "MaxSize",
+				MaxSize: &ast.IntegerLiteral{
+					LiteralType: "Integer",
+					Value:       maxSizeValue,
+				},
+				Units: units,
+			}
+			options = append(options, opt)
+
+		case "EDITION":
+			// Parse edition value (string literal)
+			value, _ := p.parseStringLiteral()
+			opt := &ast.LiteralDatabaseOption{
+				OptionKind: "Edition",
+				Value:      value,
+			}
+			options = append(options, opt)
+
+		default:
+			// Skip unknown option value
+			if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
+				p.nextToken()
+			}
 		}
 	}
 
