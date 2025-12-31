@@ -7178,6 +7178,21 @@ func userOptionToJSON(o ast.UserOption) jsonNode {
 			node["Identifier"] = identifierToJSON(opt.Identifier)
 		}
 		return node
+	case *ast.PasswordAlterPrincipalOption:
+		node := jsonNode{
+			"$type":      "PasswordAlterPrincipalOption",
+			"OptionKind": opt.OptionKind,
+			"MustChange": opt.MustChange,
+			"Unlock":     opt.Unlock,
+			"Hashed":     opt.Hashed,
+		}
+		if opt.Password != nil {
+			node["Password"] = stringLiteralToJSON(opt.Password)
+		}
+		if opt.OldPassword != nil {
+			node["OldPassword"] = stringLiteralToJSON(opt.OldPassword)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownUserOption"}
 	}
@@ -7689,12 +7704,13 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 func convertUserOptionKind(name string) string {
 	// Convert option names to the expected format
 	optionMap := map[string]string{
-		"OBJECT_ID":      "Object_ID",
-		"DEFAULT_SCHEMA": "Default_Schema",
-		"SID":            "Sid",
-		"PASSWORD":       "Password",
-		"NAME":           "Name",
-		"LOGIN":          "Login",
+		"OBJECT_ID":        "Object_ID",
+		"DEFAULT_SCHEMA":   "DefaultSchema",
+		"DEFAULT_LANGUAGE": "DefaultLanguage",
+		"SID":              "Sid",
+		"PASSWORD":         "Password",
+		"NAME":             "Name",
+		"LOGIN":            "Login",
 	}
 	upper := strings.ToUpper(name)
 	if mapped, ok := optionMap[upper]; ok {
@@ -8783,6 +8799,13 @@ func alterUserStatementToJSON(s *ast.AlterUserStatement) jsonNode {
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.UserOptions) > 0 {
+		options := make([]jsonNode, len(s.UserOptions))
+		for i, o := range s.UserOptions {
+			options[i] = userOptionToJSON(o)
+		}
+		node["UserOptions"] = options
 	}
 	return node
 }

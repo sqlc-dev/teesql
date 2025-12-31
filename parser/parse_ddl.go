@@ -3754,8 +3754,71 @@ func (p *Parser) parseAlterUserStatement() (*ast.AlterUserStatement, error) {
 	// Parse user name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+
+		for {
+			optionName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			// Handle PASSWORD specially for ALTER USER (can have OLD_PASSWORD)
+			if optionName == "PASSWORD" {
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				passwordOpt := &ast.PasswordAlterPrincipalOption{
+					OptionKind: "Password",
+				}
+				if p.curTok.Type == TokenString {
+					passwordOpt.Password = p.parseStringLiteralValue()
+					p.nextToken()
+				}
+				// Check for OLD_PASSWORD
+				if strings.ToUpper(p.curTok.Literal) == "OLD_PASSWORD" {
+					p.nextToken() // consume OLD_PASSWORD
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+					}
+					if p.curTok.Type == TokenString {
+						passwordOpt.OldPassword = p.parseStringLiteralValue()
+						p.nextToken()
+					}
+				}
+				stmt.UserOptions = append(stmt.UserOptions, passwordOpt)
+			} else {
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+
+				value, err := p.parseScalarExpression()
+				if err != nil {
+					break
+				}
+
+				// Check if value is a simple identifier
+				var opt ast.UserOption
+				if colRef, ok := value.(*ast.ColumnReferenceExpression); ok && colRef.MultiPartIdentifier != nil && len(colRef.MultiPartIdentifier.Identifiers) == 1 {
+					opt = &ast.IdentifierPrincipalOption{
+						OptionKind: convertUserOptionKind(optionName),
+						Identifier: colRef.MultiPartIdentifier.Identifiers[0],
+					}
+				} else {
+					opt = &ast.LiteralPrincipalOption{
+						OptionKind: convertUserOptionKind(optionName),
+						Value:      value,
+					}
+				}
+				stmt.UserOptions = append(stmt.UserOptions, opt)
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
 
 	return stmt, nil
 }
