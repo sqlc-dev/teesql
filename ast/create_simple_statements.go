@@ -174,13 +174,35 @@ type CreationDispositionKeyOption struct {
 func (c *CreationDispositionKeyOption) node()      {}
 func (c *CreationDispositionKeyOption) keyOption() {}
 
+// CryptoMechanism represents an encryption mechanism (CERTIFICATE, KEY, PASSWORD, etc.)
+type CryptoMechanism struct {
+	CryptoMechanismType string           `json:"CryptoMechanismType,omitempty"` // "Certificate", "SymmetricKey", "AsymmetricKey", "Password"
+	Identifier          *Identifier      `json:"Identifier,omitempty"`
+	PasswordOrSignature ScalarExpression `json:"PasswordOrSignature,omitempty"`
+}
+
+func (c *CryptoMechanism) node() {}
+
 // CreateSymmetricKeyStatement represents a CREATE SYMMETRIC KEY statement.
 type CreateSymmetricKeyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	KeyOptions          []KeyOption        `json:"KeyOptions,omitempty"`
+	Provider            *Identifier        `json:"Provider,omitempty"`
+	Name                *Identifier        `json:"Name,omitempty"`
+	EncryptingMechanisms []*CryptoMechanism `json:"EncryptingMechanisms,omitempty"`
 }
 
 func (s *CreateSymmetricKeyStatement) node()      {}
 func (s *CreateSymmetricKeyStatement) statement() {}
+
+// DropSymmetricKeyStatement represents a DROP SYMMETRIC KEY statement.
+type DropSymmetricKeyStatement struct {
+	RemoveProviderKey bool        `json:"RemoveProviderKey,omitempty"`
+	Name              *Identifier `json:"Name,omitempty"`
+	IsIfExists        bool        `json:"IsIfExists"`
+}
+
+func (s *DropSymmetricKeyStatement) node()      {}
+func (s *DropSymmetricKeyStatement) statement() {}
 
 // CreateMessageTypeStatement represents a CREATE MESSAGE TYPE statement.
 type CreateMessageTypeStatement struct {

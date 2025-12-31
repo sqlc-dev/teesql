@@ -6772,9 +6772,147 @@ func (p *Parser) parseCreateSymmetricKeyStatement() (*ast.CreateSymmetricKeyStat
 		Name: p.parseIdentifier(),
 	}
 
+	// Check for FROM PROVIDER clause
+	if p.curTok.Type == TokenFrom && strings.ToUpper(p.peekTok.Literal) == "PROVIDER" {
+		p.nextToken() // consume FROM
+		p.nextToken() // consume PROVIDER
+		stmt.Provider = p.parseIdentifier()
+	}
+
+	// Check for WITH clause (key options)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		keyOpts, err := p.parseSymmetricKeyOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.KeyOptions = keyOpts
+	}
+
+	// Check for ENCRYPTION BY clause
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		mechanisms, err := p.parseCryptoMechanisms()
+		if err != nil {
+			return nil, err
+		}
+		stmt.EncryptingMechanisms = mechanisms
+	}
+
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 	return stmt, nil
+}
+
+func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
+	var options []ast.KeyOption
+
+	for {
+		optName := strings.ToUpper(p.curTok.Literal)
+		switch optName {
+		case "PROVIDER_KEY_NAME":
+			p.nextToken() // consume PROVIDER_KEY_NAME
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			keyName, _ := p.parseScalarExpression()
+			opt := &ast.ProviderKeyNameKeyOption{
+				KeyName:    keyName,
+				OptionKind: "ProviderKeyName",
+			}
+			options = append(options, opt)
+
+		case "ALGORITHM":
+			p.nextToken() // consume ALGORITHM
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			algo := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume algorithm name
+			opt := &ast.AlgorithmKeyOption{
+				Algorithm:  algo,
+				OptionKind: "Algorithm",
+			}
+			options = append(options, opt)
+
+		case "CREATION_DISPOSITION":
+			p.nextToken() // consume CREATION_DISPOSITION
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			disposition := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume CREATE_NEW or OPEN_EXISTING
+			opt := &ast.CreationDispositionKeyOption{
+				IsCreateNew: disposition == "CREATE_NEW",
+				OptionKind:  "CreationDisposition",
+			}
+			options = append(options, opt)
+
+		default:
+			return options, nil
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	return options, nil
+}
+
+func (p *Parser) parseCryptoMechanisms() ([]*ast.CryptoMechanism, error) {
+	var mechanisms []*ast.CryptoMechanism
+
+	for {
+		mechanism := &ast.CryptoMechanism{}
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		switch upperLit {
+		case "CERTIFICATE":
+			p.nextToken() // consume CERTIFICATE
+			mechanism.CryptoMechanismType = "Certificate"
+			mechanism.Identifier = p.parseIdentifier()
+		case "SYMMETRIC":
+			p.nextToken() // consume SYMMETRIC
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			mechanism.CryptoMechanismType = "SymmetricKey"
+			mechanism.Identifier = p.parseIdentifier()
+		case "ASYMMETRIC":
+			p.nextToken() // consume ASYMMETRIC
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			mechanism.CryptoMechanismType = "AsymmetricKey"
+			mechanism.Identifier = p.parseIdentifier()
+		case "PASSWORD":
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			mechanism.CryptoMechanismType = "Password"
+			// Password should be a string literal
+			mechanism.PasswordOrSignature, _ = p.parseScalarExpression()
+		default:
+			return mechanisms, nil
+		}
+
+		mechanisms = append(mechanisms, mechanism)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	return mechanisms, nil
 }
 
 func (p *Parser) parseCreateCertificateStatement() (*ast.CreateCertificateStatement, error) {

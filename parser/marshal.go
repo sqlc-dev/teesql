@@ -214,6 +214,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropAssemblyStatementToJSON(s)
 	case *ast.DropAsymmetricKeyStatement:
 		return dropAsymmetricKeyStatementToJSON(s)
+	case *ast.DropSymmetricKeyStatement:
+		return dropSymmetricKeyStatementToJSON(s)
 	case *ast.CreateTableStatement:
 		return createTableStatementToJSON(s)
 	case *ast.GrantStatement:
@@ -8329,6 +8331,18 @@ func dropAsymmetricKeyStatementToJSON(s *ast.DropAsymmetricKeyStatement) jsonNod
 	return node
 }
 
+func dropSymmetricKeyStatementToJSON(s *ast.DropSymmetricKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type":             "DropSymmetricKeyStatement",
+		"RemoveProviderKey": s.RemoveProviderKey,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
 func alterTableTriggerModificationStatementToJSON(s *ast.AlterTableTriggerModificationStatement) jsonNode {
 	node := jsonNode{
 		"$type":              "AlterTableTriggerModificationStatement",
@@ -9302,8 +9316,39 @@ func createSymmetricKeyStatementToJSON(s *ast.CreateSymmetricKeyStatement) jsonN
 	node := jsonNode{
 		"$type": "CreateSymmetricKeyStatement",
 	}
+	if len(s.KeyOptions) > 0 {
+		opts := make([]interface{}, len(s.KeyOptions))
+		for i, opt := range s.KeyOptions {
+			opts[i] = keyOptionToJSON(opt)
+		}
+		node["KeyOptions"] = opts
+	}
+	if s.Provider != nil {
+		node["Provider"] = identifierToJSON(s.Provider)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.EncryptingMechanisms) > 0 {
+		mechs := make([]jsonNode, len(s.EncryptingMechanisms))
+		for i, mech := range s.EncryptingMechanisms {
+			mechs[i] = cryptoMechanismToJSON(mech)
+		}
+		node["EncryptingMechanisms"] = mechs
+	}
+	return node
+}
+
+func cryptoMechanismToJSON(mech *ast.CryptoMechanism) jsonNode {
+	node := jsonNode{
+		"$type":               "CryptoMechanism",
+		"CryptoMechanismType": mech.CryptoMechanismType,
+	}
+	if mech.Identifier != nil {
+		node["Identifier"] = identifierToJSON(mech.Identifier)
+	}
+	if mech.PasswordOrSignature != nil {
+		node["PasswordOrSignature"] = scalarExpressionToJSON(mech.PasswordOrSignature)
 	}
 	return node
 }
