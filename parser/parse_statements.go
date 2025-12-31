@@ -7647,9 +7647,74 @@ func (p *Parser) parseCreateRemoteServiceBindingStatement() (*ast.CreateRemoteSe
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
+	// Parse TO SERVICE 'service_name'
+	if strings.ToUpper(p.curTok.Literal) == "TO" {
+		p.nextToken() // consume TO
+		if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
+			p.nextToken() // consume SERVICE
+		}
+		// Parse service name string
+		stmt.Service = p.parseStringLiteralValue()
+		p.nextToken() // consume string
+	}
+
+	// Parse WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		stmt.Options = p.parseRemoteServiceBindingOptions()
+	}
+
+	// Skip any remaining parts
 	p.skipToEndOfStatement()
 	return stmt, nil
+}
+
+func (p *Parser) parseRemoteServiceBindingOptions() []ast.RemoteServiceBindingOption {
+	var options []ast.RemoteServiceBindingOption
+
+	for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+		// Check for GO batch separator
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO" {
+			break
+		}
+		upper := strings.ToUpper(p.curTok.Literal)
+
+		if upper == "USER" {
+			p.nextToken() // consume USER
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			opt := &ast.UserRemoteServiceBindingOption{
+				OptionKind: "User",
+				User:       p.parseIdentifier(),
+			}
+			options = append(options, opt)
+		} else if upper == "ANONYMOUS" {
+			p.nextToken() // consume ANONYMOUS
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			optState := "Off"
+			if strings.ToUpper(p.curTok.Literal) == "ON" {
+				optState = "On"
+				p.nextToken()
+			} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+				optState = "Off"
+				p.nextToken()
+			}
+			opt := &ast.OnOffRemoteServiceBindingOption{
+				OptionKind:  "Anonymous",
+				OptionState: optState,
+			}
+			options = append(options, opt)
+		} else if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else {
+			break
+		}
+	}
+
+	return options
 }
 
 func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatement, error) {

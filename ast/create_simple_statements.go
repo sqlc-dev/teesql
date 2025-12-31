@@ -217,7 +217,9 @@ func (s *CreateMessageTypeStatement) statement() {}
 
 // CreateRemoteServiceBindingStatement represents a CREATE REMOTE SERVICE BINDING statement.
 type CreateRemoteServiceBindingStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name    *Identifier                  `json:"Name,omitempty"`
+	Service ScalarExpression             `json:"Service,omitempty"`
+	Options []RemoteServiceBindingOption `json:"Options,omitempty"`
 }
 
 func (s *CreateRemoteServiceBindingStatement) node()      {}

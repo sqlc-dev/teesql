@@ -9809,8 +9809,18 @@ func createRemoteServiceBindingStatementToJSON(s *ast.CreateRemoteServiceBinding
 	node := jsonNode{
 		"$type": "CreateRemoteServiceBindingStatement",
 	}
+	if s.Service != nil {
+		node["Service"] = scalarExpressionToJSON(s.Service)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = remoteServiceBindingOptionToJSON(o)
+		}
+		node["Options"] = options
 	}
 	return node
 }
