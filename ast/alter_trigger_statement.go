@@ -6,7 +6,7 @@ type AlterTriggerStatement struct {
 	TriggerObject         *TriggerObject
 	TriggerType           string // "For", "After", "InsteadOf"
 	TriggerActions        []*TriggerAction
-	Options               []*TriggerOption
+	Options               []TriggerOptionType
 	WithAppend            bool
 	IsNotForReplication   bool
 	MethodSpecifier       *MethodSpecifier
@@ -28,11 +28,32 @@ type TriggerAction struct {
 	EventTypeGroup    *EventTypeContainer // For database/server events
 }
 
+// TriggerOptionType is the interface for trigger options
+type TriggerOptionType interface {
+	triggerOption()
+}
+
 // TriggerOption represents a trigger option
 type TriggerOption struct {
 	OptionKind  string
 	OptionState string
 }
+
+func (o *TriggerOption) triggerOption() {}
+
+// ExecuteAsClause represents an EXECUTE AS clause
+type ExecuteAsClause struct {
+	ExecuteAsOption string // Caller, Self, Owner, or specific user
+	Principal       ScalarExpression
+}
+
+// ExecuteAsTriggerOption represents an EXECUTE AS trigger option
+type ExecuteAsTriggerOption struct {
+	OptionKind      string // "ExecuteAsClause"
+	ExecuteAsClause *ExecuteAsClause
+}
+
+func (o *ExecuteAsTriggerOption) triggerOption() {}
 
 // MethodSpecifier represents a CLR method specifier
 type MethodSpecifier struct {

@@ -6,7 +6,7 @@ type CreateTriggerStatement struct {
 	TriggerObject       *TriggerObject
 	TriggerType         string // "For", "After", "InsteadOf"
 	TriggerActions      []*TriggerAction
-	Options             []*TriggerOption
+	Options             []TriggerOptionType
 	WithAppend          bool
 	IsNotForReplication bool
 	MethodSpecifier     *MethodSpecifier

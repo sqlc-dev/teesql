@@ -939,11 +939,124 @@ func (p *Parser) parseBeginStatement() (ast.Statement, error) {
 			}
 			return nil, fmt.Errorf("expected TRANSACTION after DISTRIBUTED, got %s", p.curTok.Literal)
 		}
+		// Check for ATOMIC
+		if strings.ToUpper(p.curTok.Literal) == "ATOMIC" {
+			return p.parseBeginAtomicBlockStatement()
+		}
 		// Fall through to BEGIN...END block
 		fallthrough
 	default:
 		return p.parseBeginEndBlockStatementContinued()
 	}
+}
+
+func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockStatement, error) {
+	p.nextToken() // consume ATOMIC
+
+	stmt := &ast.BeginEndAtomicBlockStatement{
+		StatementList: &ast.StatementList{},
+	}
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+		}
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			optName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume option name
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			switch optName {
+			case "TRANSACTION":
+				// TRANSACTION ISOLATION LEVEL = ...
+				if strings.ToUpper(p.curTok.Literal) == "ISOLATION" {
+					p.nextToken() // consume ISOLATION
+					if strings.ToUpper(p.curTok.Literal) == "LEVEL" {
+						p.nextToken() // consume LEVEL
+					}
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+				}
+				// Parse the isolation level identifier
+				opt := &ast.IdentifierAtomicBlockOption{
+					OptionKind: "IsolationLevel",
+					Value:      p.parseIdentifier(),
+				}
+				stmt.Options = append(stmt.Options, opt)
+			case "LANGUAGE":
+				// Parse the language value
+				if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+					strLit := &ast.StringLiteral{
+						LiteralType:   "String",
+						Value:         p.curTok.Literal,
+						IsNational:    p.curTok.Type == TokenNationalString,
+						IsLargeObject: false,
+					}
+					p.nextToken()
+					opt := &ast.LiteralAtomicBlockOption{
+						OptionKind: "Language",
+						Value:      strLit,
+					}
+					stmt.Options = append(stmt.Options, opt)
+				} else {
+					opt := &ast.IdentifierAtomicBlockOption{
+						OptionKind: "Language",
+						Value:      p.parseIdentifier(),
+					}
+					stmt.Options = append(stmt.Options, opt)
+				}
+			case "DATEFIRST", "DATEFORMAT":
+				opt := &ast.IdentifierAtomicBlockOption{
+					OptionKind: optName,
+					Value:      p.parseIdentifier(),
+				}
+				stmt.Options = append(stmt.Options, opt)
+			default:
+				// Skip unknown options
+				if p.curTok.Type == TokenIdent || p.curTok.Type == TokenString {
+					p.nextToken()
+				}
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse statements until END
+	for p.curTok.Type != TokenEnd && p.curTok.Type != TokenEOF {
+		s, err := p.parseStatement()
+		if err != nil {
+			return nil, err
+		}
+		if s != nil {
+			stmt.StatementList.Statements = append(stmt.StatementList.Statements, s)
+		}
+	}
+
+	// Consume END
+	if p.curTok.Type == TokenEnd {
+		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseBeginTransactionStatementContinued(distributed bool) (*ast.BeginTransactionStatement, error) {
@@ -5854,9 +5967,23 @@ func (p *Parser) parseCreateTypeStatement() (ast.Statement, error) {
 	case "FROM":
 		// CREATE TYPE ... FROM (User-Defined Data Type)
 		p.nextToken() // consume FROM
+		// Check if there's a valid data type to parse
+		if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
+			// Incomplete statement - fall through to generic type
+			stmt := &ast.CreateTypeStatement{
+				Name: name,
+			}
+			p.skipToEndOfStatement()
+			return stmt, nil
+		}
 		dataType, err := p.parseDataTypeReference()
 		if err != nil {
-			return nil, err
+			// Fall back to generic type on error
+			stmt := &ast.CreateTypeStatement{
+				Name: name,
+			}
+			p.skipToEndOfStatement()
+			return stmt, nil
 		}
 		stmt := &ast.CreateTypeUddtStatement{
 			Name:     name,
@@ -5882,9 +6009,23 @@ func (p *Parser) parseCreateTypeStatement() (ast.Statement, error) {
 		// CREATE TYPE ... EXTERNAL NAME (CLR User-Defined Type)
 		p.nextToken() // consume EXTERNAL
 		if strings.ToUpper(p.curTok.Literal) != "NAME" {
-			return nil, fmt.Errorf("expected NAME after EXTERNAL, got %s", p.curTok.Literal)
+			// Incomplete statement - fall back to generic type
+			stmt := &ast.CreateTypeStatement{
+				Name: name,
+			}
+			p.skipToEndOfStatement()
+			return stmt, nil
 		}
 		p.nextToken() // consume NAME
+		// Check if there's something to parse
+		if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
+			// Incomplete statement - fall back to generic type
+			stmt := &ast.CreateTypeStatement{
+				Name: name,
+			}
+			p.skipToEndOfStatement()
+			return stmt, nil
+		}
 		// Parse assembly name (could be [AssemblyName] or AssemblyName.[ClassName])
 		assemblyName := &ast.AssemblyName{}
 		firstIdent := p.parseIdentifier()

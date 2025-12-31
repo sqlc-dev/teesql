@@ -70,6 +70,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return whileStatementToJSON(s)
 	case *ast.BeginEndBlockStatement:
 		return beginEndBlockStatementToJSON(s)
+	case *ast.BeginEndAtomicBlockStatement:
+		return beginEndAtomicBlockStatementToJSON(s)
 	case *ast.CreateViewStatement:
 		return createViewStatementToJSON(s)
 	case *ast.CreateSchemaStatement:
@@ -2349,6 +2351,48 @@ func beginEndBlockStatementToJSON(s *ast.BeginEndBlockStatement) jsonNode {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
 	return node
+}
+
+func beginEndAtomicBlockStatementToJSON(s *ast.BeginEndAtomicBlockStatement) jsonNode {
+	node := jsonNode{
+		"$type": "BeginEndAtomicBlockStatement",
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = atomicBlockOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func atomicBlockOptionToJSON(o ast.AtomicBlockOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.IdentifierAtomicBlockOption:
+		node := jsonNode{
+			"$type":      "IdentifierAtomicBlockOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Value != nil {
+			node["Value"] = identifierToJSON(opt.Value)
+		}
+		return node
+	case *ast.LiteralAtomicBlockOption:
+		node := jsonNode{
+			"$type":      "LiteralAtomicBlockOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownAtomicBlockOption"}
+	}
 }
 
 func statementListToJSON(sl *ast.StatementList) jsonNode {
@@ -5944,6 +5988,55 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 	}
 	stmt.TriggerObject = triggerObject
 
+	// Parse optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		for {
+			optName := strings.ToUpper(p.curTok.Literal)
+			switch optName {
+			case "NATIVE_COMPILATION":
+				stmt.Options = append(stmt.Options, &ast.TriggerOption{OptionKind: "NativeCompile"})
+				p.nextToken()
+			case "SCHEMABINDING":
+				stmt.Options = append(stmt.Options, &ast.TriggerOption{OptionKind: "SchemaBinding"})
+				p.nextToken()
+			case "ENCRYPTION":
+				stmt.Options = append(stmt.Options, &ast.TriggerOption{OptionKind: "Encryption"})
+				p.nextToken()
+			case "EXECUTE":
+				p.nextToken() // consume EXECUTE
+				if p.curTok.Type == TokenAs {
+					p.nextToken() // consume AS
+				}
+				execAsClause := &ast.ExecuteAsClause{}
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "CALLER":
+					execAsClause.ExecuteAsOption = "Caller"
+				case "SELF":
+					execAsClause.ExecuteAsOption = "Self"
+				case "OWNER":
+					execAsClause.ExecuteAsOption = "Owner"
+				default:
+					// User name
+					execAsClause.ExecuteAsOption = "User"
+				}
+				p.nextToken()
+				stmt.Options = append(stmt.Options, &ast.ExecuteAsTriggerOption{
+					OptionKind:      "ExecuteAsClause",
+					ExecuteAsClause: execAsClause,
+				})
+			default:
+				// Unknown option, skip it
+				p.nextToken()
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
 	// Parse trigger type (FOR, AFTER, INSTEAD OF)
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "FOR":
@@ -6505,6 +6598,13 @@ func createTriggerStatementToJSON(s *ast.CreateTriggerStatement) jsonNode {
 	if s.TriggerObject != nil {
 		node["TriggerObject"] = triggerObjectToJSON(s.TriggerObject)
 	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = triggerOptionTypeToJSON(o)
+		}
+		node["Options"] = options
+	}
 	if len(s.TriggerActions) > 0 {
 		actions := make([]jsonNode, len(s.TriggerActions))
 		for i, a := range s.TriggerActions {
@@ -6516,6 +6616,34 @@ func createTriggerStatementToJSON(s *ast.CreateTriggerStatement) jsonNode {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
 	return node
+}
+
+func triggerOptionTypeToJSON(o ast.TriggerOptionType) jsonNode {
+	switch opt := o.(type) {
+	case *ast.TriggerOption:
+		node := jsonNode{
+			"$type":      "TriggerOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.OptionState != "" {
+			node["OptionState"] = opt.OptionState
+		}
+		return node
+	case *ast.ExecuteAsTriggerOption:
+		node := jsonNode{
+			"$type":      "ExecuteAsTriggerOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.ExecuteAsClause != nil {
+			node["ExecuteAsClause"] = jsonNode{
+				"$type":           "ExecuteAsClause",
+				"ExecuteAsOption": opt.ExecuteAsClause.ExecuteAsOption,
+			}
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownTriggerOption"}
+	}
 }
 
 func triggerObjectToJSON(t *ast.TriggerObject) jsonNode {
