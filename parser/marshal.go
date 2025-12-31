@@ -5852,12 +5852,22 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 			}
 
 			// Parse data type if present
-			if p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma {
+			if p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma && p.curTok.Type != TokenEquals {
 				dataType, err := p.parseDataType()
 				if err != nil {
 					return nil, err
 				}
 				param.DataType = dataType
+			}
+
+			// Parse optional default value
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				param.Value = val
 			}
 
 			stmt.Parameters = append(stmt.Parameters, param)
@@ -5880,26 +5890,77 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 	}
 	p.nextToken()
 
-	// Parse return type
-	returnDataType, err := p.parseDataType()
-	if err != nil {
-		return nil, err
-	}
-	stmt.ReturnType = &ast.ScalarFunctionReturnType{
-		DataType: returnDataType,
-	}
-
-	// Parse AS
-	if p.curTok.Type == TokenAs {
+	// Check if RETURNS TABLE
+	if strings.ToUpper(p.curTok.Literal) == "TABLE" {
 		p.nextToken()
-	}
 
-	// Parse statement list
-	stmtList, err := p.parseFunctionStatementList()
-	if err != nil {
-		return nil, err
+		// Parse optional WITH clause for options
+		if strings.ToUpper(p.curTok.Literal) == "WITH" {
+			p.nextToken()
+			for {
+				opt := &ast.FunctionOption{}
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "SCHEMABINDING":
+					opt.OptionKind = "SchemaBinding"
+				case "ENCRYPTION":
+					opt.OptionKind = "Encryption"
+				case "NATIVE_COMPILATION":
+					opt.OptionKind = "NativeCompilation"
+				default:
+					opt.OptionKind = capitalizeFirst(p.curTok.Literal)
+				}
+				p.nextToken()
+				stmt.Options = append(stmt.Options, opt)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		}
+
+		// Parse AS
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+		}
+
+		// For inline table-valued functions, parse RETURN SELECT...
+		if strings.ToUpper(p.curTok.Literal) == "RETURN" {
+			p.nextToken()
+			// Parse the SELECT statement
+			selectStmt, err := p.parseStatement()
+			if err != nil {
+				return nil, err
+			}
+			if sel, ok := selectStmt.(*ast.SelectStatement); ok {
+				stmt.ReturnType = &ast.SelectFunctionReturnType{
+					SelectStatement: sel,
+				}
+			}
+		}
+	} else {
+		// Scalar function - parse return type
+		returnDataType, err := p.parseDataType()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ReturnType = &ast.ScalarFunctionReturnType{
+			DataType: returnDataType,
+		}
+
+		// Parse AS
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+		}
+
+		// Parse statement list
+		stmtList, err := p.parseFunctionStatementList()
+		if err != nil {
+			return nil, err
+		}
+		stmt.StatementList = stmtList
 	}
-	stmt.StatementList = stmtList
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -6946,10 +7007,31 @@ func alterFunctionStatementToJSON(s *ast.AlterFunctionStatement) jsonNode {
 	if s.ReturnType != nil {
 		node["ReturnType"] = functionReturnTypeToJSON(s.ReturnType)
 	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			opts[i] = functionOptionToJSON(o)
+		}
+		node["Options"] = opts
+	}
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = procedureParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
 	return node
+}
+
+func functionOptionToJSON(o *ast.FunctionOption) jsonNode {
+	return jsonNode{
+		"$type":      "FunctionOption",
+		"OptionKind": o.OptionKind,
+	}
 }
 
 func createFunctionStatementToJSON(s *ast.CreateFunctionStatement) jsonNode {
@@ -6983,6 +7065,14 @@ func functionReturnTypeToJSON(r ast.FunctionReturnType) jsonNode {
 		}
 		if rt.DataType != nil {
 			node["DataType"] = dataTypeReferenceToJSON(rt.DataType)
+		}
+		return node
+	case *ast.SelectFunctionReturnType:
+		node := jsonNode{
+			"$type": "SelectFunctionReturnType",
+		}
+		if rt.SelectStatement != nil {
+			node["SelectStatement"] = selectStatementToJSON(rt.SelectStatement)
 		}
 		return node
 	default:
