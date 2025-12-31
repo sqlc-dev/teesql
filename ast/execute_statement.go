@@ -3,10 +3,66 @@ package ast
 // ExecuteStatement represents an EXECUTE/EXEC statement.
 type ExecuteStatement struct {
 	ExecuteSpecification *ExecuteSpecification `json:"ExecuteSpecification,omitempty"`
+	Options              []ExecuteOptionType   `json:"Options,omitempty"`
 }
 
 func (e *ExecuteStatement) node()      {}
 func (e *ExecuteStatement) statement() {}
+
+// ExecuteOptionType is an interface for execute options.
+type ExecuteOptionType interface {
+	executeOption()
+}
+
+// ExecuteOption represents a simple execute option like RECOMPILE.
+type ExecuteOption struct {
+	OptionKind string `json:"OptionKind,omitempty"`
+}
+
+func (o *ExecuteOption) executeOption() {}
+
+// ResultSetsExecuteOption represents the WITH RESULT SETS option.
+type ResultSetsExecuteOption struct {
+	OptionKind           string                   `json:"OptionKind,omitempty"`
+	ResultSetsOptionKind string                   `json:"ResultSetsOptionKind,omitempty"` // None, Undefined, ResultSetsDefined
+	Definitions          []ResultSetDefinitionType `json:"Definitions,omitempty"`
+}
+
+func (o *ResultSetsExecuteOption) executeOption() {}
+
+// ResultSetDefinitionType is an interface for result set definitions.
+type ResultSetDefinitionType interface {
+	resultSetDefinition()
+}
+
+// ResultSetDefinition represents a simple result set type like ForXml.
+type ResultSetDefinition struct {
+	ResultSetType string `json:"ResultSetType,omitempty"` // ForXml, etc.
+}
+
+func (d *ResultSetDefinition) resultSetDefinition() {}
+
+// InlineResultSetDefinition represents an inline column definition.
+type InlineResultSetDefinition struct {
+	ResultSetType           string                    `json:"ResultSetType,omitempty"` // Inline
+	ResultColumnDefinitions []*ResultColumnDefinition `json:"ResultColumnDefinitions,omitempty"`
+}
+
+func (d *InlineResultSetDefinition) resultSetDefinition() {}
+
+// SchemaObjectResultSetDefinition represents AS OBJECT or AS TYPE.
+type SchemaObjectResultSetDefinition struct {
+	ResultSetType string            `json:"ResultSetType,omitempty"` // Object, Type
+	Name          *SchemaObjectName `json:"Name,omitempty"`
+}
+
+func (d *SchemaObjectResultSetDefinition) resultSetDefinition() {}
+
+// ResultColumnDefinition represents a column in a result set.
+type ResultColumnDefinition struct {
+	ColumnDefinition *ColumnDefinitionBase         `json:"ColumnDefinition,omitempty"`
+	Nullable         *NullableConstraintDefinition `json:"Nullable,omitempty"`
+}
 
 // ExecuteSpecification contains the details of an EXECUTE.
 type ExecuteSpecification struct {

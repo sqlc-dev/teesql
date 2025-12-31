@@ -2824,12 +2824,160 @@ func (p *Parser) parseExecuteStatement() (ast.Statement, error) {
 		return nil, err
 	}
 
+	stmt := &ast.ExecuteStatement{ExecuteSpecification: execSpec}
+
+	// Parse WITH options (RESULT SETS, RECOMPILE)
+	for p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		for {
+			upperLit := strings.ToUpper(p.curTok.Literal)
+
+			if upperLit == "RESULT" {
+				p.nextToken() // consume RESULT
+				if strings.ToUpper(p.curTok.Literal) == "SETS" {
+					p.nextToken() // consume SETS
+				}
+
+				opt := &ast.ResultSetsExecuteOption{
+					OptionKind: "ResultSets",
+				}
+
+				// Check for NONE, UNDEFINED, or definitions
+				upperLit = strings.ToUpper(p.curTok.Literal)
+				if upperLit == "NONE" {
+					opt.ResultSetsOptionKind = "None"
+					p.nextToken()
+				} else if upperLit == "UNDEFINED" {
+					opt.ResultSetsOptionKind = "Undefined"
+					p.nextToken()
+				} else if p.curTok.Type == TokenLParen {
+					opt.ResultSetsOptionKind = "ResultSetsDefined"
+					p.nextToken() // consume (
+					opt.Definitions = p.parseResultSetDefinitions()
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+
+				stmt.Options = append(stmt.Options, opt)
+			} else if upperLit == "RECOMPILE" {
+				p.nextToken() // consume RECOMPILE
+				stmt.Options = append(stmt.Options, &ast.ExecuteOption{
+					OptionKind: "Recompile",
+				})
+			} else {
+				break
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+			} else {
+				break
+			}
+		}
+	}
+
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
 
-	return &ast.ExecuteStatement{ExecuteSpecification: execSpec}, nil
+	return stmt, nil
+}
+
+func (p *Parser) parseResultSetDefinitions() []ast.ResultSetDefinitionType {
+	var definitions []ast.ResultSetDefinitionType
+
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		if upperLit == "AS" {
+			p.nextToken() // consume AS
+			upperLit = strings.ToUpper(p.curTok.Literal)
+
+			if upperLit == "OBJECT" {
+				p.nextToken() // consume OBJECT
+				name, _ := p.parseSchemaObjectName()
+				def := &ast.SchemaObjectResultSetDefinition{
+					ResultSetType: "Object",
+					Name:          name,
+				}
+				definitions = append(definitions, def)
+			} else if upperLit == "FOR" {
+				p.nextToken() // consume FOR
+				if strings.ToUpper(p.curTok.Literal) == "XML" {
+					p.nextToken() // consume XML
+				}
+				def := &ast.ResultSetDefinition{
+					ResultSetType: "ForXml",
+				}
+				definitions = append(definitions, def)
+			} else if upperLit == "TYPE" {
+				p.nextToken() // consume TYPE
+				name, _ := p.parseSchemaObjectName()
+				def := &ast.SchemaObjectResultSetDefinition{
+					ResultSetType: "Type",
+					Name:          name,
+				}
+				definitions = append(definitions, def)
+			}
+		} else if p.curTok.Type == TokenLParen {
+			// Inline column definitions: (col1 int, col2 varchar(50), ...)
+			p.nextToken() // consume (
+			def := &ast.InlineResultSetDefinition{
+				ResultSetType: "Inline",
+			}
+
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colDef := &ast.ResultColumnDefinition{
+					ColumnDefinition: &ast.ColumnDefinitionBase{},
+				}
+
+				// Parse column name
+				colDef.ColumnDefinition.ColumnIdentifier = p.parseIdentifier()
+
+				// Parse data type
+				colDef.ColumnDefinition.DataType, _ = p.parseDataType()
+
+				// Check for NULL/NOT NULL
+				if strings.ToUpper(p.curTok.Literal) == "NOT" {
+					p.nextToken() // consume NOT
+					if strings.ToUpper(p.curTok.Literal) == "NULL" {
+						p.nextToken() // consume NULL
+						colDef.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+					}
+				} else if strings.ToUpper(p.curTok.Literal) == "NULL" {
+					p.nextToken() // consume NULL
+					colDef.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+				}
+
+				def.ResultColumnDefinitions = append(def.ResultColumnDefinitions, colDef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+
+			definitions = append(definitions, def)
+		} else {
+			break
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return definitions
 }
 
 func (p *Parser) parseExecuteAsStatement() (*ast.ExecuteAsStatement, error) {

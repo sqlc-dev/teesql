@@ -836,23 +836,25 @@ func (p *Parser) parseExecutableStringList() (*ast.ExecutableStringList, error) 
 
 	strList := &ast.ExecutableStringList{}
 
-	// Parse the first string expression (may be concatenated with +)
-	for {
-		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+	// Parse the string expressions (may be strings, variables, or concatenations with +)
+	// Strings are added to Strings, other parameters (after comma) go to Parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		isVariable := p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@")
+		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString || isVariable {
 			expr, err := p.parseScalarExpression()
 			if err != nil {
 				return nil, err
 			}
-			// parseScalarExpression handles the + concatenation, so we get a BinaryExpression
-			// But we need to flatten it to individual StringLiterals for the Strings array
+			// Flatten concatenated expressions to individual parts for the Strings array
 			p.flattenStringExpression(expr, &strList.Strings)
 		} else {
 			break
 		}
 
-		// Check for comma (parameters follow) or closing paren
+		// Check for comma or closing paren
 		if p.curTok.Type == TokenComma {
 			p.nextToken()
+			// After comma, we switch to parsing parameters
 			break
 		}
 		if p.curTok.Type == TokenRParen {
@@ -860,7 +862,7 @@ func (p *Parser) parseExecutableStringList() (*ast.ExecutableStringList, error) 
 		}
 	}
 
-	// Parse parameters (after the first comma)
+	// Parse parameters (after the first comma following strings)
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 		param, err := p.parseExecuteParameter()
 		if err != nil {

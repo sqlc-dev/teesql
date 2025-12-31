@@ -2730,6 +2730,98 @@ func executeStatementToJSON(s *ast.ExecuteStatement) jsonNode {
 	if s.ExecuteSpecification != nil {
 		node["ExecuteSpecification"] = executeSpecificationToJSON(s.ExecuteSpecification)
 	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = executeOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func executeOptionToJSON(opt ast.ExecuteOptionType) jsonNode {
+	switch o := opt.(type) {
+	case *ast.ExecuteOption:
+		return jsonNode{
+			"$type":      "ExecuteOption",
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.ResultSetsExecuteOption:
+		node := jsonNode{
+			"$type":                "ResultSetsExecuteOption",
+			"ResultSetsOptionKind": o.ResultSetsOptionKind,
+			"OptionKind":           o.OptionKind,
+		}
+		if len(o.Definitions) > 0 {
+			defs := make([]jsonNode, len(o.Definitions))
+			for i, def := range o.Definitions {
+				defs[i] = resultSetDefinitionToJSON(def)
+			}
+			node["Definitions"] = defs
+		}
+		return node
+	default:
+		return jsonNode{}
+	}
+}
+
+func resultSetDefinitionToJSON(def ast.ResultSetDefinitionType) jsonNode {
+	switch d := def.(type) {
+	case *ast.ResultSetDefinition:
+		return jsonNode{
+			"$type":         "ResultSetDefinition",
+			"ResultSetType": d.ResultSetType,
+		}
+	case *ast.InlineResultSetDefinition:
+		node := jsonNode{
+			"$type":         "InlineResultSetDefinition",
+			"ResultSetType": d.ResultSetType,
+		}
+		if len(d.ResultColumnDefinitions) > 0 {
+			cols := make([]jsonNode, len(d.ResultColumnDefinitions))
+			for i, col := range d.ResultColumnDefinitions {
+				cols[i] = resultColumnDefinitionToJSON(col)
+			}
+			node["ResultColumnDefinitions"] = cols
+		}
+		return node
+	case *ast.SchemaObjectResultSetDefinition:
+		node := jsonNode{
+			"$type":         "SchemaObjectResultSetDefinition",
+			"ResultSetType": d.ResultSetType,
+		}
+		if d.Name != nil {
+			node["Name"] = schemaObjectNameToJSON(d.Name)
+		}
+		return node
+	default:
+		return jsonNode{}
+	}
+}
+
+func resultColumnDefinitionToJSON(col *ast.ResultColumnDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "ResultColumnDefinition",
+	}
+	if col.ColumnDefinition != nil {
+		colDefNode := jsonNode{
+			"$type": "ColumnDefinitionBase",
+		}
+		if col.ColumnDefinition.ColumnIdentifier != nil {
+			colDefNode["ColumnIdentifier"] = identifierToJSON(col.ColumnDefinition.ColumnIdentifier)
+		}
+		if col.ColumnDefinition.DataType != nil {
+			colDefNode["DataType"] = dataTypeReferenceToJSON(col.ColumnDefinition.DataType)
+		}
+		node["ColumnDefinition"] = colDefNode
+	}
+	if col.Nullable != nil {
+		node["Nullable"] = jsonNode{
+			"$type":    "NullableConstraintDefinition",
+			"Nullable": col.Nullable.Nullable,
+		}
+	}
 	return node
 }
 
