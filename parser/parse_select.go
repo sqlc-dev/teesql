@@ -1537,6 +1537,26 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		return &ast.OptimizerHint{HintKind: "Use"}, nil
 	}
 
+	// Handle keyword tokens that can be optimizer hints (ORDER, GROUP, etc.)
+	if p.curTok.Type == TokenOrder || p.curTok.Type == TokenGroup {
+		hintKind := convertHintKind(p.curTok.Literal)
+		firstWord := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		// Check for two-word hints like ORDER GROUP
+		if (firstWord == "ORDER" || firstWord == "HASH" || firstWord == "MERGE" ||
+			firstWord == "CONCAT" || firstWord == "LOOP" || firstWord == "FORCE") &&
+			(p.curTok.Type == TokenIdent || p.curTok.Type == TokenGroup) {
+			secondWord := strings.ToUpper(p.curTok.Literal)
+			if secondWord == "GROUP" || secondWord == "JOIN" || secondWord == "UNION" ||
+				secondWord == "ORDER" {
+				hintKind = hintKind + convertHintKind(p.curTok.Literal)
+				p.nextToken()
+			}
+		}
+		return &ast.OptimizerHint{HintKind: hintKind}, nil
+	}
+
 	if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLabel {
 		// Skip unknown tokens to avoid infinite loop
 		p.nextToken()
@@ -1646,7 +1666,20 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 	default:
 		// Handle generic hints
 		hintKind := convertHintKind(p.curTok.Literal)
+		firstWord := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
+
+		// Check for two-word hints like ORDER GROUP, HASH GROUP, etc.
+		if (firstWord == "ORDER" || firstWord == "HASH" || firstWord == "MERGE" ||
+			firstWord == "CONCAT" || firstWord == "LOOP" || firstWord == "FORCE") &&
+			p.curTok.Type == TokenIdent {
+			secondWord := strings.ToUpper(p.curTok.Literal)
+			if secondWord == "GROUP" || secondWord == "JOIN" || secondWord == "UNION" ||
+				secondWord == "ORDER" {
+				hintKind = hintKind + convertHintKind(p.curTok.Literal)
+				p.nextToken()
+			}
+		}
 
 		// Check if this is a literal hint (LABEL = value, etc.)
 		if p.curTok.Type == TokenEquals {
