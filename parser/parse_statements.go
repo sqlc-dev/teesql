@@ -8631,14 +8631,37 @@ func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatemen
 				if p.curTok.Type == TokenEquals {
 					p.nextToken()
 					state := strings.ToUpper(p.curTok.Literal)
+					optionState := "On"
+					if state == "OFF" {
+						optionState = "Off"
+					}
 					p.nextToken()
 					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
 						OptionKind:  "Incremental",
-						OptionState: state,
+						OptionState: optionState,
 					})
 				} else {
 					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
 						OptionKind:  "Incremental",
+						OptionState: "On",
+					})
+				}
+			case "AUTO_DROP":
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					state := strings.ToUpper(p.curTok.Literal)
+					optionState := "On"
+					if state == "OFF" {
+						optionState = "Off"
+					}
+					p.nextToken()
+					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
+						OptionKind:  "AutoDrop",
+						OptionState: optionState,
+					})
+				} else {
+					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
+						OptionKind:  "AutoDrop",
 						OptionState: "On",
 					})
 				}
