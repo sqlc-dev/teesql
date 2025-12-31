@@ -4220,8 +4220,178 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 	// Parse assembly name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse clauses in any order
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		switch upperLit {
+		case "FROM":
+			p.nextToken() // consume FROM
+			// Parse parameters (path literals)
+			for {
+				param, err := p.parseScalarExpression()
+				if err != nil {
+					break
+				}
+				stmt.Parameters = append(stmt.Parameters, param)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+		case "WITH":
+			p.nextToken() // consume WITH
+			// Parse options
+		withLoop:
+			for {
+				optUpper := strings.ToUpper(p.curTok.Literal)
+				switch optUpper {
+				case "PERMISSION_SET":
+					p.nextToken() // consume PERMISSION_SET
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+					}
+					permSet := strings.ToUpper(p.curTok.Literal)
+					opt := &ast.PermissionSetAssemblyOption{
+						OptionKind: "PermissionSet",
+					}
+					switch permSet {
+					case "SAFE":
+						opt.PermissionSetOption = "Safe"
+					case "EXTERNAL_ACCESS":
+						opt.PermissionSetOption = "ExternalAccess"
+					case "UNSAFE":
+						opt.PermissionSetOption = "Unsafe"
+					}
+					p.nextToken()
+					stmt.Options = append(stmt.Options, opt)
+
+				case "VISIBILITY":
+					p.nextToken() // consume VISIBILITY
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+					}
+					stateUpper := strings.ToUpper(p.curTok.Literal)
+					opt := &ast.OnOffAssemblyOption{
+						OptionKind: "Visibility",
+					}
+					if stateUpper == "ON" {
+						opt.OptionState = "On"
+					} else {
+						opt.OptionState = "Off"
+					}
+					p.nextToken()
+					stmt.Options = append(stmt.Options, opt)
+
+				case "UNCHECKED":
+					p.nextToken() // consume UNCHECKED
+					if strings.ToUpper(p.curTok.Literal) == "DATA" {
+						p.nextToken() // consume DATA
+					}
+					stmt.Options = append(stmt.Options, &ast.AssemblyOption{
+						OptionKind: "UncheckedData",
+					})
+
+				default:
+					break withLoop
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+		case "DROP":
+			p.nextToken() // consume DROP
+			if strings.ToUpper(p.curTok.Literal) == "FILE" {
+				p.nextToken() // consume FILE
+				if strings.ToUpper(p.curTok.Literal) == "ALL" {
+					stmt.IsDropAll = true
+					p.nextToken()
+				} else {
+					// Parse file names
+					for {
+						if p.curTok.Type == TokenString {
+							value := p.curTok.Literal
+							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+								value = value[1 : len(value)-1]
+							}
+							stmt.DropFiles = append(stmt.DropFiles, &ast.StringLiteral{
+								LiteralType:   "String",
+								IsNational:    false,
+								IsLargeObject: false,
+								Value:         value,
+							})
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+				}
+			}
+
+		case "ADD":
+			p.nextToken() // consume ADD
+			if strings.ToUpper(p.curTok.Literal) == "FILE" {
+				p.nextToken() // consume FILE
+				if strings.ToUpper(p.curTok.Literal) == "FROM" {
+					p.nextToken() // consume FROM
+				}
+				// Parse file specs
+				for {
+					fileSpec := &ast.AddFileSpec{}
+					// Parse file (string or binary literal)
+					file, err := p.parseScalarExpression()
+					if err != nil {
+						break
+					}
+					fileSpec.File = file
+
+					// Check for AS 'filename'
+					if p.curTok.Type == TokenAs {
+						p.nextToken() // consume AS
+						if p.curTok.Type == TokenString {
+							value := p.curTok.Literal
+							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+								value = value[1 : len(value)-1]
+							}
+							fileSpec.FileName = &ast.StringLiteral{
+								LiteralType:   "String",
+								IsNational:    false,
+								IsLargeObject: false,
+								Value:         value,
+							}
+							p.nextToken()
+						}
+					}
+
+					stmt.AddFiles = append(stmt.AddFiles, fileSpec)
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+			}
+
+		default:
+			// Unknown token, skip
+			p.nextToken()
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }

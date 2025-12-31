@@ -9944,8 +9944,77 @@ func alterAssemblyStatementToJSON(s *ast.AlterAssemblyStatement) jsonNode {
 	node := jsonNode{
 		"$type": "AlterAssemblyStatement",
 	}
+	// Only include IsDropAll if there are parameters, drop files, add files, options, or it's true
+	if s.IsDropAll || len(s.DropFiles) > 0 || len(s.AddFiles) > 0 || len(s.Parameters) > 0 || len(s.Options) > 0 {
+		node["IsDropAll"] = s.IsDropAll
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = scalarExpressionToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			opts[i] = assemblyOptionToJSON(o)
+		}
+		node["Options"] = opts
+	}
+	if len(s.AddFiles) > 0 {
+		files := make([]jsonNode, len(s.AddFiles))
+		for i, f := range s.AddFiles {
+			files[i] = addFileSpecToJSON(f)
+		}
+		node["AddFiles"] = files
+	}
+	if len(s.DropFiles) > 0 {
+		files := make([]jsonNode, len(s.DropFiles))
+		for i, f := range s.DropFiles {
+			files[i] = stringLiteralToJSON(f)
+		}
+		node["DropFiles"] = files
+	}
+	return node
+}
+
+func assemblyOptionToJSON(o ast.AssemblyOptionBase) jsonNode {
+	switch opt := o.(type) {
+	case *ast.AssemblyOption:
+		return jsonNode{
+			"$type":      "AssemblyOption",
+			"OptionKind": opt.OptionKind,
+		}
+	case *ast.OnOffAssemblyOption:
+		return jsonNode{
+			"$type":       "OnOffAssemblyOption",
+			"OptionKind":  opt.OptionKind,
+			"OptionState": opt.OptionState,
+		}
+	case *ast.PermissionSetAssemblyOption:
+		return jsonNode{
+			"$type":               "PermissionSetAssemblyOption",
+			"OptionKind":          opt.OptionKind,
+			"PermissionSetOption": opt.PermissionSetOption,
+		}
+	default:
+		return jsonNode{"$type": "UnknownAssemblyOption"}
+	}
+}
+
+func addFileSpecToJSON(f *ast.AddFileSpec) jsonNode {
+	node := jsonNode{
+		"$type": "AddFileSpec",
+	}
+	if f.File != nil {
+		node["File"] = scalarExpressionToJSON(f.File)
+	}
+	if f.FileName != nil {
+		node["FileName"] = stringLiteralToJSON(f.FileName)
 	}
 	return node
 }

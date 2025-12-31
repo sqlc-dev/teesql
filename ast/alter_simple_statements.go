@@ -11,11 +11,56 @@ func (s *AlterRouteStatement) statement() {}
 
 // AlterAssemblyStatement represents an ALTER ASSEMBLY statement.
 type AlterAssemblyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name       *Identifier         `json:"Name,omitempty"`
+	Parameters []ScalarExpression  `json:"Parameters,omitempty"` // FROM 'path' parameters
+	Options    []AssemblyOptionBase `json:"Options,omitempty"`
+	AddFiles   []*AddFileSpec      `json:"AddFiles,omitempty"`
+	DropFiles  []*StringLiteral    `json:"DropFiles,omitempty"`
+	IsDropAll  bool                `json:"IsDropAll"`
 }
 
 func (s *AlterAssemblyStatement) node()      {}
 func (s *AlterAssemblyStatement) statement() {}
+
+// AddFileSpec represents an ADD FILE specification.
+type AddFileSpec struct {
+	File     ScalarExpression `json:"File,omitempty"`     // The file path or binary literal
+	FileName *StringLiteral   `json:"FileName,omitempty"` // Optional AS 'filename'
+}
+
+func (a *AddFileSpec) node() {}
+
+// AssemblyOptionBase is an interface for assembly options.
+type AssemblyOptionBase interface {
+	Node
+	assemblyOption()
+}
+
+// AssemblyOption represents a basic assembly option.
+type AssemblyOption struct {
+	OptionKind string `json:"OptionKind,omitempty"` // "UncheckedData"
+}
+
+func (o *AssemblyOption) node()           {}
+func (o *AssemblyOption) assemblyOption() {}
+
+// OnOffAssemblyOption represents a VISIBILITY = ON|OFF option.
+type OnOffAssemblyOption struct {
+	OptionKind  string `json:"OptionKind,omitempty"`  // "Visibility"
+	OptionState string `json:"OptionState,omitempty"` // "On", "Off"
+}
+
+func (o *OnOffAssemblyOption) node()           {}
+func (o *OnOffAssemblyOption) assemblyOption() {}
+
+// PermissionSetAssemblyOption represents a PERMISSION_SET option.
+type PermissionSetAssemblyOption struct {
+	OptionKind          string `json:"OptionKind,omitempty"`          // "PermissionSet"
+	PermissionSetOption string `json:"PermissionSetOption,omitempty"` // "Safe", "ExternalAccess", "Unsafe"
+}
+
+func (o *PermissionSetAssemblyOption) node()           {}
+func (o *PermissionSetAssemblyOption) assemblyOption() {}
 
 // AlterEndpointStatement represents an ALTER ENDPOINT statement.
 type AlterEndpointStatement struct {
