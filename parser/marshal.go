@@ -9165,6 +9165,12 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
 		}
+	case *ast.OnlineIndexOption:
+		return jsonNode{
+			"$type":       "OnlineIndexOption",
+			"OptionState": o.OptionState,
+			"OptionKind":  o.OptionKind,
+		}
 	default:
 		return jsonNode{"$type": "UnknownIndexOption"}
 	}
