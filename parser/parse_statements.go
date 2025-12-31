@@ -976,6 +976,14 @@ func (p *Parser) parseSetStatisticsStatement() (*ast.SetStatisticsStatement, err
 		}
 	}
 
+	// Statistics option order for sorting
+	statisticsOptionOrder := map[string]int{
+		"IO":      1,
+		"Profile": 2,
+		"Time":    3,
+		"Xml":     4,
+	}
+
 	var options []string
 	for {
 		var optName string
@@ -995,6 +1003,11 @@ func (p *Parser) parseSetStatisticsStatement() (*ast.SetStatisticsStatement, err
 			break
 		}
 	}
+
+	// Sort options according to ScriptDom order
+	sort.Slice(options, func(i, j int) bool {
+		return statisticsOptionOrder[options[i]] < statisticsOptionOrder[options[j]]
+	})
 
 	// Parse ON/OFF
 	isOn := false
