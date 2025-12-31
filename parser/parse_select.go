@@ -1822,7 +1822,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		return &ast.OptimizerHint{HintKind: "Use"}, nil
 	}
 
-	// Handle keyword tokens that can be optimizer hints (ORDER, GROUP, etc.)
+	// Handle keyword tokens that can be optimizer hints (ORDER, GROUP, MAXDOP, etc.)
 	if p.curTok.Type == TokenOrder || p.curTok.Type == TokenGroup {
 		hintKind := convertHintKind(p.curTok.Literal)
 		firstWord := strings.ToUpper(p.curTok.Literal)
@@ -1831,7 +1831,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		// Check for two-word hints like ORDER GROUP
 		if (firstWord == "ORDER" || firstWord == "HASH" || firstWord == "MERGE" ||
 			firstWord == "CONCAT" || firstWord == "LOOP" || firstWord == "FORCE") &&
-			(p.curTok.Type == TokenIdent || p.curTok.Type == TokenGroup) {
+			isSecondHintWordToken(p.curTok.Type) {
 			secondWord := strings.ToUpper(p.curTok.Literal)
 			if secondWord == "GROUP" || secondWord == "JOIN" || secondWord == "UNION" ||
 				secondWord == "ORDER" {
@@ -1842,6 +1842,20 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		return &ast.OptimizerHint{HintKind: hintKind}, nil
 	}
 
+	// Handle MAXDOP keyword
+	if p.curTok.Type == TokenMaxdop {
+		p.nextToken() // consume MAXDOP
+		// MAXDOP takes a numeric argument
+		if p.curTok.Type == TokenNumber {
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: "MaxDop", Value: value}, nil
+		}
+		return &ast.OptimizerHint{HintKind: "MaxDop"}, nil
+	}
+
 	// Handle TABLE HINT optimizer hint
 	if p.curTok.Type == TokenTable {
 		p.nextToken() // consume TABLE
@@ -1850,6 +1864,20 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			return p.parseTableHintsOptimizerHint()
 		}
 		return &ast.OptimizerHint{HintKind: "Table"}, nil
+	}
+
+	// Handle FAST keyword
+	if p.curTok.Type == TokenFast {
+		p.nextToken() // consume FAST
+		// FAST takes a numeric argument
+		if p.curTok.Type == TokenNumber {
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}, nil
+		}
+		return &ast.OptimizerHint{HintKind: "Fast"}, nil
 	}
 
 	if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLabel {
@@ -1970,14 +1998,27 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 
 		// Check for two-word hints like ORDER GROUP, HASH GROUP, etc.
 		if (firstWord == "ORDER" || firstWord == "HASH" || firstWord == "MERGE" ||
-			firstWord == "CONCAT" || firstWord == "LOOP" || firstWord == "FORCE") &&
-			p.curTok.Type == TokenIdent {
+			firstWord == "CONCAT" || firstWord == "LOOP" || firstWord == "FORCE" ||
+			firstWord == "KEEP" || firstWord == "ROBUST" || firstWord == "EXPAND" ||
+			firstWord == "KEEPFIXED" || firstWord == "SHRINKDB" || firstWord == "ALTERCOLUMN" ||
+			firstWord == "BYPASS") &&
+			isSecondHintWordToken(p.curTok.Type) {
 			secondWord := strings.ToUpper(p.curTok.Literal)
 			if secondWord == "GROUP" || secondWord == "JOIN" || secondWord == "UNION" ||
-				secondWord == "ORDER" {
+				secondWord == "ORDER" || secondWord == "PLAN" || secondWord == "VIEWS" ||
+				secondWord == "OPTIMIZER_QUEUE" {
 				hintKind = hintKind + convertHintKind(p.curTok.Literal)
 				p.nextToken()
 			}
+		}
+
+		// Check if this is a literal hint with value (USEPLAN 2, etc.)
+		if p.curTok.Type == TokenNumber {
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}, nil
 		}
 
 		// Check if this is a literal hint (LABEL = value, etc.)
@@ -2173,6 +2214,11 @@ func convertHintKind(hint string) string {
 		"KEEP":                         "Keep",
 		"EXPAND":                       "Expand",
 		"VIEWS":                        "Views",
+		"BYPASS":                       "Bypass",
+		"OPTIMIZER_QUEUE":              "OptimizerQueue",
+		"USEPLAN":                      "UsePlan",
+		"SHRINKDB":                     "ShrinkDB",
+		"ALTERCOLUMN":                  "AlterColumn",
 		"HASH":                         "Hash",
 		"ORDER":                        "Order",
 		"GROUP":                        "Group",
@@ -2194,6 +2240,11 @@ func convertHintKind(hint string) string {
 		return mapped
 	}
 	return hint
+}
+
+// isSecondHintWordToken checks if a token can be a second word in a two-word optimizer hint
+func isSecondHintWordToken(t TokenType) bool {
+	return t == TokenIdent || t == TokenGroup || t == TokenJoin || t == TokenUnion || t == TokenOrder
 }
 
 func (p *Parser) parseWhereClause() (*ast.WhereClause, error) {
