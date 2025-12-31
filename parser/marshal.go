@@ -11097,13 +11097,42 @@ func createLoginStatementToJSON(s *ast.CreateLoginStatement) jsonNode {
 
 func createIndexStatementToJSON(s *ast.CreateIndexStatement) jsonNode {
 	node := jsonNode{
-		"$type": "CreateIndexStatement",
+		"$type":                  "CreateIndexStatement",
+		"Translated80SyntaxTo90": s.Translated80SyntaxTo90,
+		"Unique":                 s.Unique,
+	}
+	if s.Clustered != nil {
+		node["Clustered"] = *s.Clustered
+	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, col := range s.Columns {
+			cols[i] = columnWithSortOrderToJSON(col)
+		}
+		node["Columns"] = cols
+	}
+	if len(s.IncludeColumns) > 0 {
+		cols := make([]jsonNode, len(s.IncludeColumns))
+		for i, col := range s.IncludeColumns {
+			cols[i] = columnReferenceExpressionToJSON(col)
+		}
+		node["IncludeColumns"] = cols
+	}
+	if s.OnFileGroupOrPartitionScheme != nil {
+		node["OnFileGroupOrPartitionScheme"] = fileGroupOrPartitionSchemeToJSON(s.OnFileGroupOrPartitionScheme)
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	if s.OnName != nil {
 		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	if len(s.IndexOptions) > 0 {
+		opts := make([]jsonNode, len(s.IndexOptions))
+		for i, opt := range s.IndexOptions {
+			opts[i] = indexOptionToJSON(opt)
+		}
+		node["IndexOptions"] = opts
 	}
 	return node
 }

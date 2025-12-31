@@ -7004,23 +7004,201 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 }
 
 func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) {
-	// May already be past INDEX keyword if called from UNIQUE case
+	stmt := &ast.CreateIndexStatement{
+		Translated80SyntaxTo90: false,
+	}
+
+	// Parse optional UNIQUE
+	if strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
+		stmt.Unique = true
+		p.nextToken() // consume UNIQUE
+	}
+
+	// Parse optional CLUSTERED/NONCLUSTERED
+	if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
+		clustered := true
+		stmt.Clustered = &clustered
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
+		clustered := false
+		stmt.Clustered = &clustered
+		p.nextToken()
+	}
+
+	// Consume INDEX keyword
 	if p.curTok.Type == TokenIndex {
 		p.nextToken() // consume INDEX
-	} else if strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
-		p.nextToken() // consume UNIQUE
-		if p.curTok.Type == TokenIndex {
-			p.nextToken() // consume INDEX
+	}
+
+	// Parse index name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse ON table_name(columns)
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		stmt.OnName, _ = p.parseSchemaObjectName()
+
+		// Parse column list (columns with sort order)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseColumnWithSortOrder()
+				stmt.Columns = append(stmt.Columns, col)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		}
 	}
 
-	stmt := &ast.CreateIndexStatement{
-		Name: p.parseIdentifier(),
+	// Parse INCLUDE (columns)
+	if strings.ToUpper(p.curTok.Literal) == "INCLUDE" {
+		p.nextToken() // consume INCLUDE
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colRef := &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Count:       1,
+						Identifiers: []*ast.Identifier{p.parseIdentifier()},
+					},
+				}
+				stmt.IncludeColumns = append(stmt.IncludeColumns, colRef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse WITH (index options)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		stmt.IndexOptions = p.parseCreateIndexOptions()
+	}
+
+	// Parse ON filegroup/partition_scheme
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		fg, _ := p.parseFileGroupOrPartitionScheme()
+		stmt.OnFileGroupOrPartitionScheme = fg
+	}
+
 	return stmt, nil
+}
+
+func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
+	var options []ast.IndexOption
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return options
+	}
+	p.nextToken() // consume (
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optionName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume option name
+
+		// Expect =
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		// Parse value
+		valueToken := p.curTok
+		valueStr := strings.ToUpper(valueToken.Literal)
+		p.nextToken() // consume value
+
+		switch optionName {
+		case "PAD_INDEX":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "PadIndex",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "FILLFACTOR":
+			options = append(options, &ast.IndexExpressionOption{
+				OptionKind: "FillFactor",
+				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+			})
+		case "IGNORE_DUP_KEY":
+			options = append(options, &ast.IgnoreDupKeyIndexOption{
+				OptionKind:  "IgnoreDupKey",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "DROP_EXISTING":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "DropExisting",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "STATISTICS_NORECOMPUTE":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "StatisticsNoRecompute",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "SORT_IN_TEMPDB":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "SortInTempDB",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "ONLINE":
+			options = append(options, &ast.OnlineIndexOption{
+				OptionKind:  "Online",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "ALLOW_ROW_LOCKS":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "AllowRowLocks",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "ALLOW_PAGE_LOCKS":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "AllowPageLocks",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "MAXDOP":
+			options = append(options, &ast.IndexExpressionOption{
+				OptionKind: "MaxDop",
+				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+			})
+		default:
+			// Generic handling for other options
+			if valueStr == "ON" || valueStr == "OFF" {
+				options = append(options, &ast.IndexStateOption{
+					OptionKind:  p.getIndexOptionKind(optionName),
+					OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+				})
+			} else {
+				options = append(options, &ast.IndexExpressionOption{
+					OptionKind: p.getIndexOptionKind(optionName),
+					Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+				})
+			}
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return options
 }
 
 func (p *Parser) parseCreateSpatialIndexStatement() (*ast.CreateSpatialIndexStatement, error) {

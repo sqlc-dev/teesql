@@ -87,6 +87,7 @@ type OnlineIndexOption struct {
 
 func (o *OnlineIndexOption) node()            {}
 func (o *OnlineIndexOption) dropIndexOption() {}
+func (o *OnlineIndexOption) indexOption()     {}
 
 // MoveToDropIndexOption represents the MOVE TO option
 type MoveToDropIndexOption struct {

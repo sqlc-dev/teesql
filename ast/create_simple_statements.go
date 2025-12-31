@@ -308,8 +308,15 @@ func (s *CreatePartitionFunctionStatement) statement() {}
 
 // CreateIndexStatement represents a CREATE INDEX statement.
 type CreateIndexStatement struct {
-	Name   *Identifier       `json:"Name,omitempty"`
-	OnName *SchemaObjectName `json:"OnName,omitempty"`
+	Name                         *Identifier                   `json:"Name,omitempty"`
+	OnName                       *SchemaObjectName             `json:"OnName,omitempty"`
+	Translated80SyntaxTo90       bool                          `json:"Translated80SyntaxTo90,omitempty"`
+	Unique                       bool                          `json:"Unique,omitempty"`
+	Clustered                    *bool                         `json:"Clustered,omitempty"` // nil = not specified, true = CLUSTERED, false = NONCLUSTERED
+	Columns                      []*ColumnWithSortOrder        `json:"Columns,omitempty"`
+	IncludeColumns               []*ColumnReferenceExpression  `json:"IncludeColumns,omitempty"`
+	IndexOptions                 []IndexOption                 `json:"IndexOptions,omitempty"`
+	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme   `json:"OnFileGroupOrPartitionScheme,omitempty"`
 }
 
 func (s *CreateIndexStatement) node()      {}
