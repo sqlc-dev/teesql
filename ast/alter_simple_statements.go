@@ -18,11 +18,59 @@ func (s *AlterAssemblyStatement) statement() {}
 
 // AlterEndpointStatement represents an ALTER ENDPOINT statement.
 type AlterEndpointStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name            *Identifier             `json:"Name,omitempty"`
+	State           string                  `json:"State,omitempty"`           // Started, Disabled, NotSpecified
+	Affinity        *EndpointAffinity       `json:"Affinity,omitempty"`
+	Protocol        string                  `json:"Protocol,omitempty"`        // None, Tcp, Http
+	ProtocolOptions []EndpointProtocolOption `json:"ProtocolOptions,omitempty"`
+	EndpointType    string                  `json:"EndpointType,omitempty"`    // NotSpecified, Soap, ServiceBroker, etc.
+	PayloadOptions  []PayloadOption         `json:"PayloadOptions,omitempty"`
 }
 
 func (s *AlterEndpointStatement) node()      {}
 func (s *AlterEndpointStatement) statement() {}
+
+// EndpointAffinity represents the affinity setting for an endpoint.
+type EndpointAffinity struct {
+	Kind  string           `json:"Kind,omitempty"` // None, Admin, Integer
+	Value *IntegerLiteral  `json:"Value,omitempty"`
+}
+
+func (e *EndpointAffinity) node() {}
+
+// EndpointProtocolOption is an interface for endpoint protocol options.
+type EndpointProtocolOption interface {
+	Node
+	endpointProtocolOption()
+}
+
+// LiteralEndpointProtocolOption represents a literal endpoint protocol option.
+type LiteralEndpointProtocolOption struct {
+	Value ScalarExpression `json:"Value,omitempty"`
+	Kind  string           `json:"Kind,omitempty"` // TcpListenerPort, HttpListenerPort, etc.
+}
+
+func (l *LiteralEndpointProtocolOption) node()                   {}
+func (l *LiteralEndpointProtocolOption) endpointProtocolOption() {}
+
+// PayloadOption is an interface for endpoint payload options.
+type PayloadOption interface {
+	Node
+	payloadOption()
+}
+
+// SoapMethod represents a SOAP web method option.
+type SoapMethod struct {
+	Alias  *StringLiteral `json:"Alias,omitempty"`
+	Action string         `json:"Action,omitempty"` // Add, Alter, Drop
+	Name   *StringLiteral `json:"Name,omitempty"`
+	Format string         `json:"Format,omitempty"` // NotSpecified, AllResults, RowsetsOnly, None
+	Schema string         `json:"Schema,omitempty"` // NotSpecified, Default, None, Standard
+	Kind   string         `json:"Kind,omitempty"`   // None, WebMethod
+}
+
+func (s *SoapMethod) node()          {}
+func (s *SoapMethod) payloadOption() {}
 
 // AlterServiceStatement represents an ALTER SERVICE statement.
 type AlterServiceStatement struct {

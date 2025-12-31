@@ -8814,7 +8814,94 @@ func alterEndpointStatementToJSON(s *ast.AlterEndpointStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.State != "" {
+		node["State"] = s.State
+	}
+	if s.Affinity != nil {
+		node["Affinity"] = endpointAffinityToJSON(s.Affinity)
+	}
+	if s.Protocol != "" {
+		node["Protocol"] = s.Protocol
+	}
+	if len(s.ProtocolOptions) > 0 {
+		opts := make([]jsonNode, len(s.ProtocolOptions))
+		for i, opt := range s.ProtocolOptions {
+			opts[i] = endpointProtocolOptionToJSON(opt)
+		}
+		node["ProtocolOptions"] = opts
+	}
+	if s.EndpointType != "" {
+		node["EndpointType"] = s.EndpointType
+	}
+	if len(s.PayloadOptions) > 0 {
+		opts := make([]jsonNode, len(s.PayloadOptions))
+		for i, opt := range s.PayloadOptions {
+			opts[i] = payloadOptionToJSON(opt)
+		}
+		node["PayloadOptions"] = opts
+	}
 	return node
+}
+
+func endpointAffinityToJSON(a *ast.EndpointAffinity) jsonNode {
+	node := jsonNode{
+		"$type": "EndpointAffinity",
+	}
+	if a.Kind != "" {
+		node["Kind"] = a.Kind
+	}
+	if a.Value != nil {
+		node["Value"] = scalarExpressionToJSON(a.Value)
+	}
+	return node
+}
+
+func endpointProtocolOptionToJSON(opt ast.EndpointProtocolOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.LiteralEndpointProtocolOption:
+		node := jsonNode{
+			"$type": "LiteralEndpointProtocolOption",
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownProtocolOption"}
+	}
+}
+
+func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.SoapMethod:
+		node := jsonNode{
+			"$type": "SoapMethod",
+		}
+		if o.Alias != nil {
+			node["Alias"] = stringLiteralToJSON(o.Alias)
+		}
+		if o.Action != "" {
+			node["Action"] = o.Action
+		}
+		if o.Name != nil {
+			node["Name"] = stringLiteralToJSON(o.Name)
+		}
+		if o.Format != "" {
+			node["Format"] = o.Format
+		}
+		if o.Schema != "" {
+			node["Schema"] = o.Schema
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownPayloadOption"}
+	}
 }
 
 func alterServiceStatementToJSON(s *ast.AlterServiceStatement) jsonNode {

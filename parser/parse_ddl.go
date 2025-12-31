@@ -3795,12 +3795,258 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 	p.nextToken()
 
 	stmt := &ast.AlterEndpointStatement{}
+	hasOptions := false
 
 	// Parse endpoint name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse endpoint options (STATE, AFFINITY)
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+		upper := strings.ToUpper(p.curTok.Literal)
+
+		switch upper {
+		case "STATE":
+			hasOptions = true
+			p.nextToken() // consume STATE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			stateUpper := strings.ToUpper(p.curTok.Literal)
+			switch stateUpper {
+			case "STARTED":
+				stmt.State = "Started"
+			case "STOPPED":
+				stmt.State = "Stopped"
+			case "DISABLED":
+				stmt.State = "Disabled"
+			}
+			p.nextToken()
+
+		case "AFFINITY":
+			hasOptions = true
+			p.nextToken() // consume AFFINITY
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			affinity := &ast.EndpointAffinity{}
+			affinityUpper := strings.ToUpper(p.curTok.Literal)
+			switch affinityUpper {
+			case "NONE":
+				affinity.Kind = "None"
+				p.nextToken()
+			case "ADMIN":
+				affinity.Kind = "Admin"
+				p.nextToken()
+			default:
+				// Integer affinity
+				affinity.Kind = "Integer"
+				if p.curTok.Type == TokenNumber {
+					affinity.Value = &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					}
+					p.nextToken()
+				}
+			}
+			stmt.Affinity = affinity
+
+		case "AS":
+			hasOptions = true
+			p.nextToken() // consume AS
+			// Protocol type (TCP, HTTP)
+			protocolUpper := strings.ToUpper(p.curTok.Literal)
+			switch protocolUpper {
+			case "TCP":
+				stmt.Protocol = "Tcp"
+			case "HTTP":
+				stmt.Protocol = "Http"
+			}
+			p.nextToken()
+			// Parse protocol options (listener_port = value)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					opt := &ast.LiteralEndpointProtocolOption{}
+					switch optName {
+					case "LISTENER_PORT":
+						opt.Kind = "TcpListenerPort"
+					case "LISTENER_IP":
+						opt.Kind = "TcpListenerIP"
+					default:
+						opt.Kind = optName
+					}
+					if p.curTok.Type == TokenNumber {
+						opt.Value = &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						}
+						p.nextToken()
+					} else if p.curTok.Type == TokenString {
+						opt.Value = &ast.StringLiteral{
+							LiteralType: "String",
+							Value:       p.curTok.Literal,
+						}
+						p.nextToken()
+					}
+					stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+
+		case "FOR":
+			hasOptions = true
+			p.nextToken() // consume FOR
+			// Endpoint type (SOAP, SERVICE_BROKER, etc.)
+			endpointTypeUpper := strings.ToUpper(p.curTok.Literal)
+			switch endpointTypeUpper {
+			case "SOAP":
+				stmt.EndpointType = "Soap"
+			case "SERVICE_BROKER":
+				stmt.EndpointType = "ServiceBroker"
+			case "DATABASE_MIRRORING":
+				stmt.EndpointType = "DatabaseMirroring"
+			case "TSQL":
+				stmt.EndpointType = "Tsql"
+			default:
+				stmt.EndpointType = endpointTypeUpper
+			}
+			p.nextToken()
+			// Parse payload options
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					actionUpper := strings.ToUpper(p.curTok.Literal)
+					if actionUpper == "ADD" || actionUpper == "ALTER" || actionUpper == "DROP" {
+						p.nextToken() // consume ADD/ALTER/DROP
+						// Parse WEBMETHOD
+						if strings.ToUpper(p.curTok.Literal) == "WEBMETHOD" {
+							p.nextToken() // consume WEBMETHOD
+							method := &ast.SoapMethod{
+								Format: "NotSpecified",
+								Schema: "NotSpecified",
+							}
+							switch actionUpper {
+							case "ADD":
+								method.Action = "Add"
+								method.Kind = "WebMethod"
+							case "ALTER":
+								method.Action = "Alter"
+								method.Kind = "WebMethod"
+							case "DROP":
+								method.Action = "Drop"
+								method.Kind = "None"
+							}
+							// Parse alias (string literal)
+							if p.curTok.Type == TokenString {
+								method.Alias = p.parseStringLiteralValue()
+								p.nextToken()
+							}
+							// Parse method options
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									optName := strings.ToUpper(p.curTok.Literal)
+									p.nextToken()
+									if p.curTok.Type == TokenEquals {
+										p.nextToken() // consume =
+									}
+									if optName == "NAME" && p.curTok.Type == TokenString {
+										method.Name = p.parseStringLiteralValue()
+										p.nextToken()
+									} else if optName == "FORMAT" {
+										formatUpper := strings.ToUpper(p.curTok.Literal)
+										switch formatUpper {
+										case "ALL_RESULTS":
+											method.Format = "AllResults"
+										case "ROWSETS_ONLY":
+											method.Format = "RowsetsOnly"
+										case "NONE":
+											method.Format = "None"
+										default:
+											method.Format = formatUpper
+										}
+										p.nextToken()
+									} else if optName == "SCHEMA" {
+										schemaUpper := strings.ToUpper(p.curTok.Literal)
+										switch schemaUpper {
+										case "DEFAULT":
+											method.Schema = "Default"
+										case "NONE":
+											method.Schema = "None"
+										case "STANDARD":
+											method.Schema = "Standard"
+										default:
+											method.Schema = schemaUpper
+										}
+										p.nextToken()
+									} else {
+										p.nextToken()
+									}
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+							}
+							stmt.PayloadOptions = append(stmt.PayloadOptions, method)
+						}
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else if p.curTok.Type != TokenRParen {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+
+		case ",":
+			p.nextToken()
+
+		default:
+			// Unknown token, break out
+			if hasOptions {
+				// Set defaults for unspecified fields when options were parsed
+				if stmt.State == "" {
+					stmt.State = "NotSpecified"
+				}
+				if stmt.Protocol == "" {
+					stmt.Protocol = "None"
+				}
+				if stmt.EndpointType == "" {
+					stmt.EndpointType = "NotSpecified"
+				}
+			}
+			return stmt, nil
+		}
+	}
+
+	// Set defaults for unspecified fields when options were parsed
+	if hasOptions {
+		if stmt.State == "" {
+			stmt.State = "NotSpecified"
+		}
+		if stmt.Protocol == "" {
+			stmt.Protocol = "None"
+		}
+		if stmt.EndpointType == "" {
+			stmt.EndpointType = "NotSpecified"
+		}
+	}
 
 	return stmt, nil
 }
