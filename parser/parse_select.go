@@ -431,10 +431,20 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 			}
 		} else if p.curTok.Type == TokenAs {
 			p.nextToken()
-			alias := p.parseIdentifier()
-			sse.ColumnName = &ast.IdentifierOrValueExpression{
-				Value:      alias.Value,
-				Identifier: alias,
+			if p.curTok.Type == TokenString {
+				// String literal alias: AS 'alias'
+				str := p.parseStringLiteralValue()
+				p.nextToken()
+				sse.ColumnName = &ast.IdentifierOrValueExpression{
+					Value:           str.Value,
+					ValueExpression: str,
+				}
+			} else {
+				alias := p.parseIdentifier()
+				sse.ColumnName = &ast.IdentifierOrValueExpression{
+					Value:      alias.Value,
+					Identifier: alias,
+				}
 			}
 		} else if p.curTok.Type == TokenIdent {
 			upper := strings.ToUpper(p.curTok.Literal)
@@ -467,10 +477,20 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		}
 	} else if p.curTok.Type == TokenAs {
 		p.nextToken() // consume AS
-		alias := p.parseIdentifier()
-		sse.ColumnName = &ast.IdentifierOrValueExpression{
-			Value:      alias.Value,
-			Identifier: alias,
+		if p.curTok.Type == TokenString {
+			// String literal alias: AS 'alias'
+			str := p.parseStringLiteralValue()
+			p.nextToken()
+			sse.ColumnName = &ast.IdentifierOrValueExpression{
+				Value:           str.Value,
+				ValueExpression: str,
+			}
+		} else {
+			alias := p.parseIdentifier()
+			sse.ColumnName = &ast.IdentifierOrValueExpression{
+				Value:      alias.Value,
+				Identifier: alias,
+			}
 		}
 	} else if p.curTok.Type == TokenIdent {
 		// Check if this is an alias (not a keyword that starts a new clause)
@@ -1267,6 +1287,40 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 
 			expr = propAccess
 			continue
+		}
+
+		// Check for WITHIN GROUP clause for function calls (e.g., PERCENTILE_CONT)
+		if fc, ok := expr.(*ast.FunctionCall); ok && strings.ToUpper(p.curTok.Literal) == "WITHIN" {
+			p.nextToken() // consume WITHIN
+			if strings.ToUpper(p.curTok.Literal) == "GROUP" {
+				p.nextToken() // consume GROUP
+			}
+
+			if p.curTok.Type != TokenLParen {
+				return nil, fmt.Errorf("expected ( after WITHIN GROUP, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume (
+
+			// Parse ORDER BY clause
+			withinGroup := &ast.WithinGroupClause{
+				HasGraphPath: false,
+			}
+
+			if p.curTok.Type == TokenOrder {
+				orderBy, err := p.parseOrderByClause()
+				if err != nil {
+					return nil, err
+				}
+				withinGroup.OrderByClause = orderBy
+			}
+
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) in WITHIN GROUP clause, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+
+			fc.WithinGroupClause = withinGroup
+			continue // continue to check for more clauses like OVER
 		}
 
 		// Check for OVER clause for function calls

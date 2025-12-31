@@ -1326,6 +1326,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.UniqueRowFilter != "" {
 			node["UniqueRowFilter"] = e.UniqueRowFilter
 		}
+		if e.WithinGroupClause != nil {
+			node["WithinGroupClause"] = withinGroupClauseToJSON(e.WithinGroupClause)
+		}
 		if e.OverClause != nil {
 			node["OverClause"] = jsonNode{
 				"$type": "OverClause",
@@ -2007,6 +2010,17 @@ func expressionWithSortOrderToJSON(ewso *ast.ExpressionWithSortOrder) jsonNode {
 	if ewso.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(ewso.Expression)
 	}
+	return node
+}
+
+func withinGroupClauseToJSON(wg *ast.WithinGroupClause) jsonNode {
+	node := jsonNode{
+		"$type": "WithinGroupClause",
+	}
+	if wg.OrderByClause != nil {
+		node["OrderByClause"] = orderByClauseToJSON(wg.OrderByClause)
+	}
+	node["HasGraphPath"] = wg.HasGraphPath
 	return node
 }
 

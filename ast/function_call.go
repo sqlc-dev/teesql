@@ -31,14 +31,23 @@ type OverClause struct {
 	// Add partition by, order by, and window frame as needed
 }
 
+// WithinGroupClause represents a WITHIN GROUP clause for ordered set aggregate functions.
+type WithinGroupClause struct {
+	OrderByClause *OrderByClause `json:"OrderByClause,omitempty"`
+	HasGraphPath  bool           `json:"HasGraphPath,omitempty"`
+}
+
+func (*WithinGroupClause) node() {}
+
 // FunctionCall represents a function call.
 type FunctionCall struct {
-	CallTarget       CallTarget         `json:"CallTarget,omitempty"`
-	FunctionName     *Identifier        `json:"FunctionName,omitempty"`
-	Parameters       []ScalarExpression `json:"Parameters,omitempty"`
-	UniqueRowFilter  string             `json:"UniqueRowFilter,omitempty"`
-	OverClause       *OverClause        `json:"OverClause,omitempty"`
-	WithArrayWrapper bool               `json:"WithArrayWrapper,omitempty"`
+	CallTarget        CallTarget         `json:"CallTarget,omitempty"`
+	FunctionName      *Identifier        `json:"FunctionName,omitempty"`
+	Parameters        []ScalarExpression `json:"Parameters,omitempty"`
+	UniqueRowFilter   string             `json:"UniqueRowFilter,omitempty"`
+	WithinGroupClause *WithinGroupClause `json:"WithinGroupClause,omitempty"`
+	OverClause        *OverClause        `json:"OverClause,omitempty"`
+	WithArrayWrapper  bool               `json:"WithArrayWrapper,omitempty"`
 }
 
 func (*FunctionCall) node()             {}
