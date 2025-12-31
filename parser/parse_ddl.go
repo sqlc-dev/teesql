@@ -2803,6 +2803,52 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 	// Parse column name
 	stmt.ColumnIdentifier = p.parseIdentifier()
 
+	// Check for ADD/DROP ROWGUIDCOL or ADD/DROP NOT FOR REPLICATION
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "ADD" {
+		p.nextToken() // consume ADD
+		nextLit := strings.ToUpper(p.curTok.Literal)
+		if nextLit == "ROWGUIDCOL" {
+			stmt.AlterTableAlterColumnOption = "AddRowGuidCol"
+			p.nextToken()
+		} else if nextLit == "NOT" {
+			p.nextToken() // consume NOT
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+			}
+			if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+				p.nextToken() // consume REPLICATION
+			}
+			stmt.AlterTableAlterColumnOption = "AddNotForReplication"
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	} else if upperLit == "DROP" {
+		p.nextToken() // consume DROP
+		nextLit := strings.ToUpper(p.curTok.Literal)
+		if nextLit == "ROWGUIDCOL" {
+			stmt.AlterTableAlterColumnOption = "DropRowGuidCol"
+			p.nextToken()
+		} else if nextLit == "NOT" {
+			p.nextToken() // consume NOT
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+			}
+			if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+				p.nextToken() // consume REPLICATION
+			}
+			stmt.AlterTableAlterColumnOption = "DropNotForReplication"
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	}
+
 	// Parse data type - be lenient if no data type is provided
 	dataType, err := p.parseDataType()
 	if err != nil {
@@ -2811,6 +2857,24 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		return stmt, nil
 	}
 	stmt.DataType = dataType
+
+	// Check for COLLATE
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		stmt.Collation = p.parseIdentifier()
+	}
+
+	// Check for NULL/NOT NULL
+	if strings.ToUpper(p.curTok.Literal) == "NULL" {
+		stmt.AlterTableAlterColumnOption = "Null"
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "NOT" {
+		p.nextToken() // consume NOT
+		if strings.ToUpper(p.curTok.Literal) == "NULL" {
+			stmt.AlterTableAlterColumnOption = "NotNull"
+			p.nextToken()
+		}
+	}
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {

@@ -766,10 +766,7 @@ func alterTableAddTableElementStatementToJSON(s *ast.AlterTableAddTableElementSt
 
 func alterTableAlterColumnStatementToJSON(s *ast.AlterTableAlterColumnStatement) jsonNode {
 	node := jsonNode{
-		"$type":                       "AlterTableAlterColumnStatement",
-		"AlterTableAlterColumnOption": s.AlterTableAlterColumnOption,
-		"IsHidden":                    s.IsHidden,
-		"IsMasked":                    s.IsMasked,
+		"$type": "AlterTableAlterColumnStatement",
 	}
 	if s.ColumnIdentifier != nil {
 		node["ColumnIdentifier"] = identifierToJSON(s.ColumnIdentifier)
@@ -777,6 +774,12 @@ func alterTableAlterColumnStatementToJSON(s *ast.AlterTableAlterColumnStatement)
 	if s.DataType != nil {
 		node["DataType"] = dataTypeReferenceToJSON(s.DataType)
 	}
+	node["AlterTableAlterColumnOption"] = s.AlterTableAlterColumnOption
+	node["IsHidden"] = s.IsHidden
+	if s.Collation != nil {
+		node["Collation"] = identifierToJSON(s.Collation)
+	}
+	node["IsMasked"] = s.IsMasked
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
