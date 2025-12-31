@@ -8506,8 +8506,31 @@ func createExternalLibraryStatementToJSON(s *ast.CreateExternalLibraryStatement)
 	node := jsonNode{
 		"$type": "CreateExternalLibraryStatement",
 	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Language != nil {
+		node["Language"] = scalarExpressionToJSON(s.Language)
+	}
+	if len(s.ExternalLibraryFiles) > 0 {
+		files := make([]jsonNode, len(s.ExternalLibraryFiles))
+		for i, f := range s.ExternalLibraryFiles {
+			files[i] = externalLibraryFileOptionToJSON(f)
+		}
+		node["ExternalLibraryFiles"] = files
+	}
+	return node
+}
+
+func externalLibraryFileOptionToJSON(f *ast.ExternalLibraryFileOption) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalLibraryFileOption",
+	}
+	if f.Content != nil {
+		node["Content"] = scalarExpressionToJSON(f.Content)
 	}
 	return node
 }
@@ -9738,16 +9761,6 @@ func alterExternalLibraryStatementToJSON(s *ast.AlterExternalLibraryStatement) j
 			files[i] = externalLibraryFileOptionToJSON(f)
 		}
 		node["ExternalLibraryFiles"] = files
-	}
-	return node
-}
-
-func externalLibraryFileOptionToJSON(f *ast.ExternalLibraryFileOption) jsonNode {
-	node := jsonNode{
-		"$type": "ExternalLibraryFileOption",
-	}
-	if f.Content != nil {
-		node["Content"] = scalarExpressionToJSON(f.Content)
 	}
 	return node
 }

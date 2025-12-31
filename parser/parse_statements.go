@@ -5042,10 +5042,74 @@ func (p *Parser) parseCreateExternalLibraryStatement() (*ast.CreateExternalLibra
 	stmt := &ast.CreateExternalLibraryStatement{
 		Name: p.parseIdentifier(),
 	}
-	// Skip rest of statement for now
-	for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF && !p.isStatementTerminator() {
-		p.nextToken()
+
+	// Parse optional AUTHORIZATION
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
 	}
+
+	// Parse FROM clause
+	if p.curTok.Type == TokenFrom {
+		p.nextToken() // consume FROM
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				if strings.ToUpper(p.curTok.Literal) == "CONTENT" {
+					p.nextToken() // consume CONTENT
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					content, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					stmt.ExternalLibraryFiles = append(stmt.ExternalLibraryFiles, &ast.ExternalLibraryFileOption{
+						Content: content,
+					})
+				} else {
+					p.nextToken()
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				if p.curTok.Type == TokenLanguage || strings.ToUpper(p.curTok.Literal) == "LANGUAGE" {
+					p.nextToken() // consume LANGUAGE
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					lang, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					stmt.Language = lang
+				} else {
+					p.nextToken()
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
