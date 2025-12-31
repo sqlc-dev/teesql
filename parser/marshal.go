@@ -138,6 +138,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterResourceGovernorStatementToJSON(s)
 	case *ast.CreateCryptographicProviderStatement:
 		return createCryptographicProviderStatementToJSON(s)
+	case *ast.CreateColumnMasterKeyStatement:
+		return createColumnMasterKeyStatementToJSON(s)
+	case *ast.DropColumnMasterKeyStatement:
+		return dropColumnMasterKeyStatementToJSON(s)
 	case *ast.AlterCryptographicProviderStatement:
 		return alterCryptographicProviderStatementToJSON(s)
 	case *ast.DropCryptographicProviderStatement:
@@ -10192,6 +10196,67 @@ func createCryptographicProviderStatementToJSON(s *ast.CreateCryptographicProvid
 	}
 	if s.File != nil {
 		node["File"] = scalarExpressionToJSON(s.File)
+	}
+	return node
+}
+
+func createColumnMasterKeyStatementToJSON(s *ast.CreateColumnMasterKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateColumnMasterKeyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = columnMasterKeyParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	return node
+}
+
+func columnMasterKeyParameterToJSON(p ast.ColumnMasterKeyParameter) jsonNode {
+	switch param := p.(type) {
+	case *ast.ColumnMasterKeyStoreProviderNameParameter:
+		node := jsonNode{
+			"$type": "ColumnMasterKeyStoreProviderNameParameter",
+		}
+		if param.Name != nil {
+			node["Name"] = scalarExpressionToJSON(param.Name)
+		}
+		node["ParameterKind"] = param.ParameterKind
+		return node
+	case *ast.ColumnMasterKeyPathParameter:
+		node := jsonNode{
+			"$type": "ColumnMasterKeyPathParameter",
+		}
+		if param.Path != nil {
+			node["Path"] = scalarExpressionToJSON(param.Path)
+		}
+		node["ParameterKind"] = param.ParameterKind
+		return node
+	case *ast.ColumnMasterKeyEnclaveComputationsParameter:
+		node := jsonNode{
+			"$type": "ColumnMasterKeyEnclaveComputationsParameter",
+		}
+		if param.Signature != nil {
+			node["Signature"] = scalarExpressionToJSON(param.Signature)
+		}
+		node["ParameterKind"] = param.ParameterKind
+		return node
+	default:
+		return jsonNode{"$type": "UnknownColumnMasterKeyParameter"}
+	}
+}
+
+func dropColumnMasterKeyStatementToJSON(s *ast.DropColumnMasterKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropColumnMasterKeyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
 	}
 	return node
 }

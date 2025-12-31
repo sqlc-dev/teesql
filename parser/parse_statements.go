@@ -1616,6 +1616,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateIndexStatement()
 		case "PRIMARY":
 			return p.parseCreateXmlIndexStatement()
+		case "COLUMN":
+			return p.parseCreateColumnMasterKeyStatement()
 		case "CRYPTOGRAPHIC":
 			return p.parseCreateCryptographicProviderStatement()
 		case "FEDERATION":
@@ -1752,6 +1754,117 @@ func (p *Parser) parseDropCryptographicProviderStatement() (*ast.DropCryptograph
 	stmt.Name = p.parseIdentifier()
 
 	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateColumnMasterKeyStatement() (*ast.CreateColumnMasterKeyStatement, error) {
+	// CREATE COLUMN MASTER KEY name WITH (options)
+	// Already consumed CREATE COLUMN, now need to consume MASTER KEY
+	p.nextToken() // consume COLUMN
+
+	if strings.ToUpper(p.curTok.Literal) != "MASTER" {
+		return nil, fmt.Errorf("expected MASTER after COLUMN, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume MASTER
+
+	if strings.ToUpper(p.curTok.Literal) != "KEY" {
+		return nil, fmt.Errorf("expected KEY after MASTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume KEY
+
+	stmt := &ast.CreateColumnMasterKeyStatement{}
+
+	// Parse key name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Parse parameters
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			paramName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume parameter name
+
+			switch paramName {
+			case "KEY_STORE_PROVIDER_NAME":
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				value, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				stmt.Parameters = append(stmt.Parameters, &ast.ColumnMasterKeyStoreProviderNameParameter{
+					Name:          value,
+					ParameterKind: "KeyStoreProviderName",
+				})
+			case "KEY_PATH":
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				value, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				stmt.Parameters = append(stmt.Parameters, &ast.ColumnMasterKeyPathParameter{
+					Path:          value,
+					ParameterKind: "KeyPath",
+				})
+			case "ENCLAVE_COMPUTATIONS":
+				// ENCLAVE_COMPUTATIONS ( SIGNATURE = value )
+				if p.curTok.Type != TokenLParen {
+					return nil, fmt.Errorf("expected ( after ENCLAVE_COMPUTATIONS, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume (
+
+				// Parse SIGNATURE = value
+				if strings.ToUpper(p.curTok.Literal) == "SIGNATURE" {
+					p.nextToken() // consume SIGNATURE
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					value, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					stmt.Parameters = append(stmt.Parameters, &ast.ColumnMasterKeyEnclaveComputationsParameter{
+						Signature:     value,
+						ParameterKind: "Signature",
+					})
+				}
+
+				// Consume closing )
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			default:
+				// Skip unknown parameter
+				p.nextToken()
+			}
+
+			// Skip comma if present
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		// Consume closing )
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Skip any remaining tokens
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
 }
 
