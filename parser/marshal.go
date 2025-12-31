@@ -9008,6 +9008,9 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
+	if s.Containment != nil {
+		node["Containment"] = containmentDatabaseOptionToJSON(s.Containment)
+	}
 	if len(s.Options) > 0 {
 		opts := make([]jsonNode, len(s.Options))
 		for i, opt := range s.Options {
@@ -9029,8 +9032,8 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 		}
 		node["LogOn"] = logs
 	}
-	// AttachMode is output when there are FileGroups, Options, Collation, or CopyOf
-	if len(s.FileGroups) > 0 || len(s.Options) > 0 || s.Collation != nil || s.CopyOf != nil {
+	// AttachMode is output when there are FileGroups, Options, Collation, CopyOf, or Containment
+	if len(s.FileGroups) > 0 || len(s.Options) > 0 || s.Collation != nil || s.CopyOf != nil || s.Containment != nil {
 		node["AttachMode"] = s.AttachMode
 	}
 	if s.CopyOf != nil {
@@ -9040,6 +9043,14 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 		node["Collation"] = identifierToJSON(s.Collation)
 	}
 	return node
+}
+
+func containmentDatabaseOptionToJSON(c *ast.ContainmentDatabaseOption) jsonNode {
+	return jsonNode{
+		"$type":      "ContainmentDatabaseOption",
+		"Value":      c.Value,
+		"OptionKind": c.OptionKind,
+	}
 }
 
 func fileGroupDefinitionToJSON(fg *ast.FileGroupDefinition) jsonNode {

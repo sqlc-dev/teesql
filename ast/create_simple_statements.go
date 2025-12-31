@@ -2,14 +2,24 @@ package ast
 
 // CreateDatabaseStatement represents a CREATE DATABASE statement.
 type CreateDatabaseStatement struct {
-	DatabaseName *Identifier              `json:"DatabaseName,omitempty"`
-	Options      []CreateDatabaseOption   `json:"Options,omitempty"`
-	AttachMode   string                   `json:"AttachMode,omitempty"` // "None", "Attach", "AttachRebuildLog"
-	CopyOf       *MultiPartIdentifier     `json:"CopyOf,omitempty"`     // For AS COPY OF syntax
-	FileGroups   []*FileGroupDefinition   `json:"FileGroups,omitempty"`
-	LogOn        []*FileDeclaration       `json:"LogOn,omitempty"`
-	Collation    *Identifier              `json:"Collation,omitempty"`
+	DatabaseName *Identifier                `json:"DatabaseName,omitempty"`
+	Options      []CreateDatabaseOption     `json:"Options,omitempty"`
+	AttachMode   string                     `json:"AttachMode,omitempty"` // "None", "Attach", "AttachRebuildLog"
+	CopyOf       *MultiPartIdentifier       `json:"CopyOf,omitempty"`     // For AS COPY OF syntax
+	FileGroups   []*FileGroupDefinition     `json:"FileGroups,omitempty"`
+	LogOn        []*FileDeclaration         `json:"LogOn,omitempty"`
+	Collation    *Identifier                `json:"Collation,omitempty"`
+	Containment  *ContainmentDatabaseOption `json:"Containment,omitempty"`
 }
+
+// ContainmentDatabaseOption represents CONTAINMENT = NONE/PARTIAL
+type ContainmentDatabaseOption struct {
+	Value      string // "None" or "Partial"
+	OptionKind string // Always "Containment"
+}
+
+func (c *ContainmentDatabaseOption) node()                 {}
+func (c *ContainmentDatabaseOption) createDatabaseOption() {}
 
 func (s *CreateDatabaseStatement) node()      {}
 func (s *CreateDatabaseStatement) statement() {}

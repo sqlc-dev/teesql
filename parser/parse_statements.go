@@ -5782,6 +5782,24 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 		}
 	}
 
+	// Check for CONTAINMENT = NONE/PARTIAL
+	if strings.ToUpper(p.curTok.Literal) == "CONTAINMENT" {
+		p.nextToken() // consume CONTAINMENT
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		val := strings.ToUpper(p.curTok.Literal)
+		containmentVal := "None"
+		if val == "PARTIAL" {
+			containmentVal = "Partial"
+		}
+		stmt.Containment = &ast.ContainmentDatabaseOption{
+			Value:      containmentVal,
+			OptionKind: "Containment",
+		}
+		p.nextToken()
+	}
+
 	// Check for AS COPY OF syntax
 	if p.curTok.Type == TokenAs {
 		p.nextToken() // consume AS
@@ -5892,6 +5910,45 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 			opt := &ast.IdentifierDatabaseOption{
 				OptionKind: "CatalogCollation",
 				Value:      p.parseIdentifier(),
+			}
+			options = append(options, opt)
+
+		case "TRANSFORM_NOISE_WORDS":
+			p.nextToken() // consume TRANSFORM_NOISE_WORDS
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.OnOffDatabaseOption{
+				OptionKind:  "TransformNoiseWords",
+				OptionState: capitalizeFirst(state),
+			}
+			options = append(options, opt)
+
+		case "DB_CHAINING":
+			p.nextToken() // consume DB_CHAINING
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume = (optional)
+			}
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.OnOffDatabaseOption{
+				OptionKind:  "DBChaining",
+				OptionState: capitalizeFirst(state),
+			}
+			options = append(options, opt)
+
+		case "NESTED_TRIGGERS":
+			p.nextToken() // consume NESTED_TRIGGERS
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.OnOffDatabaseOption{
+				OptionKind:  "NestedTriggers",
+				OptionState: capitalizeFirst(state),
 			}
 			options = append(options, opt)
 
