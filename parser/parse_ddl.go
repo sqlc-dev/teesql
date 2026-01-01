@@ -2867,20 +2867,21 @@ func (p *Parser) parseAlterTableAlterIndexStatement(tableName *ast.SchemaObjectN
 
 func convertIndexOptionKind(name string) string {
 	optionMap := map[string]string{
-		"BUCKET_COUNT":            "BucketCount",
-		"PAD_INDEX":               "PadIndex",
-		"FILLFACTOR":              "FillFactor",
-		"SORT_IN_TEMPDB":          "SortInTempDB",
-		"IGNORE_DUP_KEY":          "IgnoreDupKey",
-		"STATISTICS_NORECOMPUTE":  "StatisticsNoRecompute",
-		"DROP_EXISTING":           "DropExisting",
-		"ONLINE":                  "Online",
-		"ALLOW_ROW_LOCKS":         "AllowRowLocks",
-		"ALLOW_PAGE_LOCKS":        "AllowPageLocks",
-		"MAXDOP":                  "MaxDop",
-		"DATA_COMPRESSION":        "DataCompression",
-		"COMPRESS_ALL_ROW_GROUPS": "CompressAllRowGroups",
-		"COMPRESSION_DELAY":       "CompressionDelay",
+		"BUCKET_COUNT":                 "BucketCount",
+		"PAD_INDEX":                    "PadIndex",
+		"FILLFACTOR":                   "FillFactor",
+		"SORT_IN_TEMPDB":               "SortInTempDB",
+		"IGNORE_DUP_KEY":               "IgnoreDupKey",
+		"STATISTICS_NORECOMPUTE":       "StatisticsNoRecompute",
+		"DROP_EXISTING":                "DropExisting",
+		"ONLINE":                       "Online",
+		"ALLOW_ROW_LOCKS":              "AllowRowLocks",
+		"ALLOW_PAGE_LOCKS":             "AllowPageLocks",
+		"MAXDOP":                       "MaxDop",
+		"DATA_COMPRESSION":             "DataCompression",
+		"COMPRESS_ALL_ROW_GROUPS":      "CompressAllRowGroups",
+		"COMPRESSION_DELAY":            "CompressionDelay",
+		"OPTIMIZE_FOR_SEQUENTIAL_KEY": "OptimizeForSequentialKey",
 	}
 	if mapped, ok := optionMap[name]; ok {
 		return mapped
@@ -3085,12 +3086,27 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
 						}
-						expr, _ := p.parseScalarExpression()
-						option := &ast.IndexExpressionOption{
-							OptionKind: convertIndexOptionKind(optionName),
-							Expression: expr,
+						// Check for ON/OFF state options
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
+							state := "On"
+							if valueUpper == "OFF" {
+								state = "Off"
+							}
+							p.nextToken() // consume ON/OFF
+							option := &ast.IndexStateOption{
+								OptionKind:  convertIndexOptionKind(optionName),
+								OptionState: state,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
+						} else {
+							expr, _ := p.parseScalarExpression()
+							option := &ast.IndexExpressionOption{
+								OptionKind: convertIndexOptionKind(optionName),
+								Expression: expr,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
 						}
-						constraint.IndexOptions = append(constraint.IndexOptions, option)
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
 						} else {
@@ -3195,12 +3211,27 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
 						}
-						expr, _ := p.parseScalarExpression()
-						option := &ast.IndexExpressionOption{
-							OptionKind: convertIndexOptionKind(optionName),
-							Expression: expr,
+						// Check for ON/OFF state options
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
+							state := "On"
+							if valueUpper == "OFF" {
+								state = "Off"
+							}
+							p.nextToken() // consume ON/OFF
+							option := &ast.IndexStateOption{
+								OptionKind:  convertIndexOptionKind(optionName),
+								OptionState: state,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
+						} else {
+							expr, _ := p.parseScalarExpression()
+							option := &ast.IndexExpressionOption{
+								OptionKind: convertIndexOptionKind(optionName),
+								Expression: expr,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
 						}
-						constraint.IndexOptions = append(constraint.IndexOptions, option)
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
 						} else {
