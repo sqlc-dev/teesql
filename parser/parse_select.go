@@ -418,10 +418,42 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		}
 
 		// Not an assignment, treat as regular scalar expression starting with variable
-		// We need to "un-consume" the variable and let parseScalarExpression handle it
-		// Create the variable reference and use it as the expression
 		varRef := &ast.VariableReference{Name: varName}
-		sse := &ast.SelectScalarExpression{Expression: varRef}
+
+		// Check if next token is a binary operator - if so, continue parsing the expression
+		var expr ast.ScalarExpression = varRef
+		for p.curTok.Type == TokenPlus || p.curTok.Type == TokenMinus ||
+			p.curTok.Type == TokenStar || p.curTok.Type == TokenSlash ||
+			p.curTok.Type == TokenPercent || p.curTok.Type == TokenDoublePipe {
+			// We have a variable followed by a binary operator, continue parsing
+			var opType string
+			switch p.curTok.Type {
+			case TokenPlus:
+				opType = "Add"
+			case TokenMinus:
+				opType = "Subtract"
+			case TokenStar:
+				opType = "Multiply"
+			case TokenSlash:
+				opType = "Divide"
+			case TokenPercent:
+				opType = "Modulo"
+			case TokenDoublePipe:
+				opType = "Add" // String concatenation
+			}
+			p.nextToken() // consume operator
+			right, err := p.parsePrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+			expr = &ast.BinaryExpression{
+				FirstExpression:      expr,
+				SecondExpression:     right,
+				BinaryExpressionType: opType,
+			}
+		}
+
+		sse := &ast.SelectScalarExpression{Expression: expr}
 
 		// Check for column alias
 		if p.curTok.Type == TokenIdent && p.curTok.Literal[0] == '[' {
@@ -508,6 +540,13 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 			// String literal alias: AS 'alias'
 			str := p.parseStringLiteralValue()
 			p.nextToken()
+			sse.ColumnName = &ast.IdentifierOrValueExpression{
+				Value:           str.Value,
+				ValueExpression: str,
+			}
+		} else if p.curTok.Type == TokenNationalString {
+			// National string literal alias: AS N'alias'
+			str, _ := p.parseNationalStringFromToken()
 			sse.ColumnName = &ast.IdentifierOrValueExpression{
 				Value:           str.Value,
 				ValueExpression: str,
@@ -735,6 +774,17 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		if upper == "TRY_CONVERT" && p.peekTok.Type == TokenLParen {
 			return p.parseTryConvertCall()
 		}
+		if upper == "IDENTITY" && p.peekTok.Type == TokenLParen {
+			return p.parseIdentityFunctionCall()
+		}
+		if upper == "IDENTITYCOL" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "IdentityCol"}, nil
+		}
+		if upper == "ROWGUIDCOL" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "RowGuidCol"}, nil
+		}
 		return p.parseColumnReferenceOrFunctionCall()
 	case TokenNumber:
 		val := p.curTok.Literal
@@ -785,6 +835,13 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		// Wildcard column reference (e.g., * in count(*))
 		p.nextToken()
 		return &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}, nil
+	case TokenDot:
+		// Multi-part identifier starting with empty parts (e.g., ..t1.c1)
+		return p.parseColumnReferenceWithLeadingDots()
+	case TokenMaster, TokenDatabase, TokenKey, TokenTable, TokenIndex,
+		TokenSchema, TokenUser, TokenView:
+		// Keywords that can be used as identifiers in column/table references
+		return p.parseColumnReferenceOrFunctionCall()
 	default:
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	}
@@ -1059,20 +1116,43 @@ func (p *Parser) parseNationalStringFromToken() (*ast.StringLiteral, error) {
 	}, nil
 }
 
+func (p *Parser) isIdentifierToken() bool {
+	switch p.curTok.Type {
+	case TokenIdent, TokenMaster, TokenDatabase, TokenKey, TokenTable, TokenIndex,
+		TokenSchema, TokenUser, TokenView, TokenDefault:
+		return true
+	default:
+		return false
+	}
+}
+
 func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, error) {
 	var identifiers []*ast.Identifier
+	colType := "Regular"
 
 	for {
-		if p.curTok.Type != TokenIdent {
+		if !p.isIdentifierToken() {
 			break
 		}
 
 		quoteType := "NotQuoted"
 		literal := p.curTok.Literal
+		upper := strings.ToUpper(literal)
+
 		// Handle bracketed identifiers
 		if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
 			quoteType = "SquareBracket"
 			literal = literal[1 : len(literal)-1]
+		} else if upper == "IDENTITYCOL" || upper == "ROWGUIDCOL" {
+			// IDENTITYCOL/ROWGUIDCOL at end of multi-part identifier sets column type
+			// and is not included in the identifier list
+			if upper == "IDENTITYCOL" {
+				colType = "IdentityCol"
+			} else {
+				colType = "RowGuidCol"
+			}
+			p.nextToken()
+			break
 		}
 
 		id := &ast.Identifier{
@@ -1091,6 +1171,12 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			break
 		}
 		p.nextToken() // consume dot
+
+		// Handle consecutive dots (empty parts in multi-part identifier)
+		for p.curTok.Type == TokenDot {
+			identifiers = append(identifiers, &ast.Identifier{Value: "", QuoteType: "NotQuoted"})
+			p.nextToken() // consume dot
+		}
 	}
 
 	// Check for :: (user-defined type method call or property access): a.b::func() or a::prop
@@ -1169,12 +1255,21 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		return p.parseFunctionCallFromIdentifiers(identifiers)
 	}
 
+	// If we have identifiers, build a column reference with them
+	if len(identifiers) > 0 {
+		return &ast.ColumnReferenceExpression{
+			ColumnType: colType,
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Count:       len(identifiers),
+				Identifiers: identifiers,
+			},
+		}, nil
+	}
+
+	// No identifiers means just IDENTITYCOL or ROWGUIDCOL (already handled in parsePrimaryExpression)
+	// but handle the case anyway
 	return &ast.ColumnReferenceExpression{
-		ColumnType: "Regular",
-		MultiPartIdentifier: &ast.MultiPartIdentifier{
-			Count:       len(identifiers),
-			Identifiers: identifiers,
-		},
+		ColumnType: colType,
 	}, nil
 }
 
@@ -1188,6 +1283,71 @@ func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) 
 	}
 	// If we got a function call, wrap it in a column reference (shouldn't happen in this context)
 	return nil, fmt.Errorf("expected column reference, got function call")
+}
+
+func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, error) {
+	// Handle multi-part identifiers starting with dots like ..t1.c1 or .db..t1.c1
+	var identifiers []*ast.Identifier
+
+	// Add empty identifiers for leading dots
+	for p.curTok.Type == TokenDot {
+		identifiers = append(identifiers, &ast.Identifier{Value: "", QuoteType: "NotQuoted"})
+		p.nextToken() // consume dot
+	}
+
+	// Now parse the remaining identifiers
+	for p.isIdentifierToken() {
+		quoteType := "NotQuoted"
+		literal := p.curTok.Literal
+		// Handle special column types
+		upper := strings.ToUpper(literal)
+		if upper == "IDENTITYCOL" || upper == "ROWGUIDCOL" {
+			// Return with the proper column type
+			colType := "IdentityCol"
+			if upper == "ROWGUIDCOL" {
+				colType = "RowGuidCol"
+			}
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{
+				ColumnType: colType,
+				MultiPartIdentifier: &ast.MultiPartIdentifier{
+					Count:       len(identifiers),
+					Identifiers: identifiers,
+				},
+			}, nil
+		}
+		// Handle bracketed identifiers
+		if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
+			quoteType = "SquareBracket"
+			literal = literal[1 : len(literal)-1]
+		}
+
+		id := &ast.Identifier{
+			Value:     literal,
+			QuoteType: quoteType,
+		}
+		identifiers = append(identifiers, id)
+		p.nextToken()
+
+		if p.curTok.Type != TokenDot {
+			break
+		}
+		// Check for qualified star
+		if p.peekTok.Type == TokenStar {
+			break
+		}
+		p.nextToken() // consume dot
+	}
+
+	// Don't consume .* here - let the caller (parseSelectElement) handle qualified stars
+
+	return &ast.ColumnReferenceExpression{
+		ColumnType: "Regular",
+		MultiPartIdentifier: &ast.MultiPartIdentifier{
+			Count:       len(identifiers),
+			Identifiers: identifiers,
+		},
+	}, nil
 }
 
 func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier) (ast.ScalarExpression, error) {
@@ -3096,6 +3256,55 @@ func (p *Parser) parseTryConvertCall() (ast.ScalarExpression, error) {
 	}
 
 	return convert, nil
+}
+
+// parseIdentityFunctionCall parses an IDENTITY function call: IDENTITY(data_type [, seed, increment])
+func (p *Parser) parseIdentityFunctionCall() (ast.ScalarExpression, error) {
+	p.nextToken() // consume IDENTITY
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after IDENTITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse the data type
+	dt, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	identity := &ast.IdentityFunctionCall{
+		DataType: dt,
+	}
+
+	// Check for optional seed and increment
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		seed, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		identity.Seed = seed
+
+		// Expect comma before increment
+		if p.curTok.Type != TokenComma {
+			return nil, fmt.Errorf("expected , before increment in IDENTITY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ,
+
+		increment, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		identity.Increment = increment
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in IDENTITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return identity, nil
 }
 
 // parsePredictTableReference parses PREDICT(...) in FROM clause

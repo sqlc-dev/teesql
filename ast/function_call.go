@@ -97,3 +97,13 @@ type TryConvertCall struct {
 
 func (*TryConvertCall) node()             {}
 func (*TryConvertCall) scalarExpression() {}
+
+// IdentityFunctionCall represents an IDENTITY function call: IDENTITY(data_type [, seed, increment])
+type IdentityFunctionCall struct {
+	DataType  DataTypeReference `json:"DataType,omitempty"`
+	Seed      ScalarExpression  `json:"Seed,omitempty"`
+	Increment ScalarExpression  `json:"Increment,omitempty"`
+}
+
+func (*IdentityFunctionCall) node()             {}
+func (*IdentityFunctionCall) scalarExpression() {}

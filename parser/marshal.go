@@ -1488,6 +1488,20 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
 		return node
+	case *ast.IdentityFunctionCall:
+		node := jsonNode{
+			"$type": "IdentityFunctionCall",
+		}
+		if e.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(e.DataType)
+		}
+		if e.Seed != nil {
+			node["Seed"] = scalarExpressionToJSON(e.Seed)
+		}
+		if e.Increment != nil {
+			node["Increment"] = scalarExpressionToJSON(e.Increment)
+		}
+		return node
 	case *ast.BinaryExpression:
 		node := jsonNode{
 			"$type": "BinaryExpression",
