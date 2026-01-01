@@ -8706,52 +8706,122 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 	// Parse WITH clause if present
 	if p.curTok.Type == TokenWith {
 		p.nextToken()
-		if p.curTok.Type != TokenLParen {
-			return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
-		}
-		p.nextToken()
-
-		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-			optionName := strings.ToUpper(p.curTok.Literal)
+		// Check for XMLNAMESPACES
+		if strings.ToUpper(p.curTok.Literal) == "XMLNAMESPACES" {
+			stmt.XmlNamespaces = p.parseXmlNamespaces()
+		} else if p.curTok.Type == TokenLParen {
 			p.nextToken()
 
-			if p.curTok.Type == TokenEquals {
-				p.nextToken()
-				valueStr := strings.ToUpper(p.curTok.Literal)
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optionName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken()
 
-				// Determine if it's a state option (ON/OFF) or expression option
-				if valueStr == "ON" || valueStr == "OFF" {
-					if optionName == "IGNORE_DUP_KEY" {
-						opt := &ast.IgnoreDupKeyIndexOption{
-							OptionKind:  "IgnoreDupKey",
-							OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					valueStr := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+
+					// Determine if it's a state option (ON/OFF) or expression option
+					if valueStr == "ON" || valueStr == "OFF" {
+						if optionName == "IGNORE_DUP_KEY" {
+							opt := &ast.IgnoreDupKeyIndexOption{
+								OptionKind:  "IgnoreDupKey",
+								OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+							}
+							stmt.IndexOptions = append(stmt.IndexOptions, opt)
+						} else {
+							opt := &ast.IndexStateOption{
+								OptionKind:  p.getIndexOptionKind(optionName),
+								OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+							}
+							stmt.IndexOptions = append(stmt.IndexOptions, opt)
 						}
-						stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					} else {
-						opt := &ast.IndexStateOption{
-							OptionKind:  p.getIndexOptionKind(optionName),
-							OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+						// Expression option like FILLFACTOR = 80
+						opt := &ast.IndexExpressionOption{
+							OptionKind: p.getIndexOptionKind(optionName),
+							Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
 						}
 						stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					}
-				} else {
-					// Expression option like FILLFACTOR = 80
-					opt := &ast.IndexExpressionOption{
-						OptionKind: p.getIndexOptionKind(optionName),
-						Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
-					}
-					stmt.IndexOptions = append(stmt.IndexOptions, opt)
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
 				}
 			}
 
-			if p.curTok.Type == TokenComma {
+			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
 		}
+	}
 
-		if p.curTok.Type == TokenRParen {
-			p.nextToken()
+	// Parse FOR clause (selective XML index paths)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		stmt.AlterIndexType = "UpdateSelectiveXmlPaths"
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				path := &ast.SelectiveXmlIndexPromotedPath{}
+				actionWord := strings.ToUpper(p.curTok.Literal)
+				if actionWord == "ADD" || actionWord == "REMOVE" {
+					p.nextToken() // consume add/remove
+				}
+				// Parse path name
+				path.Name = p.parseIdentifier()
+
+				// Check for = 'path'
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+					pathLit, _ := p.parseStringLiteral()
+					path.Path = pathLit
+				}
+
+				// Check for AS XQUERY 'type'
+				if p.curTok.Type == TokenAs {
+					p.nextToken() // consume AS
+					if strings.ToUpper(p.curTok.Literal) == "XQUERY" {
+						p.nextToken() // consume XQUERY
+						xqDataType, _ := p.parseStringLiteral()
+						path.XQueryDataType = xqDataType
+					}
+				}
+
+				// Check for MAXLENGTH(n) or SINGLETON
+				for {
+					upperLit := strings.ToUpper(p.curTok.Literal)
+					if upperLit == "MAXLENGTH" {
+						p.nextToken() // consume MAXLENGTH
+						if p.curTok.Type == TokenLParen {
+							p.nextToken() // consume (
+							path.MaxLength = &ast.IntegerLiteral{
+								LiteralType: "Integer",
+								Value:       p.curTok.Literal,
+							}
+							p.nextToken() // consume number
+							if p.curTok.Type == TokenRParen {
+								p.nextToken() // consume )
+							}
+						}
+					} else if upperLit == "SINGLETON" {
+						path.IsSingleton = true
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+
+				stmt.PromotedPaths = append(stmt.PromotedPaths, path)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		}
 	}
 
@@ -8761,6 +8831,39 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 	}
 
 	return stmt, nil
+}
+
+// parseXmlNamespaces parses WITH XMLNAMESPACES clause
+func (p *Parser) parseXmlNamespaces() *ast.XmlNamespaces {
+	p.nextToken() // consume XMLNAMESPACES
+	xmlNs := &ast.XmlNamespaces{}
+
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			elem := &ast.XmlNamespacesAliasElement{}
+			// Parse string literal (namespace URI)
+			strLit, _ := p.parseStringLiteral()
+			elem.String = strLit
+
+			// Expect AS
+			if p.curTok.Type == TokenAs {
+				p.nextToken() // consume AS
+				elem.Identifier = p.parseIdentifier()
+			}
+
+			xmlNs.XmlNamespacesElements = append(xmlNs.XmlNamespacesElements, elem)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	return xmlNs
 }
 
 func (p *Parser) getIndexOptionKind(optionName string) string {
@@ -10529,11 +10632,21 @@ func alterIndexStatementToJSON(s *ast.AlterIndexStatement) jsonNode {
 	if s.Partition != nil {
 		node["Partition"] = partitionSpecifierToJSON(s.Partition)
 	}
-	if s.OnName != nil {
-		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	if len(s.PromotedPaths) > 0 {
+		paths := make([]jsonNode, len(s.PromotedPaths))
+		for i, p := range s.PromotedPaths {
+			paths[i] = selectiveXmlIndexPromotedPathToJSON(p)
+		}
+		node["PromotedPaths"] = paths
+	}
+	if s.XmlNamespaces != nil {
+		node["XmlNamespaces"] = xmlNamespacesToJSON(s.XmlNamespaces)
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.OnName != nil {
+		node["OnName"] = schemaObjectNameToJSON(s.OnName)
 	}
 	if len(s.IndexOptions) > 0 {
 		opts := make([]jsonNode, len(s.IndexOptions))
@@ -10541,6 +10654,53 @@ func alterIndexStatementToJSON(s *ast.AlterIndexStatement) jsonNode {
 			opts[i] = indexOptionToJSON(opt)
 		}
 		node["IndexOptions"] = opts
+	}
+	return node
+}
+
+func selectiveXmlIndexPromotedPathToJSON(p *ast.SelectiveXmlIndexPromotedPath) jsonNode {
+	node := jsonNode{
+		"$type": "SelectiveXmlIndexPromotedPath",
+	}
+	if p.Name != nil {
+		node["Name"] = identifierToJSON(p.Name)
+	}
+	if p.Path != nil {
+		node["Path"] = stringLiteralToJSON(p.Path)
+	}
+	if p.XQueryDataType != nil {
+		node["XQueryDataType"] = stringLiteralToJSON(p.XQueryDataType)
+	}
+	if p.MaxLength != nil {
+		node["MaxLength"] = scalarExpressionToJSON(p.MaxLength)
+	}
+	node["IsSingleton"] = p.IsSingleton
+	return node
+}
+
+func xmlNamespacesToJSON(x *ast.XmlNamespaces) jsonNode {
+	node := jsonNode{
+		"$type": "XmlNamespaces",
+	}
+	if len(x.XmlNamespacesElements) > 0 {
+		elems := make([]jsonNode, len(x.XmlNamespacesElements))
+		for i, e := range x.XmlNamespacesElements {
+			elems[i] = xmlNamespacesAliasElementToJSON(e)
+		}
+		node["XmlNamespacesElements"] = elems
+	}
+	return node
+}
+
+func xmlNamespacesAliasElementToJSON(e *ast.XmlNamespacesAliasElement) jsonNode {
+	node := jsonNode{
+		"$type": "XmlNamespacesAliasElement",
+	}
+	if e.Identifier != nil {
+		node["Identifier"] = identifierToJSON(e.Identifier)
+	}
+	if e.String != nil {
+		node["String"] = stringLiteralToJSON(e.String)
 	}
 	return node
 }
