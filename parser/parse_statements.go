@@ -248,9 +248,42 @@ func (p *Parser) parseTableConstraint() (ast.TableConstraint, error) {
 			constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 			p.nextToken()
 		}
-		// Skip the column list
+		// Parse the column list
 		if p.curTok.Type == TokenLParen {
-			p.skipParenthesizedContent()
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colRef := &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+				}
+				// Parse column name
+				colName := p.parseIdentifier()
+				colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+					Identifiers: []*ast.Identifier{colName},
+					Count:       1,
+				}
+				// Check for sort order
+				sortOrder := ast.SortOrderNotSpecified
+				upperColNext := strings.ToUpper(p.curTok.Literal)
+				if upperColNext == "ASC" {
+					sortOrder = ast.SortOrderAscending
+					p.nextToken()
+				} else if upperColNext == "DESC" {
+					sortOrder = ast.SortOrderDescending
+					p.nextToken()
+				}
+				constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+					Column:    colRef,
+					SortOrder: sortOrder,
+				})
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
 		}
 		return constraint, nil
 	} else if upperLit == "UNIQUE" {
@@ -334,15 +367,7 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 
 	// Parse index name
 	if p.curTok.Type == TokenIdent {
-		quoteType := "NotQuoted"
-		if strings.HasPrefix(p.curTok.Literal, "[") && strings.HasSuffix(p.curTok.Literal, "]") {
-			quoteType = "SquareBracket"
-		}
-		indexDef.Name = &ast.Identifier{
-			Value:     p.curTok.Literal,
-			QuoteType: quoteType,
-		}
-		p.nextToken()
+		indexDef.Name = p.parseIdentifier()
 	}
 
 	// Parse optional UNIQUE
@@ -351,36 +376,40 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		p.nextToken()
 	}
 
-	// Parse optional CLUSTERED/NONCLUSTERED
+	// Parse optional CLUSTERED/NONCLUSTERED [HASH]
 	if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
 		p.nextToken()
+		// Check for HASH
+		if strings.ToUpper(p.curTok.Literal) == "HASH" {
+			indexDef.IndexType.IndexTypeKind = "ClusteredHash"
+			p.nextToken()
+		}
 	} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 		p.nextToken()
+		// Check for HASH
+		if strings.ToUpper(p.curTok.Literal) == "HASH" {
+			indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
+			p.nextToken()
+		}
 	}
 
 	// Parse column list
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-			quoteType := "NotQuoted"
-			if strings.HasPrefix(p.curTok.Literal, "[") && strings.HasSuffix(p.curTok.Literal, "]") {
-				quoteType = "SquareBracket"
-			}
+			colIdent := p.parseIdentifier()
 			col := &ast.ColumnWithSortOrder{
 				Column: &ast.ColumnReferenceExpression{
 					ColumnType: "Regular",
 					MultiPartIdentifier: &ast.MultiPartIdentifier{
 						Count: 1,
-						Identifiers: []*ast.Identifier{
-							{Value: p.curTok.Literal, QuoteType: quoteType},
-						},
+						Identifiers: []*ast.Identifier{colIdent},
 					},
 				},
 				SortOrder: ast.SortOrderNotSpecified,
 			}
-			p.nextToken()
 
 			// Parse optional ASC/DESC
 			if strings.ToUpper(p.curTok.Literal) == "ASC" {
@@ -410,22 +439,54 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				quoteType := "NotQuoted"
-				if strings.HasPrefix(p.curTok.Literal, "[") && strings.HasSuffix(p.curTok.Literal, "]") {
-					quoteType = "SquareBracket"
-				}
+				colIdent := p.parseIdentifier()
 				includeCol := &ast.ColumnReferenceExpression{
 					ColumnType: "Regular",
 					MultiPartIdentifier: &ast.MultiPartIdentifier{
 						Count: 1,
-						Identifiers: []*ast.Identifier{
-							{Value: p.curTok.Literal, QuoteType: quoteType},
-						},
+						Identifiers: []*ast.Identifier{colIdent},
 					},
 				}
 				indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
-				p.nextToken()
 
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Parse optional WITH options
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optionName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume option name
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				// Parse option value
+				if optionName == "BUCKET_COUNT" {
+					opt := &ast.IndexExpressionOption{
+						OptionKind: "BucketCount",
+						Expression: &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						},
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+					p.nextToken()
+				} else {
+					// Skip other options
+					p.nextToken()
+				}
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
 				} else {
@@ -2819,7 +2880,7 @@ func (p *Parser) parseCreateSchemaStatement() (*ast.CreateSchemaStatement, error
 			break
 		}
 		// Parse schema element statements
-		if p.curTok.Type == TokenCreate || p.curTok.Type == TokenGrant {
+		if p.curTok.Type == TokenCreate || p.curTok.Type == TokenGrant || p.curTok.Type == TokenDeny || p.curTok.Type == TokenRevoke {
 			elemStmt, err := p.parseStatement()
 			if err != nil {
 				break
@@ -3001,6 +3062,66 @@ func (p *Parser) parseCreateCredentialStatement(isDatabaseScoped bool) (*ast.Cre
 	}
 
 	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateDatabaseEncryptionKeyStatement() (*ast.CreateDatabaseEncryptionKeyStatement, error) {
+	// curTok is ENCRYPTION
+	p.nextToken() // consume ENCRYPTION
+
+	// Consume KEY
+	if p.curTok.Type == TokenKey {
+		p.nextToken()
+	}
+
+	stmt := &ast.CreateDatabaseEncryptionKeyStatement{}
+
+	// WITH ALGORITHM = ...
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+	}
+
+	if strings.ToUpper(p.curTok.Literal) == "ALGORITHM" {
+		p.nextToken() // consume ALGORITHM
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		stmt.Algorithm = normalizeAlgorithmName(p.curTok.Literal)
+		p.nextToken()
+	}
+
+	// ENCRYPTION BY SERVER CERTIFICATE|ASYMMETRIC KEY name
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+
+		mechanism := &ast.CryptoMechanism{}
+		mechType := strings.ToUpper(p.curTok.Literal)
+		if mechType == "CERTIFICATE" {
+			p.nextToken()
+			mechanism.CryptoMechanismType = "Certificate"
+			mechanism.Identifier = p.parseIdentifier()
+		} else if mechType == "ASYMMETRIC" {
+			p.nextToken()
+			if p.curTok.Type == TokenKey {
+				p.nextToken() // consume KEY
+			}
+			mechanism.CryptoMechanismType = "AsymmetricKey"
+			mechanism.Identifier = p.parseIdentifier()
+		}
+		stmt.Encryptor = mechanism
+	}
+
+	// Skip to end of statement
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
@@ -4861,6 +4982,11 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		return p.parseBackupServiceMasterKeyStatement()
 	}
 
+	// Check for MASTER KEY
+	if strings.ToUpper(p.curTok.Literal) == "MASTER" {
+		return p.parseBackupMasterKeyStatement()
+	}
+
 	// Check for DATABASE or LOG
 	isLog := false
 	if p.curTok.Type == TokenDatabase {
@@ -5211,6 +5337,70 @@ func (p *Parser) parseBackupServiceMasterKeyStatement() (*ast.BackupServiceMaste
 	// Expect TO
 	if p.curTok.Type != TokenTo {
 		return nil, fmt.Errorf("expected TO after SERVICE MASTER KEY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect FILE
+	if strings.ToUpper(p.curTok.Literal) != "FILE" {
+		return nil, fmt.Errorf("expected FILE after TO, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after FILE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse file path
+	file, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.File = file
+
+	// Parse ENCRYPTION BY PASSWORD clause
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			pwd, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Password = pwd
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseBackupMasterKeyStatement() (*ast.BackupMasterKeyStatement, error) {
+	// Consume MASTER
+	p.nextToken()
+
+	// Expect KEY
+	if p.curTok.Type != TokenKey {
+		return nil, fmt.Errorf("expected KEY after MASTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.BackupMasterKeyStatement{}
+
+	// Expect TO
+	if p.curTok.Type != TokenTo {
+		return nil, fmt.Errorf("expected TO after MASTER KEY, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
 
@@ -6208,6 +6398,11 @@ func (p *Parser) parseCreatePartitionSchemeStatementFromPartition() (*ast.Create
 func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 	p.nextToken() // consume DATABASE
 
+	// Check for DATABASE ENCRYPTION KEY
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		return p.parseCreateDatabaseEncryptionKeyStatement()
+	}
+
 	// Check for DATABASE SCOPED CREDENTIAL
 	if strings.ToUpper(p.curTok.Literal) == "SCOPED" {
 		p.nextToken() // consume SCOPED
@@ -6809,23 +7004,201 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 }
 
 func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) {
-	// May already be past INDEX keyword if called from UNIQUE case
+	stmt := &ast.CreateIndexStatement{
+		Translated80SyntaxTo90: false,
+	}
+
+	// Parse optional UNIQUE
+	if strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
+		stmt.Unique = true
+		p.nextToken() // consume UNIQUE
+	}
+
+	// Parse optional CLUSTERED/NONCLUSTERED
+	if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
+		clustered := true
+		stmt.Clustered = &clustered
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
+		clustered := false
+		stmt.Clustered = &clustered
+		p.nextToken()
+	}
+
+	// Consume INDEX keyword
 	if p.curTok.Type == TokenIndex {
 		p.nextToken() // consume INDEX
-	} else if strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
-		p.nextToken() // consume UNIQUE
-		if p.curTok.Type == TokenIndex {
-			p.nextToken() // consume INDEX
+	}
+
+	// Parse index name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse ON table_name(columns)
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		stmt.OnName, _ = p.parseSchemaObjectName()
+
+		// Parse column list (columns with sort order)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseColumnWithSortOrder()
+				stmt.Columns = append(stmt.Columns, col)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		}
 	}
 
-	stmt := &ast.CreateIndexStatement{
-		Name: p.parseIdentifier(),
+	// Parse INCLUDE (columns)
+	if strings.ToUpper(p.curTok.Literal) == "INCLUDE" {
+		p.nextToken() // consume INCLUDE
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colRef := &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Count:       1,
+						Identifiers: []*ast.Identifier{p.parseIdentifier()},
+					},
+				}
+				stmt.IncludeColumns = append(stmt.IncludeColumns, colRef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse WITH (index options)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		stmt.IndexOptions = p.parseCreateIndexOptions()
+	}
+
+	// Parse ON filegroup/partition_scheme
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		fg, _ := p.parseFileGroupOrPartitionScheme()
+		stmt.OnFileGroupOrPartitionScheme = fg
+	}
+
 	return stmt, nil
+}
+
+func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
+	var options []ast.IndexOption
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return options
+	}
+	p.nextToken() // consume (
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optionName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume option name
+
+		// Expect =
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		// Parse value
+		valueToken := p.curTok
+		valueStr := strings.ToUpper(valueToken.Literal)
+		p.nextToken() // consume value
+
+		switch optionName {
+		case "PAD_INDEX":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "PadIndex",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "FILLFACTOR":
+			options = append(options, &ast.IndexExpressionOption{
+				OptionKind: "FillFactor",
+				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+			})
+		case "IGNORE_DUP_KEY":
+			options = append(options, &ast.IgnoreDupKeyIndexOption{
+				OptionKind:  "IgnoreDupKey",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "DROP_EXISTING":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "DropExisting",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "STATISTICS_NORECOMPUTE":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "StatisticsNoRecompute",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "SORT_IN_TEMPDB":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "SortInTempDB",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "ONLINE":
+			options = append(options, &ast.OnlineIndexOption{
+				OptionKind:  "Online",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "ALLOW_ROW_LOCKS":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "AllowRowLocks",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "ALLOW_PAGE_LOCKS":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "AllowPageLocks",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "MAXDOP":
+			options = append(options, &ast.IndexExpressionOption{
+				OptionKind: "MaxDop",
+				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+			})
+		default:
+			// Generic handling for other options
+			if valueStr == "ON" || valueStr == "OFF" {
+				options = append(options, &ast.IndexStateOption{
+					OptionKind:  p.getIndexOptionKind(optionName),
+					OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+				})
+			} else {
+				options = append(options, &ast.IndexExpressionOption{
+					OptionKind: p.getIndexOptionKind(optionName),
+					Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+				})
+			}
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return options
 }
 
 func (p *Parser) parseCreateSpatialIndexStatement() (*ast.CreateSpatialIndexStatement, error) {
@@ -7239,6 +7612,12 @@ func (p *Parser) parseCreateSymmetricKeyStatement() (*ast.CreateSymmetricKeyStat
 		Name: p.parseIdentifier(),
 	}
 
+	// Check for AUTHORIZATION clause
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
 	// Check for FROM PROVIDER clause
 	if p.curTok.Type == TokenFrom && strings.ToUpper(p.peekTok.Literal) == "PROVIDER" {
 		p.nextToken() // consume FROM
@@ -7297,7 +7676,7 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 			if p.curTok.Type == TokenEquals {
 				p.nextToken() // consume =
 			}
-			algo := strings.ToUpper(p.curTok.Literal)
+			algo := normalizeAlgorithmName(p.curTok.Literal)
 			p.nextToken() // consume algorithm name
 			opt := &ast.AlgorithmKeyOption{
 				Algorithm:  algo,
@@ -7318,6 +7697,30 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 			}
 			options = append(options, opt)
 
+		case "KEY_SOURCE":
+			p.nextToken() // consume KEY_SOURCE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			passPhrase, _ := p.parseScalarExpression()
+			opt := &ast.KeySourceKeyOption{
+				PassPhrase: passPhrase,
+				OptionKind: "KeySource",
+			}
+			options = append(options, opt)
+
+		case "IDENTITY_VALUE":
+			p.nextToken() // consume IDENTITY_VALUE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			identityPhrase, _ := p.parseScalarExpression()
+			opt := &ast.IdentityValueKeyOption{
+				IdentityPhrase: identityPhrase,
+				OptionKind:     "IdentityValue",
+			}
+			options = append(options, opt)
+
 		default:
 			return options, nil
 		}
@@ -7330,6 +7733,44 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 	}
 
 	return options, nil
+}
+
+// normalizeAlgorithmName converts algorithm names to their canonical ScriptDom form.
+func normalizeAlgorithmName(name string) string {
+	switch strings.ToUpper(name) {
+	case "DES":
+		return "Des"
+	case "TRIPLE_DES":
+		return "TripleDes"
+	case "TRIPLE_DES_3KEY":
+		return "TripleDes3Key"
+	case "RC2":
+		return "RC2"
+	case "RC4":
+		return "RC4"
+	case "RC4_128":
+		return "RC4_128"
+	case "DESX":
+		return "Desx"
+	case "AES_128":
+		return "Aes128"
+	case "AES_192":
+		return "Aes192"
+	case "AES_256":
+		return "Aes256"
+	case "RSA_512":
+		return "RSA_512"
+	case "RSA_1024":
+		return "RSA_1024"
+	case "RSA_2048":
+		return "RSA_2048"
+	case "RSA_3072":
+		return "RSA_3072"
+	case "RSA_4096":
+		return "RSA_4096"
+	default:
+		return strings.ToUpper(name)
+	}
 }
 
 func (p *Parser) parseCryptoMechanisms() ([]*ast.CryptoMechanism, error) {
@@ -7748,8 +8189,60 @@ func (p *Parser) parseCreateAssemblyStatement() (*ast.CreateAssemblyStatement, e
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Check for AUTHORIZATION clause
+	if p.curTok.Type == TokenAuthorization {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Parse FROM clause
+	if strings.ToUpper(p.curTok.Literal) == "FROM" {
+		p.nextToken() // consume FROM
+		// Parse list of expressions (variable references, string literals, binary expressions)
+		for {
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				break
+			}
+			stmt.Parameters = append(stmt.Parameters, expr)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Parse WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		// Parse PERMISSION_SET = value
+		if strings.ToUpper(p.curTok.Literal) == "PERMISSION_SET" {
+			p.nextToken() // consume PERMISSION_SET
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			option := &ast.PermissionSetAssemblyOption{
+				OptionKind: "PermissionSet",
+			}
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "SAFE":
+				option.PermissionSetOption = "Safe"
+			case "EXTERNAL_ACCESS":
+				option.PermissionSetOption = "ExternalAccess"
+			case "UNSAFE":
+				option.PermissionSetOption = "Unsafe"
+			}
+			p.nextToken()
+			stmt.Options = append(stmt.Options, option)
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
 }
 
@@ -8138,14 +8631,37 @@ func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatemen
 				if p.curTok.Type == TokenEquals {
 					p.nextToken()
 					state := strings.ToUpper(p.curTok.Literal)
+					optionState := "On"
+					if state == "OFF" {
+						optionState = "Off"
+					}
 					p.nextToken()
 					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
 						OptionKind:  "Incremental",
-						OptionState: state,
+						OptionState: optionState,
 					})
 				} else {
 					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
 						OptionKind:  "Incremental",
+						OptionState: "On",
+					})
+				}
+			case "AUTO_DROP":
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					state := strings.ToUpper(p.curTok.Literal)
+					optionState := "On"
+					if state == "OFF" {
+						optionState = "Off"
+					}
+					p.nextToken()
+					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
+						OptionKind:  "AutoDrop",
+						OptionState: optionState,
+					})
+				} else {
+					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
+						OptionKind:  "AutoDrop",
 						OptionState: "On",
 					})
 				}
@@ -8280,6 +8796,44 @@ func (p *Parser) parseCreateTypeStatement() (ast.Statement, error) {
 				// Skip closing paren if present
 				if p.curTok.Type == TokenRParen {
 					p.nextToken()
+				}
+				// Parse optional WITH clause for table options
+				if p.curTok.Type == TokenWith {
+					p.nextToken() // consume WITH
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+						// Parse options
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							optUpper := strings.ToUpper(p.curTok.Literal)
+							if optUpper == "MEMORY_OPTIMIZED" {
+								p.nextToken() // consume MEMORY_OPTIMIZED
+								if p.curTok.Type == TokenEquals {
+									p.nextToken() // consume =
+								}
+								stateUpper := strings.ToUpper(p.curTok.Literal)
+								state := "On"
+								if stateUpper == "OFF" {
+									state = "Off"
+								}
+								p.nextToken() // consume ON/OFF
+								stmt.Options = append(stmt.Options, &ast.MemoryOptimizedTableOption{
+									OptionKind:  "MemoryOptimized",
+									OptionState: state,
+								})
+							} else {
+								// Skip unknown option
+								p.nextToken()
+							}
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							} else {
+								break
+							}
+						}
+						if p.curTok.Type == TokenRParen {
+							p.nextToken()
+						}
+					}
 				}
 				// Skip semicolon if present
 				if p.curTok.Type == TokenSemicolon {

@@ -114,6 +114,16 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropAsymmetricKeyStatement()
 	case "SYMMETRIC":
 		return p.parseDropSymmetricKeyStatement()
+	case "SIGNATURE":
+		return p.parseDropSignatureStatement(false)
+	case "COUNTER":
+		p.nextToken() // consume COUNTER
+		if strings.ToUpper(p.curTok.Literal) != "SIGNATURE" {
+			return nil, fmt.Errorf("expected SIGNATURE after COUNTER, got %s", p.curTok.Literal)
+		}
+		return p.parseDropSignatureStatement(true)
+	case "SENSITIVITY":
+		return p.parseDropSensitivityClassificationStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -747,6 +757,19 @@ func (p *Parser) parseDropSymmetricKeyStatement() (*ast.DropSymmetricKeyStatemen
 func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
+
+	// Check for DATABASE ENCRYPTION KEY
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if p.curTok.Type == TokenKey {
+			p.nextToken() // consume KEY
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return &ast.DropDatabaseEncryptionKeyStatement{}, nil
+	}
 
 	// Check for DATABASE SCOPED CREDENTIAL (look ahead to confirm)
 	if p.curTok.Type == TokenScoped && p.peekTok.Type == TokenCredential {
@@ -1531,6 +1554,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterWorkloadGroupStatement()
 		case "SEQUENCE":
 			return p.parseAlterSequenceStatement()
+		case "SEARCH":
+			return p.parseAlterSearchPropertyListStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -1595,6 +1620,11 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
 
+	// Check for DATABASE ENCRYPTION KEY
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		return p.parseAlterDatabaseEncryptionKeyStatement()
+	}
+
 	// Check for SCOPED CREDENTIAL or SCOPED CONFIGURATION
 	if p.curTok.Type == TokenScoped {
 		p.nextToken() // consume SCOPED
@@ -1633,6 +1663,74 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 	// Lenient: skip unknown database names (like $(tempdb) SQLCMD variables)
 	p.skipToEndOfStatement()
 	return &ast.AlterDatabaseSetStatement{}, nil
+}
+
+func (p *Parser) parseAlterDatabaseEncryptionKeyStatement() (*ast.AlterDatabaseEncryptionKeyStatement, error) {
+	// curTok is ENCRYPTION
+	p.nextToken() // consume ENCRYPTION
+
+	// Consume KEY
+	if p.curTok.Type == TokenKey {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterDatabaseEncryptionKeyStatement{
+		Algorithm: "None", // Default when not specified
+	}
+
+	// Check for REGENERATE
+	if strings.ToUpper(p.curTok.Literal) == "REGENERATE" {
+		stmt.Regenerate = true
+		p.nextToken() // consume REGENERATE
+	}
+
+	// WITH ALGORITHM = ...
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+	}
+
+	if strings.ToUpper(p.curTok.Literal) == "ALGORITHM" {
+		p.nextToken() // consume ALGORITHM
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		stmt.Algorithm = normalizeAlgorithmName(p.curTok.Literal)
+		p.nextToken()
+	}
+
+	// ENCRYPTION BY SERVER CERTIFICATE|ASYMMETRIC KEY name
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+
+		mechanism := &ast.CryptoMechanism{}
+		mechType := strings.ToUpper(p.curTok.Literal)
+		if mechType == "CERTIFICATE" {
+			p.nextToken()
+			mechanism.CryptoMechanismType = "Certificate"
+			mechanism.Identifier = p.parseIdentifier()
+		} else if mechType == "ASYMMETRIC" {
+			p.nextToken()
+			if p.curTok.Type == TokenKey {
+				p.nextToken() // consume KEY
+			}
+			mechanism.CryptoMechanismType = "AsymmetricKey"
+			mechanism.Identifier = p.parseIdentifier()
+		}
+		stmt.Encryptor = mechanism
+	}
+
+	// Skip to end of statement
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.AlterDatabaseSetStatement, error) {
@@ -2707,6 +2805,52 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 	// Parse column name
 	stmt.ColumnIdentifier = p.parseIdentifier()
 
+	// Check for ADD/DROP ROWGUIDCOL or ADD/DROP NOT FOR REPLICATION
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "ADD" {
+		p.nextToken() // consume ADD
+		nextLit := strings.ToUpper(p.curTok.Literal)
+		if nextLit == "ROWGUIDCOL" {
+			stmt.AlterTableAlterColumnOption = "AddRowGuidCol"
+			p.nextToken()
+		} else if nextLit == "NOT" {
+			p.nextToken() // consume NOT
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+			}
+			if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+				p.nextToken() // consume REPLICATION
+			}
+			stmt.AlterTableAlterColumnOption = "AddNotForReplication"
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	} else if upperLit == "DROP" {
+		p.nextToken() // consume DROP
+		nextLit := strings.ToUpper(p.curTok.Literal)
+		if nextLit == "ROWGUIDCOL" {
+			stmt.AlterTableAlterColumnOption = "DropRowGuidCol"
+			p.nextToken()
+		} else if nextLit == "NOT" {
+			p.nextToken() // consume NOT
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+			}
+			if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+				p.nextToken() // consume REPLICATION
+			}
+			stmt.AlterTableAlterColumnOption = "DropNotForReplication"
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	}
+
 	// Parse data type - be lenient if no data type is provided
 	dataType, err := p.parseDataType()
 	if err != nil {
@@ -2715,6 +2859,24 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		return stmt, nil
 	}
 	stmt.DataType = dataType
+
+	// Check for COLLATE
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		stmt.Collation = p.parseIdentifier()
+	}
+
+	// Check for NULL/NOT NULL
+	if strings.ToUpper(p.curTok.Literal) == "NULL" {
+		stmt.AlterTableAlterColumnOption = "Null"
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "NOT" {
+		p.nextToken() // consume NOT
+		if strings.ToUpper(p.curTok.Literal) == "NULL" {
+			stmt.AlterTableAlterColumnOption = "NotNull"
+			p.nextToken()
+		}
+	}
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -4212,8 +4374,179 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 	// Parse assembly name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse clauses in any order
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		switch upperLit {
+		case "FROM":
+			p.nextToken() // consume FROM
+			// Parse parameters (path literals)
+			for {
+				param, err := p.parseScalarExpression()
+				if err != nil {
+					break
+				}
+				stmt.Parameters = append(stmt.Parameters, param)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+		case "WITH":
+			p.nextToken() // consume WITH
+			// Parse options
+		withLoop:
+			for {
+				optUpper := strings.ToUpper(p.curTok.Literal)
+				switch optUpper {
+				case "PERMISSION_SET":
+					p.nextToken() // consume PERMISSION_SET
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+					}
+					permSet := strings.ToUpper(p.curTok.Literal)
+					opt := &ast.PermissionSetAssemblyOption{
+						OptionKind: "PermissionSet",
+					}
+					switch permSet {
+					case "SAFE":
+						opt.PermissionSetOption = "Safe"
+					case "EXTERNAL_ACCESS":
+						opt.PermissionSetOption = "ExternalAccess"
+					case "UNSAFE":
+						opt.PermissionSetOption = "Unsafe"
+					}
+					p.nextToken()
+					stmt.Options = append(stmt.Options, opt)
+
+				case "VISIBILITY":
+					p.nextToken() // consume VISIBILITY
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+					}
+					stateUpper := strings.ToUpper(p.curTok.Literal)
+					opt := &ast.OnOffAssemblyOption{
+						OptionKind: "Visibility",
+					}
+					if stateUpper == "ON" {
+						opt.OptionState = "On"
+					} else {
+						opt.OptionState = "Off"
+					}
+					p.nextToken()
+					stmt.Options = append(stmt.Options, opt)
+
+				case "UNCHECKED":
+					p.nextToken() // consume UNCHECKED
+					if strings.ToUpper(p.curTok.Literal) == "DATA" {
+						p.nextToken() // consume DATA
+					}
+					stmt.Options = append(stmt.Options, &ast.AssemblyOption{
+						OptionKind: "UncheckedData",
+					})
+
+				default:
+					break withLoop
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+		case "DROP":
+			p.nextToken() // consume DROP
+			if strings.ToUpper(p.curTok.Literal) == "FILE" {
+				p.nextToken() // consume FILE
+				if strings.ToUpper(p.curTok.Literal) == "ALL" {
+					stmt.IsDropAll = true
+					p.nextToken()
+				} else {
+					// Parse file names
+					for {
+						if p.curTok.Type == TokenString {
+							value := p.curTok.Literal
+							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+								value = value[1 : len(value)-1]
+							}
+							stmt.DropFiles = append(stmt.DropFiles, &ast.StringLiteral{
+								LiteralType:   "String",
+								IsNational:    false,
+								IsLargeObject: false,
+								Value:         value,
+							})
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+				}
+			}
+
+		case "ADD":
+			p.nextToken() // consume ADD
+			if strings.ToUpper(p.curTok.Literal) == "FILE" {
+				p.nextToken() // consume FILE
+				if strings.ToUpper(p.curTok.Literal) == "FROM" {
+					p.nextToken() // consume FROM
+				}
+				// Parse file specs
+				for {
+					fileSpec := &ast.AddFileSpec{}
+					// Parse file (string or binary literal)
+					file, err := p.parseScalarExpression()
+					if err != nil {
+						break
+					}
+					fileSpec.File = file
+
+					// Check for AS 'filename'
+					if p.curTok.Type == TokenAs {
+						p.nextToken() // consume AS
+						if p.curTok.Type == TokenString {
+							value := p.curTok.Literal
+							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+								value = value[1 : len(value)-1]
+							}
+							fileSpec.FileName = &ast.StringLiteral{
+								LiteralType:   "String",
+								IsNational:    false,
+								IsLargeObject: false,
+								Value:         value,
+							}
+							p.nextToken()
+						}
+					}
+
+					stmt.AddFiles = append(stmt.AddFiles, fileSpec)
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+			}
+
+		default:
+			// Unknown token - break out
+			goto done
+		}
+	}
+
+done:
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
@@ -5009,8 +5342,93 @@ func (p *Parser) parseAlterSymmetricKeyStatement() (*ast.AlterSymmetricKeyStatem
 	// Parse key name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse ADD or DROP
+	hasAction := false
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "ADD" {
+		stmt.IsAdd = true
+		hasAction = true
+		p.nextToken()
+	} else if upperLit == "DROP" {
+		stmt.IsAdd = false
+		hasAction = true
+		p.nextToken()
+	}
+
+	// Only parse ENCRYPTION BY and mechanisms if there was an ADD or DROP
+	if hasAction {
+		// Expect ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+			p.nextToken() // consume ENCRYPTION
+		}
+
+		// Expect BY
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+
+		// Parse encrypting mechanisms
+		for {
+			mechType := strings.ToUpper(p.curTok.Literal)
+			mechanism := &ast.CryptoMechanism{}
+			parsed := true
+
+			switch mechType {
+			case "PASSWORD":
+				p.nextToken()
+				mechanism.CryptoMechanismType = "Password"
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				pwd, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				mechanism.PasswordOrSignature = pwd
+
+			case "CERTIFICATE":
+				p.nextToken()
+				mechanism.CryptoMechanismType = "Certificate"
+				mechanism.Identifier = p.parseIdentifier()
+
+			case "SYMMETRIC":
+				p.nextToken()
+				if p.curTok.Type == TokenKey {
+					p.nextToken() // consume KEY
+				}
+				mechanism.CryptoMechanismType = "SymmetricKey"
+				mechanism.Identifier = p.parseIdentifier()
+
+			case "ASYMMETRIC":
+				p.nextToken()
+				if p.curTok.Type == TokenKey {
+					p.nextToken() // consume KEY
+				}
+				mechanism.CryptoMechanismType = "AsymmetricKey"
+				mechanism.Identifier = p.parseIdentifier()
+
+			default:
+				parsed = false
+			}
+
+			if !parsed {
+				break
+			}
+
+			stmt.EncryptingMechanisms = append(stmt.EncryptingMechanisms, mechanism)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
@@ -5344,6 +5762,7 @@ func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibrary
 		p.nextToken() // consume SET
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
+			var currentFileOption *ast.ExternalLibraryFileOption
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				optName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken() // consume option name
@@ -5356,9 +5775,13 @@ func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibrary
 						if err != nil {
 							return nil, err
 						}
-						stmt.ExternalLibraryFiles = append(stmt.ExternalLibraryFiles, &ast.ExternalLibraryFileOption{
+						currentFileOption = &ast.ExternalLibraryFileOption{
 							Content: content,
-						})
+						}
+						stmt.ExternalLibraryFiles = append(stmt.ExternalLibraryFiles, currentFileOption)
+					} else if optName == "PLATFORM" && currentFileOption != nil {
+						// PLATFORM is an identifier, not a string
+						currentFileOption.Platform = p.parseIdentifier()
 					}
 				}
 
@@ -5672,3 +6095,499 @@ func (p *Parser) parseSequenceOption() (interface{}, error) {
 	}, nil
 }
 
+func (p *Parser) parseAddStatement() (ast.Statement, error) {
+	// Consume ADD
+	p.nextToken()
+
+	upper := strings.ToUpper(p.curTok.Literal)
+	switch upper {
+	case "SIGNATURE":
+		return p.parseAddSignatureStatement(false)
+	case "COUNTER":
+		p.nextToken() // consume COUNTER
+		if strings.ToUpper(p.curTok.Literal) != "SIGNATURE" {
+			return nil, fmt.Errorf("expected SIGNATURE after COUNTER, got %s", p.curTok.Literal)
+		}
+		return p.parseAddSignatureStatement(true)
+	case "SENSITIVITY":
+		return p.parseAddSensitivityClassificationStatement()
+	}
+
+	return nil, fmt.Errorf("unexpected token after ADD: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseAddSignatureStatement(isCounter bool) (*ast.AddSignatureStatement, error) {
+	// Consume SIGNATURE
+	p.nextToken()
+
+	stmt := &ast.AddSignatureStatement{
+		IsCounter:   isCounter,
+		ElementKind: "NotSpecified",
+	}
+
+	// Expect TO
+	if strings.ToUpper(p.curTok.Literal) != "TO" {
+		return nil, fmt.Errorf("expected TO after SIGNATURE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse element kind if present (OBJECT::, ASSEMBLY::, DATABASE::)
+	stmt.ElementKind, stmt.Element = p.parseSignatureElement()
+
+	// Expect BY
+	if strings.ToUpper(p.curTok.Literal) != "BY" {
+		return nil, fmt.Errorf("expected BY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse crypto mechanisms
+	cryptos, err := p.parseSignatureCryptoMechanisms()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Cryptos = cryptos
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropSignatureStatement(isCounter bool) (*ast.DropSignatureStatement, error) {
+	// Consume SIGNATURE
+	p.nextToken()
+
+	stmt := &ast.DropSignatureStatement{
+		IsCounter:   isCounter,
+		ElementKind: "NotSpecified",
+	}
+
+	// Expect FROM
+	if strings.ToUpper(p.curTok.Literal) != "FROM" {
+		return nil, fmt.Errorf("expected FROM after SIGNATURE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse element kind if present (OBJECT::, ASSEMBLY::, DATABASE::)
+	stmt.ElementKind, stmt.Element = p.parseSignatureElement()
+
+	// Expect BY
+	if strings.ToUpper(p.curTok.Literal) != "BY" {
+		return nil, fmt.Errorf("expected BY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse crypto mechanisms
+	cryptos, err := p.parseSignatureCryptoMechanisms()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Cryptos = cryptos
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAddSensitivityClassificationStatement() (*ast.AddSensitivityClassificationStatement, error) {
+	// Consume SENSITIVITY
+	p.nextToken()
+
+	if strings.ToUpper(p.curTok.Literal) != "CLASSIFICATION" {
+		return nil, fmt.Errorf("expected CLASSIFICATION after SENSITIVITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume CLASSIFICATION
+
+	if strings.ToUpper(p.curTok.Literal) != "TO" {
+		return nil, fmt.Errorf("expected TO after CLASSIFICATION, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume TO
+
+	stmt := &ast.AddSensitivityClassificationStatement{}
+
+	// Parse column references (comma-separated)
+	for {
+		colRef := p.parseColumnReferenceForSensitivity()
+		stmt.Columns = append(stmt.Columns, colRef)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else {
+			break
+		}
+	}
+
+	// Parse WITH clause
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Parse options
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			opt := &ast.SensitivityClassificationOption{}
+
+			// Parse option type
+			optType := strings.ToUpper(p.curTok.Literal)
+			switch optType {
+			case "LABEL":
+				opt.Type = "Label"
+			case "LABEL_ID":
+				opt.Type = "LabelId"
+			case "INFORMATION_TYPE":
+				opt.Type = "InformationType"
+			case "INFORMATION_TYPE_ID":
+				opt.Type = "InformationTypeId"
+			case "RANK":
+				opt.Type = "Rank"
+			default:
+				return nil, fmt.Errorf("unexpected sensitivity classification option: %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume option type
+
+			// Expect =
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			// Parse value
+			if p.curTok.Type == TokenString {
+				value := p.curTok.Literal
+				// Remove quotes
+				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+					value = value[1 : len(value)-1]
+				}
+				opt.Value = &ast.StringLiteral{
+					LiteralType:   "String",
+					IsNational:    false,
+					IsLargeObject: false,
+					Value:         value,
+				}
+				p.nextToken()
+			} else {
+				// Identifier literal (for RANK = HIGH, etc.)
+				opt.Value = &ast.IdentifierLiteral{
+					LiteralType: "Identifier",
+					QuoteType:   "NotQuoted",
+					Value:       strings.ToUpper(p.curTok.Literal),
+				}
+				p.nextToken()
+			}
+
+			stmt.Options = append(stmt.Options, opt)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropSensitivityClassificationStatement() (*ast.DropSensitivityClassificationStatement, error) {
+	// Consume SENSITIVITY
+	p.nextToken()
+
+	if strings.ToUpper(p.curTok.Literal) != "CLASSIFICATION" {
+		return nil, fmt.Errorf("expected CLASSIFICATION after SENSITIVITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume CLASSIFICATION
+
+	if strings.ToUpper(p.curTok.Literal) != "FROM" {
+		return nil, fmt.Errorf("expected FROM after CLASSIFICATION, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume FROM
+
+	stmt := &ast.DropSensitivityClassificationStatement{}
+
+	// Parse column references (comma-separated)
+	for {
+		colRef := p.parseColumnReferenceForSensitivity()
+		stmt.Columns = append(stmt.Columns, colRef)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else {
+			break
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseColumnReferenceForSensitivity() *ast.ColumnReferenceExpression {
+	colRef := &ast.ColumnReferenceExpression{
+		ColumnType: "Regular",
+	}
+
+	var identifiers []*ast.Identifier
+	for {
+		ident := p.parseIdentifier()
+		identifiers = append(identifiers, ident)
+
+		if p.curTok.Type == TokenDot {
+			p.nextToken() // consume .
+		} else {
+			break
+		}
+	}
+
+	colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+		Count:       len(identifiers),
+		Identifiers: identifiers,
+	}
+
+	return colRef
+}
+
+func (p *Parser) parseSignatureElement() (string, *ast.SchemaObjectName) {
+	// Check for element kind prefix (OBJECT::, ASSEMBLY::, DATABASE::)
+	elementKind := "NotSpecified"
+
+	upper := strings.ToUpper(p.curTok.Literal)
+	if upper == "OBJECT" || upper == "ASSEMBLY" || upper == "DATABASE" {
+		// Look ahead for ::
+		if p.peekTok.Type == TokenColonColon {
+			switch upper {
+			case "OBJECT":
+				elementKind = "Object"
+			case "ASSEMBLY":
+				elementKind = "Assembly"
+			case "DATABASE":
+				elementKind = "Database"
+			}
+			p.nextToken() // consume kind
+			p.nextToken() // consume ::
+		}
+	}
+
+	// Parse the element name
+	element, _ := p.parseSchemaObjectName()
+
+	return elementKind, element
+}
+
+func (p *Parser) parseSignatureCryptoMechanisms() ([]*ast.CryptoMechanism, error) {
+	var cryptos []*ast.CryptoMechanism
+
+	for {
+		crypto, err := p.parseSignatureCryptoMechanism()
+		if err != nil {
+			return nil, err
+		}
+		if crypto != nil {
+			cryptos = append(cryptos, crypto)
+		}
+
+		// Check for comma to continue
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			continue
+		}
+		break
+	}
+
+	return cryptos, nil
+}
+
+func (p *Parser) parseSignatureCryptoMechanism() (*ast.CryptoMechanism, error) {
+	crypto := &ast.CryptoMechanism{}
+
+	upper := strings.ToUpper(p.curTok.Literal)
+
+	switch upper {
+	case "CERTIFICATE":
+		crypto.CryptoMechanismType = "Certificate"
+		p.nextToken()
+		crypto.Identifier = p.parseIdentifier()
+	case "ASYMMETRIC":
+		p.nextToken() // consume ASYMMETRIC
+		if strings.ToUpper(p.curTok.Literal) != "KEY" {
+			return nil, fmt.Errorf("expected KEY after ASYMMETRIC, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume KEY
+		crypto.CryptoMechanismType = "AsymmetricKey"
+		crypto.Identifier = p.parseIdentifier()
+	case "PASSWORD":
+		crypto.CryptoMechanismType = "Password"
+		p.nextToken() // consume PASSWORD
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			crypto.PasswordOrSignature = val
+		}
+	default:
+		return nil, nil
+	}
+
+	// Check for WITH PASSWORD = or WITH SIGNATURE =
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		optUpper := strings.ToUpper(p.curTok.Literal)
+		if optUpper == "PASSWORD" || optUpper == "SIGNATURE" {
+			p.nextToken() // consume PASSWORD/SIGNATURE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				crypto.PasswordOrSignature = val
+			}
+		}
+	}
+
+	return crypto, nil
+}
+
+func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchPropertyListStatement, error) {
+	// Consume SEARCH
+	p.nextToken()
+	// Consume PROPERTY
+	if strings.ToUpper(p.curTok.Literal) == "PROPERTY" {
+		p.nextToken()
+	}
+	// Consume LIST
+	if strings.ToUpper(p.curTok.Literal) == "LIST" {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterSearchPropertyListStatement{}
+
+	// Parse the list name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse action: ADD or DROP
+	actionType := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume ADD or DROP
+
+	switch actionType {
+	case "ADD":
+		addAction := &ast.AddSearchPropertyListAction{}
+		// Parse property name (string literal)
+		if p.curTok.Type == TokenString {
+			value := p.curTok.Literal
+			if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+				value = value[1 : len(value)-1]
+			}
+			addAction.PropertyName = &ast.StringLiteral{
+				LiteralType:   "String",
+				IsNational:    false,
+				IsLargeObject: false,
+				Value:         value,
+			}
+			p.nextToken()
+		}
+		// Parse WITH clause
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse options
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optUpper := strings.ToUpper(p.curTok.Literal)
+					switch optUpper {
+					case "PROPERTY_SET_GUID":
+						p.nextToken() // consume PROPERTY_SET_GUID
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenString {
+							value := p.curTok.Literal
+							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+								value = value[1 : len(value)-1]
+							}
+							addAction.Guid = &ast.StringLiteral{
+								LiteralType:   "String",
+								IsNational:    false,
+								IsLargeObject: false,
+								Value:         value,
+							}
+							p.nextToken()
+						}
+					case "PROPERTY_INT_ID":
+						p.nextToken() // consume PROPERTY_INT_ID
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenNumber {
+							addAction.Id = &ast.IntegerLiteral{
+								LiteralType: "Integer",
+								Value:       p.curTok.Literal,
+							}
+							p.nextToken()
+						}
+					case "PROPERTY_DESCRIPTION":
+						p.nextToken() // consume PROPERTY_DESCRIPTION
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenString {
+							value := p.curTok.Literal
+							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+								value = value[1 : len(value)-1]
+							}
+							addAction.Description = &ast.StringLiteral{
+								LiteralType:   "String",
+								IsNational:    false,
+								IsLargeObject: false,
+								Value:         value,
+							}
+							p.nextToken()
+						}
+					default:
+						p.nextToken() // skip unknown option
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+		}
+		stmt.Action = addAction
+
+	case "DROP":
+		dropAction := &ast.DropSearchPropertyListAction{}
+		// Parse property name (string literal)
+		if p.curTok.Type == TokenString {
+			value := p.curTok.Literal
+			if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+				value = value[1 : len(value)-1]
+			}
+			dropAction.PropertyName = &ast.StringLiteral{
+				LiteralType:   "String",
+				IsNational:    false,
+				IsLargeObject: false,
+				Value:         value,
+			}
+			p.nextToken()
+		}
+		stmt.Action = dropAction
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}

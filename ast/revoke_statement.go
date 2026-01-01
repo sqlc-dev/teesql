@@ -7,6 +7,7 @@ type RevokeStatement struct {
 	GrantOptionFor       bool
 	CascadeOption        bool
 	SecurityTargetObject *SecurityTargetObject
+	AsClause             *Identifier
 }
 
 func (s *RevokeStatement) node()      {}

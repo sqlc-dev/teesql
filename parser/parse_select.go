@@ -388,6 +388,7 @@ func (p *Parser) parseSelectElements() ([]ast.SelectElement, error) {
 	return elements, nil
 }
 
+
 func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 	// Check for *
 	if p.curTok.Type == TokenStar {
@@ -463,6 +464,19 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 	expr, err := p.parseScalarExpression()
 	if err != nil {
 		return nil, err
+	}
+
+	// Check for qualified star: expression followed by .*
+	// This happens when parseColumnReferenceOrFunctionCall stopped before consuming .*
+	if p.curTok.Type == TokenDot && p.peekTok.Type == TokenStar {
+		// Convert expression to qualified star
+		if colRef, ok := expr.(*ast.ColumnReferenceExpression); ok {
+			p.nextToken() // consume .
+			p.nextToken() // consume *
+			return &ast.SelectStarExpression{
+				Qualifier: colRef.MultiPartIdentifier,
+			}, nil
+		}
 	}
 
 	sse := &ast.SelectScalarExpression{Expression: expr}
@@ -1058,6 +1072,11 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		if p.curTok.Type != TokenDot {
 			break
 		}
+		// Check if this is a qualified star like d.* - if so, don't consume the dot
+		// Let the caller handle the .* pattern
+		if p.peekTok.Type == TokenStar {
+			break
+		}
 		p.nextToken() // consume dot
 	}
 
@@ -1323,6 +1342,29 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 			continue // continue to check for more clauses like OVER
 		}
 
+		// Check for RESPECT NULLS or IGNORE NULLS for window functions
+		if fc, ok := expr.(*ast.FunctionCall); ok {
+			upperLit := strings.ToUpper(p.curTok.Literal)
+			if upperLit == "RESPECT" || upperLit == "IGNORE" {
+				// Parse RESPECT NULLS or IGNORE NULLS
+				firstIdent := &ast.Identifier{
+					Value:     strings.ToUpper(p.curTok.Literal),
+					QuoteType: "NotQuoted",
+				}
+				p.nextToken() // consume RESPECT/IGNORE
+
+				if strings.ToUpper(p.curTok.Literal) == "NULLS" {
+					secondIdent := &ast.Identifier{
+						Value:     strings.ToUpper(p.curTok.Literal),
+						QuoteType: "NotQuoted",
+					}
+					p.nextToken() // consume NULLS
+					fc.IgnoreRespectNulls = []*ast.Identifier{firstIdent, secondIdent}
+				}
+				continue // continue to check for OVER clause
+			}
+		}
+
 		// Check for OVER clause for function calls
 		if fc, ok := expr.(*ast.FunctionCall); ok && strings.ToUpper(p.curTok.Literal) == "OVER" {
 			p.nextToken() // consume OVER
@@ -1475,6 +1517,11 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		return p.parseOpenRowset()
 	}
 
+	// Check for PREDICT
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PREDICT" {
+		return p.parsePredictTableReference()
+	}
+
 	// Check for variable table reference
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		name := p.curTok.Literal
@@ -1485,7 +1532,29 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		}, nil
 	}
 
-	return p.parseNamedTableReference()
+	// Check for table-valued function (identifier followed by parentheses that's not a table hint)
+	// Parse schema object name first, then check if it's followed by function call parentheses
+	son, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for function call (has parentheses with non-hint content)
+	if p.curTok.Type == TokenLParen && !p.peekIsTableHint() {
+		params, err := p.parseFunctionParameters()
+		if err != nil {
+			return nil, err
+		}
+		ref := &ast.SchemaObjectFunctionTableReference{
+			SchemaObject: son,
+			Parameters:   params,
+			ForPath:      false,
+		}
+		return ref, nil
+	}
+
+	// It's a regular named table reference
+	return p.parseNamedTableReferenceWithName(son)
 }
 
 func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
@@ -1540,6 +1609,66 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 					// Check if the next token is a valid table hint (space-separated hints)
 					if p.isTableHintToken() {
 						continue // Continue parsing space-separated hints
+					}
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	return ref, nil
+}
+
+// parseNamedTableReferenceWithName parses a named table reference when the schema object name has already been parsed
+func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*ast.NamedTableReference, error) {
+	ref := &ast.NamedTableReference{
+		SchemaObject: son,
+		ForPath:      false,
+	}
+
+	// Parse optional alias (AS alias or just alias)
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLBracket {
+			return nil, fmt.Errorf("expected identifier after AS, got %s", p.curTok.Literal)
+		}
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+		// Could be an alias without AS, but need to be careful not to consume keywords
+		if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" {
+				ref.Alias = p.parseIdentifier()
+			}
+		} else {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	// Parse optional table hints WITH (hint, hint, ...) or old-style (hint, hint, ...)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+	}
+	if p.curTok.Type == TokenLParen {
+		// Check if this looks like hints (first token is a hint keyword)
+		if p.peekIsTableHint() {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				hint, err := p.parseTableHint()
+				if err != nil {
+					return nil, err
+				}
+				if hint != nil {
+					ref.TableHints = append(ref.TableHints, hint)
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else if p.curTok.Type != TokenRParen {
+					if p.isTableHintToken() {
+						continue
 					}
 					break
 				}
@@ -1822,7 +1951,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		return &ast.OptimizerHint{HintKind: "Use"}, nil
 	}
 
-	// Handle keyword tokens that can be optimizer hints (ORDER, GROUP, etc.)
+	// Handle keyword tokens that can be optimizer hints (ORDER, GROUP, MAXDOP, etc.)
 	if p.curTok.Type == TokenOrder || p.curTok.Type == TokenGroup {
 		hintKind := convertHintKind(p.curTok.Literal)
 		firstWord := strings.ToUpper(p.curTok.Literal)
@@ -1831,7 +1960,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		// Check for two-word hints like ORDER GROUP
 		if (firstWord == "ORDER" || firstWord == "HASH" || firstWord == "MERGE" ||
 			firstWord == "CONCAT" || firstWord == "LOOP" || firstWord == "FORCE") &&
-			(p.curTok.Type == TokenIdent || p.curTok.Type == TokenGroup) {
+			isSecondHintWordToken(p.curTok.Type) {
 			secondWord := strings.ToUpper(p.curTok.Literal)
 			if secondWord == "GROUP" || secondWord == "JOIN" || secondWord == "UNION" ||
 				secondWord == "ORDER" {
@@ -1842,6 +1971,20 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		return &ast.OptimizerHint{HintKind: hintKind}, nil
 	}
 
+	// Handle MAXDOP keyword
+	if p.curTok.Type == TokenMaxdop {
+		p.nextToken() // consume MAXDOP
+		// MAXDOP takes a numeric argument
+		if p.curTok.Type == TokenNumber {
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: "MaxDop", Value: value}, nil
+		}
+		return &ast.OptimizerHint{HintKind: "MaxDop"}, nil
+	}
+
 	// Handle TABLE HINT optimizer hint
 	if p.curTok.Type == TokenTable {
 		p.nextToken() // consume TABLE
@@ -1850,6 +1993,20 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			return p.parseTableHintsOptimizerHint()
 		}
 		return &ast.OptimizerHint{HintKind: "Table"}, nil
+	}
+
+	// Handle FAST keyword
+	if p.curTok.Type == TokenFast {
+		p.nextToken() // consume FAST
+		// FAST takes a numeric argument
+		if p.curTok.Type == TokenNumber {
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}, nil
+		}
+		return &ast.OptimizerHint{HintKind: "Fast"}, nil
 	}
 
 	if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLabel {
@@ -1970,14 +2127,27 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 
 		// Check for two-word hints like ORDER GROUP, HASH GROUP, etc.
 		if (firstWord == "ORDER" || firstWord == "HASH" || firstWord == "MERGE" ||
-			firstWord == "CONCAT" || firstWord == "LOOP" || firstWord == "FORCE") &&
-			p.curTok.Type == TokenIdent {
+			firstWord == "CONCAT" || firstWord == "LOOP" || firstWord == "FORCE" ||
+			firstWord == "KEEP" || firstWord == "ROBUST" || firstWord == "EXPAND" ||
+			firstWord == "KEEPFIXED" || firstWord == "SHRINKDB" || firstWord == "ALTERCOLUMN" ||
+			firstWord == "BYPASS") &&
+			isSecondHintWordToken(p.curTok.Type) {
 			secondWord := strings.ToUpper(p.curTok.Literal)
 			if secondWord == "GROUP" || secondWord == "JOIN" || secondWord == "UNION" ||
-				secondWord == "ORDER" {
+				secondWord == "ORDER" || secondWord == "PLAN" || secondWord == "VIEWS" ||
+				secondWord == "OPTIMIZER_QUEUE" {
 				hintKind = hintKind + convertHintKind(p.curTok.Literal)
 				p.nextToken()
 			}
+		}
+
+		// Check if this is a literal hint with value (USEPLAN 2, etc.)
+		if p.curTok.Type == TokenNumber {
+			value, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}, nil
 		}
 
 		// Check if this is a literal hint (LABEL = value, etc.)
@@ -2173,6 +2343,11 @@ func convertHintKind(hint string) string {
 		"KEEP":                         "Keep",
 		"EXPAND":                       "Expand",
 		"VIEWS":                        "Views",
+		"BYPASS":                       "Bypass",
+		"OPTIMIZER_QUEUE":              "OptimizerQueue",
+		"USEPLAN":                      "UsePlan",
+		"SHRINKDB":                     "ShrinkDB",
+		"ALTERCOLUMN":                  "AlterColumn",
 		"HASH":                         "Hash",
 		"ORDER":                        "Order",
 		"GROUP":                        "Group",
@@ -2194,6 +2369,11 @@ func convertHintKind(hint string) string {
 		return mapped
 	}
 	return hint
+}
+
+// isSecondHintWordToken checks if a token can be a second word in a two-word optimizer hint
+func isSecondHintWordToken(t TokenType) bool {
+	return t == TokenIdent || t == TokenGroup || t == TokenJoin || t == TokenUnion || t == TokenOrder
 }
 
 func (p *Parser) parseWhereClause() (*ast.WhereClause, error) {
@@ -2873,4 +3053,120 @@ func (p *Parser) parseTryConvertCall() (ast.ScalarExpression, error) {
 	}
 
 	return convert, nil
+}
+
+// parsePredictTableReference parses PREDICT(...) in FROM clause
+// PREDICT(MODEL = expression, DATA = table AS alias, RUNTIME=ident) WITH (columns) AS alias
+func (p *Parser) parsePredictTableReference() (*ast.PredictTableReference, error) {
+	p.nextToken() // consume PREDICT
+
+	ref := &ast.PredictTableReference{
+		ForPath: false,
+	}
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after PREDICT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse arguments: MODEL = expr, DATA = table AS alias, RUNTIME = ident
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		argName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume argument name
+
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		switch argName {
+		case "MODEL":
+			// MODEL can be a subquery or variable
+			if p.curTok.Type == TokenLParen {
+				// Subquery
+				p.nextToken() // consume (
+				qe, err := p.parseQueryExpression()
+				if err != nil {
+					return nil, err
+				}
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+				ref.ModelVariable = &ast.ScalarSubquery{QueryExpression: qe}
+			} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+				// Variable
+				ref.ModelVariable = &ast.VariableReference{Name: p.curTok.Literal}
+				p.nextToken()
+			}
+		case "DATA":
+			// DATA = table AS alias
+			son, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			dataSource := &ast.NamedTableReference{
+				SchemaObject: son,
+				ForPath:      false,
+			}
+			// Check for AS alias
+			if p.curTok.Type == TokenAs {
+				p.nextToken()
+				dataSource.Alias = p.parseIdentifier()
+			}
+			ref.DataSource = dataSource
+		case "RUNTIME":
+			ref.RunTime = p.parseIdentifier()
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	// Parse optional WITH clause for output schema
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				item := &ast.SchemaDeclarationItem{
+					ColumnDefinition: &ast.ColumnDefinitionBase{},
+				}
+				item.ColumnDefinition.ColumnIdentifier = p.parseIdentifier()
+
+				// Parse data type
+				dataType, err := p.parseDataTypeReference()
+				if err != nil {
+					return nil, err
+				}
+				item.ColumnDefinition.DataType = dataType
+
+				ref.SchemaDeclarationItems = append(ref.SchemaDeclarationItems, item)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse optional AS alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	}
+
+	return ref, nil
 }

@@ -146,8 +146,8 @@ func (p *Parser) parseInsertStatement() (ast.Statement, error) {
 		p.nextToken()
 	}
 
-	// Parse target
-	target, err := p.parseDMLTarget()
+	// Parse target - use parseInsertTarget which doesn't treat () as function params
+	target, err := p.parseInsertTarget()
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +222,7 @@ func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 		return nil, err
 	}
 
-	// Check for function call (has parentheses)
+	// Check for function call (has parentheses) - used by UPDATE/DELETE targets
 	if p.curTok.Type == TokenLParen {
 		params, err := p.parseFunctionParameters()
 		if err != nil {
@@ -247,6 +247,63 @@ func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 			return nil, err
 		}
 		ref.TableHints = hints
+	}
+
+	return ref, nil
+}
+
+// parseInsertTarget parses the target for INSERT statements.
+// Unlike parseDMLTarget, it does NOT treat parentheses as function parameters
+// because in INSERT statements, parentheses after the table name are column names.
+func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
+	// Check for variable
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		name := p.curTok.Literal
+		p.nextToken()
+		return &ast.VariableTableReference{
+			Variable: &ast.VariableReference{Name: name},
+			ForPath:  false,
+		}, nil
+	}
+
+	// Check for OPENROWSET
+	if p.curTok.Type == TokenOpenRowset {
+		return p.parseOpenRowset()
+	}
+
+	// Parse schema object name
+	son, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+
+	// For INSERT targets, parentheses are column names, not function parameters
+	// So we don't parse them here - the caller handles the column list
+
+	ref := &ast.NamedTableReference{
+		SchemaObject: son,
+		ForPath:      false,
+	}
+
+	// Check for table hints WITH (...)
+	if p.curTok.Type == TokenWith {
+		hints, err := p.parseTableHints()
+		if err != nil {
+			return nil, err
+		}
+		ref.TableHints = hints
+	}
+
+	// Check for alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		// Alias without AS - but need to check it's not a keyword
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "SELECT" && upper != "VALUES" && upper != "DEFAULT" && upper != "OUTPUT" && upper != "EXEC" && upper != "EXECUTE" {
+			ref.Alias = p.parseIdentifier()
+		}
 	}
 
 	return ref, nil
@@ -974,6 +1031,15 @@ func (p *Parser) parseUpdateStatement() (*ast.UpdateStatement, error) {
 		UpdateSpecification: &ast.UpdateSpecification{},
 	}
 
+	// Check for TOP clause
+	if p.curTok.Type == TokenTop {
+		top, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		stmt.UpdateSpecification.TopRowFilter = top
+	}
+
 	// Parse target
 	target, err := p.parseDMLTarget()
 	if err != nil {
@@ -1033,7 +1099,7 @@ func (p *Parser) parseSetClauses() ([]ast.SetClause, error) {
 	var clauses []ast.SetClause
 
 	for {
-		clause, err := p.parseAssignmentSetClause()
+		clause, err := p.parseSetClause()
 		if err != nil {
 			return nil, err
 		}
@@ -1046,6 +1112,119 @@ func (p *Parser) parseSetClauses() ([]ast.SetClause, error) {
 	}
 
 	return clauses, nil
+}
+
+func (p *Parser) parseSetClause() (ast.SetClause, error) {
+	// First, try to detect if this is a function call set clause
+	// e.g., SET a.b.c.d.func() or SET a.b.c.d.func(args)
+
+	// Variables start with @ and are never function call set clauses
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		return p.parseAssignmentSetClause()
+	}
+
+	// Check for $ROWGUID pseudo-column - always assignment
+	if p.curTok.Type == TokenIdent && strings.EqualFold(p.curTok.Literal, "$ROWGUID") {
+		return p.parseAssignmentSetClause()
+	}
+
+	// Parse multi-part identifier and look ahead for ( or =
+	identifiers := []*ast.Identifier{}
+	for {
+		if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLBracket && !p.isKeywordAsIdentifier() {
+			break
+		}
+		id := p.parseIdentifier()
+		identifiers = append(identifiers, id)
+
+		if p.curTok.Type != TokenDot {
+			break
+		}
+		p.nextToken() // consume dot
+	}
+
+	if len(identifiers) == 0 {
+		return nil, fmt.Errorf("expected identifier in SET clause")
+	}
+
+	// If followed by ( it's a function call set clause
+	if p.curTok.Type == TokenLParen {
+		// The last identifier is the function name, the rest form the call target
+		if len(identifiers) < 2 {
+			// Need at least object.func()
+			return nil, fmt.Errorf("expected at least 2 identifiers for function call SET clause")
+		}
+
+		funcName := identifiers[len(identifiers)-1]
+		targetIds := identifiers[:len(identifiers)-1]
+
+		p.nextToken() // consume (
+
+		// Parse parameters
+		var params []ast.ScalarExpression
+		if p.curTok.Type != TokenRParen {
+			for {
+				param, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				params = append(params, param)
+
+				if p.curTok.Type != TokenComma {
+					break
+				}
+				p.nextToken()
+			}
+		}
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) in function call SET clause, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		fc := &ast.FunctionCall{
+			CallTarget: &ast.MultiPartIdentifierCallTarget{
+				MultiPartIdentifier: &ast.MultiPartIdentifier{
+					Count:       len(targetIds),
+					Identifiers: targetIds,
+				},
+			},
+			FunctionName:     funcName,
+			Parameters:       params,
+			UniqueRowFilter:  "NotSpecified",
+			WithArrayWrapper: false,
+		}
+
+		return &ast.FunctionCallSetClause{MutatorFunction: fc}, nil
+	}
+
+	// Otherwise, it's an assignment set clause
+	// Convert identifiers to ColumnReferenceExpression
+	clause := &ast.AssignmentSetClause{
+		AssignmentKind: "Equals",
+		Column: &ast.ColumnReferenceExpression{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Count:       len(identifiers),
+				Identifiers: identifiers,
+			},
+		},
+	}
+
+	if p.isCompoundAssignment() {
+		clause.AssignmentKind = p.getAssignmentKind()
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected =, got %s", p.curTok.Literal)
+	}
+
+	val, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	clause.NewValue = val
+
+	return clause, nil
 }
 
 // isCompoundAssignment checks if the current token is a compound assignment operator
@@ -1574,13 +1753,10 @@ func (p *Parser) parseIdentifierOrValueExpression() (*ast.IdentifierOrValueExpre
 		}
 		p.nextToken()
 	} else if p.curTok.Type == TokenIdent {
-		// Identifier
-		result.Value = p.curTok.Literal
-		result.Identifier = &ast.Identifier{
-			Value:     p.curTok.Literal,
-			QuoteType: "NotQuoted",
-		}
-		p.nextToken()
+		// Identifier - use parseIdentifier to handle bracketed identifiers properly
+		ident := p.parseIdentifier()
+		result.Value = ident.Value
+		result.Identifier = ident
 	} else if p.curTok.Type == TokenEOF {
 		// Handle incomplete statement - return empty identifier
 		result.Value = ""
@@ -1610,6 +1786,15 @@ func (p *Parser) parseUpdateOrUpdateStatisticsStatement() (ast.Statement, error)
 		UpdateSpecification: &ast.UpdateSpecification{},
 	}
 
+	// Check for TOP clause
+	if p.curTok.Type == TokenTop {
+		top, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		stmt.UpdateSpecification.TopRowFilter = top
+	}
+
 	// Parse target
 	target, err := p.parseDMLTarget()
 	if err != nil {
@@ -1629,6 +1814,20 @@ func (p *Parser) parseUpdateOrUpdateStatisticsStatement() (ast.Statement, error)
 		return nil, err
 	}
 	stmt.UpdateSpecification.SetClauses = setClauses
+
+	// Parse OUTPUT clauses (can have OUTPUT INTO followed by OUTPUT)
+	for p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		outputClause, outputIntoClause, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		if outputIntoClause != nil {
+			stmt.UpdateSpecification.OutputIntoClause = outputIntoClause
+		}
+		if outputClause != nil {
+			stmt.UpdateSpecification.OutputClause = outputClause
+		}
+	}
 
 	// Parse optional FROM clause
 	if p.curTok.Type == TokenFrom {

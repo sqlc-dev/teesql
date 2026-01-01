@@ -111,7 +111,10 @@ func (s *CreateEndpointStatement) statement() {}
 
 // CreateAssemblyStatement represents a CREATE ASSEMBLY statement.
 type CreateAssemblyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name       *Identifier           `json:"Name,omitempty"`
+	Owner      *Identifier           `json:"Owner,omitempty"`
+	Parameters []ScalarExpression    `json:"Parameters,omitempty"`
+	Options    []AssemblyOptionBase  `json:"Options,omitempty"`
 }
 
 func (s *CreateAssemblyStatement) node()      {}
@@ -184,6 +187,24 @@ type CreationDispositionKeyOption struct {
 func (c *CreationDispositionKeyOption) node()      {}
 func (c *CreationDispositionKeyOption) keyOption() {}
 
+// KeySourceKeyOption represents a KEY_SOURCE key option.
+type KeySourceKeyOption struct {
+	PassPhrase ScalarExpression `json:"PassPhrase,omitempty"`
+	OptionKind string           `json:"OptionKind,omitempty"`
+}
+
+func (k *KeySourceKeyOption) node()      {}
+func (k *KeySourceKeyOption) keyOption() {}
+
+// IdentityValueKeyOption represents an IDENTITY_VALUE key option.
+type IdentityValueKeyOption struct {
+	IdentityPhrase ScalarExpression `json:"IdentityPhrase,omitempty"`
+	OptionKind     string           `json:"OptionKind,omitempty"`
+}
+
+func (i *IdentityValueKeyOption) node()      {}
+func (i *IdentityValueKeyOption) keyOption() {}
+
 // CryptoMechanism represents an encryption mechanism (CERTIFICATE, KEY, PASSWORD, etc.)
 type CryptoMechanism struct {
 	CryptoMechanismType string           `json:"CryptoMechanismType,omitempty"` // "Certificate", "SymmetricKey", "AsymmetricKey", "Password"
@@ -195,9 +216,10 @@ func (c *CryptoMechanism) node() {}
 
 // CreateSymmetricKeyStatement represents a CREATE SYMMETRIC KEY statement.
 type CreateSymmetricKeyStatement struct {
-	KeyOptions          []KeyOption        `json:"KeyOptions,omitempty"`
-	Provider            *Identifier        `json:"Provider,omitempty"`
-	Name                *Identifier        `json:"Name,omitempty"`
+	KeyOptions           []KeyOption        `json:"KeyOptions,omitempty"`
+	Owner                *Identifier        `json:"Owner,omitempty"`
+	Provider             *Identifier        `json:"Provider,omitempty"`
+	Name                 *Identifier        `json:"Name,omitempty"`
 	EncryptingMechanisms []*CryptoMechanism `json:"EncryptingMechanisms,omitempty"`
 }
 
@@ -289,8 +311,15 @@ func (s *CreatePartitionFunctionStatement) statement() {}
 
 // CreateIndexStatement represents a CREATE INDEX statement.
 type CreateIndexStatement struct {
-	Name   *Identifier       `json:"Name,omitempty"`
-	OnName *SchemaObjectName `json:"OnName,omitempty"`
+	Name                         *Identifier                   `json:"Name,omitempty"`
+	OnName                       *SchemaObjectName             `json:"OnName,omitempty"`
+	Translated80SyntaxTo90       bool                          `json:"Translated80SyntaxTo90,omitempty"`
+	Unique                       bool                          `json:"Unique,omitempty"`
+	Clustered                    *bool                         `json:"Clustered,omitempty"` // nil = not specified, true = CLUSTERED, false = NONCLUSTERED
+	Columns                      []*ColumnWithSortOrder        `json:"Columns,omitempty"`
+	IncludeColumns               []*ColumnReferenceExpression  `json:"IncludeColumns,omitempty"`
+	IndexOptions                 []IndexOption                 `json:"IndexOptions,omitempty"`
+	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme   `json:"OnFileGroupOrPartitionScheme,omitempty"`
 }
 
 func (s *CreateIndexStatement) node()      {}
@@ -339,6 +368,7 @@ func (s *CreateTypeUdtStatement) statement() {}
 type CreateTypeTableStatement struct {
 	Name       *SchemaObjectName `json:"Name,omitempty"`
 	Definition *TableDefinition  `json:"Definition,omitempty"`
+	Options    []TableOption     `json:"Options,omitempty"`
 }
 
 func (s *CreateTypeTableStatement) node()      {}
@@ -387,3 +417,18 @@ type CreateEventNotificationStatement struct {
 
 func (s *CreateEventNotificationStatement) node()      {}
 func (s *CreateEventNotificationStatement) statement() {}
+
+// CreateDatabaseEncryptionKeyStatement represents a CREATE DATABASE ENCRYPTION KEY statement.
+type CreateDatabaseEncryptionKeyStatement struct {
+	Algorithm string           `json:"Algorithm,omitempty"`
+	Encryptor *CryptoMechanism `json:"Encryptor,omitempty"`
+}
+
+func (s *CreateDatabaseEncryptionKeyStatement) node()      {}
+func (s *CreateDatabaseEncryptionKeyStatement) statement() {}
+
+// DropDatabaseEncryptionKeyStatement represents a DROP DATABASE ENCRYPTION KEY statement.
+type DropDatabaseEncryptionKeyStatement struct{}
+
+func (s *DropDatabaseEncryptionKeyStatement) node()      {}
+func (s *DropDatabaseEncryptionKeyStatement) statement() {}

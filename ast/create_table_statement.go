@@ -43,6 +43,7 @@ type ColumnDefinition struct {
 	DefaultConstraint        *DefaultConstraintDefinition
 	IdentityOptions          *IdentityOptions
 	Constraints              []ConstraintDefinition
+	Index                    *IndexDefinition
 	IsPersisted              bool
 	IsRowGuidCol             bool
 	IsHidden                 bool
@@ -137,12 +138,14 @@ func (c *CheckConstraintDefinition) constraintDefinition() {}
 
 // UniqueConstraintDefinition represents a UNIQUE or PRIMARY KEY constraint
 type UniqueConstraintDefinition struct {
-	ConstraintIdentifier *Identifier
-	Clustered            bool
-	IsPrimaryKey         bool
-	IsEnforced           *bool // nil = not specified (default enforced), true = ENFORCED, false = NOT ENFORCED
-	Columns              []*ColumnWithSortOrder
-	IndexType            *IndexType
+	ConstraintIdentifier         *Identifier
+	Clustered                    bool
+	IsPrimaryKey                 bool
+	IsEnforced                   *bool // nil = not specified (default enforced), true = ENFORCED, false = NOT ENFORCED
+	Columns                      []*ColumnWithSortOrder
+	IndexType                    *IndexType
+	IndexOptions                 []IndexOption
+	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme
 }
 
 func (u *UniqueConstraintDefinition) node()              {}

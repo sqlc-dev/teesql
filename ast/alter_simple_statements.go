@@ -11,11 +11,90 @@ func (s *AlterRouteStatement) statement() {}
 
 // AlterAssemblyStatement represents an ALTER ASSEMBLY statement.
 type AlterAssemblyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name       *Identifier         `json:"Name,omitempty"`
+	Parameters []ScalarExpression  `json:"Parameters,omitempty"` // FROM 'path' parameters
+	Options    []AssemblyOptionBase `json:"Options,omitempty"`
+	AddFiles   []*AddFileSpec      `json:"AddFiles,omitempty"`
+	DropFiles  []*StringLiteral    `json:"DropFiles,omitempty"`
+	IsDropAll  bool                `json:"IsDropAll"`
 }
 
 func (s *AlterAssemblyStatement) node()      {}
 func (s *AlterAssemblyStatement) statement() {}
+
+// AddFileSpec represents an ADD FILE specification.
+type AddFileSpec struct {
+	File     ScalarExpression `json:"File,omitempty"`     // The file path or binary literal
+	FileName *StringLiteral   `json:"FileName,omitempty"` // Optional AS 'filename'
+}
+
+func (a *AddFileSpec) node() {}
+
+// AssemblyOptionBase is an interface for assembly options.
+type AssemblyOptionBase interface {
+	Node
+	assemblyOption()
+}
+
+// AssemblyOption represents a basic assembly option.
+type AssemblyOption struct {
+	OptionKind string `json:"OptionKind,omitempty"` // "UncheckedData"
+}
+
+func (o *AssemblyOption) node()           {}
+func (o *AssemblyOption) assemblyOption() {}
+
+// OnOffAssemblyOption represents a VISIBILITY = ON|OFF option.
+type OnOffAssemblyOption struct {
+	OptionKind  string `json:"OptionKind,omitempty"`  // "Visibility"
+	OptionState string `json:"OptionState,omitempty"` // "On", "Off"
+}
+
+func (o *OnOffAssemblyOption) node()           {}
+func (o *OnOffAssemblyOption) assemblyOption() {}
+
+// PermissionSetAssemblyOption represents a PERMISSION_SET option.
+type PermissionSetAssemblyOption struct {
+	OptionKind          string `json:"OptionKind,omitempty"`          // "PermissionSet"
+	PermissionSetOption string `json:"PermissionSetOption,omitempty"` // "Safe", "ExternalAccess", "Unsafe"
+}
+
+func (o *PermissionSetAssemblyOption) node()           {}
+func (o *PermissionSetAssemblyOption) assemblyOption() {}
+
+// AlterSearchPropertyListStatement represents an ALTER SEARCH PROPERTY LIST statement.
+type AlterSearchPropertyListStatement struct {
+	Name   *Identifier                  `json:"Name,omitempty"`
+	Action SearchPropertyListAction     `json:"Action,omitempty"`
+}
+
+func (s *AlterSearchPropertyListStatement) node()      {}
+func (s *AlterSearchPropertyListStatement) statement() {}
+
+// SearchPropertyListAction is the interface for search property list actions.
+type SearchPropertyListAction interface {
+	Node
+	searchPropertyListAction()
+}
+
+// AddSearchPropertyListAction represents an ADD action in ALTER SEARCH PROPERTY LIST.
+type AddSearchPropertyListAction struct {
+	PropertyName *StringLiteral `json:"PropertyName,omitempty"`
+	Guid         *StringLiteral `json:"Guid,omitempty"`
+	Id           *IntegerLiteral `json:"Id,omitempty"`
+	Description  *StringLiteral `json:"Description,omitempty"`
+}
+
+func (a *AddSearchPropertyListAction) node()                     {}
+func (a *AddSearchPropertyListAction) searchPropertyListAction() {}
+
+// DropSearchPropertyListAction represents a DROP action in ALTER SEARCH PROPERTY LIST.
+type DropSearchPropertyListAction struct {
+	PropertyName *StringLiteral `json:"PropertyName,omitempty"`
+}
+
+func (a *DropSearchPropertyListAction) node()                     {}
+func (a *DropSearchPropertyListAction) searchPropertyListAction() {}
 
 // AlterEndpointStatement represents an ALTER ENDPOINT statement.
 type AlterEndpointStatement struct {
@@ -186,7 +265,9 @@ func (s *AlterFulltextIndexStatement) statement() {}
 
 // AlterSymmetricKeyStatement represents an ALTER SYMMETRIC KEY statement.
 type AlterSymmetricKeyStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name                 *Identifier        `json:"Name,omitempty"`
+	IsAdd                bool               `json:"IsAdd"`
+	EncryptingMechanisms []*CryptoMechanism `json:"EncryptingMechanisms,omitempty"`
 }
 
 func (s *AlterSymmetricKeyStatement) node()      {}
@@ -212,3 +293,13 @@ type RenameEntityStatement struct {
 
 func (s *RenameEntityStatement) node()      {}
 func (s *RenameEntityStatement) statement() {}
+
+// AlterDatabaseEncryptionKeyStatement represents an ALTER DATABASE ENCRYPTION KEY statement.
+type AlterDatabaseEncryptionKeyStatement struct {
+	Regenerate bool             `json:"Regenerate"`
+	Algorithm  string           `json:"Algorithm,omitempty"`
+	Encryptor  *CryptoMechanism `json:"Encryptor,omitempty"`
+}
+
+func (s *AlterDatabaseEncryptionKeyStatement) node()      {}
+func (s *AlterDatabaseEncryptionKeyStatement) statement() {}

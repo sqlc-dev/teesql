@@ -4,7 +4,7 @@ package ast
 type RestoreStatement struct {
 	Kind         string // "Database", "Log", "Filegroup", "File", "Page", "HeaderOnly", etc.
 	DatabaseName *IdentifierOrValueExpression
-	Files        []*IdentifierOrValueExpression
+	Files        []*BackupRestoreFileInfo
 	Devices      []*DeviceInfo
 	Options      []RestoreOption
 }
@@ -63,3 +63,26 @@ type ScalarExpressionRestoreOption struct {
 }
 
 func (o *ScalarExpressionRestoreOption) restoreOptionNode() {}
+
+// SimpleRestoreOption represents a simple restore option with just an option kind
+type SimpleRestoreOption struct {
+	OptionKind string
+}
+
+func (o *SimpleRestoreOption) restoreOptionNode() {}
+
+// StopRestoreOption represents a STOPATMARK or STOPBEFOREMARK option
+type StopRestoreOption struct {
+	OptionKind string
+	Mark       ScalarExpression
+	After      ScalarExpression
+	IsStopAt   bool
+}
+
+func (o *StopRestoreOption) restoreOptionNode() {}
+
+// BackupRestoreFileInfo represents file information for backup/restore
+type BackupRestoreFileInfo struct {
+	Items    []ScalarExpression
+	ItemKind string // "Files", "FileGroups", "Page", "Read-Write"
+}

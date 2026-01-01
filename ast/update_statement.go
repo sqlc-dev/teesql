@@ -12,10 +12,13 @@ func (u *UpdateStatement) statement() {}
 
 // UpdateSpecification contains the details of an UPDATE.
 type UpdateSpecification struct {
-	SetClauses  []SetClause    `json:"SetClauses,omitempty"`
-	Target      TableReference `json:"Target,omitempty"`
-	FromClause  *FromClause    `json:"FromClause,omitempty"`
-	WhereClause *WhereClause   `json:"WhereClause,omitempty"`
+	SetClauses       []SetClause       `json:"SetClauses,omitempty"`
+	Target           TableReference    `json:"Target,omitempty"`
+	TopRowFilter     *TopRowFilter     `json:"TopRowFilter,omitempty"`
+	FromClause       *FromClause       `json:"FromClause,omitempty"`
+	WhereClause      *WhereClause      `json:"WhereClause,omitempty"`
+	OutputClause     *OutputClause     `json:"OutputClause,omitempty"`
+	OutputIntoClause *OutputIntoClause `json:"OutputIntoClause,omitempty"`
 }
 
 // SetClause is an interface for SET clauses.
@@ -32,3 +35,10 @@ type AssignmentSetClause struct {
 }
 
 func (a *AssignmentSetClause) setClause() {}
+
+// FunctionCallSetClause represents a mutator function call in UPDATE SET.
+type FunctionCallSetClause struct {
+	MutatorFunction *FunctionCall `json:"MutatorFunction,omitempty"`
+}
+
+func (f *FunctionCallSetClause) setClause() {}
