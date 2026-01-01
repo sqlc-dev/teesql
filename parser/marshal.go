@@ -11019,6 +11019,49 @@ func createExternalTableStatementToJSON(s *ast.CreateExternalTableStatement) jso
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
+	if len(s.ColumnDefinitions) > 0 {
+		cols := make([]jsonNode, len(s.ColumnDefinitions))
+		for i, col := range s.ColumnDefinitions {
+			cols[i] = externalTableColumnDefinitionToJSON(col)
+		}
+		node["ColumnDefinitions"] = cols
+	}
+	if s.DataSource != nil {
+		node["DataSource"] = identifierToJSON(s.DataSource)
+	}
+	if len(s.ExternalTableOptions) > 0 {
+		opts := make([]jsonNode, len(s.ExternalTableOptions))
+		for i, opt := range s.ExternalTableOptions {
+			opts[i] = externalTableLiteralOrIdentifierOptionToJSON(opt)
+		}
+		node["ExternalTableOptions"] = opts
+	}
+	return node
+}
+
+func externalTableColumnDefinitionToJSON(col *ast.ExternalTableColumnDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalTableColumnDefinition",
+	}
+	if col.ColumnDefinition != nil {
+		node["ColumnDefinition"] = columnDefinitionBaseToJSON(col.ColumnDefinition)
+	}
+	if col.NullableConstraint != nil {
+		node["NullableConstraint"] = nullableConstraintToJSON(col.NullableConstraint)
+	}
+	return node
+}
+
+func externalTableLiteralOrIdentifierOptionToJSON(opt *ast.ExternalTableLiteralOrIdentifierOption) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalTableLiteralOrIdentifierOption",
+	}
+	if opt.Value != nil {
+		node["Value"] = identifierOrValueExpressionToJSON(opt.Value)
+	}
+	if opt.OptionKind != "" {
+		node["OptionKind"] = opt.OptionKind
+	}
 	return node
 }
 
@@ -11264,6 +11307,9 @@ func columnDefinitionBaseToJSON(c *ast.ColumnDefinitionBase) jsonNode {
 	}
 	if c.DataType != nil {
 		node["DataType"] = dataTypeReferenceToJSON(c.DataType)
+	}
+	if c.Collation != nil {
+		node["Collation"] = identifierToJSON(c.Collation)
 	}
 	return node
 }

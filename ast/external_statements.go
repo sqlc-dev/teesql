@@ -50,18 +50,28 @@ func (o *ExternalFileFormatLiteralOption) externalFileFormatOption() {}
 
 // CreateExternalTableStatement represents CREATE EXTERNAL TABLE statement
 type CreateExternalTableStatement struct {
-	SchemaObjectName *SchemaObjectName
-	Definition       *TableDefinition
-	DataSource       *Identifier
-	Location         ScalarExpression
-	FileFormat       *Identifier
-	Options          []*ExternalTableOption
+	SchemaObjectName     *SchemaObjectName
+	ColumnDefinitions    []*ExternalTableColumnDefinition
+	DataSource           *Identifier
+	ExternalTableOptions []*ExternalTableLiteralOrIdentifierOption
 }
 
 func (s *CreateExternalTableStatement) node()      {}
 func (s *CreateExternalTableStatement) statement() {}
 
-// ExternalTableOption represents an option for external table
+// ExternalTableColumnDefinition represents a column definition in an external table
+type ExternalTableColumnDefinition struct {
+	ColumnDefinition   *ColumnDefinitionBase
+	NullableConstraint *NullableConstraintDefinition
+}
+
+// ExternalTableLiteralOrIdentifierOption represents an option for external table
+type ExternalTableLiteralOrIdentifierOption struct {
+	OptionKind string
+	Value      *IdentifierOrValueExpression
+}
+
+// ExternalTableOption represents a simple option for external table (legacy)
 type ExternalTableOption struct {
 	OptionKind string
 	Value      ScalarExpression

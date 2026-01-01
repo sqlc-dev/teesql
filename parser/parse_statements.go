@@ -6439,7 +6439,6 @@ func (p *Parser) externalFileFormatOptionKind(name string) string {
 }
 
 func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableStatement, error) {
-	// TABLE name - skip rest of statement for now
 	p.nextToken() // consume TABLE
 
 	name, err := p.parseSchemaObjectName()
@@ -6450,14 +6449,131 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 		SchemaObjectName: name,
 	}
 
-	// Skip rest of statement
-	for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF && !p.isStatementTerminator() {
-		p.nextToken()
+	// Parse column definitions in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			colDef, err := p.parseExternalTableColumnDefinition()
+			if err != nil {
+				return nil, err
+			}
+			stmt.ColumnDefinitions = append(stmt.ColumnDefinitions, colDef)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
 	}
+
+	// Parse WITH clause for options
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume option name
+
+				// Expect =
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+
+				switch optName {
+				case "DATA_SOURCE":
+					stmt.DataSource = p.parseIdentifier()
+				case "LOCATION", "FILE_FORMAT", "TABLE_OPTIONS":
+					opt := &ast.ExternalTableLiteralOrIdentifierOption{
+						Value: &ast.IdentifierOrValueExpression{},
+					}
+					switch optName {
+					case "LOCATION":
+						opt.OptionKind = "Location"
+					case "FILE_FORMAT":
+						opt.OptionKind = "FileFormat"
+					case "TABLE_OPTIONS":
+						opt.OptionKind = "TableOptions"
+					}
+
+					// Parse the value (can be identifier or string literal)
+					if p.curTok.Type == TokenString {
+						strLit := p.parseStringLiteralValue()
+						p.nextToken() // consume string
+						opt.Value.Value = strLit.Value
+						opt.Value.ValueExpression = strLit
+					} else if p.curTok.Type == TokenNationalString {
+						strLit, _ := p.parseNationalStringFromToken()
+						opt.Value.Value = strLit.Value
+						opt.Value.ValueExpression = strLit
+					} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+						ident := p.parseIdentifier()
+						opt.Value.Value = ident.Value
+						opt.Value.Identifier = ident
+					}
+					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
+				default:
+					// Skip unknown options
+					for p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						p.nextToken()
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume comma
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
 	return stmt, nil
+}
+
+func (p *Parser) parseExternalTableColumnDefinition() (*ast.ExternalTableColumnDefinition, error) {
+	colDef := &ast.ExternalTableColumnDefinition{
+		ColumnDefinition: &ast.ColumnDefinitionBase{},
+	}
+
+	// Parse column name
+	colDef.ColumnDefinition.ColumnIdentifier = p.parseIdentifier()
+
+	// Parse data type
+	dt, err := p.parseDataType()
+	if err != nil {
+		return nil, err
+	}
+	colDef.ColumnDefinition.DataType = dt
+
+	// Parse optional COLLATE
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		colDef.ColumnDefinition.Collation = p.parseIdentifier()
+	}
+
+	// Parse optional NULL/NOT NULL
+	if strings.ToUpper(p.curTok.Literal) == "NOT" {
+		p.nextToken() // consume NOT
+		if strings.ToUpper(p.curTok.Literal) == "NULL" {
+			p.nextToken() // consume NULL
+			colDef.NullableConstraint = &ast.NullableConstraintDefinition{
+				Nullable: false,
+			}
+		}
+	} else if strings.ToUpper(p.curTok.Literal) == "NULL" {
+		p.nextToken() // consume NULL
+		colDef.NullableConstraint = &ast.NullableConstraintDefinition{
+			Nullable: true,
+		}
+	}
+
+	return colDef, nil
 }
 
 func (p *Parser) parseCreateExternalLanguageStatement() (*ast.CreateExternalLanguageStatement, error) {
