@@ -6,10 +6,26 @@
       "Statements": [
         {
           "$type": "CreateXmlIndexStatement",
+          "Primary": false,
+          "SecondaryXmlIndexType": "NotSpecified",
           "Name": {
             "$type": "Identifier",
-            "QuoteType": "NotQuoted",
-            "Value": "i1"
+            "Value": "i1",
+            "QuoteType": "NotQuoted"
+          },
+          "OnName": {
+            "$type": "SchemaObjectName",
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 1,
+            "Identifiers": [
+              {
+                "$ref": "Identifier"
+              }
+            ]
           }
         }
       ]

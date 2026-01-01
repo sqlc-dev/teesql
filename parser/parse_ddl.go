@@ -892,25 +892,33 @@ func (p *Parser) parseDropSearchPropertyListStatement() (*ast.DropSearchProperty
 	return stmt, nil
 }
 
-func (p *Parser) parseDropServerRoleStatement() (*ast.DropServerRoleStatement, error) {
+func (p *Parser) parseDropServerRoleStatement() (ast.Statement, error) {
 	// Consume SERVER
 	p.nextToken()
 
-	// Expect ROLE
-	if strings.ToUpper(p.curTok.Literal) != "ROLE" {
-		return nil, fmt.Errorf("expected ROLE after SERVER, got %s", p.curTok.Literal)
-	}
-	p.nextToken()
-
-	stmt := &ast.DropServerRoleStatement{}
-	stmt.Name = p.parseIdentifier()
-
-	// Skip optional semicolon
-	if p.curTok.Type == TokenSemicolon {
+	// Check if it's ROLE or AUDIT
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "ROLE":
 		p.nextToken()
+		stmt := &ast.DropServerRoleStatement{}
+		stmt.Name = p.parseIdentifier()
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	case "AUDIT":
+		p.nextToken()
+		stmt := &ast.DropServerAuditStatement{}
+		stmt.Name = p.parseIdentifier()
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	default:
+		return nil, fmt.Errorf("expected ROLE or AUDIT after SERVER, got %s", p.curTok.Literal)
 	}
-
-	return stmt, nil
 }
 
 func (p *Parser) parseDropAvailabilityGroupStatement() (*ast.DropAvailabilityGroupStatement, error) {
@@ -1851,6 +1859,59 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				Value:      capitalizeFirst(optionValue),
 			}
 			stmt.Options = append(stmt.Options, opt)
+		case "AUTO_CREATE_STATISTICS":
+			// Parse ON/OFF and optional (INCREMENTAL = ON/OFF)
+			optionValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			opt := &ast.AutoCreateStatisticsDatabaseOption{
+				OptionKind:  "AutoCreateStatistics",
+				OptionState: capitalizeFirst(optionValue),
+			}
+			// Check for (INCREMENTAL = ON/OFF)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "INCREMENTAL" {
+					p.nextToken() // consume INCREMENTAL
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+						incState := strings.ToUpper(p.curTok.Literal)
+						p.nextToken() // consume ON/OFF
+						opt.HasIncremental = true
+						opt.IncrementalState = capitalizeFirst(incState)
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "REMOTE_DATA_ARCHIVE":
+			rdaOpt, err := p.parseRemoteDataArchiveOption()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = append(stmt.Options, rdaOpt)
+		case "COMPATIBILITY_LEVEL":
+			// Parse = value
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after COMPATIBILITY_LEVEL")
+			}
+			p.nextToken() // consume =
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			opt := &ast.LiteralDatabaseOption{
+				OptionKind: "CompatibilityLevel",
+				Value:      val,
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "CHANGE_TRACKING":
+			ctOpt, err := p.parseChangeTrackingOption()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = append(stmt.Options, ctOpt)
 		default:
 			// Handle generic options with = syntax (e.g., OPTIMIZED_LOCKING = ON)
 			if p.curTok.Type == TokenEquals {
@@ -1897,6 +1958,170 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 	}
 
 	return stmt, nil
+}
+
+// parseRemoteDataArchiveOption parses REMOTE_DATA_ARCHIVE option
+// Forms:
+//   - REMOTE_DATA_ARCHIVE = ON (options...)
+//   - REMOTE_DATA_ARCHIVE = OFF
+//   - REMOTE_DATA_ARCHIVE (options...) -- OptionState is "NotSet"
+func (p *Parser) parseRemoteDataArchiveOption() (*ast.RemoteDataArchiveDatabaseOption, error) {
+	opt := &ast.RemoteDataArchiveDatabaseOption{
+		OptionKind:  "RemoteDataArchive",
+		OptionState: "NotSet",
+	}
+
+	// Check for = ON/OFF or just (
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+		stateVal := strings.ToUpper(p.curTok.Literal)
+		opt.OptionState = capitalizeFirst(stateVal)
+		p.nextToken() // consume ON/OFF
+	}
+
+	// Parse settings if we have (
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for {
+			settingName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume setting name
+
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after %s, got %s", settingName, p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			switch settingName {
+			case "SERVER":
+				// Parse string literal
+				server, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				setting := &ast.RemoteDataArchiveDbServerSetting{
+					SettingKind: "Server",
+					Server:      server,
+				}
+				opt.Settings = append(opt.Settings, setting)
+			case "CREDENTIAL":
+				// Parse identifier (may be bracketed)
+				cred := p.parseIdentifier()
+				setting := &ast.RemoteDataArchiveDbCredentialSetting{
+					SettingKind: "Credential",
+					Credential:  cred,
+				}
+				opt.Settings = append(opt.Settings, setting)
+			case "FEDERATED_SERVICE_ACCOUNT":
+				// Parse ON/OFF
+				isOn := strings.ToUpper(p.curTok.Literal) == "ON"
+				p.nextToken()
+				setting := &ast.RemoteDataArchiveDbFederatedServiceAccountSetting{
+					SettingKind: "FederatedServiceAccount",
+					IsOn:        isOn,
+				}
+				opt.Settings = append(opt.Settings, setting)
+			default:
+				return nil, fmt.Errorf("unknown REMOTE_DATA_ARCHIVE setting: %s", settingName)
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after REMOTE_DATA_ARCHIVE settings, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	}
+
+	return opt, nil
+}
+
+// parseChangeTrackingOption parses CHANGE_TRACKING option
+// Forms:
+//   - CHANGE_TRACKING = ON (options...)
+//   - CHANGE_TRACKING = OFF
+//   - CHANGE_TRACKING (options...) -- OptionState is "NotSet"
+func (p *Parser) parseChangeTrackingOption() (*ast.ChangeTrackingDatabaseOption, error) {
+	opt := &ast.ChangeTrackingDatabaseOption{
+		OptionKind:  "ChangeTracking",
+		OptionState: "NotSet",
+	}
+
+	// Check for = ON/OFF or just (
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+		stateVal := strings.ToUpper(p.curTok.Literal)
+		opt.OptionState = capitalizeFirst(stateVal)
+		p.nextToken() // consume ON/OFF
+	}
+
+	// Parse details if we have (
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for {
+			detailName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume detail name
+
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after %s, got %s", detailName, p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			switch detailName {
+			case "AUTO_CLEANUP":
+				// Parse ON/OFF
+				isOn := strings.ToUpper(p.curTok.Literal) == "ON"
+				p.nextToken()
+				detail := &ast.AutoCleanupChangeTrackingOptionDetail{
+					IsOn: isOn,
+				}
+				opt.Details = append(opt.Details, detail)
+			case "CHANGE_RETENTION":
+				// Parse value and unit (e.g., 100 HOURS, 3 DAYS, 5 MINUTES)
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				unit := ""
+				unitVal := strings.ToUpper(p.curTok.Literal)
+				switch unitVal {
+				case "DAYS":
+					unit = "Days"
+				case "HOURS":
+					unit = "Hours"
+				case "MINUTES":
+					unit = "Minutes"
+				}
+				if unit != "" {
+					p.nextToken() // consume unit
+				}
+				detail := &ast.ChangeRetentionChangeTrackingOptionDetail{
+					RetentionPeriod: val,
+					Unit:            unit,
+				}
+				opt.Details = append(opt.Details, detail)
+			default:
+				return nil, fmt.Errorf("unknown CHANGE_TRACKING detail: %s", detailName)
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after CHANGE_TRACKING details, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	}
+
+	return opt, nil
 }
 
 func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Statement, error) {
@@ -2544,8 +2769,12 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 		return p.parseAlterTableAddStatement(tableName)
 	}
 
-	// Check for ENABLE/DISABLE TRIGGER
+	// Check for ENABLE/DISABLE TRIGGER or FILETABLE_NAMESPACE
 	if strings.ToUpper(p.curTok.Literal) == "ENABLE" || strings.ToUpper(p.curTok.Literal) == "DISABLE" {
+		// Check if it's FILETABLE_NAMESPACE
+		if strings.ToUpper(p.peekTok.Literal) == "FILETABLE_NAMESPACE" {
+			return p.parseAlterTableFileTableNamespaceStatement(tableName)
+		}
 		return p.parseAlterTableTriggerModificationStatement(tableName)
 	}
 
@@ -2841,20 +3070,21 @@ func (p *Parser) parseAlterTableAlterIndexStatement(tableName *ast.SchemaObjectN
 
 func convertIndexOptionKind(name string) string {
 	optionMap := map[string]string{
-		"BUCKET_COUNT":            "BucketCount",
-		"PAD_INDEX":               "PadIndex",
-		"FILLFACTOR":              "FillFactor",
-		"SORT_IN_TEMPDB":          "SortInTempDB",
-		"IGNORE_DUP_KEY":          "IgnoreDupKey",
-		"STATISTICS_NORECOMPUTE":  "StatisticsNoRecompute",
-		"DROP_EXISTING":           "DropExisting",
-		"ONLINE":                  "Online",
-		"ALLOW_ROW_LOCKS":         "AllowRowLocks",
-		"ALLOW_PAGE_LOCKS":        "AllowPageLocks",
-		"MAXDOP":                  "MaxDop",
-		"DATA_COMPRESSION":        "DataCompression",
-		"COMPRESS_ALL_ROW_GROUPS": "CompressAllRowGroups",
-		"COMPRESSION_DELAY":       "CompressionDelay",
+		"BUCKET_COUNT":                 "BucketCount",
+		"PAD_INDEX":                    "PadIndex",
+		"FILLFACTOR":                   "FillFactor",
+		"SORT_IN_TEMPDB":               "SortInTempDB",
+		"IGNORE_DUP_KEY":               "IgnoreDupKey",
+		"STATISTICS_NORECOMPUTE":       "StatisticsNoRecompute",
+		"DROP_EXISTING":                "DropExisting",
+		"ONLINE":                       "Online",
+		"ALLOW_ROW_LOCKS":              "AllowRowLocks",
+		"ALLOW_PAGE_LOCKS":             "AllowPageLocks",
+		"MAXDOP":                       "MaxDop",
+		"DATA_COMPRESSION":             "DataCompression",
+		"COMPRESS_ALL_ROW_GROUPS":      "CompressAllRowGroups",
+		"COMPRESSION_DELAY":            "CompressionDelay",
+		"OPTIMIZE_FOR_SEQUENTIAL_KEY": "OptimizeForSequentialKey",
 	}
 	if mapped, ok := optionMap[name]; ok {
 		return mapped
@@ -3059,12 +3289,27 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
 						}
-						expr, _ := p.parseScalarExpression()
-						option := &ast.IndexExpressionOption{
-							OptionKind: convertIndexOptionKind(optionName),
-							Expression: expr,
+						// Check for ON/OFF state options
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
+							state := "On"
+							if valueUpper == "OFF" {
+								state = "Off"
+							}
+							p.nextToken() // consume ON/OFF
+							option := &ast.IndexStateOption{
+								OptionKind:  convertIndexOptionKind(optionName),
+								OptionState: state,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
+						} else {
+							expr, _ := p.parseScalarExpression()
+							option := &ast.IndexExpressionOption{
+								OptionKind: convertIndexOptionKind(optionName),
+								Expression: expr,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
 						}
-						constraint.IndexOptions = append(constraint.IndexOptions, option)
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
 						} else {
@@ -3169,12 +3414,27 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
 						}
-						expr, _ := p.parseScalarExpression()
-						option := &ast.IndexExpressionOption{
-							OptionKind: convertIndexOptionKind(optionName),
-							Expression: expr,
+						// Check for ON/OFF state options
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
+							state := "On"
+							if valueUpper == "OFF" {
+								state = "Off"
+							}
+							p.nextToken() // consume ON/OFF
+							option := &ast.IndexStateOption{
+								OptionKind:  convertIndexOptionKind(optionName),
+								OptionState: state,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
+						} else {
+							expr, _ := p.parseScalarExpression()
+							option := &ast.IndexExpressionOption{
+								OptionKind: convertIndexOptionKind(optionName),
+								Expression: expr,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
 						}
-						constraint.IndexOptions = append(constraint.IndexOptions, option)
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
 						} else {
@@ -3266,6 +3526,45 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 			if hasColumnsFK && hasReferences {
 				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 			}
+
+		case "CONNECTION":
+			// Parse CONNECTION (node1 TO node2, ...)
+			p.nextToken() // consume CONNECTION
+			constraint := &ast.GraphConnectionConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+			}
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					conn := &ast.GraphConnectionBetweenNodes{}
+					// Parse FromNode
+					fromNode, err := p.parseSchemaObjectName()
+					if err != nil {
+						return nil, err
+					}
+					conn.FromNode = fromNode
+					// Expect TO
+					if strings.ToUpper(p.curTok.Literal) == "TO" {
+						p.nextToken() // consume TO
+					}
+					// Parse ToNode
+					toNode, err := p.parseSchemaObjectName()
+					if err != nil {
+						return nil, err
+					}
+					conn.ToNode = toNode
+					constraint.FromNodeToNodeList = append(constraint.FromNodeToNodeList, conn)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 
 		default:
 			// Unknown constraint type - skip to end of statement
@@ -3467,6 +3766,33 @@ func (p *Parser) parseAlterTableTriggerModificationStatement(tableName *ast.Sche
 	return stmt, nil
 }
 
+func (p *Parser) parseAlterTableFileTableNamespaceStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableFileTableNamespaceStatement, error) {
+	stmt := &ast.AlterTableFileTableNamespaceStatement{
+		SchemaObjectName: tableName,
+	}
+
+	// Parse ENABLE or DISABLE
+	if strings.ToUpper(p.curTok.Literal) == "ENABLE" {
+		stmt.IsEnable = true
+	} else {
+		stmt.IsEnable = false
+	}
+	p.nextToken()
+
+	// Consume FILETABLE_NAMESPACE
+	if strings.ToUpper(p.curTok.Literal) != "FILETABLE_NAMESPACE" {
+		return nil, fmt.Errorf("expected FILETABLE_NAMESPACE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableSwitchStatement, error) {
 	stmt := &ast.AlterTableSwitchStatement{
 		SchemaObjectName: tableName,
@@ -3529,6 +3855,72 @@ func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName)
 						}
 						stmt.Options = append(stmt.Options, opt)
 					}
+				} else if optionName == "WAIT_AT_LOW_PRIORITY" {
+					opt := &ast.LowPriorityLockWaitTableSwitchOption{
+						OptionKind: "LowPriorityLockWait",
+					}
+
+					// Expect (
+					if p.curTok.Type == TokenLParen {
+						p.nextToken()
+
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							subOptName := strings.ToUpper(p.curTok.Literal)
+							p.nextToken()
+
+							if subOptName == "MAX_DURATION" {
+								if p.curTok.Type == TokenEquals {
+									p.nextToken()
+								}
+								// Parse the duration value
+								durExpr, err := p.parseScalarExpression()
+								if err != nil {
+									return nil, err
+								}
+								subOpt := &ast.LowPriorityLockWaitMaxDurationOption{
+									OptionKind:  "MaxDuration",
+									MaxDuration: durExpr,
+								}
+								// Check for MINUTES
+								if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+									subOpt.Unit = "Minutes"
+									p.nextToken()
+								}
+								opt.Options = append(opt.Options, subOpt)
+							} else if subOptName == "ABORT_AFTER_WAIT" {
+								if p.curTok.Type == TokenEquals {
+									p.nextToken()
+								}
+								value := p.curTok.Literal
+								p.nextToken()
+								// Convert to proper case
+								abortValue := "None"
+								switch strings.ToUpper(value) {
+								case "NONE":
+									abortValue = "None"
+								case "SELF":
+									abortValue = "Self"
+								case "BLOCKERS":
+									abortValue = "Blockers"
+								}
+								subOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
+									OptionKind:     "AbortAfterWait",
+									AbortAfterWait: abortValue,
+								}
+								opt.Options = append(opt.Options, subOpt)
+							}
+
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							}
+						}
+
+						if p.curTok.Type == TokenRParen {
+							p.nextToken()
+						}
+					}
+
+					stmt.Options = append(stmt.Options, opt)
 				}
 
 				if p.curTok.Type == TokenComma {
@@ -3632,6 +4024,43 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 			opt, err := p.parseSystemVersioningTableOption()
 			if err != nil {
 				return nil, err
+			}
+			stmt.Options = append(stmt.Options, opt)
+		} else if optionName == "FILETABLE_DIRECTORY" {
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			// Parse the directory name as a literal or NULL
+			opt := &ast.FileTableDirectoryTableOption{
+				OptionKind: "FileTableDirectory",
+			}
+			if strings.ToUpper(p.curTok.Literal) == "NULL" {
+				opt.Value = &ast.NullLiteral{
+					LiteralType: "Null",
+					Value:       "NULL",
+				}
+				p.nextToken()
+			} else if p.curTok.Type == TokenString {
+				value := p.curTok.Literal
+				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+					value = value[1 : len(value)-1]
+				}
+				opt.Value = &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         value,
+					IsNational:    false,
+					IsLargeObject: false,
+				}
+				p.nextToken()
+			} else {
+				value := p.curTok.Literal
+				opt.Value = &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         value,
+					IsNational:    false,
+					IsLargeObject: false,
+				}
+				p.nextToken()
 			}
 			stmt.Options = append(stmt.Options, opt)
 		}
@@ -3901,6 +4330,24 @@ func (p *Parser) parseAlterServerAuditStatement() (*ast.AlterServerAuditStatemen
 
 	// Parse audit name
 	stmt.AuditName = p.parseIdentifier()
+
+	// Check for MODIFY NAME
+	if strings.ToUpper(p.curTok.Literal) == "MODIFY" {
+		p.nextToken() // consume MODIFY
+		if strings.ToUpper(p.curTok.Literal) == "NAME" {
+			p.nextToken() // consume NAME
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			stmt.NewName = p.parseIdentifier()
+			// Skip optional semicolon
+			if p.curTok.Type == TokenSemicolon {
+				p.nextToken()
+			}
+			return stmt, nil
+		}
+		return nil, fmt.Errorf("expected NAME after MODIFY, got %s", p.curTok.Literal)
+	}
 
 	// Check for REMOVE WHERE
 	if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
@@ -5472,8 +5919,204 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 		}
 		stmt.OnName = name
 	}
-	p.skipToEndOfStatement()
+
+	// Parse action (if any)
+	action := p.tryParseAlterFullTextIndexAction()
+	stmt.Action = action
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 	return stmt, nil
+}
+
+func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexActionOption {
+	actionLit := strings.ToUpper(p.curTok.Literal)
+
+	switch actionLit {
+	case "ENABLE":
+		p.nextToken()
+		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "Enable"}
+	case "DISABLE":
+		p.nextToken()
+		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "Disable"}
+	case "SET":
+		p.nextToken() // consume SET
+		// Parse CHANGE_TRACKING = MANUAL/AUTO/OFF
+		if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING" {
+			p.nextToken() // consume CHANGE_TRACKING
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			trackingLit := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			switch trackingLit {
+			case "MANUAL":
+				return &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingManual"}
+			case "AUTO":
+				return &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingAuto"}
+			case "OFF":
+				return &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingOff"}
+			}
+		}
+		return nil
+	case "START":
+		p.nextToken() // consume START
+		popType := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+			p.nextToken()
+		}
+		switch popType {
+		case "FULL":
+			return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartFullPopulation"}
+		case "INCREMENTAL":
+			return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartIncrementalPopulation"}
+		case "UPDATE":
+			return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartUpdatePopulation"}
+		}
+		return nil
+	case "STOP":
+		p.nextToken() // consume STOP
+		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+			p.nextToken()
+		}
+		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StopPopulation"}
+	case "PAUSE":
+		p.nextToken() // consume PAUSE
+		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+			p.nextToken()
+		}
+		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "PausePopulation"}
+	case "RESUME":
+		p.nextToken() // consume RESUME
+		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+			p.nextToken()
+		}
+		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "ResumePopulation"}
+	case "ADD":
+		action, _ := p.parseAddAlterFullTextIndexAction()
+		return action
+	case "DROP":
+		action, _ := p.parseDropAlterFullTextIndexAction()
+		return action
+	}
+
+	// No action found
+	return nil
+}
+
+func (p *Parser) parseAddAlterFullTextIndexAction() (*ast.AddAlterFullTextIndexAction, error) {
+	p.nextToken() // consume ADD
+
+	action := &ast.AddAlterFullTextIndexAction{}
+
+	// Parse (column list)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			col := &ast.FullTextIndexColumn{}
+			col.Name = p.parseIdentifier()
+
+			// Check for TYPE COLUMN
+			if strings.ToUpper(p.curTok.Literal) == "TYPE" {
+				p.nextToken() // consume TYPE
+				if strings.ToUpper(p.curTok.Literal) == "COLUMN" {
+					p.nextToken() // consume COLUMN
+				}
+				col.TypeColumn = p.parseIdentifier()
+			}
+
+			// Check for LANGUAGE
+			if strings.ToUpper(p.curTok.Literal) == "LANGUAGE" {
+				p.nextToken() // consume LANGUAGE
+				col.LanguageTerm = &ast.IdentifierOrValueExpression{}
+				if p.curTok.Type == TokenNumber {
+					col.LanguageTerm.Value = p.curTok.Literal
+					col.LanguageTerm.ValueExpression = &ast.IntegerLiteral{Value: p.curTok.Literal, LiteralType: "Integer"}
+					p.nextToken()
+				} else if p.curTok.Type == TokenString {
+					// Strip quotes from string literal
+					val := p.curTok.Literal
+					if len(val) >= 2 && (val[0] == '\'' || val[0] == '"') {
+						val = val[1 : len(val)-1]
+					}
+					col.LanguageTerm.Value = val
+					col.LanguageTerm.ValueExpression = &ast.StringLiteral{Value: val, LiteralType: "String"}
+					p.nextToken()
+				}
+			}
+
+			// StatisticalSemantics defaults to false
+
+			action.Columns = append(action.Columns, col)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Check for WITH NO POPULATION
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "NO" {
+			p.nextToken() // consume NO
+			if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+				p.nextToken() // consume POPULATION
+				action.WithNoPopulation = true
+			}
+		}
+	}
+
+	return action, nil
+}
+
+func (p *Parser) parseDropAlterFullTextIndexAction() (*ast.DropAlterFullTextIndexAction, error) {
+	p.nextToken() // consume DROP
+
+	action := &ast.DropAlterFullTextIndexAction{}
+
+	// Parse (column list)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			action.Columns = append(action.Columns, p.parseIdentifier())
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Check for WITH NO POPULATION
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "NO" {
+			p.nextToken() // consume NO
+			if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+				p.nextToken() // consume POPULATION
+				action.WithNoPopulation = true
+			}
+		}
+	}
+
+	return action, nil
 }
 
 func (p *Parser) parseAlterSymmetricKeyStatement() (*ast.AlterSymmetricKeyStatement, error) {
@@ -5883,8 +6526,83 @@ func (p *Parser) parseAlterExternalLanguageStatement() (*ast.AlterExternalLangua
 	// Parse name
 	stmt.Name = p.parseIdentifier()
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse optional AUTHORIZATION
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Parse operation (SET, ADD, REMOVE)
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "SET" || upperLit == "ADD" || upperLit == "REMOVE" {
+		stmt.Operation = p.parseIdentifier()
+
+		if upperLit == "REMOVE" {
+			// REMOVE PLATFORM <platform>
+			if strings.ToUpper(p.curTok.Literal) == "PLATFORM" {
+				p.nextToken() // consume PLATFORM
+				stmt.Platform = p.parseIdentifier()
+			}
+		} else {
+			// SET or ADD - parse file options
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				fileOption := &ast.ExternalLanguageFileOption{}
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					switch strings.ToUpper(p.curTok.Literal) {
+					case "CONTENT":
+						p.nextToken() // consume CONTENT
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						fileOption.Content = expr
+					case "FILE_NAME":
+						p.nextToken() // consume FILE_NAME
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						fileOption.FileName = expr
+					case "PLATFORM":
+						p.nextToken() // consume PLATFORM
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						fileOption.Platform = p.parseIdentifier()
+					case "PARAMETERS":
+						p.nextToken() // consume PARAMETERS
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						fileOption.Parameters = expr
+					case "ENVIRONMENT_VARIABLES":
+						p.nextToken() // consume ENVIRONMENT_VARIABLES
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						fileOption.EnvironmentVariables = expr
+					default:
+						p.nextToken()
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+				stmt.ExternalLanguageFiles = append(stmt.ExternalLanguageFiles, fileOption)
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
@@ -5980,6 +6698,12 @@ func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibrary
 
 // convertOptionKind converts a SQL option name (e.g., "OPTIMIZED_LOCKING") to its OptionKind form (e.g., "OptimizedLocking")
 func convertOptionKind(optionName string) string {
+	// Handle special cases with specific capitalization
+	switch optionName {
+	case "VARDECIMAL_STORAGE_FORMAT":
+		return "VarDecimalStorageFormat"
+	}
+
 	// Split by underscores and capitalize each word
 	parts := strings.Split(optionName, "_")
 	for i, part := range parts {
@@ -6034,15 +6758,29 @@ func (p *Parser) parseAlterWorkloadGroupStatement() (*ast.AlterWorkloadGroupStat
 	// Parse USING clause (resource pool reference)
 	if strings.ToUpper(p.curTok.Literal) == "USING" {
 		p.nextToken() // consume USING
-		stmt.PoolName = p.parseIdentifier()
 
-		// Check for EXTERNAL
-		if p.curTok.Type == TokenComma {
-			p.nextToken()
-		}
+		// Check if EXTERNAL comes first
 		if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
 			p.nextToken() // consume EXTERNAL
 			stmt.ExternalPoolName = p.parseIdentifier()
+
+			// Check for comma and internal pool
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+				stmt.PoolName = p.parseIdentifier()
+			}
+		} else {
+			// Internal pool first
+			stmt.PoolName = p.parseIdentifier()
+
+			// Check for EXTERNAL
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+			if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+				p.nextToken() // consume EXTERNAL
+				stmt.ExternalPoolName = p.parseIdentifier()
+			}
 		}
 	}
 

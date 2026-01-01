@@ -222,6 +222,10 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		if strings.ToUpper(p.curTok.Literal) == "DISABLE" {
 			return p.parseEnableDisableTriggerStatement("Disable")
 		}
+		// Check for MERGE statement
+		if strings.ToUpper(p.curTok.Literal) == "MERGE" {
+			return p.parseMergeStatement()
+		}
 		// Check for label (identifier followed by colon)
 		return p.parseLabelOrError()
 	default:

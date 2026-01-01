@@ -483,7 +483,7 @@ func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
 func (p *Parser) getOpenRowsetOptionKind(name string) string {
 	optionMap := map[string]string{
 		"FORMATFILE":       "FormatFile",
-		"FORMAT":           "Format",
+		"FORMAT":           "DataFileFormat",
 		"CODEPAGE":         "CodePage",
 		"ROWS_PER_BATCH":   "RowsPerBatch",
 		"LASTROW":          "LastRow",
@@ -1766,7 +1766,7 @@ func (p *Parser) parseBulkInsertOption() (ast.BulkInsertOption, error) {
 		"KEEPIDENTITY":        "KeepIdentity",
 		"INCLUDE_HIDDEN":      "IncludeHidden",
 		"BATCHSIZE":           "BatchSize",
-		"CODEPAGE":            "Codepage",
+		"CODEPAGE":            "CodePage",
 		"DATAFILETYPE":        "DataFileType",
 		"FIELDTERMINATOR":     "FieldTerminator",
 		"FIRSTROW":            "FirstRow",
@@ -1777,6 +1777,9 @@ func (p *Parser) parseBulkInsertOption() (ast.BulkInsertOption, error) {
 		"ROWTERMINATOR":       "RowTerminator",
 		"ROWS_PER_BATCH":      "RowsPerBatch",
 		"ERRORFILE":           "ErrorFile",
+		"FORMAT":              "DataFileFormat",
+		"ESCAPECHAR":          "EscapeChar",
+		"FIELDQUOTE":          "FieldQuote",
 	}
 
 	optionKind := optionKindMap[optionName]
@@ -2142,17 +2145,61 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 					Literal:    value,
 				})
 			case "RESAMPLE":
-				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.ResampleStatisticsOption{
+				resampleOpt := &ast.ResampleStatisticsOption{
 					OptionKind: "Resample",
-				})
+				}
+				// Check for ON PARTITIONS
+				if p.curTok.Type == TokenOn {
+					p.nextToken() // consume ON
+					if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PARTITIONS" {
+						p.nextToken() // consume PARTITIONS
+						if p.curTok.Type == TokenLParen {
+							p.nextToken() // consume (
+							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+								// Parse partition range: number or number TO number
+								// Just parse the literal value directly
+								fromVal := &ast.IntegerLiteral{
+									LiteralType: "Integer",
+									Value:       p.curTok.Literal,
+								}
+								p.nextToken() // consume the number
+								partRange := &ast.StatisticsPartitionRange{
+									From: fromVal,
+								}
+								// Check for TO (TokenTo)
+								if p.curTok.Type == TokenTo {
+									p.nextToken() // consume TO
+									toVal := &ast.IntegerLiteral{
+										LiteralType: "Integer",
+										Value:       p.curTok.Literal,
+									}
+									p.nextToken() // consume the number
+									partRange.To = toVal
+								}
+								resampleOpt.Partitions = append(resampleOpt.Partitions, partRange)
+								if p.curTok.Type == TokenComma {
+									p.nextToken()
+								}
+							}
+							if p.curTok.Type == TokenRParen {
+								p.nextToken() // consume )
+							}
+						}
+					}
+				}
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, resampleOpt)
 			case "INCREMENTAL":
 				if p.curTok.Type == TokenEquals {
 					p.nextToken()
 					state := strings.ToUpper(p.curTok.Literal)
+					optionState := "On"
+					if state == "OFF" {
+						optionState = "Off"
+					}
 					p.nextToken()
 					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{
 						OptionKind:  "Incremental",
-						OptionState: state,
+						OptionState: optionState,
 					})
 				} else {
 					stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.OnOffStatisticsOption{

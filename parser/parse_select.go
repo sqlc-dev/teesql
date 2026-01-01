@@ -186,6 +186,17 @@ func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.Schem
 		}
 	}
 
+	// Parse OFFSET...FETCH clause after ORDER BY
+	if strings.ToUpper(p.curTok.Literal) == "OFFSET" {
+		oc, err := p.parseOffsetClause()
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		if qs, ok := left.(*ast.QuerySpecification); ok {
+			qs.OffsetClause = oc
+		}
+	}
+
 	// Parse FOR clause (FOR BROWSE, FOR XML, FOR UPDATE, FOR READ ONLY)
 	if strings.ToUpper(p.curTok.Literal) == "FOR" {
 		forClause, err := p.parseForClause()
@@ -698,7 +709,7 @@ func (p *Parser) parseAdditiveExpression() (ast.ScalarExpression, error) {
 }
 
 func (p *Parser) parseMultiplicativeExpression() (ast.ScalarExpression, error) {
-	left, err := p.parsePrimaryExpression()
+	left, err := p.parsePostfixExpression()
 	if err != nil {
 		return nil, err
 	}
@@ -715,7 +726,7 @@ func (p *Parser) parseMultiplicativeExpression() (ast.ScalarExpression, error) {
 		}
 		p.nextToken()
 
-		right, err := p.parsePrimaryExpression()
+		right, err := p.parsePostfixExpression()
 		if err != nil {
 			return nil, err
 		}
@@ -728,6 +739,36 @@ func (p *Parser) parseMultiplicativeExpression() (ast.ScalarExpression, error) {
 	}
 
 	return left, nil
+}
+
+// parsePostfixExpression handles postfix operators like AT TIME ZONE
+func (p *Parser) parsePostfixExpression() (ast.ScalarExpression, error) {
+	expr, err := p.parsePrimaryExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for AT TIME ZONE - only if followed by "TIME"
+	for strings.ToUpper(p.curTok.Literal) == "AT" && strings.ToUpper(p.peekTok.Literal) == "TIME" {
+		p.nextToken() // consume AT
+		p.nextToken() // consume TIME
+		if strings.ToUpper(p.curTok.Literal) != "ZONE" {
+			return nil, fmt.Errorf("expected ZONE after TIME, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ZONE
+
+		timezone, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &ast.AtTimeZoneCall{
+			DateValue: expr,
+			TimeZone:  timezone,
+		}
+	}
+
+	return expr, nil
 }
 
 func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
@@ -1656,13 +1697,46 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 
 	// Check for JOINs
 	for {
-		// Check for CROSS JOIN
+		// Check for CROSS JOIN or CROSS APPLY
 		if p.curTok.Type == TokenCross {
 			p.nextToken() // consume CROSS
-			if p.curTok.Type != TokenJoin {
-				return nil, fmt.Errorf("expected JOIN after CROSS, got %s", p.curTok.Literal)
+			if p.curTok.Type == TokenJoin {
+				p.nextToken() // consume JOIN
+
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+
+				left = &ast.UnqualifiedJoin{
+					UnqualifiedJoinType:  "CrossJoin",
+					FirstTableReference:  left,
+					SecondTableReference: right,
+				}
+				continue
+			} else if strings.ToUpper(p.curTok.Literal) == "APPLY" {
+				p.nextToken() // consume APPLY
+
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+
+				left = &ast.UnqualifiedJoin{
+					UnqualifiedJoinType:  "CrossApply",
+					FirstTableReference:  left,
+					SecondTableReference: right,
+				}
+				continue
+			} else {
+				return nil, fmt.Errorf("expected JOIN or APPLY after CROSS, got %s", p.curTok.Literal)
 			}
-			p.nextToken() // consume JOIN
+		}
+
+		// Check for OUTER APPLY
+		if p.curTok.Type == TokenOuter && strings.ToUpper(p.peekTok.Literal) == "APPLY" {
+			p.nextToken() // consume OUTER
+			p.nextToken() // consume APPLY
 
 			right, err := p.parseSingleTableReference()
 			if err != nil {
@@ -1670,7 +1744,7 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 			}
 
 			left = &ast.UnqualifiedJoin{
-				UnqualifiedJoinType:  "CrossJoin",
+				UnqualifiedJoinType:  "OuterApply",
 				FirstTableReference:  left,
 				SecondTableReference: right,
 			}
@@ -1741,6 +1815,11 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 }
 
 func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
+	// Check for derived table (parenthesized query)
+	if p.curTok.Type == TokenLParen {
+		return p.parseDerivedTableReference()
+	}
+
 	// Check for OPENROWSET
 	if p.curTok.Type == TokenOpenRowset {
 		return p.parseOpenRowset()
@@ -1786,6 +1865,46 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 	return p.parseNamedTableReferenceWithName(son)
 }
 
+// parseDerivedTableReference parses a derived table (parenthesized query) like (SELECT ...) AS alias
+func (p *Parser) parseDerivedTableReference() (*ast.QueryDerivedTable, error) {
+	p.nextToken() // consume (
+
+	// Parse the query expression
+	qe, err := p.parseQueryExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after derived table query, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	ref := &ast.QueryDerivedTable{
+		QueryExpression: qe,
+		ForPath:         false,
+	}
+
+	// Parse optional alias (AS alias or just alias)
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+		// Could be an alias without AS, but need to be careful not to consume keywords
+		if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
+				ref.Alias = p.parseIdentifier()
+			}
+		} else {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	return ref, nil
+}
+
 func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	ref := &ast.NamedTableReference{
 		ForPath: false,
@@ -1809,7 +1928,7 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	} else if p.curTok.Type == TokenIdent {
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
 			ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
 			p.nextToken()
 		}
@@ -1869,7 +1988,7 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		if p.curTok.Type == TokenIdent {
 			upper := strings.ToUpper(p.curTok.Literal)
-			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
 				ref.Alias = p.parseIdentifier()
 			}
 		} else {
@@ -2639,14 +2758,9 @@ func (p *Parser) parseGroupByClause() (*ast.GroupByClause, error) {
 
 	// Parse grouping specifications
 	for {
-		expr, err := p.parseScalarExpression()
+		spec, err := p.parseGroupingSpecification()
 		if err != nil {
 			return nil, err
-		}
-
-		spec := &ast.ExpressionGroupingSpecification{
-			Expression:             expr,
-			DistributedAggregation: false,
 		}
 		gbc.GroupingSpecifications = append(gbc.GroupingSpecifications, spec)
 
@@ -2656,7 +2770,7 @@ func (p *Parser) parseGroupByClause() (*ast.GroupByClause, error) {
 		p.nextToken() // consume comma
 	}
 
-	// Check for WITH ROLLUP or WITH CUBE
+	// Check for WITH ROLLUP or WITH CUBE (old syntax)
 	if p.curTok.Type == TokenWith {
 		p.nextToken() // consume WITH
 		if p.curTok.Type == TokenRollup {
@@ -2669,6 +2783,163 @@ func (p *Parser) parseGroupByClause() (*ast.GroupByClause, error) {
 	}
 
 	return gbc, nil
+}
+
+// parseGroupingSpecification parses a single grouping specification
+func (p *Parser) parseGroupingSpecification() (ast.GroupingSpecification, error) {
+	// Check for ROLLUP (...)
+	if p.curTok.Type == TokenRollup {
+		return p.parseRollupGroupingSpecification()
+	}
+
+	// Check for CUBE (...)
+	if p.curTok.Type == TokenCube {
+		return p.parseCubeGroupingSpecification()
+	}
+
+	// Check for composite grouping (c1, c2, ...)
+	if p.curTok.Type == TokenLParen {
+		return p.parseCompositeGroupingSpecification()
+	}
+
+	// Regular expression grouping
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	spec := &ast.ExpressionGroupingSpecification{
+		Expression:             expr,
+		DistributedAggregation: false,
+	}
+
+	// Check for WITH (DISTRIBUTED_AGG) hint - only if next token is (
+	// This distinguishes from WITH ROLLUP/CUBE at the end
+	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
+		p.nextToken() // consume WITH
+		p.nextToken() // consume (
+		if strings.ToUpper(p.curTok.Literal) == "DISTRIBUTED_AGG" {
+			spec.DistributedAggregation = true
+			p.nextToken() // consume DISTRIBUTED_AGG
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	return spec, nil
+}
+
+// parseRollupGroupingSpecification parses ROLLUP (c1, c2, ...)
+func (p *Parser) parseRollupGroupingSpecification() (*ast.RollupGroupingSpecification, error) {
+	p.nextToken() // consume ROLLUP
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after ROLLUP, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	spec := &ast.RollupGroupingSpecification{}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		arg, err := p.parseGroupingSpecificationArgument()
+		if err != nil {
+			return nil, err
+		}
+		spec.Arguments = append(spec.Arguments, arg)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return spec, nil
+}
+
+// parseCubeGroupingSpecification parses CUBE (c1, c2, ...)
+func (p *Parser) parseCubeGroupingSpecification() (*ast.CubeGroupingSpecification, error) {
+	p.nextToken() // consume CUBE
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after CUBE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	spec := &ast.CubeGroupingSpecification{}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		arg, err := p.parseGroupingSpecificationArgument()
+		if err != nil {
+			return nil, err
+		}
+		spec.Arguments = append(spec.Arguments, arg)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return spec, nil
+}
+
+// parseGroupingSpecificationArgument parses an argument inside ROLLUP/CUBE which can be
+// an expression or a composite grouping like (c2, c3)
+func (p *Parser) parseGroupingSpecificationArgument() (ast.GroupingSpecification, error) {
+	// Check for composite grouping (c1, c2)
+	if p.curTok.Type == TokenLParen {
+		return p.parseCompositeGroupingSpecification()
+	}
+
+	// Regular expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.ExpressionGroupingSpecification{
+		Expression:             expr,
+		DistributedAggregation: false,
+	}, nil
+}
+
+// parseCompositeGroupingSpecification parses (c1, c2, ...)
+func (p *Parser) parseCompositeGroupingSpecification() (*ast.CompositeGroupingSpecification, error) {
+	p.nextToken() // consume (
+
+	spec := &ast.CompositeGroupingSpecification{}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		spec.Items = append(spec.Items, &ast.ExpressionGroupingSpecification{
+			Expression:             expr,
+			DistributedAggregation: false,
+		})
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return spec, nil
 }
 
 func (p *Parser) parseHavingClause() (*ast.HavingClause, error) {
@@ -2724,6 +2995,58 @@ func (p *Parser) parseOrderByClause() (*ast.OrderByClause, error) {
 	}
 
 	return obc, nil
+}
+
+// parseOffsetClause parses OFFSET n ROWS FETCH NEXT/FIRST m ROWS ONLY
+func (p *Parser) parseOffsetClause() (*ast.OffsetClause, error) {
+	// Consume OFFSET
+	p.nextToken()
+
+	oc := &ast.OffsetClause{}
+
+	// Parse offset expression
+	offsetExpr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	oc.OffsetExpression = offsetExpr
+
+	// Skip ROWS/ROW keyword
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "ROWS" || upperLit == "ROW" {
+		p.nextToken()
+	}
+
+	// Parse FETCH NEXT/FIRST m ROWS ONLY
+	if strings.ToUpper(p.curTok.Literal) == "FETCH" {
+		p.nextToken() // consume FETCH
+
+		// Skip NEXT or FIRST
+		upperLit = strings.ToUpper(p.curTok.Literal)
+		if upperLit == "NEXT" || upperLit == "FIRST" {
+			p.nextToken()
+		}
+
+		// Parse fetch expression
+		fetchExpr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		oc.FetchExpression = fetchExpr
+
+		// Skip ROWS/ROW keyword
+		upperLit = strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ROWS" || upperLit == "ROW" {
+			p.nextToken()
+		}
+
+		// Skip ONLY keyword
+		if strings.ToUpper(p.curTok.Literal) == "ONLY" {
+			p.nextToken()
+		}
+	}
+
+	return oc, nil
 }
 
 func (p *Parser) parseBooleanExpression() (ast.BooleanExpression, error) {
@@ -2812,6 +3135,54 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		inner, err := p.parseBooleanExpression()
 		if err != nil {
 			return nil, err
+		}
+
+		// Check if we got a placeholder for a scalar expression without comparison
+		// This happens when parsing something like (XACT_STATE()) in: IF (XACT_STATE()) = -1
+		if placeholder, ok := inner.(*ast.BooleanScalarPlaceholder); ok {
+			// The inner content was a bare scalar expression
+			// curTok should still be ) since we didn't consume it
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+
+			// Wrap the scalar in a ParenthesisExpression
+			parenExpr := &ast.ParenthesisExpression{Expression: placeholder.Scalar}
+
+			// Check for comparison operators after the parenthesized expression
+			if p.isComparisonOperator() {
+				return p.parseComparisonAfterLeft(parenExpr)
+			}
+
+			// Check for IS NULL / IS NOT NULL
+			if p.curTok.Type == TokenIs {
+				return p.parseIsNullAfterLeft(parenExpr)
+			}
+
+			// Check for NOT before IN/LIKE/BETWEEN
+			notDefined := false
+			if p.curTok.Type == TokenNot {
+				notDefined = true
+				p.nextToken()
+			}
+
+			if p.curTok.Type == TokenIn {
+				return p.parseInExpressionAfterLeft(parenExpr, notDefined)
+			}
+			if p.curTok.Type == TokenLike {
+				return p.parseLikeExpressionAfterLeft(parenExpr, notDefined)
+			}
+			if p.curTok.Type == TokenBetween {
+				return p.parseBetweenExpressionAfterLeft(parenExpr, notDefined)
+			}
+
+			if notDefined {
+				return nil, fmt.Errorf("expected IN, LIKE, or BETWEEN after NOT, got %s", p.curTok.Literal)
+			}
+
+			// If no comparison follows, return error
+			return nil, fmt.Errorf("expected comparison operator after parenthesized expression, got %s", p.curTok.Literal)
 		}
 
 		if p.curTok.Type != TokenRParen {
@@ -2983,6 +3354,11 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		compType = "LessThanOrEqualTo"
 	case TokenGreaterOrEqual:
 		compType = "GreaterThanOrEqualTo"
+	case TokenRParen:
+		// We're at ) without a comparison operator - this happens when parsing
+		// a parenthesized scalar expression like (XACT_STATE()) in a boolean context.
+		// Return a special marker that the caller can handle.
+		return &ast.BooleanScalarPlaceholder{Scalar: left}, nil
 	default:
 		return nil, fmt.Errorf("expected comparison operator, got %s", p.curTok.Literal)
 	}
@@ -3043,6 +3419,171 @@ func (p *Parser) parseComparisonAfterLeft(left ast.ScalarExpression) (ast.Boolea
 		ComparisonType:   compType,
 		FirstExpression:  left,
 		SecondExpression: right,
+	}, nil
+}
+
+// parseInExpressionAfterLeft parses an IN expression after the left operand is already parsed
+func (p *Parser) parseInExpressionAfterLeft(left ast.ScalarExpression, notDefined bool) (ast.BooleanExpression, error) {
+	p.nextToken() // consume IN
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after IN, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Check if it's a subquery or value list
+	if p.curTok.Type == TokenSelect {
+		subquery, err := p.parseQueryExpression()
+		if err != nil {
+			return nil, err
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+		return &ast.BooleanInExpression{
+			Expression: left,
+			NotDefined: notDefined,
+			Subquery:   subquery,
+		}, nil
+	}
+
+	// Parse value list
+	var values []ast.ScalarExpression
+	for {
+		val, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, val)
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume ,
+	}
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+	return &ast.BooleanInExpression{
+		Expression: left,
+		NotDefined: notDefined,
+		Values:     values,
+	}, nil
+}
+
+// parseLikeExpressionAfterLeft parses a LIKE expression after the left operand is already parsed
+func (p *Parser) parseLikeExpressionAfterLeft(left ast.ScalarExpression, notDefined bool) (ast.BooleanExpression, error) {
+	p.nextToken() // consume LIKE
+
+	pattern, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	var escapeExpr ast.ScalarExpression
+	if p.curTok.Type == TokenEscape {
+		p.nextToken() // consume ESCAPE
+		escapeExpr, err = p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &ast.BooleanLikeExpression{
+		FirstExpression:  left,
+		SecondExpression: pattern,
+		EscapeExpression: escapeExpr,
+		NotDefined:       notDefined,
+	}, nil
+}
+
+// parseBetweenExpressionAfterLeft parses a BETWEEN expression after the left operand is already parsed
+func (p *Parser) parseBetweenExpressionAfterLeft(left ast.ScalarExpression, notDefined bool) (ast.BooleanExpression, error) {
+	p.nextToken() // consume BETWEEN
+
+	low, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenAnd {
+		return nil, fmt.Errorf("expected AND in BETWEEN, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume AND
+
+	high, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	ternaryType := "Between"
+	if notDefined {
+		ternaryType = "NotBetween"
+	}
+	return &ast.BooleanTernaryExpression{
+		TernaryExpressionType: ternaryType,
+		FirstExpression:       left,
+		SecondExpression:      low,
+		ThirdExpression:       high,
+	}, nil
+}
+
+// finishParenthesizedBooleanExpression finishes parsing a parenthesized boolean expression
+// after the initial comparison/expression has been parsed
+func (p *Parser) finishParenthesizedBooleanExpression(inner ast.BooleanExpression) (ast.BooleanExpression, error) {
+	// Check for AND/OR continuation
+	for p.curTok.Type == TokenAnd || p.curTok.Type == TokenOr {
+		op := p.curTok.Type
+		p.nextToken()
+
+		right, err := p.parseBooleanPrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		if op == TokenAnd {
+			inner = &ast.BooleanBinaryExpression{
+				BinaryExpressionType: "And",
+				FirstExpression:      inner,
+				SecondExpression:     right,
+			}
+		} else {
+			inner = &ast.BooleanBinaryExpression{
+				BinaryExpressionType: "Or",
+				FirstExpression:      inner,
+				SecondExpression:     right,
+			}
+		}
+	}
+
+	// Expect closing parenthesis
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.BooleanParenthesisExpression{Expression: inner}, nil
+}
+
+// parseIsNullAfterLeft parses IS NULL / IS NOT NULL after the left operand is already parsed
+func (p *Parser) parseIsNullAfterLeft(left ast.ScalarExpression) (ast.BooleanExpression, error) {
+	p.nextToken() // consume IS
+
+	isNot := false
+	if p.curTok.Type == TokenNot {
+		isNot = true
+		p.nextToken() // consume NOT
+	}
+
+	if p.curTok.Type != TokenNull {
+		return nil, fmt.Errorf("expected NULL after IS/IS NOT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume NULL
+
+	return &ast.BooleanIsNullExpression{
+		IsNot:      isNot,
+		Expression: left,
 	}, nil
 }
 
@@ -3495,6 +4036,10 @@ func (p *Parser) parseForClause() (ast.ForClause, error) {
 		p.nextToken() // consume XML
 		return p.parseXmlForClause()
 
+	case "JSON":
+		p.nextToken() // consume JSON
+		return p.parseJsonForClause()
+
 	default:
 		return nil, fmt.Errorf("unexpected token after FOR: %s", p.curTok.Literal)
 	}
@@ -3607,6 +4152,63 @@ func (p *Parser) parseXmlForClauseOption() (*ast.XmlForClauseOption, error) {
 			option.OptionKind = "BinaryBase64"
 			p.nextToken() // consume BASE64
 		}
+	default:
+		option.OptionKind = keyword
+	}
+
+	return option, nil
+}
+
+// parseJsonForClause parses FOR JSON options.
+func (p *Parser) parseJsonForClause() (*ast.JsonForClause, error) {
+	clause := &ast.JsonForClause{}
+
+	// Parse JSON options separated by commas
+	for {
+		option, err := p.parseJsonForClauseOption()
+		if err != nil {
+			return nil, err
+		}
+		clause.Options = append(clause.Options, option)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	return clause, nil
+}
+
+// parseJsonForClauseOption parses a single JSON FOR clause option.
+func (p *Parser) parseJsonForClauseOption() (*ast.JsonForClauseOption, error) {
+	option := &ast.JsonForClauseOption{}
+
+	keyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume the option keyword
+
+	switch keyword {
+	case "AUTO":
+		option.OptionKind = "Auto"
+	case "PATH":
+		option.OptionKind = "Path"
+	case "ROOT":
+		option.OptionKind = "Root"
+		// Check for optional root name: ROOT('name')
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if p.curTok.Type == TokenString {
+				option.Value = p.parseStringLiteralValue()
+				p.nextToken() // consume string
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	case "INCLUDE_NULL_VALUES":
+		option.OptionKind = "IncludeNullValues"
+	case "WITHOUT_ARRAY_WRAPPER":
+		option.OptionKind = "WithoutArrayWrapper"
 	default:
 		option.OptionKind = keyword
 	}

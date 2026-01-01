@@ -257,11 +257,53 @@ type OnOffFullTextCatalogOption struct {
 
 // AlterFulltextIndexStatement represents an ALTER FULLTEXT INDEX statement.
 type AlterFulltextIndexStatement struct {
-	OnName *SchemaObjectName `json:"OnName,omitempty"`
+	OnName *SchemaObjectName              `json:"OnName,omitempty"`
+	Action AlterFullTextIndexActionOption `json:"Action,omitempty"`
 }
 
 func (s *AlterFulltextIndexStatement) node()      {}
 func (s *AlterFulltextIndexStatement) statement() {}
+
+// AlterFullTextIndexActionOption is an interface for fulltext index actions
+type AlterFullTextIndexActionOption interface {
+	alterFullTextIndexAction()
+}
+
+// SimpleAlterFullTextIndexAction represents simple actions like ENABLE, DISABLE, etc.
+type SimpleAlterFullTextIndexAction struct {
+	ActionKind string `json:"ActionKind,omitempty"`
+}
+
+func (*SimpleAlterFullTextIndexAction) node()                     {}
+func (*SimpleAlterFullTextIndexAction) alterFullTextIndexAction() {}
+
+// AddAlterFullTextIndexAction represents an ADD action for fulltext index
+type AddAlterFullTextIndexAction struct {
+	Columns          []*FullTextIndexColumn `json:"Columns,omitempty"`
+	WithNoPopulation bool                   `json:"WithNoPopulation"`
+}
+
+func (*AddAlterFullTextIndexAction) node()                     {}
+func (*AddAlterFullTextIndexAction) alterFullTextIndexAction() {}
+
+// DropAlterFullTextIndexAction represents a DROP action for fulltext index
+type DropAlterFullTextIndexAction struct {
+	Columns          []*Identifier `json:"Columns,omitempty"`
+	WithNoPopulation bool          `json:"WithNoPopulation"`
+}
+
+func (*DropAlterFullTextIndexAction) node()                     {}
+func (*DropAlterFullTextIndexAction) alterFullTextIndexAction() {}
+
+// FullTextIndexColumn represents a column in a fulltext index
+type FullTextIndexColumn struct {
+	Name                 *Identifier              `json:"Name,omitempty"`
+	TypeColumn           *Identifier              `json:"TypeColumn,omitempty"`
+	LanguageTerm         *IdentifierOrValueExpression `json:"LanguageTerm,omitempty"`
+	StatisticalSemantics bool                     `json:"StatisticalSemantics"`
+}
+
+func (*FullTextIndexColumn) node() {}
 
 // AlterSymmetricKeyStatement represents an ALTER SYMMETRIC KEY statement.
 type AlterSymmetricKeyStatement struct {
