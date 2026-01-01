@@ -671,10 +671,13 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 	var quoteType string
 	literal := p.curTok.Literal
 
-	// Check if this is a bracketed identifier like [int]
+	// Check if this is a bracketed or quoted identifier
 	if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
 		typeName = literal[1 : len(literal)-1]
 		quoteType = "SquareBracket"
+	} else if len(literal) >= 2 && literal[0] == '"' && literal[len(literal)-1] == '"' {
+		typeName = literal[1 : len(literal)-1]
+		quoteType = "DoubleQuote"
 	} else {
 		typeName = literal
 		quoteType = "NotQuoted"
@@ -726,11 +729,79 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 	// Check if this is a known SQL data type
 	sqlOption, isKnownType := getSqlDataTypeOption(typeName)
 
+	// Check for multi-word types: CHAR VARYING -> VarChar, DOUBLE PRECISION -> Float
+	if upper := strings.ToUpper(typeName); upper == "CHAR" || upper == "DOUBLE" {
+		nextUpper := strings.ToUpper(p.curTok.Literal)
+		if upper == "CHAR" && nextUpper == "VARYING" {
+			sqlOption = "VarChar"
+			isKnownType = true
+			p.nextToken() // consume VARYING
+		} else if upper == "DOUBLE" && nextUpper == "PRECISION" {
+			baseName.BaseIdentifier.Value = "FLOAT" // Use FLOAT for output
+			sqlOption = "Float"
+			isKnownType = true
+			p.nextToken() // consume PRECISION
+		}
+	}
+
 	if !isKnownType {
-		// Return UserDataTypeReference for unknown types
-		return &ast.UserDataTypeReference{
+		// Check for multi-part type name (e.g., dbo.mytype)
+		if p.curTok.Type == TokenDot {
+			p.nextToken() // consume .
+			// Get the next identifier
+			nextIdent := p.parseIdentifier()
+			// Schema.Type structure
+			baseName.SchemaIdentifier = baseId
+			baseName.BaseIdentifier = nextIdent
+			baseName.Count = 2
+			baseName.Identifiers = []*ast.Identifier{baseId, nextIdent}
+
+			// Check for third part: database.schema.type
+			if p.curTok.Type == TokenDot {
+				p.nextToken() // consume .
+				thirdIdent := p.parseIdentifier()
+				// Database.Schema.Type structure
+				baseName.DatabaseIdentifier = baseId
+				baseName.SchemaIdentifier = nextIdent
+				baseName.BaseIdentifier = thirdIdent
+				baseName.Count = 3
+				baseName.Identifiers = []*ast.Identifier{baseId, nextIdent, thirdIdent}
+			}
+		}
+
+		userRef := &ast.UserDataTypeReference{
 			Name: baseName,
-		}, nil
+		}
+
+		// Check for parameters: mytype(10) or mytype(10, 20) or mytype(max)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				// Special case: MAX keyword
+				if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "MAX" {
+					userRef.Parameters = append(userRef.Parameters, &ast.MaxLiteral{
+						LiteralType: "Max",
+						Value:       p.curTok.Literal,
+					})
+					p.nextToken()
+				} else {
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					userRef.Parameters = append(userRef.Parameters, expr)
+				}
+				if p.curTok.Type != TokenComma {
+					break
+				}
+				p.nextToken() // consume comma
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+
+		return userRef, nil
 	}
 
 	dt := &ast.SqlDataTypeReference{

@@ -5283,6 +5283,13 @@ func userDataTypeReferenceToJSON(dt *ast.UserDataTypeReference) jsonNode {
 	node := jsonNode{
 		"$type": "UserDataTypeReference",
 	}
+	if len(dt.Parameters) > 0 {
+		params := make([]jsonNode, len(dt.Parameters))
+		for i, p := range dt.Parameters {
+			params[i] = scalarExpressionToJSON(p)
+		}
+		node["Parameters"] = params
+	}
 	if dt.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(dt.Name)
 	}
