@@ -694,9 +694,19 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 			XmlDataTypeOption: "None",
 			Name:              baseName,
 		}
-		// Check for schema collection: XML(schema_collection)
+		// Check for schema collection: XML(CONTENT|DOCUMENT schema_collection)
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
+
+			// Check for CONTENT or DOCUMENT keyword
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper == "CONTENT" {
+				xmlRef.XmlDataTypeOption = "Content"
+				p.nextToken()
+			} else if upper == "DOCUMENT" {
+				xmlRef.XmlDataTypeOption = "Document"
+				p.nextToken()
+			}
 
 			// Parse the schema collection name
 			schemaName, err := p.parseSchemaObjectName()

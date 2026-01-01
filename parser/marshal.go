@@ -3308,14 +3308,12 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 		upperLit := strings.ToUpper(p.curTok.Literal)
 		if p.curTok.Type == TokenOn {
 			p.nextToken() // consume ON
-			// Parse filegroup identifier
-			ident := p.parseIdentifier()
-			stmt.OnFileGroupOrPartitionScheme = &ast.FileGroupOrPartitionScheme{
-				Name: &ast.IdentifierOrValueExpression{
-					Value:      ident.Value,
-					Identifier: ident,
-				},
+			// Parse filegroup or partition scheme with optional columns
+			fg, err := p.parseFileGroupOrPartitionScheme()
+			if err != nil {
+				return nil, err
 			}
+			stmt.OnFileGroupOrPartitionScheme = fg
 		} else if upperLit == "TEXTIMAGE_ON" {
 			p.nextToken() // consume TEXTIMAGE_ON
 			// Parse filegroup identifier or string literal
@@ -3522,10 +3520,9 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			col.IsPersisted = true
 			p.nextToken() // consume PERSISTED
 		}
-		return col, nil
-	}
-
-	// Parse data type - be lenient if no data type is provided
+		// Fall through to parse constraints (NOT NULL, CHECK, FOREIGN KEY, etc.)
+	} else {
+		// Parse data type - be lenient if no data type is provided
 	dataType, err := p.parseDataTypeReference()
 	if err != nil {
 		// Lenient: return column definition without data type
@@ -3582,7 +3579,8 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 		}
 
 		col.IdentityOptions = identityOpts
-	}
+		}
+	} // end of else block for non-computed columns
 
 	// Parse column constraints (NULL, NOT NULL, UNIQUE, PRIMARY KEY, DEFAULT, CHECK, CONSTRAINT)
 	var constraintName *ast.Identifier
@@ -3697,6 +3695,15 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					CheckCondition: cond,
 				})
 			}
+		} else if upperLit == "FOREIGN" {
+			// Parse FOREIGN KEY constraint for column
+			constraint, err := p.parseForeignKeyConstraint()
+			if err != nil {
+				return nil, err
+			}
+			constraint.ConstraintIdentifier = constraintName
+			constraintName = nil
+			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "CONSTRAINT" {
 			p.nextToken() // consume CONSTRAINT
 			// Parse and save constraint name for next constraint
@@ -5197,6 +5204,8 @@ func constraintDefinitionToJSON(c ast.ConstraintDefinition) jsonNode {
 		return uniqueConstraintToJSON(constraint)
 	case *ast.CheckConstraintDefinition:
 		return checkConstraintToJSON(constraint)
+	case *ast.ForeignKeyConstraintDefinition:
+		return foreignKeyConstraintToJSON(constraint)
 	default:
 		return jsonNode{"$type": "UnknownConstraint"}
 	}

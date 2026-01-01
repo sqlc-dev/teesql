@@ -175,3 +175,4 @@ type ForeignKeyConstraintDefinition struct {
 
 func (f *ForeignKeyConstraintDefinition) node()            {}
 func (f *ForeignKeyConstraintDefinition) tableConstraint() {}
+func (f *ForeignKeyConstraintDefinition) constraintDefinition() {}
