@@ -181,6 +181,12 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		return p.parseBackupStatement()
 	case TokenClose:
 		return p.parseCloseStatement()
+	case TokenEnd:
+		// Check for END CONVERSATION
+		if p.peekTok.Type == TokenConversation {
+			return p.parseEndConversationStatement()
+		}
+		return nil, fmt.Errorf("unexpected token: END")
 	case TokenOpen:
 		return p.parseOpenStatement()
 	case TokenDbcc:

@@ -28,8 +28,9 @@ type InsertBulkColumnDefinition struct {
 
 // ColumnDefinitionBase represents a basic column definition.
 type ColumnDefinitionBase struct {
-	ColumnIdentifier *Identifier   `json:"ColumnIdentifier,omitempty"`
+	ColumnIdentifier *Identifier       `json:"ColumnIdentifier,omitempty"`
 	DataType         DataTypeReference `json:"DataType,omitempty"`
+	Collation        *Identifier       `json:"Collation,omitempty"`
 }
 
 // BulkInsertOption is the interface for bulk insert options.

@@ -72,12 +72,20 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return beginEndBlockStatementToJSON(s)
 	case *ast.BeginEndAtomicBlockStatement:
 		return beginEndAtomicBlockStatementToJSON(s)
+	case *ast.BeginDialogStatement:
+		return beginDialogStatementToJSON(s)
+	case *ast.BeginConversationTimerStatement:
+		return beginConversationTimerStatementToJSON(s)
 	case *ast.CreateViewStatement:
 		return createViewStatementToJSON(s)
+	case *ast.CreateOrAlterViewStatement:
+		return createOrAlterViewStatementToJSON(s)
 	case *ast.CreateSchemaStatement:
 		return createSchemaStatementToJSON(s)
 	case *ast.CreateProcedureStatement:
 		return createProcedureStatementToJSON(s)
+	case *ast.CreateOrAlterProcedureStatement:
+		return createOrAlterProcedureStatementToJSON(s)
 	case *ast.AlterProcedureStatement:
 		return alterProcedureStatementToJSON(s)
 	case *ast.CreateRoleStatement:
@@ -376,8 +384,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTriggerStatementToJSON(s)
 	case *ast.CreateTriggerStatement:
 		return createTriggerStatementToJSON(s)
+	case *ast.CreateOrAlterTriggerStatement:
+		return createOrAlterTriggerStatementToJSON(s)
 	case *ast.EnableDisableTriggerStatement:
 		return enableDisableTriggerStatementToJSON(s)
+	case *ast.EndConversationStatement:
+		return endConversationStatementToJSON(s)
 	case *ast.CreateDatabaseStatement:
 		return createDatabaseStatementToJSON(s)
 	case *ast.CreateDatabaseEncryptionKeyStatement:
@@ -1241,6 +1253,51 @@ func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
 	if q.OrderByClause != nil {
 		node["OrderByClause"] = orderByClauseToJSON(q.OrderByClause)
 	}
+	if q.ForClause != nil {
+		node["ForClause"] = forClauseToJSON(q.ForClause)
+	}
+	return node
+}
+
+func forClauseToJSON(fc ast.ForClause) jsonNode {
+	switch f := fc.(type) {
+	case *ast.BrowseForClause:
+		return jsonNode{"$type": "BrowseForClause"}
+	case *ast.ReadOnlyForClause:
+		return jsonNode{"$type": "ReadOnlyForClause"}
+	case *ast.UpdateForClause:
+		node := jsonNode{"$type": "UpdateForClause"}
+		if len(f.Columns) > 0 {
+			cols := make([]jsonNode, len(f.Columns))
+			for i, col := range f.Columns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		return node
+	case *ast.XmlForClause:
+		node := jsonNode{"$type": "XmlForClause"}
+		if len(f.Options) > 0 {
+			opts := make([]jsonNode, len(f.Options))
+			for i, opt := range f.Options {
+				opts[i] = xmlForClauseOptionToJSON(opt)
+			}
+			node["Options"] = opts
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownForClause"}
+	}
+}
+
+func xmlForClauseOptionToJSON(opt *ast.XmlForClauseOption) jsonNode {
+	node := jsonNode{"$type": "XmlForClauseOption"}
+	if opt.OptionKind != "" {
+		node["OptionKind"] = opt.OptionKind
+	}
+	if opt.Value != nil {
+		node["Value"] = stringLiteralToJSON(opt.Value)
+	}
 	return node
 }
 
@@ -1313,6 +1370,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		}
 		if e.MultiPartIdentifier != nil {
 			node["MultiPartIdentifier"] = multiPartIdentifierToJSON(e.MultiPartIdentifier)
+		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
 		}
 		return node
 	case *ast.IntegerLiteral:
@@ -1389,9 +1449,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["WithinGroupClause"] = withinGroupClauseToJSON(e.WithinGroupClause)
 		}
 		if e.OverClause != nil {
-			node["OverClause"] = jsonNode{
-				"$type": "OverClause",
-			}
+			node["OverClause"] = overClauseToJSON(e.OverClause)
 		}
 		if len(e.IgnoreRespectNulls) > 0 {
 			idents := make([]jsonNode, len(e.IgnoreRespectNulls))
@@ -1401,6 +1459,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["IgnoreRespectNulls"] = idents
 		}
 		node["WithArrayWrapper"] = e.WithArrayWrapper
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
+		}
 		return node
 	case *ast.UserDefinedTypePropertyAccess:
 		node := jsonNode{
@@ -1476,6 +1537,20 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		}
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
+		}
+		return node
+	case *ast.IdentityFunctionCall:
+		node := jsonNode{
+			"$type": "IdentityFunctionCall",
+		}
+		if e.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(e.DataType)
+		}
+		if e.Seed != nil {
+			node["Seed"] = scalarExpressionToJSON(e.Seed)
+		}
+		if e.Increment != nil {
+			node["Increment"] = scalarExpressionToJSON(e.Increment)
 		}
 		return node
 	case *ast.BinaryExpression:
@@ -1693,6 +1768,16 @@ func eventSessionObjectNameToJSON(e *ast.EventSessionObjectName) jsonNode {
 	}
 	if e.MultiPartIdentifier != nil {
 		node["MultiPartIdentifier"] = multiPartIdentifierToJSON(e.MultiPartIdentifier)
+	}
+	return node
+}
+
+func sourceDeclarationToJSON(s *ast.SourceDeclaration) jsonNode {
+	node := jsonNode{
+		"$type": "SourceDeclaration",
+	}
+	if s.Value != nil {
+		node["Value"] = eventSessionObjectNameToJSON(s.Value)
 	}
 	return node
 }
@@ -2036,6 +2121,22 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			node["ThirdExpression"] = scalarExpressionToJSON(e.ThirdExpression)
 		}
 		return node
+	case *ast.EventDeclarationCompareFunctionParameter:
+		node := jsonNode{
+			"$type": "EventDeclarationCompareFunctionParameter",
+		}
+		if e.Name != nil {
+			node["Name"] = eventSessionObjectNameToJSON(e.Name)
+		}
+		if e.SourceDeclaration != nil {
+			node["SourceDeclaration"] = sourceDeclarationToJSON(e.SourceDeclaration)
+		}
+		if e.EventValue != nil {
+			node["EventValue"] = scalarExpressionToJSON(e.EventValue)
+		}
+		return node
+	case *ast.SourceDeclaration:
+		return sourceDeclarationToJSON(e)
 	default:
 		return jsonNode{"$type": "UnknownBooleanExpression"}
 	}
@@ -2122,6 +2223,23 @@ func withinGroupClauseToJSON(wg *ast.WithinGroupClause) jsonNode {
 		node["OrderByClause"] = orderByClauseToJSON(wg.OrderByClause)
 	}
 	node["HasGraphPath"] = wg.HasGraphPath
+	return node
+}
+
+func overClauseToJSON(oc *ast.OverClause) jsonNode {
+	node := jsonNode{
+		"$type": "OverClause",
+	}
+	if len(oc.Partitions) > 0 {
+		partitions := make([]jsonNode, len(oc.Partitions))
+		for i, p := range oc.Partitions {
+			partitions[i] = scalarExpressionToJSON(p)
+		}
+		node["Partitions"] = partitions
+	}
+	if oc.OrderByClause != nil {
+		node["OrderByClause"] = orderByClauseToJSON(oc.OrderByClause)
+	}
 	return node
 }
 
@@ -2333,6 +2451,9 @@ func executableEntityToJSON(entity ast.ExecutableEntity) jsonNode {
 			}
 			node["Parameters"] = params
 		}
+		if e.AdHocDataSource != nil {
+			node["AdHocDataSource"] = adHocDataSourceToJSON(e.AdHocDataSource)
+		}
 		return node
 	case *ast.ExecutableStringList:
 		node := jsonNode{
@@ -2378,6 +2499,9 @@ func procedureReferenceToJSON(pr *ast.ProcedureReference) jsonNode {
 	if pr.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(pr.Name)
 	}
+	if pr.Number != nil {
+		node["Number"] = scalarExpressionToJSON(pr.Number)
+	}
 	return node
 }
 
@@ -2392,6 +2516,19 @@ func executeParameterToJSON(ep *ast.ExecuteParameter) jsonNode {
 		node["Variable"] = scalarExpressionToJSON(ep.Variable)
 	}
 	node["IsOutput"] = ep.IsOutput
+	return node
+}
+
+func adHocDataSourceToJSON(ds *ast.AdHocDataSource) jsonNode {
+	node := jsonNode{
+		"$type": "AdHocDataSource",
+	}
+	if ds.ProviderName != nil {
+		node["ProviderName"] = scalarExpressionToJSON(ds.ProviderName)
+	}
+	if ds.InitString != nil {
+		node["InitString"] = scalarExpressionToJSON(ds.InitString)
+	}
 	return node
 }
 
@@ -2548,6 +2685,15 @@ func deleteSpecificationToJSON(spec *ast.DeleteSpecification) jsonNode {
 	}
 	if spec.Target != nil {
 		node["Target"] = tableReferenceToJSON(spec.Target)
+	}
+	if spec.TopRowFilter != nil {
+		node["TopRowFilter"] = topRowFilterToJSON(spec.TopRowFilter)
+	}
+	if spec.OutputClause != nil {
+		node["OutputClause"] = outputClauseToJSON(spec.OutputClause)
+	}
+	if spec.OutputIntoClause != nil {
+		node["OutputIntoClause"] = outputIntoClauseToJSON(spec.OutputIntoClause)
 	}
 	return node
 }
@@ -2803,6 +2949,71 @@ func statementListToJSON(sl *ast.StatementList) jsonNode {
 	return node
 }
 
+func beginDialogStatementToJSON(s *ast.BeginDialogStatement) jsonNode {
+	node := jsonNode{
+		"$type":          "BeginDialogStatement",
+		"IsConversation": s.IsConversation,
+	}
+	if s.Handle != nil {
+		node["Handle"] = scalarExpressionToJSON(s.Handle)
+	}
+	if s.InitiatorServiceName != nil {
+		node["InitiatorServiceName"] = identifierOrValueExpressionToJSON(s.InitiatorServiceName)
+	}
+	if s.TargetServiceName != nil {
+		node["TargetServiceName"] = scalarExpressionToJSON(s.TargetServiceName)
+	}
+	if s.ContractName != nil {
+		node["ContractName"] = identifierOrValueExpressionToJSON(s.ContractName)
+	}
+	if s.InstanceSpec != nil {
+		node["InstanceSpec"] = scalarExpressionToJSON(s.InstanceSpec)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = dialogOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func dialogOptionToJSON(o ast.DialogOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.ScalarExpressionDialogOption:
+		node := jsonNode{
+			"$type":      "ScalarExpressionDialogOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		return node
+	case *ast.OnOffDialogOption:
+		return jsonNode{
+			"$type":       "OnOffDialogOption",
+			"OptionState": opt.OptionState,
+			"OptionKind":  opt.OptionKind,
+		}
+	default:
+		return jsonNode{"$type": "UnknownDialogOption"}
+	}
+}
+
+func beginConversationTimerStatementToJSON(s *ast.BeginConversationTimerStatement) jsonNode {
+	node := jsonNode{
+		"$type": "BeginConversationTimerStatement",
+	}
+	if s.Handle != nil {
+		node["Handle"] = scalarExpressionToJSON(s.Handle)
+	}
+	if s.Timeout != nil {
+		node["Timeout"] = scalarExpressionToJSON(s.Timeout)
+	}
+	return node
+}
+
 func createViewStatementToJSON(s *ast.CreateViewStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateViewStatement",
@@ -2817,12 +3028,92 @@ func createViewStatementToJSON(s *ast.CreateViewStatement) jsonNode {
 		}
 		node["Columns"] = cols
 	}
+	if len(s.ViewOptions) > 0 {
+		opts := make([]jsonNode, len(s.ViewOptions))
+		for i, opt := range s.ViewOptions {
+			opts[i] = viewOptionToJSON(opt)
+		}
+		node["ViewOptions"] = opts
+	}
 	if s.SelectStatement != nil {
 		node["SelectStatement"] = selectStatementToJSON(s.SelectStatement)
 	}
 	node["WithCheckOption"] = s.WithCheckOption
 	node["IsMaterialized"] = s.IsMaterialized
 	return node
+}
+
+func createOrAlterViewStatementToJSON(s *ast.CreateOrAlterViewStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateOrAlterViewStatement",
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, c := range s.Columns {
+			cols[i] = identifierToJSON(c)
+		}
+		node["Columns"] = cols
+	}
+	if len(s.ViewOptions) > 0 {
+		opts := make([]jsonNode, len(s.ViewOptions))
+		for i, opt := range s.ViewOptions {
+			opts[i] = viewOptionToJSON(opt)
+		}
+		node["ViewOptions"] = opts
+	}
+	if s.SelectStatement != nil {
+		node["SelectStatement"] = selectStatementToJSON(s.SelectStatement)
+	}
+	node["WithCheckOption"] = s.WithCheckOption
+	node["IsMaterialized"] = s.IsMaterialized
+	return node
+}
+
+func viewOptionToJSON(opt ast.ViewOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.ViewStatementOption:
+		return jsonNode{
+			"$type":      "ViewOption",
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.ViewDistributionOption:
+		node := jsonNode{
+			"$type":      "ViewDistributionOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			valueNode := jsonNode{
+				"$type": "ViewHashDistributionPolicy",
+			}
+			if o.Value.DistributionColumn != nil {
+				valueNode["DistributionColumn"] = identifierToJSON(o.Value.DistributionColumn)
+			}
+			if len(o.Value.DistributionColumns) > 0 {
+				cols := make([]jsonNode, len(o.Value.DistributionColumns))
+				for i, c := range o.Value.DistributionColumns {
+					// First column is same as DistributionColumn, use $ref
+					if i == 0 && o.Value.DistributionColumn != nil {
+						cols[i] = jsonNode{"$ref": "Identifier"}
+					} else {
+						cols[i] = identifierToJSON(c)
+					}
+				}
+				valueNode["DistributionColumns"] = cols
+			}
+			node["Value"] = valueNode
+		}
+		return node
+	case *ast.ViewForAppendOption:
+		return jsonNode{
+			"$type":      "ViewForAppendOption",
+			"OptionKind": o.OptionKind,
+		}
+	default:
+		return jsonNode{"$type": "UnknownViewOption"}
+	}
 }
 
 func createSchemaStatementToJSON(s *ast.CreateSchemaStatement) jsonNode {
@@ -3062,14 +3353,12 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 		upperLit := strings.ToUpper(p.curTok.Literal)
 		if p.curTok.Type == TokenOn {
 			p.nextToken() // consume ON
-			// Parse filegroup identifier
-			ident := p.parseIdentifier()
-			stmt.OnFileGroupOrPartitionScheme = &ast.FileGroupOrPartitionScheme{
-				Name: &ast.IdentifierOrValueExpression{
-					Value:      ident.Value,
-					Identifier: ident,
-				},
+			// Parse filegroup or partition scheme with optional columns
+			fg, err := p.parseFileGroupOrPartitionScheme()
+			if err != nil {
+				return nil, err
 			}
+			stmt.OnFileGroupOrPartitionScheme = fg
 		} else if upperLit == "TEXTIMAGE_ON" {
 			p.nextToken() // consume TEXTIMAGE_ON
 			// Parse filegroup identifier or string literal
@@ -3139,6 +3428,20 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						stmt.Options = append(stmt.Options, &ast.TableDataCompressionOption{
 							DataCompressionOption: opt,
 							OptionKind:            "DataCompression",
+						})
+					} else if optionName == "MEMORY_OPTIMIZED" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						stateUpper := strings.ToUpper(p.curTok.Literal)
+						state := "On"
+						if stateUpper == "OFF" {
+							state = "Off"
+						}
+						p.nextToken() // consume ON/OFF
+						stmt.Options = append(stmt.Options, &ast.MemoryOptimizedTableOption{
+							OptionKind:  "MemoryOptimized",
+							OptionState: state,
 						})
 					} else {
 						// Skip unknown option value
@@ -3262,10 +3565,9 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			col.IsPersisted = true
 			p.nextToken() // consume PERSISTED
 		}
-		return col, nil
-	}
-
-	// Parse data type - be lenient if no data type is provided
+		// Fall through to parse constraints (NOT NULL, CHECK, FOREIGN KEY, etc.)
+	} else {
+		// Parse data type - be lenient if no data type is provided
 	dataType, err := p.parseDataTypeReference()
 	if err != nil {
 		// Lenient: return column definition without data type
@@ -3322,7 +3624,8 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 		}
 
 		col.IdentityOptions = identityOpts
-	}
+		}
+	} // end of else block for non-computed columns
 
 	// Parse column constraints (NULL, NOT NULL, UNIQUE, PRIMARY KEY, DEFAULT, CHECK, CONSTRAINT)
 	var constraintName *ast.Identifier
@@ -3352,8 +3655,14 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				p.nextToken()
 			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 				constraint.Clustered = false
-				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 				p.nextToken()
+				// Check for HASH suffix
+				if strings.ToUpper(p.curTok.Literal) == "HASH" {
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+					p.nextToken()
+				} else {
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+				}
 			}
 			// Parse WITH (index_options)
 			if strings.ToUpper(p.curTok.Literal) == "WITH" {
@@ -3384,8 +3693,14 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				p.nextToken()
 			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 				constraint.Clustered = false
-				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 				p.nextToken()
+				// Check for HASH suffix
+				if strings.ToUpper(p.curTok.Literal) == "HASH" {
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+					p.nextToken()
+				} else {
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+				}
 			}
 			// Parse WITH (index_options)
 			if strings.ToUpper(p.curTok.Literal) == "WITH" {
@@ -3425,6 +3740,15 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					CheckCondition: cond,
 				})
 			}
+		} else if upperLit == "FOREIGN" {
+			// Parse FOREIGN KEY constraint for column
+			constraint, err := p.parseForeignKeyConstraint()
+			if err != nil {
+				return nil, err
+			}
+			constraint.ConstraintIdentifier = constraintName
+			constraintName = nil
+			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "CONSTRAINT" {
 			p.nextToken() // consume CONSTRAINT
 			// Parse and save constraint name for next constraint
@@ -3439,11 +3763,133 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			indexDef := &ast.IndexDefinition{
 				IndexType: &ast.IndexType{},
 			}
-			// Parse index name
-			if p.curTok.Type == TokenIdent {
+			// Parse index name (skip if it's CLUSTERED/NONCLUSTERED)
+			idxUpper := strings.ToUpper(p.curTok.Literal)
+			if p.curTok.Type == TokenIdent && idxUpper != "CLUSTERED" && idxUpper != "NONCLUSTERED" && p.curTok.Type != TokenLParen {
 				indexDef.Name = p.parseIdentifier()
 			}
+			// Parse optional CLUSTERED/NONCLUSTERED
+			if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
+				indexDef.IndexType.IndexTypeKind = "Clustered"
+				p.nextToken()
+			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
+				indexDef.IndexType.IndexTypeKind = "NonClustered"
+				p.nextToken()
+			}
+			// Parse optional column list: (col1 [ASC|DESC], ...)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colWithSort := &ast.ColumnWithSortOrder{
+						SortOrder: ast.SortOrderNotSpecified,
+					}
+					// Parse column name
+					colRef := &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Identifiers: []*ast.Identifier{p.parseIdentifier()},
+						},
+					}
+					colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
+					colWithSort.Column = colRef
+
+					// Parse optional ASC/DESC
+					if strings.ToUpper(p.curTok.Literal) == "ASC" {
+						colWithSort.SortOrder = ast.SortOrderAscending
+						p.nextToken()
+					} else if strings.ToUpper(p.curTok.Literal) == "DESC" {
+						colWithSort.SortOrder = ast.SortOrderDescending
+						p.nextToken()
+					}
+					indexDef.Columns = append(indexDef.Columns, colWithSort)
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			// Parse optional INCLUDE clause
+			if strings.ToUpper(p.curTok.Literal) == "INCLUDE" {
+				p.nextToken() // consume INCLUDE
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						colRef := &ast.ColumnReferenceExpression{
+							ColumnType: "Regular",
+							MultiPartIdentifier: &ast.MultiPartIdentifier{
+								Identifiers: []*ast.Identifier{p.parseIdentifier()},
+							},
+						}
+						colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
+						indexDef.IncludeColumns = append(indexDef.IncludeColumns, colRef)
+
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			}
 			col.Index = indexDef
+		} else if upperLit == "SPARSE" {
+			p.nextToken() // consume SPARSE
+			if col.StorageOptions == nil {
+				col.StorageOptions = &ast.ColumnStorageOptions{}
+			}
+			col.StorageOptions.SparseOption = "Sparse"
+		} else if upperLit == "FILESTREAM" {
+			p.nextToken() // consume FILESTREAM
+			if col.StorageOptions == nil {
+				col.StorageOptions = &ast.ColumnStorageOptions{}
+			}
+			col.StorageOptions.IsFileStream = true
+		} else if upperLit == "COLUMN_SET" {
+			p.nextToken() // consume COLUMN_SET
+			// Expect FOR ALL_SPARSE_COLUMNS
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+				if strings.ToUpper(p.curTok.Literal) == "ALL_SPARSE_COLUMNS" {
+					p.nextToken() // consume ALL_SPARSE_COLUMNS
+					if col.StorageOptions == nil {
+						col.StorageOptions = &ast.ColumnStorageOptions{}
+					}
+					col.StorageOptions.SparseOption = "ColumnSetForAllSparseColumns"
+				}
+			}
+		} else if upperLit == "ROWGUIDCOL" {
+			p.nextToken() // consume ROWGUIDCOL
+			col.IsRowGuidCol = true
+		} else if upperLit == "HIDDEN" {
+			p.nextToken() // consume HIDDEN
+			col.IsHidden = true
+		} else if upperLit == "MASKED" {
+			p.nextToken() // consume MASKED
+			col.IsMasked = true
+			// Skip optional WITH clause
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken()
+				if p.curTok.Type == TokenLParen {
+					depth := 1
+					p.nextToken()
+					for depth > 0 && p.curTok.Type != TokenEOF {
+						if p.curTok.Type == TokenLParen {
+							depth++
+						} else if p.curTok.Type == TokenRParen {
+							depth--
+						}
+						p.nextToken()
+					}
+				}
+			}
 		} else {
 			break
 		}
@@ -4721,6 +5167,9 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 		"IsMasked":         c.IsMasked,
 		"ColumnIdentifier": identifierToJSON(c.ColumnIdentifier),
 	}
+	if c.StorageOptions != nil {
+		node["StorageOptions"] = columnStorageOptionsToJSON(c.StorageOptions)
+	}
 	if c.ComputedColumnExpression != nil {
 		node["ComputedColumnExpression"] = scalarExpressionToJSON(c.ComputedColumnExpression)
 	}
@@ -4747,6 +5196,18 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 		node["Index"] = indexDefinitionToJSON(c.Index)
 	}
 	return node
+}
+
+func columnStorageOptionsToJSON(o *ast.ColumnStorageOptions) jsonNode {
+	sparseOption := o.SparseOption
+	if sparseOption == "" {
+		sparseOption = "None"
+	}
+	return jsonNode{
+		"$type":        "ColumnStorageOptions",
+		"IsFileStream": o.IsFileStream,
+		"SparseOption": sparseOption,
+	}
 }
 
 func defaultConstraintToJSON(d *ast.DefaultConstraintDefinition) jsonNode {
@@ -4788,6 +5249,8 @@ func constraintDefinitionToJSON(c ast.ConstraintDefinition) jsonNode {
 		return uniqueConstraintToJSON(constraint)
 	case *ast.CheckConstraintDefinition:
 		return checkConstraintToJSON(constraint)
+	case *ast.ForeignKeyConstraintDefinition:
+		return foreignKeyConstraintToJSON(constraint)
 	default:
 		return jsonNode{"$type": "UnknownConstraint"}
 	}
@@ -4798,8 +5261,10 @@ func uniqueConstraintToJSON(c *ast.UniqueConstraintDefinition) jsonNode {
 		"$type":        "UniqueConstraintDefinition",
 		"IsPrimaryKey": c.IsPrimaryKey,
 	}
-	// Output Clustered if it's true, or if IndexType is set (meaning NONCLUSTERED was explicitly specified)
-	if c.Clustered || c.IndexType != nil {
+	// Output Clustered if it's true, or if IndexType is NonClustered (not Hash variants)
+	if c.Clustered {
+		node["Clustered"] = c.Clustered
+	} else if c.IndexType != nil && (c.IndexType.IndexTypeKind == "NonClustered" || c.IndexType.IndexTypeKind == "Clustered") {
 		node["Clustered"] = c.Clustered
 	}
 	// Output IsEnforced if it's explicitly set
@@ -4862,6 +5327,13 @@ func dataTypeReferenceToJSON(d ast.DataTypeReference) jsonNode {
 func userDataTypeReferenceToJSON(dt *ast.UserDataTypeReference) jsonNode {
 	node := jsonNode{
 		"$type": "UserDataTypeReference",
+	}
+	if len(dt.Parameters) > 0 {
+		params := make([]jsonNode, len(dt.Parameters))
+		for i, p := range dt.Parameters {
+			params[i] = scalarExpressionToJSON(p)
+		}
+		node["Parameters"] = params
 	}
 	if dt.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(dt.Name)
@@ -5387,6 +5859,9 @@ func columnReferenceExpressionToJSON(c *ast.ColumnReferenceExpression) jsonNode 
 	}
 	if c.MultiPartIdentifier != nil {
 		node["MultiPartIdentifier"] = multiPartIdentifierToJSON(c.MultiPartIdentifier)
+	}
+	if c.Collation != nil {
+		node["Collation"] = identifierToJSON(c.Collation)
 	}
 	return node
 }
@@ -5951,6 +6426,37 @@ func alterLoginAddDropCredentialStatementToJSON(s *ast.AlterLoginAddDropCredenti
 func createProcedureStatementToJSON(s *ast.CreateProcedureStatement) jsonNode {
 	node := jsonNode{
 		"$type":            "CreateProcedureStatement",
+		"IsForReplication": s.IsForReplication,
+	}
+	if s.ProcedureReference != nil {
+		node["ProcedureReference"] = procedureReferenceToJSON(s.ProcedureReference)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			options[i] = procedureOptionToJSON(opt)
+		}
+		node["Options"] = options
+	}
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = procedureParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	if s.MethodSpecifier != nil {
+		node["MethodSpecifier"] = methodSpecifierToJSON(s.MethodSpecifier)
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func createOrAlterProcedureStatementToJSON(s *ast.CreateOrAlterProcedureStatement) jsonNode {
+	node := jsonNode{
+		"$type":            "CreateOrAlterProcedureStatement",
 		"IsForReplication": s.IsForReplication,
 	}
 	if s.ProcedureReference != nil {
@@ -6939,8 +7445,12 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 					}
 					stmt.IndexOptions = append(stmt.IndexOptions, opt)
 
-				case "SORT_IN_TEMPDB":
-					p.nextToken() // consume SORT_IN_TEMPDB
+				case "SORT_IN_TEMPDB", "DROP_EXISTING":
+					optKind := "SortInTempDB"
+					if optName == "DROP_EXISTING" {
+						optKind = "DropExisting"
+					}
+					p.nextToken() // consume option name
 					if p.curTok.Type == TokenEquals {
 						p.nextToken() // consume =
 					}
@@ -6953,8 +7463,22 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 						p.nextToken()
 					}
 					stmt.IndexOptions = append(stmt.IndexOptions, &ast.IndexStateOption{
-						OptionKind:  "SortInTempDB",
+						OptionKind:  optKind,
 						OptionState: state,
+					})
+
+				case "MAXDOP":
+					p.nextToken() // consume MAXDOP
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, &ast.IndexExpressionOption{
+						OptionKind: "MaxDop",
+						Expression: expr,
 					})
 
 				case "ORDER":
@@ -7001,13 +7525,31 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 		}
 	}
 
-	// Skip optional ON partition clause
+	// Parse optional ON filegroup/partition scheme
 	if p.curTok.Type == TokenOn {
-		p.nextToken()
-		// Skip to semicolon
-		for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
-			p.nextToken()
+		p.nextToken() // consume ON
+		fgps := &ast.FileGroupOrPartitionScheme{
+			Name: &ast.IdentifierOrValueExpression{
+				Identifier: p.parseIdentifier(),
+			},
 		}
+		fgps.Name.Value = fgps.Name.Identifier.Value
+		// Check for partition columns
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				fgps.PartitionSchemeColumns = append(fgps.PartitionSchemeColumns, p.parseIdentifier())
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+		stmt.OnFileGroupOrPartitionScheme = fgps
 	}
 
 	// Skip optional semicolon
@@ -7441,19 +7983,45 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 
 				if p.curTok.Type == TokenEquals {
 					p.nextToken()
-					valueStr := strings.ToUpper(p.curTok.Literal)
+					valueStr := p.curTok.Literal
+					valueUpper := strings.ToUpper(valueStr)
 					p.nextToken()
 
-					if valueStr == "ON" || valueStr == "OFF" {
-						opt := &ast.IndexStateOption{
-							OptionKind:  p.getIndexOptionKind(optionName),
-							OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+					if optionName == "COMPRESSION_DELAY" {
+						// Parse COMPRESSION_DELAY = value [MINUTE|MINUTES]
+						timeUnit := "Unitless"
+						nextUpper := strings.ToUpper(p.curTok.Literal)
+						if nextUpper == "MINUTE" {
+							timeUnit = "Minute"
+							p.nextToken()
+						} else if nextUpper == "MINUTES" {
+							timeUnit = "Minutes"
+							p.nextToken()
+						}
+						opt := &ast.CompressionDelayIndexOption{
+							OptionKind: "CompressionDelay",
+							Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
+							TimeUnit:   timeUnit,
 						}
 						stmt.IndexOptions = append(stmt.IndexOptions, opt)
+					} else if valueUpper == "ON" || valueUpper == "OFF" {
+						if optionName == "IGNORE_DUP_KEY" {
+							opt := &ast.IgnoreDupKeyIndexOption{
+								OptionKind:  "IgnoreDupKey",
+								OptionState: p.capitalizeFirst(strings.ToLower(valueUpper)),
+							}
+							stmt.IndexOptions = append(stmt.IndexOptions, opt)
+						} else {
+							opt := &ast.IndexStateOption{
+								OptionKind:  p.getIndexOptionKind(optionName),
+								OptionState: p.capitalizeFirst(strings.ToLower(valueUpper)),
+							}
+							stmt.IndexOptions = append(stmt.IndexOptions, opt)
+						}
 					} else {
 						opt := &ast.IndexExpressionOption{
 							OptionKind: p.getIndexOptionKind(optionName),
-							Expression: &ast.IntegerLiteral{Value: valueStr},
+							Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
 						}
 						stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					}
@@ -7519,16 +8087,24 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 
 				// Determine if it's a state option (ON/OFF) or expression option
 				if valueStr == "ON" || valueStr == "OFF" {
-					opt := &ast.IndexStateOption{
-						OptionKind:  p.getIndexOptionKind(optionName),
-						OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+					if optionName == "IGNORE_DUP_KEY" {
+						opt := &ast.IgnoreDupKeyIndexOption{
+							OptionKind:  "IgnoreDupKey",
+							OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+						}
+						stmt.IndexOptions = append(stmt.IndexOptions, opt)
+					} else {
+						opt := &ast.IndexStateOption{
+							OptionKind:  p.getIndexOptionKind(optionName),
+							OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+						}
+						stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					}
-					stmt.IndexOptions = append(stmt.IndexOptions, opt)
 				} else {
 					// Expression option like FILLFACTOR = 80
 					opt := &ast.IndexExpressionOption{
 						OptionKind: p.getIndexOptionKind(optionName),
-						Expression: &ast.IntegerLiteral{Value: valueStr},
+						Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
 					}
 					stmt.IndexOptions = append(stmt.IndexOptions, opt)
 				}
@@ -7554,6 +8130,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 
 func (p *Parser) getIndexOptionKind(optionName string) string {
 	optionMap := map[string]string{
+		"BUCKET_COUNT":                "BucketCount",
 		"PAD_INDEX":                   "PadIndex",
 		"FILLFACTOR":                  "FillFactor",
 		"SORT_IN_TEMPDB":              "SortInTempDB",
@@ -7569,6 +8146,9 @@ func (p *Parser) getIndexOptionKind(optionName string) string {
 		"MAX_DURATION":                "MaxDuration",
 		"WAIT_AT_LOW_PRIORITY":        "WaitAtLowPriority",
 		"OPTIMIZE_FOR_SEQUENTIAL_KEY": "OptimizeForSequentialKey",
+		"COMPRESS_ALL_ROW_GROUPS":     "CompressAllRowGroups",
+		"COMPRESSION_DELAY":           "CompressionDelay",
+		"LOB_COMPACTION":              "LobCompaction",
 	}
 	if kind, ok := optionMap[optionName]; ok {
 		return kind
@@ -8119,21 +8699,57 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 }
 
 // parseCreateOrAlterProcedureStatement parses a CREATE OR ALTER PROCEDURE statement
-func (p *Parser) parseCreateOrAlterProcedureStatement() (*ast.CreateProcedureStatement, error) {
-	// For now, delegate to regular CREATE PROCEDURE parsing
-	return p.parseCreateProcedureStatement()
+func (p *Parser) parseCreateOrAlterProcedureStatement() (*ast.CreateOrAlterProcedureStatement, error) {
+	// Parse as regular CREATE PROCEDURE, then convert to CreateOrAlter type
+	stmt, err := p.parseCreateProcedureStatement()
+	if err != nil {
+		return nil, err
+	}
+	return &ast.CreateOrAlterProcedureStatement{
+		ProcedureReference: stmt.ProcedureReference,
+		Parameters:         stmt.Parameters,
+		StatementList:      stmt.StatementList,
+		IsForReplication:   stmt.IsForReplication,
+		Options:            stmt.Options,
+		MethodSpecifier:    stmt.MethodSpecifier,
+	}, nil
 }
 
 // parseCreateOrAlterViewStatement parses a CREATE OR ALTER VIEW statement
-func (p *Parser) parseCreateOrAlterViewStatement() (*ast.CreateViewStatement, error) {
-	// For now, delegate to regular CREATE VIEW parsing
-	return p.parseCreateViewStatement()
+func (p *Parser) parseCreateOrAlterViewStatement() (*ast.CreateOrAlterViewStatement, error) {
+	// Parse as regular CREATE VIEW, then convert to CreateOrAlter type
+	stmt, err := p.parseCreateViewStatement()
+	if err != nil {
+		return nil, err
+	}
+	return &ast.CreateOrAlterViewStatement{
+		SchemaObjectName:  stmt.SchemaObjectName,
+		Columns:           stmt.Columns,
+		SelectStatement:   stmt.SelectStatement,
+		WithCheckOption:   stmt.WithCheckOption,
+		ViewOptions:       stmt.ViewOptions,
+		IsMaterialized:    stmt.IsMaterialized,
+	}, nil
 }
 
 // parseCreateOrAlterTriggerStatement parses a CREATE OR ALTER TRIGGER statement
-func (p *Parser) parseCreateOrAlterTriggerStatement() (*ast.CreateTriggerStatement, error) {
-	// For now, delegate to regular CREATE TRIGGER parsing
-	return p.parseCreateTriggerStatement()
+func (p *Parser) parseCreateOrAlterTriggerStatement() (*ast.CreateOrAlterTriggerStatement, error) {
+	// Parse as regular CREATE TRIGGER, then convert to CreateOrAlter type
+	stmt, err := p.parseCreateTriggerStatement()
+	if err != nil {
+		return nil, err
+	}
+	return &ast.CreateOrAlterTriggerStatement{
+		Name:                stmt.Name,
+		TriggerObject:       stmt.TriggerObject,
+		TriggerType:         stmt.TriggerType,
+		TriggerActions:      stmt.TriggerActions,
+		Options:             stmt.Options,
+		WithAppend:          stmt.WithAppend,
+		IsNotForReplication: stmt.IsNotForReplication,
+		MethodSpecifier:     stmt.MethodSpecifier,
+		StatementList:       stmt.StatementList,
+	}, nil
 }
 
 // parseCreateTriggerStatement parses a CREATE TRIGGER statement
@@ -8752,6 +9368,9 @@ func createColumnStoreIndexStatementToJSON(s *ast.CreateColumnStoreIndexStatemen
 		}
 		node["OrderedColumns"] = cols
 	}
+	if s.OnFileGroupOrPartitionScheme != nil {
+		node["OnFileGroupOrPartitionScheme"] = fileGroupOrPartitionSchemeToJSON(s.OnFileGroupOrPartitionScheme)
+	}
 	return node
 }
 
@@ -8786,6 +9405,15 @@ func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
 		}
+	case *ast.IndexExpressionOption:
+		node := jsonNode{
+			"$type":      "IndexExpressionOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(o.Expression)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownIndexOption"}
 	}
@@ -9134,6 +9762,39 @@ func createTriggerStatementToJSON(s *ast.CreateTriggerStatement) jsonNode {
 	return node
 }
 
+func createOrAlterTriggerStatementToJSON(s *ast.CreateOrAlterTriggerStatement) jsonNode {
+	node := jsonNode{
+		"$type":               "CreateOrAlterTriggerStatement",
+		"TriggerType":         s.TriggerType,
+		"WithAppend":          s.WithAppend,
+		"IsNotForReplication": s.IsNotForReplication,
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.TriggerObject != nil {
+		node["TriggerObject"] = triggerObjectToJSON(s.TriggerObject)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = triggerOptionTypeToJSON(o)
+		}
+		node["Options"] = options
+	}
+	if len(s.TriggerActions) > 0 {
+		actions := make([]jsonNode, len(s.TriggerActions))
+		for i, a := range s.TriggerActions {
+			actions[i] = triggerActionToJSON(a)
+		}
+		node["TriggerActions"] = actions
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
 func triggerOptionTypeToJSON(o ast.TriggerOptionType) jsonNode {
 	switch opt := o.(type) {
 	case *ast.TriggerOption:
@@ -9202,6 +9863,23 @@ func enableDisableTriggerStatementToJSON(s *ast.EnableDisableTriggerStatement) j
 	}
 	if s.TriggerObject != nil {
 		node["TriggerObject"] = triggerObjectToJSON(s.TriggerObject)
+	}
+	return node
+}
+
+func endConversationStatementToJSON(s *ast.EndConversationStatement) jsonNode {
+	node := jsonNode{
+		"$type":       "EndConversationStatement",
+		"WithCleanup": s.WithCleanup,
+	}
+	if s.Conversation != nil {
+		node["Conversation"] = scalarExpressionToJSON(s.Conversation)
+	}
+	if s.ErrorCode != nil {
+		node["ErrorCode"] = scalarExpressionToJSON(s.ErrorCode)
+	}
+	if s.ErrorDescription != nil {
+		node["ErrorDescription"] = scalarExpressionToJSON(s.ErrorDescription)
 	}
 	return node
 }
@@ -9282,6 +9960,16 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
 		}
+	case *ast.CompressionDelayIndexOption:
+		node := jsonNode{
+			"$type":      "CompressionDelayIndexOption",
+			"OptionKind": o.OptionKind,
+			"TimeUnit":   o.TimeUnit,
+		}
+		if o.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(o.Expression)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownIndexOption"}
 	}
@@ -9523,6 +10211,43 @@ func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
 			"$type":            "DataCompressionOption",
 			"CompressionLevel": o.CompressionLevel,
 			"OptionKind":       o.OptionKind,
+		}
+	case *ast.WaitAtLowPriorityOption:
+		node := jsonNode{
+			"$type":      "WaitAtLowPriorityOption",
+			"OptionKind": o.OptionKind,
+		}
+		if len(o.Options) > 0 {
+			options := make([]jsonNode, len(o.Options))
+			for i, opt := range o.Options {
+				options[i] = lowPriorityLockWaitOptionToJSON(opt)
+			}
+			node["Options"] = options
+		}
+		return node
+	}
+	return jsonNode{}
+}
+
+func lowPriorityLockWaitOptionToJSON(opt ast.LowPriorityLockWaitOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.LowPriorityLockWaitMaxDurationOption:
+		node := jsonNode{
+			"$type":      "LowPriorityLockWaitMaxDurationOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.MaxDuration != nil {
+			node["MaxDuration"] = scalarExpressionToJSON(o.MaxDuration)
+		}
+		if o.Unit != "" {
+			node["Unit"] = o.Unit
+		}
+		return node
+	case *ast.LowPriorityLockWaitAbortAfterWaitOption:
+		return jsonNode{
+			"$type":          "LowPriorityLockWaitAbortAfterWaitOption",
+			"AbortAfterWait": o.AbortAfterWait,
+			"OptionKind":     o.OptionKind,
 		}
 	}
 	return jsonNode{}
@@ -10294,6 +11019,49 @@ func createExternalTableStatementToJSON(s *ast.CreateExternalTableStatement) jso
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
+	if len(s.ColumnDefinitions) > 0 {
+		cols := make([]jsonNode, len(s.ColumnDefinitions))
+		for i, col := range s.ColumnDefinitions {
+			cols[i] = externalTableColumnDefinitionToJSON(col)
+		}
+		node["ColumnDefinitions"] = cols
+	}
+	if s.DataSource != nil {
+		node["DataSource"] = identifierToJSON(s.DataSource)
+	}
+	if len(s.ExternalTableOptions) > 0 {
+		opts := make([]jsonNode, len(s.ExternalTableOptions))
+		for i, opt := range s.ExternalTableOptions {
+			opts[i] = externalTableLiteralOrIdentifierOptionToJSON(opt)
+		}
+		node["ExternalTableOptions"] = opts
+	}
+	return node
+}
+
+func externalTableColumnDefinitionToJSON(col *ast.ExternalTableColumnDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalTableColumnDefinition",
+	}
+	if col.ColumnDefinition != nil {
+		node["ColumnDefinition"] = columnDefinitionBaseToJSON(col.ColumnDefinition)
+	}
+	if col.NullableConstraint != nil {
+		node["NullableConstraint"] = nullableConstraintToJSON(col.NullableConstraint)
+	}
+	return node
+}
+
+func externalTableLiteralOrIdentifierOptionToJSON(opt *ast.ExternalTableLiteralOrIdentifierOption) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalTableLiteralOrIdentifierOption",
+	}
+	if opt.Value != nil {
+		node["Value"] = identifierOrValueExpressionToJSON(opt.Value)
+	}
+	if opt.OptionKind != "" {
+		node["OptionKind"] = opt.OptionKind
+	}
 	return node
 }
 
@@ -10350,7 +11118,147 @@ func createEventSessionStatementToJSON(s *ast.CreateEventSessionStatement) jsonN
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.SessionScope != "" {
+		node["SessionScope"] = s.SessionScope
+	}
+	if len(s.EventDeclarations) > 0 {
+		events := make([]jsonNode, len(s.EventDeclarations))
+		for i, e := range s.EventDeclarations {
+			events[i] = eventDeclarationToJSON(e)
+		}
+		node["EventDeclarations"] = events
+	}
+	if len(s.TargetDeclarations) > 0 {
+		targets := make([]jsonNode, len(s.TargetDeclarations))
+		for i, t := range s.TargetDeclarations {
+			targets[i] = targetDeclarationToJSON(t)
+		}
+		node["TargetDeclarations"] = targets
+	}
+	if len(s.SessionOptions) > 0 {
+		opts := make([]jsonNode, len(s.SessionOptions))
+		for i, o := range s.SessionOptions {
+			opts[i] = sessionOptionToJSON(o)
+		}
+		node["SessionOptions"] = opts
+	}
 	return node
+}
+
+func eventDeclarationToJSON(e *ast.EventDeclaration) jsonNode {
+	node := jsonNode{
+		"$type": "EventDeclaration",
+	}
+	if e.ObjectName != nil {
+		node["ObjectName"] = eventSessionObjectNameToJSON(e.ObjectName)
+	}
+	if len(e.EventDeclarationActionParameters) > 0 {
+		actions := make([]jsonNode, len(e.EventDeclarationActionParameters))
+		for i, a := range e.EventDeclarationActionParameters {
+			actions[i] = eventSessionObjectNameToJSON(a)
+		}
+		node["EventDeclarationActionParameters"] = actions
+	}
+	if e.EventDeclarationPredicateParameter != nil {
+		node["EventDeclarationPredicateParameter"] = booleanExpressionToJSON(e.EventDeclarationPredicateParameter)
+	}
+	return node
+}
+
+func targetDeclarationToJSON(t *ast.TargetDeclaration) jsonNode {
+	node := jsonNode{
+		"$type": "TargetDeclaration",
+	}
+	if t.ObjectName != nil {
+		node["ObjectName"] = eventSessionObjectNameToJSON(t.ObjectName)
+	}
+	if len(t.TargetDeclarationParameters) > 0 {
+		params := make([]jsonNode, len(t.TargetDeclarationParameters))
+		for i, p := range t.TargetDeclarationParameters {
+			params[i] = eventDeclarationSetParameterToJSON(p)
+		}
+		node["TargetDeclarationParameters"] = params
+	}
+	return node
+}
+
+func eventDeclarationSetParameterToJSON(p *ast.EventDeclarationSetParameter) jsonNode {
+	node := jsonNode{
+		"$type": "EventDeclarationSetParameter",
+	}
+	if p.EventField != nil {
+		node["EventField"] = identifierToJSON(p.EventField)
+	}
+	if p.EventValue != nil {
+		node["EventValue"] = scalarExpressionToJSON(p.EventValue)
+	}
+	return node
+}
+
+func sessionOptionToJSON(o ast.SessionOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.LiteralSessionOption:
+		node := jsonNode{
+			"$type": "LiteralSessionOption",
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		if opt.Unit != "" {
+			node["Unit"] = opt.Unit
+		}
+		if opt.OptionKind != "" {
+			node["OptionKind"] = opt.OptionKind
+		}
+		return node
+	case *ast.OnOffSessionOption:
+		node := jsonNode{
+			"$type": "OnOffSessionOption",
+		}
+		if opt.OptionState != "" {
+			node["OptionState"] = opt.OptionState
+		}
+		if opt.OptionKind != "" {
+			node["OptionKind"] = opt.OptionKind
+		}
+		return node
+	case *ast.EventRetentionSessionOption:
+		node := jsonNode{
+			"$type": "EventRetentionSessionOption",
+		}
+		if opt.Value != "" {
+			node["Value"] = opt.Value
+		}
+		if opt.OptionKind != "" {
+			node["OptionKind"] = opt.OptionKind
+		}
+		return node
+	case *ast.MaxDispatchLatencySessionOption:
+		node := jsonNode{
+			"$type":      "MaxDispatchLatencySessionOption",
+			"IsInfinite": opt.IsInfinite,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		if opt.OptionKind != "" {
+			node["OptionKind"] = opt.OptionKind
+		}
+		return node
+	case *ast.MemoryPartitionSessionOption:
+		node := jsonNode{
+			"$type": "MemoryPartitionSessionOption",
+		}
+		if opt.Value != "" {
+			node["Value"] = opt.Value
+		}
+		if opt.OptionKind != "" {
+			node["OptionKind"] = opt.OptionKind
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownSessionOption"}
+	}
 }
 
 func insertBulkStatementToJSON(s *ast.InsertBulkStatement) jsonNode {
@@ -10399,6 +11307,9 @@ func columnDefinitionBaseToJSON(c *ast.ColumnDefinitionBase) jsonNode {
 	}
 	if c.DataType != nil {
 		node["DataType"] = dataTypeReferenceToJSON(c.DataType)
+	}
+	if c.Collation != nil {
+		node["Collation"] = identifierToJSON(c.Collation)
 	}
 	return node
 }
@@ -11277,6 +12188,23 @@ func encryptionSourceToJSON(source ast.EncryptionSource) interface{} {
 	switch s := source.(type) {
 	case *ast.ProviderEncryptionSource:
 		return providerEncryptionSourceToJSON(s)
+	case *ast.AssemblyEncryptionSource:
+		node := jsonNode{
+			"$type": "AssemblyEncryptionSource",
+		}
+		if s.Assembly != nil {
+			node["Assembly"] = identifierToJSON(s.Assembly)
+		}
+		return node
+	case *ast.FileEncryptionSource:
+		node := jsonNode{
+			"$type":        "FileEncryptionSource",
+			"IsExecutable": s.IsExecutable,
+		}
+		if s.File != nil {
+			node["File"] = stringLiteralToJSON(s.File)
+		}
+		return node
 	default:
 		return nil
 	}
@@ -11393,8 +12321,37 @@ func createCertificateStatementToJSON(s *ast.CreateCertificateStatement) jsonNod
 	node := jsonNode{
 		"$type": "CreateCertificateStatement",
 	}
+	if s.CertificateSource != nil {
+		node["CertificateSource"] = encryptionSourceToJSON(s.CertificateSource)
+	}
+	if len(s.CertificateOptions) > 0 {
+		options := make([]jsonNode, len(s.CertificateOptions))
+		for i, opt := range s.CertificateOptions {
+			options[i] = jsonNode{
+				"$type": "CertificateOption",
+				"Kind":  opt.Kind,
+				"Value": stringLiteralToJSON(opt.Value),
+			}
+		}
+		node["CertificateOptions"] = options
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.ActiveForBeginDialog != "" {
+		node["ActiveForBeginDialog"] = s.ActiveForBeginDialog
+	}
+	if s.PrivateKeyPath != nil {
+		node["PrivateKeyPath"] = stringLiteralToJSON(s.PrivateKeyPath)
+	}
+	if s.EncryptionPassword != nil {
+		node["EncryptionPassword"] = stringLiteralToJSON(s.EncryptionPassword)
+	}
+	if s.DecryptionPassword != nil {
+		node["DecryptionPassword"] = stringLiteralToJSON(s.DecryptionPassword)
 	}
 	return node
 }

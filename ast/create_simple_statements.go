@@ -122,11 +122,43 @@ func (s *CreateAssemblyStatement) statement() {}
 
 // CreateCertificateStatement represents a CREATE CERTIFICATE statement.
 type CreateCertificateStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name               *Identifier         `json:"Name,omitempty"`
+	Owner              *Identifier         `json:"Owner,omitempty"`
+	CertificateSource  EncryptionSource    `json:"CertificateSource,omitempty"`
+	ActiveForBeginDialog string            `json:"ActiveForBeginDialog,omitempty"` // "On", "Off", "NotSet"
+	PrivateKeyPath     *StringLiteral      `json:"PrivateKeyPath,omitempty"`
+	EncryptionPassword *StringLiteral      `json:"EncryptionPassword,omitempty"`
+	DecryptionPassword *StringLiteral      `json:"DecryptionPassword,omitempty"`
+	CertificateOptions []*CertificateOption `json:"CertificateOptions,omitempty"`
 }
 
 func (s *CreateCertificateStatement) node()      {}
 func (s *CreateCertificateStatement) statement() {}
+
+// CertificateOption represents an option in a CREATE CERTIFICATE statement.
+type CertificateOption struct {
+	Kind  string         `json:"Kind,omitempty"` // "Subject", "StartDate", "ExpiryDate"
+	Value *StringLiteral `json:"Value,omitempty"`
+}
+
+func (o *CertificateOption) node() {}
+
+// AssemblyEncryptionSource represents a certificate source from an assembly.
+type AssemblyEncryptionSource struct {
+	Assembly *Identifier `json:"Assembly,omitempty"`
+}
+
+func (s *AssemblyEncryptionSource) node()             {}
+func (s *AssemblyEncryptionSource) encryptionSource() {}
+
+// FileEncryptionSource represents a certificate source from a file.
+type FileEncryptionSource struct {
+	IsExecutable bool           `json:"IsExecutable,omitempty"`
+	File         *StringLiteral `json:"File,omitempty"`
+}
+
+func (s *FileEncryptionSource) node()             {}
+func (s *FileEncryptionSource) encryptionSource() {}
 
 // CreateAsymmetricKeyStatement represents a CREATE ASYMMETRIC KEY statement.
 type CreateAsymmetricKeyStatement struct {

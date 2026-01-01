@@ -656,11 +656,25 @@ func (p *Parser) parseColumnList() ([]*ast.ColumnReferenceExpression, error) {
 
 	var cols []*ast.ColumnReferenceExpression
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-		col, err := p.parseMultiPartIdentifierAsColumn()
-		if err != nil {
-			return nil, err
+		// Check for pseudo columns
+		lit := p.curTok.Literal
+		upperLit := strings.ToUpper(lit)
+		if upperLit == "$ACTION" {
+			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnAction"})
+			p.nextToken()
+		} else if upperLit == "$CUID" {
+			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"})
+			p.nextToken()
+		} else if upperLit == "$ROWGUID" {
+			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnRowGuid"})
+			p.nextToken()
+		} else {
+			col, err := p.parseMultiPartIdentifierAsColumn()
+			if err != nil {
+				return nil, err
+			}
+			cols = append(cols, col)
 		}
-		cols = append(cols, col)
 
 		if p.curTok.Type != TokenComma {
 			break
@@ -851,20 +865,77 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 	// Parse procedure reference
 	procRef := &ast.ExecutableProcedureReference{}
 
+	// Check for OPENDATASOURCE or OPENROWSET
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "OPENDATASOURCE" || upperLit == "OPENROWSET" {
+		p.nextToken() // consume OPENDATASOURCE/OPENROWSET
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+
+			// Parse provider name
+			var providerName *ast.StringLiteral
+			if p.curTok.Type == TokenString {
+				providerName = p.parseStringLiteralValue()
+				p.nextToken()
+			}
+
+			// Expect comma
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+
+			// Parse init string
+			var initString *ast.StringLiteral
+			if p.curTok.Type == TokenString {
+				initString = p.parseStringLiteralValue()
+				p.nextToken()
+			}
+
+			// Expect )
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+
+			procRef.AdHocDataSource = &ast.AdHocDataSource{
+				ProviderName: providerName,
+				InitString:   initString,
+			}
+
+			// Expect . and then schema.object.procedure name
+			if p.curTok.Type == TokenDot {
+				p.nextToken() // consume .
+			}
+		}
+	}
+
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		// Procedure variable
 		procRef.ProcedureReference = &ast.ProcedureReferenceName{
 			ProcedureVariable: &ast.VariableReference{Name: p.curTok.Literal},
 		}
 		p.nextToken()
-	} else {
+	} else if p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
 		// Procedure name
 		son, err := p.parseSchemaObjectName()
 		if err != nil {
 			return nil, err
 		}
+		pr := &ast.ProcedureReference{Name: son}
+
+		// Check for procedure number: ;number
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken() // consume ;
+			if p.curTok.Type == TokenNumber {
+				pr.Number = &ast.IntegerLiteral{
+					LiteralType: "Integer",
+					Value:       p.curTok.Literal,
+				}
+				p.nextToken()
+			}
+		}
+
 		procRef.ProcedureReference = &ast.ProcedureReferenceName{
-			ProcedureReference: &ast.ProcedureReference{Name: son},
+			ProcedureReference: pr,
 		}
 	}
 
@@ -1001,11 +1072,83 @@ func (p *Parser) parseExecuteContextForSpec() (*ast.ExecuteContext, error) {
 func (p *Parser) parseExecuteParameter() (*ast.ExecuteParameter, error) {
 	param := &ast.ExecuteParameter{IsOutput: false}
 
-	expr, err := p.parseScalarExpression()
-	if err != nil {
-		return nil, err
+	// Check for DEFAULT keyword
+	if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+		param.ParameterValue = &ast.DefaultLiteral{LiteralType: "Default", Value: "DEFAULT"}
+		p.nextToken()
+		return param, nil
 	}
-	param.ParameterValue = expr
+
+	// Check for named parameter: @name = value
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		varName := p.curTok.Literal
+		p.nextToken()
+
+		if p.curTok.Type == TokenEquals {
+			// Named parameter
+			p.nextToken() // consume =
+			param.Variable = &ast.VariableReference{Name: varName}
+
+			// Check for DEFAULT keyword as value
+			if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+				param.ParameterValue = &ast.DefaultLiteral{LiteralType: "Default", Value: "DEFAULT"}
+				p.nextToken()
+			} else {
+				// Parse the parameter value
+				expr, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				param.ParameterValue = expr
+			}
+		} else {
+			// Just a variable as value (not a named parameter)
+			param.ParameterValue = &ast.VariableReference{Name: varName}
+		}
+	} else {
+		// Check for bare identifier as IdentifierLiteral (e.g., EXEC sp_addtype birthday, datetime)
+		// Only if it's not followed by . or ( which would indicate a column/function reference
+		if p.curTok.Type == TokenIdent && !strings.HasPrefix(p.curTok.Literal, "@") {
+			upper := strings.ToUpper(p.curTok.Literal)
+			// Skip keywords that are expression starters
+			isKeyword := upper == "NULL" || upper == "DEFAULT" || upper == "NOT" ||
+				upper == "CASE" || upper == "EXISTS" || upper == "CAST" ||
+				upper == "CONVERT" || upper == "COALESCE" || upper == "NULLIF"
+			if !isKeyword && p.peekTok.Type != TokenDot && p.peekTok.Type != TokenLParen {
+				// Plain identifier - treat as IdentifierLiteral
+				quoteType := "NotQuoted"
+				if strings.HasPrefix(p.curTok.Literal, "[") {
+					quoteType = "SquareBracket"
+				}
+				param.ParameterValue = &ast.IdentifierLiteral{
+					LiteralType: "Identifier",
+					QuoteType:   quoteType,
+					Value:       p.curTok.Literal,
+				}
+				p.nextToken()
+			} else {
+				// Regular value expression
+				expr, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				param.ParameterValue = expr
+			}
+		} else {
+			// Regular value expression
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			param.ParameterValue = expr
+		}
+	}
+
+	// Check for OUTPUT modifier
+	if strings.ToUpper(p.curTok.Literal) == "OUTPUT" || strings.ToUpper(p.curTok.Literal) == "OUT" {
+		param.IsOutput = true
+		p.nextToken()
+	}
 
 	return param, nil
 }
@@ -1355,6 +1498,15 @@ func (p *Parser) parseDeleteStatement() (*ast.DeleteStatement, error) {
 		DeleteSpecification: &ast.DeleteSpecification{},
 	}
 
+	// Parse optional TOP clause
+	if p.curTok.Type == TokenTop {
+		topRowFilter, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		stmt.DeleteSpecification.TopRowFilter = topRowFilter
+	}
+
 	// Skip optional FROM
 	if p.curTok.Type == TokenFrom {
 		p.nextToken()
@@ -1366,6 +1518,20 @@ func (p *Parser) parseDeleteStatement() (*ast.DeleteStatement, error) {
 		return nil, err
 	}
 	stmt.DeleteSpecification.Target = target
+
+	// Parse OUTPUT clauses (can have OUTPUT INTO followed by OUTPUT)
+	for p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		outputClause, outputIntoClause, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		if outputIntoClause != nil {
+			stmt.DeleteSpecification.OutputIntoClause = outputIntoClause
+		}
+		if outputClause != nil {
+			stmt.DeleteSpecification.OutputClause = outputClause
+		}
+	}
 
 	// Parse optional FROM clause
 	if p.curTok.Type == TokenFrom {

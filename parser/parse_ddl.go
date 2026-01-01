@@ -1315,6 +1315,75 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 				CompressionLevel: level,
 				OptionKind:       "DataCompression",
 			})
+		case "WAIT_AT_LOW_PRIORITY":
+			p.nextToken() // consume WAIT_AT_LOW_PRIORITY
+			waitOpt := &ast.WaitAtLowPriorityOption{
+				OptionKind: "WaitAtLowPriority",
+			}
+			// Parse nested options inside parentheses
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for {
+					optName := strings.ToUpper(p.curTok.Literal)
+					if optName == "MAX_DURATION" {
+						p.nextToken() // consume MAX_DURATION
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						maxDur := &ast.LowPriorityLockWaitMaxDurationOption{
+							OptionKind: "MaxDuration",
+						}
+						// Parse integer value
+						if p.curTok.Type == TokenNumber {
+							maxDur.MaxDuration = &ast.IntegerLiteral{
+								LiteralType: "Integer",
+								Value:       p.curTok.Literal,
+							}
+							p.nextToken()
+						}
+						// Parse unit: MINUTES or SECONDS
+						unitUpper := strings.ToUpper(p.curTok.Literal)
+						if unitUpper == "MINUTES" {
+							maxDur.Unit = "Minutes"
+							p.nextToken()
+						} else if unitUpper == "SECONDS" {
+							maxDur.Unit = "Seconds"
+							p.nextToken()
+						}
+						waitOpt.Options = append(waitOpt.Options, maxDur)
+					} else if optName == "ABORT_AFTER_WAIT" {
+						p.nextToken() // consume ABORT_AFTER_WAIT
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						abortOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
+							OptionKind: "AbortAfterWait",
+						}
+						abortValue := strings.ToUpper(p.curTok.Literal)
+						switch abortValue {
+						case "NONE":
+							abortOpt.AbortAfterWait = "None"
+						case "SELF":
+							abortOpt.AbortAfterWait = "Self"
+						case "BLOCKERS":
+							abortOpt.AbortAfterWait = "Blockers"
+						}
+						p.nextToken()
+						waitOpt.Options = append(waitOpt.Options, abortOpt)
+					} else {
+						break
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken() // consume comma
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			options = append(options, waitOpt)
 		default:
 			// Unknown option, skip
 			p.nextToken()
@@ -2772,18 +2841,20 @@ func (p *Parser) parseAlterTableAlterIndexStatement(tableName *ast.SchemaObjectN
 
 func convertIndexOptionKind(name string) string {
 	optionMap := map[string]string{
-		"BUCKET_COUNT":           "BucketCount",
-		"PAD_INDEX":              "PadIndex",
-		"FILLFACTOR":             "FillFactor",
-		"SORT_IN_TEMPDB":         "SortInTempDB",
-		"IGNORE_DUP_KEY":         "IgnoreDupKey",
-		"STATISTICS_NORECOMPUTE": "StatisticsNoRecompute",
-		"DROP_EXISTING":          "DropExisting",
-		"ONLINE":                 "Online",
-		"ALLOW_ROW_LOCKS":        "AllowRowLocks",
-		"ALLOW_PAGE_LOCKS":       "AllowPageLocks",
-		"MAXDOP":                 "MaxDop",
-		"DATA_COMPRESSION":       "DataCompression",
+		"BUCKET_COUNT":            "BucketCount",
+		"PAD_INDEX":               "PadIndex",
+		"FILLFACTOR":              "FillFactor",
+		"SORT_IN_TEMPDB":          "SortInTempDB",
+		"IGNORE_DUP_KEY":          "IgnoreDupKey",
+		"STATISTICS_NORECOMPUTE":  "StatisticsNoRecompute",
+		"DROP_EXISTING":           "DropExisting",
+		"ONLINE":                  "Online",
+		"ALLOW_ROW_LOCKS":         "AllowRowLocks",
+		"ALLOW_PAGE_LOCKS":        "AllowPageLocks",
+		"MAXDOP":                  "MaxDop",
+		"DATA_COMPRESSION":        "DataCompression",
+		"COMPRESS_ALL_ROW_GROUPS": "CompressAllRowGroups",
+		"COMPRESSION_DELAY":       "CompressionDelay",
 	}
 	if mapped, ok := optionMap[name]; ok {
 		return mapped
@@ -2915,7 +2986,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				ConstraintIdentifier: constraintName,
 				IsPrimaryKey:         true,
 			}
-			// Parse optional CLUSTERED/NONCLUSTERED
+			// Parse optional CLUSTERED/NONCLUSTERED/HASH
 			for {
 				upperOpt := strings.ToUpper(p.curTok.Literal)
 				if upperOpt == "CLUSTERED" {
@@ -2924,7 +2995,17 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken()
 				} else if upperOpt == "NONCLUSTERED" {
 					constraint.Clustered = false
-					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					p.nextToken()
+					// Check for HASH suffix
+					if strings.ToUpper(p.curTok.Literal) == "HASH" {
+						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+						p.nextToken()
+					} else {
+						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					}
+				} else if upperOpt == "HASH" {
+					// HASH without NONCLUSTERED
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
 					p.nextToken()
 				} else {
 					break
@@ -2967,6 +3048,34 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken()
 				}
 			}
+			// Parse WITH (index_options)
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						optionName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						option := &ast.IndexExpressionOption{
+							OptionKind: convertIndexOptionKind(optionName),
+							Expression: expr,
+						}
+						constraint.IndexOptions = append(constraint.IndexOptions, option)
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
+				}
+			}
 			// Parse NOT ENFORCED
 			if strings.ToUpper(p.curTok.Literal) == "NOT" {
 				p.nextToken()
@@ -2987,7 +3096,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				ConstraintIdentifier: constraintName,
 				IsPrimaryKey:         false,
 			}
-			// Parse optional CLUSTERED/NONCLUSTERED
+			// Parse optional CLUSTERED/NONCLUSTERED/HASH
 			for {
 				upperOpt := strings.ToUpper(p.curTok.Literal)
 				if upperOpt == "CLUSTERED" {
@@ -2996,7 +3105,17 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken()
 				} else if upperOpt == "NONCLUSTERED" {
 					constraint.Clustered = false
-					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					p.nextToken()
+					// Check for HASH suffix
+					if strings.ToUpper(p.curTok.Literal) == "HASH" {
+						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+						p.nextToken()
+					} else {
+						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					}
+				} else if upperOpt == "HASH" {
+					// HASH without NONCLUSTERED
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
 					p.nextToken()
 				} else {
 					break
@@ -3037,6 +3156,34 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				}
 				if p.curTok.Type == TokenRParen {
 					p.nextToken()
+				}
+			}
+			// Parse WITH (index_options)
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						optionName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						option := &ast.IndexExpressionOption{
+							OptionKind: convertIndexOptionKind(optionName),
+							Expression: expr,
+						}
+						constraint.IndexOptions = append(constraint.IndexOptions, option)
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
 				}
 			}
 			// Parse NOT ENFORCED

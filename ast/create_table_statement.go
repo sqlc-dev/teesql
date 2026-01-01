@@ -49,9 +49,18 @@ type ColumnDefinition struct {
 	IsHidden                 bool
 	IsMasked                 bool
 	Nullable                 *NullableConstraintDefinition
+	StorageOptions           *ColumnStorageOptions
 }
 
 func (c *ColumnDefinition) node() {}
+
+// ColumnStorageOptions represents storage options for a column (SPARSE, FILESTREAM)
+type ColumnStorageOptions struct {
+	IsFileStream bool   // true if FILESTREAM specified
+	SparseOption string // "None", "Sparse", "ColumnSetForAllSparseColumns"
+}
+
+func (c *ColumnStorageOptions) node() {}
 
 // DataTypeReference is an interface for data type references
 type DataTypeReference interface {
@@ -166,3 +175,4 @@ type ForeignKeyConstraintDefinition struct {
 
 func (f *ForeignKeyConstraintDefinition) node()            {}
 func (f *ForeignKeyConstraintDefinition) tableConstraint() {}
+func (f *ForeignKeyConstraintDefinition) constraintDefinition() {}
