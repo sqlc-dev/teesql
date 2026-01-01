@@ -1369,6 +1369,15 @@ func (p *Parser) parseDeleteStatement() (*ast.DeleteStatement, error) {
 		DeleteSpecification: &ast.DeleteSpecification{},
 	}
 
+	// Parse optional TOP clause
+	if p.curTok.Type == TokenTop {
+		topRowFilter, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		stmt.DeleteSpecification.TopRowFilter = topRowFilter
+	}
+
 	// Skip optional FROM
 	if p.curTok.Type == TokenFrom {
 		p.nextToken()
@@ -1380,6 +1389,20 @@ func (p *Parser) parseDeleteStatement() (*ast.DeleteStatement, error) {
 		return nil, err
 	}
 	stmt.DeleteSpecification.Target = target
+
+	// Parse OUTPUT clauses (can have OUTPUT INTO followed by OUTPUT)
+	for p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		outputClause, outputIntoClause, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		if outputIntoClause != nil {
+			stmt.DeleteSpecification.OutputIntoClause = outputIntoClause
+		}
+		if outputClause != nil {
+			stmt.DeleteSpecification.OutputClause = outputClause
+		}
+	}
 
 	// Parse optional FROM clause
 	if p.curTok.Type == TokenFrom {

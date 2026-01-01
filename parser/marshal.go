@@ -2598,6 +2598,15 @@ func deleteSpecificationToJSON(spec *ast.DeleteSpecification) jsonNode {
 	if spec.Target != nil {
 		node["Target"] = tableReferenceToJSON(spec.Target)
 	}
+	if spec.TopRowFilter != nil {
+		node["TopRowFilter"] = topRowFilterToJSON(spec.TopRowFilter)
+	}
+	if spec.OutputClause != nil {
+		node["OutputClause"] = outputClauseToJSON(spec.OutputClause)
+	}
+	if spec.OutputIntoClause != nil {
+		node["OutputIntoClause"] = outputIntoClauseToJSON(spec.OutputIntoClause)
+	}
 	return node
 }
 
