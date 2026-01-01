@@ -2728,14 +2728,9 @@ func (p *Parser) parseGroupByClause() (*ast.GroupByClause, error) {
 
 	// Parse grouping specifications
 	for {
-		expr, err := p.parseScalarExpression()
+		spec, err := p.parseGroupingSpecification()
 		if err != nil {
 			return nil, err
-		}
-
-		spec := &ast.ExpressionGroupingSpecification{
-			Expression:             expr,
-			DistributedAggregation: false,
 		}
 		gbc.GroupingSpecifications = append(gbc.GroupingSpecifications, spec)
 
@@ -2745,7 +2740,7 @@ func (p *Parser) parseGroupByClause() (*ast.GroupByClause, error) {
 		p.nextToken() // consume comma
 	}
 
-	// Check for WITH ROLLUP or WITH CUBE
+	// Check for WITH ROLLUP or WITH CUBE (old syntax)
 	if p.curTok.Type == TokenWith {
 		p.nextToken() // consume WITH
 		if p.curTok.Type == TokenRollup {
@@ -2758,6 +2753,163 @@ func (p *Parser) parseGroupByClause() (*ast.GroupByClause, error) {
 	}
 
 	return gbc, nil
+}
+
+// parseGroupingSpecification parses a single grouping specification
+func (p *Parser) parseGroupingSpecification() (ast.GroupingSpecification, error) {
+	// Check for ROLLUP (...)
+	if p.curTok.Type == TokenRollup {
+		return p.parseRollupGroupingSpecification()
+	}
+
+	// Check for CUBE (...)
+	if p.curTok.Type == TokenCube {
+		return p.parseCubeGroupingSpecification()
+	}
+
+	// Check for composite grouping (c1, c2, ...)
+	if p.curTok.Type == TokenLParen {
+		return p.parseCompositeGroupingSpecification()
+	}
+
+	// Regular expression grouping
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	spec := &ast.ExpressionGroupingSpecification{
+		Expression:             expr,
+		DistributedAggregation: false,
+	}
+
+	// Check for WITH (DISTRIBUTED_AGG) hint - only if next token is (
+	// This distinguishes from WITH ROLLUP/CUBE at the end
+	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
+		p.nextToken() // consume WITH
+		p.nextToken() // consume (
+		if strings.ToUpper(p.curTok.Literal) == "DISTRIBUTED_AGG" {
+			spec.DistributedAggregation = true
+			p.nextToken() // consume DISTRIBUTED_AGG
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	return spec, nil
+}
+
+// parseRollupGroupingSpecification parses ROLLUP (c1, c2, ...)
+func (p *Parser) parseRollupGroupingSpecification() (*ast.RollupGroupingSpecification, error) {
+	p.nextToken() // consume ROLLUP
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after ROLLUP, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	spec := &ast.RollupGroupingSpecification{}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		arg, err := p.parseGroupingSpecificationArgument()
+		if err != nil {
+			return nil, err
+		}
+		spec.Arguments = append(spec.Arguments, arg)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return spec, nil
+}
+
+// parseCubeGroupingSpecification parses CUBE (c1, c2, ...)
+func (p *Parser) parseCubeGroupingSpecification() (*ast.CubeGroupingSpecification, error) {
+	p.nextToken() // consume CUBE
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after CUBE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	spec := &ast.CubeGroupingSpecification{}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		arg, err := p.parseGroupingSpecificationArgument()
+		if err != nil {
+			return nil, err
+		}
+		spec.Arguments = append(spec.Arguments, arg)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return spec, nil
+}
+
+// parseGroupingSpecificationArgument parses an argument inside ROLLUP/CUBE which can be
+// an expression or a composite grouping like (c2, c3)
+func (p *Parser) parseGroupingSpecificationArgument() (ast.GroupingSpecification, error) {
+	// Check for composite grouping (c1, c2)
+	if p.curTok.Type == TokenLParen {
+		return p.parseCompositeGroupingSpecification()
+	}
+
+	// Regular expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.ExpressionGroupingSpecification{
+		Expression:             expr,
+		DistributedAggregation: false,
+	}, nil
+}
+
+// parseCompositeGroupingSpecification parses (c1, c2, ...)
+func (p *Parser) parseCompositeGroupingSpecification() (*ast.CompositeGroupingSpecification, error) {
+	p.nextToken() // consume (
+
+	spec := &ast.CompositeGroupingSpecification{}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		spec.Items = append(spec.Items, &ast.ExpressionGroupingSpecification{
+			Expression:             expr,
+			DistributedAggregation: false,
+		})
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return spec, nil
 }
 
 func (p *Parser) parseHavingClause() (*ast.HavingClause, error) {

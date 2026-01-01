@@ -2378,6 +2378,42 @@ func groupingSpecificationToJSON(spec ast.GroupingSpecification) jsonNode {
 			node["Expression"] = scalarExpressionToJSON(s.Expression)
 		}
 		return node
+	case *ast.RollupGroupingSpecification:
+		node := jsonNode{
+			"$type": "RollupGroupingSpecification",
+		}
+		if len(s.Arguments) > 0 {
+			args := make([]jsonNode, len(s.Arguments))
+			for i, arg := range s.Arguments {
+				args[i] = groupingSpecificationToJSON(arg)
+			}
+			node["Arguments"] = args
+		}
+		return node
+	case *ast.CubeGroupingSpecification:
+		node := jsonNode{
+			"$type": "CubeGroupingSpecification",
+		}
+		if len(s.Arguments) > 0 {
+			args := make([]jsonNode, len(s.Arguments))
+			for i, arg := range s.Arguments {
+				args[i] = groupingSpecificationToJSON(arg)
+			}
+			node["Arguments"] = args
+		}
+		return node
+	case *ast.CompositeGroupingSpecification:
+		node := jsonNode{
+			"$type": "CompositeGroupingSpecification",
+		}
+		if len(s.Items) > 0 {
+			items := make([]jsonNode, len(s.Items))
+			for i, item := range s.Items {
+				items[i] = groupingSpecificationToJSON(item)
+			}
+			node["Items"] = items
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownGroupingSpecification"}
 	}
