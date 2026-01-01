@@ -8935,7 +8935,7 @@ func (p *Parser) parseCreateFulltextCatalogStatement() (*ast.CreateFullTextCatal
 	}
 
 	// Parse optional clauses
-	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && !p.isBatchSeparator() {
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && !p.isBatchSeparator() && !p.isStatementTerminator() {
 		switch strings.ToUpper(p.curTok.Literal) {
 		case "ON":
 			p.nextToken() // consume ON
