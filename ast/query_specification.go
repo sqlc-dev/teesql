@@ -10,6 +10,7 @@ type QuerySpecification struct {
 	GroupByClause   *GroupByClause    `json:"GroupByClause,omitempty"`
 	HavingClause    *HavingClause     `json:"HavingClause,omitempty"`
 	OrderByClause   *OrderByClause    `json:"OrderByClause,omitempty"`
+	ForClause       ForClause         `json:"ForClause,omitempty"`
 }
 
 func (*QuerySpecification) node()            {}

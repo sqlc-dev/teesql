@@ -1253,6 +1253,51 @@ func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
 	if q.OrderByClause != nil {
 		node["OrderByClause"] = orderByClauseToJSON(q.OrderByClause)
 	}
+	if q.ForClause != nil {
+		node["ForClause"] = forClauseToJSON(q.ForClause)
+	}
+	return node
+}
+
+func forClauseToJSON(fc ast.ForClause) jsonNode {
+	switch f := fc.(type) {
+	case *ast.BrowseForClause:
+		return jsonNode{"$type": "BrowseForClause"}
+	case *ast.ReadOnlyForClause:
+		return jsonNode{"$type": "ReadOnlyForClause"}
+	case *ast.UpdateForClause:
+		node := jsonNode{"$type": "UpdateForClause"}
+		if len(f.Columns) > 0 {
+			cols := make([]jsonNode, len(f.Columns))
+			for i, col := range f.Columns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		return node
+	case *ast.XmlForClause:
+		node := jsonNode{"$type": "XmlForClause"}
+		if len(f.Options) > 0 {
+			opts := make([]jsonNode, len(f.Options))
+			for i, opt := range f.Options {
+				opts[i] = xmlForClauseOptionToJSON(opt)
+			}
+			node["Options"] = opts
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownForClause"}
+	}
+}
+
+func xmlForClauseOptionToJSON(opt *ast.XmlForClauseOption) jsonNode {
+	node := jsonNode{"$type": "XmlForClauseOption"}
+	if opt.OptionKind != "" {
+		node["OptionKind"] = opt.OptionKind
+	}
+	if opt.Value != nil {
+		node["Value"] = stringLiteralToJSON(opt.Value)
+	}
 	return node
 }
 

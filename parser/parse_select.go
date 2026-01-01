@@ -186,6 +186,18 @@ func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.Schem
 		}
 	}
 
+	// Parse FOR clause (FOR BROWSE, FOR XML, FOR UPDATE, FOR READ ONLY)
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		forClause, err := p.parseForClause()
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		// Attach to QuerySpecification
+		if qs, ok := left.(*ast.QuerySpecification); ok {
+			qs.ForClause = forClause
+		}
+	}
+
 	return left, into, on, nil
 }
 
@@ -1797,7 +1809,7 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	} else if p.curTok.Type == TokenIdent {
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" {
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
 			ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
 			p.nextToken()
 		}
@@ -1857,7 +1869,7 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		if p.curTok.Type == TokenIdent {
 			upper := strings.ToUpper(p.curTok.Literal)
-			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" {
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
 				ref.Alias = p.parseIdentifier()
 			}
 		} else {
@@ -3435,4 +3447,169 @@ func (p *Parser) parsePredictTableReference() (*ast.PredictTableReference, error
 	}
 
 	return ref, nil
+}
+
+// parseForClause parses FOR BROWSE, FOR XML, FOR UPDATE, FOR READ ONLY clauses.
+func (p *Parser) parseForClause() (ast.ForClause, error) {
+	p.nextToken() // consume FOR
+
+	keyword := strings.ToUpper(p.curTok.Literal)
+
+	switch keyword {
+	case "BROWSE":
+		p.nextToken() // consume BROWSE
+		return &ast.BrowseForClause{}, nil
+
+	case "READ":
+		p.nextToken() // consume READ
+		if strings.ToUpper(p.curTok.Literal) == "ONLY" {
+			p.nextToken() // consume ONLY
+		}
+		return &ast.ReadOnlyForClause{}, nil
+
+	case "UPDATE":
+		p.nextToken() // consume UPDATE
+		clause := &ast.UpdateForClause{}
+
+		// Check for OF column_list
+		if strings.ToUpper(p.curTok.Literal) == "OF" {
+			p.nextToken() // consume OF
+
+			// Parse column list
+			for {
+				col, err := p.parseColumnReference()
+				if err != nil {
+					return nil, err
+				}
+				clause.Columns = append(clause.Columns, col)
+
+				if p.curTok.Type != TokenComma {
+					break
+				}
+				p.nextToken() // consume comma
+			}
+		}
+		return clause, nil
+
+	case "XML":
+		p.nextToken() // consume XML
+		return p.parseXmlForClause()
+
+	default:
+		return nil, fmt.Errorf("unexpected token after FOR: %s", p.curTok.Literal)
+	}
+}
+
+// parseXmlForClause parses FOR XML options.
+func (p *Parser) parseXmlForClause() (*ast.XmlForClause, error) {
+	clause := &ast.XmlForClause{}
+
+	// Parse XML options separated by commas
+	for {
+		option, err := p.parseXmlForClauseOption()
+		if err != nil {
+			return nil, err
+		}
+		clause.Options = append(clause.Options, option)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	return clause, nil
+}
+
+// parseXmlForClauseOption parses a single XML FOR clause option.
+func (p *Parser) parseXmlForClauseOption() (*ast.XmlForClauseOption, error) {
+	option := &ast.XmlForClauseOption{}
+
+	keyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume the option keyword
+
+	switch keyword {
+	case "AUTO":
+		option.OptionKind = "Auto"
+	case "EXPLICIT":
+		option.OptionKind = "Explicit"
+	case "RAW":
+		option.OptionKind = "Raw"
+		// Check for optional element name: RAW ('name')
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if p.curTok.Type == TokenString {
+				option.Value = p.parseStringLiteralValue()
+				p.nextToken() // consume string
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	case "PATH":
+		option.OptionKind = "Path"
+		// Check for optional path name: PATH ('name')
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if p.curTok.Type == TokenString {
+				option.Value = p.parseStringLiteralValue()
+				p.nextToken() // consume string
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	case "ELEMENTS":
+		// Check for XSINIL or ABSENT
+		nextKeyword := strings.ToUpper(p.curTok.Literal)
+		if nextKeyword == "XSINIL" {
+			option.OptionKind = "ElementsXsiNil"
+			p.nextToken() // consume XSINIL
+		} else if nextKeyword == "ABSENT" {
+			option.OptionKind = "ElementsAbsent"
+			p.nextToken() // consume ABSENT
+		} else {
+			option.OptionKind = "Elements"
+		}
+	case "XMLDATA":
+		option.OptionKind = "XmlData"
+	case "XMLSCHEMA":
+		option.OptionKind = "XmlSchema"
+		// Check for optional namespace: XMLSCHEMA ('namespace')
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if p.curTok.Type == TokenString {
+				option.Value = p.parseStringLiteralValue()
+				p.nextToken() // consume string
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	case "ROOT":
+		option.OptionKind = "Root"
+		// Check for optional root name: ROOT ('name')
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if p.curTok.Type == TokenString {
+				option.Value = p.parseStringLiteralValue()
+				p.nextToken() // consume string
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	case "TYPE":
+		option.OptionKind = "Type"
+	case "BINARY":
+		// BINARY BASE64
+		if strings.ToUpper(p.curTok.Literal) == "BASE64" {
+			option.OptionKind = "BinaryBase64"
+			p.nextToken() // consume BASE64
+		}
+	default:
+		option.OptionKind = keyword
+	}
+
+	return option, nil
 }
