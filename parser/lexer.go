@@ -1,8 +1,10 @@
 package parser
 
 import (
+	"encoding/binary"
 	"strings"
 	"unicode"
+	"unicode/utf16"
 )
 
 // TokenType represents the type of a token.
@@ -243,6 +245,10 @@ type Lexer struct {
 
 // NewLexer creates a new Lexer for the given input.
 func NewLexer(input string) *Lexer {
+	// Handle UTF-16 LE BOM (0xFF 0xFE) - convert to UTF-8
+	if len(input) >= 2 && input[0] == 0xFF && input[1] == 0xFE {
+		input = utf16LEToUTF8(input[2:])
+	}
 	// Skip UTF-8 BOM if present
 	if len(input) >= 3 && input[0] == 0xEF && input[1] == 0xBB && input[2] == 0xBF {
 		input = input[3:]
@@ -250,6 +256,21 @@ func NewLexer(input string) *Lexer {
 	l := &Lexer{input: input}
 	l.readChar()
 	return l
+}
+
+// utf16LEToUTF8 converts a UTF-16 LE string to UTF-8
+func utf16LEToUTF8(data string) string {
+	// Convert byte string to []uint16
+	if len(data)%2 != 0 {
+		data = data[:len(data)-1] // Truncate odd byte
+	}
+	u16s := make([]uint16, len(data)/2)
+	for i := 0; i < len(u16s); i++ {
+		u16s[i] = binary.LittleEndian.Uint16([]byte(data[i*2 : i*2+2]))
+	}
+	// Decode UTF-16 to runes
+	runes := utf16.Decode(u16s)
+	return string(runes)
 }
 
 func (l *Lexer) readChar() {
