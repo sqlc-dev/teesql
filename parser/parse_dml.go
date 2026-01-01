@@ -656,11 +656,25 @@ func (p *Parser) parseColumnList() ([]*ast.ColumnReferenceExpression, error) {
 
 	var cols []*ast.ColumnReferenceExpression
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-		col, err := p.parseMultiPartIdentifierAsColumn()
-		if err != nil {
-			return nil, err
+		// Check for pseudo columns
+		lit := p.curTok.Literal
+		upperLit := strings.ToUpper(lit)
+		if upperLit == "$ACTION" {
+			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnAction"})
+			p.nextToken()
+		} else if upperLit == "$CUID" {
+			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"})
+			p.nextToken()
+		} else if upperLit == "$ROWGUID" {
+			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnRowGuid"})
+			p.nextToken()
+		} else {
+			col, err := p.parseMultiPartIdentifierAsColumn()
+			if err != nil {
+				return nil, err
+			}
+			cols = append(cols, col)
 		}
-		cols = append(cols, col)
 
 		if p.curTok.Type != TokenComma {
 			break
