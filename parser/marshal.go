@@ -10160,6 +10160,43 @@ func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
 			"CompressionLevel": o.CompressionLevel,
 			"OptionKind":       o.OptionKind,
 		}
+	case *ast.WaitAtLowPriorityOption:
+		node := jsonNode{
+			"$type":      "WaitAtLowPriorityOption",
+			"OptionKind": o.OptionKind,
+		}
+		if len(o.Options) > 0 {
+			options := make([]jsonNode, len(o.Options))
+			for i, opt := range o.Options {
+				options[i] = lowPriorityLockWaitOptionToJSON(opt)
+			}
+			node["Options"] = options
+		}
+		return node
+	}
+	return jsonNode{}
+}
+
+func lowPriorityLockWaitOptionToJSON(opt ast.LowPriorityLockWaitOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.LowPriorityLockWaitMaxDurationOption:
+		node := jsonNode{
+			"$type":      "LowPriorityLockWaitMaxDurationOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.MaxDuration != nil {
+			node["MaxDuration"] = scalarExpressionToJSON(o.MaxDuration)
+		}
+		if o.Unit != "" {
+			node["Unit"] = o.Unit
+		}
+		return node
+	case *ast.LowPriorityLockWaitAbortAfterWaitOption:
+		return jsonNode{
+			"$type":          "LowPriorityLockWaitAbortAfterWaitOption",
+			"AbortAfterWait": o.AbortAfterWait,
+			"OptionKind":     o.OptionKind,
+		}
 	}
 	return jsonNode{}
 }

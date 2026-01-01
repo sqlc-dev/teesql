@@ -107,6 +107,37 @@ type FileStreamOnDropIndexOption struct {
 func (o *FileStreamOnDropIndexOption) node()            {}
 func (o *FileStreamOnDropIndexOption) dropIndexOption() {}
 
+// WaitAtLowPriorityOption represents the WAIT_AT_LOW_PRIORITY option
+type WaitAtLowPriorityOption struct {
+	Options    []LowPriorityLockWaitOption
+	OptionKind string // WaitAtLowPriority
+}
+
+func (o *WaitAtLowPriorityOption) node()            {}
+func (o *WaitAtLowPriorityOption) dropIndexOption() {}
+
+// LowPriorityLockWaitOption is the interface for options within WAIT_AT_LOW_PRIORITY
+type LowPriorityLockWaitOption interface {
+	lowPriorityLockWaitOption()
+}
+
+// LowPriorityLockWaitMaxDurationOption represents MAX_DURATION option
+type LowPriorityLockWaitMaxDurationOption struct {
+	MaxDuration *IntegerLiteral
+	Unit        string // Minutes or Seconds
+	OptionKind  string // MaxDuration
+}
+
+func (o *LowPriorityLockWaitMaxDurationOption) lowPriorityLockWaitOption() {}
+
+// LowPriorityLockWaitAbortAfterWaitOption represents ABORT_AFTER_WAIT option
+type LowPriorityLockWaitAbortAfterWaitOption struct {
+	AbortAfterWait string // None, Self, Blockers
+	OptionKind     string // AbortAfterWait
+}
+
+func (o *LowPriorityLockWaitAbortAfterWaitOption) lowPriorityLockWaitOption() {}
+
 // DropStatisticsStatement represents a DROP STATISTICS statement
 type DropStatisticsStatement struct {
 	Objects []*SchemaObjectName
