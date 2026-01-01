@@ -75,6 +75,14 @@ func (o *OnOffDatabaseOption) createDatabaseOption()            {}
 func (i *IdentifierDatabaseOption) createDatabaseOption()       {}
 func (d *DelayedDurabilityDatabaseOption) createDatabaseOption() {}
 
+// SimpleDatabaseOption represents a simple database option with just OptionKind (e.g., ENABLE_BROKER)
+type SimpleDatabaseOption struct {
+	OptionKind string `json:"OptionKind,omitempty"`
+}
+
+func (d *SimpleDatabaseOption) node()                 {}
+func (d *SimpleDatabaseOption) createDatabaseOption() {}
+
 // MaxSizeDatabaseOption represents a MAXSIZE option.
 type MaxSizeDatabaseOption struct {
 	OptionKind string           `json:"OptionKind,omitempty"`

@@ -7676,6 +7676,26 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 			}
 			options = append(options, opt)
 
+		case "TRUSTWORTHY":
+			p.nextToken() // consume TRUSTWORTHY
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume = (optional)
+			}
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.OnOffDatabaseOption{
+				OptionKind:  "Trustworthy",
+				OptionState: capitalizeFirst(state),
+			}
+			options = append(options, opt)
+
+		case "ENABLE_BROKER":
+			p.nextToken() // consume ENABLE_BROKER
+			opt := &ast.SimpleDatabaseOption{
+				OptionKind: "EnableBroker",
+			}
+			options = append(options, opt)
+
 		case "NESTED_TRIGGERS":
 			p.nextToken() // consume NESTED_TRIGGERS
 			if p.curTok.Type == TokenEquals {

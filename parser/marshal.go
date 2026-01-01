@@ -12904,6 +12904,11 @@ func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 			node["OptionKind"] = o.OptionKind
 		}
 		return node
+	case *ast.SimpleDatabaseOption:
+		return jsonNode{
+			"$type":      "DatabaseOption",
+			"OptionKind": o.OptionKind,
+		}
 	default:
 		return jsonNode{"$type": "CreateDatabaseOption"}
 	}
