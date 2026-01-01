@@ -12474,8 +12474,40 @@ func createExternalLanguageStatementToJSON(s *ast.CreateExternalLanguageStatemen
 	node := jsonNode{
 		"$type": "CreateExternalLanguageStatement",
 	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ExternalLanguageFiles) > 0 {
+		files := make([]jsonNode, len(s.ExternalLanguageFiles))
+		for i, f := range s.ExternalLanguageFiles {
+			files[i] = externalLanguageFileOptionToJSON(f)
+		}
+		node["ExternalLanguageFiles"] = files
+	}
+	return node
+}
+
+func externalLanguageFileOptionToJSON(f *ast.ExternalLanguageFileOption) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalLanguageFileOption",
+	}
+	if f.Content != nil {
+		node["Content"] = scalarExpressionToJSON(f.Content)
+	}
+	if f.FileName != nil {
+		node["FileName"] = scalarExpressionToJSON(f.FileName)
+	}
+	if f.Platform != nil {
+		node["Platform"] = identifierToJSON(f.Platform)
+	}
+	if f.Parameters != nil {
+		node["Parameters"] = scalarExpressionToJSON(f.Parameters)
+	}
+	if f.EnvironmentVariables != nil {
+		node["EnvironmentVariables"] = scalarExpressionToJSON(f.EnvironmentVariables)
 	}
 	return node
 }

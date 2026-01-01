@@ -79,18 +79,24 @@ type ExternalTableOption struct {
 
 // CreateExternalLanguageStatement represents CREATE EXTERNAL LANGUAGE statement
 type CreateExternalLanguageStatement struct {
-	Name    *Identifier
-	Options []*ExternalLanguageOption
+	Name                  *Identifier
+	Owner                 *Identifier
+	ExternalLanguageFiles []*ExternalLanguageFileOption
 }
 
 func (s *CreateExternalLanguageStatement) node()      {}
 func (s *CreateExternalLanguageStatement) statement() {}
 
-// ExternalLanguageOption represents an option for external language
-type ExternalLanguageOption struct {
-	OptionKind string
-	Value      ScalarExpression
+// ExternalLanguageFileOption represents a file option for external language
+type ExternalLanguageFileOption struct {
+	Content              ScalarExpression
+	FileName             ScalarExpression
+	Platform             *Identifier
+	Parameters           ScalarExpression
+	EnvironmentVariables ScalarExpression
 }
+
+func (s *ExternalLanguageFileOption) node() {}
 
 // CreateExternalLibraryStatement represents CREATE EXTERNAL LIBRARY statement
 type CreateExternalLibraryStatement struct {
@@ -126,8 +132,8 @@ func (s *AlterExternalDataSourceStatement) statement() {}
 
 // AlterExternalLanguageStatement represents ALTER EXTERNAL LANGUAGE statement
 type AlterExternalLanguageStatement struct {
-	Name    *Identifier
-	Options []*ExternalLanguageOption
+	Name                  *Identifier
+	ExternalLanguageFiles []*ExternalLanguageFileOption
 }
 
 func (s *AlterExternalLanguageStatement) node()      {}

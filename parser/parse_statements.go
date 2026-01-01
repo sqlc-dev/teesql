@@ -6963,10 +6963,79 @@ func (p *Parser) parseCreateExternalLanguageStatement() (*ast.CreateExternalLang
 	stmt := &ast.CreateExternalLanguageStatement{
 		Name: p.parseIdentifier(),
 	}
-	// Skip rest of statement for now
-	for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF && !p.isStatementTerminator() {
-		p.nextToken()
+
+	// Parse optional AUTHORIZATION
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
 	}
+
+	// Parse FROM clause
+	if p.curTok.Type == TokenFrom {
+		p.nextToken() // consume FROM
+		for {
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				fileOption := &ast.ExternalLanguageFileOption{}
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					switch strings.ToUpper(p.curTok.Literal) {
+					case "CONTENT":
+						p.nextToken() // consume CONTENT
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						fileOption.Content = expr
+					case "FILE_NAME":
+						p.nextToken() // consume FILE_NAME
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						fileOption.FileName = expr
+					case "PLATFORM":
+						p.nextToken() // consume PLATFORM
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						fileOption.Platform = p.parseIdentifier()
+					case "PARAMETERS":
+						p.nextToken() // consume PARAMETERS
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						fileOption.Parameters = expr
+					case "ENVIRONMENT_VARIABLES":
+						p.nextToken() // consume ENVIRONMENT_VARIABLES
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						fileOption.EnvironmentVariables = expr
+					default:
+						p.nextToken()
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+				stmt.ExternalLanguageFiles = append(stmt.ExternalLanguageFiles, fileOption)
+			} else {
+				break
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume , for multiple file options
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
