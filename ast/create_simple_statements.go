@@ -436,8 +436,13 @@ func (s *CreateTypeTableStatement) statement() {}
 
 // CreateXmlIndexStatement represents a CREATE XML INDEX statement.
 type CreateXmlIndexStatement struct {
-	Name   *Identifier       `json:"Name,omitempty"`
-	OnName *SchemaObjectName `json:"OnName,omitempty"`
+	Primary               bool          `json:"Primary,omitempty"`
+	XmlColumn             *Identifier   `json:"XmlColumn,omitempty"`
+	SecondaryXmlIndexName *Identifier   `json:"SecondaryXmlIndexName,omitempty"`
+	SecondaryXmlIndexType string        `json:"SecondaryXmlIndexType,omitempty"` // "NotSpecified", "Value", "Path", "Property"
+	Name                  *Identifier   `json:"Name,omitempty"`
+	OnName                *SchemaObjectName `json:"OnName,omitempty"`
+	IndexOptions          []IndexOption `json:"IndexOptions,omitempty"`
 }
 
 func (s *CreateXmlIndexStatement) node()      {}

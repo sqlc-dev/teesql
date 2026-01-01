@@ -13595,11 +13595,28 @@ func createXmlIndexStatementToJSON(s *ast.CreateXmlIndexStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateXmlIndexStatement",
 	}
+	node["Primary"] = s.Primary
+	if s.XmlColumn != nil {
+		node["XmlColumn"] = identifierToJSON(s.XmlColumn)
+	}
+	if s.SecondaryXmlIndexName != nil {
+		node["SecondaryXmlIndexName"] = identifierToJSON(s.SecondaryXmlIndexName)
+	}
+	if s.SecondaryXmlIndexType != "" {
+		node["SecondaryXmlIndexType"] = s.SecondaryXmlIndexType
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	if s.OnName != nil {
 		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	if len(s.IndexOptions) > 0 {
+		opts := make([]jsonNode, len(s.IndexOptions))
+		for i, opt := range s.IndexOptions {
+			opts[i] = indexOptionToJSON(opt)
+		}
+		node["IndexOptions"] = opts
 	}
 	return node
 }

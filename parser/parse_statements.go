@@ -10451,11 +10451,35 @@ func (p *Parser) parseCreateXmlIndexStatement() (*ast.CreateXmlIndexStatement, e
 	}
 
 	stmt := &ast.CreateXmlIndexStatement{
-		Name: p.parseIdentifier(),
+		Primary:               true,
+		SecondaryXmlIndexType: "NotSpecified",
+		Name:                  p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse ON table_name
+	if strings.ToUpper(p.curTok.Literal) == "ON" {
+		p.nextToken() // consume ON
+		stmt.OnName, _ = p.parseSchemaObjectName()
+	}
+
+	// Parse (column)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		stmt.XmlColumn = p.parseIdentifier()
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse WITH (options) if present
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			// parseCreateIndexOptions expects to consume ( and ) itself
+			stmt.IndexOptions = p.parseCreateIndexOptions()
+		}
+	}
+
 	return stmt, nil
 }
 
@@ -10466,11 +10490,61 @@ func (p *Parser) parseCreateXmlIndexFromXml() (*ast.CreateXmlIndexStatement, err
 	}
 
 	stmt := &ast.CreateXmlIndexStatement{
-		Name: p.parseIdentifier(),
+		Primary:               false,
+		SecondaryXmlIndexType: "NotSpecified",
+		Name:                  p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse ON table_name
+	if strings.ToUpper(p.curTok.Literal) == "ON" {
+		p.nextToken() // consume ON
+		stmt.OnName, _ = p.parseSchemaObjectName()
+	}
+
+	// Parse (column)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		stmt.XmlColumn = p.parseIdentifier()
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse USING XML INDEX name FOR VALUE|PATH|PROPERTY
+	if strings.ToUpper(p.curTok.Literal) == "USING" {
+		p.nextToken() // consume USING
+		if strings.ToUpper(p.curTok.Literal) == "XML" {
+			p.nextToken() // consume XML
+		}
+		if p.curTok.Type == TokenIndex {
+			p.nextToken() // consume INDEX
+		}
+		stmt.SecondaryXmlIndexName = p.parseIdentifier()
+		if strings.ToUpper(p.curTok.Literal) == "FOR" {
+			p.nextToken() // consume FOR
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "VALUE":
+				stmt.SecondaryXmlIndexType = "Value"
+				p.nextToken()
+			case "PATH":
+				stmt.SecondaryXmlIndexType = "Path"
+				p.nextToken()
+			case "PROPERTY":
+				stmt.SecondaryXmlIndexType = "Property"
+				p.nextToken()
+			}
+		}
+	}
+
+	// Parse WITH (options) if present
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			// parseCreateIndexOptions expects to consume ( and ) itself
+			stmt.IndexOptions = p.parseCreateIndexOptions()
+		}
+	}
+
 	return stmt, nil
 }
 
