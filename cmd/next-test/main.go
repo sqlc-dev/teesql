@@ -71,5 +71,6 @@ func main() {
 	})
 
 	next := todoTests[0]
-	fmt.Printf("%s (%d bytes)\n", next.Name, next.QueryLen)
+	fmt.Printf("Next: %s (%d bytes)\n", next.Name, next.QueryLen)
+	fmt.Printf("Remaining: %d\n", len(todoTests)-1)
 }
