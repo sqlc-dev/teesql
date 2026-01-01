@@ -84,8 +84,9 @@ type SourceDeclaration struct {
 	Value *EventSessionObjectName
 }
 
-func (s *SourceDeclaration) node()             {}
-func (s *SourceDeclaration) scalarExpression() {}
+func (s *SourceDeclaration) node()              {}
+func (s *SourceDeclaration) scalarExpression()  {}
+func (s *SourceDeclaration) booleanExpression() {}
 
 // EventSessionObjectName represents an event session object name
 type EventSessionObjectName struct {

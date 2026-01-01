@@ -6197,22 +6197,356 @@ func (p *Parser) parseCreateEventSessionStatement() (*ast.CreateEventSessionStat
 		Name: p.parseIdentifier(),
 	}
 
-	// ON SERVER
+	// ON SERVER/DATABASE
 	if p.curTok.Type == TokenOn {
 		p.nextToken()
-		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+		scopeUpper := strings.ToUpper(p.curTok.Literal)
+		if scopeUpper == "SERVER" {
+			stmt.SessionScope = "Server"
+			p.nextToken()
+		} else if scopeUpper == "DATABASE" {
+			stmt.SessionScope = "Database"
 			p.nextToken()
 		}
 	}
 
-	// Skip rest of statement for now - event sessions are complex
+	// Parse ADD EVENT/TARGET and WITH clauses
 	for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF && !p.isStatementTerminator() {
-		p.nextToken()
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		if upperLit == "ADD" {
+			p.nextToken()
+			addType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			if addType == "EVENT" {
+				event := p.parseEventDeclaration()
+				stmt.EventDeclarations = append(stmt.EventDeclarations, event)
+			} else if addType == "TARGET" {
+				target := p.parseTargetDeclaration()
+				stmt.TargetDeclarations = append(stmt.TargetDeclarations, target)
+			}
+		} else if upperLit == "WITH" || p.curTok.Type == TokenWith {
+			p.nextToken()
+			if p.curTok.Type == TokenLParen {
+				p.nextToken()
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					opt := p.parseSessionOption()
+					if opt != nil {
+						stmt.SessionOptions = append(stmt.SessionOptions, opt)
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+		} else {
+			p.nextToken()
+		}
 	}
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
 	return stmt, nil
+}
+
+func (p *Parser) parseEventDeclaration() *ast.EventDeclaration {
+	event := &ast.EventDeclaration{}
+
+	// Parse package.event_name
+	event.ObjectName = p.parseEventSessionObjectName()
+
+	// Parse optional ( ACTION(...) WHERE ... )
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			upperLit := strings.ToUpper(p.curTok.Literal)
+			if upperLit == "ACTION" {
+				p.nextToken()
+				if p.curTok.Type == TokenLParen {
+					p.nextToken()
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						actionName := p.parseEventSessionObjectName()
+						event.EventDeclarationActionParameters = append(event.EventDeclarationActionParameters, actionName)
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
+				}
+			} else if upperLit == "WHERE" {
+				p.nextToken()
+				event.EventDeclarationPredicateParameter = p.parseEventPredicate()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	return event
+}
+
+func (p *Parser) parseTargetDeclaration() *ast.TargetDeclaration {
+	target := &ast.TargetDeclaration{}
+
+	// Parse package.target_name
+	target.ObjectName = p.parseEventSessionObjectName()
+
+	// Parse optional ( SET ... )
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			if strings.ToUpper(p.curTok.Literal) == "SET" {
+				p.nextToken()
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					param := &ast.EventDeclarationSetParameter{
+						EventField: p.parseIdentifier(),
+					}
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+						param.EventValue, _ = p.parseScalarExpression()
+					}
+					target.TargetDeclarationParameters = append(target.TargetDeclarationParameters, param)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	return target
+}
+
+func (p *Parser) parseEventSessionObjectName() *ast.EventSessionObjectName {
+	var identifiers []*ast.Identifier
+
+	for {
+		if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLBracket {
+			break
+		}
+		identifiers = append(identifiers, p.parseIdentifier())
+		if p.curTok.Type != TokenDot {
+			break
+		}
+		p.nextToken() // consume dot
+	}
+
+	return &ast.EventSessionObjectName{
+		MultiPartIdentifier: &ast.MultiPartIdentifier{
+			Identifiers: identifiers,
+			Count:       len(identifiers),
+		},
+	}
+}
+
+func (p *Parser) parseEventPredicate() ast.BooleanExpression {
+	return p.parseEventPredicateOr()
+}
+
+func (p *Parser) parseEventPredicateOr() ast.BooleanExpression {
+	left := p.parseEventPredicateAnd()
+	for strings.ToUpper(p.curTok.Literal) == "OR" {
+		p.nextToken()
+		right := p.parseEventPredicateAnd()
+		left = &ast.BooleanBinaryExpression{
+			BinaryExpressionType: "Or",
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+	return left
+}
+
+func (p *Parser) parseEventPredicateAnd() ast.BooleanExpression {
+	left := p.parseEventPredicatePrimary()
+	for strings.ToUpper(p.curTok.Literal) == "AND" {
+		p.nextToken()
+		right := p.parseEventPredicatePrimary()
+		left = &ast.BooleanBinaryExpression{
+			BinaryExpressionType: "And",
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+	return left
+}
+
+func (p *Parser) parseEventPredicatePrimary() ast.BooleanExpression {
+	// Handle parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		expr := p.parseEventPredicateOr()
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+		return &ast.BooleanParenthesisExpression{Expression: expr}
+	}
+
+	// Parse [package].[function_or_field](...) or [package].[field] NOT LIKE 'pattern'
+	name := p.parseEventSessionObjectName()
+
+	// Check for function call
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		// Parse function parameters
+		var source *ast.SourceDeclaration
+		var eventValue ast.ScalarExpression
+
+		// First param is usually a source declaration
+		sourceName := p.parseEventSessionObjectName()
+		source = &ast.SourceDeclaration{Value: sourceName}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			eventValue, _ = p.parseScalarExpression()
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+
+		return &ast.EventDeclarationCompareFunctionParameter{
+			Name:              name,
+			SourceDeclaration: source,
+			EventValue:        eventValue,
+		}
+	}
+
+	// Check for NOT LIKE or LIKE
+	notLike := false
+	if strings.ToUpper(p.curTok.Literal) == "NOT" {
+		notLike = true
+		p.nextToken()
+	}
+
+	if strings.ToUpper(p.curTok.Literal) == "LIKE" {
+		p.nextToken()
+		pattern, _ := p.parseScalarExpression()
+		compType := "Like"
+		if notLike {
+			compType = "NotLike"
+		}
+		return &ast.BooleanComparisonExpression{
+			ComparisonType:   compType,
+			FirstExpression:  &ast.SourceDeclaration{Value: name},
+			SecondExpression: pattern,
+		}
+	}
+
+	// Fallback: return source declaration wrapped in something
+	return &ast.SourceDeclaration{Value: name}
+}
+
+func (p *Parser) parseSessionOption() ast.SessionOption {
+	optName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	if p.curTok.Type == TokenEquals {
+		p.nextToken()
+	}
+
+	switch optName {
+	case "MAX_MEMORY", "MAX_EVENT_SIZE":
+		value, _ := p.parseScalarExpression()
+		unit := ""
+		if strings.ToUpper(p.curTok.Literal) == "KB" || strings.ToUpper(p.curTok.Literal) == "MB" {
+			unit = strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+		}
+		return &ast.LiteralSessionOption{
+			OptionKind: p.sessionOptionKind(optName),
+			Value:      value,
+			Unit:       unit,
+		}
+	case "EVENT_RETENTION_MODE":
+		value := p.curTok.Literal
+		p.nextToken()
+		return &ast.EventRetentionSessionOption{
+			OptionKind: "EventRetention",
+			Value:      p.eventRetentionValue(value),
+		}
+	case "MAX_DISPATCH_LATENCY":
+		value, _ := p.parseScalarExpression()
+		// Check for SECONDS
+		if strings.ToUpper(p.curTok.Literal) == "SECONDS" {
+			p.nextToken()
+		}
+		return &ast.MaxDispatchLatencySessionOption{
+			OptionKind: "MaxDispatchLatency",
+			Value:      value,
+			IsInfinite: false,
+		}
+	case "MEMORY_PARTITION_MODE":
+		value := p.curTok.Literal
+		p.nextToken()
+		return &ast.MemoryPartitionSessionOption{
+			OptionKind: "MemoryPartition",
+			Value:      p.capitalizeFirst(strings.ToLower(value)),
+		}
+	case "TRACK_CAUSALITY", "STARTUP_STATE":
+		stateUpper := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+		state := "Off"
+		if stateUpper == "ON" {
+			state = "On"
+		}
+		return &ast.OnOffSessionOption{
+			OptionKind:  p.sessionOptionKind(optName),
+			OptionState: state,
+		}
+	default:
+		// Skip unknown option value
+		p.nextToken()
+		return nil
+	}
+}
+
+func (p *Parser) sessionOptionKind(name string) string {
+	switch name {
+	case "MAX_MEMORY":
+		return "MaxMemory"
+	case "MAX_EVENT_SIZE":
+		return "MaxEventSize"
+	case "TRACK_CAUSALITY":
+		return "TrackCausality"
+	case "STARTUP_STATE":
+		return "StartUpState"
+	default:
+		return name
+	}
+}
+
+func (p *Parser) eventRetentionValue(value string) string {
+	switch strings.ToUpper(value) {
+	case "ALLOW_SINGLE_EVENT_LOSS":
+		return "AllowSingleEventLoss"
+	case "ALLOW_MULTIPLE_EVENT_LOSS":
+		return "AllowMultipleEventLoss"
+	case "NO_EVENT_LOSS":
+		return "NoEventLoss"
+	default:
+		return value
+	}
 }
 
 func (p *Parser) parseCreateEventSessionStatementFromEvent() (*ast.CreateEventSessionStatement, error) {
@@ -6223,16 +6557,61 @@ func (p *Parser) parseCreateEventSessionStatementFromEvent() (*ast.CreateEventSe
 		Name: p.parseIdentifier(),
 	}
 
-	// ON SERVER
+	// ON SERVER/DATABASE
 	if p.curTok.Type == TokenOn {
 		p.nextToken()
-		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+		scopeUpper := strings.ToUpper(p.curTok.Literal)
+		if scopeUpper == "SERVER" {
+			stmt.SessionScope = "Server"
+			p.nextToken()
+		} else if scopeUpper == "DATABASE" {
+			stmt.SessionScope = "Database"
 			p.nextToken()
 		}
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse ADD EVENT/TARGET and WITH clauses
+	for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF && !p.isStatementTerminator() {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		if upperLit == "ADD" {
+			p.nextToken()
+			addType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			if addType == "EVENT" {
+				event := p.parseEventDeclaration()
+				stmt.EventDeclarations = append(stmt.EventDeclarations, event)
+			} else if addType == "TARGET" {
+				target := p.parseTargetDeclaration()
+				stmt.TargetDeclarations = append(stmt.TargetDeclarations, target)
+			}
+		} else if upperLit == "WITH" || p.curTok.Type == TokenWith {
+			p.nextToken()
+			if p.curTok.Type == TokenLParen {
+				p.nextToken()
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					opt := p.parseSessionOption()
+					if opt != nil {
+						stmt.SessionOptions = append(stmt.SessionOptions, opt)
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+		} else {
+			p.nextToken()
+		}
+	}
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 	return stmt, nil
 }
 

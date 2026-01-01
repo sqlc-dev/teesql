@@ -1697,6 +1697,16 @@ func eventSessionObjectNameToJSON(e *ast.EventSessionObjectName) jsonNode {
 	return node
 }
 
+func sourceDeclarationToJSON(s *ast.SourceDeclaration) jsonNode {
+	node := jsonNode{
+		"$type": "SourceDeclaration",
+	}
+	if s.Value != nil {
+		node["Value"] = eventSessionObjectNameToJSON(s.Value)
+	}
+	return node
+}
+
 func identifierOrValueExpressionToJSON(iove *ast.IdentifierOrValueExpression) jsonNode {
 	node := jsonNode{
 		"$type": "IdentifierOrValueExpression",
@@ -2036,6 +2046,22 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			node["ThirdExpression"] = scalarExpressionToJSON(e.ThirdExpression)
 		}
 		return node
+	case *ast.EventDeclarationCompareFunctionParameter:
+		node := jsonNode{
+			"$type": "EventDeclarationCompareFunctionParameter",
+		}
+		if e.Name != nil {
+			node["Name"] = eventSessionObjectNameToJSON(e.Name)
+		}
+		if e.SourceDeclaration != nil {
+			node["SourceDeclaration"] = sourceDeclarationToJSON(e.SourceDeclaration)
+		}
+		if e.EventValue != nil {
+			node["EventValue"] = scalarExpressionToJSON(e.EventValue)
+		}
+		return node
+	case *ast.SourceDeclaration:
+		return sourceDeclarationToJSON(e)
 	default:
 		return jsonNode{"$type": "UnknownBooleanExpression"}
 	}
@@ -10460,7 +10486,147 @@ func createEventSessionStatementToJSON(s *ast.CreateEventSessionStatement) jsonN
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.SessionScope != "" {
+		node["SessionScope"] = s.SessionScope
+	}
+	if len(s.EventDeclarations) > 0 {
+		events := make([]jsonNode, len(s.EventDeclarations))
+		for i, e := range s.EventDeclarations {
+			events[i] = eventDeclarationToJSON(e)
+		}
+		node["EventDeclarations"] = events
+	}
+	if len(s.TargetDeclarations) > 0 {
+		targets := make([]jsonNode, len(s.TargetDeclarations))
+		for i, t := range s.TargetDeclarations {
+			targets[i] = targetDeclarationToJSON(t)
+		}
+		node["TargetDeclarations"] = targets
+	}
+	if len(s.SessionOptions) > 0 {
+		opts := make([]jsonNode, len(s.SessionOptions))
+		for i, o := range s.SessionOptions {
+			opts[i] = sessionOptionToJSON(o)
+		}
+		node["SessionOptions"] = opts
+	}
 	return node
+}
+
+func eventDeclarationToJSON(e *ast.EventDeclaration) jsonNode {
+	node := jsonNode{
+		"$type": "EventDeclaration",
+	}
+	if e.ObjectName != nil {
+		node["ObjectName"] = eventSessionObjectNameToJSON(e.ObjectName)
+	}
+	if len(e.EventDeclarationActionParameters) > 0 {
+		actions := make([]jsonNode, len(e.EventDeclarationActionParameters))
+		for i, a := range e.EventDeclarationActionParameters {
+			actions[i] = eventSessionObjectNameToJSON(a)
+		}
+		node["EventDeclarationActionParameters"] = actions
+	}
+	if e.EventDeclarationPredicateParameter != nil {
+		node["EventDeclarationPredicateParameter"] = booleanExpressionToJSON(e.EventDeclarationPredicateParameter)
+	}
+	return node
+}
+
+func targetDeclarationToJSON(t *ast.TargetDeclaration) jsonNode {
+	node := jsonNode{
+		"$type": "TargetDeclaration",
+	}
+	if t.ObjectName != nil {
+		node["ObjectName"] = eventSessionObjectNameToJSON(t.ObjectName)
+	}
+	if len(t.TargetDeclarationParameters) > 0 {
+		params := make([]jsonNode, len(t.TargetDeclarationParameters))
+		for i, p := range t.TargetDeclarationParameters {
+			params[i] = eventDeclarationSetParameterToJSON(p)
+		}
+		node["TargetDeclarationParameters"] = params
+	}
+	return node
+}
+
+func eventDeclarationSetParameterToJSON(p *ast.EventDeclarationSetParameter) jsonNode {
+	node := jsonNode{
+		"$type": "EventDeclarationSetParameter",
+	}
+	if p.EventField != nil {
+		node["EventField"] = identifierToJSON(p.EventField)
+	}
+	if p.EventValue != nil {
+		node["EventValue"] = scalarExpressionToJSON(p.EventValue)
+	}
+	return node
+}
+
+func sessionOptionToJSON(o ast.SessionOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.LiteralSessionOption:
+		node := jsonNode{
+			"$type": "LiteralSessionOption",
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		if opt.Unit != "" {
+			node["Unit"] = opt.Unit
+		}
+		if opt.OptionKind != "" {
+			node["OptionKind"] = opt.OptionKind
+		}
+		return node
+	case *ast.OnOffSessionOption:
+		node := jsonNode{
+			"$type": "OnOffSessionOption",
+		}
+		if opt.OptionState != "" {
+			node["OptionState"] = opt.OptionState
+		}
+		if opt.OptionKind != "" {
+			node["OptionKind"] = opt.OptionKind
+		}
+		return node
+	case *ast.EventRetentionSessionOption:
+		node := jsonNode{
+			"$type": "EventRetentionSessionOption",
+		}
+		if opt.Value != "" {
+			node["Value"] = opt.Value
+		}
+		if opt.OptionKind != "" {
+			node["OptionKind"] = opt.OptionKind
+		}
+		return node
+	case *ast.MaxDispatchLatencySessionOption:
+		node := jsonNode{
+			"$type":      "MaxDispatchLatencySessionOption",
+			"IsInfinite": opt.IsInfinite,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		if opt.OptionKind != "" {
+			node["OptionKind"] = opt.OptionKind
+		}
+		return node
+	case *ast.MemoryPartitionSessionOption:
+		node := jsonNode{
+			"$type": "MemoryPartitionSessionOption",
+		}
+		if opt.Value != "" {
+			node["Value"] = opt.Value
+		}
+		if opt.OptionKind != "" {
+			node["OptionKind"] = opt.OptionKind
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownSessionOption"}
+	}
 }
 
 func insertBulkStatementToJSON(s *ast.InsertBulkStatement) jsonNode {
