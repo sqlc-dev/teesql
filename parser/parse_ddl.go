@@ -1885,6 +1885,12 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				}
 			}
 			stmt.Options = append(stmt.Options, opt)
+		case "REMOTE_DATA_ARCHIVE":
+			rdaOpt, err := p.parseRemoteDataArchiveOption()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = append(stmt.Options, rdaOpt)
 		default:
 			// Handle generic options with = syntax (e.g., OPTIMIZED_LOCKING = ON)
 			if p.curTok.Type == TokenEquals {
@@ -1931,6 +1937,86 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 	}
 
 	return stmt, nil
+}
+
+// parseRemoteDataArchiveOption parses REMOTE_DATA_ARCHIVE option
+// Forms:
+//   - REMOTE_DATA_ARCHIVE = ON (options...)
+//   - REMOTE_DATA_ARCHIVE = OFF
+//   - REMOTE_DATA_ARCHIVE (options...) -- OptionState is "NotSet"
+func (p *Parser) parseRemoteDataArchiveOption() (*ast.RemoteDataArchiveDatabaseOption, error) {
+	opt := &ast.RemoteDataArchiveDatabaseOption{
+		OptionKind:  "RemoteDataArchive",
+		OptionState: "NotSet",
+	}
+
+	// Check for = ON/OFF or just (
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+		stateVal := strings.ToUpper(p.curTok.Literal)
+		opt.OptionState = capitalizeFirst(stateVal)
+		p.nextToken() // consume ON/OFF
+	}
+
+	// Parse settings if we have (
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for {
+			settingName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume setting name
+
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after %s, got %s", settingName, p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			switch settingName {
+			case "SERVER":
+				// Parse string literal
+				server, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				setting := &ast.RemoteDataArchiveDbServerSetting{
+					SettingKind: "Server",
+					Server:      server,
+				}
+				opt.Settings = append(opt.Settings, setting)
+			case "CREDENTIAL":
+				// Parse identifier (may be bracketed)
+				cred := p.parseIdentifier()
+				setting := &ast.RemoteDataArchiveDbCredentialSetting{
+					SettingKind: "Credential",
+					Credential:  cred,
+				}
+				opt.Settings = append(opt.Settings, setting)
+			case "FEDERATED_SERVICE_ACCOUNT":
+				// Parse ON/OFF
+				isOn := strings.ToUpper(p.curTok.Literal) == "ON"
+				p.nextToken()
+				setting := &ast.RemoteDataArchiveDbFederatedServiceAccountSetting{
+					SettingKind: "FederatedServiceAccount",
+					IsOn:        isOn,
+				}
+				opt.Settings = append(opt.Settings, setting)
+			default:
+				return nil, fmt.Errorf("unknown REMOTE_DATA_ARCHIVE setting: %s", settingName)
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after REMOTE_DATA_ARCHIVE settings, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	}
+
+	return opt, nil
 }
 
 func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Statement, error) {

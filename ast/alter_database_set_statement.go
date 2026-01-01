@@ -192,3 +192,46 @@ type DatabaseConfigurationClearOption struct {
 }
 
 func (d *DatabaseConfigurationClearOption) node() {}
+
+// RemoteDataArchiveDatabaseOption represents REMOTE_DATA_ARCHIVE database option
+type RemoteDataArchiveDatabaseOption struct {
+	OptionKind  string                       // "RemoteDataArchive"
+	OptionState string                       // "On", "Off", "NotSet"
+	Settings    []RemoteDataArchiveDbSetting // Settings like SERVER, CREDENTIAL, FEDERATED_SERVICE_ACCOUNT
+}
+
+func (r *RemoteDataArchiveDatabaseOption) node()           {}
+func (r *RemoteDataArchiveDatabaseOption) databaseOption() {}
+
+// RemoteDataArchiveDbSetting is an interface for Remote Data Archive settings
+type RemoteDataArchiveDbSetting interface {
+	Node
+	remoteDataArchiveDbSetting()
+}
+
+// RemoteDataArchiveDbServerSetting represents the SERVER setting
+type RemoteDataArchiveDbServerSetting struct {
+	SettingKind string           // "Server"
+	Server      ScalarExpression // The server string literal
+}
+
+func (r *RemoteDataArchiveDbServerSetting) node()                      {}
+func (r *RemoteDataArchiveDbServerSetting) remoteDataArchiveDbSetting() {}
+
+// RemoteDataArchiveDbCredentialSetting represents the CREDENTIAL setting
+type RemoteDataArchiveDbCredentialSetting struct {
+	SettingKind string      // "Credential"
+	Credential  *Identifier // The credential name
+}
+
+func (r *RemoteDataArchiveDbCredentialSetting) node()                      {}
+func (r *RemoteDataArchiveDbCredentialSetting) remoteDataArchiveDbSetting() {}
+
+// RemoteDataArchiveDbFederatedServiceAccountSetting represents the FEDERATED_SERVICE_ACCOUNT setting
+type RemoteDataArchiveDbFederatedServiceAccountSetting struct {
+	SettingKind string // "FederatedServiceAccount"
+	IsOn        bool   // true for ON, false for OFF
+}
+
+func (r *RemoteDataArchiveDbFederatedServiceAccountSetting) node()                      {}
+func (r *RemoteDataArchiveDbFederatedServiceAccountSetting) remoteDataArchiveDbSetting() {}

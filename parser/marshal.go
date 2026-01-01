@@ -987,8 +987,53 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			node["OptionKind"] = o.OptionKind
 		}
 		return node
+	case *ast.RemoteDataArchiveDatabaseOption:
+		node := jsonNode{
+			"$type":       "RemoteDataArchiveDatabaseOption",
+			"OptionState": o.OptionState,
+			"OptionKind":  o.OptionKind,
+		}
+		if len(o.Settings) > 0 {
+			settings := make([]jsonNode, len(o.Settings))
+			for i, setting := range o.Settings {
+				settings[i] = remoteDataArchiveDbSettingToJSON(setting)
+			}
+			node["Settings"] = settings
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownDatabaseOption"}
+	}
+}
+
+func remoteDataArchiveDbSettingToJSON(setting ast.RemoteDataArchiveDbSetting) jsonNode {
+	switch s := setting.(type) {
+	case *ast.RemoteDataArchiveDbServerSetting:
+		node := jsonNode{
+			"$type":       "RemoteDataArchiveDbServerSetting",
+			"SettingKind": s.SettingKind,
+		}
+		if s.Server != nil {
+			node["Server"] = scalarExpressionToJSON(s.Server)
+		}
+		return node
+	case *ast.RemoteDataArchiveDbCredentialSetting:
+		node := jsonNode{
+			"$type":       "RemoteDataArchiveDbCredentialSetting",
+			"SettingKind": s.SettingKind,
+		}
+		if s.Credential != nil {
+			node["Credential"] = identifierToJSON(s.Credential)
+		}
+		return node
+	case *ast.RemoteDataArchiveDbFederatedServiceAccountSetting:
+		return jsonNode{
+			"$type":       "RemoteDataArchiveDbFederatedServiceAccountSetting",
+			"IsOn":        s.IsOn,
+			"SettingKind": s.SettingKind,
+		}
+	default:
+		return jsonNode{"$type": "UnknownRemoteDataArchiveDbSetting"}
 	}
 }
 
