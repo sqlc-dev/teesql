@@ -133,6 +133,9 @@ func (s *AlterExternalDataSourceStatement) statement() {}
 // AlterExternalLanguageStatement represents ALTER EXTERNAL LANGUAGE statement
 type AlterExternalLanguageStatement struct {
 	Name                  *Identifier
+	Owner                 *Identifier
+	Operation             *Identifier
+	Platform              *Identifier
 	ExternalLanguageFiles []*ExternalLanguageFileOption
 }
 

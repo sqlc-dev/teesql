@@ -14650,8 +14650,24 @@ func alterExternalLanguageStatementToJSON(s *ast.AlterExternalLanguageStatement)
 	node := jsonNode{
 		"$type": "AlterExternalLanguageStatement",
 	}
+	if s.Platform != nil {
+		node["Platform"] = identifierToJSON(s.Platform)
+	}
+	if s.Operation != nil {
+		node["Operation"] = identifierToJSON(s.Operation)
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ExternalLanguageFiles) > 0 {
+		files := make([]jsonNode, len(s.ExternalLanguageFiles))
+		for i, f := range s.ExternalLanguageFiles {
+			files[i] = externalLanguageFileOptionToJSON(f)
+		}
+		node["ExternalLanguageFiles"] = files
 	}
 	return node
 }
