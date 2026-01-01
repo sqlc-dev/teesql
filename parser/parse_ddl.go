@@ -6562,15 +6562,29 @@ func (p *Parser) parseAlterWorkloadGroupStatement() (*ast.AlterWorkloadGroupStat
 	// Parse USING clause (resource pool reference)
 	if strings.ToUpper(p.curTok.Literal) == "USING" {
 		p.nextToken() // consume USING
-		stmt.PoolName = p.parseIdentifier()
 
-		// Check for EXTERNAL
-		if p.curTok.Type == TokenComma {
-			p.nextToken()
-		}
+		// Check if EXTERNAL comes first
 		if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
 			p.nextToken() // consume EXTERNAL
 			stmt.ExternalPoolName = p.parseIdentifier()
+
+			// Check for comma and internal pool
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+				stmt.PoolName = p.parseIdentifier()
+			}
+		} else {
+			// Internal pool first
+			stmt.PoolName = p.parseIdentifier()
+
+			// Check for EXTERNAL
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+			if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+				p.nextToken() // consume EXTERNAL
+				stmt.ExternalPoolName = p.parseIdentifier()
+			}
 		}
 	}
 
