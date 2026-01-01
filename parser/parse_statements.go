@@ -936,7 +936,9 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 	p.nextToken()
 
 	// Check for special SET statements
-	if p.curTok.Type == TokenIdent {
+	// Note: some options like LANGUAGE are keyword tokens, so we also check for those
+	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLanguage ||
+		p.curTok.Type == TokenTransaction {
 		optionName := strings.ToUpper(p.curTok.Literal)
 
 		// Handle SET ROWCOUNT
@@ -964,6 +966,31 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 		// Handle SET OFFSETS
 		if optionName == "OFFSETS" {
 			return p.parseSetOffsetsStatement()
+		}
+
+		// Handle SET TRANSACTION ISOLATION LEVEL
+		if optionName == "TRANSACTION" {
+			return p.parseSetTransactionIsolationLevel()
+		}
+
+		// Handle SET TEXTSIZE
+		if optionName == "TEXTSIZE" {
+			return p.parseSetTextSizeStatement()
+		}
+
+		// Handle SET IDENTITY_INSERT
+		if optionName == "IDENTITY_INSERT" {
+			return p.parseSetIdentityInsertStatement()
+		}
+
+		// Handle SET ERRLVL
+		if optionName == "ERRLVL" {
+			return p.parseSetErrorLevelStatement()
+		}
+
+		// Handle SET command statements (FIPS_FLAGGER, LANGUAGE, etc.)
+		if p.isSetCommandOption(optionName) {
+			return p.parseSetCommandStatement(optionName)
 		}
 
 		// Handle predicate SET options like SET ANSI_NULLS ON/OFF
@@ -1362,6 +1389,260 @@ func (p *Parser) parseSetOffsetsStatement() (*ast.SetOffsetsStatement, error) {
 		Options: strings.Join(options, ", "),
 		IsOn:    isOn,
 	}, nil
+}
+
+// isSetCommandOption returns true if the option is a SET command option
+func (p *Parser) isSetCommandOption(optName string) bool {
+	switch optName {
+	case "FIPS_FLAGGER", "QUERY_GOVERNOR_COST_LIMIT", "LANGUAGE", "DATEFORMAT",
+		"DATEFIRST", "DEADLOCK_PRIORITY", "LOCK_TIMEOUT", "CONTEXT_INFO":
+		return true
+	}
+	return false
+}
+
+// parseSetCommandStatement parses SET commands like FIPS_FLAGGER, LANGUAGE, etc.
+func (p *Parser) parseSetCommandStatement(firstOpt string) (*ast.SetCommandStatement, error) {
+	stmt := &ast.SetCommandStatement{}
+
+	// Consume the first option name (already read in parseSetVariableStatement)
+	p.nextToken()
+
+	// Parse the first command
+	cmd, err := p.parseSetCommand(firstOpt)
+	if err != nil {
+		return nil, err
+	}
+	stmt.Commands = append(stmt.Commands, cmd)
+
+	// Parse additional commands separated by comma
+	for p.curTok.Type == TokenComma {
+		p.nextToken() // consume comma
+		optName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume option name
+		cmd, err := p.parseSetCommand(optName)
+		if err != nil {
+			return nil, err
+		}
+		stmt.Commands = append(stmt.Commands, cmd)
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseSetCommand parses a single SET command
+func (p *Parser) parseSetCommand(optName string) (ast.SetCommand, error) {
+	switch optName {
+	case "FIPS_FLAGGER":
+		// Parse OFF, 'ENTRY', 'INTERMEDIATE', 'FULL'
+		var level string
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OFF" {
+			level = "Off"
+			p.nextToken()
+		} else if p.curTok.Type == TokenString {
+			// Strip quotes from the value
+			val := strings.Trim(p.curTok.Literal, "'\"")
+			switch strings.ToUpper(val) {
+			case "ENTRY":
+				level = "Entry"
+			case "INTERMEDIATE":
+				level = "Intermediate"
+			case "FULL":
+				level = "Full"
+			default:
+				level = capitalizeFirst(strings.ToLower(val))
+			}
+			p.nextToken()
+		}
+		return &ast.SetFipsFlaggerCommand{ComplianceLevel: level}, nil
+
+	case "QUERY_GOVERNOR_COST_LIMIT":
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.GeneralSetCommand{CommandType: "QueryGovernorCostLimit", Parameter: param}, nil
+
+	case "LANGUAGE":
+		param, err := p.parseSetCommandParameter()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.GeneralSetCommand{CommandType: "Language", Parameter: param}, nil
+
+	case "DATEFORMAT":
+		param, err := p.parseSetCommandParameter()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.GeneralSetCommand{CommandType: "DateFormat", Parameter: param}, nil
+
+	case "DATEFIRST":
+		param, err := p.parseSetCommandParameter()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.GeneralSetCommand{CommandType: "DateFirst", Parameter: param}, nil
+
+	case "DEADLOCK_PRIORITY":
+		param, err := p.parseSetCommandParameter()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.GeneralSetCommand{CommandType: "DeadlockPriority", Parameter: param}, nil
+
+	case "LOCK_TIMEOUT":
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.GeneralSetCommand{CommandType: "LockTimeout", Parameter: param}, nil
+
+	case "CONTEXT_INFO":
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.GeneralSetCommand{CommandType: "ContextInfo", Parameter: param}, nil
+
+	default:
+		return nil, fmt.Errorf("unknown SET command: %s", optName)
+	}
+}
+
+// parseSetCommandParameter parses parameters for SET commands that can be identifier, string or variable
+func (p *Parser) parseSetCommandParameter() (ast.ScalarExpression, error) {
+	if strings.HasPrefix(p.curTok.Literal, "@") {
+		// Variable reference
+		v := &ast.VariableReference{Name: p.curTok.Literal}
+		p.nextToken()
+		return v, nil
+	} else if p.curTok.Type == TokenString {
+		// String literal - strip quotes from value
+		val := strings.Trim(p.curTok.Literal, "'\"")
+		lit := &ast.StringLiteral{
+			LiteralType:   "String",
+			Value:         val,
+			IsNational:    false,
+			IsLargeObject: false,
+		}
+		p.nextToken()
+		return lit, nil
+	} else if p.curTok.Type == TokenIdent {
+		// Identifier literal
+		lit := &ast.IdentifierLiteral{
+			LiteralType: "Identifier",
+			QuoteType:   "NotQuoted",
+			Value:       p.curTok.Literal,
+		}
+		p.nextToken()
+		return lit, nil
+	}
+	return p.parseScalarExpression()
+}
+
+// parseSetTransactionIsolationLevel parses SET TRANSACTION ISOLATION LEVEL statement
+func (p *Parser) parseSetTransactionIsolationLevel() (*ast.SetTransactionIsolationLevelStatement, error) {
+	p.nextToken() // consume TRANSACTION
+
+	// Skip ISOLATION LEVEL
+	if strings.ToUpper(p.curTok.Literal) == "ISOLATION" {
+		p.nextToken()
+	}
+	if strings.ToUpper(p.curTok.Literal) == "LEVEL" {
+		p.nextToken()
+	}
+
+	// Parse level
+	var level string
+	firstWord := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	switch firstWord {
+	case "READ":
+		secondWord := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+		if secondWord == "COMMITTED" {
+			level = "ReadCommitted"
+		} else if secondWord == "UNCOMMITTED" {
+			level = "ReadUncommitted"
+		}
+	case "REPEATABLE":
+		if strings.ToUpper(p.curTok.Literal) == "READ" {
+			p.nextToken()
+		}
+		level = "RepeatableRead"
+	case "SERIALIZABLE":
+		level = "Serializable"
+	case "SNAPSHOT":
+		level = "Snapshot"
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return &ast.SetTransactionIsolationLevelStatement{Level: level}, nil
+}
+
+// parseSetTextSizeStatement parses SET TEXTSIZE statement
+func (p *Parser) parseSetTextSizeStatement() (*ast.SetTextSizeStatement, error) {
+	p.nextToken() // consume TEXTSIZE
+
+	textSize, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return &ast.SetTextSizeStatement{TextSize: textSize}, nil
+}
+
+// parseSetIdentityInsertStatement parses SET IDENTITY_INSERT table ON/OFF
+func (p *Parser) parseSetIdentityInsertStatement() (*ast.SetIdentityInsertStatement, error) {
+	p.nextToken() // consume IDENTITY_INSERT
+
+	// Parse table name
+	tableName, _ := p.parseSchemaObjectName()
+
+	// Parse ON/OFF
+	isOn := false
+	if p.curTok.Type == TokenOn || strings.ToUpper(p.curTok.Literal) == "ON" {
+		isOn = true
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+		isOn = false
+		p.nextToken()
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return &ast.SetIdentityInsertStatement{Table: tableName, IsOn: isOn}, nil
+}
+
+// parseSetErrorLevelStatement parses SET ERRLVL statement
+func (p *Parser) parseSetErrorLevelStatement() (*ast.SetErrorLevelStatement, error) {
+	p.nextToken() // consume ERRLVL
+
+	level, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return &ast.SetErrorLevelStatement{Level: level}, nil
 }
 
 func (p *Parser) parseIfStatement() (*ast.IfStatement, error) {

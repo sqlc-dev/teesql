@@ -248,6 +248,16 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return setRowCountStatementToJSON(s)
 	case *ast.SetOffsetsStatement:
 		return setOffsetsStatementToJSON(s)
+	case *ast.SetCommandStatement:
+		return setCommandStatementToJSON(s)
+	case *ast.SetTransactionIsolationLevelStatement:
+		return setTransactionIsolationLevelStatementToJSON(s)
+	case *ast.SetTextSizeStatement:
+		return setTextSizeStatementToJSON(s)
+	case *ast.SetIdentityInsertStatement:
+		return setIdentityInsertStatementToJSON(s)
+	case *ast.SetErrorLevelStatement:
+		return setErrorLevelStatementToJSON(s)
 	case *ast.CommitTransactionStatement:
 		return commitTransactionStatementToJSON(s)
 	case *ast.RollbackTransactionStatement:
@@ -6224,6 +6234,79 @@ func setOffsetsStatementToJSON(s *ast.SetOffsetsStatement) jsonNode {
 		"Options": s.Options,
 		"IsOn":    s.IsOn,
 	}
+}
+
+func setCommandStatementToJSON(s *ast.SetCommandStatement) jsonNode {
+	node := jsonNode{
+		"$type": "SetCommandStatement",
+	}
+	if len(s.Commands) > 0 {
+		cmds := make([]jsonNode, len(s.Commands))
+		for i, cmd := range s.Commands {
+			cmds[i] = setCommandToJSON(cmd)
+		}
+		node["Commands"] = cmds
+	}
+	return node
+}
+
+func setCommandToJSON(cmd ast.SetCommand) jsonNode {
+	switch c := cmd.(type) {
+	case *ast.SetFipsFlaggerCommand:
+		return jsonNode{
+			"$type":           "SetFipsFlaggerCommand",
+			"ComplianceLevel": c.ComplianceLevel,
+		}
+	case *ast.GeneralSetCommand:
+		node := jsonNode{
+			"$type":       "GeneralSetCommand",
+			"CommandType": c.CommandType,
+		}
+		if c.Parameter != nil {
+			node["Parameter"] = scalarExpressionToJSON(c.Parameter)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownSetCommand"}
+	}
+}
+
+func setTransactionIsolationLevelStatementToJSON(s *ast.SetTransactionIsolationLevelStatement) jsonNode {
+	return jsonNode{
+		"$type": "SetTransactionIsolationLevelStatement",
+		"Level": s.Level,
+	}
+}
+
+func setTextSizeStatementToJSON(s *ast.SetTextSizeStatement) jsonNode {
+	node := jsonNode{
+		"$type": "SetTextSizeStatement",
+	}
+	if s.TextSize != nil {
+		node["TextSize"] = scalarExpressionToJSON(s.TextSize)
+	}
+	return node
+}
+
+func setIdentityInsertStatementToJSON(s *ast.SetIdentityInsertStatement) jsonNode {
+	node := jsonNode{
+		"$type": "SetIdentityInsertStatement",
+		"IsOn":  s.IsOn,
+	}
+	if s.Table != nil {
+		node["Table"] = schemaObjectNameToJSON(s.Table)
+	}
+	return node
+}
+
+func setErrorLevelStatementToJSON(s *ast.SetErrorLevelStatement) jsonNode {
+	node := jsonNode{
+		"$type": "SetErrorLevelStatement",
+	}
+	if s.Level != nil {
+		node["Level"] = scalarExpressionToJSON(s.Level)
+	}
+	return node
 }
 
 func commitTransactionStatementToJSON(s *ast.CommitTransactionStatement) jsonNode {
