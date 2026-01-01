@@ -1851,6 +1851,32 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				Value:      capitalizeFirst(optionValue),
 			}
 			stmt.Options = append(stmt.Options, opt)
+		case "AUTO_CREATE_STATISTICS":
+			// Parse ON/OFF and optional (INCREMENTAL = ON/OFF)
+			optionValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			opt := &ast.AutoCreateStatisticsDatabaseOption{
+				OptionKind:  "AutoCreateStatistics",
+				OptionState: capitalizeFirst(optionValue),
+			}
+			// Check for (INCREMENTAL = ON/OFF)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "INCREMENTAL" {
+					p.nextToken() // consume INCREMENTAL
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+						incState := strings.ToUpper(p.curTok.Literal)
+						p.nextToken() // consume ON/OFF
+						opt.HasIncremental = true
+						opt.IncrementalState = capitalizeFirst(incState)
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Options = append(stmt.Options, opt)
 		default:
 			// Handle generic options with = syntax (e.g., OPTIMIZED_LOCKING = ON)
 			if p.curTok.Type == TokenEquals {

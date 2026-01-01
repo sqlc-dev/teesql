@@ -2131,7 +2131,21 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateSearchPropertyListStatement()
 		case "AGGREGATE":
 			return p.parseCreateAggregateStatement()
-		case "CLUSTERED", "NONCLUSTERED", "COLUMNSTORE":
+		case "CLUSTERED":
+			// Check if next token is COLUMNSTORE or INDEX
+			if p.peekTok.Type == TokenIdent && strings.ToUpper(p.peekTok.Literal) == "COLUMNSTORE" {
+				return p.parseCreateColumnStoreIndexStatement()
+			}
+			// Otherwise it's CLUSTERED INDEX -> use parseCreateIndexStatement
+			return p.parseCreateIndexStatement()
+		case "NONCLUSTERED":
+			// Check if next token is COLUMNSTORE or INDEX
+			if p.peekTok.Type == TokenIdent && strings.ToUpper(p.peekTok.Literal) == "COLUMNSTORE" {
+				return p.parseCreateColumnStoreIndexStatement()
+			}
+			// Otherwise it's NONCLUSTERED INDEX -> use parseCreateIndexStatement
+			return p.parseCreateIndexStatement()
+		case "COLUMNSTORE":
 			return p.parseCreateColumnStoreIndexStatement()
 		case "EXTERNAL":
 			return p.parseCreateExternalStatement()

@@ -44,6 +44,17 @@ type DelayedDurabilityDatabaseOption struct {
 func (d *DelayedDurabilityDatabaseOption) node()           {}
 func (d *DelayedDurabilityDatabaseOption) databaseOption() {}
 
+// AutoCreateStatisticsDatabaseOption represents AUTO_CREATE_STATISTICS option with optional INCREMENTAL
+type AutoCreateStatisticsDatabaseOption struct {
+	OptionKind       string // "AutoCreateStatistics"
+	OptionState      string // "On" or "Off"
+	HasIncremental   bool   // Whether INCREMENTAL is specified
+	IncrementalState string // "On" or "Off"
+}
+
+func (a *AutoCreateStatisticsDatabaseOption) node()           {}
+func (a *AutoCreateStatisticsDatabaseOption) databaseOption() {}
+
 // IdentifierDatabaseOption represents a database option with an identifier value
 type IdentifierDatabaseOption struct {
 	OptionKind string      `json:"OptionKind,omitempty"` // "CatalogCollation"

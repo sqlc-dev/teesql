@@ -949,6 +949,17 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
 		}
+	case *ast.AutoCreateStatisticsDatabaseOption:
+		node := jsonNode{
+			"$type": "AutoCreateStatisticsDatabaseOption",
+		}
+		if o.HasIncremental {
+			node["HasIncremental"] = o.HasIncremental
+			node["IncrementalState"] = o.IncrementalState
+		}
+		node["OptionState"] = o.OptionState
+		node["OptionKind"] = o.OptionKind
+		return node
 	case *ast.MaxSizeDatabaseOption:
 		node := jsonNode{
 			"$type": "MaxSizeDatabaseOption",
@@ -8760,6 +8771,7 @@ func (p *Parser) getIndexOptionKind(optionName string) string {
 		"SORT_IN_TEMPDB":              "SortInTempDB",
 		"IGNORE_DUP_KEY":              "IgnoreDupKey",
 		"STATISTICS_NORECOMPUTE":      "StatisticsNoRecompute",
+		"STATISTICS_INCREMENTAL":      "StatisticsIncremental",
 		"DROP_EXISTING":               "DropExisting",
 		"ONLINE":                      "Online",
 		"ALLOW_ROW_LOCKS":             "AllowRowLocks",
@@ -13956,15 +13968,28 @@ func resampleStatisticsOptionToJSON(o *ast.ResampleStatisticsOption) jsonNode {
 	node := jsonNode{
 		"$type": "ResampleStatisticsOption",
 	}
-	if o.OptionKind != "" {
-		node["OptionKind"] = o.OptionKind
-	}
 	if len(o.Partitions) > 0 {
 		partitions := make([]jsonNode, len(o.Partitions))
 		for i, p := range o.Partitions {
-			partitions[i] = scalarExpressionToJSON(p)
+			partitions[i] = statisticsPartitionRangeToJSON(p)
 		}
 		node["Partitions"] = partitions
+	}
+	if o.OptionKind != "" {
+		node["OptionKind"] = o.OptionKind
+	}
+	return node
+}
+
+func statisticsPartitionRangeToJSON(r *ast.StatisticsPartitionRange) jsonNode {
+	node := jsonNode{
+		"$type": "StatisticsPartitionRange",
+	}
+	if r.From != nil {
+		node["From"] = scalarExpressionToJSON(r.From)
+	}
+	if r.To != nil {
+		node["To"] = scalarExpressionToJSON(r.To)
 	}
 	return node
 }

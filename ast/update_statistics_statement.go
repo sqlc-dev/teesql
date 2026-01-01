@@ -40,8 +40,14 @@ func (o *OnOffStatisticsOption) statisticsOption() {}
 
 // ResampleStatisticsOption represents RESAMPLE statistics option.
 type ResampleStatisticsOption struct {
-	OptionKind string `json:"OptionKind,omitempty"`
-	Partitions []ScalarExpression `json:"Partitions,omitempty"`
+	OptionKind string                     `json:"OptionKind,omitempty"`
+	Partitions []*StatisticsPartitionRange `json:"Partitions,omitempty"`
 }
 
 func (r *ResampleStatisticsOption) statisticsOption() {}
+
+// StatisticsPartitionRange represents a range of partitions for RESAMPLE.
+type StatisticsPartitionRange struct {
+	From ScalarExpression `json:"From,omitempty"`
+	To   ScalarExpression `json:"To,omitempty"`
+}
