@@ -378,6 +378,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createTriggerStatementToJSON(s)
 	case *ast.EnableDisableTriggerStatement:
 		return enableDisableTriggerStatementToJSON(s)
+	case *ast.EndConversationStatement:
+		return endConversationStatementToJSON(s)
 	case *ast.CreateDatabaseStatement:
 		return createDatabaseStatementToJSON(s)
 	case *ast.CreateDatabaseEncryptionKeyStatement:
@@ -9391,6 +9393,23 @@ func enableDisableTriggerStatementToJSON(s *ast.EnableDisableTriggerStatement) j
 	}
 	if s.TriggerObject != nil {
 		node["TriggerObject"] = triggerObjectToJSON(s.TriggerObject)
+	}
+	return node
+}
+
+func endConversationStatementToJSON(s *ast.EndConversationStatement) jsonNode {
+	node := jsonNode{
+		"$type":       "EndConversationStatement",
+		"WithCleanup": s.WithCleanup,
+	}
+	if s.Conversation != nil {
+		node["Conversation"] = scalarExpressionToJSON(s.Conversation)
+	}
+	if s.ErrorCode != nil {
+		node["ErrorCode"] = scalarExpressionToJSON(s.ErrorCode)
+	}
+	if s.ErrorDescription != nil {
+		node["ErrorDescription"] = scalarExpressionToJSON(s.ErrorDescription)
 	}
 	return node
 }

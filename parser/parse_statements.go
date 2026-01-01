@@ -1518,11 +1518,27 @@ func (p *Parser) parseTryCatchStatement() (*ast.TryCatchStatement, error) {
 	}
 
 	// Parse statements until END TRY
-	for p.curTok.Type != TokenEnd && p.curTok.Type != TokenEOF {
+	for p.curTok.Type != TokenEOF {
 		// Skip semicolons
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 			continue
+		}
+		// Check for END TRY (not END CONVERSATION)
+		if p.curTok.Type == TokenEnd {
+			if p.peekTok.Type == TokenConversation {
+				// It's END CONVERSATION, parse it
+				endConvStmt, err := p.parseEndConversationStatement()
+				if err != nil {
+					return nil, err
+				}
+				if endConvStmt != nil {
+					stmt.TryStatements.Statements = append(stmt.TryStatements.Statements, endConvStmt)
+				}
+				continue
+			}
+			// It's END TRY, break
+			break
 		}
 		s, err := p.parseStatement()
 		if err != nil {
@@ -1552,11 +1568,27 @@ func (p *Parser) parseTryCatchStatement() (*ast.TryCatchStatement, error) {
 	stmt.CatchStatements = &ast.StatementList{}
 
 	// Parse catch statements until END CATCH
-	for p.curTok.Type != TokenEnd && p.curTok.Type != TokenEOF {
+	for p.curTok.Type != TokenEOF {
 		// Skip semicolons
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 			continue
+		}
+		// Check for END CATCH (not END CONVERSATION)
+		if p.curTok.Type == TokenEnd {
+			if p.peekTok.Type == TokenConversation {
+				// It's END CONVERSATION, parse it
+				endConvStmt, err := p.parseEndConversationStatement()
+				if err != nil {
+					return nil, err
+				}
+				if endConvStmt != nil {
+					stmt.CatchStatements.Statements = append(stmt.CatchStatements.Statements, endConvStmt)
+				}
+				continue
+			}
+			// It's END CATCH, break
+			break
 		}
 		s, err := p.parseStatement()
 		if err != nil {
@@ -1588,8 +1620,24 @@ func (p *Parser) parseBeginEndBlockStatementContinued() (*ast.BeginEndBlockState
 		StatementList: &ast.StatementList{},
 	}
 
-	// Parse statements until END
-	for p.curTok.Type != TokenEnd && p.curTok.Type != TokenEOF {
+	// Parse statements until END (but not END CONVERSATION)
+	for p.curTok.Type != TokenEOF {
+		// Check for END (not END CONVERSATION)
+		if p.curTok.Type == TokenEnd {
+			if p.peekTok.Type == TokenConversation {
+				// It's END CONVERSATION, parse it
+				endConvStmt, err := p.parseEndConversationStatement()
+				if err != nil {
+					return nil, err
+				}
+				if endConvStmt != nil {
+					stmt.StatementList.Statements = append(stmt.StatementList.Statements, endConvStmt)
+				}
+				continue
+			}
+			// It's END (block terminator), break
+			break
+		}
 		s, err := p.parseStatement()
 		if err != nil {
 			return nil, err
@@ -1620,8 +1668,24 @@ func (p *Parser) parseBeginEndBlockStatement() (*ast.BeginEndBlockStatement, err
 		StatementList: &ast.StatementList{},
 	}
 
-	// Parse statements until END
-	for p.curTok.Type != TokenEnd && p.curTok.Type != TokenEOF {
+	// Parse statements until END (but not END CONVERSATION)
+	for p.curTok.Type != TokenEOF {
+		// Check for END (not END CONVERSATION)
+		if p.curTok.Type == TokenEnd {
+			if p.peekTok.Type == TokenConversation {
+				// It's END CONVERSATION, parse it
+				endConvStmt, err := p.parseEndConversationStatement()
+				if err != nil {
+					return nil, err
+				}
+				if endConvStmt != nil {
+					stmt.StatementList.Statements = append(stmt.StatementList.Statements, endConvStmt)
+				}
+				continue
+			}
+			// It's END (block terminator), break
+			break
+		}
 		s, err := p.parseStatement()
 		if err != nil {
 			return nil, err
@@ -2845,8 +2909,21 @@ func (p *Parser) parseStatementList() (*ast.StatementList, error) {
 			continue
 		}
 
-		// Check for END (end of BEGIN block or TRY/CATCH)
+		// Check for END (end of BEGIN block or TRY/CATCH, or END CONVERSATION statement)
 		if p.curTok.Type == TokenEnd {
+			// Look ahead to check if it's END CONVERSATION (a statement)
+			if p.peekTok.Type == TokenConversation {
+				// It's END CONVERSATION statement, parse it
+				stmt, err := p.parseEndConversationStatement()
+				if err != nil {
+					return nil, err
+				}
+				if stmt != nil {
+					sl.Statements = append(sl.Statements, stmt)
+				}
+				continue
+			}
+			// Otherwise it's the end of a BEGIN block
 			break
 		}
 
@@ -9830,6 +9907,75 @@ func (p *Parser) parseEnableDisableTriggerStatement(enforcement string) (*ast.En
 		}
 		stmt.TriggerObject.Name = tableName
 		stmt.TriggerObject.TriggerScope = "Normal"
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseEndConversationStatement parses END CONVERSATION statements
+func (p *Parser) parseEndConversationStatement() (*ast.EndConversationStatement, error) {
+	// Consume END
+	p.nextToken()
+
+	// Expect CONVERSATION
+	if strings.ToUpper(p.curTok.Literal) != "CONVERSATION" {
+		return nil, fmt.Errorf("expected CONVERSATION after END, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.EndConversationStatement{}
+
+	// Parse the conversation handle expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Conversation = expr
+
+	// Check for WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+
+		if strings.ToUpper(p.curTok.Literal) == "CLEANUP" {
+			stmt.WithCleanup = true
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "ERROR" {
+			p.nextToken()
+
+			// Expect =
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+
+			// Parse error code
+			errCode, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.ErrorCode = errCode
+
+			// Expect DESCRIPTION
+			if strings.ToUpper(p.curTok.Literal) == "DESCRIPTION" {
+				p.nextToken()
+
+				// Expect =
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+
+				// Parse error description
+				errDesc, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				stmt.ErrorDescription = errDesc
+			}
+		}
 	}
 
 	// Skip optional semicolon
