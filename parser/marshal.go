@@ -1358,8 +1358,24 @@ func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
 	if q.OrderByClause != nil {
 		node["OrderByClause"] = orderByClauseToJSON(q.OrderByClause)
 	}
+	if q.OffsetClause != nil {
+		node["OffsetClause"] = offsetClauseToJSON(q.OffsetClause)
+	}
 	if q.ForClause != nil {
 		node["ForClause"] = forClauseToJSON(q.ForClause)
+	}
+	return node
+}
+
+func offsetClauseToJSON(oc *ast.OffsetClause) jsonNode {
+	node := jsonNode{
+		"$type": "OffsetClause",
+	}
+	if oc.OffsetExpression != nil {
+		node["OffsetExpression"] = scalarExpressionToJSON(oc.OffsetExpression)
+	}
+	if oc.FetchExpression != nil {
+		node["FetchExpression"] = scalarExpressionToJSON(oc.FetchExpression)
 	}
 	return node
 }
@@ -2096,6 +2112,18 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.Join != nil {
 			node["Join"] = tableReferenceToJSON(r.Join)
 		}
+		return node
+	case *ast.QueryDerivedTable:
+		node := jsonNode{
+			"$type": "QueryDerivedTable",
+		}
+		if r.QueryExpression != nil {
+			node["QueryExpression"] = queryExpressionToJSON(r.QueryExpression)
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
 		return node
 	default:
 		return jsonNode{"$type": "UnknownTableReference"}

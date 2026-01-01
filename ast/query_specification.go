@@ -10,8 +10,17 @@ type QuerySpecification struct {
 	GroupByClause   *GroupByClause    `json:"GroupByClause,omitempty"`
 	HavingClause    *HavingClause     `json:"HavingClause,omitempty"`
 	OrderByClause   *OrderByClause    `json:"OrderByClause,omitempty"`
+	OffsetClause    *OffsetClause     `json:"OffsetClause,omitempty"`
 	ForClause       ForClause         `json:"ForClause,omitempty"`
 }
 
 func (*QuerySpecification) node()            {}
 func (*QuerySpecification) queryExpression() {}
+
+// OffsetClause represents OFFSET ... ROWS FETCH NEXT/FIRST ... ROWS ONLY
+type OffsetClause struct {
+	OffsetExpression ScalarExpression `json:"OffsetExpression,omitempty"`
+	FetchExpression  ScalarExpression `json:"FetchExpression,omitempty"`
+}
+
+func (*OffsetClause) node() {}

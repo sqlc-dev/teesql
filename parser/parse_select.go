@@ -186,6 +186,17 @@ func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.Schem
 		}
 	}
 
+	// Parse OFFSET...FETCH clause after ORDER BY
+	if strings.ToUpper(p.curTok.Literal) == "OFFSET" {
+		oc, err := p.parseOffsetClause()
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		if qs, ok := left.(*ast.QuerySpecification); ok {
+			qs.OffsetClause = oc
+		}
+	}
+
 	// Parse FOR clause (FOR BROWSE, FOR XML, FOR UPDATE, FOR READ ONLY)
 	if strings.ToUpper(p.curTok.Literal) == "FOR" {
 		forClause, err := p.parseForClause()
@@ -1656,13 +1667,46 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 
 	// Check for JOINs
 	for {
-		// Check for CROSS JOIN
+		// Check for CROSS JOIN or CROSS APPLY
 		if p.curTok.Type == TokenCross {
 			p.nextToken() // consume CROSS
-			if p.curTok.Type != TokenJoin {
-				return nil, fmt.Errorf("expected JOIN after CROSS, got %s", p.curTok.Literal)
+			if p.curTok.Type == TokenJoin {
+				p.nextToken() // consume JOIN
+
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+
+				left = &ast.UnqualifiedJoin{
+					UnqualifiedJoinType:  "CrossJoin",
+					FirstTableReference:  left,
+					SecondTableReference: right,
+				}
+				continue
+			} else if strings.ToUpper(p.curTok.Literal) == "APPLY" {
+				p.nextToken() // consume APPLY
+
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+
+				left = &ast.UnqualifiedJoin{
+					UnqualifiedJoinType:  "CrossApply",
+					FirstTableReference:  left,
+					SecondTableReference: right,
+				}
+				continue
+			} else {
+				return nil, fmt.Errorf("expected JOIN or APPLY after CROSS, got %s", p.curTok.Literal)
 			}
-			p.nextToken() // consume JOIN
+		}
+
+		// Check for OUTER APPLY
+		if p.curTok.Type == TokenOuter && strings.ToUpper(p.peekTok.Literal) == "APPLY" {
+			p.nextToken() // consume OUTER
+			p.nextToken() // consume APPLY
 
 			right, err := p.parseSingleTableReference()
 			if err != nil {
@@ -1670,7 +1714,7 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 			}
 
 			left = &ast.UnqualifiedJoin{
-				UnqualifiedJoinType:  "CrossJoin",
+				UnqualifiedJoinType:  "OuterApply",
 				FirstTableReference:  left,
 				SecondTableReference: right,
 			}
@@ -1741,6 +1785,11 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 }
 
 func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
+	// Check for derived table (parenthesized query)
+	if p.curTok.Type == TokenLParen {
+		return p.parseDerivedTableReference()
+	}
+
 	// Check for OPENROWSET
 	if p.curTok.Type == TokenOpenRowset {
 		return p.parseOpenRowset()
@@ -1784,6 +1833,46 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 
 	// It's a regular named table reference
 	return p.parseNamedTableReferenceWithName(son)
+}
+
+// parseDerivedTableReference parses a derived table (parenthesized query) like (SELECT ...) AS alias
+func (p *Parser) parseDerivedTableReference() (*ast.QueryDerivedTable, error) {
+	p.nextToken() // consume (
+
+	// Parse the query expression
+	qe, err := p.parseQueryExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after derived table query, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	ref := &ast.QueryDerivedTable{
+		QueryExpression: qe,
+		ForPath:         false,
+	}
+
+	// Parse optional alias (AS alias or just alias)
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+		// Could be an alias without AS, but need to be careful not to consume keywords
+		if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
+				ref.Alias = p.parseIdentifier()
+			}
+		} else {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	return ref, nil
 }
 
 func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
@@ -2724,6 +2813,58 @@ func (p *Parser) parseOrderByClause() (*ast.OrderByClause, error) {
 	}
 
 	return obc, nil
+}
+
+// parseOffsetClause parses OFFSET n ROWS FETCH NEXT/FIRST m ROWS ONLY
+func (p *Parser) parseOffsetClause() (*ast.OffsetClause, error) {
+	// Consume OFFSET
+	p.nextToken()
+
+	oc := &ast.OffsetClause{}
+
+	// Parse offset expression
+	offsetExpr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	oc.OffsetExpression = offsetExpr
+
+	// Skip ROWS/ROW keyword
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "ROWS" || upperLit == "ROW" {
+		p.nextToken()
+	}
+
+	// Parse FETCH NEXT/FIRST m ROWS ONLY
+	if strings.ToUpper(p.curTok.Literal) == "FETCH" {
+		p.nextToken() // consume FETCH
+
+		// Skip NEXT or FIRST
+		upperLit = strings.ToUpper(p.curTok.Literal)
+		if upperLit == "NEXT" || upperLit == "FIRST" {
+			p.nextToken()
+		}
+
+		// Parse fetch expression
+		fetchExpr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		oc.FetchExpression = fetchExpr
+
+		// Skip ROWS/ROW keyword
+		upperLit = strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ROWS" || upperLit == "ROW" {
+			p.nextToken()
+		}
+
+		// Skip ONLY keyword
+		if strings.ToUpper(p.curTok.Literal) == "ONLY" {
+			p.nextToken()
+		}
+	}
+
+	return oc, nil
 }
 
 func (p *Parser) parseBooleanExpression() (ast.BooleanExpression, error) {
