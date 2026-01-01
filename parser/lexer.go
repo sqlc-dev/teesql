@@ -185,6 +185,7 @@ const (
 	TokenColonColon
 	TokenMove
 	TokenConversation
+	TokenDialog
 	TokenGet
 	TokenUse
 	TokenKill
@@ -925,6 +926,7 @@ var keywords = map[string]TokenType{
 	"TRUNCATE":      TokenTruncate,
 	"MOVE":          TokenMove,
 	"CONVERSATION":  TokenConversation,
+	"DIALOG":        TokenDialog,
 	"GET":           TokenGet,
 	"USE":           TokenUse,
 	"KILL":          TokenKill,

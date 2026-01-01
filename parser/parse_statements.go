@@ -1318,6 +1318,10 @@ func (p *Parser) parseBeginStatement() (ast.Statement, error) {
 		return p.parseBeginTransactionStatementContinued(false)
 	case TokenTry:
 		return p.parseTryCatchStatement()
+	case TokenDialog:
+		return p.parseBeginDialogStatement()
+	case TokenConversation:
+		return p.parseBeginConversationTimerStatement()
 	case TokenIdent:
 		// Check for DISTRIBUTED
 		if strings.ToUpper(p.curTok.Literal) == "DISTRIBUTED" {
@@ -1650,6 +1654,221 @@ func (p *Parser) parseBeginEndBlockStatementContinued() (*ast.BeginEndBlockState
 	// Consume END
 	if p.curTok.Type == TokenEnd {
 		p.nextToken()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseBeginDialogStatement() (*ast.BeginDialogStatement, error) {
+	p.nextToken() // consume DIALOG
+
+	stmt := &ast.BeginDialogStatement{}
+
+	// Check for optional CONVERSATION keyword
+	if p.curTok.Type == TokenConversation {
+		stmt.IsConversation = true
+		p.nextToken() // consume CONVERSATION
+	}
+
+	// Parse dialog handle (variable reference)
+	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+		stmt.Handle = &ast.VariableReference{Name: p.curTok.Literal}
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected variable for dialog handle")
+	}
+
+	// Parse FROM SERVICE
+	if p.curTok.Type != TokenFrom {
+		return nil, fmt.Errorf("expected FROM after dialog handle")
+	}
+	p.nextToken() // consume FROM
+
+	if strings.ToUpper(p.curTok.Literal) != "SERVICE" {
+		return nil, fmt.Errorf("expected SERVICE after FROM")
+	}
+	p.nextToken() // consume SERVICE
+
+	// Parse initiator service name (identifier)
+	id := p.parseIdentifier()
+	stmt.InitiatorServiceName = &ast.IdentifierOrValueExpression{
+		Value:      id.Value,
+		Identifier: id,
+	}
+
+	// Parse TO SERVICE
+	if p.curTok.Type != TokenTo {
+		return nil, fmt.Errorf("expected TO after initiator service name")
+	}
+	p.nextToken() // consume TO
+
+	if strings.ToUpper(p.curTok.Literal) != "SERVICE" {
+		return nil, fmt.Errorf("expected SERVICE after TO")
+	}
+	p.nextToken() // consume SERVICE
+
+	// Parse target service name (string literal or variable)
+	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+		strLit, err := p.parseStringLiteral()
+		if err != nil {
+			return nil, err
+		}
+		stmt.TargetServiceName = strLit
+	} else if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+		stmt.TargetServiceName = &ast.VariableReference{Name: p.curTok.Literal}
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected string literal or variable for target service name")
+	}
+
+	// Check for optional instance spec (after comma)
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume comma
+		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+			strLit, err := p.parseStringLiteral()
+			if err != nil {
+				return nil, err
+			}
+			stmt.InstanceSpec = strLit
+		} else if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+			stmt.InstanceSpec = &ast.VariableReference{Name: p.curTok.Literal}
+			p.nextToken()
+		}
+	}
+
+	// Parse optional ON CONTRACT
+	if p.curTok.Type == TokenOn && strings.ToUpper(p.peekTok.Literal) == "CONTRACT" {
+		p.nextToken() // consume ON
+		p.nextToken() // consume CONTRACT
+		id := p.parseIdentifier()
+		stmt.ContractName = &ast.IdentifierOrValueExpression{
+			Value:      id.Value,
+			Identifier: id,
+		}
+	}
+
+	// Parse optional WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		for {
+			optName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume option name
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			switch optName {
+			case "RELATED_CONVERSATION":
+				if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+					stmt.Options = append(stmt.Options, &ast.ScalarExpressionDialogOption{
+						Value:      &ast.VariableReference{Name: p.curTok.Literal},
+						OptionKind: "RelatedConversation",
+					})
+					p.nextToken()
+				}
+			case "RELATED_CONVERSATION_GROUP":
+				if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+					stmt.Options = append(stmt.Options, &ast.ScalarExpressionDialogOption{
+						Value:      &ast.VariableReference{Name: p.curTok.Literal},
+						OptionKind: "RelatedConversationGroup",
+					})
+					p.nextToken()
+				}
+			case "ENCRYPTION":
+				optState := strings.ToUpper(p.curTok.Literal)
+				if optState == "ON" {
+					stmt.Options = append(stmt.Options, &ast.OnOffDialogOption{
+						OptionState: "On",
+						OptionKind:  "Encryption",
+					})
+				} else if optState == "OFF" {
+					stmt.Options = append(stmt.Options, &ast.OnOffDialogOption{
+						OptionState: "Off",
+						OptionKind:  "Encryption",
+					})
+				}
+				p.nextToken()
+			case "LIFETIME":
+				if p.curTok.Type == TokenNumber {
+					stmt.Options = append(stmt.Options, &ast.ScalarExpressionDialogOption{
+						Value: &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						},
+						OptionKind: "Lifetime",
+					})
+					p.nextToken()
+				}
+			}
+
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume comma
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseBeginConversationTimerStatement() (*ast.BeginConversationTimerStatement, error) {
+	p.nextToken() // consume CONVERSATION
+
+	// Expect TIMER
+	if strings.ToUpper(p.curTok.Literal) != "TIMER" {
+		return nil, fmt.Errorf("expected TIMER after BEGIN CONVERSATION")
+	}
+	p.nextToken() // consume TIMER
+
+	stmt := &ast.BeginConversationTimerStatement{}
+
+	// Parse handle in parentheses
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TIMER")
+	}
+	p.nextToken() // consume (
+
+	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+		stmt.Handle = &ast.VariableReference{Name: p.curTok.Literal}
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected variable for conversation handle")
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after handle")
+	}
+	p.nextToken() // consume )
+
+	// Parse TIMEOUT = value
+	if strings.ToUpper(p.curTok.Literal) != "TIMEOUT" {
+		return nil, fmt.Errorf("expected TIMEOUT")
+	}
+	p.nextToken() // consume TIMEOUT
+
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+	}
+
+	if p.curTok.Type == TokenNumber {
+		stmt.Timeout = &ast.IntegerLiteral{
+			LiteralType: "Integer",
+			Value:       p.curTok.Literal,
+		}
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected integer for timeout value")
 	}
 
 	// Skip optional semicolon

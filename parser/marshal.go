@@ -72,6 +72,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return beginEndBlockStatementToJSON(s)
 	case *ast.BeginEndAtomicBlockStatement:
 		return beginEndAtomicBlockStatementToJSON(s)
+	case *ast.BeginDialogStatement:
+		return beginDialogStatementToJSON(s)
+	case *ast.BeginConversationTimerStatement:
+		return beginConversationTimerStatementToJSON(s)
 	case *ast.CreateViewStatement:
 		return createViewStatementToJSON(s)
 	case *ast.CreateSchemaStatement:
@@ -2857,6 +2861,71 @@ func statementListToJSON(sl *ast.StatementList) jsonNode {
 			stmts[i] = statementToJSON(s)
 		}
 		node["Statements"] = stmts
+	}
+	return node
+}
+
+func beginDialogStatementToJSON(s *ast.BeginDialogStatement) jsonNode {
+	node := jsonNode{
+		"$type":          "BeginDialogStatement",
+		"IsConversation": s.IsConversation,
+	}
+	if s.Handle != nil {
+		node["Handle"] = scalarExpressionToJSON(s.Handle)
+	}
+	if s.InitiatorServiceName != nil {
+		node["InitiatorServiceName"] = identifierOrValueExpressionToJSON(s.InitiatorServiceName)
+	}
+	if s.TargetServiceName != nil {
+		node["TargetServiceName"] = scalarExpressionToJSON(s.TargetServiceName)
+	}
+	if s.ContractName != nil {
+		node["ContractName"] = identifierOrValueExpressionToJSON(s.ContractName)
+	}
+	if s.InstanceSpec != nil {
+		node["InstanceSpec"] = scalarExpressionToJSON(s.InstanceSpec)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = dialogOptionToJSON(o)
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func dialogOptionToJSON(o ast.DialogOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.ScalarExpressionDialogOption:
+		node := jsonNode{
+			"$type":      "ScalarExpressionDialogOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		return node
+	case *ast.OnOffDialogOption:
+		return jsonNode{
+			"$type":       "OnOffDialogOption",
+			"OptionState": opt.OptionState,
+			"OptionKind":  opt.OptionKind,
+		}
+	default:
+		return jsonNode{"$type": "UnknownDialogOption"}
+	}
+}
+
+func beginConversationTimerStatementToJSON(s *ast.BeginConversationTimerStatement) jsonNode {
+	node := jsonNode{
+		"$type": "BeginConversationTimerStatement",
+	}
+	if s.Handle != nil {
+		node["Handle"] = scalarExpressionToJSON(s.Handle)
+	}
+	if s.Timeout != nil {
+		node["Timeout"] = scalarExpressionToJSON(s.Timeout)
 	}
 	return node
 }
