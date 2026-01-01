@@ -7845,15 +7845,23 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 						}
 						stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					} else if valueUpper == "ON" || valueUpper == "OFF" {
-						opt := &ast.IndexStateOption{
-							OptionKind:  p.getIndexOptionKind(optionName),
-							OptionState: p.capitalizeFirst(strings.ToLower(valueUpper)),
+						if optionName == "IGNORE_DUP_KEY" {
+							opt := &ast.IgnoreDupKeyIndexOption{
+								OptionKind:  "IgnoreDupKey",
+								OptionState: p.capitalizeFirst(strings.ToLower(valueUpper)),
+							}
+							stmt.IndexOptions = append(stmt.IndexOptions, opt)
+						} else {
+							opt := &ast.IndexStateOption{
+								OptionKind:  p.getIndexOptionKind(optionName),
+								OptionState: p.capitalizeFirst(strings.ToLower(valueUpper)),
+							}
+							stmt.IndexOptions = append(stmt.IndexOptions, opt)
 						}
-						stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					} else {
 						opt := &ast.IndexExpressionOption{
 							OptionKind: p.getIndexOptionKind(optionName),
-							Expression: &ast.IntegerLiteral{Value: valueStr},
+							Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
 						}
 						stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					}
@@ -7919,16 +7927,24 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 
 				// Determine if it's a state option (ON/OFF) or expression option
 				if valueStr == "ON" || valueStr == "OFF" {
-					opt := &ast.IndexStateOption{
-						OptionKind:  p.getIndexOptionKind(optionName),
-						OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+					if optionName == "IGNORE_DUP_KEY" {
+						opt := &ast.IgnoreDupKeyIndexOption{
+							OptionKind:  "IgnoreDupKey",
+							OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+						}
+						stmt.IndexOptions = append(stmt.IndexOptions, opt)
+					} else {
+						opt := &ast.IndexStateOption{
+							OptionKind:  p.getIndexOptionKind(optionName),
+							OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+						}
+						stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					}
-					stmt.IndexOptions = append(stmt.IndexOptions, opt)
 				} else {
 					// Expression option like FILLFACTOR = 80
 					opt := &ast.IndexExpressionOption{
 						OptionKind: p.getIndexOptionKind(optionName),
-						Expression: &ast.IntegerLiteral{Value: valueStr},
+						Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
 					}
 					stmt.IndexOptions = append(stmt.IndexOptions, opt)
 				}
@@ -7972,6 +7988,7 @@ func (p *Parser) getIndexOptionKind(optionName string) string {
 		"OPTIMIZE_FOR_SEQUENTIAL_KEY": "OptimizeForSequentialKey",
 		"COMPRESS_ALL_ROW_GROUPS":     "CompressAllRowGroups",
 		"COMPRESSION_DELAY":           "CompressionDelay",
+		"LOB_COMPACTION":              "LobCompaction",
 	}
 	if kind, ok := optionMap[optionName]; ok {
 		return kind
