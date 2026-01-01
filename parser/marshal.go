@@ -13273,10 +13273,67 @@ func createFullTextCatalogStatementToJSON(s *ast.CreateFullTextCatalogStatement)
 
 func alterFulltextIndexStatementToJSON(s *ast.AlterFulltextIndexStatement) jsonNode {
 	node := jsonNode{
-		"$type": "AlterFulltextIndexStatement",
+		"$type": "AlterFullTextIndexStatement",
 	}
 	if s.OnName != nil {
 		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	if s.Action != nil {
+		node["Action"] = alterFullTextIndexActionToJSON(s.Action)
+	}
+	return node
+}
+
+func alterFullTextIndexActionToJSON(a ast.AlterFullTextIndexActionOption) jsonNode {
+	switch action := a.(type) {
+	case *ast.SimpleAlterFullTextIndexAction:
+		return jsonNode{
+			"$type":      "SimpleAlterFullTextIndexAction",
+			"ActionKind": action.ActionKind,
+		}
+	case *ast.AddAlterFullTextIndexAction:
+		node := jsonNode{
+			"$type":            "AddAlterFullTextIndexAction",
+			"WithNoPopulation": action.WithNoPopulation,
+		}
+		if len(action.Columns) > 0 {
+			cols := make([]jsonNode, len(action.Columns))
+			for i, col := range action.Columns {
+				cols[i] = fullTextIndexColumnToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		return node
+	case *ast.DropAlterFullTextIndexAction:
+		node := jsonNode{
+			"$type":            "DropAlterFullTextIndexAction",
+			"WithNoPopulation": action.WithNoPopulation,
+		}
+		if len(action.Columns) > 0 {
+			cols := make([]jsonNode, len(action.Columns))
+			for i, col := range action.Columns {
+				cols[i] = identifierToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		return node
+	}
+	return nil
+}
+
+func fullTextIndexColumnToJSON(col *ast.FullTextIndexColumn) jsonNode {
+	node := jsonNode{
+		"$type":                "FullTextIndexColumn",
+		"StatisticalSemantics": col.StatisticalSemantics,
+	}
+	if col.Name != nil {
+		node["Name"] = identifierToJSON(col.Name)
+	}
+	if col.TypeColumn != nil {
+		node["TypeColumn"] = identifierToJSON(col.TypeColumn)
+	}
+	if col.LanguageTerm != nil {
+		node["LanguageTerm"] = identifierOrValueExpressionToJSON(col.LanguageTerm)
 	}
 	return node
 }

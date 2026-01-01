@@ -5919,8 +5919,204 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 		}
 		stmt.OnName = name
 	}
-	p.skipToEndOfStatement()
+
+	// Parse action (if any)
+	action := p.tryParseAlterFullTextIndexAction()
+	stmt.Action = action
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
 	return stmt, nil
+}
+
+func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexActionOption {
+	actionLit := strings.ToUpper(p.curTok.Literal)
+
+	switch actionLit {
+	case "ENABLE":
+		p.nextToken()
+		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "Enable"}
+	case "DISABLE":
+		p.nextToken()
+		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "Disable"}
+	case "SET":
+		p.nextToken() // consume SET
+		// Parse CHANGE_TRACKING = MANUAL/AUTO/OFF
+		if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING" {
+			p.nextToken() // consume CHANGE_TRACKING
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			trackingLit := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			switch trackingLit {
+			case "MANUAL":
+				return &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingManual"}
+			case "AUTO":
+				return &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingAuto"}
+			case "OFF":
+				return &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingOff"}
+			}
+		}
+		return nil
+	case "START":
+		p.nextToken() // consume START
+		popType := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+			p.nextToken()
+		}
+		switch popType {
+		case "FULL":
+			return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartFullPopulation"}
+		case "INCREMENTAL":
+			return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartIncrementalPopulation"}
+		case "UPDATE":
+			return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartUpdatePopulation"}
+		}
+		return nil
+	case "STOP":
+		p.nextToken() // consume STOP
+		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+			p.nextToken()
+		}
+		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StopPopulation"}
+	case "PAUSE":
+		p.nextToken() // consume PAUSE
+		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+			p.nextToken()
+		}
+		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "PausePopulation"}
+	case "RESUME":
+		p.nextToken() // consume RESUME
+		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+			p.nextToken()
+		}
+		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "ResumePopulation"}
+	case "ADD":
+		action, _ := p.parseAddAlterFullTextIndexAction()
+		return action
+	case "DROP":
+		action, _ := p.parseDropAlterFullTextIndexAction()
+		return action
+	}
+
+	// No action found
+	return nil
+}
+
+func (p *Parser) parseAddAlterFullTextIndexAction() (*ast.AddAlterFullTextIndexAction, error) {
+	p.nextToken() // consume ADD
+
+	action := &ast.AddAlterFullTextIndexAction{}
+
+	// Parse (column list)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			col := &ast.FullTextIndexColumn{}
+			col.Name = p.parseIdentifier()
+
+			// Check for TYPE COLUMN
+			if strings.ToUpper(p.curTok.Literal) == "TYPE" {
+				p.nextToken() // consume TYPE
+				if strings.ToUpper(p.curTok.Literal) == "COLUMN" {
+					p.nextToken() // consume COLUMN
+				}
+				col.TypeColumn = p.parseIdentifier()
+			}
+
+			// Check for LANGUAGE
+			if strings.ToUpper(p.curTok.Literal) == "LANGUAGE" {
+				p.nextToken() // consume LANGUAGE
+				col.LanguageTerm = &ast.IdentifierOrValueExpression{}
+				if p.curTok.Type == TokenNumber {
+					col.LanguageTerm.Value = p.curTok.Literal
+					col.LanguageTerm.ValueExpression = &ast.IntegerLiteral{Value: p.curTok.Literal, LiteralType: "Integer"}
+					p.nextToken()
+				} else if p.curTok.Type == TokenString {
+					// Strip quotes from string literal
+					val := p.curTok.Literal
+					if len(val) >= 2 && (val[0] == '\'' || val[0] == '"') {
+						val = val[1 : len(val)-1]
+					}
+					col.LanguageTerm.Value = val
+					col.LanguageTerm.ValueExpression = &ast.StringLiteral{Value: val, LiteralType: "String"}
+					p.nextToken()
+				}
+			}
+
+			// StatisticalSemantics defaults to false
+
+			action.Columns = append(action.Columns, col)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Check for WITH NO POPULATION
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "NO" {
+			p.nextToken() // consume NO
+			if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+				p.nextToken() // consume POPULATION
+				action.WithNoPopulation = true
+			}
+		}
+	}
+
+	return action, nil
+}
+
+func (p *Parser) parseDropAlterFullTextIndexAction() (*ast.DropAlterFullTextIndexAction, error) {
+	p.nextToken() // consume DROP
+
+	action := &ast.DropAlterFullTextIndexAction{}
+
+	// Parse (column list)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			action.Columns = append(action.Columns, p.parseIdentifier())
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Check for WITH NO POPULATION
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "NO" {
+			p.nextToken() // consume NO
+			if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+				p.nextToken() // consume POPULATION
+				action.WithNoPopulation = true
+			}
+		}
+	}
+
+	return action, nil
 }
 
 func (p *Parser) parseAlterSymmetricKeyStatement() (*ast.AlterSymmetricKeyStatement, error) {
