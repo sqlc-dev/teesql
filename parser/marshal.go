@@ -3570,6 +3570,56 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				indexDef.Name = p.parseIdentifier()
 			}
 			col.Index = indexDef
+		} else if upperLit == "SPARSE" {
+			p.nextToken() // consume SPARSE
+			if col.StorageOptions == nil {
+				col.StorageOptions = &ast.ColumnStorageOptions{}
+			}
+			col.StorageOptions.SparseOption = "Sparse"
+		} else if upperLit == "FILESTREAM" {
+			p.nextToken() // consume FILESTREAM
+			if col.StorageOptions == nil {
+				col.StorageOptions = &ast.ColumnStorageOptions{}
+			}
+			col.StorageOptions.IsFileStream = true
+		} else if upperLit == "COLUMN_SET" {
+			p.nextToken() // consume COLUMN_SET
+			// Expect FOR ALL_SPARSE_COLUMNS
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+				if strings.ToUpper(p.curTok.Literal) == "ALL_SPARSE_COLUMNS" {
+					p.nextToken() // consume ALL_SPARSE_COLUMNS
+					if col.StorageOptions == nil {
+						col.StorageOptions = &ast.ColumnStorageOptions{}
+					}
+					col.StorageOptions.SparseOption = "ColumnSetForAllSparseColumns"
+				}
+			}
+		} else if upperLit == "ROWGUIDCOL" {
+			p.nextToken() // consume ROWGUIDCOL
+			col.IsRowGuidCol = true
+		} else if upperLit == "HIDDEN" {
+			p.nextToken() // consume HIDDEN
+			col.IsHidden = true
+		} else if upperLit == "MASKED" {
+			p.nextToken() // consume MASKED
+			col.IsMasked = true
+			// Skip optional WITH clause
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken()
+				if p.curTok.Type == TokenLParen {
+					depth := 1
+					p.nextToken()
+					for depth > 0 && p.curTok.Type != TokenEOF {
+						if p.curTok.Type == TokenLParen {
+							depth++
+						} else if p.curTok.Type == TokenRParen {
+							depth--
+						}
+						p.nextToken()
+					}
+				}
+			}
 		} else {
 			break
 		}
@@ -4847,6 +4897,9 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 		"IsMasked":         c.IsMasked,
 		"ColumnIdentifier": identifierToJSON(c.ColumnIdentifier),
 	}
+	if c.StorageOptions != nil {
+		node["StorageOptions"] = columnStorageOptionsToJSON(c.StorageOptions)
+	}
 	if c.ComputedColumnExpression != nil {
 		node["ComputedColumnExpression"] = scalarExpressionToJSON(c.ComputedColumnExpression)
 	}
@@ -4873,6 +4926,18 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 		node["Index"] = indexDefinitionToJSON(c.Index)
 	}
 	return node
+}
+
+func columnStorageOptionsToJSON(o *ast.ColumnStorageOptions) jsonNode {
+	sparseOption := o.SparseOption
+	if sparseOption == "" {
+		sparseOption = "None"
+	}
+	return jsonNode{
+		"$type":        "ColumnStorageOptions",
+		"IsFileStream": o.IsFileStream,
+		"SparseOption": sparseOption,
+	}
 }
 
 func defaultConstraintToJSON(d *ast.DefaultConstraintDefinition) jsonNode {
