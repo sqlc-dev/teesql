@@ -235,3 +235,36 @@ type RemoteDataArchiveDbFederatedServiceAccountSetting struct {
 
 func (r *RemoteDataArchiveDbFederatedServiceAccountSetting) node()                      {}
 func (r *RemoteDataArchiveDbFederatedServiceAccountSetting) remoteDataArchiveDbSetting() {}
+
+// ChangeTrackingDatabaseOption represents the CHANGE_TRACKING database option
+type ChangeTrackingDatabaseOption struct {
+	OptionKind  string                            // "ChangeTracking"
+	OptionState string                            // "On", "Off", "NotSet"
+	Details     []ChangeTrackingOptionDetail      // AUTO_CLEANUP, CHANGE_RETENTION
+}
+
+func (c *ChangeTrackingDatabaseOption) node()           {}
+func (c *ChangeTrackingDatabaseOption) databaseOption() {}
+
+// ChangeTrackingOptionDetail is an interface for change tracking option details
+type ChangeTrackingOptionDetail interface {
+	Node
+	changeTrackingOptionDetail()
+}
+
+// AutoCleanupChangeTrackingOptionDetail represents AUTO_CLEANUP option
+type AutoCleanupChangeTrackingOptionDetail struct {
+	IsOn bool
+}
+
+func (a *AutoCleanupChangeTrackingOptionDetail) node()                        {}
+func (a *AutoCleanupChangeTrackingOptionDetail) changeTrackingOptionDetail() {}
+
+// ChangeRetentionChangeTrackingOptionDetail represents CHANGE_RETENTION option
+type ChangeRetentionChangeTrackingOptionDetail struct {
+	RetentionPeriod ScalarExpression
+	Unit            string // "Days", "Hours", "Minutes"
+}
+
+func (c *ChangeRetentionChangeTrackingOptionDetail) node()                        {}
+func (c *ChangeRetentionChangeTrackingOptionDetail) changeTrackingOptionDetail() {}

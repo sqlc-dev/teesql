@@ -1891,6 +1891,27 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				return nil, err
 			}
 			stmt.Options = append(stmt.Options, rdaOpt)
+		case "COMPATIBILITY_LEVEL":
+			// Parse = value
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after COMPATIBILITY_LEVEL")
+			}
+			p.nextToken() // consume =
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			opt := &ast.LiteralDatabaseOption{
+				OptionKind: "CompatibilityLevel",
+				Value:      val,
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "CHANGE_TRACKING":
+			ctOpt, err := p.parseChangeTrackingOption()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = append(stmt.Options, ctOpt)
 		default:
 			// Handle generic options with = syntax (e.g., OPTIMIZED_LOCKING = ON)
 			if p.curTok.Type == TokenEquals {
@@ -2012,6 +2033,90 @@ func (p *Parser) parseRemoteDataArchiveOption() (*ast.RemoteDataArchiveDatabaseO
 
 		if p.curTok.Type != TokenRParen {
 			return nil, fmt.Errorf("expected ) after REMOTE_DATA_ARCHIVE settings, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	}
+
+	return opt, nil
+}
+
+// parseChangeTrackingOption parses CHANGE_TRACKING option
+// Forms:
+//   - CHANGE_TRACKING = ON (options...)
+//   - CHANGE_TRACKING = OFF
+//   - CHANGE_TRACKING (options...) -- OptionState is "NotSet"
+func (p *Parser) parseChangeTrackingOption() (*ast.ChangeTrackingDatabaseOption, error) {
+	opt := &ast.ChangeTrackingDatabaseOption{
+		OptionKind:  "ChangeTracking",
+		OptionState: "NotSet",
+	}
+
+	// Check for = ON/OFF or just (
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+		stateVal := strings.ToUpper(p.curTok.Literal)
+		opt.OptionState = capitalizeFirst(stateVal)
+		p.nextToken() // consume ON/OFF
+	}
+
+	// Parse details if we have (
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for {
+			detailName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume detail name
+
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after %s, got %s", detailName, p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			switch detailName {
+			case "AUTO_CLEANUP":
+				// Parse ON/OFF
+				isOn := strings.ToUpper(p.curTok.Literal) == "ON"
+				p.nextToken()
+				detail := &ast.AutoCleanupChangeTrackingOptionDetail{
+					IsOn: isOn,
+				}
+				opt.Details = append(opt.Details, detail)
+			case "CHANGE_RETENTION":
+				// Parse value and unit (e.g., 100 HOURS, 3 DAYS, 5 MINUTES)
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				unit := ""
+				unitVal := strings.ToUpper(p.curTok.Literal)
+				switch unitVal {
+				case "DAYS":
+					unit = "Days"
+				case "HOURS":
+					unit = "Hours"
+				case "MINUTES":
+					unit = "Minutes"
+				}
+				if unit != "" {
+					p.nextToken() // consume unit
+				}
+				detail := &ast.ChangeRetentionChangeTrackingOptionDetail{
+					RetentionPeriod: val,
+					Unit:            unit,
+				}
+				opt.Details = append(opt.Details, detail)
+			default:
+				return nil, fmt.Errorf("unknown CHANGE_TRACKING detail: %s", detailName)
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after CHANGE_TRACKING details, got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume )
 	}
@@ -6254,6 +6359,12 @@ func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibrary
 
 // convertOptionKind converts a SQL option name (e.g., "OPTIMIZED_LOCKING") to its OptionKind form (e.g., "OptimizedLocking")
 func convertOptionKind(optionName string) string {
+	// Handle special cases with specific capitalization
+	switch optionName {
+	case "VARDECIMAL_STORAGE_FORMAT":
+		return "VarDecimalStorageFormat"
+	}
+
 	// Split by underscores and capitalize each word
 	parts := strings.Split(optionName, "_")
 	for i, part := range parts {

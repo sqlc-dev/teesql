@@ -1011,6 +1011,20 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			node["Settings"] = settings
 		}
 		return node
+	case *ast.ChangeTrackingDatabaseOption:
+		node := jsonNode{
+			"$type":       "ChangeTrackingDatabaseOption",
+			"OptionState": o.OptionState,
+			"OptionKind":  o.OptionKind,
+		}
+		if len(o.Details) > 0 {
+			details := make([]jsonNode, len(o.Details))
+			for i, detail := range o.Details {
+				details[i] = changeTrackingOptionDetailToJSON(detail)
+			}
+			node["Details"] = details
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownDatabaseOption"}
 	}
@@ -1044,6 +1058,27 @@ func remoteDataArchiveDbSettingToJSON(setting ast.RemoteDataArchiveDbSetting) js
 		}
 	default:
 		return jsonNode{"$type": "UnknownRemoteDataArchiveDbSetting"}
+	}
+}
+
+func changeTrackingOptionDetailToJSON(detail ast.ChangeTrackingOptionDetail) jsonNode {
+	switch d := detail.(type) {
+	case *ast.AutoCleanupChangeTrackingOptionDetail:
+		return jsonNode{
+			"$type": "AutoCleanupChangeTrackingOptionDetail",
+			"IsOn":  d.IsOn,
+		}
+	case *ast.ChangeRetentionChangeTrackingOptionDetail:
+		node := jsonNode{
+			"$type": "ChangeRetentionChangeTrackingOptionDetail",
+			"Unit":  d.Unit,
+		}
+		if d.RetentionPeriod != nil {
+			node["RetentionPeriod"] = scalarExpressionToJSON(d.RetentionPeriod)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownChangeTrackingOptionDetail"}
 	}
 }
 
