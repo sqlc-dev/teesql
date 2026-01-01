@@ -7059,8 +7059,12 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 					}
 					stmt.IndexOptions = append(stmt.IndexOptions, opt)
 
-				case "SORT_IN_TEMPDB":
-					p.nextToken() // consume SORT_IN_TEMPDB
+				case "SORT_IN_TEMPDB", "DROP_EXISTING":
+					optKind := "SortInTempDB"
+					if optName == "DROP_EXISTING" {
+						optKind = "DropExisting"
+					}
+					p.nextToken() // consume option name
 					if p.curTok.Type == TokenEquals {
 						p.nextToken() // consume =
 					}
@@ -7073,8 +7077,22 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 						p.nextToken()
 					}
 					stmt.IndexOptions = append(stmt.IndexOptions, &ast.IndexStateOption{
-						OptionKind:  "SortInTempDB",
+						OptionKind:  optKind,
 						OptionState: state,
+					})
+
+				case "MAXDOP":
+					p.nextToken() // consume MAXDOP
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, &ast.IndexExpressionOption{
+						OptionKind: "MaxDop",
+						Expression: expr,
 					})
 
 				case "ORDER":
@@ -7121,13 +7139,31 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 		}
 	}
 
-	// Skip optional ON partition clause
+	// Parse optional ON filegroup/partition scheme
 	if p.curTok.Type == TokenOn {
-		p.nextToken()
-		// Skip to semicolon
-		for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
-			p.nextToken()
+		p.nextToken() // consume ON
+		fgps := &ast.FileGroupOrPartitionScheme{
+			Name: &ast.IdentifierOrValueExpression{
+				Identifier: p.parseIdentifier(),
+			},
 		}
+		fgps.Name.Value = fgps.Name.Identifier.Value
+		// Check for partition columns
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				fgps.PartitionSchemeColumns = append(fgps.PartitionSchemeColumns, p.parseIdentifier())
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+		stmt.OnFileGroupOrPartitionScheme = fgps
 	}
 
 	// Skip optional semicolon
@@ -8893,6 +8929,9 @@ func createColumnStoreIndexStatementToJSON(s *ast.CreateColumnStoreIndexStatemen
 		}
 		node["OrderedColumns"] = cols
 	}
+	if s.OnFileGroupOrPartitionScheme != nil {
+		node["OnFileGroupOrPartitionScheme"] = fileGroupOrPartitionSchemeToJSON(s.OnFileGroupOrPartitionScheme)
+	}
 	return node
 }
 
@@ -8927,6 +8966,15 @@ func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
 		}
+	case *ast.IndexExpressionOption:
+		node := jsonNode{
+			"$type":      "IndexExpressionOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(o.Expression)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownIndexOption"}
 	}
