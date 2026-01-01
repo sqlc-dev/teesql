@@ -3574,9 +3574,81 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			indexDef := &ast.IndexDefinition{
 				IndexType: &ast.IndexType{},
 			}
-			// Parse index name
-			if p.curTok.Type == TokenIdent {
+			// Parse index name (skip if it's CLUSTERED/NONCLUSTERED)
+			idxUpper := strings.ToUpper(p.curTok.Literal)
+			if p.curTok.Type == TokenIdent && idxUpper != "CLUSTERED" && idxUpper != "NONCLUSTERED" && p.curTok.Type != TokenLParen {
 				indexDef.Name = p.parseIdentifier()
+			}
+			// Parse optional CLUSTERED/NONCLUSTERED
+			if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
+				indexDef.IndexType.IndexTypeKind = "Clustered"
+				p.nextToken()
+			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
+				indexDef.IndexType.IndexTypeKind = "NonClustered"
+				p.nextToken()
+			}
+			// Parse optional column list: (col1 [ASC|DESC], ...)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colWithSort := &ast.ColumnWithSortOrder{
+						SortOrder: ast.SortOrderNotSpecified,
+					}
+					// Parse column name
+					colRef := &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Identifiers: []*ast.Identifier{p.parseIdentifier()},
+						},
+					}
+					colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
+					colWithSort.Column = colRef
+
+					// Parse optional ASC/DESC
+					if strings.ToUpper(p.curTok.Literal) == "ASC" {
+						colWithSort.SortOrder = ast.SortOrderAscending
+						p.nextToken()
+					} else if strings.ToUpper(p.curTok.Literal) == "DESC" {
+						colWithSort.SortOrder = ast.SortOrderDescending
+						p.nextToken()
+					}
+					indexDef.Columns = append(indexDef.Columns, colWithSort)
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			// Parse optional INCLUDE clause
+			if strings.ToUpper(p.curTok.Literal) == "INCLUDE" {
+				p.nextToken() // consume INCLUDE
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						colRef := &ast.ColumnReferenceExpression{
+							ColumnType: "Regular",
+							MultiPartIdentifier: &ast.MultiPartIdentifier{
+								Identifiers: []*ast.Identifier{p.parseIdentifier()},
+							},
+						}
+						colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
+						indexDef.IncludeColumns = append(indexDef.IncludeColumns, colRef)
+
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
 			}
 			col.Index = indexDef
 		} else if upperLit == "SPARSE" {
