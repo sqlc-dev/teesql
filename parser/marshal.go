@@ -3140,6 +3140,20 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							DataCompressionOption: opt,
 							OptionKind:            "DataCompression",
 						})
+					} else if optionName == "MEMORY_OPTIMIZED" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						stateUpper := strings.ToUpper(p.curTok.Literal)
+						state := "On"
+						if stateUpper == "OFF" {
+							state = "Off"
+						}
+						p.nextToken() // consume ON/OFF
+						stmt.Options = append(stmt.Options, &ast.MemoryOptimizedTableOption{
+							OptionKind:  "MemoryOptimized",
+							OptionState: state,
+						})
 					} else {
 						// Skip unknown option value
 						if p.curTok.Type == TokenEquals {
@@ -3352,8 +3366,14 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				p.nextToken()
 			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 				constraint.Clustered = false
-				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 				p.nextToken()
+				// Check for HASH suffix
+				if strings.ToUpper(p.curTok.Literal) == "HASH" {
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+					p.nextToken()
+				} else {
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+				}
 			}
 			// Parse WITH (index_options)
 			if strings.ToUpper(p.curTok.Literal) == "WITH" {
@@ -3384,8 +3404,14 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				p.nextToken()
 			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 				constraint.Clustered = false
-				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 				p.nextToken()
+				// Check for HASH suffix
+				if strings.ToUpper(p.curTok.Literal) == "HASH" {
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+					p.nextToken()
+				} else {
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+				}
 			}
 			// Parse WITH (index_options)
 			if strings.ToUpper(p.curTok.Literal) == "WITH" {
@@ -4798,8 +4824,10 @@ func uniqueConstraintToJSON(c *ast.UniqueConstraintDefinition) jsonNode {
 		"$type":        "UniqueConstraintDefinition",
 		"IsPrimaryKey": c.IsPrimaryKey,
 	}
-	// Output Clustered if it's true, or if IndexType is set (meaning NONCLUSTERED was explicitly specified)
-	if c.Clustered || c.IndexType != nil {
+	// Output Clustered if it's true, or if IndexType is NonClustered (not Hash variants)
+	if c.Clustered {
+		node["Clustered"] = c.Clustered
+	} else if c.IndexType != nil && (c.IndexType.IndexTypeKind == "NonClustered" || c.IndexType.IndexTypeKind == "Clustered") {
 		node["Clustered"] = c.Clustered
 	}
 	// Output IsEnforced if it's explicitly set
@@ -7554,6 +7582,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 
 func (p *Parser) getIndexOptionKind(optionName string) string {
 	optionMap := map[string]string{
+		"BUCKET_COUNT":                "BucketCount",
 		"PAD_INDEX":                   "PadIndex",
 		"FILLFACTOR":                  "FillFactor",
 		"SORT_IN_TEMPDB":              "SortInTempDB",

@@ -2915,7 +2915,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				ConstraintIdentifier: constraintName,
 				IsPrimaryKey:         true,
 			}
-			// Parse optional CLUSTERED/NONCLUSTERED
+			// Parse optional CLUSTERED/NONCLUSTERED/HASH
 			for {
 				upperOpt := strings.ToUpper(p.curTok.Literal)
 				if upperOpt == "CLUSTERED" {
@@ -2924,7 +2924,17 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken()
 				} else if upperOpt == "NONCLUSTERED" {
 					constraint.Clustered = false
-					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					p.nextToken()
+					// Check for HASH suffix
+					if strings.ToUpper(p.curTok.Literal) == "HASH" {
+						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+						p.nextToken()
+					} else {
+						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					}
+				} else if upperOpt == "HASH" {
+					// HASH without NONCLUSTERED
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
 					p.nextToken()
 				} else {
 					break
@@ -2967,6 +2977,34 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken()
 				}
 			}
+			// Parse WITH (index_options)
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						optionName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						option := &ast.IndexExpressionOption{
+							OptionKind: convertIndexOptionKind(optionName),
+							Expression: expr,
+						}
+						constraint.IndexOptions = append(constraint.IndexOptions, option)
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
+				}
+			}
 			// Parse NOT ENFORCED
 			if strings.ToUpper(p.curTok.Literal) == "NOT" {
 				p.nextToken()
@@ -2987,7 +3025,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				ConstraintIdentifier: constraintName,
 				IsPrimaryKey:         false,
 			}
-			// Parse optional CLUSTERED/NONCLUSTERED
+			// Parse optional CLUSTERED/NONCLUSTERED/HASH
 			for {
 				upperOpt := strings.ToUpper(p.curTok.Literal)
 				if upperOpt == "CLUSTERED" {
@@ -2996,7 +3034,17 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken()
 				} else if upperOpt == "NONCLUSTERED" {
 					constraint.Clustered = false
-					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					p.nextToken()
+					// Check for HASH suffix
+					if strings.ToUpper(p.curTok.Literal) == "HASH" {
+						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+						p.nextToken()
+					} else {
+						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+					}
+				} else if upperOpt == "HASH" {
+					// HASH without NONCLUSTERED
+					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
 					p.nextToken()
 				} else {
 					break
@@ -3037,6 +3085,34 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				}
 				if p.curTok.Type == TokenRParen {
 					p.nextToken()
+				}
+			}
+			// Parse WITH (index_options)
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						optionName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						expr, _ := p.parseScalarExpression()
+						option := &ast.IndexExpressionOption{
+							OptionKind: convertIndexOptionKind(optionName),
+							Expression: expr,
+						}
+						constraint.IndexOptions = append(constraint.IndexOptions, option)
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
 				}
 			}
 			// Parse NOT ENFORCED

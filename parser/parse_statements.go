@@ -238,14 +238,23 @@ func (p *Parser) parseTableConstraint() (ast.TableConstraint, error) {
 		constraint := &ast.UniqueConstraintDefinition{
 			IsPrimaryKey: true,
 		}
-		// Parse optional CLUSTERED/NONCLUSTERED
+		// Parse optional CLUSTERED/NONCLUSTERED/HASH
 		if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 			constraint.Clustered = true
 			constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
 			p.nextToken()
 		} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 			constraint.Clustered = false
-			constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+			p.nextToken()
+			// Check for HASH suffix
+			if strings.ToUpper(p.curTok.Literal) == "HASH" {
+				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+				p.nextToken()
+			} else {
+				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+			}
+		} else if strings.ToUpper(p.curTok.Literal) == "HASH" {
+			constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
 			p.nextToken()
 		}
 		// Parse the column list
@@ -283,6 +292,34 @@ func (p *Parser) parseTableConstraint() (ast.TableConstraint, error) {
 			}
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
+			}
+		}
+		// Parse WITH (index_options)
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optionName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					expr, _ := p.parseScalarExpression()
+					option := &ast.IndexExpressionOption{
+						OptionKind: p.getIndexOptionKind(optionName),
+						Expression: expr,
+					}
+					constraint.IndexOptions = append(constraint.IndexOptions, option)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
 			}
 		}
 		return constraint, nil
@@ -291,14 +328,23 @@ func (p *Parser) parseTableConstraint() (ast.TableConstraint, error) {
 		constraint := &ast.UniqueConstraintDefinition{
 			IsPrimaryKey: false,
 		}
-		// Parse optional CLUSTERED/NONCLUSTERED
+		// Parse optional CLUSTERED/NONCLUSTERED/HASH
 		if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 			constraint.Clustered = true
 			constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
 			p.nextToken()
 		} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 			constraint.Clustered = false
-			constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+			p.nextToken()
+			// Check for HASH suffix
+			if strings.ToUpper(p.curTok.Literal) == "HASH" {
+				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+				p.nextToken()
+			} else {
+				constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+			}
+		} else if strings.ToUpper(p.curTok.Literal) == "HASH" {
+			constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
 			p.nextToken()
 		}
 		// Parse the column list
@@ -336,6 +382,34 @@ func (p *Parser) parseTableConstraint() (ast.TableConstraint, error) {
 			}
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
+			}
+		}
+		// Parse WITH (index_options)
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optionName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					expr, _ := p.parseScalarExpression()
+					option := &ast.IndexExpressionOption{
+						OptionKind: p.getIndexOptionKind(optionName),
+						Expression: expr,
+					}
+					constraint.IndexOptions = append(constraint.IndexOptions, option)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
 			}
 		}
 		return constraint, nil
