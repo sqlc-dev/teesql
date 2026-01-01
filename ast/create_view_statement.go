@@ -13,6 +13,19 @@ type CreateViewStatement struct {
 func (c *CreateViewStatement) node()      {}
 func (c *CreateViewStatement) statement() {}
 
+// CreateOrAlterViewStatement represents a CREATE OR ALTER VIEW statement.
+type CreateOrAlterViewStatement struct {
+	SchemaObjectName  *SchemaObjectName    `json:"SchemaObjectName,omitempty"`
+	Columns           []*Identifier        `json:"Columns,omitempty"`
+	SelectStatement   *SelectStatement     `json:"SelectStatement,omitempty"`
+	WithCheckOption   bool                 `json:"WithCheckOption"`
+	ViewOptions       []ViewOption         `json:"ViewOptions,omitempty"`
+	IsMaterialized    bool                 `json:"IsMaterialized"`
+}
+
+func (c *CreateOrAlterViewStatement) node()      {}
+func (c *CreateOrAlterViewStatement) statement() {}
+
 // ViewOption is an interface for different view option types.
 type ViewOption interface {
 	viewOption()

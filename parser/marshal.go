@@ -78,10 +78,14 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return beginConversationTimerStatementToJSON(s)
 	case *ast.CreateViewStatement:
 		return createViewStatementToJSON(s)
+	case *ast.CreateOrAlterViewStatement:
+		return createOrAlterViewStatementToJSON(s)
 	case *ast.CreateSchemaStatement:
 		return createSchemaStatementToJSON(s)
 	case *ast.CreateProcedureStatement:
 		return createProcedureStatementToJSON(s)
+	case *ast.CreateOrAlterProcedureStatement:
+		return createOrAlterProcedureStatementToJSON(s)
 	case *ast.AlterProcedureStatement:
 		return alterProcedureStatementToJSON(s)
 	case *ast.CreateRoleStatement:
@@ -380,6 +384,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTriggerStatementToJSON(s)
 	case *ast.CreateTriggerStatement:
 		return createTriggerStatementToJSON(s)
+	case *ast.CreateOrAlterTriggerStatement:
+		return createOrAlterTriggerStatementToJSON(s)
 	case *ast.EnableDisableTriggerStatement:
 		return enableDisableTriggerStatementToJSON(s)
 	case *ast.EndConversationStatement:
@@ -2947,6 +2953,35 @@ func beginConversationTimerStatementToJSON(s *ast.BeginConversationTimerStatemen
 func createViewStatementToJSON(s *ast.CreateViewStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateViewStatement",
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, c := range s.Columns {
+			cols[i] = identifierToJSON(c)
+		}
+		node["Columns"] = cols
+	}
+	if len(s.ViewOptions) > 0 {
+		opts := make([]jsonNode, len(s.ViewOptions))
+		for i, opt := range s.ViewOptions {
+			opts[i] = viewOptionToJSON(opt)
+		}
+		node["ViewOptions"] = opts
+	}
+	if s.SelectStatement != nil {
+		node["SelectStatement"] = selectStatementToJSON(s.SelectStatement)
+	}
+	node["WithCheckOption"] = s.WithCheckOption
+	node["IsMaterialized"] = s.IsMaterialized
+	return node
+}
+
+func createOrAlterViewStatementToJSON(s *ast.CreateOrAlterViewStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateOrAlterViewStatement",
 	}
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
@@ -6339,6 +6374,37 @@ func createProcedureStatementToJSON(s *ast.CreateProcedureStatement) jsonNode {
 	return node
 }
 
+func createOrAlterProcedureStatementToJSON(s *ast.CreateOrAlterProcedureStatement) jsonNode {
+	node := jsonNode{
+		"$type":            "CreateOrAlterProcedureStatement",
+		"IsForReplication": s.IsForReplication,
+	}
+	if s.ProcedureReference != nil {
+		node["ProcedureReference"] = procedureReferenceToJSON(s.ProcedureReference)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			options[i] = procedureOptionToJSON(opt)
+		}
+		node["Options"] = options
+	}
+	if len(s.Parameters) > 0 {
+		params := make([]jsonNode, len(s.Parameters))
+		for i, p := range s.Parameters {
+			params[i] = procedureParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	if s.MethodSpecifier != nil {
+		node["MethodSpecifier"] = methodSpecifierToJSON(s.MethodSpecifier)
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
 func procedureOptionToJSON(opt ast.ProcedureOptionBase) jsonNode {
 	switch o := opt.(type) {
 	case *ast.ProcedureOption:
@@ -8553,21 +8619,57 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 }
 
 // parseCreateOrAlterProcedureStatement parses a CREATE OR ALTER PROCEDURE statement
-func (p *Parser) parseCreateOrAlterProcedureStatement() (*ast.CreateProcedureStatement, error) {
-	// For now, delegate to regular CREATE PROCEDURE parsing
-	return p.parseCreateProcedureStatement()
+func (p *Parser) parseCreateOrAlterProcedureStatement() (*ast.CreateOrAlterProcedureStatement, error) {
+	// Parse as regular CREATE PROCEDURE, then convert to CreateOrAlter type
+	stmt, err := p.parseCreateProcedureStatement()
+	if err != nil {
+		return nil, err
+	}
+	return &ast.CreateOrAlterProcedureStatement{
+		ProcedureReference: stmt.ProcedureReference,
+		Parameters:         stmt.Parameters,
+		StatementList:      stmt.StatementList,
+		IsForReplication:   stmt.IsForReplication,
+		Options:            stmt.Options,
+		MethodSpecifier:    stmt.MethodSpecifier,
+	}, nil
 }
 
 // parseCreateOrAlterViewStatement parses a CREATE OR ALTER VIEW statement
-func (p *Parser) parseCreateOrAlterViewStatement() (*ast.CreateViewStatement, error) {
-	// For now, delegate to regular CREATE VIEW parsing
-	return p.parseCreateViewStatement()
+func (p *Parser) parseCreateOrAlterViewStatement() (*ast.CreateOrAlterViewStatement, error) {
+	// Parse as regular CREATE VIEW, then convert to CreateOrAlter type
+	stmt, err := p.parseCreateViewStatement()
+	if err != nil {
+		return nil, err
+	}
+	return &ast.CreateOrAlterViewStatement{
+		SchemaObjectName:  stmt.SchemaObjectName,
+		Columns:           stmt.Columns,
+		SelectStatement:   stmt.SelectStatement,
+		WithCheckOption:   stmt.WithCheckOption,
+		ViewOptions:       stmt.ViewOptions,
+		IsMaterialized:    stmt.IsMaterialized,
+	}, nil
 }
 
 // parseCreateOrAlterTriggerStatement parses a CREATE OR ALTER TRIGGER statement
-func (p *Parser) parseCreateOrAlterTriggerStatement() (*ast.CreateTriggerStatement, error) {
-	// For now, delegate to regular CREATE TRIGGER parsing
-	return p.parseCreateTriggerStatement()
+func (p *Parser) parseCreateOrAlterTriggerStatement() (*ast.CreateOrAlterTriggerStatement, error) {
+	// Parse as regular CREATE TRIGGER, then convert to CreateOrAlter type
+	stmt, err := p.parseCreateTriggerStatement()
+	if err != nil {
+		return nil, err
+	}
+	return &ast.CreateOrAlterTriggerStatement{
+		Name:                stmt.Name,
+		TriggerObject:       stmt.TriggerObject,
+		TriggerType:         stmt.TriggerType,
+		TriggerActions:      stmt.TriggerActions,
+		Options:             stmt.Options,
+		WithAppend:          stmt.WithAppend,
+		IsNotForReplication: stmt.IsNotForReplication,
+		MethodSpecifier:     stmt.MethodSpecifier,
+		StatementList:       stmt.StatementList,
+	}, nil
 }
 
 // parseCreateTriggerStatement parses a CREATE TRIGGER statement
@@ -9550,6 +9652,39 @@ func alterTriggerStatementToJSON(s *ast.AlterTriggerStatement) jsonNode {
 func createTriggerStatementToJSON(s *ast.CreateTriggerStatement) jsonNode {
 	node := jsonNode{
 		"$type":               "CreateTriggerStatement",
+		"TriggerType":         s.TriggerType,
+		"WithAppend":          s.WithAppend,
+		"IsNotForReplication": s.IsNotForReplication,
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if s.TriggerObject != nil {
+		node["TriggerObject"] = triggerObjectToJSON(s.TriggerObject)
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			options[i] = triggerOptionTypeToJSON(o)
+		}
+		node["Options"] = options
+	}
+	if len(s.TriggerActions) > 0 {
+		actions := make([]jsonNode, len(s.TriggerActions))
+		for i, a := range s.TriggerActions {
+			actions[i] = triggerActionToJSON(a)
+		}
+		node["TriggerActions"] = actions
+	}
+	if s.StatementList != nil {
+		node["StatementList"] = statementListToJSON(s.StatementList)
+	}
+	return node
+}
+
+func createOrAlterTriggerStatementToJSON(s *ast.CreateOrAlterTriggerStatement) jsonNode {
+	node := jsonNode{
+		"$type":               "CreateOrAlterTriggerStatement",
 		"TriggerType":         s.TriggerType,
 		"WithAppend":          s.WithAppend,
 		"IsNotForReplication": s.IsNotForReplication,

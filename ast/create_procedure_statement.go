@@ -13,6 +13,19 @@ type CreateProcedureStatement struct {
 func (c *CreateProcedureStatement) node()      {}
 func (c *CreateProcedureStatement) statement() {}
 
+// CreateOrAlterProcedureStatement represents a CREATE OR ALTER PROCEDURE statement.
+type CreateOrAlterProcedureStatement struct {
+	ProcedureReference *ProcedureReference
+	Parameters         []*ProcedureParameter
+	StatementList      *StatementList
+	IsForReplication   bool
+	Options            []ProcedureOptionBase
+	MethodSpecifier    *MethodSpecifier
+}
+
+func (c *CreateOrAlterProcedureStatement) node()      {}
+func (c *CreateOrAlterProcedureStatement) statement() {}
+
 // ProcedureParameter represents a parameter in a procedure definition.
 type ProcedureParameter struct {
 	VariableName *Identifier
