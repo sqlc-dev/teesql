@@ -437,7 +437,9 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 	// Consume INDEX
 	p.nextToken()
 
-	indexDef := &ast.IndexDefinition{}
+	indexDef := &ast.IndexDefinition{
+		IndexType: &ast.IndexType{}, // Default empty index type
+	}
 
 	// Parse index name
 	if p.curTok.Type == TokenIdent {
@@ -513,15 +515,43 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				colIdent := p.parseIdentifier()
-				includeCol := &ast.ColumnReferenceExpression{
-					ColumnType: "Regular",
-					MultiPartIdentifier: &ast.MultiPartIdentifier{
-						Count: 1,
-						Identifiers: []*ast.Identifier{colIdent},
-					},
+				// Check for graph pseudo columns like $node_id, $edge_id, $from_id, $to_id
+				upperLit := strings.ToUpper(p.curTok.Literal)
+				if upperLit == "$NODE_ID" {
+					includeCol := &ast.ColumnReferenceExpression{
+						ColumnType: "PseudoColumnGraphNodeId",
+					}
+					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
+					p.nextToken()
+				} else if upperLit == "$EDGE_ID" {
+					includeCol := &ast.ColumnReferenceExpression{
+						ColumnType: "PseudoColumnGraphEdgeId",
+					}
+					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
+					p.nextToken()
+				} else if upperLit == "$FROM_ID" {
+					includeCol := &ast.ColumnReferenceExpression{
+						ColumnType: "PseudoColumnFromNodeId",
+					}
+					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
+					p.nextToken()
+				} else if upperLit == "$TO_ID" {
+					includeCol := &ast.ColumnReferenceExpression{
+						ColumnType: "PseudoColumnToNodeId",
+					}
+					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
+					p.nextToken()
+				} else {
+					colIdent := p.parseIdentifier()
+					includeCol := &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Count:       1,
+							Identifiers: []*ast.Identifier{colIdent},
+						},
+					}
+					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
 				}
-				indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
 
 				if p.curTok.Type == TokenComma {
 					p.nextToken()

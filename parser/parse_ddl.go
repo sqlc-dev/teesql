@@ -3267,6 +3267,45 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 			}
 
+		case "CONNECTION":
+			// Parse CONNECTION (node1 TO node2, ...)
+			p.nextToken() // consume CONNECTION
+			constraint := &ast.GraphConnectionConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+			}
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					conn := &ast.GraphConnectionBetweenNodes{}
+					// Parse FromNode
+					fromNode, err := p.parseSchemaObjectName()
+					if err != nil {
+						return nil, err
+					}
+					conn.FromNode = fromNode
+					// Expect TO
+					if strings.ToUpper(p.curTok.Literal) == "TO" {
+						p.nextToken() // consume TO
+					}
+					// Parse ToNode
+					toNode, err := p.parseSchemaObjectName()
+					if err != nil {
+						return nil, err
+					}
+					conn.ToNode = toNode
+					constraint.FromNodeToNodeList = append(constraint.FromNodeToNodeList, conn)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+
 		default:
 			// Unknown constraint type - skip to end of statement
 			p.skipToEndOfStatement()

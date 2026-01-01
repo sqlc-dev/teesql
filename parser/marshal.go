@@ -58,6 +58,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return updateStatisticsStatementToJSON(s)
 	case *ast.DeleteStatement:
 		return deleteStatementToJSON(s)
+	case *ast.MergeStatement:
+		return mergeStatementToJSON(s)
 	case *ast.DeclareVariableStatement:
 		return declareVariableStatementToJSON(s)
 	case *ast.DeclareTableVariableStatement:
@@ -1963,6 +1965,14 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		node["ForPath"] = r.ForPath
 		return node
+	case *ast.JoinParenthesisTableReference:
+		node := jsonNode{
+			"$type": "JoinParenthesisTableReference",
+		}
+		if r.Join != nil {
+			node["Join"] = tableReferenceToJSON(r.Join)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownTableReference"}
 	}
@@ -2137,9 +2147,52 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		return node
 	case *ast.SourceDeclaration:
 		return sourceDeclarationToJSON(e)
+	case *ast.GraphMatchPredicate:
+		node := jsonNode{
+			"$type": "GraphMatchPredicate",
+		}
+		if e.Expression != nil {
+			node["Expression"] = graphMatchExpressionToJSON(e.Expression)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownBooleanExpression"}
 	}
+}
+
+func graphMatchExpressionToJSON(expr ast.GraphMatchExpression) jsonNode {
+	switch e := expr.(type) {
+	case *ast.GraphMatchCompositeExpression:
+		node := jsonNode{
+			"$type": "GraphMatchCompositeExpression",
+		}
+		if e.LeftNode != nil {
+			node["LeftNode"] = graphMatchNodeExpressionToJSON(e.LeftNode)
+		}
+		if e.Edge != nil {
+			node["Edge"] = identifierToJSON(e.Edge)
+		}
+		if e.RightNode != nil {
+			node["RightNode"] = graphMatchNodeExpressionToJSON(e.RightNode)
+		}
+		node["ArrowOnRight"] = e.ArrowOnRight
+		return node
+	case *ast.GraphMatchNodeExpression:
+		return graphMatchNodeExpressionToJSON(e)
+	default:
+		return jsonNode{"$type": "UnknownGraphMatchExpression"}
+	}
+}
+
+func graphMatchNodeExpressionToJSON(expr *ast.GraphMatchNodeExpression) jsonNode {
+	node := jsonNode{
+		"$type": "GraphMatchNodeExpression",
+	}
+	if expr.Node != nil {
+		node["Node"] = identifierToJSON(expr.Node)
+	}
+	node["UsesLastNode"] = expr.UsesLastNode
+	return node
 }
 
 func groupByClauseToJSON(gbc *ast.GroupByClause) jsonNode {
@@ -2634,6 +2687,92 @@ func deleteStatementToJSON(s *ast.DeleteStatement) jsonNode {
 		node["OptimizerHints"] = hints
 	}
 	return node
+}
+
+func mergeStatementToJSON(s *ast.MergeStatement) jsonNode {
+	node := jsonNode{
+		"$type": "MergeStatement",
+	}
+	if s.MergeSpecification != nil {
+		node["MergeSpecification"] = mergeSpecificationToJSON(s.MergeSpecification)
+	}
+	return node
+}
+
+func mergeSpecificationToJSON(spec *ast.MergeSpecification) jsonNode {
+	node := jsonNode{
+		"$type": "MergeSpecification",
+	}
+	if spec.TableReference != nil {
+		node["TableReference"] = tableReferenceToJSON(spec.TableReference)
+	}
+	if spec.SearchCondition != nil {
+		node["SearchCondition"] = booleanExpressionToJSON(spec.SearchCondition)
+	}
+	if len(spec.ActionClauses) > 0 {
+		clauses := make([]jsonNode, len(spec.ActionClauses))
+		for i, c := range spec.ActionClauses {
+			clauses[i] = mergeActionClauseToJSON(c)
+		}
+		node["ActionClauses"] = clauses
+	}
+	if spec.Target != nil {
+		node["Target"] = tableReferenceToJSON(spec.Target)
+	}
+	if spec.OutputClause != nil {
+		node["OutputClause"] = outputClauseToJSON(spec.OutputClause)
+	}
+	return node
+}
+
+func mergeActionClauseToJSON(c *ast.MergeActionClause) jsonNode {
+	node := jsonNode{
+		"$type":     "MergeActionClause",
+		"Condition": c.Condition,
+	}
+	if c.SearchCondition != nil {
+		node["SearchCondition"] = booleanExpressionToJSON(c.SearchCondition)
+	}
+	if c.Action != nil {
+		node["Action"] = mergeActionToJSON(c.Action)
+	}
+	return node
+}
+
+func mergeActionToJSON(a ast.MergeAction) jsonNode {
+	switch action := a.(type) {
+	case *ast.DeleteMergeAction:
+		return jsonNode{"$type": "DeleteMergeAction"}
+	case *ast.UpdateMergeAction:
+		node := jsonNode{"$type": "UpdateMergeAction"}
+		if len(action.SetClauses) > 0 {
+			clauses := make([]jsonNode, len(action.SetClauses))
+			for i, sc := range action.SetClauses {
+				clauses[i] = setClauseToJSON(sc)
+			}
+			node["SetClauses"] = clauses
+		}
+		return node
+	case *ast.InsertMergeAction:
+		node := jsonNode{"$type": "InsertMergeAction"}
+		if len(action.Columns) > 0 {
+			cols := make([]jsonNode, len(action.Columns))
+			for i, col := range action.Columns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		if len(action.Values) > 0 {
+			vals := make([]jsonNode, len(action.Values))
+			for i, val := range action.Values {
+				vals[i] = scalarExpressionToJSON(val)
+			}
+			node["Values"] = vals
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownMergeAction"}
+	}
 }
 
 func withCtesAndXmlNamespacesToJSON(w *ast.WithCtesAndXmlNamespaces) jsonNode {
@@ -3326,6 +3465,14 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 			if constraint != nil {
 				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 			}
+		} else if upperLit == "INDEX" {
+			// Parse inline index definition
+			indexDef, err := p.parseInlineIndexDefinition()
+			if err != nil {
+				p.skipToEndOfStatement()
+				return stmt, nil
+			}
+			stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
 		} else {
 			// Parse column definition
 			colDef, err := p.parseColumnDefinition()
@@ -3459,6 +3606,17 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 					p.nextToken()
 				}
 			}
+		} else if p.curTok.Type == TokenAs {
+			// Parse AS NODE or AS EDGE
+			p.nextToken() // consume AS
+			nodeOrEdge := strings.ToUpper(p.curTok.Literal)
+			if nodeOrEdge == "NODE" {
+				stmt.AsNode = true
+				p.nextToken()
+			} else if nodeOrEdge == "EDGE" {
+				stmt.AsEdge = true
+				p.nextToken()
+			}
 		} else {
 			break
 		}
@@ -3470,6 +3628,384 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 	}
 
 	return stmt, nil
+}
+
+// parseMergeStatement parses a MERGE statement
+func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
+	// Consume MERGE
+	p.nextToken()
+
+	stmt := &ast.MergeStatement{
+		MergeSpecification: &ast.MergeSpecification{},
+	}
+
+	// Optional INTO keyword
+	if strings.ToUpper(p.curTok.Literal) == "INTO" {
+		p.nextToken()
+	}
+
+	// Parse target table
+	target, err := p.parseSingleTableReference()
+	if err != nil {
+		return nil, err
+	}
+	stmt.MergeSpecification.Target = target
+
+	// Expect USING
+	if strings.ToUpper(p.curTok.Literal) == "USING" {
+		p.nextToken()
+	}
+
+	// Parse source table reference (may be parenthesized join)
+	sourceRef, err := p.parseMergeSourceTableReference()
+	if err != nil {
+		return nil, err
+	}
+	stmt.MergeSpecification.TableReference = sourceRef
+
+	// Expect ON
+	if p.curTok.Type == TokenOn {
+		p.nextToken()
+	}
+
+	// Parse ON condition - check for MATCH predicate
+	if strings.ToUpper(p.curTok.Literal) == "MATCH" {
+		matchPred, err := p.parseGraphMatchPredicate()
+		if err != nil {
+			return nil, err
+		}
+		stmt.MergeSpecification.SearchCondition = matchPred
+	} else {
+		cond, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.MergeSpecification.SearchCondition = cond
+	}
+
+	// Parse WHEN clauses
+	for strings.ToUpper(p.curTok.Literal) == "WHEN" {
+		clause, err := p.parseMergeActionClause()
+		if err != nil {
+			return nil, err
+		}
+		stmt.MergeSpecification.ActionClauses = append(stmt.MergeSpecification.ActionClauses, clause)
+	}
+
+	// Parse optional OUTPUT clause
+	if strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		output, _, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		stmt.MergeSpecification.OutputClause = output
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseMergeSourceTableReference parses the source table reference in a MERGE statement
+func (p *Parser) parseMergeSourceTableReference() (ast.TableReference, error) {
+	// Check for parenthesized expression (usually joins)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		// Parse the inner join expression
+		inner, err := p.parseMergeJoinTableReference()
+		if err != nil {
+			return nil, err
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+		return &ast.JoinParenthesisTableReference{Join: inner}, nil
+	}
+	return p.parseSingleTableReference()
+}
+
+// parseMergeJoinTableReference parses a table reference which may include joins
+func (p *Parser) parseMergeJoinTableReference() (ast.TableReference, error) {
+	left, err := p.parseSingleTableReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for JOIN
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "JOIN" || upperLit == "INNER" || upperLit == "LEFT" || upperLit == "RIGHT" || upperLit == "FULL" || upperLit == "CROSS" {
+			join := &ast.QualifiedJoin{
+				FirstTableReference: left,
+				JoinHint:            "None",
+			}
+
+			// Parse join type
+			switch upperLit {
+			case "INNER", "JOIN":
+				join.QualifiedJoinType = "Inner"
+				if upperLit == "INNER" {
+					p.nextToken() // consume INNER
+				}
+			case "LEFT":
+				join.QualifiedJoinType = "LeftOuter"
+				p.nextToken() // consume LEFT
+				if strings.ToUpper(p.curTok.Literal) == "OUTER" {
+					p.nextToken() // consume OUTER
+				}
+			case "RIGHT":
+				join.QualifiedJoinType = "RightOuter"
+				p.nextToken() // consume RIGHT
+				if strings.ToUpper(p.curTok.Literal) == "OUTER" {
+					p.nextToken() // consume OUTER
+				}
+			case "FULL":
+				join.QualifiedJoinType = "FullOuter"
+				p.nextToken() // consume FULL
+				if strings.ToUpper(p.curTok.Literal) == "OUTER" {
+					p.nextToken() // consume OUTER
+				}
+			case "CROSS":
+				join.QualifiedJoinType = "CrossJoin"
+				p.nextToken() // consume CROSS
+			}
+
+			// Consume JOIN keyword if present
+			if strings.ToUpper(p.curTok.Literal) == "JOIN" {
+				p.nextToken()
+			}
+
+			// Parse the right side of the join
+			right, err := p.parseSingleTableReference()
+			if err != nil {
+				return nil, err
+			}
+			join.SecondTableReference = right
+
+			// Parse ON condition
+			if p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+				cond, err := p.parseBooleanExpression()
+				if err != nil {
+					return nil, err
+				}
+				join.SearchCondition = cond
+			}
+
+			left = join
+		} else {
+			break
+		}
+	}
+
+	return left, nil
+}
+
+// parseGraphMatchPredicate parses MATCH (node-edge->node) graph pattern
+func (p *Parser) parseGraphMatchPredicate() (*ast.GraphMatchPredicate, error) {
+	// Consume MATCH
+	p.nextToken()
+
+	pred := &ast.GraphMatchPredicate{}
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after MATCH, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse the graph pattern: Node-(Edge)->Node or Node<-(Edge)-Node
+	expr, err := p.parseGraphMatchExpression()
+	if err != nil {
+		return nil, err
+	}
+	pred.Expression = expr
+
+	// Expect )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	return pred, nil
+}
+
+// parseGraphMatchExpression parses a graph match expression like Node-(Edge)->Node
+func (p *Parser) parseGraphMatchExpression() (ast.GraphMatchExpression, error) {
+	composite := &ast.GraphMatchCompositeExpression{}
+
+	// Parse left node
+	leftNode := &ast.GraphMatchNodeExpression{
+		Node: p.parseIdentifier(),
+	}
+	composite.LeftNode = leftNode
+
+	// Check for arrow direction at the start: <- means arrow on left
+	arrowOnRight := true
+	if p.curTok.Type == TokenLessThan {
+		arrowOnRight = false
+		p.nextToken() // consume <
+		if p.curTok.Type == TokenMinus {
+			p.nextToken() // consume -
+		}
+	} else if p.curTok.Type == TokenMinus {
+		p.nextToken() // consume -
+	}
+
+	// Parse edge - may be in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		composite.Edge = p.parseIdentifier()
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	} else {
+		composite.Edge = p.parseIdentifier()
+	}
+
+	// Check for arrow direction at the end: -> means arrow on right
+	if p.curTok.Type == TokenMinus {
+		p.nextToken() // consume -
+		if p.curTok.Type == TokenGreaterThan {
+			arrowOnRight = true
+			p.nextToken() // consume >
+		}
+	}
+	composite.ArrowOnRight = arrowOnRight
+
+	// Parse right node
+	rightNode := &ast.GraphMatchNodeExpression{
+		Node: p.parseIdentifier(),
+	}
+	composite.RightNode = rightNode
+
+	return composite, nil
+}
+
+// parseMergeActionClause parses a WHEN clause in a MERGE statement
+func (p *Parser) parseMergeActionClause() (*ast.MergeActionClause, error) {
+	// Consume WHEN
+	p.nextToken()
+
+	clause := &ast.MergeActionClause{}
+
+	// Parse condition: MATCHED, NOT MATCHED, NOT MATCHED BY SOURCE, NOT MATCHED BY TARGET
+	if strings.ToUpper(p.curTok.Literal) == "MATCHED" {
+		clause.Condition = "Matched"
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "NOT" {
+		p.nextToken() // consume NOT
+		if strings.ToUpper(p.curTok.Literal) == "MATCHED" {
+			p.nextToken() // consume MATCHED
+			if strings.ToUpper(p.curTok.Literal) == "BY" {
+				p.nextToken() // consume BY
+				byWhat := strings.ToUpper(p.curTok.Literal)
+				if byWhat == "SOURCE" {
+					clause.Condition = "NotMatchedBySource"
+					p.nextToken()
+				} else if byWhat == "TARGET" {
+					clause.Condition = "NotMatchedByTarget"
+					p.nextToken()
+				}
+			} else {
+				clause.Condition = "NotMatched"
+			}
+		}
+	}
+
+	// Optional AND condition
+	if strings.ToUpper(p.curTok.Literal) == "AND" {
+		p.nextToken()
+		cond, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+		clause.SearchCondition = cond
+	}
+
+	// Expect THEN
+	if strings.ToUpper(p.curTok.Literal) == "THEN" {
+		p.nextToken()
+	}
+
+	// Parse action: DELETE, UPDATE SET, INSERT
+	actionWord := strings.ToUpper(p.curTok.Literal)
+	if actionWord == "DELETE" {
+		p.nextToken()
+		clause.Action = &ast.DeleteMergeAction{}
+	} else if actionWord == "UPDATE" {
+		p.nextToken() // consume UPDATE
+		if strings.ToUpper(p.curTok.Literal) == "SET" {
+			p.nextToken() // consume SET
+		}
+		action := &ast.UpdateMergeAction{}
+		// Parse SET clauses
+		for {
+			setClause, err := p.parseSetClause()
+			if err != nil {
+				break
+			}
+			action.SetClauses = append(action.SetClauses, setClause)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		clause.Action = action
+	} else if actionWord == "INSERT" {
+		p.nextToken() // consume INSERT
+		action := &ast.InsertMergeAction{}
+		// Parse optional column list
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{p.parseIdentifier()},
+						Count:       1,
+					},
+				}
+				action.Columns = append(action.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+		// Parse VALUES
+		if strings.ToUpper(p.curTok.Literal) == "VALUES" {
+			p.nextToken()
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					val, err := p.parseScalarExpression()
+					if err != nil {
+						break
+					}
+					action.Values = append(action.Values, val)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+		}
+		clause.Action = action
+	}
+
+	return clause, nil
 }
 
 func (p *Parser) parseDataCompressionOption() (*ast.DataCompressionOption, error) {
@@ -3937,6 +4473,13 @@ func (p *Parser) parseNamedTableConstraint() (ast.TableConstraint, error) {
 		}
 		constraint.ConstraintIdentifier = constraintName
 		return constraint, nil
+	} else if upperLit == "CONNECTION" {
+		constraint, err := p.parseConnectionConstraint()
+		if err != nil {
+			return nil, err
+		}
+		constraint.ConstraintIdentifier = constraintName
+		return constraint, nil
 	}
 
 	return nil, nil
@@ -4225,6 +4768,54 @@ func (p *Parser) parseCheckConstraint() (*ast.CheckConstraintDefinition, error) 
 			return nil, err
 		}
 		constraint.CheckCondition = cond
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	return constraint, nil
+}
+
+// parseConnectionConstraint parses CONNECTION (node1 TO node2, ...)
+func (p *Parser) parseConnectionConstraint() (*ast.GraphConnectionConstraintDefinition, error) {
+	// Consume CONNECTION
+	p.nextToken()
+
+	constraint := &ast.GraphConnectionConstraintDefinition{}
+
+	// Parse connection pairs
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			conn := &ast.GraphConnectionBetweenNodes{}
+
+			// Parse FromNode
+			fromNode, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			conn.FromNode = fromNode
+
+			// Expect TO
+			if strings.ToUpper(p.curTok.Literal) == "TO" {
+				p.nextToken() // consume TO
+			}
+
+			// Parse ToNode
+			toNode, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			conn.ToNode = toNode
+
+			constraint.FromNodeToNodeList = append(constraint.FromNodeToNodeList, conn)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
 		if p.curTok.Type == TokenRParen {
 			p.nextToken() // consume )
 		}
@@ -5110,9 +5701,42 @@ func tableConstraintToJSON(c ast.TableConstraint) jsonNode {
 		return checkConstraintToJSON(constraint)
 	case *ast.ForeignKeyConstraintDefinition:
 		return foreignKeyConstraintToJSON(constraint)
+	case *ast.GraphConnectionConstraintDefinition:
+		return graphConnectionConstraintToJSON(constraint)
 	default:
 		return jsonNode{"$type": "UnknownTableConstraint"}
 	}
+}
+
+func graphConnectionConstraintToJSON(c *ast.GraphConnectionConstraintDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "GraphConnectionConstraintDefinition",
+	}
+	if len(c.FromNodeToNodeList) > 0 {
+		connections := make([]jsonNode, len(c.FromNodeToNodeList))
+		for i, conn := range c.FromNodeToNodeList {
+			connNode := jsonNode{
+				"$type": "GraphConnectionBetweenNodes",
+			}
+			if conn.FromNode != nil {
+				connNode["FromNode"] = schemaObjectNameToJSON(conn.FromNode)
+			}
+			if conn.ToNode != nil {
+				connNode["ToNode"] = schemaObjectNameToJSON(conn.ToNode)
+			}
+			connections[i] = connNode
+		}
+		node["FromNodeToNodeList"] = connections
+	}
+	deleteAction := c.DeleteAction
+	if deleteAction == "" {
+		deleteAction = "NotSpecified"
+	}
+	node["DeleteAction"] = deleteAction
+	if c.ConstraintIdentifier != nil {
+		node["ConstraintIdentifier"] = identifierToJSON(c.ConstraintIdentifier)
+	}
+	return node
 }
 
 func foreignKeyConstraintToJSON(c *ast.ForeignKeyConstraintDefinition) jsonNode {
