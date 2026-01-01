@@ -1316,6 +1316,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.MultiPartIdentifier != nil {
 			node["MultiPartIdentifier"] = multiPartIdentifierToJSON(e.MultiPartIdentifier)
 		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
+		}
 		return node
 	case *ast.IntegerLiteral:
 		node := jsonNode{
@@ -1401,6 +1404,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["IgnoreRespectNulls"] = idents
 		}
 		node["WithArrayWrapper"] = e.WithArrayWrapper
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
+		}
 		return node
 	case *ast.UserDefinedTypePropertyAccess:
 		node := jsonNode{
@@ -5509,6 +5515,9 @@ func columnReferenceExpressionToJSON(c *ast.ColumnReferenceExpression) jsonNode 
 	}
 	if c.MultiPartIdentifier != nil {
 		node["MultiPartIdentifier"] = multiPartIdentifierToJSON(c.MultiPartIdentifier)
+	}
+	if c.Collation != nil {
+		node["Collation"] = identifierToJSON(c.Collation)
 	}
 	return node
 }

@@ -479,6 +479,19 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		}
 	}
 
+	// Check for COLLATE clause before creating SelectScalarExpression
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		collation := p.parseIdentifier()
+		// Attach collation to the expression
+		switch e := expr.(type) {
+		case *ast.FunctionCall:
+			e.Collation = collation
+		case *ast.ColumnReferenceExpression:
+			e.Collation = collation
+		}
+	}
+
 	sse := &ast.SelectScalarExpression{Expression: expr}
 
 	// Check for column alias: [alias], AS alias, or just alias
@@ -509,7 +522,7 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 	} else if p.curTok.Type == TokenIdent {
 		// Check if this is an alias (not a keyword that starts a new clause)
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "FROM" && upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "INTO" && upper != "UNION" && upper != "EXCEPT" && upper != "INTERSECT" && upper != "GO" {
+		if upper != "FROM" && upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "INTO" && upper != "UNION" && upper != "EXCEPT" && upper != "INTERSECT" && upper != "GO" && upper != "COLLATE" {
 			alias := p.parseIdentifier()
 			sse.ColumnName = &ast.IdentifierOrValueExpression{
 				Value:      alias.Value,

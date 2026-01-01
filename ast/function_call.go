@@ -50,6 +50,7 @@ type FunctionCall struct {
 	OverClause         *OverClause        `json:"OverClause,omitempty"`
 	IgnoreRespectNulls []*Identifier      `json:"IgnoreRespectNulls,omitempty"`
 	WithArrayWrapper   bool               `json:"WithArrayWrapper,omitempty"`
+	Collation          *Identifier        `json:"Collation,omitempty"`
 }
 
 func (*FunctionCall) node()             {}
