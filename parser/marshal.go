@@ -2817,12 +2817,63 @@ func createViewStatementToJSON(s *ast.CreateViewStatement) jsonNode {
 		}
 		node["Columns"] = cols
 	}
+	if len(s.ViewOptions) > 0 {
+		opts := make([]jsonNode, len(s.ViewOptions))
+		for i, opt := range s.ViewOptions {
+			opts[i] = viewOptionToJSON(opt)
+		}
+		node["ViewOptions"] = opts
+	}
 	if s.SelectStatement != nil {
 		node["SelectStatement"] = selectStatementToJSON(s.SelectStatement)
 	}
 	node["WithCheckOption"] = s.WithCheckOption
 	node["IsMaterialized"] = s.IsMaterialized
 	return node
+}
+
+func viewOptionToJSON(opt ast.ViewOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.ViewStatementOption:
+		return jsonNode{
+			"$type":      "ViewOption",
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.ViewDistributionOption:
+		node := jsonNode{
+			"$type":      "ViewDistributionOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			valueNode := jsonNode{
+				"$type": "ViewHashDistributionPolicy",
+			}
+			if o.Value.DistributionColumn != nil {
+				valueNode["DistributionColumn"] = identifierToJSON(o.Value.DistributionColumn)
+			}
+			if len(o.Value.DistributionColumns) > 0 {
+				cols := make([]jsonNode, len(o.Value.DistributionColumns))
+				for i, c := range o.Value.DistributionColumns {
+					// First column is same as DistributionColumn, use $ref
+					if i == 0 && o.Value.DistributionColumn != nil {
+						cols[i] = jsonNode{"$ref": "Identifier"}
+					} else {
+						cols[i] = identifierToJSON(c)
+					}
+				}
+				valueNode["DistributionColumns"] = cols
+			}
+			node["Value"] = valueNode
+		}
+		return node
+	case *ast.ViewForAppendOption:
+		return jsonNode{
+			"$type":      "ViewForAppendOption",
+			"OptionKind": o.OptionKind,
+		}
+	default:
+		return jsonNode{"$type": "UnknownViewOption"}
+	}
 }
 
 func createSchemaStatementToJSON(s *ast.CreateSchemaStatement) jsonNode {

@@ -1789,6 +1789,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateSequenceStatement()
 		case "SPATIAL":
 			return p.parseCreateSpatialIndexStatement()
+		case "MATERIALIZED":
+			return p.parseCreateMaterializedViewStatement()
 		case "SERVER":
 			// Check if it's SERVER ROLE or SERVER AUDIT
 			p.nextToken() // consume SERVER
@@ -2899,7 +2901,7 @@ func (p *Parser) parseCreateViewStatement() (*ast.CreateViewStatement, error) {
 		p.nextToken()
 		// Parse view options
 		for p.curTok.Type == TokenIdent {
-			opt := ast.ViewOption{OptionKind: p.curTok.Literal}
+			opt := &ast.ViewStatementOption{OptionKind: p.curTok.Literal}
 			stmt.ViewOptions = append(stmt.ViewOptions, opt)
 			p.nextToken()
 			if p.curTok.Type == TokenComma {
@@ -2919,6 +2921,104 @@ func (p *Parser) parseCreateViewStatement() (*ast.CreateViewStatement, error) {
 	selStmt, err := p.parseSelectStatement()
 	if err != nil {
 		// Be lenient for incomplete SELECT statements
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	stmt.SelectStatement = selStmt
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateMaterializedViewStatement() (*ast.CreateViewStatement, error) {
+	// Consume MATERIALIZED
+	p.nextToken()
+
+	// Expect VIEW
+	if p.curTok.Type != TokenView {
+		return nil, fmt.Errorf("expected VIEW after MATERIALIZED, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.CreateViewStatement{
+		IsMaterialized: true,
+	}
+
+	// Parse view name
+	son, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.SchemaObjectName = son
+
+	// Parse WITH options for materialized view
+	if p.curTok.Type == TokenWith || strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken()
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optionName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+
+				if optionName == "DISTRIBUTION" {
+					// Parse DISTRIBUTION = HASH(col1, col2, ...)
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+					}
+					if strings.ToUpper(p.curTok.Literal) == "HASH" {
+						p.nextToken()
+						if p.curTok.Type == TokenLParen {
+							p.nextToken()
+							distOpt := &ast.ViewDistributionOption{
+								OptionKind: "Distribution",
+								Value:      &ast.ViewHashDistributionPolicy{},
+							}
+							// Parse column list
+							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+								col := p.parseIdentifier()
+								if distOpt.Value.DistributionColumn == nil {
+									distOpt.Value.DistributionColumn = col
+								}
+								distOpt.Value.DistributionColumns = append(distOpt.Value.DistributionColumns, col)
+								if p.curTok.Type == TokenComma {
+									p.nextToken()
+								} else {
+									break
+								}
+							}
+							if p.curTok.Type == TokenRParen {
+								p.nextToken()
+							}
+							stmt.ViewOptions = append(stmt.ViewOptions, distOpt)
+						}
+					}
+				} else if optionName == "FOR_APPEND" {
+					stmt.ViewOptions = append(stmt.ViewOptions, &ast.ViewForAppendOption{
+						OptionKind: "ForAppend",
+					})
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else if p.curTok.Type != TokenRParen {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken()
+
+	// Parse SELECT statement
+	selStmt, err := p.parseSelectStatement()
+	if err != nil {
 		p.skipToEndOfStatement()
 		return stmt, nil
 	}

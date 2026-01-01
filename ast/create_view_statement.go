@@ -13,7 +13,35 @@ type CreateViewStatement struct {
 func (c *CreateViewStatement) node()      {}
 func (c *CreateViewStatement) statement() {}
 
-// ViewOption represents a view option like SCHEMABINDING.
-type ViewOption struct {
+// ViewOption is an interface for different view option types.
+type ViewOption interface {
+	viewOption()
+}
+
+// ViewStatementOption represents a simple view option like SCHEMABINDING.
+type ViewStatementOption struct {
 	OptionKind string `json:"OptionKind,omitempty"`
 }
+
+func (v *ViewStatementOption) viewOption() {}
+
+// ViewDistributionOption represents a DISTRIBUTION option for materialized views.
+type ViewDistributionOption struct {
+	OptionKind string                        `json:"OptionKind,omitempty"`
+	Value      *ViewHashDistributionPolicy `json:"Value,omitempty"`
+}
+
+func (v *ViewDistributionOption) viewOption() {}
+
+// ViewHashDistributionPolicy represents the hash distribution policy for materialized views.
+type ViewHashDistributionPolicy struct {
+	DistributionColumn  *Identifier   `json:"DistributionColumn,omitempty"`
+	DistributionColumns []*Identifier `json:"DistributionColumns,omitempty"`
+}
+
+// ViewForAppendOption represents the FOR_APPEND option for materialized views.
+type ViewForAppendOption struct {
+	OptionKind string `json:"OptionKind,omitempty"`
+}
+
+func (v *ViewForAppendOption) viewOption() {}
