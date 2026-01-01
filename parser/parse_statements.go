@@ -9346,6 +9346,16 @@ func (p *Parser) parseCreateQueueStatement() (*ast.CreateQueueStatement, error) 
 		Name: name,
 	}
 
+	// Check for ON clause (filegroup)
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		fg, err := p.parseIdentifierOrValueExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.OnFileGroup = fg
+	}
+
 	// Check for WITH clause
 	if strings.ToUpper(p.curTok.Literal) == "WITH" {
 		p.nextToken() // consume WITH
@@ -9356,8 +9366,21 @@ func (p *Parser) parseCreateQueueStatement() (*ast.CreateQueueStatement, error) 
 		stmt.QueueOptions = opts
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Check for ON clause after WITH (alternative syntax)
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		fg, err := p.parseIdentifierOrValueExpression()
+		if err != nil {
+			return nil, err
+		}
+		stmt.OnFileGroup = fg
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
 }
 
@@ -9440,16 +9463,16 @@ func (p *Parser) parseQueueOptions() ([]ast.QueueOption, error) {
 				}
 				options = append(options, opt)
 			} else {
-				// Skip to end of activation clause
-				depth := 1
-				for depth > 0 && p.curTok.Type != TokenEOF {
-					if p.curTok.Type == TokenLParen {
-						depth++
-					} else if p.curTok.Type == TokenRParen {
-						depth--
-					}
-					p.nextToken()
+				// Parse activation options
+				activationOpts, err := p.parseActivationOptions()
+				if err != nil {
+					return nil, err
 				}
+				options = append(options, activationOpts...)
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ) after ACTIVATION options, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
 			}
 
 		default:
@@ -9462,6 +9485,102 @@ func (p *Parser) parseQueueOptions() ([]ast.QueueOption, error) {
 			p.nextToken()
 		} else {
 			break
+		}
+	}
+
+	return options, nil
+}
+
+func (p *Parser) parseActivationOptions() ([]ast.QueueOption, error) {
+	var options []ast.QueueOption
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optName := strings.ToUpper(p.curTok.Literal)
+		switch optName {
+		case "STATUS":
+			p.nextToken() // consume STATUS
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume ON/OFF
+			opt := &ast.QueueStateOption{
+				OptionState: capitalizeFirst(state),
+				OptionKind:  "ActivationStatus",
+			}
+			options = append(options, opt)
+
+		case "PROCEDURE_NAME":
+			p.nextToken() // consume PROCEDURE_NAME
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			procName, _ := p.parseSchemaObjectName()
+			opt := &ast.QueueProcedureOption{
+				OptionValue: procName,
+				OptionKind:  "ActivationProcedureName",
+			}
+			options = append(options, opt)
+
+		case "MAX_QUEUE_READERS":
+			p.nextToken() // consume MAX_QUEUE_READERS
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			value, _ := p.parseScalarExpression()
+			opt := &ast.QueueValueOption{
+				OptionValue: value,
+				OptionKind:  "ActivationMaxQueueReaders",
+			}
+			options = append(options, opt)
+
+		case "EXECUTE":
+			p.nextToken() // consume EXECUTE
+			// Expect AS
+			if strings.ToUpper(p.curTok.Literal) == "AS" {
+				p.nextToken() // consume AS
+			}
+			execAs := &ast.ExecuteAsClause{}
+			// Check for SELF, OWNER, or string
+			execVal := strings.ToUpper(p.curTok.Literal)
+			switch execVal {
+			case "SELF":
+				execAs.ExecuteAsOption = "Self"
+				p.nextToken()
+			case "OWNER":
+				execAs.ExecuteAsOption = "Owner"
+				p.nextToken()
+			default:
+				// String literal - 'username'
+				if p.curTok.Type == TokenString {
+					value := p.curTok.Literal
+					// Remove quotes
+					if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+						value = value[1 : len(value)-1]
+					}
+					execAs.ExecuteAsOption = "String"
+					execAs.Literal = &ast.StringLiteral{
+						LiteralType:   "String",
+						IsNational:    false,
+						IsLargeObject: false,
+						Value:         value,
+					}
+					p.nextToken()
+				}
+			}
+			opt := &ast.QueueExecuteAsOption{
+				OptionValue: execAs,
+				OptionKind:  "ActivationExecuteAs",
+			}
+			options = append(options, opt)
+
+		default:
+			return options, nil
+		}
+
+		// Check for comma separator
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
 		}
 	}
 

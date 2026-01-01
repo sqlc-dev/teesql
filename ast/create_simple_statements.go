@@ -74,10 +74,38 @@ type QueueOptionSimple struct {
 func (o *QueueOptionSimple) node()        {}
 func (o *QueueOptionSimple) queueOption() {}
 
+// QueueProcedureOption represents a PROCEDURE_NAME option.
+type QueueProcedureOption struct {
+	OptionValue *SchemaObjectName `json:"OptionValue,omitempty"`
+	OptionKind  string            `json:"OptionKind,omitempty"` // "ActivationProcedureName"
+}
+
+func (o *QueueProcedureOption) node()        {}
+func (o *QueueProcedureOption) queueOption() {}
+
+// QueueValueOption represents an option with an integer value.
+type QueueValueOption struct {
+	OptionValue ScalarExpression `json:"OptionValue,omitempty"`
+	OptionKind  string           `json:"OptionKind,omitempty"` // "ActivationMaxQueueReaders"
+}
+
+func (o *QueueValueOption) node()        {}
+func (o *QueueValueOption) queueOption() {}
+
+// QueueExecuteAsOption represents an EXECUTE AS option.
+type QueueExecuteAsOption struct {
+	OptionValue *ExecuteAsClause `json:"OptionValue,omitempty"`
+	OptionKind  string           `json:"OptionKind,omitempty"` // "ActivationExecuteAs"
+}
+
+func (o *QueueExecuteAsOption) node()        {}
+func (o *QueueExecuteAsOption) queueOption() {}
+
 // CreateQueueStatement represents a CREATE QUEUE statement.
 type CreateQueueStatement struct {
-	Name         *SchemaObjectName `json:"Name,omitempty"`
-	QueueOptions []QueueOption     `json:"QueueOptions,omitempty"`
+	Name         *SchemaObjectName            `json:"Name,omitempty"`
+	OnFileGroup  *IdentifierOrValueExpression `json:"OnFileGroup,omitempty"`
+	QueueOptions []QueueOption                `json:"QueueOptions,omitempty"`
 }
 
 func (s *CreateQueueStatement) node()      {}

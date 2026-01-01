@@ -13227,6 +13227,9 @@ func createQueueStatementToJSON(s *ast.CreateQueueStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateQueueStatement",
 	}
+	if s.OnFileGroup != nil {
+		node["OnFileGroup"] = identifierOrValueExpressionToJSON(s.OnFileGroup)
+	}
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
@@ -13253,6 +13256,33 @@ func queueOptionToJSON(opt ast.QueueOption) jsonNode {
 		node := jsonNode{
 			"$type":      "QueueOption",
 			"OptionKind": o.OptionKind,
+		}
+		return node
+	case *ast.QueueProcedureOption:
+		node := jsonNode{
+			"$type":      "QueueProcedureOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.OptionValue != nil {
+			node["OptionValue"] = schemaObjectNameToJSON(o.OptionValue)
+		}
+		return node
+	case *ast.QueueValueOption:
+		node := jsonNode{
+			"$type":      "QueueValueOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.OptionValue != nil {
+			node["OptionValue"] = scalarExpressionToJSON(o.OptionValue)
+		}
+		return node
+	case *ast.QueueExecuteAsOption:
+		node := jsonNode{
+			"$type":      "QueueExecuteAsOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.OptionValue != nil {
+			node["OptionValue"] = executeAsClauseToJSON(o.OptionValue)
 		}
 		return node
 	default:
