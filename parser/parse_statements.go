@@ -8676,11 +8676,194 @@ func (p *Parser) parseCreateCertificateStatement() (*ast.CreateCertificateStatem
 	p.nextToken() // consume CERTIFICATE
 
 	stmt := &ast.CreateCertificateStatement{
-		Name: p.parseIdentifier(),
+		Name:                 p.parseIdentifier(),
+		ActiveForBeginDialog: "NotSet",
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Optional AUTHORIZATION
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken()
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Optional ENCRYPTION BY PASSWORD
+	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
+		p.nextToken() // consume ENCRYPTION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+				strLit, _ := p.parseStringLiteral()
+				stmt.EncryptionPassword = strLit
+			}
+		}
+	}
+
+	// Optional FROM clause
+	if p.curTok.Type == TokenFrom {
+		p.nextToken() // consume FROM
+		sourceType := strings.ToUpper(p.curTok.Literal)
+
+		if sourceType == "ASSEMBLY" {
+			p.nextToken() // consume ASSEMBLY
+			stmt.CertificateSource = &ast.AssemblyEncryptionSource{
+				Assembly: p.parseIdentifier(),
+			}
+		} else if sourceType == "FILE" || sourceType == "EXECUTABLE" {
+			isExecutable := false
+			if sourceType == "EXECUTABLE" {
+				isExecutable = true
+				p.nextToken() // consume EXECUTABLE
+				// Next should be FILE
+			}
+			if strings.ToUpper(p.curTok.Literal) == "FILE" {
+				p.nextToken() // consume FILE
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+					strLit, _ := p.parseStringLiteral()
+					stmt.CertificateSource = &ast.FileEncryptionSource{
+						IsExecutable: isExecutable,
+						File:         strLit,
+					}
+				}
+			}
+		}
+	}
+
+	// Parse WITH clauses (can appear multiple times for different purposes)
+	for p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		// Check if it's PRIVATE KEY or certificate options
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "PRIVATE" {
+			p.nextToken() // consume PRIVATE
+			if strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken() // consume option name
+
+					switch optName {
+					case "FILE":
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+							strLit, _ := p.parseStringLiteral()
+							stmt.PrivateKeyPath = strLit
+						}
+					case "DECRYPTION":
+						// DECRYPTION BY PASSWORD
+						if strings.ToUpper(p.curTok.Literal) == "BY" {
+							p.nextToken()
+						}
+						if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+							p.nextToken()
+							if p.curTok.Type == TokenEquals {
+								p.nextToken()
+							}
+							if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+								strLit, _ := p.parseStringLiteral()
+								stmt.DecryptionPassword = strLit
+							}
+						}
+					case "ENCRYPTION":
+						// ENCRYPTION BY PASSWORD
+						if strings.ToUpper(p.curTok.Literal) == "BY" {
+							p.nextToken()
+						}
+						if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+							p.nextToken()
+							if p.curTok.Type == TokenEquals {
+								p.nextToken()
+							}
+							if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+								strLit, _ := p.parseStringLiteral()
+								stmt.EncryptionPassword = strLit
+							}
+						}
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+		} else {
+			// Certificate options: SUBJECT, START_DATE, EXPIRY_DATE
+			for {
+				optName := strings.ToUpper(p.curTok.Literal)
+				if optName != "SUBJECT" && optName != "START_DATE" && optName != "EXPIRY_DATE" {
+					break
+				}
+				p.nextToken() // consume option name
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+					strLit, _ := p.parseStringLiteral()
+					kind := ""
+					switch optName {
+					case "SUBJECT":
+						kind = "Subject"
+					case "START_DATE":
+						kind = "StartDate"
+					case "EXPIRY_DATE":
+						kind = "ExpiryDate"
+					}
+					stmt.CertificateOptions = append(stmt.CertificateOptions, &ast.CertificateOption{
+						Kind:  kind,
+						Value: strLit,
+					})
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		}
+	}
+
+	// Optional ACTIVE FOR BEGIN_DIALOG
+	if strings.ToUpper(p.curTok.Literal) == "ACTIVE" {
+		p.nextToken() // consume ACTIVE
+		if strings.ToUpper(p.curTok.Literal) == "FOR" {
+			p.nextToken() // consume FOR
+		}
+		if strings.ToUpper(p.curTok.Literal) == "BEGIN_DIALOG" {
+			p.nextToken() // consume BEGIN_DIALOG
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			if strings.ToUpper(p.curTok.Literal) == "ON" {
+				stmt.ActiveForBeginDialog = "On"
+				p.nextToken()
+			} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+				stmt.ActiveForBeginDialog = "Off"
+				p.nextToken()
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
 }
 

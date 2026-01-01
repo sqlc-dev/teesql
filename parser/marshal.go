@@ -11876,6 +11876,23 @@ func encryptionSourceToJSON(source ast.EncryptionSource) interface{} {
 	switch s := source.(type) {
 	case *ast.ProviderEncryptionSource:
 		return providerEncryptionSourceToJSON(s)
+	case *ast.AssemblyEncryptionSource:
+		node := jsonNode{
+			"$type": "AssemblyEncryptionSource",
+		}
+		if s.Assembly != nil {
+			node["Assembly"] = identifierToJSON(s.Assembly)
+		}
+		return node
+	case *ast.FileEncryptionSource:
+		node := jsonNode{
+			"$type":        "FileEncryptionSource",
+			"IsExecutable": s.IsExecutable,
+		}
+		if s.File != nil {
+			node["File"] = stringLiteralToJSON(s.File)
+		}
+		return node
 	default:
 		return nil
 	}
@@ -11992,8 +12009,37 @@ func createCertificateStatementToJSON(s *ast.CreateCertificateStatement) jsonNod
 	node := jsonNode{
 		"$type": "CreateCertificateStatement",
 	}
+	if s.CertificateSource != nil {
+		node["CertificateSource"] = encryptionSourceToJSON(s.CertificateSource)
+	}
+	if len(s.CertificateOptions) > 0 {
+		options := make([]jsonNode, len(s.CertificateOptions))
+		for i, opt := range s.CertificateOptions {
+			options[i] = jsonNode{
+				"$type": "CertificateOption",
+				"Kind":  opt.Kind,
+				"Value": stringLiteralToJSON(opt.Value),
+			}
+		}
+		node["CertificateOptions"] = options
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.ActiveForBeginDialog != "" {
+		node["ActiveForBeginDialog"] = s.ActiveForBeginDialog
+	}
+	if s.PrivateKeyPath != nil {
+		node["PrivateKeyPath"] = stringLiteralToJSON(s.PrivateKeyPath)
+	}
+	if s.EncryptionPassword != nil {
+		node["EncryptionPassword"] = stringLiteralToJSON(s.EncryptionPassword)
+	}
+	if s.DecryptionPassword != nil {
+		node["DecryptionPassword"] = stringLiteralToJSON(s.DecryptionPassword)
 	}
 	return node
 }
