@@ -7910,11 +7910,13 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 	}
 
 	// Check for DATABASE SCOPED CREDENTIAL
-	if strings.ToUpper(p.curTok.Literal) == "SCOPED" {
-		p.nextToken() // consume SCOPED
-		if p.curTok.Type == TokenCredential {
+	if p.curTok.Type == TokenScoped || strings.ToUpper(p.curTok.Literal) == "SCOPED" {
+		// Look ahead to see if it's SCOPED CREDENTIAL
+		if p.peekTok.Type == TokenCredential {
+			p.nextToken() // consume SCOPED
 			return p.parseCreateCredentialStatement(true)
 		}
+		// Otherwise SCOPED is the database name
 	}
 
 	stmt := &ast.CreateDatabaseStatement{

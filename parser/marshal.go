@@ -13502,10 +13502,8 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 		}
 		node["LogOn"] = logs
 	}
-	// AttachMode is output when there are FileGroups, Options, Collation, CopyOf, or Containment
-	if len(s.FileGroups) > 0 || len(s.Options) > 0 || s.Collation != nil || s.CopyOf != nil || s.Containment != nil {
-		node["AttachMode"] = s.AttachMode
-	}
+	// Always output AttachMode
+	node["AttachMode"] = s.AttachMode
 	if s.CopyOf != nil {
 		node["CopyOf"] = multiPartIdentifierToJSON(s.CopyOf)
 	}

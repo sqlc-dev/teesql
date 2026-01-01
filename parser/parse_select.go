@@ -634,7 +634,7 @@ func (p *Parser) isKeywordAsIdentifier() bool {
 		TokenExternal, TokenSymmetric, TokenAsymmetric, TokenGroup,
 		TokenAdd, TokenGrant, TokenRevoke, TokenBackup, TokenRestore,
 		TokenQuery, TokenJob, TokenStats, TokenPassword, TokenTime, TokenDelay,
-		TokenTyp:
+		TokenTyp, TokenScoped:
 		return true
 	default:
 		return false
