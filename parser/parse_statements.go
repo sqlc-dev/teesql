@@ -8348,6 +8348,18 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 				OptionKind: "MaxDop",
 				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
 			})
+		case "MAX_DURATION":
+			// Parse MAX_DURATION = value [MINUTES]
+			opt := &ast.MaxDurationOption{
+				OptionKind:  "MaxDuration",
+				MaxDuration: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+			}
+			// Check for optional MINUTES unit
+			if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+				opt.Unit = "Minutes"
+				p.nextToken() // consume MINUTES
+			}
+			options = append(options, opt)
 		default:
 			// Generic handling for other options
 			if valueStr == "ON" || valueStr == "OFF" {

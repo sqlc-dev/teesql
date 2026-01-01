@@ -10809,6 +10809,18 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 			node["Expression"] = scalarExpressionToJSON(o.Expression)
 		}
 		return node
+	case *ast.MaxDurationOption:
+		node := jsonNode{
+			"$type":      "MaxDurationOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.MaxDuration != nil {
+			node["MaxDuration"] = scalarExpressionToJSON(o.MaxDuration)
+		}
+		if o.Unit != "" {
+			node["Unit"] = o.Unit
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownIndexOption"}
 	}

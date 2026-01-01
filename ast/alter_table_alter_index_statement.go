@@ -53,3 +53,13 @@ type OrderIndexOption struct {
 
 func (o *OrderIndexOption) indexOption() {}
 func (o *OrderIndexOption) node()        {}
+
+// MaxDurationOption represents MAX_DURATION option for resumable index operations
+type MaxDurationOption struct {
+	MaxDuration ScalarExpression
+	Unit        string // "", "Minutes"
+	OptionKind  string // "MaxDuration"
+}
+
+func (m *MaxDurationOption) indexOption() {}
+func (m *MaxDurationOption) node()        {}
