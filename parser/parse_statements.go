@@ -5690,10 +5690,88 @@ func (p *Parser) parseLabelOrError() (ast.Statement, error) {
 		return &ast.LabelStatement{Value: label + ":"}, nil
 	}
 
-	// Not a label - be lenient and skip to end of statement
+	// Check for implicit procedure execution (identifier followed by parameters)
+	// This happens at batch start where you can call a stored procedure without EXEC
+	if p.isImplicitExecuteParameter() {
+		return p.parseImplicitExecuteStatement(label)
+	}
+
+	// Not a label or implicit execute - be lenient and skip to end of statement
 	// This handles malformed SQL like "abcde" or other unknown identifiers
 	p.skipToEndOfStatement()
 	return &ast.LabelStatement{Value: label}, nil
+}
+
+// isImplicitExecuteParameter checks if current token could be a parameter for implicit EXEC
+func (p *Parser) isImplicitExecuteParameter() bool {
+	switch p.curTok.Type {
+	case TokenString, TokenNationalString, TokenNumber:
+		return true
+	case TokenIdent:
+		// Variables (@var) or identifiers followed by comma/semicolon
+		if strings.HasPrefix(p.curTok.Literal, "@") {
+			return true
+		}
+		// DEFAULT keyword
+		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+			return true
+		}
+		// Regular identifier as parameter (like sp_addtype birthday, datetime)
+		return true
+	case TokenSemicolon, TokenEOF:
+		// No parameters - could still be implicit exec
+		return true
+	default:
+		return false
+	}
+}
+
+// parseImplicitExecuteStatement parses an implicit EXEC statement (procedure call without EXEC keyword)
+func (p *Parser) parseImplicitExecuteStatement(procName string) (ast.Statement, error) {
+	// Build the SchemaObjectName from the procedure name
+	// Use the same identifier pointer for both Identifiers array and BaseIdentifier
+	// so that JSON marshaling can use $ref
+	baseIdent := &ast.Identifier{Value: procName, QuoteType: "NotQuoted"}
+	son := &ast.SchemaObjectName{
+		Count:          1,
+		Identifiers:    []*ast.Identifier{baseIdent},
+		BaseIdentifier: baseIdent,
+	}
+
+	procRef := &ast.ExecutableProcedureReference{
+		ProcedureReference: &ast.ProcedureReferenceName{
+			ProcedureReference: &ast.ProcedureReference{
+				Name: son,
+			},
+		},
+	}
+
+	// Parse parameters
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && !p.isStatementTerminator() {
+		param, err := p.parseExecuteParameter()
+		if err != nil {
+			break
+		}
+		procRef.Parameters = append(procRef.Parameters, param)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken()
+	}
+
+	spec := &ast.ExecuteSpecification{
+		ExecutableEntity: procRef,
+	}
+
+	stmt := &ast.ExecuteStatement{ExecuteSpecification: spec}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func isKeyword(s string) bool {
