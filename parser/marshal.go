@@ -1697,6 +1697,17 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Increment"] = scalarExpressionToJSON(e.Increment)
 		}
 		return node
+	case *ast.AtTimeZoneCall:
+		node := jsonNode{
+			"$type": "AtTimeZoneCall",
+		}
+		if e.DateValue != nil {
+			node["DateValue"] = scalarExpressionToJSON(e.DateValue)
+		}
+		if e.TimeZone != nil {
+			node["TimeZone"] = scalarExpressionToJSON(e.TimeZone)
+		}
+		return node
 	case *ast.BinaryExpression:
 		node := jsonNode{
 			"$type": "BinaryExpression",

@@ -709,7 +709,7 @@ func (p *Parser) parseAdditiveExpression() (ast.ScalarExpression, error) {
 }
 
 func (p *Parser) parseMultiplicativeExpression() (ast.ScalarExpression, error) {
-	left, err := p.parsePrimaryExpression()
+	left, err := p.parsePostfixExpression()
 	if err != nil {
 		return nil, err
 	}
@@ -726,7 +726,7 @@ func (p *Parser) parseMultiplicativeExpression() (ast.ScalarExpression, error) {
 		}
 		p.nextToken()
 
-		right, err := p.parsePrimaryExpression()
+		right, err := p.parsePostfixExpression()
 		if err != nil {
 			return nil, err
 		}
@@ -739,6 +739,36 @@ func (p *Parser) parseMultiplicativeExpression() (ast.ScalarExpression, error) {
 	}
 
 	return left, nil
+}
+
+// parsePostfixExpression handles postfix operators like AT TIME ZONE
+func (p *Parser) parsePostfixExpression() (ast.ScalarExpression, error) {
+	expr, err := p.parsePrimaryExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for AT TIME ZONE - only if followed by "TIME"
+	for strings.ToUpper(p.curTok.Literal) == "AT" && strings.ToUpper(p.peekTok.Literal) == "TIME" {
+		p.nextToken() // consume AT
+		p.nextToken() // consume TIME
+		if strings.ToUpper(p.curTok.Literal) != "ZONE" {
+			return nil, fmt.Errorf("expected ZONE after TIME, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ZONE
+
+		timezone, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &ast.AtTimeZoneCall{
+			DateValue: expr,
+			TimeZone:  timezone,
+		}
+	}
+
+	return expr, nil
 }
 
 func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
