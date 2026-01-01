@@ -2474,6 +2474,15 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 				return p.parseCreateWorkloadClassifierStatement()
 			}
 			return p.parseCreateWorkloadGroupStatement()
+		case "RESOURCE":
+			// Check if it's RESOURCE POOL or RESOURCE GOVERNOR
+			p.nextToken() // consume RESOURCE
+			if strings.ToUpper(p.curTok.Literal) == "POOL" {
+				return p.parseCreateResourcePoolStatement()
+			}
+			// RESOURCE GOVERNOR not supported for CREATE
+			p.skipToEndOfStatement()
+			return &ast.CreateProcedureStatement{}, nil
 		case "SEQUENCE":
 			return p.parseCreateSequenceStatement()
 		case "SPATIAL":

@@ -1644,6 +1644,11 @@ func (p *Parser) parseAlterResourceGovernorStatement() (ast.Statement, error) {
 	// Consume RESOURCE
 	p.nextToken()
 
+	// Check if this is RESOURCE POOL or RESOURCE GOVERNOR
+	if strings.ToUpper(p.curTok.Literal) == "POOL" {
+		return p.parseAlterResourcePoolStatement()
+	}
+
 	// Consume GOVERNOR
 	if strings.ToUpper(p.curTok.Literal) == "GOVERNOR" {
 		p.nextToken()
@@ -7475,4 +7480,244 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 	}
 
 	return stmt, nil
+}
+
+// parseCreateResourcePoolStatement parses CREATE RESOURCE POOL statement
+func (p *Parser) parseCreateResourcePoolStatement() (*ast.CreateResourcePoolStatement, error) {
+	// We've already consumed CREATE RESOURCE
+	// Consume POOL
+	if strings.ToUpper(p.curTok.Literal) == "POOL" {
+		p.nextToken()
+	}
+
+	stmt := &ast.CreateResourcePoolStatement{}
+
+	// Parse pool name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		params, err := p.parseResourcePoolParameters()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ResourcePoolParameters = params
+	}
+
+	return stmt, nil
+}
+
+// parseAlterResourcePoolStatement parses ALTER RESOURCE POOL statement
+func (p *Parser) parseAlterResourcePoolStatement() (*ast.AlterResourcePoolStatement, error) {
+	// Consume POOL (we've already consumed ALTER RESOURCE)
+	p.nextToken()
+
+	stmt := &ast.AlterResourcePoolStatement{}
+
+	// Parse pool name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		params, err := p.parseResourcePoolParameters()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ResourcePoolParameters = params
+	}
+
+	return stmt, nil
+}
+
+// parseResourcePoolParameters parses resource pool parameters within WITH (...)
+func (p *Parser) parseResourcePoolParameters() ([]*ast.ResourcePoolParameter, error) {
+	var params []*ast.ResourcePoolParameter
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param, err := p.parseResourcePoolParameter()
+		if err != nil {
+			return nil, err
+		}
+		if param != nil {
+			params = append(params, param)
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return params, nil
+}
+
+// parseResourcePoolParameter parses a single resource pool parameter
+func (p *Parser) parseResourcePoolParameter() (*ast.ResourcePoolParameter, error) {
+	paramName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume parameter name
+
+	param := &ast.ResourcePoolParameter{}
+
+	switch paramName {
+	case "MIN_CPU_PERCENT":
+		param.ParameterType = "MinCpuPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MAX_CPU_PERCENT":
+		param.ParameterType = "MaxCpuPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "CAP_CPU_PERCENT":
+		param.ParameterType = "CapCpuPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MIN_MEMORY_PERCENT":
+		param.ParameterType = "MinMemoryPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MAX_MEMORY_PERCENT":
+		param.ParameterType = "MaxMemoryPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "TARGET_MEMORY_PERCENT":
+		param.ParameterType = "TargetMemoryPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MIN_IO_PERCENT":
+		param.ParameterType = "MinIoPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MAX_IO_PERCENT":
+		param.ParameterType = "MaxIoPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "CAP_IO_PERCENT":
+		param.ParameterType = "CapIoPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MIN_IOPS_PER_VOLUME":
+		param.ParameterType = "MinIopsPerVolume"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MAX_IOPS_PER_VOLUME":
+		param.ParameterType = "MaxIopsPerVolume"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "AFFINITY":
+		param.ParameterType = "Affinity"
+		affSpec, err := p.parseResourcePoolAffinitySpecification()
+		if err != nil {
+			return nil, err
+		}
+		param.AffinitySpecification = affSpec
+	default:
+		// Skip unknown parameter
+		return nil, nil
+	}
+
+	return param, nil
+}
+
+// parseResourcePoolAffinitySpecification parses AFFINITY SCHEDULER/NUMANODE specification
+func (p *Parser) parseResourcePoolAffinitySpecification() (*ast.ResourcePoolAffinitySpecification, error) {
+	spec := &ast.ResourcePoolAffinitySpecification{}
+
+	// Parse SCHEDULER or NUMANODE
+	affinityType := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	switch affinityType {
+	case "SCHEDULER":
+		spec.AffinityType = "Scheduler"
+	case "NUMANODE":
+		spec.AffinityType = "NumaNode"
+	default:
+		return nil, fmt.Errorf("expected SCHEDULER or NUMANODE after AFFINITY, got %s", affinityType)
+	}
+
+	// Expect =
+	if p.curTok.Type == TokenEquals {
+		p.nextToken()
+	}
+
+	// Check for AUTO or range list
+	if strings.ToUpper(p.curTok.Literal) == "AUTO" {
+		spec.IsAuto = true
+		p.nextToken()
+	} else if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		spec.IsAuto = false
+
+		// Parse range list
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			lr := &ast.LiteralRange{}
+
+			// Parse 'from' value
+			lr.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+			p.nextToken()
+
+			// Check for TO
+			if strings.ToUpper(p.curTok.Literal) == "TO" {
+				p.nextToken() // consume TO
+				lr.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+				p.nextToken()
+			}
+
+			spec.PoolAffinityRanges = append(spec.PoolAffinityRanges, lr)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	return spec, nil
 }

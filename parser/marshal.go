@@ -146,6 +146,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterDatabaseScopedConfigurationClearStatementToJSON(s)
 	case *ast.AlterResourceGovernorStatement:
 		return alterResourceGovernorStatementToJSON(s)
+	case *ast.CreateResourcePoolStatement:
+		return createResourcePoolStatementToJSON(s)
+	case *ast.AlterResourcePoolStatement:
+		return alterResourcePoolStatementToJSON(s)
 	case *ast.CreateCryptographicProviderStatement:
 		return createCryptographicProviderStatementToJSON(s)
 	case *ast.CreateColumnMasterKeyStatement:
@@ -14561,6 +14565,87 @@ func alterResourceGovernorStatementToJSON(s *ast.AlterResourceGovernorStatement)
 	}
 	if s.ClassifierFunction != nil {
 		node["ClassifierFunction"] = schemaObjectNameToJSON(s.ClassifierFunction)
+	}
+	return node
+}
+
+func createResourcePoolStatementToJSON(s *ast.CreateResourcePoolStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateResourcePoolStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ResourcePoolParameters) > 0 {
+		params := make([]jsonNode, len(s.ResourcePoolParameters))
+		for i, param := range s.ResourcePoolParameters {
+			params[i] = resourcePoolParameterToJSON(param)
+		}
+		node["ResourcePoolParameters"] = params
+	}
+	return node
+}
+
+func alterResourcePoolStatementToJSON(s *ast.AlterResourcePoolStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterResourcePoolStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ResourcePoolParameters) > 0 {
+		params := make([]jsonNode, len(s.ResourcePoolParameters))
+		for i, param := range s.ResourcePoolParameters {
+			params[i] = resourcePoolParameterToJSON(param)
+		}
+		node["ResourcePoolParameters"] = params
+	}
+	return node
+}
+
+func resourcePoolParameterToJSON(p *ast.ResourcePoolParameter) jsonNode {
+	node := jsonNode{
+		"$type": "ResourcePoolParameter",
+	}
+	if p.ParameterType != "" {
+		node["ParameterType"] = p.ParameterType
+	}
+	if p.ParameterValue != nil {
+		node["ParameterValue"] = scalarExpressionToJSON(p.ParameterValue)
+	}
+	if p.AffinitySpecification != nil {
+		node["AffinitySpecification"] = resourcePoolAffinitySpecificationToJSON(p.AffinitySpecification)
+	}
+	return node
+}
+
+func resourcePoolAffinitySpecificationToJSON(s *ast.ResourcePoolAffinitySpecification) jsonNode {
+	node := jsonNode{
+		"$type": "ResourcePoolAffinitySpecification",
+	}
+	if s.AffinityType != "" {
+		node["AffinityType"] = s.AffinityType
+	}
+	node["IsAuto"] = s.IsAuto
+	if len(s.PoolAffinityRanges) > 0 {
+		ranges := make([]jsonNode, len(s.PoolAffinityRanges))
+		for i, r := range s.PoolAffinityRanges {
+			ranges[i] = literalRangeToJSON(r)
+		}
+		node["PoolAffinityRanges"] = ranges
+	}
+	return node
+}
+
+func literalRangeToJSON(r *ast.LiteralRange) jsonNode {
+	node := jsonNode{
+		"$type": "LiteralRange",
+	}
+	if r.From != nil {
+		node["From"] = scalarExpressionToJSON(r.From)
+	}
+	if r.To != nil {
+		node["To"] = scalarExpressionToJSON(r.To)
 	}
 	return node
 }
