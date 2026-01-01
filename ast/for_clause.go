@@ -41,3 +41,19 @@ type XmlForClauseOption struct {
 }
 
 func (*XmlForClauseOption) node() {}
+
+// JsonForClause represents a FOR JSON clause with its options.
+type JsonForClause struct {
+	Options []*JsonForClauseOption `json:"Options,omitempty"`
+}
+
+func (*JsonForClause) node()      {}
+func (*JsonForClause) forClause() {}
+
+// JsonForClauseOption represents an option in a FOR JSON clause.
+type JsonForClauseOption struct {
+	OptionKind string         `json:"OptionKind,omitempty"`
+	Value      *StringLiteral `json:"Value,omitempty"`
+}
+
+func (*JsonForClauseOption) node() {}

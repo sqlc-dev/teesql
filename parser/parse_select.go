@@ -3495,6 +3495,10 @@ func (p *Parser) parseForClause() (ast.ForClause, error) {
 		p.nextToken() // consume XML
 		return p.parseXmlForClause()
 
+	case "JSON":
+		p.nextToken() // consume JSON
+		return p.parseJsonForClause()
+
 	default:
 		return nil, fmt.Errorf("unexpected token after FOR: %s", p.curTok.Literal)
 	}
@@ -3607,6 +3611,63 @@ func (p *Parser) parseXmlForClauseOption() (*ast.XmlForClauseOption, error) {
 			option.OptionKind = "BinaryBase64"
 			p.nextToken() // consume BASE64
 		}
+	default:
+		option.OptionKind = keyword
+	}
+
+	return option, nil
+}
+
+// parseJsonForClause parses FOR JSON options.
+func (p *Parser) parseJsonForClause() (*ast.JsonForClause, error) {
+	clause := &ast.JsonForClause{}
+
+	// Parse JSON options separated by commas
+	for {
+		option, err := p.parseJsonForClauseOption()
+		if err != nil {
+			return nil, err
+		}
+		clause.Options = append(clause.Options, option)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	return clause, nil
+}
+
+// parseJsonForClauseOption parses a single JSON FOR clause option.
+func (p *Parser) parseJsonForClauseOption() (*ast.JsonForClauseOption, error) {
+	option := &ast.JsonForClauseOption{}
+
+	keyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume the option keyword
+
+	switch keyword {
+	case "AUTO":
+		option.OptionKind = "Auto"
+	case "PATH":
+		option.OptionKind = "Path"
+	case "ROOT":
+		option.OptionKind = "Root"
+		// Check for optional root name: ROOT('name')
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if p.curTok.Type == TokenString {
+				option.Value = p.parseStringLiteralValue()
+				p.nextToken() // consume string
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	case "INCLUDE_NULL_VALUES":
+		option.OptionKind = "IncludeNullValues"
+	case "WITHOUT_ARRAY_WRAPPER":
+		option.OptionKind = "WithoutArrayWrapper"
 	default:
 		option.OptionKind = keyword
 	}

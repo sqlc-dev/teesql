@@ -1300,6 +1300,16 @@ func forClauseToJSON(fc ast.ForClause) jsonNode {
 			node["Options"] = opts
 		}
 		return node
+	case *ast.JsonForClause:
+		node := jsonNode{"$type": "JsonForClause"}
+		if len(f.Options) > 0 {
+			opts := make([]jsonNode, len(f.Options))
+			for i, opt := range f.Options {
+				opts[i] = jsonForClauseOptionToJSON(opt)
+			}
+			node["Options"] = opts
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownForClause"}
 	}
@@ -1307,6 +1317,17 @@ func forClauseToJSON(fc ast.ForClause) jsonNode {
 
 func xmlForClauseOptionToJSON(opt *ast.XmlForClauseOption) jsonNode {
 	node := jsonNode{"$type": "XmlForClauseOption"}
+	if opt.OptionKind != "" {
+		node["OptionKind"] = opt.OptionKind
+	}
+	if opt.Value != nil {
+		node["Value"] = stringLiteralToJSON(opt.Value)
+	}
+	return node
+}
+
+func jsonForClauseOptionToJSON(opt *ast.JsonForClauseOption) jsonNode {
+	node := jsonNode{"$type": "JsonForClauseOption"}
 	if opt.OptionKind != "" {
 		node["OptionKind"] = opt.OptionKind
 	}
