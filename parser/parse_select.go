@@ -2814,6 +2814,54 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			return nil, err
 		}
 
+		// Check if we got a placeholder for a scalar expression without comparison
+		// This happens when parsing something like (XACT_STATE()) in: IF (XACT_STATE()) = -1
+		if placeholder, ok := inner.(*ast.BooleanScalarPlaceholder); ok {
+			// The inner content was a bare scalar expression
+			// curTok should still be ) since we didn't consume it
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+
+			// Wrap the scalar in a ParenthesisExpression
+			parenExpr := &ast.ParenthesisExpression{Expression: placeholder.Scalar}
+
+			// Check for comparison operators after the parenthesized expression
+			if p.isComparisonOperator() {
+				return p.parseComparisonAfterLeft(parenExpr)
+			}
+
+			// Check for IS NULL / IS NOT NULL
+			if p.curTok.Type == TokenIs {
+				return p.parseIsNullAfterLeft(parenExpr)
+			}
+
+			// Check for NOT before IN/LIKE/BETWEEN
+			notDefined := false
+			if p.curTok.Type == TokenNot {
+				notDefined = true
+				p.nextToken()
+			}
+
+			if p.curTok.Type == TokenIn {
+				return p.parseInExpressionAfterLeft(parenExpr, notDefined)
+			}
+			if p.curTok.Type == TokenLike {
+				return p.parseLikeExpressionAfterLeft(parenExpr, notDefined)
+			}
+			if p.curTok.Type == TokenBetween {
+				return p.parseBetweenExpressionAfterLeft(parenExpr, notDefined)
+			}
+
+			if notDefined {
+				return nil, fmt.Errorf("expected IN, LIKE, or BETWEEN after NOT, got %s", p.curTok.Literal)
+			}
+
+			// If no comparison follows, return error
+			return nil, fmt.Errorf("expected comparison operator after parenthesized expression, got %s", p.curTok.Literal)
+		}
+
 		if p.curTok.Type != TokenRParen {
 			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
@@ -2983,6 +3031,11 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		compType = "LessThanOrEqualTo"
 	case TokenGreaterOrEqual:
 		compType = "GreaterThanOrEqualTo"
+	case TokenRParen:
+		// We're at ) without a comparison operator - this happens when parsing
+		// a parenthesized scalar expression like (XACT_STATE()) in a boolean context.
+		// Return a special marker that the caller can handle.
+		return &ast.BooleanScalarPlaceholder{Scalar: left}, nil
 	default:
 		return nil, fmt.Errorf("expected comparison operator, got %s", p.curTok.Literal)
 	}
@@ -3043,6 +3096,171 @@ func (p *Parser) parseComparisonAfterLeft(left ast.ScalarExpression) (ast.Boolea
 		ComparisonType:   compType,
 		FirstExpression:  left,
 		SecondExpression: right,
+	}, nil
+}
+
+// parseInExpressionAfterLeft parses an IN expression after the left operand is already parsed
+func (p *Parser) parseInExpressionAfterLeft(left ast.ScalarExpression, notDefined bool) (ast.BooleanExpression, error) {
+	p.nextToken() // consume IN
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after IN, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Check if it's a subquery or value list
+	if p.curTok.Type == TokenSelect {
+		subquery, err := p.parseQueryExpression()
+		if err != nil {
+			return nil, err
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+		return &ast.BooleanInExpression{
+			Expression: left,
+			NotDefined: notDefined,
+			Subquery:   subquery,
+		}, nil
+	}
+
+	// Parse value list
+	var values []ast.ScalarExpression
+	for {
+		val, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, val)
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume ,
+	}
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+	return &ast.BooleanInExpression{
+		Expression: left,
+		NotDefined: notDefined,
+		Values:     values,
+	}, nil
+}
+
+// parseLikeExpressionAfterLeft parses a LIKE expression after the left operand is already parsed
+func (p *Parser) parseLikeExpressionAfterLeft(left ast.ScalarExpression, notDefined bool) (ast.BooleanExpression, error) {
+	p.nextToken() // consume LIKE
+
+	pattern, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	var escapeExpr ast.ScalarExpression
+	if p.curTok.Type == TokenEscape {
+		p.nextToken() // consume ESCAPE
+		escapeExpr, err = p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &ast.BooleanLikeExpression{
+		FirstExpression:  left,
+		SecondExpression: pattern,
+		EscapeExpression: escapeExpr,
+		NotDefined:       notDefined,
+	}, nil
+}
+
+// parseBetweenExpressionAfterLeft parses a BETWEEN expression after the left operand is already parsed
+func (p *Parser) parseBetweenExpressionAfterLeft(left ast.ScalarExpression, notDefined bool) (ast.BooleanExpression, error) {
+	p.nextToken() // consume BETWEEN
+
+	low, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenAnd {
+		return nil, fmt.Errorf("expected AND in BETWEEN, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume AND
+
+	high, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	ternaryType := "Between"
+	if notDefined {
+		ternaryType = "NotBetween"
+	}
+	return &ast.BooleanTernaryExpression{
+		TernaryExpressionType: ternaryType,
+		FirstExpression:       left,
+		SecondExpression:      low,
+		ThirdExpression:       high,
+	}, nil
+}
+
+// finishParenthesizedBooleanExpression finishes parsing a parenthesized boolean expression
+// after the initial comparison/expression has been parsed
+func (p *Parser) finishParenthesizedBooleanExpression(inner ast.BooleanExpression) (ast.BooleanExpression, error) {
+	// Check for AND/OR continuation
+	for p.curTok.Type == TokenAnd || p.curTok.Type == TokenOr {
+		op := p.curTok.Type
+		p.nextToken()
+
+		right, err := p.parseBooleanPrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		if op == TokenAnd {
+			inner = &ast.BooleanBinaryExpression{
+				BinaryExpressionType: "And",
+				FirstExpression:      inner,
+				SecondExpression:     right,
+			}
+		} else {
+			inner = &ast.BooleanBinaryExpression{
+				BinaryExpressionType: "Or",
+				FirstExpression:      inner,
+				SecondExpression:     right,
+			}
+		}
+	}
+
+	// Expect closing parenthesis
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.BooleanParenthesisExpression{Expression: inner}, nil
+}
+
+// parseIsNullAfterLeft parses IS NULL / IS NOT NULL after the left operand is already parsed
+func (p *Parser) parseIsNullAfterLeft(left ast.ScalarExpression) (ast.BooleanExpression, error) {
+	p.nextToken() // consume IS
+
+	isNot := false
+	if p.curTok.Type == TokenNot {
+		isNot = true
+		p.nextToken() // consume NOT
+	}
+
+	if p.curTok.Type != TokenNull {
+		return nil, fmt.Errorf("expected NULL after IS/IS NOT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume NULL
+
+	return &ast.BooleanIsNullExpression{
+		IsNot:      isNot,
+		Expression: left,
 	}, nil
 }
 
