@@ -2769,8 +2769,12 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 		return p.parseAlterTableAddStatement(tableName)
 	}
 
-	// Check for ENABLE/DISABLE TRIGGER
+	// Check for ENABLE/DISABLE TRIGGER or FILETABLE_NAMESPACE
 	if strings.ToUpper(p.curTok.Literal) == "ENABLE" || strings.ToUpper(p.curTok.Literal) == "DISABLE" {
+		// Check if it's FILETABLE_NAMESPACE
+		if strings.ToUpper(p.peekTok.Literal) == "FILETABLE_NAMESPACE" {
+			return p.parseAlterTableFileTableNamespaceStatement(tableName)
+		}
 		return p.parseAlterTableTriggerModificationStatement(tableName)
 	}
 
@@ -3762,6 +3766,33 @@ func (p *Parser) parseAlterTableTriggerModificationStatement(tableName *ast.Sche
 	return stmt, nil
 }
 
+func (p *Parser) parseAlterTableFileTableNamespaceStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableFileTableNamespaceStatement, error) {
+	stmt := &ast.AlterTableFileTableNamespaceStatement{
+		SchemaObjectName: tableName,
+	}
+
+	// Parse ENABLE or DISABLE
+	if strings.ToUpper(p.curTok.Literal) == "ENABLE" {
+		stmt.IsEnable = true
+	} else {
+		stmt.IsEnable = false
+	}
+	p.nextToken()
+
+	// Consume FILETABLE_NAMESPACE
+	if strings.ToUpper(p.curTok.Literal) != "FILETABLE_NAMESPACE" {
+		return nil, fmt.Errorf("expected FILETABLE_NAMESPACE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableSwitchStatement, error) {
 	stmt := &ast.AlterTableSwitchStatement{
 		SchemaObjectName: tableName,
@@ -3993,6 +4024,43 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 			opt, err := p.parseSystemVersioningTableOption()
 			if err != nil {
 				return nil, err
+			}
+			stmt.Options = append(stmt.Options, opt)
+		} else if optionName == "FILETABLE_DIRECTORY" {
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			// Parse the directory name as a literal or NULL
+			opt := &ast.FileTableDirectoryTableOption{
+				OptionKind: "FileTableDirectory",
+			}
+			if strings.ToUpper(p.curTok.Literal) == "NULL" {
+				opt.Value = &ast.NullLiteral{
+					LiteralType: "Null",
+					Value:       "NULL",
+				}
+				p.nextToken()
+			} else if p.curTok.Type == TokenString {
+				value := p.curTok.Literal
+				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+					value = value[1 : len(value)-1]
+				}
+				opt.Value = &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         value,
+					IsNational:    false,
+					IsLargeObject: false,
+				}
+				p.nextToken()
+			} else {
+				value := p.curTok.Literal
+				opt.Value = &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         value,
+					IsNational:    false,
+					IsLargeObject: false,
+				}
+				p.nextToken()
 			}
 			stmt.Options = append(stmt.Options, opt)
 		}

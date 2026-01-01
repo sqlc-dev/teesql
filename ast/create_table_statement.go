@@ -11,7 +11,16 @@ type CreateTableStatement struct {
 	TextImageOn                  *IdentifierOrValueExpression
 	FileStreamOn                 *IdentifierOrValueExpression
 	Options                      []TableOption
+	FederationScheme             *FederationScheme
 }
+
+// FederationScheme represents a FEDERATED ON clause
+type FederationScheme struct {
+	DistributionName *Identifier
+	ColumnName       *Identifier
+}
+
+func (*FederationScheme) node() {}
 
 // TableDataCompressionOption represents a DATA_COMPRESSION option
 type TableDataCompressionOption struct {

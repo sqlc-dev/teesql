@@ -486,6 +486,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropSchemaStatementToJSON(s)
 	case *ast.AlterTableTriggerModificationStatement:
 		return alterTableTriggerModificationStatementToJSON(s)
+	case *ast.AlterTableFileTableNamespaceStatement:
+		return alterTableFileTableNamespaceStatementToJSON(s)
 	case *ast.AlterTableSwitchStatement:
 		return alterTableSwitchStatementToJSON(s)
 	case *ast.AlterTableConstraintModificationStatement:
@@ -3621,10 +3623,24 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 	}
 	stmt.SchemaObjectName = name
 
-	// Expect ( - if not present, be lenient
+	// Check for AS FILETABLE
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		if strings.ToUpper(p.curTok.Literal) == "FILETABLE" {
+			stmt.AsFileTable = true
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "NODE" {
+			stmt.AsNode = true
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "EDGE" {
+			stmt.AsEdge = true
+			p.nextToken()
+		}
+	}
+
+	// Check for ON, TEXTIMAGE_ON, FILESTREAM_ON, WITH clauses (for AS FILETABLE)
 	if p.curTok.Type != TokenLParen {
-		p.skipToEndOfStatement()
-		return stmt, nil
+		return p.parseCreateTableOptions(stmt)
 	}
 	p.nextToken()
 
@@ -3804,6 +3820,229 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 			} else if nodeOrEdge == "EDGE" {
 				stmt.AsEdge = true
 				p.nextToken()
+			}
+		} else if upperLit == "FEDERATED" {
+			p.nextToken() // consume FEDERATED
+			// Expect ON
+			if p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+			}
+			// Expect (
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+			}
+			// Parse distribution_name = column_name
+			distributionName := p.parseIdentifier()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			columnName := p.parseIdentifier()
+			stmt.FederationScheme = &ast.FederationScheme{
+				DistributionName: distributionName,
+				ColumnName:       columnName,
+			}
+			// Expect )
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		} else {
+			break
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseCreateTableOptions parses table options (ON, TEXTIMAGE_ON, FILESTREAM_ON, WITH) for tables without column definitions (like AS FILETABLE)
+func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.CreateTableStatement, error) {
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if p.curTok.Type == TokenOn {
+			p.nextToken() // consume ON
+			// Parse filegroup or partition scheme with optional columns
+			fg, err := p.parseFileGroupOrPartitionScheme()
+			if err != nil {
+				return nil, err
+			}
+			stmt.OnFileGroupOrPartitionScheme = fg
+		} else if upperLit == "TEXTIMAGE_ON" {
+			p.nextToken() // consume TEXTIMAGE_ON
+			// Parse filegroup identifier or string literal
+			if p.curTok.Type == TokenString {
+				value := p.curTok.Literal
+				// Strip quotes from string literal
+				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+					value = value[1 : len(value)-1]
+				}
+				stmt.TextImageOn = &ast.IdentifierOrValueExpression{
+					Value: value,
+					ValueExpression: &ast.StringLiteral{
+						LiteralType: "String",
+						Value:       value,
+					},
+				}
+				p.nextToken()
+			} else {
+				ident := p.parseIdentifier()
+				stmt.TextImageOn = &ast.IdentifierOrValueExpression{
+					Value:      ident.Value,
+					Identifier: ident,
+				}
+			}
+		} else if upperLit == "FILESTREAM_ON" {
+			p.nextToken() // consume FILESTREAM_ON
+			// Parse filegroup identifier or string literal
+			if p.curTok.Type == TokenString {
+				value := p.curTok.Literal
+				// Strip quotes from string literal
+				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+					value = value[1 : len(value)-1]
+				}
+				stmt.FileStreamOn = &ast.IdentifierOrValueExpression{
+					Value: value,
+					ValueExpression: &ast.StringLiteral{
+						LiteralType: "String",
+						Value:       value,
+					},
+				}
+				p.nextToken()
+			} else {
+				ident := p.parseIdentifier()
+				stmt.FileStreamOn = &ast.IdentifierOrValueExpression{
+					Value:      ident.Value,
+					Identifier: ident,
+				}
+			}
+		} else if p.curTok.Type == TokenWith {
+			// Parse WITH clause with table options
+			p.nextToken() // consume WITH
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse table options
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optionName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken() // consume option name
+
+					if optionName == "DATA_COMPRESSION" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						opt, err := p.parseDataCompressionOption()
+						if err != nil {
+							break
+						}
+						stmt.Options = append(stmt.Options, &ast.TableDataCompressionOption{
+							DataCompressionOption: opt,
+							OptionKind:            "DataCompression",
+						})
+					} else if optionName == "FILETABLE_DIRECTORY" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						// Parse the directory name as a literal or NULL
+						opt := &ast.FileTableDirectoryTableOption{
+							OptionKind: "FileTableDirectory",
+						}
+						if strings.ToUpper(p.curTok.Literal) == "NULL" {
+							opt.Value = &ast.NullLiteral{
+								LiteralType: "Null",
+								Value:       "NULL",
+							}
+							p.nextToken()
+						} else if p.curTok.Type == TokenString {
+							value := p.curTok.Literal
+							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+								value = value[1 : len(value)-1]
+							}
+							opt.Value = &ast.StringLiteral{
+								LiteralType:   "String",
+								Value:         value,
+								IsNational:    false,
+								IsLargeObject: false,
+							}
+							p.nextToken()
+						} else {
+							value := p.curTok.Literal
+							opt.Value = &ast.StringLiteral{
+								LiteralType:   "String",
+								Value:         value,
+								IsNational:    false,
+								IsLargeObject: false,
+							}
+							p.nextToken()
+						}
+						stmt.Options = append(stmt.Options, opt)
+					} else if optionName == "FILETABLE_COLLATE_FILENAME" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						// Parse the collation name as an identifier
+						collationName := p.parseIdentifier()
+						stmt.Options = append(stmt.Options, &ast.FileTableCollateFileNameTableOption{
+							OptionKind: "FileTableCollateFileName",
+							Value:      collationName,
+						})
+					} else if optionName == "MEMORY_OPTIMIZED" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						stateUpper := strings.ToUpper(p.curTok.Literal)
+						state := "On"
+						if stateUpper == "OFF" {
+							state = "Off"
+						}
+						p.nextToken() // consume ON/OFF
+						stmt.Options = append(stmt.Options, &ast.MemoryOptimizedTableOption{
+							OptionKind:  "MemoryOptimized",
+							OptionState: state,
+						})
+					} else if optionName == "FILETABLE_PRIMARY_KEY_CONSTRAINT_NAME" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						constraintName := p.parseIdentifier()
+						stmt.Options = append(stmt.Options, &ast.FileTableConstraintNameTableOption{
+							OptionKind: "FileTablePrimaryKeyConstraintName",
+							Value:      constraintName,
+						})
+					} else if optionName == "FILETABLE_STREAMID_UNIQUE_CONSTRAINT_NAME" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						constraintName := p.parseIdentifier()
+						stmt.Options = append(stmt.Options, &ast.FileTableConstraintNameTableOption{
+							OptionKind: "FileTableStreamIdUniqueConstraintName",
+							Value:      constraintName,
+						})
+					} else if optionName == "FILETABLE_FULLPATH_UNIQUE_CONSTRAINT_NAME" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						constraintName := p.parseIdentifier()
+						stmt.Options = append(stmt.Options, &ast.FileTableConstraintNameTableOption{
+							OptionKind: "FileTableFullPathUniqueConstraintName",
+							Value:      constraintName,
+						})
+					} else {
+						// Skip unknown option value
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						p.nextToken()
+					}
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
 			}
 		} else {
 			break
@@ -5794,6 +6033,22 @@ func createTableStatementToJSON(s *ast.CreateTableStatement) jsonNode {
 		}
 		node["Options"] = opts
 	}
+	if s.FederationScheme != nil {
+		node["FederationScheme"] = federationSchemeToJSON(s.FederationScheme)
+	}
+	return node
+}
+
+func federationSchemeToJSON(fs *ast.FederationScheme) jsonNode {
+	node := jsonNode{
+		"$type": "FederationScheme",
+	}
+	if fs.DistributionName != nil {
+		node["DistributionName"] = identifierToJSON(fs.DistributionName)
+	}
+	if fs.ColumnName != nil {
+		node["ColumnName"] = identifierToJSON(fs.ColumnName)
+	}
 	return node
 }
 
@@ -5816,6 +6071,33 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
 		}
+	case *ast.FileTableDirectoryTableOption:
+		node := jsonNode{
+			"$type":      "FileTableDirectoryTableOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		return node
+	case *ast.FileTableCollateFileNameTableOption:
+		node := jsonNode{
+			"$type":      "FileTableCollateFileNameTableOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = identifierToJSON(o.Value)
+		}
+		return node
+	case *ast.FileTableConstraintNameTableOption:
+		node := jsonNode{
+			"$type":      "FileTableConstraintNameTableOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = identifierToJSON(o.Value)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownTableOption"}
 	}
@@ -11918,6 +12200,17 @@ func alterTableTriggerModificationStatementToJSON(s *ast.AlterTableTriggerModifi
 			names[i] = identifierToJSON(name)
 		}
 		node["TriggerNames"] = names
+	}
+	return node
+}
+
+func alterTableFileTableNamespaceStatementToJSON(s *ast.AlterTableFileTableNamespaceStatement) jsonNode {
+	node := jsonNode{
+		"$type":    "AlterTableFileTableNamespaceStatement",
+		"IsEnable": s.IsEnable,
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
 	return node
 }
