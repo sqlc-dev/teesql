@@ -2772,18 +2772,20 @@ func (p *Parser) parseAlterTableAlterIndexStatement(tableName *ast.SchemaObjectN
 
 func convertIndexOptionKind(name string) string {
 	optionMap := map[string]string{
-		"BUCKET_COUNT":           "BucketCount",
-		"PAD_INDEX":              "PadIndex",
-		"FILLFACTOR":             "FillFactor",
-		"SORT_IN_TEMPDB":         "SortInTempDB",
-		"IGNORE_DUP_KEY":         "IgnoreDupKey",
-		"STATISTICS_NORECOMPUTE": "StatisticsNoRecompute",
-		"DROP_EXISTING":          "DropExisting",
-		"ONLINE":                 "Online",
-		"ALLOW_ROW_LOCKS":        "AllowRowLocks",
-		"ALLOW_PAGE_LOCKS":       "AllowPageLocks",
-		"MAXDOP":                 "MaxDop",
-		"DATA_COMPRESSION":       "DataCompression",
+		"BUCKET_COUNT":            "BucketCount",
+		"PAD_INDEX":               "PadIndex",
+		"FILLFACTOR":              "FillFactor",
+		"SORT_IN_TEMPDB":          "SortInTempDB",
+		"IGNORE_DUP_KEY":          "IgnoreDupKey",
+		"STATISTICS_NORECOMPUTE":  "StatisticsNoRecompute",
+		"DROP_EXISTING":           "DropExisting",
+		"ONLINE":                  "Online",
+		"ALLOW_ROW_LOCKS":         "AllowRowLocks",
+		"ALLOW_PAGE_LOCKS":        "AllowPageLocks",
+		"MAXDOP":                  "MaxDop",
+		"DATA_COMPRESSION":        "DataCompression",
+		"COMPRESS_ALL_ROW_GROUPS": "CompressAllRowGroups",
+		"COMPRESSION_DELAY":       "CompressionDelay",
 	}
 	if mapped, ok := optionMap[name]; ok {
 		return mapped

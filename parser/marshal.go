@@ -7469,13 +7469,31 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 
 				if p.curTok.Type == TokenEquals {
 					p.nextToken()
-					valueStr := strings.ToUpper(p.curTok.Literal)
+					valueStr := p.curTok.Literal
+					valueUpper := strings.ToUpper(valueStr)
 					p.nextToken()
 
-					if valueStr == "ON" || valueStr == "OFF" {
+					if optionName == "COMPRESSION_DELAY" {
+						// Parse COMPRESSION_DELAY = value [MINUTE|MINUTES]
+						timeUnit := "Unitless"
+						nextUpper := strings.ToUpper(p.curTok.Literal)
+						if nextUpper == "MINUTE" {
+							timeUnit = "Minute"
+							p.nextToken()
+						} else if nextUpper == "MINUTES" {
+							timeUnit = "Minutes"
+							p.nextToken()
+						}
+						opt := &ast.CompressionDelayIndexOption{
+							OptionKind: "CompressionDelay",
+							Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
+							TimeUnit:   timeUnit,
+						}
+						stmt.IndexOptions = append(stmt.IndexOptions, opt)
+					} else if valueUpper == "ON" || valueUpper == "OFF" {
 						opt := &ast.IndexStateOption{
 							OptionKind:  p.getIndexOptionKind(optionName),
-							OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+							OptionState: p.capitalizeFirst(strings.ToLower(valueUpper)),
 						}
 						stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					} else {
@@ -7598,6 +7616,8 @@ func (p *Parser) getIndexOptionKind(optionName string) string {
 		"MAX_DURATION":                "MaxDuration",
 		"WAIT_AT_LOW_PRIORITY":        "WaitAtLowPriority",
 		"OPTIMIZE_FOR_SEQUENTIAL_KEY": "OptimizeForSequentialKey",
+		"COMPRESS_ALL_ROW_GROUPS":     "CompressAllRowGroups",
+		"COMPRESSION_DELAY":           "CompressionDelay",
 	}
 	if kind, ok := optionMap[optionName]; ok {
 		return kind
@@ -9311,6 +9331,16 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
 		}
+	case *ast.CompressionDelayIndexOption:
+		node := jsonNode{
+			"$type":      "CompressionDelayIndexOption",
+			"OptionKind": o.OptionKind,
+			"TimeUnit":   o.TimeUnit,
+		}
+		if o.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(o.Expression)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownIndexOption"}
 	}
