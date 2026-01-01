@@ -81,6 +81,7 @@ type ExecutableEntity interface {
 type ExecutableProcedureReference struct {
 	ProcedureReference *ProcedureReferenceName `json:"ProcedureReference,omitempty"`
 	Parameters         []*ExecuteParameter     `json:"Parameters,omitempty"`
+	AdHocDataSource    *AdHocDataSource        `json:"AdHocDataSource,omitempty"`
 }
 
 func (e *ExecutableProcedureReference) executableEntity() {}
@@ -102,12 +103,19 @@ type ProcedureReferenceName struct {
 
 // ProcedureReference references a stored procedure by name.
 type ProcedureReference struct {
-	Name *SchemaObjectName `json:"Name,omitempty"`
+	Name   *SchemaObjectName `json:"Name,omitempty"`
+	Number *IntegerLiteral   `json:"Number,omitempty"`
 }
 
 // ExecuteParameter represents a parameter to an EXEC call.
 type ExecuteParameter struct {
-	ParameterValue ScalarExpression `json:"ParameterValue,omitempty"`
+	ParameterValue ScalarExpression   `json:"ParameterValue,omitempty"`
 	Variable       *VariableReference `json:"Variable,omitempty"`
-	IsOutput       bool             `json:"IsOutput"`
+	IsOutput       bool               `json:"IsOutput"`
+}
+
+// AdHocDataSource represents an OPENDATASOURCE or OPENROWSET call for ad-hoc data access.
+type AdHocDataSource struct {
+	ProviderName *StringLiteral `json:"ProviderName,omitempty"`
+	InitString   *StringLiteral `json:"InitString,omitempty"`
 }

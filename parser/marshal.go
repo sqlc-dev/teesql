@@ -2406,6 +2406,9 @@ func executableEntityToJSON(entity ast.ExecutableEntity) jsonNode {
 			}
 			node["Parameters"] = params
 		}
+		if e.AdHocDataSource != nil {
+			node["AdHocDataSource"] = adHocDataSourceToJSON(e.AdHocDataSource)
+		}
 		return node
 	case *ast.ExecutableStringList:
 		node := jsonNode{
@@ -2451,6 +2454,9 @@ func procedureReferenceToJSON(pr *ast.ProcedureReference) jsonNode {
 	if pr.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(pr.Name)
 	}
+	if pr.Number != nil {
+		node["Number"] = scalarExpressionToJSON(pr.Number)
+	}
 	return node
 }
 
@@ -2465,6 +2471,19 @@ func executeParameterToJSON(ep *ast.ExecuteParameter) jsonNode {
 		node["Variable"] = scalarExpressionToJSON(ep.Variable)
 	}
 	node["IsOutput"] = ep.IsOutput
+	return node
+}
+
+func adHocDataSourceToJSON(ds *ast.AdHocDataSource) jsonNode {
+	node := jsonNode{
+		"$type": "AdHocDataSource",
+	}
+	if ds.ProviderName != nil {
+		node["ProviderName"] = scalarExpressionToJSON(ds.ProviderName)
+	}
+	if ds.InitString != nil {
+		node["InitString"] = scalarExpressionToJSON(ds.InitString)
+	}
 	return node
 }
 
