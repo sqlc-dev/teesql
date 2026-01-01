@@ -1384,6 +1384,7 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 	}
 
 	// Parse parameters
+	funcNameUpper := strings.ToUpper(fc.FunctionName.Value)
 	if p.curTok.Type != TokenRParen {
 		for {
 			param, err := p.parseScalarExpression()
@@ -1391,6 +1392,12 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 				return nil, err
 			}
 			fc.Parameters = append(fc.Parameters, param)
+
+			// Special handling for TRIM function: FROM keyword acts as separator
+			if funcNameUpper == "TRIM" && strings.ToUpper(p.curTok.Literal) == "FROM" {
+				p.nextToken() // consume FROM
+				continue
+			}
 
 			if p.curTok.Type != TokenComma {
 				break
@@ -1585,6 +1592,13 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 			p.nextToken() // consume )
 
 			fc.OverClause = overClause
+		}
+
+		// Check for COLLATE clause for function calls
+		if fc, ok := expr.(*ast.FunctionCall); ok && strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+			p.nextToken() // consume COLLATE
+			fc.Collation = p.parseIdentifier()
+			continue
 		}
 
 		break
