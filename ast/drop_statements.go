@@ -123,7 +123,7 @@ type LowPriorityLockWaitOption interface {
 
 // LowPriorityLockWaitMaxDurationOption represents MAX_DURATION option
 type LowPriorityLockWaitMaxDurationOption struct {
-	MaxDuration *IntegerLiteral
+	MaxDuration ScalarExpression
 	Unit        string // Minutes or Seconds
 	OptionKind  string // MaxDuration
 }

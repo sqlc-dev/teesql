@@ -3594,6 +3594,72 @@ func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName)
 						}
 						stmt.Options = append(stmt.Options, opt)
 					}
+				} else if optionName == "WAIT_AT_LOW_PRIORITY" {
+					opt := &ast.LowPriorityLockWaitTableSwitchOption{
+						OptionKind: "LowPriorityLockWait",
+					}
+
+					// Expect (
+					if p.curTok.Type == TokenLParen {
+						p.nextToken()
+
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							subOptName := strings.ToUpper(p.curTok.Literal)
+							p.nextToken()
+
+							if subOptName == "MAX_DURATION" {
+								if p.curTok.Type == TokenEquals {
+									p.nextToken()
+								}
+								// Parse the duration value
+								durExpr, err := p.parseScalarExpression()
+								if err != nil {
+									return nil, err
+								}
+								subOpt := &ast.LowPriorityLockWaitMaxDurationOption{
+									OptionKind:  "MaxDuration",
+									MaxDuration: durExpr,
+								}
+								// Check for MINUTES
+								if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+									subOpt.Unit = "Minutes"
+									p.nextToken()
+								}
+								opt.Options = append(opt.Options, subOpt)
+							} else if subOptName == "ABORT_AFTER_WAIT" {
+								if p.curTok.Type == TokenEquals {
+									p.nextToken()
+								}
+								value := p.curTok.Literal
+								p.nextToken()
+								// Convert to proper case
+								abortValue := "None"
+								switch strings.ToUpper(value) {
+								case "NONE":
+									abortValue = "None"
+								case "SELF":
+									abortValue = "Self"
+								case "BLOCKERS":
+									abortValue = "Blockers"
+								}
+								subOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
+									OptionKind:     "AbortAfterWait",
+									AbortAfterWait: abortValue,
+								}
+								opt.Options = append(opt.Options, subOpt)
+							}
+
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							}
+						}
+
+						if p.curTok.Type == TokenRParen {
+							p.nextToken()
+						}
+					}
+
+					stmt.Options = append(stmt.Options, opt)
 				}
 
 				if p.curTok.Type == TokenComma {

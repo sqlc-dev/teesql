@@ -11653,6 +11653,19 @@ func tableSwitchOptionToJSON(opt ast.TableSwitchOption) jsonNode {
 			"TruncateTarget": o.TruncateTarget,
 			"OptionKind":     o.OptionKind,
 		}
+	case *ast.LowPriorityLockWaitTableSwitchOption:
+		node := jsonNode{
+			"$type":      "LowPriorityLockWaitTableSwitchOption",
+			"OptionKind": o.OptionKind,
+		}
+		if len(o.Options) > 0 {
+			opts := make([]jsonNode, len(o.Options))
+			for i, subOpt := range o.Options {
+				opts[i] = lowPriorityLockWaitOptionToJSON(subOpt)
+			}
+			node["Options"] = opts
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownSwitchOption"}
 	}
