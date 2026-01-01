@@ -19,3 +19,11 @@ type IndexTableHint struct {
 }
 
 func (*IndexTableHint) tableHint() {}
+
+// LiteralTableHint represents a table hint with a literal value (e.g., SPATIAL_WINDOW_MAX_CELLS = 512).
+type LiteralTableHint struct {
+	HintKind string           `json:"HintKind,omitempty"`
+	Value    ScalarExpression `json:"Value,omitempty"`
+}
+
+func (*LiteralTableHint) tableHint() {}

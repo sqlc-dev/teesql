@@ -1172,7 +1172,7 @@ func (p *Parser) parseNationalStringFromToken() (*ast.StringLiteral, error) {
 func (p *Parser) isIdentifierToken() bool {
 	switch p.curTok.Type {
 	case TokenIdent, TokenMaster, TokenDatabase, TokenKey, TokenTable, TokenIndex,
-		TokenSchema, TokenUser, TokenView, TokenDefault:
+		TokenSchema, TokenUser, TokenView, TokenDefault, TokenTyp, TokenLanguage:
 		return true
 	default:
 		return false
@@ -1830,6 +1830,18 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		return p.parsePredictTableReference()
 	}
 
+	// Check for full-text table functions (CONTAINSTABLE, FREETEXTTABLE)
+	if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper == "CONTAINSTABLE" || upper == "FREETEXTTABLE" {
+			return p.parseFullTextTableReference(upper)
+		}
+		// Check for semantic table functions
+		if upper == "SEMANTICKEYPHRASETABLE" || upper == "SEMANTICSIMILARITYTABLE" || upper == "SEMANTICSIMILARITYDETAILSTABLE" {
+			return p.parseSemanticTableReference(upper)
+		}
+	}
+
 	// Check for variable table reference
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		name := p.curTok.Literal
@@ -2030,6 +2042,319 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 	return ref, nil
 }
 
+// parseFullTextTableReference parses CONTAINSTABLE or FREETEXTTABLE
+func (p *Parser) parseFullTextTableReference(funcType string) (*ast.FullTextTableReference, error) {
+	ref := &ast.FullTextTableReference{
+		ForPath: false,
+	}
+	if funcType == "CONTAINSTABLE" {
+		ref.FullTextFunctionType = "Contains"
+	} else {
+		ref.FullTextFunctionType = "FreeText"
+	}
+	p.nextToken() // consume function name
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after %s, got %s", funcType, p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse table name
+	tableName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	ref.TableName = tableName
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after table name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse column specification - could be *, (columns), or PROPERTY(column, 'property')
+	if p.curTok.Type == TokenStar {
+		ref.Columns = []*ast.ColumnReferenceExpression{{ColumnType: "Wildcard"}}
+		p.nextToken()
+	} else if p.curTok.Type == TokenLParen {
+		// Column list
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			if p.curTok.Type == TokenStar {
+				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				p.nextToken()
+			} else {
+				col := p.parseIdentifier()
+				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{col},
+						Count:       1,
+					},
+				})
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PROPERTY" {
+		// PROPERTY(column, 'property_name')
+		p.nextToken() // consume PROPERTY
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Parse column name
+		col := p.parseIdentifier()
+		ref.Columns = []*ast.ColumnReferenceExpression{{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Identifiers: []*ast.Identifier{col},
+				Count:       1,
+			},
+		}}
+
+		// Expect comma
+		if p.curTok.Type != TokenComma {
+			return nil, fmt.Errorf("expected , after column in PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ,
+
+		// Parse property name (string literal)
+		propExpr, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+		ref.PropertyName = propExpr
+
+		// Expect )
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	} else {
+		// Single column
+		col := p.parseIdentifier()
+		ref.Columns = []*ast.ColumnReferenceExpression{{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Identifiers: []*ast.Identifier{col},
+				Count:       1,
+			},
+		}}
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after columns, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse search condition (string literal or expression)
+	searchCond, err := p.parsePrimaryExpression()
+	if err != nil {
+		return nil, err
+	}
+	ref.SearchCondition = searchCond
+
+	// Parse optional LANGUAGE and top_n - can come in any order
+	for p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+
+		if p.curTok.Type == TokenLanguage {
+			p.nextToken() // consume LANGUAGE
+			langExpr, err := p.parsePrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+			ref.Language = langExpr
+		} else {
+			// top_n value
+			topExpr, err := p.parsePrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+			ref.TopN = topExpr
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after CONTAINSTABLE/FREETEXTTABLE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	return ref, nil
+}
+
+// parseSemanticTableReference parses SEMANTICKEYPHRASETABLE, SEMANTICSIMILARITYTABLE, or SEMANTICSIMILARITYDETAILSTABLE
+func (p *Parser) parseSemanticTableReference(funcType string) (*ast.SemanticTableReference, error) {
+	ref := &ast.SemanticTableReference{
+		ForPath: false,
+	}
+	switch funcType {
+	case "SEMANTICKEYPHRASETABLE":
+		ref.SemanticFunctionType = "SemanticKeyPhraseTable"
+	case "SEMANTICSIMILARITYTABLE":
+		ref.SemanticFunctionType = "SemanticSimilarityTable"
+	case "SEMANTICSIMILARITYDETAILSTABLE":
+		ref.SemanticFunctionType = "SemanticSimilarityDetailsTable"
+	}
+	p.nextToken() // consume function name
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after %s, got %s", funcType, p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse table name
+	tableName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	ref.TableName = tableName
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after table name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse column specification - could be *, (columns), or single column
+	if p.curTok.Type == TokenStar {
+		ref.Columns = []*ast.ColumnReferenceExpression{{ColumnType: "Wildcard"}}
+		p.nextToken()
+	} else if p.curTok.Type == TokenLParen {
+		// Column list
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			if p.curTok.Type == TokenStar {
+				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				p.nextToken()
+			} else {
+				col := p.parseIdentifier()
+				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{col},
+						Count:       1,
+					},
+				})
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	} else {
+		// Single column
+		col := p.parseIdentifier()
+		ref.Columns = []*ast.ColumnReferenceExpression{{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Identifiers: []*ast.Identifier{col},
+				Count:       1,
+			},
+		}}
+	}
+
+	// For SEMANTICSIMILARITYTABLE and SEMANTICKEYPHRASETABLE: optional source_key
+	// For SEMANTICSIMILARITYDETAILSTABLE: source_key, matched_column, matched_key
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		// Parse source_key expression
+		sourceKey, err := p.parseSimpleExpression()
+		if err != nil {
+			return nil, err
+		}
+		ref.SourceKey = sourceKey
+
+		// For SEMANTICSIMILARITYDETAILSTABLE, parse matched_column and matched_key
+		if funcType == "SEMANTICSIMILARITYDETAILSTABLE" {
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				// Parse matched_column
+				col := p.parseIdentifier()
+				ref.MatchedColumn = &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{col},
+						Count:       1,
+					},
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume ,
+					// Parse matched_key expression
+					matchedKey, err := p.parseSimpleExpression()
+					if err != nil {
+						return nil, err
+					}
+					ref.MatchedKey = matchedKey
+				}
+			}
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after semantic table function, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	return ref, nil
+}
+
+// parseSimpleExpression parses a simple expression (including unary minus for negative numbers)
+func (p *Parser) parseSimpleExpression() (ast.ScalarExpression, error) {
+	if p.curTok.Type == TokenMinus {
+		p.nextToken() // consume -
+		expr, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.UnaryExpression{
+			UnaryExpressionType: "Negative",
+			Expression:          expr,
+		}, nil
+	}
+	return p.parsePrimaryExpression()
+}
+
 // parseTableHint parses a single table hint
 func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 	hintName := strings.ToUpper(p.curTok.Literal)
@@ -2075,6 +2400,24 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
+		}
+		return hint, nil
+	}
+
+	// SPATIAL_WINDOW_MAX_CELLS hint with value
+	if hintName == "SPATIAL_WINDOW_MAX_CELLS" {
+		hint := &ast.LiteralTableHint{
+			HintKind: "SpatialWindowMaxCells",
+		}
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		if p.curTok.Type == TokenNumber {
+			hint.Value = &ast.IntegerLiteral{
+				LiteralType: "Integer",
+				Value:       p.curTok.Literal,
+			}
+			p.nextToken()
 		}
 		return hint, nil
 	}

@@ -2138,6 +2138,68 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		node["ForPath"] = r.ForPath
 		return node
+	case *ast.FullTextTableReference:
+		node := jsonNode{
+			"$type": "FullTextTableReference",
+		}
+		if r.FullTextFunctionType != "" {
+			node["FullTextFunctionType"] = r.FullTextFunctionType
+		}
+		if r.TableName != nil {
+			node["TableName"] = schemaObjectNameToJSON(r.TableName)
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, col := range r.Columns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		if r.SearchCondition != nil {
+			node["SearchCondition"] = scalarExpressionToJSON(r.SearchCondition)
+		}
+		if r.TopN != nil {
+			node["TopN"] = scalarExpressionToJSON(r.TopN)
+		}
+		if r.Language != nil {
+			node["Language"] = scalarExpressionToJSON(r.Language)
+		}
+		if r.PropertyName != nil {
+			node["PropertyName"] = scalarExpressionToJSON(r.PropertyName)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.SemanticTableReference:
+		node := jsonNode{
+			"$type": "SemanticTableReference",
+		}
+		if r.SemanticFunctionType != "" {
+			node["SemanticFunctionType"] = r.SemanticFunctionType
+		}
+		if r.TableName != nil {
+			node["TableName"] = schemaObjectNameToJSON(r.TableName)
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, col := range r.Columns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		if r.SourceKey != nil {
+			node["SourceKey"] = scalarExpressionToJSON(r.SourceKey)
+		}
+		if r.MatchedColumn != nil {
+			node["MatchedColumn"] = columnReferenceExpressionToJSON(r.MatchedColumn)
+		}
+		if r.MatchedKey != nil {
+			node["MatchedKey"] = scalarExpressionToJSON(r.MatchedKey)
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
 	default:
 		return jsonNode{"$type": "UnknownTableReference"}
 	}
@@ -2519,6 +2581,17 @@ func tableHintToJSON(h ast.TableHintType) jsonNode {
 				values[i] = identifierOrValueExpressionToJSON(v)
 			}
 			node["IndexValues"] = values
+		}
+		if th.HintKind != "" {
+			node["HintKind"] = th.HintKind
+		}
+		return node
+	case *ast.LiteralTableHint:
+		node := jsonNode{
+			"$type": "LiteralTableHint",
+		}
+		if th.Value != nil {
+			node["Value"] = scalarExpressionToJSON(th.Value)
 		}
 		if th.HintKind != "" {
 			node["HintKind"] = th.HintKind
