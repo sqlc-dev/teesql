@@ -483,7 +483,7 @@ func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
 func (p *Parser) getOpenRowsetOptionKind(name string) string {
 	optionMap := map[string]string{
 		"FORMATFILE":       "FormatFile",
-		"FORMAT":           "Format",
+		"FORMAT":           "DataFileFormat",
 		"CODEPAGE":         "CodePage",
 		"ROWS_PER_BATCH":   "RowsPerBatch",
 		"LASTROW":          "LastRow",
@@ -1766,7 +1766,7 @@ func (p *Parser) parseBulkInsertOption() (ast.BulkInsertOption, error) {
 		"KEEPIDENTITY":        "KeepIdentity",
 		"INCLUDE_HIDDEN":      "IncludeHidden",
 		"BATCHSIZE":           "BatchSize",
-		"CODEPAGE":            "Codepage",
+		"CODEPAGE":            "CodePage",
 		"DATAFILETYPE":        "DataFileType",
 		"FIELDTERMINATOR":     "FieldTerminator",
 		"FIRSTROW":            "FirstRow",
@@ -1777,6 +1777,9 @@ func (p *Parser) parseBulkInsertOption() (ast.BulkInsertOption, error) {
 		"ROWTERMINATOR":       "RowTerminator",
 		"ROWS_PER_BATCH":      "RowsPerBatch",
 		"ERRORFILE":           "ErrorFile",
+		"FORMAT":              "DataFileFormat",
+		"ESCAPECHAR":          "EscapeChar",
+		"FIELDQUOTE":          "FieldQuote",
 	}
 
 	optionKind := optionKindMap[optionName]
