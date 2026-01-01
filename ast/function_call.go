@@ -28,7 +28,8 @@ func (*UserDefinedTypeCallTarget) callTarget() {}
 
 // OverClause represents an OVER clause for window functions.
 type OverClause struct {
-	// Add partition by, order by, and window frame as needed
+	Partitions    []ScalarExpression `json:"Partitions,omitempty"`
+	OrderByClause *OrderByClause     `json:"OrderByClause,omitempty"`
 }
 
 // WithinGroupClause represents a WITHIN GROUP clause for ordered set aggregate functions.

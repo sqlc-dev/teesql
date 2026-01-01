@@ -1389,9 +1389,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["WithinGroupClause"] = withinGroupClauseToJSON(e.WithinGroupClause)
 		}
 		if e.OverClause != nil {
-			node["OverClause"] = jsonNode{
-				"$type": "OverClause",
-			}
+			node["OverClause"] = overClauseToJSON(e.OverClause)
 		}
 		if len(e.IgnoreRespectNulls) > 0 {
 			idents := make([]jsonNode, len(e.IgnoreRespectNulls))
@@ -2148,6 +2146,23 @@ func withinGroupClauseToJSON(wg *ast.WithinGroupClause) jsonNode {
 		node["OrderByClause"] = orderByClauseToJSON(wg.OrderByClause)
 	}
 	node["HasGraphPath"] = wg.HasGraphPath
+	return node
+}
+
+func overClauseToJSON(oc *ast.OverClause) jsonNode {
+	node := jsonNode{
+		"$type": "OverClause",
+	}
+	if len(oc.Partitions) > 0 {
+		partitions := make([]jsonNode, len(oc.Partitions))
+		for i, p := range oc.Partitions {
+			partitions[i] = scalarExpressionToJSON(p)
+		}
+		node["Partitions"] = partitions
+	}
+	if oc.OrderByClause != nil {
+		node["OrderByClause"] = orderByClauseToJSON(oc.OrderByClause)
+	}
 	return node
 }
 

@@ -1374,14 +1374,44 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 			}
 			p.nextToken() // consume (
 
-			// For now, just skip to closing paren (basic OVER() support)
-			// TODO: Parse partition by, order by, and window frame
+			overClause := &ast.OverClause{}
+
+			// Parse PARTITION BY
+			if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+				p.nextToken() // consume PARTITION
+				if strings.ToUpper(p.curTok.Literal) == "BY" {
+					p.nextToken() // consume BY
+				}
+				// Parse partition expressions
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					partExpr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					overClause.Partitions = append(overClause.Partitions, partExpr)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+			}
+
+			// Parse ORDER BY
+			if p.curTok.Type == TokenOrder {
+				orderBy, err := p.parseOrderByClause()
+				if err != nil {
+					return nil, err
+				}
+				overClause.OrderByClause = orderBy
+			}
+
 			if p.curTok.Type != TokenRParen {
 				return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
 			}
 			p.nextToken() // consume )
 
-			fc.OverClause = &ast.OverClause{}
+			fc.OverClause = overClause
 		}
 
 		break
