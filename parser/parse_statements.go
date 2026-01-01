@@ -2605,32 +2605,89 @@ func (p *Parser) parseAuditTargetOption() (ast.AuditTargetOption, error) {
 	}
 	p.nextToken()
 
-	// Parse value
-	val, err := p.parseScalarExpression()
-	if err != nil {
-		return nil, err
-	}
-
-	optKind := ""
 	switch optName {
-	case "FILEPATH":
-		optKind = "FilePath"
-	case "MAX_FILES":
-		optKind = "MaxFiles"
-	case "MAX_ROLLOVER_FILES":
-		optKind = "MaxRolloverFiles"
 	case "MAXSIZE":
-		optKind = "MaxSize"
-	case "RESERVE_DISK_SPACE":
-		optKind = "ReserveDiskSpace"
-	default:
-		optKind = capitalizeFirst(strings.ToLower(optName))
-	}
+		// Check for UNLIMITED
+		if strings.ToUpper(p.curTok.Literal) == "UNLIMITED" {
+			p.nextToken()
+			return &ast.MaxSizeAuditTargetOption{
+				OptionKind:  "MaxSize",
+				IsUnlimited: true,
+				Unit:        "Unspecified",
+			}, nil
+		}
+		// Parse size value
+		size, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		// Parse unit (MB, GB, TB)
+		unit := "Unspecified"
+		unitUpper := strings.ToUpper(p.curTok.Literal)
+		if unitUpper == "MB" || unitUpper == "GB" || unitUpper == "TB" {
+			unit = unitUpper
+			p.nextToken()
+		}
+		return &ast.MaxSizeAuditTargetOption{
+			OptionKind:  "MaxSize",
+			Size:        size,
+			Unit:        unit,
+			IsUnlimited: false,
+		}, nil
 
-	return &ast.LiteralAuditTargetOption{
-		OptionKind: optKind,
-		Value:      val,
-	}, nil
+	case "MAX_ROLLOVER_FILES":
+		// Check for UNLIMITED
+		if strings.ToUpper(p.curTok.Literal) == "UNLIMITED" {
+			p.nextToken()
+			return &ast.MaxRolloverFilesAuditTargetOption{
+				OptionKind:  "MaxRolloverFiles",
+				IsUnlimited: true,
+			}, nil
+		}
+		// Parse value
+		val, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.MaxRolloverFilesAuditTargetOption{
+			OptionKind:  "MaxRolloverFiles",
+			Value:       val,
+			IsUnlimited: false,
+		}, nil
+
+	case "RESERVE_DISK_SPACE":
+		// Parse ON/OFF
+		value := "Off"
+		valUpper := strings.ToUpper(p.curTok.Literal)
+		if valUpper == "ON" || p.curTok.Type == TokenOn {
+			value = "On"
+		}
+		p.nextToken()
+		return &ast.OnOffAuditTargetOption{
+			OptionKind: "ReserveDiskSpace",
+			Value:      value,
+		}, nil
+
+	default:
+		// Parse literal value (FILEPATH, etc.)
+		val, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		optKind := ""
+		switch optName {
+		case "FILEPATH":
+			optKind = "FilePath"
+		case "MAX_FILES":
+			optKind = "MaxFiles"
+		default:
+			optKind = capitalizeFirst(strings.ToLower(optName))
+		}
+		return &ast.LiteralAuditTargetOption{
+			OptionKind: optKind,
+			Value:      val,
+		}, nil
+	}
 }
 
 func (p *Parser) parseAuditOption() (ast.AuditOption, error) {

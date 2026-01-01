@@ -176,6 +176,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropSearchPropertyListStatementToJSON(s)
 	case *ast.DropServerRoleStatement:
 		return dropServerRoleStatementToJSON(s)
+	case *ast.DropServerAuditStatement:
+		return dropServerAuditStatementToJSON(s)
 	case *ast.DropAvailabilityGroupStatement:
 		return dropAvailabilityGroupStatementToJSON(s)
 	case *ast.DropFederationStatement:
@@ -6761,6 +6763,9 @@ func alterServerAuditStatementToJSON(s *ast.AlterServerAuditStatement) jsonNode 
 		"$type":       "AlterServerAuditStatement",
 		"RemoveWhere": s.RemoveWhere,
 	}
+	if s.NewName != nil {
+		node["NewName"] = identifierToJSON(s.NewName)
+	}
 	if s.AuditName != nil {
 		node["AuditName"] = identifierToJSON(s.AuditName)
 	}
@@ -6776,6 +6781,17 @@ func alterServerAuditStatementToJSON(s *ast.AlterServerAuditStatement) jsonNode 
 	}
 	if s.PredicateExpression != nil {
 		node["PredicateExpression"] = booleanExpressionToJSON(s.PredicateExpression)
+	}
+	return node
+}
+
+func dropServerAuditStatementToJSON(s *ast.DropServerAuditStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropServerAuditStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
 	}
 	return node
 }
@@ -6806,6 +6822,33 @@ func auditTargetOptionToJSON(o ast.AuditTargetOption) jsonNode {
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
 		return node
+	case *ast.MaxSizeAuditTargetOption:
+		node := jsonNode{
+			"$type":       "MaxSizeAuditTargetOption",
+			"IsUnlimited": opt.IsUnlimited,
+			"Unit":        opt.Unit,
+			"OptionKind":  opt.OptionKind,
+		}
+		if opt.Size != nil {
+			node["Size"] = scalarExpressionToJSON(opt.Size)
+		}
+		return node
+	case *ast.MaxRolloverFilesAuditTargetOption:
+		node := jsonNode{
+			"$type":       "MaxRolloverFilesAuditTargetOption",
+			"IsUnlimited": opt.IsUnlimited,
+			"OptionKind":  opt.OptionKind,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		return node
+	case *ast.OnOffAuditTargetOption:
+		return jsonNode{
+			"$type":      "OnOffAuditTargetOption",
+			"Value":      opt.Value,
+			"OptionKind": opt.OptionKind,
+		}
 	default:
 		return jsonNode{"$type": "UnknownAuditTargetOption"}
 	}

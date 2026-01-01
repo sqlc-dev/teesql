@@ -14,6 +14,7 @@ func (s *CreateServerAuditStatement) node()      {}
 // AlterServerAuditStatement represents an ALTER SERVER AUDIT statement
 type AlterServerAuditStatement struct {
 	AuditName           *Identifier
+	NewName             *Identifier
 	AuditTarget         *AuditTarget
 	Options             []AuditOption
 	PredicateExpression BooleanExpression
@@ -22,6 +23,15 @@ type AlterServerAuditStatement struct {
 
 func (s *AlterServerAuditStatement) statement() {}
 func (s *AlterServerAuditStatement) node()      {}
+
+// DropServerAuditStatement represents a DROP SERVER AUDIT statement
+type DropServerAuditStatement struct {
+	Name       *Identifier
+	IsIfExists bool
+}
+
+func (s *DropServerAuditStatement) statement() {}
+func (s *DropServerAuditStatement) node()      {}
 
 // AuditTarget represents the target of a server audit
 type AuditTarget struct {
@@ -41,6 +51,33 @@ type LiteralAuditTargetOption struct {
 }
 
 func (o *LiteralAuditTargetOption) auditTargetOption() {}
+
+// MaxSizeAuditTargetOption represents the MAXSIZE option
+type MaxSizeAuditTargetOption struct {
+	OptionKind  string
+	Size        ScalarExpression
+	Unit        string // MB, GB, TB, Unspecified
+	IsUnlimited bool
+}
+
+func (o *MaxSizeAuditTargetOption) auditTargetOption() {}
+
+// MaxRolloverFilesAuditTargetOption represents the MAX_ROLLOVER_FILES option
+type MaxRolloverFilesAuditTargetOption struct {
+	OptionKind  string
+	Value       ScalarExpression
+	IsUnlimited bool
+}
+
+func (o *MaxRolloverFilesAuditTargetOption) auditTargetOption() {}
+
+// OnOffAuditTargetOption represents an ON/OFF target option
+type OnOffAuditTargetOption struct {
+	OptionKind string
+	Value      string // On, Off
+}
+
+func (o *OnOffAuditTargetOption) auditTargetOption() {}
 
 // AuditOption is an interface for audit options
 type AuditOption interface {

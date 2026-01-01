@@ -892,25 +892,33 @@ func (p *Parser) parseDropSearchPropertyListStatement() (*ast.DropSearchProperty
 	return stmt, nil
 }
 
-func (p *Parser) parseDropServerRoleStatement() (*ast.DropServerRoleStatement, error) {
+func (p *Parser) parseDropServerRoleStatement() (ast.Statement, error) {
 	// Consume SERVER
 	p.nextToken()
 
-	// Expect ROLE
-	if strings.ToUpper(p.curTok.Literal) != "ROLE" {
-		return nil, fmt.Errorf("expected ROLE after SERVER, got %s", p.curTok.Literal)
-	}
-	p.nextToken()
-
-	stmt := &ast.DropServerRoleStatement{}
-	stmt.Name = p.parseIdentifier()
-
-	// Skip optional semicolon
-	if p.curTok.Type == TokenSemicolon {
+	// Check if it's ROLE or AUDIT
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "ROLE":
 		p.nextToken()
+		stmt := &ast.DropServerRoleStatement{}
+		stmt.Name = p.parseIdentifier()
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	case "AUDIT":
+		p.nextToken()
+		stmt := &ast.DropServerAuditStatement{}
+		stmt.Name = p.parseIdentifier()
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	default:
+		return nil, fmt.Errorf("expected ROLE or AUDIT after SERVER, got %s", p.curTok.Literal)
 	}
-
-	return stmt, nil
 }
 
 func (p *Parser) parseDropAvailabilityGroupStatement() (*ast.DropAvailabilityGroupStatement, error) {
@@ -4063,6 +4071,24 @@ func (p *Parser) parseAlterServerAuditStatement() (*ast.AlterServerAuditStatemen
 
 	// Parse audit name
 	stmt.AuditName = p.parseIdentifier()
+
+	// Check for MODIFY NAME
+	if strings.ToUpper(p.curTok.Literal) == "MODIFY" {
+		p.nextToken() // consume MODIFY
+		if strings.ToUpper(p.curTok.Literal) == "NAME" {
+			p.nextToken() // consume NAME
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			stmt.NewName = p.parseIdentifier()
+			// Skip optional semicolon
+			if p.curTok.Type == TokenSemicolon {
+				p.nextToken()
+			}
+			return stmt, nil
+		}
+		return nil, fmt.Errorf("expected NAME after MODIFY, got %s", p.curTok.Literal)
+	}
 
 	// Check for REMOVE WHERE
 	if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
