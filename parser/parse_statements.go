@@ -7936,7 +7936,14 @@ func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) 
 	// Parse WITH (index options)
 	if p.curTok.Type == TokenWith {
 		p.nextToken() // consume WITH
-		stmt.IndexOptions = p.parseCreateIndexOptions()
+		// Check if this is SQL 80 style (no parentheses) or modern style (with parentheses)
+		if p.curTok.Type == TokenLParen {
+			stmt.IndexOptions = p.parseCreateIndexOptions()
+		} else {
+			// SQL 80 style - no parentheses around options
+			stmt.Translated80SyntaxTo90 = true
+			stmt.IndexOptions = p.parseCreateIndexOptions80Style()
+		}
 	}
 
 	// Parse ON filegroup/partition_scheme
@@ -8048,6 +8055,104 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 	}
 
 	return options
+}
+
+// parseCreateIndexOptions80Style parses index options without parentheses (SQL 80 style)
+// e.g., WITH FILLFACTOR = 23, PAD_INDEX
+func (p *Parser) parseCreateIndexOptions80Style() []ast.IndexOption {
+	var options []ast.IndexOption
+
+	for {
+		// Check if current token could be an index option
+		upper := strings.ToUpper(p.curTok.Literal)
+		if !p.isIndexOption80Style(upper) {
+			break
+		}
+
+		optionName := upper
+		p.nextToken() // consume option name
+
+		var valueStr string
+		var valueToken Token
+
+		// Check if there's an = value
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+			valueToken = p.curTok
+			valueStr = strings.ToUpper(valueToken.Literal)
+			p.nextToken() // consume value
+		} else {
+			// No value means this is a flag option that is ON
+			valueStr = "ON"
+		}
+
+		switch optionName {
+		case "PAD_INDEX":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "PadIndex",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "FILLFACTOR":
+			options = append(options, &ast.IndexExpressionOption{
+				OptionKind: "FillFactor",
+				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+			})
+		case "IGNORE_DUP_KEY":
+			// In SQL 80 style, IGNORE_DUP_KEY uses IndexStateOption
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "IgnoreDupKey",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "DROP_EXISTING":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "DropExisting",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "STATISTICS_NORECOMPUTE":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "StatisticsNoRecompute",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		case "SORT_IN_TEMPDB":
+			options = append(options, &ast.IndexStateOption{
+				OptionKind:  "SortInTempDB",
+				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			})
+		default:
+			// Generic handling for other options
+			if valueStr == "ON" || valueStr == "OFF" {
+				options = append(options, &ast.IndexStateOption{
+					OptionKind:  p.getIndexOptionKind(optionName),
+					OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+				})
+			} else if valueToken.Type == TokenNumber || valueToken.Type != 0 {
+				options = append(options, &ast.IndexExpressionOption{
+					OptionKind: p.getIndexOptionKind(optionName),
+					Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+				})
+			}
+		}
+
+		// Check for comma to continue parsing options
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return options
+}
+
+// isIndexOption80Style checks if a token could be an index option in SQL 80 style
+func (p *Parser) isIndexOption80Style(name string) bool {
+	switch name {
+	case "PAD_INDEX", "FILLFACTOR", "IGNORE_DUP_KEY", "DROP_EXISTING",
+		"STATISTICS_NORECOMPUTE", "SORT_IN_TEMPDB":
+		return true
+	default:
+		return false
+	}
 }
 
 func (p *Parser) parseCreateSpatialIndexStatement() (*ast.CreateSpatialIndexStatement, error) {
