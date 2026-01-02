@@ -27,7 +27,8 @@ type LiteralPrincipalOption struct {
 	Value      ScalarExpression
 }
 
-func (o *LiteralPrincipalOption) userOptionNode() {}
+func (o *LiteralPrincipalOption) userOptionNode()      {}
+func (o *LiteralPrincipalOption) principalOptionNode() {}
 
 // IdentifierPrincipalOption represents an identifier-based user option
 type IdentifierPrincipalOption struct {
@@ -35,7 +36,8 @@ type IdentifierPrincipalOption struct {
 	Identifier *Identifier
 }
 
-func (o *IdentifierPrincipalOption) userOptionNode() {}
+func (o *IdentifierPrincipalOption) userOptionNode()      {}
+func (o *IdentifierPrincipalOption) principalOptionNode() {}
 
 // DefaultSchemaPrincipalOption represents a default schema option
 type DefaultSchemaPrincipalOption struct {

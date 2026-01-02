@@ -13732,7 +13732,54 @@ func createLoginStatementToJSON(s *ast.CreateLoginStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.Source != nil {
+		node["Source"] = createLoginSourceToJSON(s.Source)
+	}
 	return node
+}
+
+func createLoginSourceToJSON(s ast.CreateLoginSource) jsonNode {
+	switch src := s.(type) {
+	case *ast.ExternalCreateLoginSource:
+		node := jsonNode{
+			"$type": "ExternalCreateLoginSource",
+		}
+		if len(src.Options) > 0 {
+			opts := make([]jsonNode, len(src.Options))
+			for i, opt := range src.Options {
+				opts[i] = principalOptionToJSON(opt)
+			}
+			node["Options"] = opts
+		}
+		return node
+	default:
+		return jsonNode{}
+	}
+}
+
+func principalOptionToJSON(o ast.PrincipalOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.LiteralPrincipalOption:
+		node := jsonNode{
+			"$type":      "LiteralPrincipalOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		return node
+	case *ast.IdentifierPrincipalOption:
+		node := jsonNode{
+			"$type":      "IdentifierPrincipalOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Identifier != nil {
+			node["Identifier"] = identifierToJSON(opt.Identifier)
+		}
+		return node
+	default:
+		return jsonNode{}
+	}
 }
 
 func createIndexStatementToJSON(s *ast.CreateIndexStatement) jsonNode {

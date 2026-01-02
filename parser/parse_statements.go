@@ -8604,9 +8604,95 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Check for FROM clause
+	if p.curTok.Type == TokenFrom {
+		p.nextToken() // consume FROM
+
+		// Check for EXTERNAL PROVIDER
+		if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+			p.nextToken() // consume EXTERNAL
+			if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+				p.nextToken() // consume PROVIDER
+			}
+
+			source := &ast.ExternalCreateLoginSource{}
+
+			// Parse WITH options
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				source.Options = p.parseExternalLoginOptions()
+			}
+
+			stmt.Source = source
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
+}
+
+func (p *Parser) parseExternalLoginOptions() []ast.PrincipalOption {
+	var options []ast.PrincipalOption
+
+	for {
+		optName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume option name
+
+		// Expect =
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		switch optName {
+		case "SID":
+			// SID = 0x... (binary literal)
+			if p.curTok.Type == TokenBinary {
+				options = append(options, &ast.LiteralPrincipalOption{
+					OptionKind: "Sid",
+					Value: &ast.BinaryLiteral{
+						LiteralType:   "Binary",
+						IsLargeObject: false,
+						Value:         p.curTok.Literal,
+					},
+				})
+				p.nextToken()
+			}
+		case "TYPE":
+			// TYPE = X or TYPE = [X] or TYPE = E
+			options = append(options, &ast.IdentifierPrincipalOption{
+				OptionKind: "Type",
+				Identifier: p.parseIdentifier(),
+			})
+		case "DEFAULT_DATABASE":
+			options = append(options, &ast.IdentifierPrincipalOption{
+				OptionKind: "DefaultDatabase",
+				Identifier: p.parseIdentifier(),
+			})
+		case "DEFAULT_LANGUAGE":
+			options = append(options, &ast.IdentifierPrincipalOption{
+				OptionKind: "DefaultLanguage",
+				Identifier: p.parseIdentifier(),
+			})
+		default:
+			// Unknown option, skip value
+			if p.curTok.Type != TokenComma && p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+				p.nextToken()
+			}
+		}
+
+		// Check for comma (more options)
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return options
 }
 
 func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) {
