@@ -3055,16 +3055,16 @@ func (p *Parser) parseWaitAtLowPriorityOption() (*ast.DropClusteredConstraintWai
 			}
 			p.nextToken() // consume number
 
-			// Parse unit (MINUTES or SECONDS)
+			// Parse optional unit (MINUTES or SECONDS)
 			unit := strings.ToUpper(p.curTok.Literal)
 			if unit == "MINUTES" {
 				maxDuration.Unit = "Minutes"
+				p.nextToken() // consume unit
 			} else if unit == "SECONDS" {
 				maxDuration.Unit = "Seconds"
-			} else {
-				return nil, fmt.Errorf("expected MINUTES or SECONDS, got %s", p.curTok.Literal)
+				p.nextToken() // consume unit
 			}
-			p.nextToken() // consume unit
+			// If no unit is specified, leave Unit empty
 
 			opt.Options = append(opt.Options, maxDuration)
 

@@ -768,10 +768,12 @@ func lowPriorityLockWaitOptionToJSON(o ast.LowPriorityLockWaitOption) jsonNode {
 		node := jsonNode{
 			"$type":      "LowPriorityLockWaitMaxDurationOption",
 			"OptionKind": opt.OptionKind,
-			"Unit":       opt.Unit,
 		}
 		if opt.MaxDuration != nil {
 			node["MaxDuration"] = scalarExpressionToJSON(opt.MaxDuration)
+		}
+		if opt.Unit != "" {
+			node["Unit"] = opt.Unit
 		}
 		return node
 	case *ast.LowPriorityLockWaitAbortAfterWaitOption:
