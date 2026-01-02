@@ -1070,6 +1070,16 @@ func (p *Parser) parseOdbcLiteral() (*ast.OdbcLiteral, error) {
 
 func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
 	raw := p.curTok.Literal
+	isNational := false
+
+	// Check for national string (N'...')
+	if p.curTok.Type == TokenNationalString {
+		isNational = true
+		// Strip the N prefix
+		if len(raw) >= 3 && (raw[0] == 'N' || raw[0] == 'n') && raw[1] == '\'' {
+			raw = raw[1:] // Remove the N, keep the rest including quotes
+		}
+	}
 	p.nextToken()
 
 	// Remove surrounding quotes and handle escaped quotes
@@ -1079,7 +1089,7 @@ func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
 		value := strings.ReplaceAll(inner, "''", "'")
 		return &ast.StringLiteral{
 			LiteralType:   "String",
-			IsNational:    false,
+			IsNational:    isNational,
 			IsLargeObject: false,
 			Value:         value,
 		}, nil
@@ -1087,7 +1097,7 @@ func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
 
 	return &ast.StringLiteral{
 		LiteralType:   "String",
-		IsNational:    false,
+		IsNational:    isNational,
 		IsLargeObject: false,
 		Value:         raw,
 	}, nil

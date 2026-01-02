@@ -1197,6 +1197,9 @@ func selectStatementToJSON(s *ast.SelectStatement) jsonNode {
 		}
 		node["OptimizerHints"] = hints
 	}
+	if s.WithCtesAndXmlNamespaces != nil {
+		node["WithCtesAndXmlNamespaces"] = withCtesAndXmlNamespacesToJSON(s.WithCtesAndXmlNamespaces)
+	}
 	return node
 }
 
@@ -3056,6 +3059,9 @@ func mergeActionToJSON(a ast.MergeAction) jsonNode {
 func withCtesAndXmlNamespacesToJSON(w *ast.WithCtesAndXmlNamespaces) jsonNode {
 	node := jsonNode{
 		"$type": "WithCtesAndXmlNamespaces",
+	}
+	if w.XmlNamespaces != nil {
+		node["XmlNamespaces"] = xmlNamespacesToJSON(w.XmlNamespaces)
 	}
 	if len(w.CommonTableExpressions) > 0 {
 		ctes := make([]jsonNode, len(w.CommonTableExpressions))
@@ -11346,11 +11352,22 @@ func xmlNamespacesToJSON(x *ast.XmlNamespaces) jsonNode {
 	if len(x.XmlNamespacesElements) > 0 {
 		elems := make([]jsonNode, len(x.XmlNamespacesElements))
 		for i, e := range x.XmlNamespacesElements {
-			elems[i] = xmlNamespacesAliasElementToJSON(e)
+			elems[i] = xmlNamespacesElementToJSON(e)
 		}
 		node["XmlNamespacesElements"] = elems
 	}
 	return node
+}
+
+func xmlNamespacesElementToJSON(e ast.XmlNamespacesElement) jsonNode {
+	switch elem := e.(type) {
+	case *ast.XmlNamespacesAliasElement:
+		return xmlNamespacesAliasElementToJSON(elem)
+	case *ast.XmlNamespacesDefaultElement:
+		return xmlNamespacesDefaultElementToJSON(elem)
+	default:
+		return jsonNode{}
+	}
 }
 
 func xmlNamespacesAliasElementToJSON(e *ast.XmlNamespacesAliasElement) jsonNode {
@@ -11359,6 +11376,16 @@ func xmlNamespacesAliasElementToJSON(e *ast.XmlNamespacesAliasElement) jsonNode 
 	}
 	if e.Identifier != nil {
 		node["Identifier"] = identifierToJSON(e.Identifier)
+	}
+	if e.String != nil {
+		node["String"] = stringLiteralToJSON(e.String)
+	}
+	return node
+}
+
+func xmlNamespacesDefaultElementToJSON(e *ast.XmlNamespacesDefaultElement) jsonNode {
+	node := jsonNode{
+		"$type": "XmlNamespacesDefaultElement",
 	}
 	if e.String != nil {
 		node["String"] = stringLiteralToJSON(e.String)

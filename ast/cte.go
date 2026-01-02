@@ -2,6 +2,7 @@ package ast
 
 // WithCtesAndXmlNamespaces represents the WITH clause containing CTEs and/or XML namespaces.
 type WithCtesAndXmlNamespaces struct {
+	XmlNamespaces          *XmlNamespaces           `json:"XmlNamespaces,omitempty"`
 	CommonTableExpressions []*CommonTableExpression `json:"CommonTableExpressions,omitempty"`
 	ChangeTrackingContext  ScalarExpression         `json:"ChangeTrackingContext,omitempty"`
 }

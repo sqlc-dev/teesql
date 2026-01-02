@@ -11286,10 +11286,25 @@ func (p *Parser) parseDeclareCursorStatementContinued(cursorName *ast.Identifier
 		p.nextToken()
 	}
 
-	// Parse SELECT statement
-	selectStmt, err := p.parseSelectStatement()
-	if err != nil {
-		return nil, err
+	// Parse SELECT statement (may have WITH clause for CTEs)
+	var selectStmt *ast.SelectStatement
+	if p.curTok.Type == TokenWith {
+		// Parse WITH + SELECT statement
+		withStmt, err := p.parseWithStatement()
+		if err != nil {
+			return nil, err
+		}
+		if sel, ok := withStmt.(*ast.SelectStatement); ok {
+			selectStmt = sel
+		} else {
+			return nil, fmt.Errorf("expected SELECT statement after WITH in cursor definition")
+		}
+	} else {
+		var err error
+		selectStmt, err = p.parseSelectStatement()
+		if err != nil {
+			return nil, err
+		}
 	}
 	stmt.CursorDefinition.Select = selectStmt
 

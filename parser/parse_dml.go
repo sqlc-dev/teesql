@@ -14,9 +14,42 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 
 	withClause := &ast.WithCtesAndXmlNamespaces{}
 
-	// Parse CHANGE_TRACKING_CONTEXT or CTEs
+	// Parse XMLNAMESPACES, CHANGE_TRACKING_CONTEXT or CTEs
 	for {
-		if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING_CONTEXT" {
+		if strings.ToUpper(p.curTok.Literal) == "XMLNAMESPACES" {
+			p.nextToken() // consume XMLNAMESPACES
+			xmlNs := &ast.XmlNamespaces{}
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					// Check for DEFAULT element
+					if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+						p.nextToken() // consume DEFAULT
+						strLit, _ := p.parseStringLiteral()
+						elem := &ast.XmlNamespacesDefaultElement{String: strLit}
+						xmlNs.XmlNamespacesElements = append(xmlNs.XmlNamespacesElements, elem)
+					} else {
+						// Alias element: string AS identifier
+						strLit, _ := p.parseStringLiteral()
+						elem := &ast.XmlNamespacesAliasElement{String: strLit}
+						if p.curTok.Type == TokenAs {
+							p.nextToken() // consume AS
+							elem.Identifier = p.parseIdentifier()
+						}
+						xmlNs.XmlNamespacesElements = append(xmlNs.XmlNamespacesElements, elem)
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			withClause.XmlNamespaces = xmlNs
+		} else if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING_CONTEXT" {
 			p.nextToken() // consume CHANGE_TRACKING_CONTEXT
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
@@ -69,7 +102,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 			break
 		}
 
-		// Check for comma (more CTEs)
+		// Check for comma (more CTEs or XMLNAMESPACES followed by CTEs)
 		if p.curTok.Type == TokenComma {
 			p.nextToken()
 		} else {
@@ -105,9 +138,12 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 		stmt.WithCtesAndXmlNamespaces = withClause
 		return stmt, nil
 	case TokenSelect:
-		// For SELECT, we need to handle it differently
-		// Skip for now - return the select without CTE
-		return p.parseSelectStatement()
+		stmt, err := p.parseSelectStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.WithCtesAndXmlNamespaces = withClause
+		return stmt, nil
 	}
 
 	return nil, fmt.Errorf("expected INSERT, UPDATE, DELETE, or SELECT after WITH clause, got %s", p.curTok.Literal)
