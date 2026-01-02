@@ -1769,6 +1769,21 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 		if strings.ToUpper(p.curTok.Literal) == "CONFIGURATION" {
 			return p.parseAlterDatabaseScopedConfigurationStatement()
 		}
+		// SCOPED is actually a database name, treat it as such
+		dbName := &ast.Identifier{Value: "SCOPED", QuoteType: "NotQuoted"}
+		// Check for COLLATE
+		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+			p.nextToken() // consume COLLATE
+			stmt := &ast.AlterDatabaseCollateStatement{
+				DatabaseName: dbName,
+				Collation:    p.parseIdentifier(),
+			}
+			p.skipToEndOfStatement()
+			return stmt, nil
+		}
+		// Fall through to skip rest
+		p.skipToEndOfStatement()
+		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
 	}
 
 	// Parse database name followed by various commands
@@ -1787,6 +1802,15 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 			}
 			if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
 				return p.parseAlterDatabaseRemoveStatement(dbName)
+			}
+			if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+				p.nextToken() // consume COLLATE
+				stmt := &ast.AlterDatabaseCollateStatement{
+					DatabaseName: dbName,
+					Collation:    p.parseIdentifier(),
+				}
+				p.skipToEndOfStatement()
+				return stmt, nil
 			}
 		}
 		// Lenient - skip rest of statement
@@ -2283,6 +2307,14 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 		p.nextToken() // consume FILE
 		stmt := &ast.AlterDatabaseModifyFileStatement{
 			DatabaseName: dbName,
+		}
+		// Parse the file declaration (NAME = n1, NEWNAME = n2)
+		decls, err := p.parseFileDeclarationList(false)
+		if err != nil {
+			return nil, err
+		}
+		if len(decls) > 0 {
+			stmt.FileDeclaration = decls[0]
 		}
 		p.skipToEndOfStatement()
 		return stmt, nil

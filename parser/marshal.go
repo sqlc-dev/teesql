@@ -142,6 +142,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterDatabaseRemoveFileStatementToJSON(s)
 	case *ast.AlterDatabaseRemoveFileGroupStatement:
 		return alterDatabaseRemoveFileGroupStatementToJSON(s)
+	case *ast.AlterDatabaseCollateStatement:
+		return alterDatabaseCollateStatementToJSON(s)
 	case *ast.AlterDatabaseScopedConfigurationClearStatement:
 		return alterDatabaseScopedConfigurationClearStatementToJSON(s)
 	case *ast.AlterResourceGovernorStatement:
@@ -14795,9 +14797,13 @@ func alterDatabaseModifyFileStatementToJSON(s *ast.AlterDatabaseModifyFileStatem
 	node := jsonNode{
 		"$type": "AlterDatabaseModifyFileStatement",
 	}
+	if s.FileDeclaration != nil {
+		node["FileDeclaration"] = fileDeclarationToJSON(s.FileDeclaration)
+	}
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
+	node["UseCurrent"] = false
 	return node
 }
 
@@ -14805,20 +14811,22 @@ func alterDatabaseModifyFileGroupStatementToJSON(s *ast.AlterDatabaseModifyFileG
 	node := jsonNode{
 		"$type": "AlterDatabaseModifyFileGroupStatement",
 	}
-	if s.DatabaseName != nil {
-		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
-	}
 	if s.FileGroupName != nil {
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
-	node["MakeDefault"] = s.MakeDefault
-	node["UseCurrent"] = false
 	if s.NewFileGroupName != nil {
 		node["NewFileGroupName"] = identifierToJSON(s.NewFileGroupName)
 	}
+	node["MakeDefault"] = s.MakeDefault
 	if s.UpdatabilityOption != "" {
 		node["UpdatabilityOption"] = s.UpdatabilityOption
+	} else {
+		node["UpdatabilityOption"] = "None"
 	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = false
 	return node
 }
 
@@ -14826,12 +14834,13 @@ func alterDatabaseModifyNameStatementToJSON(s *ast.AlterDatabaseModifyNameStatem
 	node := jsonNode{
 		"$type": "AlterDatabaseModifyNameStatement",
 	}
-	if s.DatabaseName != nil {
-		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
-	}
 	if s.NewName != nil {
 		node["NewDatabaseName"] = identifierToJSON(s.NewName)
 	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = false
 	return node
 }
 
@@ -14839,12 +14848,13 @@ func alterDatabaseRemoveFileStatementToJSON(s *ast.AlterDatabaseRemoveFileStatem
 	node := jsonNode{
 		"$type": "AlterDatabaseRemoveFileStatement",
 	}
-	if s.DatabaseName != nil {
-		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
-	}
 	if s.FileName != nil {
 		node["File"] = identifierToJSON(s.FileName)
 	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = false
 	return node
 }
 
@@ -14859,6 +14869,20 @@ func alterDatabaseRemoveFileGroupStatementToJSON(s *ast.AlterDatabaseRemoveFileG
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
 	node["UseCurrent"] = s.UseCurrent
+	return node
+}
+
+func alterDatabaseCollateStatementToJSON(s *ast.AlterDatabaseCollateStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseCollateStatement",
+	}
+	if s.Collation != nil {
+		node["Collation"] = identifierToJSON(s.Collation)
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = false
 	return node
 }
 
