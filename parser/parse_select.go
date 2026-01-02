@@ -443,8 +443,13 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		// Not an assignment, treat as regular scalar expression starting with variable
 		varRef := &ast.VariableReference{Name: varName}
 
+		// Handle postfix operations (method calls, property access)
+		expr, err := p.handlePostfixOperations(varRef)
+		if err != nil {
+			return nil, err
+		}
+
 		// Check if next token is a binary operator - if so, continue parsing the expression
-		var expr ast.ScalarExpression = varRef
 		for p.curTok.Type == TokenPlus || p.curTok.Type == TokenMinus ||
 			p.curTok.Type == TokenStar || p.curTok.Type == TokenSlash ||
 			p.curTok.Type == TokenPercent || p.curTok.Type == TokenDoublePipe {
@@ -748,24 +753,267 @@ func (p *Parser) parsePostfixExpression() (ast.ScalarExpression, error) {
 		return nil, err
 	}
 
-	// Check for AT TIME ZONE - only if followed by "TIME"
-	for strings.ToUpper(p.curTok.Literal) == "AT" && strings.ToUpper(p.peekTok.Literal) == "TIME" {
-		p.nextToken() // consume AT
-		p.nextToken() // consume TIME
-		if strings.ToUpper(p.curTok.Literal) != "ZONE" {
-			return nil, fmt.Errorf("expected ZONE after TIME, got %s", p.curTok.Literal)
-		}
-		p.nextToken() // consume ZONE
+	// Handle postfix operations: method calls, property access, AT TIME ZONE
+	for {
+		// Check for method/property access: expr.func() or expr.prop
+		// The next token after the dot must be an identifier (plain or bracketed)
+		if p.curTok.Type == TokenDot && (p.peekTok.Type == TokenIdent || (len(p.peekTok.Literal) > 0 && p.peekTok.Literal[0] == '[')) {
+			p.nextToken() // consume dot
 
-		timezone, err := p.parsePrimaryExpression()
-		if err != nil {
-			return nil, err
+			if !p.isIdentifierToken() {
+				return nil, fmt.Errorf("expected identifier after dot, got %s", p.curTok.Literal)
+			}
+
+			// Parse method/property name
+			quoteType := "NotQuoted"
+			name := p.curTok.Literal
+			if len(name) >= 2 && name[0] == '[' && name[len(name)-1] == ']' {
+				quoteType = "SquareBracket"
+				name = name[1 : len(name)-1]
+			}
+			methodName := &ast.Identifier{Value: name, QuoteType: quoteType}
+			p.nextToken()
+
+			if p.curTok.Type == TokenLParen {
+				// It's a method call: expr.func()
+				p.nextToken() // consume (
+
+				fc := &ast.FunctionCall{
+					CallTarget:       &ast.ExpressionCallTarget{Expression: expr},
+					FunctionName:     methodName,
+					UniqueRowFilter:  "NotSpecified",
+					WithArrayWrapper: false,
+				}
+
+				// Parse parameters
+				if p.curTok.Type != TokenRParen {
+					for {
+						param, err := p.parseScalarExpression()
+						if err != nil {
+							return nil, err
+						}
+						fc.Parameters = append(fc.Parameters, param)
+
+						if p.curTok.Type != TokenComma {
+							break
+						}
+						p.nextToken() // consume comma
+					}
+				}
+
+				// Expect )
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ) after method call, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+
+				// Check for OVER clause
+				if strings.ToUpper(p.curTok.Literal) == "OVER" {
+					p.nextToken() // consume OVER
+					if p.curTok.Type != TokenLParen {
+						return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume (
+
+					overClause := &ast.OverClause{}
+
+					// Parse PARTITION BY
+					if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+						p.nextToken() // consume PARTITION
+						if strings.ToUpper(p.curTok.Literal) == "BY" {
+							p.nextToken() // consume BY
+						}
+						// Parse partition expressions
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							partExpr, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							overClause.Partitions = append(overClause.Partitions, partExpr)
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							} else {
+								break
+							}
+						}
+					}
+
+					// Parse ORDER BY
+					if p.curTok.Type == TokenOrder {
+						orderBy, err := p.parseOrderByClause()
+						if err != nil {
+							return nil, err
+						}
+						overClause.OrderByClause = orderBy
+					}
+
+					if p.curTok.Type != TokenRParen {
+						return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume )
+
+					fc.OverClause = overClause
+				}
+
+				expr = fc
+			} else {
+				// It's a property access: expr.prop
+				expr = &ast.UserDefinedTypePropertyAccess{
+					CallTarget: &ast.ExpressionCallTarget{
+						Expression: expr,
+					},
+					PropertyName: methodName,
+				}
+			}
+			continue
 		}
 
-		expr = &ast.AtTimeZoneCall{
-			DateValue: expr,
-			TimeZone:  timezone,
+		// Check for AT TIME ZONE - only if followed by "TIME"
+		if strings.ToUpper(p.curTok.Literal) == "AT" && strings.ToUpper(p.peekTok.Literal) == "TIME" {
+			p.nextToken() // consume AT
+			p.nextToken() // consume TIME
+			if strings.ToUpper(p.curTok.Literal) != "ZONE" {
+				return nil, fmt.Errorf("expected ZONE after TIME, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume ZONE
+
+			timezone, err := p.parsePrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			expr = &ast.AtTimeZoneCall{
+				DateValue: expr,
+				TimeZone:  timezone,
+			}
+			continue
 		}
+
+		// No more postfix operations
+		break
+	}
+
+	return expr, nil
+}
+
+// handlePostfixOperations handles method calls and property access on an existing expression
+func (p *Parser) handlePostfixOperations(expr ast.ScalarExpression) (ast.ScalarExpression, error) {
+	for {
+		// Check for method/property access: expr.func() or expr.prop
+		if p.curTok.Type == TokenDot && (p.peekTok.Type == TokenIdent || (len(p.peekTok.Literal) > 0 && p.peekTok.Literal[0] == '[')) {
+			p.nextToken() // consume dot
+
+			// Check for bracket-quoted identifier or regular identifier token
+			isBracketQuoted := len(p.curTok.Literal) >= 2 && p.curTok.Literal[0] == '[' && p.curTok.Literal[len(p.curTok.Literal)-1] == ']'
+			if !p.isIdentifierToken() && !isBracketQuoted {
+				return nil, fmt.Errorf("expected identifier after dot, got %s", p.curTok.Literal)
+			}
+
+			// Parse method/property name
+			quoteType := "NotQuoted"
+			name := p.curTok.Literal
+			if len(name) >= 2 && name[0] == '[' && name[len(name)-1] == ']' {
+				quoteType = "SquareBracket"
+				name = name[1 : len(name)-1]
+			}
+			methodName := &ast.Identifier{Value: name, QuoteType: quoteType}
+			p.nextToken()
+
+			if p.curTok.Type == TokenLParen {
+				// It's a method call: expr.func()
+				p.nextToken() // consume (
+
+				fc := &ast.FunctionCall{
+					CallTarget:       &ast.ExpressionCallTarget{Expression: expr},
+					FunctionName:     methodName,
+					UniqueRowFilter:  "NotSpecified",
+					WithArrayWrapper: false,
+				}
+
+				// Parse parameters
+				if p.curTok.Type != TokenRParen {
+					for {
+						param, err := p.parseScalarExpression()
+						if err != nil {
+							return nil, err
+						}
+						fc.Parameters = append(fc.Parameters, param)
+
+						if p.curTok.Type != TokenComma {
+							break
+						}
+						p.nextToken() // consume comma
+					}
+				}
+
+				// Expect )
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ) after method call, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+
+				// Check for OVER clause
+				if strings.ToUpper(p.curTok.Literal) == "OVER" {
+					p.nextToken() // consume OVER
+					if p.curTok.Type != TokenLParen {
+						return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume (
+
+					overClause := &ast.OverClause{}
+
+					// Parse PARTITION BY
+					if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+						p.nextToken() // consume PARTITION
+						if strings.ToUpper(p.curTok.Literal) == "BY" {
+							p.nextToken() // consume BY
+						}
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							partExpr, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							overClause.Partitions = append(overClause.Partitions, partExpr)
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							} else {
+								break
+							}
+						}
+					}
+
+					// Parse ORDER BY
+					if p.curTok.Type == TokenOrder {
+						orderBy, err := p.parseOrderByClause()
+						if err != nil {
+							return nil, err
+						}
+						overClause.OrderByClause = orderBy
+					}
+
+					if p.curTok.Type != TokenRParen {
+						return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume )
+
+					fc.OverClause = overClause
+				}
+
+				expr = fc
+			} else {
+				// It's a property access: expr.prop
+				expr = &ast.UserDefinedTypePropertyAccess{
+					CallTarget: &ast.ExpressionCallTarget{
+						Expression: expr,
+					},
+					PropertyName: methodName,
+				}
+			}
+			continue
+		}
+
+		// No more postfix operations
+		break
 	}
 
 	return expr, nil
@@ -892,7 +1140,7 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		// Multi-part identifier starting with empty parts (e.g., ..t1.c1)
 		return p.parseColumnReferenceWithLeadingDots()
 	case TokenMaster, TokenDatabase, TokenKey, TokenTable, TokenIndex,
-		TokenSchema, TokenUser, TokenView:
+		TokenSchema, TokenUser, TokenView, TokenTime:
 		// Keywords that can be used as identifiers in column/table references
 		return p.parseColumnReferenceOrFunctionCall()
 	default:
@@ -1182,7 +1430,8 @@ func (p *Parser) parseNationalStringFromToken() (*ast.StringLiteral, error) {
 func (p *Parser) isIdentifierToken() bool {
 	switch p.curTok.Type {
 	case TokenIdent, TokenMaster, TokenDatabase, TokenKey, TokenTable, TokenIndex,
-		TokenSchema, TokenUser, TokenView, TokenDefault, TokenTyp, TokenLanguage:
+		TokenSchema, TokenUser, TokenView, TokenDefault, TokenTyp, TokenLanguage,
+		TokenTime:
 		return true
 	default:
 		return false
@@ -1242,19 +1491,83 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		}
 	}
 
+	// Check for $PARTITION function call: [db.]$PARTITION.func(args)
+	if len(identifiers) >= 2 && p.curTok.Type == TokenLParen {
+		// Check if $PARTITION is in the identifiers
+		partitionIdx := -1
+		for i, id := range identifiers {
+			if strings.ToUpper(id.Value) == "$PARTITION" {
+				partitionIdx = i
+				break
+			}
+		}
+
+		if partitionIdx >= 0 {
+			// Build PartitionFunctionCall
+			pfc := &ast.PartitionFunctionCall{}
+
+			// DatabaseName comes before $PARTITION if present
+			if partitionIdx == 1 {
+				pfc.DatabaseName = identifiers[0]
+			}
+
+			// FunctionName comes after $PARTITION
+			if partitionIdx+1 < len(identifiers) {
+				pfc.FunctionName = identifiers[partitionIdx+1]
+			}
+
+			// Parse parameters
+			p.nextToken() // consume (
+			if p.curTok.Type != TokenRParen {
+				for {
+					param, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					pfc.Parameters = append(pfc.Parameters, param)
+
+					if p.curTok.Type != TokenComma {
+						break
+					}
+					p.nextToken() // consume comma
+				}
+			}
+
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) in $PARTITION function call, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+
+			return pfc, nil
+		}
+	}
+
 	// Check for :: (user-defined type method call or property access): a.b::func() or a::prop
 	if p.curTok.Type == TokenColonColon && len(identifiers) > 0 {
 		p.nextToken() // consume ::
 
-		// Parse function/property name
-		if p.curTok.Type != TokenIdent {
+		// Parse function/property name - can be regular identifier or bracket-quoted
+		isBracketQuoted := len(p.curTok.Literal) >= 2 && p.curTok.Literal[0] == '[' && p.curTok.Literal[len(p.curTok.Literal)-1] == ']'
+		if p.curTok.Type != TokenIdent && !isBracketQuoted {
 			return nil, fmt.Errorf("expected identifier after ::, got %s", p.curTok.Literal)
 		}
-		name := &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+		nameValue := p.curTok.Literal
+		quoteType := "NotQuoted"
+		if isBracketQuoted {
+			quoteType = "SquareBracket"
+			nameValue = nameValue[1 : len(nameValue)-1]
+		}
+		name := &ast.Identifier{Value: nameValue, QuoteType: quoteType}
 		p.nextToken()
 
-		// Build SchemaObjectName from identifiers
-		schemaObjName := identifiersToSchemaObjectName(identifiers)
+		// Build SchemaObjectName from identifiers (filter out empty identifiers from leading dots)
+		var nonEmptyIdents []*ast.Identifier
+		for _, id := range identifiers {
+			if id.Value != "" {
+				nonEmptyIdents = append(nonEmptyIdents, id)
+			}
+		}
+		schemaObjName := identifiersToSchemaObjectName(nonEmptyIdents)
 
 		// If followed by ( it's a method call, otherwise property access
 		if p.curTok.Type == TokenLParen {
@@ -1403,6 +1716,90 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 	}
 
 	// Don't consume .* here - let the caller (parseSelectElement) handle qualified stars
+
+	// Check for :: (user-defined type method call or property access): .t::func() or .t::prop
+	if p.curTok.Type == TokenColonColon && len(identifiers) > 0 {
+		p.nextToken() // consume ::
+
+		// Parse function/property name - can be regular identifier or bracket-quoted
+		isBracketQuoted := len(p.curTok.Literal) >= 2 && p.curTok.Literal[0] == '[' && p.curTok.Literal[len(p.curTok.Literal)-1] == ']'
+		if p.curTok.Type != TokenIdent && !isBracketQuoted {
+			return nil, fmt.Errorf("expected identifier after ::, got %s", p.curTok.Literal)
+		}
+		nameValue := p.curTok.Literal
+		quoteType := "NotQuoted"
+		if isBracketQuoted {
+			quoteType = "SquareBracket"
+			nameValue = nameValue[1 : len(nameValue)-1]
+		}
+		name := &ast.Identifier{Value: nameValue, QuoteType: quoteType}
+		p.nextToken()
+
+		// Build SchemaObjectName from identifiers (filter out empty identifiers from leading dots)
+		var nonEmptyIdents []*ast.Identifier
+		for _, id := range identifiers {
+			if id.Value != "" {
+				nonEmptyIdents = append(nonEmptyIdents, id)
+			}
+		}
+		schemaObjName := identifiersToSchemaObjectName(nonEmptyIdents)
+
+		// If followed by ( it's a method call, otherwise property access
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+
+			fc := &ast.FunctionCall{
+				CallTarget: &ast.UserDefinedTypeCallTarget{
+					SchemaObjectName: schemaObjName,
+				},
+				FunctionName:     name,
+				UniqueRowFilter:  "NotSpecified",
+				WithArrayWrapper: false,
+			}
+
+			// Parse parameters
+			if p.curTok.Type != TokenRParen {
+				for {
+					param, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					fc.Parameters = append(fc.Parameters, param)
+
+					if p.curTok.Type != TokenComma {
+						break
+					}
+					p.nextToken() // consume comma
+				}
+			}
+
+			// Expect )
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) in function call with ::, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+
+			// Check for OVER clause or property access after method call
+			return p.parsePostExpressionAccess(fc)
+		}
+
+		// Property access: .t::a
+		propAccess := &ast.UserDefinedTypePropertyAccess{
+			CallTarget: &ast.UserDefinedTypeCallTarget{
+				SchemaObjectName: schemaObjName,
+			},
+			PropertyName: name,
+		}
+
+		// Check for COLLATE clause
+		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+			p.nextToken() // consume COLLATE
+			propAccess.Collation = p.parseIdentifier()
+		}
+
+		// Check for chained property access
+		return p.parsePostExpressionAccess(propAccess)
+	}
 
 	// Check if this is a function call
 	if p.curTok.Type == TokenLParen && len(identifiers) > 1 {

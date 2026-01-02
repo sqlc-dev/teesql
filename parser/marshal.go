@@ -1628,6 +1628,27 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
 		return node
+	case *ast.PartitionFunctionCall:
+		node := jsonNode{
+			"$type": "PartitionFunctionCall",
+		}
+		if e.DatabaseName != nil {
+			node["DatabaseName"] = identifierToJSON(e.DatabaseName)
+		}
+		if e.SchemaName != nil {
+			node["SchemaName"] = identifierToJSON(e.SchemaName)
+		}
+		if e.FunctionName != nil {
+			node["FunctionName"] = identifierToJSON(e.FunctionName)
+		}
+		if len(e.Parameters) > 0 {
+			params := make([]jsonNode, len(e.Parameters))
+			for i, p := range e.Parameters {
+				params[i] = scalarExpressionToJSON(p)
+			}
+			node["Parameters"] = params
+		}
+		return node
 	case *ast.UserDefinedTypePropertyAccess:
 		node := jsonNode{
 			"$type": "UserDefinedTypePropertyAccess",
