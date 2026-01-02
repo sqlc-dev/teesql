@@ -142,6 +142,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterDatabaseRemoveFileStatementToJSON(s)
 	case *ast.AlterDatabaseRemoveFileGroupStatement:
 		return alterDatabaseRemoveFileGroupStatementToJSON(s)
+	case *ast.AlterDatabaseCollateStatement:
+		return alterDatabaseCollateStatementToJSON(s)
 	case *ast.AlterDatabaseScopedConfigurationClearStatement:
 		return alterDatabaseScopedConfigurationClearStatementToJSON(s)
 	case *ast.AlterResourceGovernorStatement:
@@ -744,8 +746,46 @@ func dropClusteredConstraintOptionToJSON(o ast.DropClusteredConstraintOption) js
 			node["OptionValue"] = scalarExpressionToJSON(opt.OptionValue)
 		}
 		return node
+	case *ast.DropClusteredConstraintWaitAtLowPriorityLockOption:
+		node := jsonNode{
+			"$type":      "DropClusteredConstraintWaitAtLowPriorityLockOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if len(opt.Options) > 0 {
+			options := make([]jsonNode, len(opt.Options))
+			for i, o := range opt.Options {
+				options[i] = lowPriorityLockWaitOptionToJSON(o)
+			}
+			node["Options"] = options
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownDropClusteredConstraintOption"}
+	}
+}
+
+func lowPriorityLockWaitOptionToJSON(o ast.LowPriorityLockWaitOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.LowPriorityLockWaitMaxDurationOption:
+		node := jsonNode{
+			"$type":      "LowPriorityLockWaitMaxDurationOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.MaxDuration != nil {
+			node["MaxDuration"] = scalarExpressionToJSON(opt.MaxDuration)
+		}
+		if opt.Unit != "" {
+			node["Unit"] = opt.Unit
+		}
+		return node
+	case *ast.LowPriorityLockWaitAbortAfterWaitOption:
+		return jsonNode{
+			"$type":          "LowPriorityLockWaitAbortAfterWaitOption",
+			"OptionKind":     opt.OptionKind,
+			"AbortAfterWait": opt.AbortAfterWait,
+		}
+	default:
+		return jsonNode{"$type": "UnknownLowPriorityLockWaitOption"}
 	}
 }
 
@@ -1764,6 +1804,17 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
 		}
 		return node
+	case *ast.NextValueForExpression:
+		node := jsonNode{
+			"$type": "NextValueForExpression",
+		}
+		if e.SequenceName != nil {
+			node["SequenceName"] = schemaObjectNameToJSON(e.SequenceName)
+		}
+		if e.OverClause != nil {
+			node["OverClause"] = overClauseToJSON(e.OverClause)
+		}
+		return node
 	case *ast.VariableReference:
 		node := jsonNode{
 			"$type": "VariableReference",
@@ -2351,6 +2402,18 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(e.Expression)
 		}
+		return node
+	case *ast.DistinctPredicate:
+		node := jsonNode{
+			"$type": "DistinctPredicate",
+		}
+		if e.FirstExpression != nil {
+			node["FirstExpression"] = scalarExpressionToJSON(e.FirstExpression)
+		}
+		if e.SecondExpression != nil {
+			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
+		}
+		node["IsNot"] = e.IsNot
 		return node
 	case *ast.BooleanInExpression:
 		node := jsonNode{
@@ -3036,6 +3099,9 @@ func mergeStatementToJSON(s *ast.MergeStatement) jsonNode {
 func mergeSpecificationToJSON(spec *ast.MergeSpecification) jsonNode {
 	node := jsonNode{
 		"$type": "MergeSpecification",
+	}
+	if spec.TableAlias != nil {
+		node["TableAlias"] = identifierToJSON(spec.TableAlias)
 	}
 	if spec.TableReference != nil {
 		node["TableReference"] = tableReferenceToJSON(spec.TableReference)
@@ -4223,6 +4289,11 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 	if err != nil {
 		return nil, err
 	}
+	// If target has an alias, move it to TableAlias (ScriptDOM convention)
+	if ntr, ok := target.(*ast.NamedTableReference); ok && ntr.Alias != nil {
+		stmt.MergeSpecification.TableAlias = ntr.Alias
+		ntr.Alias = nil
+	}
 	stmt.MergeSpecification.Target = target
 
 	// Expect USING
@@ -4230,7 +4301,7 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 		p.nextToken()
 	}
 
-	// Parse source table reference (may be parenthesized join)
+	// Parse source table reference (may be parenthesized join or subquery)
 	sourceRef, err := p.parseMergeSourceTableReference()
 	if err != nil {
 		return nil, err
@@ -4285,8 +4356,13 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 
 // parseMergeSourceTableReference parses the source table reference in a MERGE statement
 func (p *Parser) parseMergeSourceTableReference() (ast.TableReference, error) {
-	// Check for parenthesized expression (usually joins)
+	// Check for parenthesized expression
 	if p.curTok.Type == TokenLParen {
+		// Check if this is a derived table (subquery) or a join
+		if p.peekTok.Type == TokenSelect {
+			// This is a derived table like (SELECT ...) AS alias
+			return p.parseDerivedTableReference()
+		}
 		p.nextToken() // consume (
 		// Parse the inner join expression
 		inner, err := p.parseMergeJoinTableReference()
@@ -10313,15 +10389,28 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 				switch strings.ToUpper(p.curTok.Literal) {
 				case "CALLER":
 					execAsClause.ExecuteAsOption = "Caller"
+					p.nextToken()
 				case "SELF":
 					execAsClause.ExecuteAsOption = "Self"
+					p.nextToken()
 				case "OWNER":
 					execAsClause.ExecuteAsOption = "Owner"
+					p.nextToken()
 				default:
-					// User name
-					execAsClause.ExecuteAsOption = "User"
+					// Check for string literal (e.g., EXECUTE AS 'dbo')
+					if p.curTok.Type == TokenString {
+						strLit, err := p.parseStringLiteral()
+						if err != nil {
+							return nil, err
+						}
+						execAsClause.ExecuteAsOption = "String"
+						execAsClause.Literal = strLit
+					} else {
+						// User name
+						execAsClause.ExecuteAsOption = "User"
+						p.nextToken()
+					}
 				}
-				p.nextToken()
 				stmt.Options = append(stmt.Options, &ast.ExecuteAsTriggerOption{
 					OptionKind:      "ExecuteAsClause",
 					ExecuteAsClause: execAsClause,
@@ -10365,6 +10454,11 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 			break
 		}
 
+		// Check for NOT FOR REPLICATION
+		if actionType == "NOT" {
+			break
+		}
+
 		switch actionType {
 		case "INSERT":
 			action.TriggerActionType = "Insert"
@@ -10376,8 +10470,8 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 			// For database/server triggers, events are wrapped in EventTypeContainer
 			if isDatabaseOrServerTrigger && len(actionType) > 0 {
 				action.TriggerActionType = "Event"
-				// Convert action type to proper case (e.g., RENAME -> Rename)
-				eventType := strings.ToUpper(actionType[:1]) + strings.ToLower(actionType[1:])
+				// Convert action type to proper case (e.g., DENY_DATABASE -> DenyDatabase)
+				eventType := convertEventTypeCase(actionType)
 				action.EventTypeGroup = &ast.EventTypeContainer{
 					EventType: eventType,
 				}
@@ -10396,6 +10490,18 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 		}
 	}
 
+	// Parse NOT FOR REPLICATION
+	if strings.ToUpper(p.curTok.Literal) == "NOT" {
+		p.nextToken() // consume NOT
+		if strings.ToUpper(p.curTok.Literal) == "FOR" {
+			p.nextToken() // consume FOR
+		}
+		if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+			p.nextToken() // consume REPLICATION
+			stmt.IsNotForReplication = true
+		}
+	}
+
 	// Parse AS
 	if p.curTok.Type == TokenAs {
 		p.nextToken()
@@ -10404,6 +10510,30 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 	// Skip leading semicolons
 	for p.curTok.Type == TokenSemicolon {
 		p.nextToken()
+	}
+
+	// Check for EXTERNAL NAME (CLR trigger)
+	if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+		p.nextToken() // consume EXTERNAL
+		if strings.ToUpper(p.curTok.Literal) == "NAME" {
+			p.nextToken() // consume NAME
+		}
+		// Parse assembly.class.method
+		stmt.MethodSpecifier = &ast.MethodSpecifier{}
+		stmt.MethodSpecifier.AssemblyName = p.parseIdentifier()
+		if p.curTok.Type == TokenDot {
+			p.nextToken()
+			stmt.MethodSpecifier.ClassName = p.parseIdentifier()
+		}
+		if p.curTok.Type == TokenDot {
+			p.nextToken()
+			stmt.MethodSpecifier.MethodName = p.parseIdentifier()
+		}
+		// Skip optional semicolons
+		for p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
 	}
 
 	// Parse statement list (all statements until GO/EOF)
@@ -10436,6 +10566,17 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 	}
 
 	return stmt, nil
+}
+
+// convertEventTypeCase converts an event type like "DENY_DATABASE" to "DenyDatabase"
+func convertEventTypeCase(s string) string {
+	parts := strings.Split(s, "_")
+	for i, part := range parts {
+		if len(part) > 0 {
+			parts[i] = strings.ToUpper(part[:1]) + strings.ToLower(part[1:])
+		}
+	}
+	return strings.Join(parts, "")
 }
 
 // JSON marshaling functions for new statement types
@@ -10491,8 +10632,29 @@ func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
 	node := jsonNode{
 		"$type": "BackupDatabaseStatement",
 	}
+	if len(s.Files) > 0 {
+		files := make([]jsonNode, len(s.Files))
+		for i, f := range s.Files {
+			files[i] = backupRestoreFileInfoToJSON(f)
+		}
+		node["Files"] = files
+	}
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierOrValueExpressionToJSON(s.DatabaseName)
+	}
+	if len(s.MirrorToClauses) > 0 {
+		clauses := make([]jsonNode, len(s.MirrorToClauses))
+		for i, c := range s.MirrorToClauses {
+			clauses[i] = mirrorToClauseToJSON(c)
+		}
+		node["MirrorToClauses"] = clauses
+	}
+	if len(s.Devices) > 0 {
+		devices := make([]jsonNode, len(s.Devices))
+		for i, d := range s.Devices {
+			devices[i] = deviceInfoToJSON(d)
+		}
+		node["Devices"] = devices
 	}
 	if len(s.Options) > 0 {
 		options := make([]jsonNode, len(s.Options))
@@ -10501,9 +10663,16 @@ func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
 		}
 		node["Options"] = options
 	}
-	if len(s.Devices) > 0 {
-		devices := make([]jsonNode, len(s.Devices))
-		for i, d := range s.Devices {
+	return node
+}
+
+func mirrorToClauseToJSON(c *ast.MirrorToClause) jsonNode {
+	node := jsonNode{
+		"$type": "MirrorToClause",
+	}
+	if len(c.Devices) > 0 {
+		devices := make([]jsonNode, len(c.Devices))
+		for i, d := range c.Devices {
 			devices[i] = deviceInfoToJSON(d)
 		}
 		node["Devices"] = devices
@@ -11247,6 +11416,9 @@ func createTriggerStatementToJSON(s *ast.CreateTriggerStatement) jsonNode {
 		}
 		node["TriggerActions"] = actions
 	}
+	if s.MethodSpecifier != nil {
+		node["MethodSpecifier"] = methodSpecifierToJSON(s.MethodSpecifier)
+	}
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
@@ -11303,10 +11475,14 @@ func triggerOptionTypeToJSON(o ast.TriggerOptionType) jsonNode {
 			"OptionKind": opt.OptionKind,
 		}
 		if opt.ExecuteAsClause != nil {
-			node["ExecuteAsClause"] = jsonNode{
+			execClause := jsonNode{
 				"$type":           "ExecuteAsClause",
 				"ExecuteAsOption": opt.ExecuteAsClause.ExecuteAsOption,
 			}
+			if opt.ExecuteAsClause.Literal != nil {
+				execClause["Literal"] = stringLiteralToJSON(opt.ExecuteAsClause.Literal)
+			}
+			node["ExecuteAsClause"] = execClause
 		}
 		return node
 	default:
@@ -11806,30 +11982,6 @@ func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
 			node["Options"] = options
 		}
 		return node
-	}
-	return jsonNode{}
-}
-
-func lowPriorityLockWaitOptionToJSON(opt ast.LowPriorityLockWaitOption) jsonNode {
-	switch o := opt.(type) {
-	case *ast.LowPriorityLockWaitMaxDurationOption:
-		node := jsonNode{
-			"$type":      "LowPriorityLockWaitMaxDurationOption",
-			"OptionKind": o.OptionKind,
-		}
-		if o.MaxDuration != nil {
-			node["MaxDuration"] = scalarExpressionToJSON(o.MaxDuration)
-		}
-		if o.Unit != "" {
-			node["Unit"] = o.Unit
-		}
-		return node
-	case *ast.LowPriorityLockWaitAbortAfterWaitOption:
-		return jsonNode{
-			"$type":          "LowPriorityLockWaitAbortAfterWaitOption",
-			"AbortAfterWait": o.AbortAfterWait,
-			"OptionKind":     o.OptionKind,
-		}
 	}
 	return jsonNode{}
 }
@@ -14665,13 +14817,13 @@ func alterDatabaseAddFileGroupStatementToJSON(s *ast.AlterDatabaseAddFileGroupSt
 	node := jsonNode{
 		"$type": "AlterDatabaseAddFileGroupStatement",
 	}
+	if s.FileGroupName != nil {
+		node["FileGroup"] = identifierToJSON(s.FileGroupName)
+	}
 	node["ContainsFileStream"] = s.ContainsFileStream
 	node["ContainsMemoryOptimizedData"] = s.ContainsMemoryOptimizedData
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
-	}
-	if s.FileGroupName != nil {
-		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
 	node["UseCurrent"] = s.UseCurrent
 	return node
@@ -14681,9 +14833,13 @@ func alterDatabaseModifyFileStatementToJSON(s *ast.AlterDatabaseModifyFileStatem
 	node := jsonNode{
 		"$type": "AlterDatabaseModifyFileStatement",
 	}
+	if s.FileDeclaration != nil {
+		node["FileDeclaration"] = fileDeclarationToJSON(s.FileDeclaration)
+	}
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
+	node["UseCurrent"] = s.UseCurrent
 	return node
 }
 
@@ -14691,20 +14847,22 @@ func alterDatabaseModifyFileGroupStatementToJSON(s *ast.AlterDatabaseModifyFileG
 	node := jsonNode{
 		"$type": "AlterDatabaseModifyFileGroupStatement",
 	}
-	if s.DatabaseName != nil {
-		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
-	}
 	if s.FileGroupName != nil {
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
-	node["MakeDefault"] = s.MakeDefault
-	node["UseCurrent"] = false
 	if s.NewFileGroupName != nil {
 		node["NewFileGroupName"] = identifierToJSON(s.NewFileGroupName)
 	}
+	node["MakeDefault"] = s.MakeDefault
 	if s.UpdatabilityOption != "" {
 		node["UpdatabilityOption"] = s.UpdatabilityOption
+	} else {
+		node["UpdatabilityOption"] = "None"
 	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = false
 	return node
 }
 
@@ -14712,12 +14870,13 @@ func alterDatabaseModifyNameStatementToJSON(s *ast.AlterDatabaseModifyNameStatem
 	node := jsonNode{
 		"$type": "AlterDatabaseModifyNameStatement",
 	}
-	if s.DatabaseName != nil {
-		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
-	}
 	if s.NewName != nil {
 		node["NewDatabaseName"] = identifierToJSON(s.NewName)
 	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = false
 	return node
 }
 
@@ -14725,12 +14884,13 @@ func alterDatabaseRemoveFileStatementToJSON(s *ast.AlterDatabaseRemoveFileStatem
 	node := jsonNode{
 		"$type": "AlterDatabaseRemoveFileStatement",
 	}
-	if s.DatabaseName != nil {
-		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
-	}
 	if s.FileName != nil {
 		node["File"] = identifierToJSON(s.FileName)
 	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = false
 	return node
 }
 
@@ -14738,13 +14898,27 @@ func alterDatabaseRemoveFileGroupStatementToJSON(s *ast.AlterDatabaseRemoveFileG
 	node := jsonNode{
 		"$type": "AlterDatabaseRemoveFileGroupStatement",
 	}
-	if s.DatabaseName != nil {
-		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
-	}
 	if s.FileGroupName != nil {
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
 	node["UseCurrent"] = s.UseCurrent
+	return node
+}
+
+func alterDatabaseCollateStatementToJSON(s *ast.AlterDatabaseCollateStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseCollateStatement",
+	}
+	if s.Collation != nil {
+		node["Collation"] = identifierToJSON(s.Collation)
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = false
 	return node
 }
 

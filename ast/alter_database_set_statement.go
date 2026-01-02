@@ -130,7 +130,9 @@ func (a *AlterDatabaseAddFileGroupStatement) statement() {}
 
 // AlterDatabaseModifyFileStatement represents ALTER DATABASE ... MODIFY FILE statement
 type AlterDatabaseModifyFileStatement struct {
-	DatabaseName *Identifier
+	DatabaseName    *Identifier
+	FileDeclaration *FileDeclaration
+	UseCurrent      bool
 }
 
 func (a *AlterDatabaseModifyFileStatement) node()      {}
@@ -175,6 +177,15 @@ type AlterDatabaseRemoveFileGroupStatement struct {
 
 func (a *AlterDatabaseRemoveFileGroupStatement) node()      {}
 func (a *AlterDatabaseRemoveFileGroupStatement) statement() {}
+
+// AlterDatabaseCollateStatement represents ALTER DATABASE ... COLLATE statement
+type AlterDatabaseCollateStatement struct {
+	DatabaseName *Identifier
+	Collation    *Identifier
+}
+
+func (a *AlterDatabaseCollateStatement) node()      {}
+func (a *AlterDatabaseCollateStatement) statement() {}
 
 // AlterDatabaseScopedConfigurationClearStatement represents ALTER DATABASE SCOPED CONFIGURATION CLEAR statement
 type AlterDatabaseScopedConfigurationClearStatement struct {

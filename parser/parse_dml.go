@@ -2288,6 +2288,21 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 						OptionState: "On",
 					})
 				}
+			case "STATS_STREAM":
+				// Parse = value (binary literal)
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				val := p.curTok.Literal
+				p.nextToken()
+				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
+					OptionKind: "StatsStream",
+					Literal: &ast.BinaryLiteral{
+						LiteralType:   "Binary",
+						Value:         val,
+						IsLargeObject: false,
+					},
+				})
 			default:
 				// Unknown option, skip
 			}

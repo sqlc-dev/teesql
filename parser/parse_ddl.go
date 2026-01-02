@@ -1769,6 +1769,21 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 		if strings.ToUpper(p.curTok.Literal) == "CONFIGURATION" {
 			return p.parseAlterDatabaseScopedConfigurationStatement()
 		}
+		// SCOPED is actually a database name, treat it as such
+		dbName := &ast.Identifier{Value: "SCOPED", QuoteType: "NotQuoted"}
+		// Check for COLLATE
+		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+			p.nextToken() // consume COLLATE
+			stmt := &ast.AlterDatabaseCollateStatement{
+				DatabaseName: dbName,
+				Collation:    p.parseIdentifier(),
+			}
+			p.skipToEndOfStatement()
+			return stmt, nil
+		}
+		// Fall through to skip rest
+		p.skipToEndOfStatement()
+		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
 	}
 
 	// Parse database name followed by various commands
@@ -1787,6 +1802,15 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 			}
 			if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
 				return p.parseAlterDatabaseRemoveStatement(dbName)
+			}
+			if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+				p.nextToken() // consume COLLATE
+				stmt := &ast.AlterDatabaseCollateStatement{
+					DatabaseName: dbName,
+					Collation:    p.parseIdentifier(),
+				}
+				p.skipToEndOfStatement()
+				return stmt, nil
 			}
 		}
 		// Lenient - skip rest of statement
@@ -2283,6 +2307,14 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 		p.nextToken() // consume FILE
 		stmt := &ast.AlterDatabaseModifyFileStatement{
 			DatabaseName: dbName,
+		}
+		// Parse the file declaration (NAME = n1, NEWNAME = n2)
+		decls, err := p.parseFileDeclarationList(false)
+		if err != nil {
+			return nil, err
+		}
+		if len(decls) > 0 {
+			stmt.FileDeclaration = decls[0]
 		}
 		p.skipToEndOfStatement()
 		return stmt, nil
@@ -2994,6 +3026,13 @@ func (p *Parser) parseDropClusteredConstraintOptions() ([]ast.DropClusteredConst
 			})
 			p.nextToken() // consume number
 
+		case "WAIT_AT_LOW_PRIORITY":
+			waitOpt, err := p.parseWaitAtLowPriorityOption()
+			if err != nil {
+				return nil, err
+			}
+			options = append(options, waitOpt)
+
 		default:
 			return nil, fmt.Errorf("unexpected option in DROP WITH clause: %s", p.curTok.Literal)
 		}
@@ -3010,6 +3049,98 @@ func (p *Parser) parseDropClusteredConstraintOptions() ([]ast.DropClusteredConst
 	p.nextToken() // consume )
 
 	return options, nil
+}
+
+func (p *Parser) parseWaitAtLowPriorityOption() (*ast.DropClusteredConstraintWaitAtLowPriorityLockOption, error) {
+	// Consume WAIT_AT_LOW_PRIORITY
+	p.nextToken()
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after WAIT_AT_LOW_PRIORITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	opt := &ast.DropClusteredConstraintWaitAtLowPriorityLockOption{
+		OptionKind: "MaxDop", // This seems to be the expected value based on test data
+	}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optionName := strings.ToUpper(p.curTok.Literal)
+
+		switch optionName {
+		case "MAX_DURATION":
+			p.nextToken() // consume MAX_DURATION
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after MAX_DURATION, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			maxDuration := &ast.LowPriorityLockWaitMaxDurationOption{
+				OptionKind: "MaxDuration",
+			}
+			if p.curTok.Type != TokenNumber {
+				return nil, fmt.Errorf("expected number after MAX_DURATION =, got %s", p.curTok.Literal)
+			}
+			maxDuration.MaxDuration = &ast.IntegerLiteral{
+				LiteralType: "Integer",
+				Value:       p.curTok.Literal,
+			}
+			p.nextToken() // consume number
+
+			// Parse optional unit (MINUTES or SECONDS)
+			unit := strings.ToUpper(p.curTok.Literal)
+			if unit == "MINUTES" {
+				maxDuration.Unit = "Minutes"
+				p.nextToken() // consume unit
+			} else if unit == "SECONDS" {
+				maxDuration.Unit = "Seconds"
+				p.nextToken() // consume unit
+			}
+			// If no unit is specified, leave Unit empty
+
+			opt.Options = append(opt.Options, maxDuration)
+
+		case "ABORT_AFTER_WAIT":
+			p.nextToken() // consume ABORT_AFTER_WAIT
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after ABORT_AFTER_WAIT, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			abortOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
+				OptionKind: "AbortAfterWait",
+			}
+			abortValue := strings.ToUpper(p.curTok.Literal)
+			switch abortValue {
+			case "NONE":
+				abortOpt.AbortAfterWait = "None"
+			case "SELF":
+				abortOpt.AbortAfterWait = "Self"
+			case "BLOCKERS":
+				abortOpt.AbortAfterWait = "Blockers"
+			default:
+				return nil, fmt.Errorf("expected NONE, SELF, or BLOCKERS after ABORT_AFTER_WAIT =, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume abort value
+
+			opt.Options = append(opt.Options, abortOpt)
+
+		default:
+			return nil, fmt.Errorf("unexpected option in WAIT_AT_LOW_PRIORITY: %s", p.curTok.Literal)
+		}
+
+		// Check for comma
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) to close WAIT_AT_LOW_PRIORITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return opt, nil
 }
 
 func (p *Parser) parseFileGroupOrPartitionScheme() (*ast.FileGroupOrPartitionScheme, error) {
@@ -3163,13 +3294,16 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 	// Parse column name
 	stmt.ColumnIdentifier = p.parseIdentifier()
 
-	// Check for ADD/DROP ROWGUIDCOL or ADD/DROP NOT FOR REPLICATION
+	// Check for ADD/DROP ROWGUIDCOL or ADD/DROP NOT FOR REPLICATION or ADD/DROP PERSISTED
 	upperLit := strings.ToUpper(p.curTok.Literal)
 	if upperLit == "ADD" {
 		p.nextToken() // consume ADD
 		nextLit := strings.ToUpper(p.curTok.Literal)
 		if nextLit == "ROWGUIDCOL" {
 			stmt.AlterTableAlterColumnOption = "AddRowGuidCol"
+			p.nextToken()
+		} else if nextLit == "PERSISTED" {
+			stmt.AlterTableAlterColumnOption = "AddPersisted"
 			p.nextToken()
 		} else if nextLit == "NOT" {
 			p.nextToken() // consume NOT
@@ -3191,6 +3325,9 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		nextLit := strings.ToUpper(p.curTok.Literal)
 		if nextLit == "ROWGUIDCOL" {
 			stmt.AlterTableAlterColumnOption = "DropRowGuidCol"
+			p.nextToken()
+		} else if nextLit == "PERSISTED" {
+			stmt.AlterTableAlterColumnOption = "DropPersisted"
 			p.nextToken()
 		} else if nextLit == "NOT" {
 			p.nextToken() // consume NOT

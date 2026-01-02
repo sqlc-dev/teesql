@@ -6162,6 +6162,54 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		}
 	}
 
+	// Parse optional file specification (READ_WRITE_FILEGROUPS, FILE, FILEGROUP, etc.)
+	var files []*ast.BackupRestoreFileInfo
+	for {
+		upperLiteral := strings.ToUpper(p.curTok.Literal)
+		if upperLiteral == "READ_WRITE_FILEGROUPS" {
+			files = append(files, &ast.BackupRestoreFileInfo{
+				ItemKind: "ReadWriteFileGroups",
+			})
+			p.nextToken()
+		} else if upperLiteral == "FILE" {
+			p.nextToken()
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after FILE, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+			fileInfo := &ast.BackupRestoreFileInfo{
+				ItemKind: "Files",
+			}
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			fileInfo.Items = append(fileInfo.Items, expr)
+			files = append(files, fileInfo)
+		} else if upperLiteral == "FILEGROUP" {
+			p.nextToken()
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after FILEGROUP, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+			fileInfo := &ast.BackupRestoreFileInfo{
+				ItemKind: "FileGroups",
+			}
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			fileInfo.Items = append(fileInfo.Items, expr)
+			files = append(files, fileInfo)
+		} else {
+			break
+		}
+		// Check for comma to continue with more files
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
 	// Expect TO
 	if p.curTok.Type != TokenTo {
 		return nil, fmt.Errorf("expected TO after database name, got %s", p.curTok.Literal)
@@ -6252,6 +6300,101 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		}
 	}
 
+	// Parse optional MIRROR TO clause(s)
+	var mirrorToClauses []*ast.MirrorToClause
+	for strings.ToUpper(p.curTok.Literal) == "MIRROR" {
+		p.nextToken() // consume MIRROR
+		if p.curTok.Type != TokenTo {
+			return nil, fmt.Errorf("expected TO after MIRROR, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume TO
+
+		mirrorClause := &ast.MirrorToClause{}
+		// Parse mirror devices
+		for {
+			mirrorDevice := &ast.DeviceInfo{
+				DeviceType: "None",
+			}
+
+			// Check for device type (DISK, TAPE, URL, etc.)
+			mirrorDeviceType := strings.ToUpper(p.curTok.Literal)
+			hasMirrorPhysicalType := false
+			if mirrorDeviceType == "DISK" || mirrorDeviceType == "TAPE" || mirrorDeviceType == "URL" || mirrorDeviceType == "VIRTUAL_DEVICE" {
+				hasMirrorPhysicalType = true
+				switch mirrorDeviceType {
+				case "DISK":
+					mirrorDevice.DeviceType = "Disk"
+				case "TAPE":
+					mirrorDevice.DeviceType = "Tape"
+				case "URL":
+					mirrorDevice.DeviceType = "Url"
+				case "VIRTUAL_DEVICE":
+					mirrorDevice.DeviceType = "VirtualDevice"
+				}
+				p.nextToken()
+				if p.curTok.Type != TokenEquals {
+					return nil, fmt.Errorf("expected = after device type, got %s", p.curTok.Literal)
+				}
+				p.nextToken()
+			}
+
+			// Parse device name
+			if hasMirrorPhysicalType {
+				// Physical device: use PhysicalDevice field with ScalarExpression
+				if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+					mirrorDevice.PhysicalDevice = &ast.VariableReference{
+						Name: p.curTok.Literal,
+					}
+					p.nextToken()
+				} else if p.curTok.Type == TokenString {
+					str, err := p.parseStringLiteral()
+					if err != nil {
+						return nil, err
+					}
+					mirrorDevice.PhysicalDevice = str
+				} else {
+					return nil, fmt.Errorf("expected string or variable for physical device, got %s", p.curTok.Literal)
+				}
+			} else {
+				// Logical device: use LogicalDevice field with IdentifierOrValueExpression
+				if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
+					mirrorDevice.LogicalDevice = &ast.IdentifierOrValueExpression{
+						Value: p.curTok.Literal,
+						ValueExpression: &ast.VariableReference{
+							Name: p.curTok.Literal,
+						},
+					}
+					p.nextToken()
+				} else if p.curTok.Type == TokenString {
+					str, err := p.parseStringLiteral()
+					if err != nil {
+						return nil, err
+					}
+					mirrorDevice.LogicalDevice = &ast.IdentifierOrValueExpression{
+						Value:           str.Value,
+						ValueExpression: str,
+					}
+				} else {
+					id := p.parseIdentifier()
+					mirrorDevice.LogicalDevice = &ast.IdentifierOrValueExpression{
+						Value:      id.Value,
+						Identifier: id,
+					}
+				}
+			}
+
+			mirrorClause.Devices = append(mirrorClause.Devices, mirrorDevice)
+
+			// Check for comma (more mirror devices)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		mirrorToClauses = append(mirrorToClauses, mirrorClause)
+	}
+
 	// Parse optional WITH clause
 	var options []*ast.BackupOption
 	if p.curTok.Type == TokenWith {
@@ -6320,9 +6463,11 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		}, nil
 	}
 	return &ast.BackupDatabaseStatement{
-		DatabaseName: dbName,
-		Devices:      devices,
-		Options:      options,
+		Files:           files,
+		DatabaseName:    dbName,
+		MirrorToClauses: mirrorToClauses,
+		Devices:         devices,
+		Options:         options,
 	}, nil
 }
 

@@ -54,8 +54,17 @@ func (*DropClusteredConstraintValueOption) dropClusteredConstraintOption()  {}
 
 // FileGroupOrPartitionScheme represents a filegroup or partition scheme reference.
 type FileGroupOrPartitionScheme struct {
-	Name                    *IdentifierOrValueExpression
-	PartitionSchemeColumns  []*Identifier
+	Name                   *IdentifierOrValueExpression
+	PartitionSchemeColumns []*Identifier
 }
 
 func (*FileGroupOrPartitionScheme) node() {}
+
+// DropClusteredConstraintWaitAtLowPriorityLockOption represents a WAIT_AT_LOW_PRIORITY option.
+type DropClusteredConstraintWaitAtLowPriorityLockOption struct {
+	OptionKind string // Always "MaxDop" based on the expected output
+	Options    []LowPriorityLockWaitOption
+}
+
+func (*DropClusteredConstraintWaitAtLowPriorityLockOption) node()                          {}
+func (*DropClusteredConstraintWaitAtLowPriorityLockOption) dropClusteredConstraintOption() {}
