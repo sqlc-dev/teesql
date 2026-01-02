@@ -2392,6 +2392,18 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			node["Expression"] = scalarExpressionToJSON(e.Expression)
 		}
 		return node
+	case *ast.DistinctPredicate:
+		node := jsonNode{
+			"$type": "DistinctPredicate",
+		}
+		if e.FirstExpression != nil {
+			node["FirstExpression"] = scalarExpressionToJSON(e.FirstExpression)
+		}
+		if e.SecondExpression != nil {
+			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
+		}
+		node["IsNot"] = e.IsNot
+		return node
 	case *ast.BooleanInExpression:
 		node := jsonNode{
 			"$type": "InPredicate",

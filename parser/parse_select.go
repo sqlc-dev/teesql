@@ -4096,7 +4096,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		p.nextToken() // consume NOT
 	}
 
-	// Check for IS NULL / IS NOT NULL
+	// Check for IS NULL / IS NOT NULL / IS [NOT] DISTINCT FROM
 	if p.curTok.Type == TokenIs {
 		p.nextToken() // consume IS
 
@@ -4106,8 +4106,40 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			p.nextToken() // consume NOT
 		}
 
+		// Check for DISTINCT FROM
+		if p.curTok.Type == TokenDistinct {
+			p.nextToken() // consume DISTINCT
+			if strings.ToUpper(p.curTok.Literal) != "FROM" {
+				return nil, fmt.Errorf("expected FROM after DISTINCT, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume FROM
+
+			// Special case: IS [NOT] DISTINCT FROM NULL becomes IS [NOT] NULL
+			if p.curTok.Type == TokenNull {
+				p.nextToken() // consume NULL
+				// IS NOT DISTINCT FROM NULL = IS NULL (IsNot: false)
+				// IS DISTINCT FROM NULL = IS NOT NULL (IsNot: true)
+				return &ast.BooleanIsNullExpression{
+					IsNot:      !isNot,
+					Expression: left,
+				}, nil
+			}
+
+			// Parse the second expression
+			secondExpr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			return &ast.DistinctPredicate{
+				FirstExpression:  left,
+				SecondExpression: secondExpr,
+				IsNot:            isNot,
+			}, nil
+		}
+
 		if p.curTok.Type != TokenNull {
-			return nil, fmt.Errorf("expected NULL after IS/IS NOT, got %s", p.curTok.Literal)
+			return nil, fmt.Errorf("expected NULL or DISTINCT after IS/IS NOT, got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume NULL
 
@@ -4456,7 +4488,7 @@ func (p *Parser) finishParenthesizedBooleanExpression(inner ast.BooleanExpressio
 	return &ast.BooleanParenthesisExpression{Expression: inner}, nil
 }
 
-// parseIsNullAfterLeft parses IS NULL / IS NOT NULL after the left operand is already parsed
+// parseIsNullAfterLeft parses IS NULL / IS NOT NULL / IS [NOT] DISTINCT FROM after the left operand is already parsed
 func (p *Parser) parseIsNullAfterLeft(left ast.ScalarExpression) (ast.BooleanExpression, error) {
 	p.nextToken() // consume IS
 
@@ -4466,8 +4498,40 @@ func (p *Parser) parseIsNullAfterLeft(left ast.ScalarExpression) (ast.BooleanExp
 		p.nextToken() // consume NOT
 	}
 
+	// Check for DISTINCT FROM
+	if p.curTok.Type == TokenDistinct {
+		p.nextToken() // consume DISTINCT
+		if strings.ToUpper(p.curTok.Literal) != "FROM" {
+			return nil, fmt.Errorf("expected FROM after DISTINCT, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume FROM
+
+		// Special case: IS [NOT] DISTINCT FROM NULL becomes IS [NOT] NULL
+		if p.curTok.Type == TokenNull {
+			p.nextToken() // consume NULL
+			// IS NOT DISTINCT FROM NULL = IS NULL (IsNot: false)
+			// IS DISTINCT FROM NULL = IS NOT NULL (IsNot: true)
+			return &ast.BooleanIsNullExpression{
+				IsNot:      !isNot,
+				Expression: left,
+			}, nil
+		}
+
+		// Parse the second expression
+		secondExpr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		return &ast.DistinctPredicate{
+			FirstExpression:  left,
+			SecondExpression: secondExpr,
+			IsNot:            isNot,
+		}, nil
+	}
+
 	if p.curTok.Type != TokenNull {
-		return nil, fmt.Errorf("expected NULL after IS/IS NOT, got %s", p.curTok.Literal)
+		return nil, fmt.Errorf("expected NULL or DISTINCT after IS/IS NOT, got %s", p.curTok.Literal)
 	}
 	p.nextToken() // consume NULL
 
