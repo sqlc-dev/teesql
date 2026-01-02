@@ -1347,6 +1347,8 @@ func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
 	}
 	if q.UniqueRowFilter != "" {
 		node["UniqueRowFilter"] = q.UniqueRowFilter
+	} else {
+		node["UniqueRowFilter"] = "NotSpecified"
 	}
 	if q.TopRowFilter != nil {
 		node["TopRowFilter"] = topRowFilterToJSON(q.TopRowFilter)
@@ -2500,6 +2502,22 @@ func groupingSpecificationToJSON(spec ast.GroupingSpecification) jsonNode {
 				items[i] = groupingSpecificationToJSON(item)
 			}
 			node["Items"] = items
+		}
+		return node
+	case *ast.GrandTotalGroupingSpecification:
+		return jsonNode{
+			"$type": "GrandTotalGroupingSpecification",
+		}
+	case *ast.GroupingSetsGroupingSpecification:
+		node := jsonNode{
+			"$type": "GroupingSetsGroupingSpecification",
+		}
+		if len(s.Arguments) > 0 {
+			args := make([]jsonNode, len(s.Arguments))
+			for i, arg := range s.Arguments {
+				args[i] = groupingSpecificationToJSON(arg)
+			}
+			node["Sets"] = args
 		}
 		return node
 	default:

@@ -23,3 +23,17 @@ type CompositeGroupingSpecification struct {
 
 func (*CompositeGroupingSpecification) node()                  {}
 func (*CompositeGroupingSpecification) groupingSpecification() {}
+
+// GrandTotalGroupingSpecification represents empty parentheses () which means grand total.
+type GrandTotalGroupingSpecification struct{}
+
+func (*GrandTotalGroupingSpecification) node()                  {}
+func (*GrandTotalGroupingSpecification) groupingSpecification() {}
+
+// GroupingSetsGroupingSpecification represents GROUP BY GROUPING SETS (...) syntax.
+type GroupingSetsGroupingSpecification struct {
+	Arguments []GroupingSpecification `json:"Arguments,omitempty"`
+}
+
+func (*GroupingSetsGroupingSpecification) node()                  {}
+func (*GroupingSetsGroupingSpecification) groupingSpecification() {}

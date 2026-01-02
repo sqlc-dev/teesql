@@ -3150,8 +3150,20 @@ func (p *Parser) parseGroupingSpecification() (ast.GroupingSpecification, error)
 		return p.parseCubeGroupingSpecification()
 	}
 
-	// Check for composite grouping (c1, c2, ...)
+	// Check for GROUPING SETS (...)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GROUPING" &&
+		p.peekTok.Type == TokenIdent && strings.ToUpper(p.peekTok.Literal) == "SETS" {
+		return p.parseGroupingSetsGroupingSpecification()
+	}
+
+	// Check for grand total () or composite grouping (c1, c2, ...)
 	if p.curTok.Type == TokenLParen {
+		// Check for empty parens () which is grand total
+		if p.peekTok.Type == TokenRParen {
+			p.nextToken() // consume (
+			p.nextToken() // consume )
+			return &ast.GrandTotalGroupingSpecification{}, nil
+		}
 		return p.parseCompositeGroupingSpecification()
 	}
 
@@ -3243,6 +3255,129 @@ func (p *Parser) parseCubeGroupingSpecification() (*ast.CubeGroupingSpecificatio
 	}
 
 	return spec, nil
+}
+
+// parseGroupingSetsGroupingSpecification parses GROUPING SETS (...)
+func (p *Parser) parseGroupingSetsGroupingSpecification() (*ast.GroupingSetsGroupingSpecification, error) {
+	p.nextToken() // consume GROUPING
+	p.nextToken() // consume SETS
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after GROUPING SETS, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	spec := &ast.GroupingSetsGroupingSpecification{}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		arg, err := p.parseGroupingSetsArgument()
+		if err != nil {
+			return nil, err
+		}
+		spec.Arguments = append(spec.Arguments, arg)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return spec, nil
+}
+
+// parseGroupingSetsArgument parses an argument inside GROUPING SETS which can be
+// CUBE(...), ROLLUP(...), a column, or a parenthesized group
+func (p *Parser) parseGroupingSetsArgument() (ast.GroupingSpecification, error) {
+	// Check for CUBE
+	if p.curTok.Type == TokenCube {
+		return p.parseCubeGroupingSpecification()
+	}
+
+	// Check for ROLLUP
+	if p.curTok.Type == TokenRollup {
+		return p.parseRollupGroupingSpecification()
+	}
+
+	// Check for parenthesized group
+	if p.curTok.Type == TokenLParen {
+		// Check for empty parens () which is grand total
+		if p.peekTok.Type == TokenRParen {
+			p.nextToken() // consume (
+			p.nextToken() // consume )
+			return &ast.GrandTotalGroupingSpecification{}, nil
+		}
+		return p.parseGroupingSetsCompositeArgument()
+	}
+
+	// Regular expression (column reference or literal)
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.ExpressionGroupingSpecification{
+		Expression:             expr,
+		DistributedAggregation: false,
+	}, nil
+}
+
+// parseGroupingSetsCompositeArgument parses a parenthesized group inside GROUPING SETS
+// which can contain CUBE, ROLLUP, columns, or a mix
+func (p *Parser) parseGroupingSetsCompositeArgument() (ast.GroupingSpecification, error) {
+	p.nextToken() // consume (
+
+	// Check what's inside - might be CUBE, ROLLUP, or columns
+	var items []ast.GroupingSpecification
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		var item ast.GroupingSpecification
+		var err error
+
+		if p.curTok.Type == TokenCube {
+			item, err = p.parseCubeGroupingSpecification()
+		} else if p.curTok.Type == TokenRollup {
+			item, err = p.parseRollupGroupingSpecification()
+		} else if p.curTok.Type == TokenLParen {
+			// Check for empty parens () which is grand total
+			if p.peekTok.Type == TokenRParen {
+				p.nextToken() // consume (
+				p.nextToken() // consume )
+				item = &ast.GrandTotalGroupingSpecification{}
+			} else {
+				item, err = p.parseGroupingSetsCompositeArgument()
+			}
+		} else {
+			// Expression
+			expr, e := p.parseScalarExpression()
+			if e != nil {
+				return nil, e
+			}
+			item = &ast.ExpressionGroupingSpecification{
+				Expression:             expr,
+				DistributedAggregation: false,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return &ast.CompositeGroupingSpecification{Items: items}, nil
 }
 
 // parseGroupingSpecificationArgument parses an argument inside ROLLUP/CUBE which can be
