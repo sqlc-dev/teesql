@@ -160,6 +160,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterCryptographicProviderStatementToJSON(s)
 	case *ast.DropCryptographicProviderStatement:
 		return dropCryptographicProviderStatementToJSON(s)
+	case *ast.CreateBrokerPriorityStatement:
+		return createBrokerPriorityStatementToJSON(s)
+	case *ast.AlterBrokerPriorityStatement:
+		return alterBrokerPriorityStatementToJSON(s)
+	case *ast.DropBrokerPriorityStatement:
+		return dropBrokerPriorityStatementToJSON(s)
 	case *ast.UseFederationStatement:
 		return useFederationStatementToJSON(s)
 	case *ast.CreateFederationStatement:
@@ -14937,6 +14943,67 @@ func dropCryptographicProviderStatementToJSON(s *ast.DropCryptographicProviderSt
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func createBrokerPriorityStatementToJSON(s *ast.CreateBrokerPriorityStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateBrokerPriorityStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.BrokerPriorityParameters) > 0 {
+		params := make([]jsonNode, len(s.BrokerPriorityParameters))
+		for i, p := range s.BrokerPriorityParameters {
+			params[i] = brokerPriorityParameterToJSON(p)
+		}
+		node["BrokerPriorityParameters"] = params
+	}
+	return node
+}
+
+func alterBrokerPriorityStatementToJSON(s *ast.AlterBrokerPriorityStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterBrokerPriorityStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.BrokerPriorityParameters) > 0 {
+		params := make([]jsonNode, len(s.BrokerPriorityParameters))
+		for i, p := range s.BrokerPriorityParameters {
+			params[i] = brokerPriorityParameterToJSON(p)
+		}
+		node["BrokerPriorityParameters"] = params
+	}
+	return node
+}
+
+func dropBrokerPriorityStatementToJSON(s *ast.DropBrokerPriorityStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropBrokerPriorityStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func brokerPriorityParameterToJSON(p *ast.BrokerPriorityParameter) jsonNode {
+	node := jsonNode{
+		"$type": "BrokerPriorityParameter",
+	}
+	if p.IsDefaultOrAny != "" {
+		node["IsDefaultOrAny"] = p.IsDefaultOrAny
+	}
+	if p.ParameterType != "" {
+		node["ParameterType"] = p.ParameterType
+	}
+	if p.ParameterValue != nil {
+		node["ParameterValue"] = identifierOrValueExpressionToJSON(p.ParameterValue)
+	}
 	return node
 }
 

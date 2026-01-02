@@ -126,6 +126,8 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropSensitivityClassificationStatement()
 	case "FULLTEXT":
 		return p.parseDropFulltextStatement()
+	case "BROKER":
+		return p.parseDropBrokerPriorityStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -1673,6 +1675,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterResourceGovernorStatement()
 		case "CRYPTOGRAPHIC":
 			return p.parseAlterCryptographicProviderStatement()
+		case "BROKER":
+			return p.parseAlterBrokerPriorityStatement()
 		case "FEDERATION":
 			return p.parseAlterFederationStatement()
 		case "WORKLOAD":
@@ -7815,4 +7819,69 @@ func (p *Parser) parseResourcePoolAffinitySpecification() (*ast.ResourcePoolAffi
 	}
 
 	return spec, nil
+}
+
+func (p *Parser) parseAlterBrokerPriorityStatement() (*ast.AlterBrokerPriorityStatement, error) {
+	// Consume BROKER
+	p.nextToken()
+
+	// Consume PRIORITY
+	if strings.ToUpper(p.curTok.Literal) == "PRIORITY" {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterBrokerPriorityStatement{}
+
+	// Parse priority name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse FOR CONVERSATION
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "CONVERSATION" {
+			p.nextToken() // consume CONVERSATION
+		}
+	}
+
+	// Parse SET (parameters)
+	if strings.ToUpper(p.curTok.Literal) == "SET" {
+		p.nextToken() // consume SET
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			stmt.BrokerPriorityParameters = p.parseBrokerPriorityParameters()
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseDropBrokerPriorityStatement() (*ast.DropBrokerPriorityStatement, error) {
+	// Consume BROKER
+	p.nextToken()
+
+	// Consume PRIORITY
+	if strings.ToUpper(p.curTok.Literal) == "PRIORITY" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropBrokerPriorityStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken() // consume IF
+		if strings.ToUpper(p.curTok.Literal) == "EXISTS" {
+			stmt.IsIfExists = true
+			p.nextToken() // consume EXISTS
+		}
+	}
+
+	// Parse priority name
+	stmt.Name = p.parseIdentifier()
+
+	p.skipToEndOfStatement()
+	return stmt, nil
 }

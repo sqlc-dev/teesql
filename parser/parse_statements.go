@@ -2589,6 +2589,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateColumnMasterKeyStatement()
 		case "CRYPTOGRAPHIC":
 			return p.parseCreateCryptographicProviderStatement()
+		case "BROKER":
+			return p.parseCreateBrokerPriorityStatement()
 		case "FEDERATION":
 			return p.parseCreateFederationStatement()
 		case "WORKLOAD":
@@ -12215,4 +12217,93 @@ func (p *Parser) convertDbccOptionKind(opt string) string {
 		return canonical
 	}
 	return opt
+}
+
+func (p *Parser) parseCreateBrokerPriorityStatement() (*ast.CreateBrokerPriorityStatement, error) {
+	// Consume BROKER
+	p.nextToken()
+
+	// Consume PRIORITY
+	if strings.ToUpper(p.curTok.Literal) == "PRIORITY" {
+		p.nextToken()
+	}
+
+	stmt := &ast.CreateBrokerPriorityStatement{}
+
+	// Parse priority name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse FOR CONVERSATION
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "CONVERSATION" {
+			p.nextToken() // consume CONVERSATION
+		}
+	}
+
+	// Parse SET (parameters)
+	if strings.ToUpper(p.curTok.Literal) == "SET" {
+		p.nextToken() // consume SET
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			stmt.BrokerPriorityParameters = p.parseBrokerPriorityParameters()
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseBrokerPriorityParameters() []*ast.BrokerPriorityParameter {
+	var params []*ast.BrokerPriorityParameter
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+		param := &ast.BrokerPriorityParameter{}
+
+		// Get parameter type
+		paramType := strings.ToUpper(p.curTok.Literal)
+		switch paramType {
+		case "PRIORITY_LEVEL":
+			param.ParameterType = "PriorityLevel"
+		case "CONTRACT_NAME":
+			param.ParameterType = "ContractName"
+		case "REMOTE_SERVICE_NAME":
+			param.ParameterType = "RemoteServiceName"
+		case "LOCAL_SERVICE_NAME":
+			param.ParameterType = "LocalServiceName"
+		default:
+			param.ParameterType = paramType
+		}
+		p.nextToken() // consume parameter name
+
+		// Consume = if present
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+
+		// Parse value: DEFAULT, ANY, or an expression
+		valLiteral := strings.ToUpper(p.curTok.Literal)
+		if valLiteral == "DEFAULT" {
+			param.IsDefaultOrAny = "Default"
+			p.nextToken() // consume DEFAULT
+		} else if valLiteral == "ANY" {
+			param.IsDefaultOrAny = "Any"
+			p.nextToken() // consume ANY
+		} else {
+			param.IsDefaultOrAny = "None"
+			param.ParameterValue, _ = p.parseIdentifierOrValueExpression()
+		}
+
+		params = append(params, param)
+
+		// Skip comma
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	return params
 }
