@@ -4812,6 +4812,38 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			constraint.ConstraintIdentifier = constraintName
 			constraintName = nil
 			col.Constraints = append(col.Constraints, constraint)
+		} else if upperLit == "REFERENCES" {
+			// Parse inline REFERENCES constraint (shorthand for FOREIGN KEY)
+			p.nextToken() // consume REFERENCES
+			constraint := &ast.ForeignKeyConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+				DeleteAction:         "NotSpecified",
+				UpdateAction:         "NotSpecified",
+			}
+			constraintName = nil
+			// Parse reference table name
+			refTable, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			constraint.ReferenceTableName = refTable
+			// Parse referenced column list
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					ident := p.parseIdentifier()
+					constraint.ReferencedColumns = append(constraint.ReferencedColumns, ident)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "CONSTRAINT" {
 			p.nextToken() // consume CONSTRAINT
 			// Parse and save constraint name for next constraint

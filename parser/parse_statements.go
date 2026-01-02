@@ -693,6 +693,13 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 		return dt, nil
 	}
 
+	// Handle NATIONAL prefix (NATIONAL CHAR, NATIONAL TEXT, etc.)
+	isNational := false
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "NATIONAL" {
+		isNational = true
+		p.nextToken() // consume NATIONAL
+	}
+
 	if p.curTok.Type != TokenIdent {
 		return nil, fmt.Errorf("expected data type, got %s", p.curTok.Literal)
 	}
@@ -760,10 +767,15 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 	sqlOption, isKnownType := getSqlDataTypeOption(typeName)
 
 	// Check for multi-word types: CHAR VARYING -> VarChar, DOUBLE PRECISION -> Float
-	if upper := strings.ToUpper(typeName); upper == "CHAR" || upper == "DOUBLE" {
+	// Also handle BINARY VARYING -> VarBinary
+	if upper := strings.ToUpper(typeName); upper == "CHAR" || upper == "DOUBLE" || upper == "BINARY" {
 		nextUpper := strings.ToUpper(p.curTok.Literal)
 		if upper == "CHAR" && nextUpper == "VARYING" {
 			sqlOption = "VarChar"
+			isKnownType = true
+			p.nextToken() // consume VARYING
+		} else if upper == "BINARY" && nextUpper == "VARYING" {
+			sqlOption = "VarBinary"
 			isKnownType = true
 			p.nextToken() // consume VARYING
 		} else if upper == "DOUBLE" && nextUpper == "PRECISION" {
@@ -774,8 +786,20 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 		}
 	}
 
+	// Apply NATIONAL prefix to convert to national types
+	if isNational && isKnownType {
+		switch sqlOption {
+		case "Text":
+			sqlOption = "NText"
+		case "Char":
+			sqlOption = "NChar"
+		case "VarChar":
+			sqlOption = "NVarChar"
+		}
+	}
+
 	if !isKnownType {
-		// Check for multi-part type name (e.g., dbo.mytype)
+		// Check for multi-part type name (e.g., dbo.mytype or sys.text)
 		if p.curTok.Type == TokenDot {
 			p.nextToken() // consume .
 			// Get the next identifier
@@ -796,6 +820,106 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 				baseName.BaseIdentifier = thirdIdent
 				baseName.Count = 3
 				baseName.Identifiers = []*ast.Identifier{baseId, nextIdent, thirdIdent}
+			}
+
+			// Re-check if the base type (after schema) is a known SQL type
+			// This handles cases like sys.int, sys.text, etc.
+			baseTypeName := baseName.BaseIdentifier.Value
+			baseOption, baseIsKnown := getSqlDataTypeOption(baseTypeName)
+
+			// Handle multi-word types with schema prefix: sys.Char varying -> VarChar
+			if baseUpper := strings.ToUpper(baseTypeName); baseUpper == "CHAR" || baseUpper == "BINARY" {
+				nextUpper := strings.ToUpper(p.curTok.Literal)
+				if baseUpper == "CHAR" && nextUpper == "VARYING" {
+					baseOption = "VarChar"
+					baseIsKnown = true
+					p.nextToken() // consume VARYING
+				} else if baseUpper == "BINARY" && nextUpper == "VARYING" {
+					baseOption = "VarBinary"
+					baseIsKnown = true
+					p.nextToken() // consume VARYING
+				}
+			}
+
+			// Apply NATIONAL prefix for schema-qualified national types
+			if isNational && baseIsKnown {
+				switch baseOption {
+				case "Text":
+					baseOption = "NText"
+				case "Char":
+					baseOption = "NChar"
+				case "VarChar":
+					baseOption = "NVarChar"
+				}
+			}
+
+			if baseIsKnown {
+				// Special handling for XML type with schema prefix: sys.[xml](CONTENT schema_collection)
+				if strings.ToUpper(baseName.BaseIdentifier.Value) == "XML" {
+					xmlRef := &ast.XmlDataTypeReference{
+						XmlDataTypeOption: "None",
+						Name:              baseName,
+					}
+					// Check for schema collection: XML(CONTENT|DOCUMENT schema_collection)
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+
+						// Check for CONTENT or DOCUMENT keyword
+						upper := strings.ToUpper(p.curTok.Literal)
+						if upper == "CONTENT" {
+							xmlRef.XmlDataTypeOption = "Content"
+							p.nextToken()
+						} else if upper == "DOCUMENT" {
+							xmlRef.XmlDataTypeOption = "Document"
+							p.nextToken()
+						}
+
+						// Parse the schema collection name
+						schemaName, err := p.parseSchemaObjectName()
+						if err != nil {
+							return nil, err
+						}
+						xmlRef.XmlSchemaCollection = schemaName
+
+						if p.curTok.Type == TokenRParen {
+							p.nextToken()
+						}
+					}
+					return xmlRef, nil
+				}
+
+				// Return SqlDataTypeReference for known types with schema prefix
+				dt := &ast.SqlDataTypeReference{
+					SqlDataTypeOption: baseOption,
+					Name:              baseName,
+				}
+				// Handle parameters
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "MAX" {
+							dt.Parameters = append(dt.Parameters, &ast.MaxLiteral{
+								LiteralType: "Max",
+								Value:       p.curTok.Literal,
+							})
+							p.nextToken()
+						} else {
+							expr, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							dt.Parameters = append(dt.Parameters, expr)
+						}
+						if p.curTok.Type != TokenComma {
+							break
+						}
+						p.nextToken() // consume comma
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+				return dt, nil
 			}
 		}
 
