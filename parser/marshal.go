@@ -1804,6 +1804,17 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
 		}
 		return node
+	case *ast.NextValueForExpression:
+		node := jsonNode{
+			"$type": "NextValueForExpression",
+		}
+		if e.SequenceName != nil {
+			node["SequenceName"] = schemaObjectNameToJSON(e.SequenceName)
+		}
+		if e.OverClause != nil {
+			node["OverClause"] = overClauseToJSON(e.OverClause)
+		}
+		return node
 	case *ast.VariableReference:
 		node := jsonNode{
 			"$type": "VariableReference",
@@ -14793,13 +14804,13 @@ func alterDatabaseAddFileGroupStatementToJSON(s *ast.AlterDatabaseAddFileGroupSt
 	node := jsonNode{
 		"$type": "AlterDatabaseAddFileGroupStatement",
 	}
+	if s.FileGroupName != nil {
+		node["FileGroup"] = identifierToJSON(s.FileGroupName)
+	}
 	node["ContainsFileStream"] = s.ContainsFileStream
 	node["ContainsMemoryOptimizedData"] = s.ContainsMemoryOptimizedData
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
-	}
-	if s.FileGroupName != nil {
-		node["FileGroup"] = identifierToJSON(s.FileGroupName)
 	}
 	node["UseCurrent"] = s.UseCurrent
 	return node
@@ -14815,7 +14826,7 @@ func alterDatabaseModifyFileStatementToJSON(s *ast.AlterDatabaseModifyFileStatem
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
-	node["UseCurrent"] = false
+	node["UseCurrent"] = s.UseCurrent
 	return node
 }
 
@@ -14874,11 +14885,11 @@ func alterDatabaseRemoveFileGroupStatementToJSON(s *ast.AlterDatabaseRemoveFileG
 	node := jsonNode{
 		"$type": "AlterDatabaseRemoveFileGroupStatement",
 	}
-	if s.DatabaseName != nil {
-		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
-	}
 	if s.FileGroupName != nil {
 		node["FileGroup"] = identifierToJSON(s.FileGroupName)
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = s.UseCurrent
 	return node

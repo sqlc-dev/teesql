@@ -132,6 +132,7 @@ func (a *AlterDatabaseAddFileGroupStatement) statement() {}
 type AlterDatabaseModifyFileStatement struct {
 	DatabaseName    *Identifier
 	FileDeclaration *FileDeclaration
+	UseCurrent      bool
 }
 
 func (a *AlterDatabaseModifyFileStatement) node()      {}

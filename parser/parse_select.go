@@ -1086,6 +1086,10 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			p.nextToken()
 			return &ast.ColumnReferenceExpression{ColumnType: "RowGuidCol"}, nil
 		}
+		// Check for NEXT VALUE FOR sequence expression
+		if upper == "NEXT" && strings.ToUpper(p.peekTok.Literal) == "VALUE" {
+			return p.parseNextValueForExpression()
+		}
 		return p.parseColumnReferenceOrFunctionCall()
 	case TokenNumber:
 		val := p.curTok.Literal
@@ -1253,6 +1257,78 @@ func (p *Parser) parseSimpleCaseExpression() (*ast.SimpleCaseExpression, error) 
 		return nil, fmt.Errorf("expected END in CASE, got %s", p.curTok.Literal)
 	}
 	p.nextToken() // consume END
+
+	return expr, nil
+}
+
+// parseNextValueForExpression parses NEXT VALUE FOR sequence_name [OVER (...)]
+func (p *Parser) parseNextValueForExpression() (*ast.NextValueForExpression, error) {
+	p.nextToken() // consume NEXT
+	p.nextToken() // consume VALUE
+
+	// Expect FOR
+	if strings.ToUpper(p.curTok.Literal) != "FOR" {
+		return nil, fmt.Errorf("expected FOR after NEXT VALUE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume FOR
+
+	expr := &ast.NextValueForExpression{}
+
+	// Parse sequence name (may be multi-part: schema.sequence)
+	seqName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	expr.SequenceName = seqName
+
+	// Check for optional OVER clause
+	if p.curTok.Type == TokenOver {
+		p.nextToken() // consume OVER
+
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		overClause := &ast.OverClause{}
+
+		// Parse PARTITION BY
+		if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+			p.nextToken() // consume PARTITION
+			if strings.ToUpper(p.curTok.Literal) == "BY" {
+				p.nextToken() // consume BY
+			}
+			// Parse partition expressions
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				partExpr, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				overClause.Partitions = append(overClause.Partitions, partExpr)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		}
+
+		// Parse ORDER BY
+		if p.curTok.Type == TokenOrder {
+			orderBy, err := p.parseOrderByClause()
+			if err != nil {
+				return nil, err
+			}
+			overClause.OrderByClause = orderBy
+		}
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		expr.OverClause = overClause
+	}
 
 	return expr, nil
 }
