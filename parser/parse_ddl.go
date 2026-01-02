@@ -2994,6 +2994,13 @@ func (p *Parser) parseDropClusteredConstraintOptions() ([]ast.DropClusteredConst
 			})
 			p.nextToken() // consume number
 
+		case "WAIT_AT_LOW_PRIORITY":
+			waitOpt, err := p.parseWaitAtLowPriorityOption()
+			if err != nil {
+				return nil, err
+			}
+			options = append(options, waitOpt)
+
 		default:
 			return nil, fmt.Errorf("unexpected option in DROP WITH clause: %s", p.curTok.Literal)
 		}
@@ -3010,6 +3017,98 @@ func (p *Parser) parseDropClusteredConstraintOptions() ([]ast.DropClusteredConst
 	p.nextToken() // consume )
 
 	return options, nil
+}
+
+func (p *Parser) parseWaitAtLowPriorityOption() (*ast.DropClusteredConstraintWaitAtLowPriorityLockOption, error) {
+	// Consume WAIT_AT_LOW_PRIORITY
+	p.nextToken()
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after WAIT_AT_LOW_PRIORITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	opt := &ast.DropClusteredConstraintWaitAtLowPriorityLockOption{
+		OptionKind: "MaxDop", // This seems to be the expected value based on test data
+	}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optionName := strings.ToUpper(p.curTok.Literal)
+
+		switch optionName {
+		case "MAX_DURATION":
+			p.nextToken() // consume MAX_DURATION
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after MAX_DURATION, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			maxDuration := &ast.LowPriorityLockWaitMaxDurationOption{
+				OptionKind: "MaxDuration",
+			}
+			if p.curTok.Type != TokenNumber {
+				return nil, fmt.Errorf("expected number after MAX_DURATION =, got %s", p.curTok.Literal)
+			}
+			maxDuration.MaxDuration = &ast.IntegerLiteral{
+				LiteralType: "Integer",
+				Value:       p.curTok.Literal,
+			}
+			p.nextToken() // consume number
+
+			// Parse unit (MINUTES or SECONDS)
+			unit := strings.ToUpper(p.curTok.Literal)
+			if unit == "MINUTES" {
+				maxDuration.Unit = "Minutes"
+			} else if unit == "SECONDS" {
+				maxDuration.Unit = "Seconds"
+			} else {
+				return nil, fmt.Errorf("expected MINUTES or SECONDS, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume unit
+
+			opt.Options = append(opt.Options, maxDuration)
+
+		case "ABORT_AFTER_WAIT":
+			p.nextToken() // consume ABORT_AFTER_WAIT
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after ABORT_AFTER_WAIT, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			abortOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
+				OptionKind: "AbortAfterWait",
+			}
+			abortValue := strings.ToUpper(p.curTok.Literal)
+			switch abortValue {
+			case "NONE":
+				abortOpt.AbortAfterWait = "None"
+			case "SELF":
+				abortOpt.AbortAfterWait = "Self"
+			case "BLOCKERS":
+				abortOpt.AbortAfterWait = "Blockers"
+			default:
+				return nil, fmt.Errorf("expected NONE, SELF, or BLOCKERS after ABORT_AFTER_WAIT =, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume abort value
+
+			opt.Options = append(opt.Options, abortOpt)
+
+		default:
+			return nil, fmt.Errorf("unexpected option in WAIT_AT_LOW_PRIORITY: %s", p.curTok.Literal)
+		}
+
+		// Check for comma
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) to close WAIT_AT_LOW_PRIORITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return opt, nil
 }
 
 func (p *Parser) parseFileGroupOrPartitionScheme() (*ast.FileGroupOrPartitionScheme, error) {
