@@ -289,8 +289,10 @@ func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 }
 
 // parseInsertTarget parses the target for INSERT statements.
-// Unlike parseDMLTarget, it does NOT treat parentheses as function parameters
-// because in INSERT statements, parentheses after the table name are column names.
+// Unlike parseDMLTarget, it needs to distinguish between:
+// - dbo.f1() - a table-valued function call
+// - table (c1, c2) - a table with column list
+// We check if parentheses contain function parameters vs column names.
 func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
 	// Check for variable
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
@@ -313,8 +315,24 @@ func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
 		return nil, err
 	}
 
-	// For INSERT targets, parentheses are column names, not function parameters
-	// So we don't parse them here - the caller handles the column list
+	// Check for function call: dbo.f1() or dbo.tvf(1, -1, DEFAULT)
+	// This is a function if the parens contain:
+	// - Empty: ()
+	// - Non-identifier tokens: numbers, strings, DEFAULT, operators
+	// Otherwise, it's a column list and we don't consume it here.
+	if p.curTok.Type == TokenLParen {
+		if p.isInsertFunctionParams() {
+			params, err := p.parseFunctionParameters()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.SchemaObjectFunctionTableReference{
+				SchemaObject: son,
+				Parameters:   params,
+				ForPath:      false,
+			}, nil
+		}
+	}
 
 	ref := &ast.NamedTableReference{
 		SchemaObject: son,
@@ -343,6 +361,34 @@ func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
 	}
 
 	return ref, nil
+}
+
+// isInsertFunctionParams checks if the current parentheses contain function parameters
+// rather than a column list. Returns true if:
+// - Empty parens: ()
+// - Contains non-identifier tokens: numbers, strings, DEFAULT, minus, etc.
+func (p *Parser) isInsertFunctionParams() bool {
+	// We're at '(' - look at peekTok to see what's inside
+
+	// Empty parens () - definitely function call
+	if p.peekTok.Type == TokenRParen {
+		return true
+	}
+
+	// Look at the first token after (
+	// If it's a number, string, DEFAULT, minus, or other non-identifier, it's function params
+	switch p.peekTok.Type {
+	case TokenNumber, TokenString, TokenNationalString, TokenMinus, TokenPlus:
+		return true
+	case TokenIdent:
+		// Check for DEFAULT keyword
+		if strings.ToUpper(p.peekTok.Literal) == "DEFAULT" {
+			return true
+		}
+	}
+
+	// Otherwise, it's likely a column list
+	return false
 }
 
 func (p *Parser) parseOpenRowset() (ast.TableReference, error) {
