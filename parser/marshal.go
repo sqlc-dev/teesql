@@ -10313,15 +10313,28 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 				switch strings.ToUpper(p.curTok.Literal) {
 				case "CALLER":
 					execAsClause.ExecuteAsOption = "Caller"
+					p.nextToken()
 				case "SELF":
 					execAsClause.ExecuteAsOption = "Self"
+					p.nextToken()
 				case "OWNER":
 					execAsClause.ExecuteAsOption = "Owner"
+					p.nextToken()
 				default:
-					// User name
-					execAsClause.ExecuteAsOption = "User"
+					// Check for string literal (e.g., EXECUTE AS 'dbo')
+					if p.curTok.Type == TokenString {
+						strLit, err := p.parseStringLiteral()
+						if err != nil {
+							return nil, err
+						}
+						execAsClause.ExecuteAsOption = "String"
+						execAsClause.Literal = strLit
+					} else {
+						// User name
+						execAsClause.ExecuteAsOption = "User"
+						p.nextToken()
+					}
 				}
-				p.nextToken()
 				stmt.Options = append(stmt.Options, &ast.ExecuteAsTriggerOption{
 					OptionKind:      "ExecuteAsClause",
 					ExecuteAsClause: execAsClause,
@@ -10365,6 +10378,11 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 			break
 		}
 
+		// Check for NOT FOR REPLICATION
+		if actionType == "NOT" {
+			break
+		}
+
 		switch actionType {
 		case "INSERT":
 			action.TriggerActionType = "Insert"
@@ -10376,8 +10394,8 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 			// For database/server triggers, events are wrapped in EventTypeContainer
 			if isDatabaseOrServerTrigger && len(actionType) > 0 {
 				action.TriggerActionType = "Event"
-				// Convert action type to proper case (e.g., RENAME -> Rename)
-				eventType := strings.ToUpper(actionType[:1]) + strings.ToLower(actionType[1:])
+				// Convert action type to proper case (e.g., DENY_DATABASE -> DenyDatabase)
+				eventType := convertEventTypeCase(actionType)
 				action.EventTypeGroup = &ast.EventTypeContainer{
 					EventType: eventType,
 				}
@@ -10396,6 +10414,18 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 		}
 	}
 
+	// Parse NOT FOR REPLICATION
+	if strings.ToUpper(p.curTok.Literal) == "NOT" {
+		p.nextToken() // consume NOT
+		if strings.ToUpper(p.curTok.Literal) == "FOR" {
+			p.nextToken() // consume FOR
+		}
+		if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+			p.nextToken() // consume REPLICATION
+			stmt.IsNotForReplication = true
+		}
+	}
+
 	// Parse AS
 	if p.curTok.Type == TokenAs {
 		p.nextToken()
@@ -10404,6 +10434,30 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 	// Skip leading semicolons
 	for p.curTok.Type == TokenSemicolon {
 		p.nextToken()
+	}
+
+	// Check for EXTERNAL NAME (CLR trigger)
+	if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+		p.nextToken() // consume EXTERNAL
+		if strings.ToUpper(p.curTok.Literal) == "NAME" {
+			p.nextToken() // consume NAME
+		}
+		// Parse assembly.class.method
+		stmt.MethodSpecifier = &ast.MethodSpecifier{}
+		stmt.MethodSpecifier.AssemblyName = p.parseIdentifier()
+		if p.curTok.Type == TokenDot {
+			p.nextToken()
+			stmt.MethodSpecifier.ClassName = p.parseIdentifier()
+		}
+		if p.curTok.Type == TokenDot {
+			p.nextToken()
+			stmt.MethodSpecifier.MethodName = p.parseIdentifier()
+		}
+		// Skip optional semicolons
+		for p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
 	}
 
 	// Parse statement list (all statements until GO/EOF)
@@ -10436,6 +10490,17 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 	}
 
 	return stmt, nil
+}
+
+// convertEventTypeCase converts an event type like "DENY_DATABASE" to "DenyDatabase"
+func convertEventTypeCase(s string) string {
+	parts := strings.Split(s, "_")
+	for i, part := range parts {
+		if len(part) > 0 {
+			parts[i] = strings.ToUpper(part[:1]) + strings.ToLower(part[1:])
+		}
+	}
+	return strings.Join(parts, "")
 }
 
 // JSON marshaling functions for new statement types
@@ -11275,6 +11340,9 @@ func createTriggerStatementToJSON(s *ast.CreateTriggerStatement) jsonNode {
 		}
 		node["TriggerActions"] = actions
 	}
+	if s.MethodSpecifier != nil {
+		node["MethodSpecifier"] = methodSpecifierToJSON(s.MethodSpecifier)
+	}
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
@@ -11331,10 +11399,14 @@ func triggerOptionTypeToJSON(o ast.TriggerOptionType) jsonNode {
 			"OptionKind": opt.OptionKind,
 		}
 		if opt.ExecuteAsClause != nil {
-			node["ExecuteAsClause"] = jsonNode{
+			execClause := jsonNode{
 				"$type":           "ExecuteAsClause",
 				"ExecuteAsOption": opt.ExecuteAsClause.ExecuteAsOption,
 			}
+			if opt.ExecuteAsClause.Literal != nil {
+				execClause["Literal"] = stringLiteralToJSON(opt.ExecuteAsClause.Literal)
+			}
+			node["ExecuteAsClause"] = execClause
 		}
 		return node
 	default:
