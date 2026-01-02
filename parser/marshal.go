@@ -3100,6 +3100,9 @@ func mergeSpecificationToJSON(spec *ast.MergeSpecification) jsonNode {
 	node := jsonNode{
 		"$type": "MergeSpecification",
 	}
+	if spec.TableAlias != nil {
+		node["TableAlias"] = identifierToJSON(spec.TableAlias)
+	}
 	if spec.TableReference != nil {
 		node["TableReference"] = tableReferenceToJSON(spec.TableReference)
 	}
@@ -4286,6 +4289,11 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 	if err != nil {
 		return nil, err
 	}
+	// If target has an alias, move it to TableAlias (ScriptDOM convention)
+	if ntr, ok := target.(*ast.NamedTableReference); ok && ntr.Alias != nil {
+		stmt.MergeSpecification.TableAlias = ntr.Alias
+		ntr.Alias = nil
+	}
 	stmt.MergeSpecification.Target = target
 
 	// Expect USING
@@ -4293,7 +4301,7 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 		p.nextToken()
 	}
 
-	// Parse source table reference (may be parenthesized join)
+	// Parse source table reference (may be parenthesized join or subquery)
 	sourceRef, err := p.parseMergeSourceTableReference()
 	if err != nil {
 		return nil, err
@@ -4348,8 +4356,13 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 
 // parseMergeSourceTableReference parses the source table reference in a MERGE statement
 func (p *Parser) parseMergeSourceTableReference() (ast.TableReference, error) {
-	// Check for parenthesized expression (usually joins)
+	// Check for parenthesized expression
 	if p.curTok.Type == TokenLParen {
+		// Check if this is a derived table (subquery) or a join
+		if p.peekTok.Type == TokenSelect {
+			// This is a derived table like (SELECT ...) AS alias
+			return p.parseDerivedTableReference()
+		}
 		p.nextToken() // consume (
 		// Parse the inner join expression
 		inner, err := p.parseMergeJoinTableReference()

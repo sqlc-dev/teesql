@@ -11,6 +11,7 @@ func (s *MergeStatement) statement() {}
 // MergeSpecification represents the specification of a MERGE statement
 type MergeSpecification struct {
 	Target          TableReference    // The target table
+	TableAlias      *Identifier       // Alias for the USING clause table reference (e.g., AS src)
 	TableReference  TableReference    // The USING clause table reference
 	SearchCondition BooleanExpression // The ON clause condition (may be GraphMatchPredicate)
 	ActionClauses   []*MergeActionClause
