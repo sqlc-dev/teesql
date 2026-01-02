@@ -10463,6 +10463,8 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "CATALOG":
 		return p.parseCreateFulltextCatalogStatement()
+	case "STOPLIST":
+		return p.parseCreateFulltextStopListStatement()
 	case "INDEX":
 		p.nextToken() // consume INDEX
 		// FULLTEXT INDEX ON table_name
@@ -10483,6 +10485,52 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 		p.skipToEndOfStatement()
 		return stmt, nil
 	}
+}
+
+func (p *Parser) parseCreateFulltextStopListStatement() (*ast.CreateFullTextStopListStatement, error) {
+	p.nextToken() // consume STOPLIST
+
+	stmt := &ast.CreateFullTextStopListStatement{
+		Name:             p.parseIdentifier(),
+		IsSystemStopList: false,
+	}
+
+	// Parse FROM clause
+	if p.curTok.Type == TokenFrom {
+		p.nextToken() // consume FROM
+
+		// Check for SYSTEM STOPLIST
+		if strings.ToUpper(p.curTok.Literal) == "SYSTEM" {
+			p.nextToken() // consume SYSTEM
+			if strings.ToUpper(p.curTok.Literal) == "STOPLIST" {
+				p.nextToken() // consume STOPLIST
+			}
+			stmt.IsSystemStopList = true
+		} else {
+			// Parse schema.name or just name
+			first := p.parseIdentifier()
+			if p.curTok.Type == TokenDot {
+				p.nextToken() // consume .
+				stmt.DatabaseName = first
+				stmt.SourceStopListName = p.parseIdentifier()
+			} else {
+				stmt.SourceStopListName = first
+			}
+		}
+	}
+
+	// Parse AUTHORIZATION clause
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseCreateFulltextCatalogStatement() (*ast.CreateFullTextCatalogStatement, error) {

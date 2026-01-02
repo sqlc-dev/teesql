@@ -532,6 +532,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createFullTextCatalogStatementToJSON(s)
 	case *ast.AlterFulltextIndexStatement:
 		return alterFulltextIndexStatementToJSON(s)
+	case *ast.CreateFullTextStopListStatement:
+		return createFullTextStopListStatementToJSON(s)
+	case *ast.AlterFullTextStopListStatement:
+		return alterFullTextStopListStatementToJSON(s)
+	case *ast.DropFullTextStopListStatement:
+		return dropFullTextStopListStatementToJSON(s)
 	case *ast.AlterSymmetricKeyStatement:
 		return alterSymmetricKeyStatementToJSON(s)
 	case *ast.AlterServiceMasterKeyStatement:
@@ -13371,6 +13377,65 @@ func createFullTextCatalogStatementToJSON(s *ast.CreateFullTextCatalogStatement)
 			opts[i] = optNode
 		}
 		node["Options"] = opts
+	}
+	return node
+}
+
+func createFullTextStopListStatementToJSON(s *ast.CreateFullTextStopListStatement) jsonNode {
+	node := jsonNode{
+		"$type":            "CreateFullTextStopListStatement",
+		"IsSystemStopList": s.IsSystemStopList,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	if s.SourceStopListName != nil {
+		node["SourceStopListName"] = identifierToJSON(s.SourceStopListName)
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
+	return node
+}
+
+func alterFullTextStopListStatementToJSON(s *ast.AlterFullTextStopListStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterFullTextStopListStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Action != nil {
+		node["Action"] = fullTextStopListActionToJSON(s.Action)
+	}
+	return node
+}
+
+func fullTextStopListActionToJSON(a *ast.FullTextStopListAction) jsonNode {
+	node := jsonNode{
+		"$type": "FullTextStopListAction",
+		"IsAdd": a.IsAdd,
+		"IsAll": a.IsAll,
+	}
+	if a.StopWord != nil {
+		node["StopWord"] = stringLiteralToJSON(a.StopWord)
+	}
+	if a.LanguageTerm != nil {
+		node["LanguageTerm"] = identifierOrValueExpressionToJSON(a.LanguageTerm)
+	}
+	return node
+}
+
+func dropFullTextStopListStatementToJSON(s *ast.DropFullTextStopListStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropFullTextStopListStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
 	}
 	return node
 }

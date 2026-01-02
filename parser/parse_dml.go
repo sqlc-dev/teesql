@@ -1934,27 +1934,26 @@ func (p *Parser) parseBulkInsertStatement() (*ast.BulkInsertStatement, error) {
 func (p *Parser) parseIdentifierOrValueExpression() (*ast.IdentifierOrValueExpression, error) {
 	result := &ast.IdentifierOrValueExpression{}
 
-	if p.curTok.Type == TokenString {
+	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
 		// String literal
-		value := p.curTok.Literal
-		// Remove quotes
-		if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
-			value = value[1 : len(value)-1]
-		}
-		result.Value = value
-		result.ValueExpression = &ast.StringLiteral{
-			LiteralType:   "String",
-			IsNational:    false,
-			IsLargeObject: false,
-			Value:         value,
-		}
-		p.nextToken()
+		strLit, _ := p.parseStringLiteral()
+		result.Value = strLit.Value
+		result.ValueExpression = strLit
 	} else if p.curTok.Type == TokenNumber {
 		// Integer literal
 		result.Value = p.curTok.Literal
 		result.ValueExpression = &ast.IntegerLiteral{
 			LiteralType: "Integer",
 			Value:       p.curTok.Literal,
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenBinary {
+		// Binary/hex literal
+		result.Value = p.curTok.Literal
+		result.ValueExpression = &ast.BinaryLiteral{
+			LiteralType:   "Binary",
+			IsLargeObject: false,
+			Value:         p.curTok.Literal,
 		}
 		p.nextToken()
 	} else if p.curTok.Type == TokenIdent {

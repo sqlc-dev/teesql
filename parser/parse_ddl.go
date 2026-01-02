@@ -124,9 +124,57 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropSignatureStatement(true)
 	case "SENSITIVITY":
 		return p.parseDropSensitivityClassificationStatement()
+	case "FULLTEXT":
+		return p.parseDropFulltextStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseDropFulltextStatement() (ast.Statement, error) {
+	// Consume FULLTEXT
+	p.nextToken()
+
+	keyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume CATALOG/INDEX/STOPLIST
+
+	switch keyword {
+	case "STOPLIST":
+		stmt := &ast.DropFullTextStopListStatement{
+			Name:       p.parseIdentifier(),
+			IsIfExists: false,
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	case "CATALOG":
+		stmt := &ast.DropFullTextCatalogStatement{
+			Name: p.parseIdentifier(),
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	case "INDEX":
+		// DROP FULLTEXT INDEX ON table
+		if p.curTok.Type == TokenOn {
+			p.nextToken() // consume ON
+		}
+		name, _ := p.parseSchemaObjectName()
+		stmt := &ast.DropFulltextIndexStatement{
+			OnName: name,
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	}
+
+	return nil, fmt.Errorf("unexpected token after DROP FULLTEXT: %s", keyword)
 }
 
 func (p *Parser) parseDropExternalStatement() (ast.Statement, error) {
@@ -5862,9 +5910,13 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 	// Consume FULLTEXT
 	p.nextToken()
 
-	// Check CATALOG or INDEX
+	// Check CATALOG, INDEX, or STOPLIST
 	keyword := strings.ToUpper(p.curTok.Literal)
 	p.nextToken()
+
+	if keyword == "STOPLIST" {
+		return p.parseAlterFulltextStopListStatement()
+	}
 
 	if keyword == "CATALOG" {
 		stmt := &ast.AlterFulltextCatalogStatement{}
@@ -5933,6 +5985,49 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterFulltextStopListStatement() (*ast.AlterFullTextStopListStatement, error) {
+	stmt := &ast.AlterFullTextStopListStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	action := &ast.FullTextStopListAction{}
+
+	// Parse ADD or DROP
+	actionLit := strings.ToUpper(p.curTok.Literal)
+	if actionLit == "ADD" {
+		action.IsAdd = true
+		p.nextToken() // consume ADD
+	} else if actionLit == "DROP" {
+		action.IsAdd = false
+		p.nextToken() // consume DROP
+	}
+
+	// Check for ALL
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		action.IsAll = true
+		p.nextToken() // consume ALL
+	} else if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+		// Parse stopword
+		strLit, _ := p.parseStringLiteral()
+		action.StopWord = strLit
+	}
+
+	// Parse LANGUAGE term
+	if p.curTok.Type == TokenLanguage || strings.ToUpper(p.curTok.Literal) == "LANGUAGE" {
+		p.nextToken() // consume LANGUAGE
+		action.LanguageTerm, _ = p.parseIdentifierOrValueExpression()
+	}
+
+	stmt.Action = action
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
 }
 
