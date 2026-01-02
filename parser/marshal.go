@@ -2015,6 +2015,8 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		if r.JoinHint != "" {
 			node["JoinHint"] = r.JoinHint
+		} else {
+			node["JoinHint"] = "None"
 		}
 		if r.FirstTableReference != nil {
 			node["FirstTableReference"] = tableReferenceToJSON(r.FirstTableReference)
