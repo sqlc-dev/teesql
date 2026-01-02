@@ -693,6 +693,13 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 		return dt, nil
 	}
 
+	// Handle NATIONAL prefix (NATIONAL CHAR, NATIONAL TEXT, etc.)
+	isNational := false
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "NATIONAL" {
+		isNational = true
+		p.nextToken() // consume NATIONAL
+	}
+
 	if p.curTok.Type != TokenIdent {
 		return nil, fmt.Errorf("expected data type, got %s", p.curTok.Literal)
 	}
@@ -760,10 +767,15 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 	sqlOption, isKnownType := getSqlDataTypeOption(typeName)
 
 	// Check for multi-word types: CHAR VARYING -> VarChar, DOUBLE PRECISION -> Float
-	if upper := strings.ToUpper(typeName); upper == "CHAR" || upper == "DOUBLE" {
+	// Also handle BINARY VARYING -> VarBinary
+	if upper := strings.ToUpper(typeName); upper == "CHAR" || upper == "DOUBLE" || upper == "BINARY" {
 		nextUpper := strings.ToUpper(p.curTok.Literal)
 		if upper == "CHAR" && nextUpper == "VARYING" {
 			sqlOption = "VarChar"
+			isKnownType = true
+			p.nextToken() // consume VARYING
+		} else if upper == "BINARY" && nextUpper == "VARYING" {
+			sqlOption = "VarBinary"
 			isKnownType = true
 			p.nextToken() // consume VARYING
 		} else if upper == "DOUBLE" && nextUpper == "PRECISION" {
@@ -774,8 +786,20 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 		}
 	}
 
+	// Apply NATIONAL prefix to convert to national types
+	if isNational && isKnownType {
+		switch sqlOption {
+		case "Text":
+			sqlOption = "NText"
+		case "Char":
+			sqlOption = "NChar"
+		case "VarChar":
+			sqlOption = "NVarChar"
+		}
+	}
+
 	if !isKnownType {
-		// Check for multi-part type name (e.g., dbo.mytype)
+		// Check for multi-part type name (e.g., dbo.mytype or sys.text)
 		if p.curTok.Type == TokenDot {
 			p.nextToken() // consume .
 			// Get the next identifier
@@ -796,6 +820,106 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 				baseName.BaseIdentifier = thirdIdent
 				baseName.Count = 3
 				baseName.Identifiers = []*ast.Identifier{baseId, nextIdent, thirdIdent}
+			}
+
+			// Re-check if the base type (after schema) is a known SQL type
+			// This handles cases like sys.int, sys.text, etc.
+			baseTypeName := baseName.BaseIdentifier.Value
+			baseOption, baseIsKnown := getSqlDataTypeOption(baseTypeName)
+
+			// Handle multi-word types with schema prefix: sys.Char varying -> VarChar
+			if baseUpper := strings.ToUpper(baseTypeName); baseUpper == "CHAR" || baseUpper == "BINARY" {
+				nextUpper := strings.ToUpper(p.curTok.Literal)
+				if baseUpper == "CHAR" && nextUpper == "VARYING" {
+					baseOption = "VarChar"
+					baseIsKnown = true
+					p.nextToken() // consume VARYING
+				} else if baseUpper == "BINARY" && nextUpper == "VARYING" {
+					baseOption = "VarBinary"
+					baseIsKnown = true
+					p.nextToken() // consume VARYING
+				}
+			}
+
+			// Apply NATIONAL prefix for schema-qualified national types
+			if isNational && baseIsKnown {
+				switch baseOption {
+				case "Text":
+					baseOption = "NText"
+				case "Char":
+					baseOption = "NChar"
+				case "VarChar":
+					baseOption = "NVarChar"
+				}
+			}
+
+			if baseIsKnown {
+				// Special handling for XML type with schema prefix: sys.[xml](CONTENT schema_collection)
+				if strings.ToUpper(baseName.BaseIdentifier.Value) == "XML" {
+					xmlRef := &ast.XmlDataTypeReference{
+						XmlDataTypeOption: "None",
+						Name:              baseName,
+					}
+					// Check for schema collection: XML(CONTENT|DOCUMENT schema_collection)
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+
+						// Check for CONTENT or DOCUMENT keyword
+						upper := strings.ToUpper(p.curTok.Literal)
+						if upper == "CONTENT" {
+							xmlRef.XmlDataTypeOption = "Content"
+							p.nextToken()
+						} else if upper == "DOCUMENT" {
+							xmlRef.XmlDataTypeOption = "Document"
+							p.nextToken()
+						}
+
+						// Parse the schema collection name
+						schemaName, err := p.parseSchemaObjectName()
+						if err != nil {
+							return nil, err
+						}
+						xmlRef.XmlSchemaCollection = schemaName
+
+						if p.curTok.Type == TokenRParen {
+							p.nextToken()
+						}
+					}
+					return xmlRef, nil
+				}
+
+				// Return SqlDataTypeReference for known types with schema prefix
+				dt := &ast.SqlDataTypeReference{
+					SqlDataTypeOption: baseOption,
+					Name:              baseName,
+				}
+				// Handle parameters
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "MAX" {
+							dt.Parameters = append(dt.Parameters, &ast.MaxLiteral{
+								LiteralType: "Max",
+								Value:       p.curTok.Literal,
+							})
+							p.nextToken()
+						} else {
+							expr, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							dt.Parameters = append(dt.Parameters, expr)
+						}
+						if p.curTok.Type != TokenComma {
+							break
+						}
+						p.nextToken() // consume comma
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+				return dt, nil
 			}
 		}
 
@@ -2465,6 +2589,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateColumnMasterKeyStatement()
 		case "CRYPTOGRAPHIC":
 			return p.parseCreateCryptographicProviderStatement()
+		case "BROKER":
+			return p.parseCreateBrokerPriorityStatement()
 		case "FEDERATION":
 			return p.parseCreateFederationStatement()
 		case "WORKLOAD":
@@ -2474,6 +2600,15 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 				return p.parseCreateWorkloadClassifierStatement()
 			}
 			return p.parseCreateWorkloadGroupStatement()
+		case "RESOURCE":
+			// Check if it's RESOURCE POOL or RESOURCE GOVERNOR
+			p.nextToken() // consume RESOURCE
+			if strings.ToUpper(p.curTok.Literal) == "POOL" {
+				return p.parseCreateResourcePoolStatement()
+			}
+			// RESOURCE GOVERNOR not supported for CREATE
+			p.skipToEndOfStatement()
+			return &ast.CreateProcedureStatement{}, nil
 		case "SEQUENCE":
 			return p.parseCreateSequenceStatement()
 		case "SPATIAL":
@@ -5681,10 +5816,88 @@ func (p *Parser) parseLabelOrError() (ast.Statement, error) {
 		return &ast.LabelStatement{Value: label + ":"}, nil
 	}
 
-	// Not a label - be lenient and skip to end of statement
+	// Check for implicit procedure execution (identifier followed by parameters)
+	// This happens at batch start where you can call a stored procedure without EXEC
+	if p.isImplicitExecuteParameter() {
+		return p.parseImplicitExecuteStatement(label)
+	}
+
+	// Not a label or implicit execute - be lenient and skip to end of statement
 	// This handles malformed SQL like "abcde" or other unknown identifiers
 	p.skipToEndOfStatement()
 	return &ast.LabelStatement{Value: label}, nil
+}
+
+// isImplicitExecuteParameter checks if current token could be a parameter for implicit EXEC
+func (p *Parser) isImplicitExecuteParameter() bool {
+	switch p.curTok.Type {
+	case TokenString, TokenNationalString, TokenNumber:
+		return true
+	case TokenIdent:
+		// Variables (@var) or identifiers followed by comma/semicolon
+		if strings.HasPrefix(p.curTok.Literal, "@") {
+			return true
+		}
+		// DEFAULT keyword
+		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+			return true
+		}
+		// Regular identifier as parameter (like sp_addtype birthday, datetime)
+		return true
+	case TokenSemicolon, TokenEOF:
+		// No parameters - could still be implicit exec
+		return true
+	default:
+		return false
+	}
+}
+
+// parseImplicitExecuteStatement parses an implicit EXEC statement (procedure call without EXEC keyword)
+func (p *Parser) parseImplicitExecuteStatement(procName string) (ast.Statement, error) {
+	// Build the SchemaObjectName from the procedure name
+	// Use the same identifier pointer for both Identifiers array and BaseIdentifier
+	// so that JSON marshaling can use $ref
+	baseIdent := &ast.Identifier{Value: procName, QuoteType: "NotQuoted"}
+	son := &ast.SchemaObjectName{
+		Count:          1,
+		Identifiers:    []*ast.Identifier{baseIdent},
+		BaseIdentifier: baseIdent,
+	}
+
+	procRef := &ast.ExecutableProcedureReference{
+		ProcedureReference: &ast.ProcedureReferenceName{
+			ProcedureReference: &ast.ProcedureReference{
+				Name: son,
+			},
+		},
+	}
+
+	// Parse parameters
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && !p.isStatementTerminator() {
+		param, err := p.parseExecuteParameter()
+		if err != nil {
+			break
+		}
+		procRef.Parameters = append(procRef.Parameters, param)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken()
+	}
+
+	spec := &ast.ExecuteSpecification{
+		ExecutableEntity: procRef,
+	}
+
+	stmt := &ast.ExecuteStatement{ExecuteSpecification: spec}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func isKeyword(s string) bool {
@@ -7901,11 +8114,13 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 	}
 
 	// Check for DATABASE SCOPED CREDENTIAL
-	if strings.ToUpper(p.curTok.Literal) == "SCOPED" {
-		p.nextToken() // consume SCOPED
-		if p.curTok.Type == TokenCredential {
+	if p.curTok.Type == TokenScoped || strings.ToUpper(p.curTok.Literal) == "SCOPED" {
+		// Look ahead to see if it's SCOPED CREDENTIAL
+		if p.peekTok.Type == TokenCredential {
+			p.nextToken() // consume SCOPED
 			return p.parseCreateCredentialStatement(true)
 		}
+		// Otherwise SCOPED is the database name
 	}
 
 	stmt := &ast.CreateDatabaseStatement{
@@ -8515,9 +8730,95 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 		Name: p.parseIdentifier(),
 	}
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Check for FROM clause
+	if p.curTok.Type == TokenFrom {
+		p.nextToken() // consume FROM
+
+		// Check for EXTERNAL PROVIDER
+		if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+			p.nextToken() // consume EXTERNAL
+			if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+				p.nextToken() // consume PROVIDER
+			}
+
+			source := &ast.ExternalCreateLoginSource{}
+
+			// Parse WITH options
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				source.Options = p.parseExternalLoginOptions()
+			}
+
+			stmt.Source = source
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
+}
+
+func (p *Parser) parseExternalLoginOptions() []ast.PrincipalOption {
+	var options []ast.PrincipalOption
+
+	for {
+		optName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume option name
+
+		// Expect =
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		switch optName {
+		case "SID":
+			// SID = 0x... (binary literal)
+			if p.curTok.Type == TokenBinary {
+				options = append(options, &ast.LiteralPrincipalOption{
+					OptionKind: "Sid",
+					Value: &ast.BinaryLiteral{
+						LiteralType:   "Binary",
+						IsLargeObject: false,
+						Value:         p.curTok.Literal,
+					},
+				})
+				p.nextToken()
+			}
+		case "TYPE":
+			// TYPE = X or TYPE = [X] or TYPE = E
+			options = append(options, &ast.IdentifierPrincipalOption{
+				OptionKind: "Type",
+				Identifier: p.parseIdentifier(),
+			})
+		case "DEFAULT_DATABASE":
+			options = append(options, &ast.IdentifierPrincipalOption{
+				OptionKind: "DefaultDatabase",
+				Identifier: p.parseIdentifier(),
+			})
+		case "DEFAULT_LANGUAGE":
+			options = append(options, &ast.IdentifierPrincipalOption{
+				OptionKind: "DefaultLanguage",
+				Identifier: p.parseIdentifier(),
+			})
+		default:
+			// Unknown option, skip value
+			if p.curTok.Type != TokenComma && p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+				p.nextToken()
+			}
+		}
+
+		// Check for comma (more options)
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	return options
 }
 
 func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) {
@@ -10288,6 +10589,8 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "CATALOG":
 		return p.parseCreateFulltextCatalogStatement()
+	case "STOPLIST":
+		return p.parseCreateFulltextStopListStatement()
 	case "INDEX":
 		p.nextToken() // consume INDEX
 		// FULLTEXT INDEX ON table_name
@@ -10308,6 +10611,52 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 		p.skipToEndOfStatement()
 		return stmt, nil
 	}
+}
+
+func (p *Parser) parseCreateFulltextStopListStatement() (*ast.CreateFullTextStopListStatement, error) {
+	p.nextToken() // consume STOPLIST
+
+	stmt := &ast.CreateFullTextStopListStatement{
+		Name:             p.parseIdentifier(),
+		IsSystemStopList: false,
+	}
+
+	// Parse FROM clause
+	if p.curTok.Type == TokenFrom {
+		p.nextToken() // consume FROM
+
+		// Check for SYSTEM STOPLIST
+		if strings.ToUpper(p.curTok.Literal) == "SYSTEM" {
+			p.nextToken() // consume SYSTEM
+			if strings.ToUpper(p.curTok.Literal) == "STOPLIST" {
+				p.nextToken() // consume STOPLIST
+			}
+			stmt.IsSystemStopList = true
+		} else {
+			// Parse schema.name or just name
+			first := p.parseIdentifier()
+			if p.curTok.Type == TokenDot {
+				p.nextToken() // consume .
+				stmt.DatabaseName = first
+				stmt.SourceStopListName = p.parseIdentifier()
+			} else {
+				stmt.SourceStopListName = first
+			}
+		}
+	}
+
+	// Parse AUTHORIZATION clause
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseCreateFulltextCatalogStatement() (*ast.CreateFullTextCatalogStatement, error) {
@@ -11197,10 +11546,25 @@ func (p *Parser) parseDeclareCursorStatementContinued(cursorName *ast.Identifier
 		p.nextToken()
 	}
 
-	// Parse SELECT statement
-	selectStmt, err := p.parseSelectStatement()
-	if err != nil {
-		return nil, err
+	// Parse SELECT statement (may have WITH clause for CTEs)
+	var selectStmt *ast.SelectStatement
+	if p.curTok.Type == TokenWith {
+		// Parse WITH + SELECT statement
+		withStmt, err := p.parseWithStatement()
+		if err != nil {
+			return nil, err
+		}
+		if sel, ok := withStmt.(*ast.SelectStatement); ok {
+			selectStmt = sel
+		} else {
+			return nil, fmt.Errorf("expected SELECT statement after WITH in cursor definition")
+		}
+	} else {
+		var err error
+		selectStmt, err = p.parseSelectStatement()
+		if err != nil {
+			return nil, err
+		}
 	}
 	stmt.CursorDefinition.Select = selectStmt
 
@@ -11853,4 +12217,93 @@ func (p *Parser) convertDbccOptionKind(opt string) string {
 		return canonical
 	}
 	return opt
+}
+
+func (p *Parser) parseCreateBrokerPriorityStatement() (*ast.CreateBrokerPriorityStatement, error) {
+	// Consume BROKER
+	p.nextToken()
+
+	// Consume PRIORITY
+	if strings.ToUpper(p.curTok.Literal) == "PRIORITY" {
+		p.nextToken()
+	}
+
+	stmt := &ast.CreateBrokerPriorityStatement{}
+
+	// Parse priority name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse FOR CONVERSATION
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "CONVERSATION" {
+			p.nextToken() // consume CONVERSATION
+		}
+	}
+
+	// Parse SET (parameters)
+	if strings.ToUpper(p.curTok.Literal) == "SET" {
+		p.nextToken() // consume SET
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			stmt.BrokerPriorityParameters = p.parseBrokerPriorityParameters()
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseBrokerPriorityParameters() []*ast.BrokerPriorityParameter {
+	var params []*ast.BrokerPriorityParameter
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+		param := &ast.BrokerPriorityParameter{}
+
+		// Get parameter type
+		paramType := strings.ToUpper(p.curTok.Literal)
+		switch paramType {
+		case "PRIORITY_LEVEL":
+			param.ParameterType = "PriorityLevel"
+		case "CONTRACT_NAME":
+			param.ParameterType = "ContractName"
+		case "REMOTE_SERVICE_NAME":
+			param.ParameterType = "RemoteServiceName"
+		case "LOCAL_SERVICE_NAME":
+			param.ParameterType = "LocalServiceName"
+		default:
+			param.ParameterType = paramType
+		}
+		p.nextToken() // consume parameter name
+
+		// Consume = if present
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+
+		// Parse value: DEFAULT, ANY, or an expression
+		valLiteral := strings.ToUpper(p.curTok.Literal)
+		if valLiteral == "DEFAULT" {
+			param.IsDefaultOrAny = "Default"
+			p.nextToken() // consume DEFAULT
+		} else if valLiteral == "ANY" {
+			param.IsDefaultOrAny = "Any"
+			p.nextToken() // consume ANY
+		} else {
+			param.IsDefaultOrAny = "None"
+			param.ParameterValue, _ = p.parseIdentifierOrValueExpression()
+		}
+
+		params = append(params, param)
+
+		// Skip comma
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	return params
 }

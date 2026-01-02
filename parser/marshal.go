@@ -146,6 +146,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterDatabaseScopedConfigurationClearStatementToJSON(s)
 	case *ast.AlterResourceGovernorStatement:
 		return alterResourceGovernorStatementToJSON(s)
+	case *ast.CreateResourcePoolStatement:
+		return createResourcePoolStatementToJSON(s)
+	case *ast.AlterResourcePoolStatement:
+		return alterResourcePoolStatementToJSON(s)
 	case *ast.CreateCryptographicProviderStatement:
 		return createCryptographicProviderStatementToJSON(s)
 	case *ast.CreateColumnMasterKeyStatement:
@@ -156,6 +160,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterCryptographicProviderStatementToJSON(s)
 	case *ast.DropCryptographicProviderStatement:
 		return dropCryptographicProviderStatementToJSON(s)
+	case *ast.CreateBrokerPriorityStatement:
+		return createBrokerPriorityStatementToJSON(s)
+	case *ast.AlterBrokerPriorityStatement:
+		return alterBrokerPriorityStatementToJSON(s)
+	case *ast.DropBrokerPriorityStatement:
+		return dropBrokerPriorityStatementToJSON(s)
 	case *ast.UseFederationStatement:
 		return useFederationStatementToJSON(s)
 	case *ast.CreateFederationStatement:
@@ -528,6 +538,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createFullTextCatalogStatementToJSON(s)
 	case *ast.AlterFulltextIndexStatement:
 		return alterFulltextIndexStatementToJSON(s)
+	case *ast.CreateFullTextStopListStatement:
+		return createFullTextStopListStatementToJSON(s)
+	case *ast.AlterFullTextStopListStatement:
+		return alterFullTextStopListStatementToJSON(s)
+	case *ast.DropFullTextStopListStatement:
+		return dropFullTextStopListStatementToJSON(s)
 	case *ast.AlterSymmetricKeyStatement:
 		return alterSymmetricKeyStatementToJSON(s)
 	case *ast.AlterServiceMasterKeyStatement:
@@ -1193,6 +1209,9 @@ func selectStatementToJSON(s *ast.SelectStatement) jsonNode {
 		}
 		node["OptimizerHints"] = hints
 	}
+	if s.WithCtesAndXmlNamespaces != nil {
+		node["WithCtesAndXmlNamespaces"] = withCtesAndXmlNamespacesToJSON(s.WithCtesAndXmlNamespaces)
+	}
 	return node
 }
 
@@ -1334,6 +1353,8 @@ func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
 	}
 	if q.UniqueRowFilter != "" {
 		node["UniqueRowFilter"] = q.UniqueRowFilter
+	} else {
+		node["UniqueRowFilter"] = "NotSpecified"
 	}
 	if q.TopRowFilter != nil {
 		node["TopRowFilter"] = topRowFilterToJSON(q.TopRowFilter)
@@ -1605,6 +1626,27 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		node["WithArrayWrapper"] = e.WithArrayWrapper
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
+		}
+		return node
+	case *ast.PartitionFunctionCall:
+		node := jsonNode{
+			"$type": "PartitionFunctionCall",
+		}
+		if e.DatabaseName != nil {
+			node["DatabaseName"] = identifierToJSON(e.DatabaseName)
+		}
+		if e.SchemaName != nil {
+			node["SchemaName"] = identifierToJSON(e.SchemaName)
+		}
+		if e.FunctionName != nil {
+			node["FunctionName"] = identifierToJSON(e.FunctionName)
+		}
+		if len(e.Parameters) > 0 {
+			params := make([]jsonNode, len(e.Parameters))
+			for i, p := range e.Parameters {
+				params[i] = scalarExpressionToJSON(p)
+			}
+			node["Parameters"] = params
 		}
 		return node
 	case *ast.UserDefinedTypePropertyAccess:
@@ -2000,6 +2042,8 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		if r.JoinHint != "" {
 			node["JoinHint"] = r.JoinHint
+		} else {
+			node["JoinHint"] = "None"
 		}
 		if r.FirstTableReference != nil {
 			node["FirstTableReference"] = tableReferenceToJSON(r.FirstTableReference)
@@ -2132,6 +2176,68 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		if r.QueryExpression != nil {
 			node["QueryExpression"] = queryExpressionToJSON(r.QueryExpression)
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.FullTextTableReference:
+		node := jsonNode{
+			"$type": "FullTextTableReference",
+		}
+		if r.FullTextFunctionType != "" {
+			node["FullTextFunctionType"] = r.FullTextFunctionType
+		}
+		if r.TableName != nil {
+			node["TableName"] = schemaObjectNameToJSON(r.TableName)
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, col := range r.Columns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		if r.SearchCondition != nil {
+			node["SearchCondition"] = scalarExpressionToJSON(r.SearchCondition)
+		}
+		if r.TopN != nil {
+			node["TopN"] = scalarExpressionToJSON(r.TopN)
+		}
+		if r.Language != nil {
+			node["Language"] = scalarExpressionToJSON(r.Language)
+		}
+		if r.PropertyName != nil {
+			node["PropertyName"] = scalarExpressionToJSON(r.PropertyName)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.SemanticTableReference:
+		node := jsonNode{
+			"$type": "SemanticTableReference",
+		}
+		if r.SemanticFunctionType != "" {
+			node["SemanticFunctionType"] = r.SemanticFunctionType
+		}
+		if r.TableName != nil {
+			node["TableName"] = schemaObjectNameToJSON(r.TableName)
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, col := range r.Columns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		if r.SourceKey != nil {
+			node["SourceKey"] = scalarExpressionToJSON(r.SourceKey)
+		}
+		if r.MatchedColumn != nil {
+			node["MatchedColumn"] = columnReferenceExpressionToJSON(r.MatchedColumn)
+		}
+		if r.MatchedKey != nil {
+			node["MatchedKey"] = scalarExpressionToJSON(r.MatchedKey)
 		}
 		if r.Alias != nil {
 			node["Alias"] = identifierToJSON(r.Alias)
@@ -2427,6 +2533,22 @@ func groupingSpecificationToJSON(spec ast.GroupingSpecification) jsonNode {
 			node["Items"] = items
 		}
 		return node
+	case *ast.GrandTotalGroupingSpecification:
+		return jsonNode{
+			"$type": "GrandTotalGroupingSpecification",
+		}
+	case *ast.GroupingSetsGroupingSpecification:
+		node := jsonNode{
+			"$type": "GroupingSetsGroupingSpecification",
+		}
+		if len(s.Arguments) > 0 {
+			args := make([]jsonNode, len(s.Arguments))
+			for i, arg := range s.Arguments {
+				args[i] = groupingSpecificationToJSON(arg)
+			}
+			node["Sets"] = args
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownGroupingSpecification"}
 	}
@@ -2519,6 +2641,17 @@ func tableHintToJSON(h ast.TableHintType) jsonNode {
 				values[i] = identifierOrValueExpressionToJSON(v)
 			}
 			node["IndexValues"] = values
+		}
+		if th.HintKind != "" {
+			node["HintKind"] = th.HintKind
+		}
+		return node
+	case *ast.LiteralTableHint:
+		node := jsonNode{
+			"$type": "LiteralTableHint",
+		}
+		if th.Value != nil {
+			node["Value"] = scalarExpressionToJSON(th.Value)
 		}
 		if th.HintKind != "" {
 			node["HintKind"] = th.HintKind
@@ -2979,6 +3112,9 @@ func mergeActionToJSON(a ast.MergeAction) jsonNode {
 func withCtesAndXmlNamespacesToJSON(w *ast.WithCtesAndXmlNamespaces) jsonNode {
 	node := jsonNode{
 		"$type": "WithCtesAndXmlNamespaces",
+	}
+	if w.XmlNamespaces != nil {
+		node["XmlNamespaces"] = xmlNamespacesToJSON(w.XmlNamespaces)
 	}
 	if len(w.CommonTableExpressions) > 0 {
 		ctes := make([]jsonNode, len(w.CommonTableExpressions))
@@ -4722,6 +4858,38 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			}
 			constraint.ConstraintIdentifier = constraintName
 			constraintName = nil
+			col.Constraints = append(col.Constraints, constraint)
+		} else if upperLit == "REFERENCES" {
+			// Parse inline REFERENCES constraint (shorthand for FOREIGN KEY)
+			p.nextToken() // consume REFERENCES
+			constraint := &ast.ForeignKeyConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+				DeleteAction:         "NotSpecified",
+				UpdateAction:         "NotSpecified",
+			}
+			constraintName = nil
+			// Parse reference table name
+			refTable, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			constraint.ReferenceTableName = refTable
+			// Parse referenced column list
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					ident := p.parseIdentifier()
+					constraint.ReferencedColumns = append(constraint.ReferencedColumns, ident)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "CONSTRAINT" {
 			p.nextToken() // consume CONSTRAINT
@@ -11269,11 +11437,22 @@ func xmlNamespacesToJSON(x *ast.XmlNamespaces) jsonNode {
 	if len(x.XmlNamespacesElements) > 0 {
 		elems := make([]jsonNode, len(x.XmlNamespacesElements))
 		for i, e := range x.XmlNamespacesElements {
-			elems[i] = xmlNamespacesAliasElementToJSON(e)
+			elems[i] = xmlNamespacesElementToJSON(e)
 		}
 		node["XmlNamespacesElements"] = elems
 	}
 	return node
+}
+
+func xmlNamespacesElementToJSON(e ast.XmlNamespacesElement) jsonNode {
+	switch elem := e.(type) {
+	case *ast.XmlNamespacesAliasElement:
+		return xmlNamespacesAliasElementToJSON(elem)
+	case *ast.XmlNamespacesDefaultElement:
+		return xmlNamespacesDefaultElementToJSON(elem)
+	default:
+		return jsonNode{}
+	}
 }
 
 func xmlNamespacesAliasElementToJSON(e *ast.XmlNamespacesAliasElement) jsonNode {
@@ -11282,6 +11461,16 @@ func xmlNamespacesAliasElementToJSON(e *ast.XmlNamespacesAliasElement) jsonNode 
 	}
 	if e.Identifier != nil {
 		node["Identifier"] = identifierToJSON(e.Identifier)
+	}
+	if e.String != nil {
+		node["String"] = stringLiteralToJSON(e.String)
+	}
+	return node
+}
+
+func xmlNamespacesDefaultElementToJSON(e *ast.XmlNamespacesDefaultElement) jsonNode {
+	node := jsonNode{
+		"$type": "XmlNamespacesDefaultElement",
 	}
 	if e.String != nil {
 		node["String"] = stringLiteralToJSON(e.String)
@@ -13271,6 +13460,65 @@ func createFullTextCatalogStatementToJSON(s *ast.CreateFullTextCatalogStatement)
 	return node
 }
 
+func createFullTextStopListStatementToJSON(s *ast.CreateFullTextStopListStatement) jsonNode {
+	node := jsonNode{
+		"$type":            "CreateFullTextStopListStatement",
+		"IsSystemStopList": s.IsSystemStopList,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	if s.SourceStopListName != nil {
+		node["SourceStopListName"] = identifierToJSON(s.SourceStopListName)
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
+	return node
+}
+
+func alterFullTextStopListStatementToJSON(s *ast.AlterFullTextStopListStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterFullTextStopListStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.Action != nil {
+		node["Action"] = fullTextStopListActionToJSON(s.Action)
+	}
+	return node
+}
+
+func fullTextStopListActionToJSON(a *ast.FullTextStopListAction) jsonNode {
+	node := jsonNode{
+		"$type": "FullTextStopListAction",
+		"IsAdd": a.IsAdd,
+		"IsAll": a.IsAll,
+	}
+	if a.StopWord != nil {
+		node["StopWord"] = stringLiteralToJSON(a.StopWord)
+	}
+	if a.LanguageTerm != nil {
+		node["LanguageTerm"] = identifierOrValueExpressionToJSON(a.LanguageTerm)
+	}
+	return node
+}
+
+func dropFullTextStopListStatementToJSON(s *ast.DropFullTextStopListStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropFullTextStopListStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
 func alterFulltextIndexStatementToJSON(s *ast.AlterFulltextIndexStatement) jsonNode {
 	node := jsonNode{
 		"$type": "AlterFullTextIndexStatement",
@@ -13425,10 +13673,8 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 		}
 		node["LogOn"] = logs
 	}
-	// AttachMode is output when there are FileGroups, Options, Collation, CopyOf, or Containment
-	if len(s.FileGroups) > 0 || len(s.Options) > 0 || s.Collation != nil || s.CopyOf != nil || s.Containment != nil {
-		node["AttachMode"] = s.AttachMode
-	}
+	// Always output AttachMode
+	node["AttachMode"] = s.AttachMode
 	if s.CopyOf != nil {
 		node["CopyOf"] = multiPartIdentifierToJSON(s.CopyOf)
 	}
@@ -13630,7 +13876,54 @@ func createLoginStatementToJSON(s *ast.CreateLoginStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	if s.Source != nil {
+		node["Source"] = createLoginSourceToJSON(s.Source)
+	}
 	return node
+}
+
+func createLoginSourceToJSON(s ast.CreateLoginSource) jsonNode {
+	switch src := s.(type) {
+	case *ast.ExternalCreateLoginSource:
+		node := jsonNode{
+			"$type": "ExternalCreateLoginSource",
+		}
+		if len(src.Options) > 0 {
+			opts := make([]jsonNode, len(src.Options))
+			for i, opt := range src.Options {
+				opts[i] = principalOptionToJSON(opt)
+			}
+			node["Options"] = opts
+		}
+		return node
+	default:
+		return jsonNode{}
+	}
+}
+
+func principalOptionToJSON(o ast.PrincipalOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.LiteralPrincipalOption:
+		node := jsonNode{
+			"$type":      "LiteralPrincipalOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		return node
+	case *ast.IdentifierPrincipalOption:
+		node := jsonNode{
+			"$type":      "IdentifierPrincipalOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Identifier != nil {
+			node["Identifier"] = identifierToJSON(opt.Identifier)
+		}
+		return node
+	default:
+		return jsonNode{}
+	}
 }
 
 func createIndexStatementToJSON(s *ast.CreateIndexStatement) jsonNode {
@@ -14492,6 +14785,87 @@ func alterResourceGovernorStatementToJSON(s *ast.AlterResourceGovernorStatement)
 	return node
 }
 
+func createResourcePoolStatementToJSON(s *ast.CreateResourcePoolStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateResourcePoolStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ResourcePoolParameters) > 0 {
+		params := make([]jsonNode, len(s.ResourcePoolParameters))
+		for i, param := range s.ResourcePoolParameters {
+			params[i] = resourcePoolParameterToJSON(param)
+		}
+		node["ResourcePoolParameters"] = params
+	}
+	return node
+}
+
+func alterResourcePoolStatementToJSON(s *ast.AlterResourcePoolStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterResourcePoolStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ResourcePoolParameters) > 0 {
+		params := make([]jsonNode, len(s.ResourcePoolParameters))
+		for i, param := range s.ResourcePoolParameters {
+			params[i] = resourcePoolParameterToJSON(param)
+		}
+		node["ResourcePoolParameters"] = params
+	}
+	return node
+}
+
+func resourcePoolParameterToJSON(p *ast.ResourcePoolParameter) jsonNode {
+	node := jsonNode{
+		"$type": "ResourcePoolParameter",
+	}
+	if p.ParameterType != "" {
+		node["ParameterType"] = p.ParameterType
+	}
+	if p.ParameterValue != nil {
+		node["ParameterValue"] = scalarExpressionToJSON(p.ParameterValue)
+	}
+	if p.AffinitySpecification != nil {
+		node["AffinitySpecification"] = resourcePoolAffinitySpecificationToJSON(p.AffinitySpecification)
+	}
+	return node
+}
+
+func resourcePoolAffinitySpecificationToJSON(s *ast.ResourcePoolAffinitySpecification) jsonNode {
+	node := jsonNode{
+		"$type": "ResourcePoolAffinitySpecification",
+	}
+	if s.AffinityType != "" {
+		node["AffinityType"] = s.AffinityType
+	}
+	node["IsAuto"] = s.IsAuto
+	if len(s.PoolAffinityRanges) > 0 {
+		ranges := make([]jsonNode, len(s.PoolAffinityRanges))
+		for i, r := range s.PoolAffinityRanges {
+			ranges[i] = literalRangeToJSON(r)
+		}
+		node["PoolAffinityRanges"] = ranges
+	}
+	return node
+}
+
+func literalRangeToJSON(r *ast.LiteralRange) jsonNode {
+	node := jsonNode{
+		"$type": "LiteralRange",
+	}
+	if r.From != nil {
+		node["From"] = scalarExpressionToJSON(r.From)
+	}
+	if r.To != nil {
+		node["To"] = scalarExpressionToJSON(r.To)
+	}
+	return node
+}
+
 func createCryptographicProviderStatementToJSON(s *ast.CreateCryptographicProviderStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateCryptographicProviderStatement",
@@ -14590,6 +14964,67 @@ func dropCryptographicProviderStatementToJSON(s *ast.DropCryptographicProviderSt
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func createBrokerPriorityStatementToJSON(s *ast.CreateBrokerPriorityStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateBrokerPriorityStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.BrokerPriorityParameters) > 0 {
+		params := make([]jsonNode, len(s.BrokerPriorityParameters))
+		for i, p := range s.BrokerPriorityParameters {
+			params[i] = brokerPriorityParameterToJSON(p)
+		}
+		node["BrokerPriorityParameters"] = params
+	}
+	return node
+}
+
+func alterBrokerPriorityStatementToJSON(s *ast.AlterBrokerPriorityStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterBrokerPriorityStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.BrokerPriorityParameters) > 0 {
+		params := make([]jsonNode, len(s.BrokerPriorityParameters))
+		for i, p := range s.BrokerPriorityParameters {
+			params[i] = brokerPriorityParameterToJSON(p)
+		}
+		node["BrokerPriorityParameters"] = params
+	}
+	return node
+}
+
+func dropBrokerPriorityStatementToJSON(s *ast.DropBrokerPriorityStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropBrokerPriorityStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func brokerPriorityParameterToJSON(p *ast.BrokerPriorityParameter) jsonNode {
+	node := jsonNode{
+		"$type": "BrokerPriorityParameter",
+	}
+	if p.IsDefaultOrAny != "" {
+		node["IsDefaultOrAny"] = p.IsDefaultOrAny
+	}
+	if p.ParameterType != "" {
+		node["ParameterType"] = p.ParameterType
+	}
+	if p.ParameterValue != nil {
+		node["ParameterValue"] = identifierOrValueExpressionToJSON(p.ParameterValue)
+	}
 	return node
 }
 

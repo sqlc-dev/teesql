@@ -26,11 +26,29 @@ func (s *CreateDatabaseStatement) statement() {}
 
 // CreateLoginStatement represents a CREATE LOGIN statement.
 type CreateLoginStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name   *Identifier       `json:"Name,omitempty"`
+	Source CreateLoginSource `json:"Source,omitempty"`
 }
 
 func (s *CreateLoginStatement) node()      {}
 func (s *CreateLoginStatement) statement() {}
+
+// CreateLoginSource is an interface for login sources
+type CreateLoginSource interface {
+	createLoginSource()
+}
+
+// ExternalCreateLoginSource represents FROM EXTERNAL PROVIDER source
+type ExternalCreateLoginSource struct {
+	Options []PrincipalOption `json:"Options,omitempty"`
+}
+
+func (s *ExternalCreateLoginSource) createLoginSource() {}
+
+// PrincipalOption is an interface for principal options (SID, TYPE, etc.)
+type PrincipalOption interface {
+	principalOptionNode()
+}
 
 // ServiceContract represents a contract in CREATE/ALTER SERVICE.
 type ServiceContract struct {

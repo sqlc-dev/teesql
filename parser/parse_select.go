@@ -443,8 +443,13 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		// Not an assignment, treat as regular scalar expression starting with variable
 		varRef := &ast.VariableReference{Name: varName}
 
+		// Handle postfix operations (method calls, property access)
+		expr, err := p.handlePostfixOperations(varRef)
+		if err != nil {
+			return nil, err
+		}
+
 		// Check if next token is a binary operator - if so, continue parsing the expression
-		var expr ast.ScalarExpression = varRef
 		for p.curTok.Type == TokenPlus || p.curTok.Type == TokenMinus ||
 			p.curTok.Type == TokenStar || p.curTok.Type == TokenSlash ||
 			p.curTok.Type == TokenPercent || p.curTok.Type == TokenDoublePipe {
@@ -634,7 +639,7 @@ func (p *Parser) isKeywordAsIdentifier() bool {
 		TokenExternal, TokenSymmetric, TokenAsymmetric, TokenGroup,
 		TokenAdd, TokenGrant, TokenRevoke, TokenBackup, TokenRestore,
 		TokenQuery, TokenJob, TokenStats, TokenPassword, TokenTime, TokenDelay,
-		TokenTyp:
+		TokenTyp, TokenScoped:
 		return true
 	default:
 		return false
@@ -748,24 +753,267 @@ func (p *Parser) parsePostfixExpression() (ast.ScalarExpression, error) {
 		return nil, err
 	}
 
-	// Check for AT TIME ZONE - only if followed by "TIME"
-	for strings.ToUpper(p.curTok.Literal) == "AT" && strings.ToUpper(p.peekTok.Literal) == "TIME" {
-		p.nextToken() // consume AT
-		p.nextToken() // consume TIME
-		if strings.ToUpper(p.curTok.Literal) != "ZONE" {
-			return nil, fmt.Errorf("expected ZONE after TIME, got %s", p.curTok.Literal)
-		}
-		p.nextToken() // consume ZONE
+	// Handle postfix operations: method calls, property access, AT TIME ZONE
+	for {
+		// Check for method/property access: expr.func() or expr.prop
+		// The next token after the dot must be an identifier (plain or bracketed)
+		if p.curTok.Type == TokenDot && (p.peekTok.Type == TokenIdent || (len(p.peekTok.Literal) > 0 && p.peekTok.Literal[0] == '[')) {
+			p.nextToken() // consume dot
 
-		timezone, err := p.parsePrimaryExpression()
-		if err != nil {
-			return nil, err
+			if !p.isIdentifierToken() {
+				return nil, fmt.Errorf("expected identifier after dot, got %s", p.curTok.Literal)
+			}
+
+			// Parse method/property name
+			quoteType := "NotQuoted"
+			name := p.curTok.Literal
+			if len(name) >= 2 && name[0] == '[' && name[len(name)-1] == ']' {
+				quoteType = "SquareBracket"
+				name = name[1 : len(name)-1]
+			}
+			methodName := &ast.Identifier{Value: name, QuoteType: quoteType}
+			p.nextToken()
+
+			if p.curTok.Type == TokenLParen {
+				// It's a method call: expr.func()
+				p.nextToken() // consume (
+
+				fc := &ast.FunctionCall{
+					CallTarget:       &ast.ExpressionCallTarget{Expression: expr},
+					FunctionName:     methodName,
+					UniqueRowFilter:  "NotSpecified",
+					WithArrayWrapper: false,
+				}
+
+				// Parse parameters
+				if p.curTok.Type != TokenRParen {
+					for {
+						param, err := p.parseScalarExpression()
+						if err != nil {
+							return nil, err
+						}
+						fc.Parameters = append(fc.Parameters, param)
+
+						if p.curTok.Type != TokenComma {
+							break
+						}
+						p.nextToken() // consume comma
+					}
+				}
+
+				// Expect )
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ) after method call, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+
+				// Check for OVER clause
+				if strings.ToUpper(p.curTok.Literal) == "OVER" {
+					p.nextToken() // consume OVER
+					if p.curTok.Type != TokenLParen {
+						return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume (
+
+					overClause := &ast.OverClause{}
+
+					// Parse PARTITION BY
+					if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+						p.nextToken() // consume PARTITION
+						if strings.ToUpper(p.curTok.Literal) == "BY" {
+							p.nextToken() // consume BY
+						}
+						// Parse partition expressions
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							partExpr, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							overClause.Partitions = append(overClause.Partitions, partExpr)
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							} else {
+								break
+							}
+						}
+					}
+
+					// Parse ORDER BY
+					if p.curTok.Type == TokenOrder {
+						orderBy, err := p.parseOrderByClause()
+						if err != nil {
+							return nil, err
+						}
+						overClause.OrderByClause = orderBy
+					}
+
+					if p.curTok.Type != TokenRParen {
+						return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume )
+
+					fc.OverClause = overClause
+				}
+
+				expr = fc
+			} else {
+				// It's a property access: expr.prop
+				expr = &ast.UserDefinedTypePropertyAccess{
+					CallTarget: &ast.ExpressionCallTarget{
+						Expression: expr,
+					},
+					PropertyName: methodName,
+				}
+			}
+			continue
 		}
 
-		expr = &ast.AtTimeZoneCall{
-			DateValue: expr,
-			TimeZone:  timezone,
+		// Check for AT TIME ZONE - only if followed by "TIME"
+		if strings.ToUpper(p.curTok.Literal) == "AT" && strings.ToUpper(p.peekTok.Literal) == "TIME" {
+			p.nextToken() // consume AT
+			p.nextToken() // consume TIME
+			if strings.ToUpper(p.curTok.Literal) != "ZONE" {
+				return nil, fmt.Errorf("expected ZONE after TIME, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume ZONE
+
+			timezone, err := p.parsePrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			expr = &ast.AtTimeZoneCall{
+				DateValue: expr,
+				TimeZone:  timezone,
+			}
+			continue
 		}
+
+		// No more postfix operations
+		break
+	}
+
+	return expr, nil
+}
+
+// handlePostfixOperations handles method calls and property access on an existing expression
+func (p *Parser) handlePostfixOperations(expr ast.ScalarExpression) (ast.ScalarExpression, error) {
+	for {
+		// Check for method/property access: expr.func() or expr.prop
+		if p.curTok.Type == TokenDot && (p.peekTok.Type == TokenIdent || (len(p.peekTok.Literal) > 0 && p.peekTok.Literal[0] == '[')) {
+			p.nextToken() // consume dot
+
+			// Check for bracket-quoted identifier or regular identifier token
+			isBracketQuoted := len(p.curTok.Literal) >= 2 && p.curTok.Literal[0] == '[' && p.curTok.Literal[len(p.curTok.Literal)-1] == ']'
+			if !p.isIdentifierToken() && !isBracketQuoted {
+				return nil, fmt.Errorf("expected identifier after dot, got %s", p.curTok.Literal)
+			}
+
+			// Parse method/property name
+			quoteType := "NotQuoted"
+			name := p.curTok.Literal
+			if len(name) >= 2 && name[0] == '[' && name[len(name)-1] == ']' {
+				quoteType = "SquareBracket"
+				name = name[1 : len(name)-1]
+			}
+			methodName := &ast.Identifier{Value: name, QuoteType: quoteType}
+			p.nextToken()
+
+			if p.curTok.Type == TokenLParen {
+				// It's a method call: expr.func()
+				p.nextToken() // consume (
+
+				fc := &ast.FunctionCall{
+					CallTarget:       &ast.ExpressionCallTarget{Expression: expr},
+					FunctionName:     methodName,
+					UniqueRowFilter:  "NotSpecified",
+					WithArrayWrapper: false,
+				}
+
+				// Parse parameters
+				if p.curTok.Type != TokenRParen {
+					for {
+						param, err := p.parseScalarExpression()
+						if err != nil {
+							return nil, err
+						}
+						fc.Parameters = append(fc.Parameters, param)
+
+						if p.curTok.Type != TokenComma {
+							break
+						}
+						p.nextToken() // consume comma
+					}
+				}
+
+				// Expect )
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ) after method call, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+
+				// Check for OVER clause
+				if strings.ToUpper(p.curTok.Literal) == "OVER" {
+					p.nextToken() // consume OVER
+					if p.curTok.Type != TokenLParen {
+						return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume (
+
+					overClause := &ast.OverClause{}
+
+					// Parse PARTITION BY
+					if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+						p.nextToken() // consume PARTITION
+						if strings.ToUpper(p.curTok.Literal) == "BY" {
+							p.nextToken() // consume BY
+						}
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							partExpr, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							overClause.Partitions = append(overClause.Partitions, partExpr)
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							} else {
+								break
+							}
+						}
+					}
+
+					// Parse ORDER BY
+					if p.curTok.Type == TokenOrder {
+						orderBy, err := p.parseOrderByClause()
+						if err != nil {
+							return nil, err
+						}
+						overClause.OrderByClause = orderBy
+					}
+
+					if p.curTok.Type != TokenRParen {
+						return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume )
+
+					fc.OverClause = overClause
+				}
+
+				expr = fc
+			} else {
+				// It's a property access: expr.prop
+				expr = &ast.UserDefinedTypePropertyAccess{
+					CallTarget: &ast.ExpressionCallTarget{
+						Expression: expr,
+					},
+					PropertyName: methodName,
+				}
+			}
+			continue
+		}
+
+		// No more postfix operations
+		break
 	}
 
 	return expr, nil
@@ -892,7 +1140,7 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		// Multi-part identifier starting with empty parts (e.g., ..t1.c1)
 		return p.parseColumnReferenceWithLeadingDots()
 	case TokenMaster, TokenDatabase, TokenKey, TokenTable, TokenIndex,
-		TokenSchema, TokenUser, TokenView:
+		TokenSchema, TokenUser, TokenView, TokenTime:
 		// Keywords that can be used as identifiers in column/table references
 		return p.parseColumnReferenceOrFunctionCall()
 	default:
@@ -1070,6 +1318,16 @@ func (p *Parser) parseOdbcLiteral() (*ast.OdbcLiteral, error) {
 
 func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
 	raw := p.curTok.Literal
+	isNational := false
+
+	// Check for national string (N'...')
+	if p.curTok.Type == TokenNationalString {
+		isNational = true
+		// Strip the N prefix
+		if len(raw) >= 3 && (raw[0] == 'N' || raw[0] == 'n') && raw[1] == '\'' {
+			raw = raw[1:] // Remove the N, keep the rest including quotes
+		}
+	}
 	p.nextToken()
 
 	// Remove surrounding quotes and handle escaped quotes
@@ -1079,7 +1337,7 @@ func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
 		value := strings.ReplaceAll(inner, "''", "'")
 		return &ast.StringLiteral{
 			LiteralType:   "String",
-			IsNational:    false,
+			IsNational:    isNational,
 			IsLargeObject: false,
 			Value:         value,
 		}, nil
@@ -1087,7 +1345,7 @@ func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
 
 	return &ast.StringLiteral{
 		LiteralType:   "String",
-		IsNational:    false,
+		IsNational:    isNational,
 		IsLargeObject: false,
 		Value:         raw,
 	}, nil
@@ -1172,7 +1430,8 @@ func (p *Parser) parseNationalStringFromToken() (*ast.StringLiteral, error) {
 func (p *Parser) isIdentifierToken() bool {
 	switch p.curTok.Type {
 	case TokenIdent, TokenMaster, TokenDatabase, TokenKey, TokenTable, TokenIndex,
-		TokenSchema, TokenUser, TokenView, TokenDefault:
+		TokenSchema, TokenUser, TokenView, TokenDefault, TokenTyp, TokenLanguage,
+		TokenTime:
 		return true
 	default:
 		return false
@@ -1232,19 +1491,83 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		}
 	}
 
+	// Check for $PARTITION function call: [db.]$PARTITION.func(args)
+	if len(identifiers) >= 2 && p.curTok.Type == TokenLParen {
+		// Check if $PARTITION is in the identifiers
+		partitionIdx := -1
+		for i, id := range identifiers {
+			if strings.ToUpper(id.Value) == "$PARTITION" {
+				partitionIdx = i
+				break
+			}
+		}
+
+		if partitionIdx >= 0 {
+			// Build PartitionFunctionCall
+			pfc := &ast.PartitionFunctionCall{}
+
+			// DatabaseName comes before $PARTITION if present
+			if partitionIdx == 1 {
+				pfc.DatabaseName = identifiers[0]
+			}
+
+			// FunctionName comes after $PARTITION
+			if partitionIdx+1 < len(identifiers) {
+				pfc.FunctionName = identifiers[partitionIdx+1]
+			}
+
+			// Parse parameters
+			p.nextToken() // consume (
+			if p.curTok.Type != TokenRParen {
+				for {
+					param, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					pfc.Parameters = append(pfc.Parameters, param)
+
+					if p.curTok.Type != TokenComma {
+						break
+					}
+					p.nextToken() // consume comma
+				}
+			}
+
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) in $PARTITION function call, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume )
+
+			return pfc, nil
+		}
+	}
+
 	// Check for :: (user-defined type method call or property access): a.b::func() or a::prop
 	if p.curTok.Type == TokenColonColon && len(identifiers) > 0 {
 		p.nextToken() // consume ::
 
-		// Parse function/property name
-		if p.curTok.Type != TokenIdent {
+		// Parse function/property name - can be regular identifier or bracket-quoted
+		isBracketQuoted := len(p.curTok.Literal) >= 2 && p.curTok.Literal[0] == '[' && p.curTok.Literal[len(p.curTok.Literal)-1] == ']'
+		if p.curTok.Type != TokenIdent && !isBracketQuoted {
 			return nil, fmt.Errorf("expected identifier after ::, got %s", p.curTok.Literal)
 		}
-		name := &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+		nameValue := p.curTok.Literal
+		quoteType := "NotQuoted"
+		if isBracketQuoted {
+			quoteType = "SquareBracket"
+			nameValue = nameValue[1 : len(nameValue)-1]
+		}
+		name := &ast.Identifier{Value: nameValue, QuoteType: quoteType}
 		p.nextToken()
 
-		// Build SchemaObjectName from identifiers
-		schemaObjName := identifiersToSchemaObjectName(identifiers)
+		// Build SchemaObjectName from identifiers (filter out empty identifiers from leading dots)
+		var nonEmptyIdents []*ast.Identifier
+		for _, id := range identifiers {
+			if id.Value != "" {
+				nonEmptyIdents = append(nonEmptyIdents, id)
+			}
+		}
+		schemaObjName := identifiersToSchemaObjectName(nonEmptyIdents)
 
 		// If followed by ( it's a method call, otherwise property access
 		if p.curTok.Type == TokenLParen {
@@ -1393,6 +1716,95 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 	}
 
 	// Don't consume .* here - let the caller (parseSelectElement) handle qualified stars
+
+	// Check for :: (user-defined type method call or property access): .t::func() or .t::prop
+	if p.curTok.Type == TokenColonColon && len(identifiers) > 0 {
+		p.nextToken() // consume ::
+
+		// Parse function/property name - can be regular identifier or bracket-quoted
+		isBracketQuoted := len(p.curTok.Literal) >= 2 && p.curTok.Literal[0] == '[' && p.curTok.Literal[len(p.curTok.Literal)-1] == ']'
+		if p.curTok.Type != TokenIdent && !isBracketQuoted {
+			return nil, fmt.Errorf("expected identifier after ::, got %s", p.curTok.Literal)
+		}
+		nameValue := p.curTok.Literal
+		quoteType := "NotQuoted"
+		if isBracketQuoted {
+			quoteType = "SquareBracket"
+			nameValue = nameValue[1 : len(nameValue)-1]
+		}
+		name := &ast.Identifier{Value: nameValue, QuoteType: quoteType}
+		p.nextToken()
+
+		// Build SchemaObjectName from identifiers (filter out empty identifiers from leading dots)
+		var nonEmptyIdents []*ast.Identifier
+		for _, id := range identifiers {
+			if id.Value != "" {
+				nonEmptyIdents = append(nonEmptyIdents, id)
+			}
+		}
+		schemaObjName := identifiersToSchemaObjectName(nonEmptyIdents)
+
+		// If followed by ( it's a method call, otherwise property access
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+
+			fc := &ast.FunctionCall{
+				CallTarget: &ast.UserDefinedTypeCallTarget{
+					SchemaObjectName: schemaObjName,
+				},
+				FunctionName:     name,
+				UniqueRowFilter:  "NotSpecified",
+				WithArrayWrapper: false,
+			}
+
+			// Parse parameters
+			if p.curTok.Type != TokenRParen {
+				for {
+					param, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					fc.Parameters = append(fc.Parameters, param)
+
+					if p.curTok.Type != TokenComma {
+						break
+					}
+					p.nextToken() // consume comma
+				}
+			}
+
+			// Expect )
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) in function call with ::, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
+
+			// Check for OVER clause or property access after method call
+			return p.parsePostExpressionAccess(fc)
+		}
+
+		// Property access: .t::a
+		propAccess := &ast.UserDefinedTypePropertyAccess{
+			CallTarget: &ast.UserDefinedTypeCallTarget{
+				SchemaObjectName: schemaObjName,
+			},
+			PropertyName: name,
+		}
+
+		// Check for COLLATE clause
+		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+			p.nextToken() // consume COLLATE
+			propAccess.Collation = p.parseIdentifier()
+		}
+
+		// Check for chained property access
+		return p.parsePostExpressionAccess(propAccess)
+	}
+
+	// Check if this is a function call
+	if p.curTok.Type == TokenLParen && len(identifiers) > 1 {
+		return p.parseFunctionCallFromIdentifiers(identifiers)
+	}
 
 	return &ast.ColumnReferenceExpression{
 		ColumnType: "Regular",
@@ -1830,6 +2242,18 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		return p.parsePredictTableReference()
 	}
 
+	// Check for full-text table functions (CONTAINSTABLE, FREETEXTTABLE)
+	if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper == "CONTAINSTABLE" || upper == "FREETEXTTABLE" {
+			return p.parseFullTextTableReference(upper)
+		}
+		// Check for semantic table functions
+		if upper == "SEMANTICKEYPHRASETABLE" || upper == "SEMANTICSIMILARITYTABLE" || upper == "SEMANTICSIMILARITYDETAILSTABLE" {
+			return p.parseSemanticTableReference(upper)
+		}
+	}
+
 	// Check for variable table reference
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		name := p.curTok.Literal
@@ -2030,6 +2454,319 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 	return ref, nil
 }
 
+// parseFullTextTableReference parses CONTAINSTABLE or FREETEXTTABLE
+func (p *Parser) parseFullTextTableReference(funcType string) (*ast.FullTextTableReference, error) {
+	ref := &ast.FullTextTableReference{
+		ForPath: false,
+	}
+	if funcType == "CONTAINSTABLE" {
+		ref.FullTextFunctionType = "Contains"
+	} else {
+		ref.FullTextFunctionType = "FreeText"
+	}
+	p.nextToken() // consume function name
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after %s, got %s", funcType, p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse table name
+	tableName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	ref.TableName = tableName
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after table name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse column specification - could be *, (columns), or PROPERTY(column, 'property')
+	if p.curTok.Type == TokenStar {
+		ref.Columns = []*ast.ColumnReferenceExpression{{ColumnType: "Wildcard"}}
+		p.nextToken()
+	} else if p.curTok.Type == TokenLParen {
+		// Column list
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			if p.curTok.Type == TokenStar {
+				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				p.nextToken()
+			} else {
+				col := p.parseIdentifier()
+				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{col},
+						Count:       1,
+					},
+				})
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PROPERTY" {
+		// PROPERTY(column, 'property_name')
+		p.nextToken() // consume PROPERTY
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Parse column name
+		col := p.parseIdentifier()
+		ref.Columns = []*ast.ColumnReferenceExpression{{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Identifiers: []*ast.Identifier{col},
+				Count:       1,
+			},
+		}}
+
+		// Expect comma
+		if p.curTok.Type != TokenComma {
+			return nil, fmt.Errorf("expected , after column in PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ,
+
+		// Parse property name (string literal)
+		propExpr, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+		ref.PropertyName = propExpr
+
+		// Expect )
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	} else {
+		// Single column
+		col := p.parseIdentifier()
+		ref.Columns = []*ast.ColumnReferenceExpression{{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Identifiers: []*ast.Identifier{col},
+				Count:       1,
+			},
+		}}
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after columns, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse search condition (string literal or expression)
+	searchCond, err := p.parsePrimaryExpression()
+	if err != nil {
+		return nil, err
+	}
+	ref.SearchCondition = searchCond
+
+	// Parse optional LANGUAGE and top_n - can come in any order
+	for p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+
+		if p.curTok.Type == TokenLanguage {
+			p.nextToken() // consume LANGUAGE
+			langExpr, err := p.parsePrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+			ref.Language = langExpr
+		} else {
+			// top_n value
+			topExpr, err := p.parsePrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+			ref.TopN = topExpr
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after CONTAINSTABLE/FREETEXTTABLE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	return ref, nil
+}
+
+// parseSemanticTableReference parses SEMANTICKEYPHRASETABLE, SEMANTICSIMILARITYTABLE, or SEMANTICSIMILARITYDETAILSTABLE
+func (p *Parser) parseSemanticTableReference(funcType string) (*ast.SemanticTableReference, error) {
+	ref := &ast.SemanticTableReference{
+		ForPath: false,
+	}
+	switch funcType {
+	case "SEMANTICKEYPHRASETABLE":
+		ref.SemanticFunctionType = "SemanticKeyPhraseTable"
+	case "SEMANTICSIMILARITYTABLE":
+		ref.SemanticFunctionType = "SemanticSimilarityTable"
+	case "SEMANTICSIMILARITYDETAILSTABLE":
+		ref.SemanticFunctionType = "SemanticSimilarityDetailsTable"
+	}
+	p.nextToken() // consume function name
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after %s, got %s", funcType, p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse table name
+	tableName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	ref.TableName = tableName
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after table name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse column specification - could be *, (columns), or single column
+	if p.curTok.Type == TokenStar {
+		ref.Columns = []*ast.ColumnReferenceExpression{{ColumnType: "Wildcard"}}
+		p.nextToken()
+	} else if p.curTok.Type == TokenLParen {
+		// Column list
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			if p.curTok.Type == TokenStar {
+				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				p.nextToken()
+			} else {
+				col := p.parseIdentifier()
+				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{col},
+						Count:       1,
+					},
+				})
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	} else {
+		// Single column
+		col := p.parseIdentifier()
+		ref.Columns = []*ast.ColumnReferenceExpression{{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Identifiers: []*ast.Identifier{col},
+				Count:       1,
+			},
+		}}
+	}
+
+	// For SEMANTICSIMILARITYTABLE and SEMANTICKEYPHRASETABLE: optional source_key
+	// For SEMANTICSIMILARITYDETAILSTABLE: source_key, matched_column, matched_key
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		// Parse source_key expression
+		sourceKey, err := p.parseSimpleExpression()
+		if err != nil {
+			return nil, err
+		}
+		ref.SourceKey = sourceKey
+
+		// For SEMANTICSIMILARITYDETAILSTABLE, parse matched_column and matched_key
+		if funcType == "SEMANTICSIMILARITYDETAILSTABLE" {
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				// Parse matched_column
+				col := p.parseIdentifier()
+				ref.MatchedColumn = &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{col},
+						Count:       1,
+					},
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume ,
+					// Parse matched_key expression
+					matchedKey, err := p.parseSimpleExpression()
+					if err != nil {
+						return nil, err
+					}
+					ref.MatchedKey = matchedKey
+				}
+			}
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after semantic table function, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	return ref, nil
+}
+
+// parseSimpleExpression parses a simple expression (including unary minus for negative numbers)
+func (p *Parser) parseSimpleExpression() (ast.ScalarExpression, error) {
+	if p.curTok.Type == TokenMinus {
+		p.nextToken() // consume -
+		expr, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.UnaryExpression{
+			UnaryExpressionType: "Negative",
+			Expression:          expr,
+		}, nil
+	}
+	return p.parsePrimaryExpression()
+}
+
 // parseTableHint parses a single table hint
 func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 	hintName := strings.ToUpper(p.curTok.Literal)
@@ -2075,6 +2812,24 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
+		}
+		return hint, nil
+	}
+
+	// SPATIAL_WINDOW_MAX_CELLS hint with value
+	if hintName == "SPATIAL_WINDOW_MAX_CELLS" {
+		hint := &ast.LiteralTableHint{
+			HintKind: "SpatialWindowMaxCells",
+		}
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+		if p.curTok.Type == TokenNumber {
+			hint.Value = &ast.IntegerLiteral{
+				LiteralType: "Integer",
+				Value:       p.curTok.Literal,
+			}
+			p.nextToken()
 		}
 		return hint, nil
 	}
@@ -2797,8 +3552,20 @@ func (p *Parser) parseGroupingSpecification() (ast.GroupingSpecification, error)
 		return p.parseCubeGroupingSpecification()
 	}
 
-	// Check for composite grouping (c1, c2, ...)
+	// Check for GROUPING SETS (...)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GROUPING" &&
+		p.peekTok.Type == TokenIdent && strings.ToUpper(p.peekTok.Literal) == "SETS" {
+		return p.parseGroupingSetsGroupingSpecification()
+	}
+
+	// Check for grand total () or composite grouping (c1, c2, ...)
 	if p.curTok.Type == TokenLParen {
+		// Check for empty parens () which is grand total
+		if p.peekTok.Type == TokenRParen {
+			p.nextToken() // consume (
+			p.nextToken() // consume )
+			return &ast.GrandTotalGroupingSpecification{}, nil
+		}
 		return p.parseCompositeGroupingSpecification()
 	}
 
@@ -2890,6 +3657,129 @@ func (p *Parser) parseCubeGroupingSpecification() (*ast.CubeGroupingSpecificatio
 	}
 
 	return spec, nil
+}
+
+// parseGroupingSetsGroupingSpecification parses GROUPING SETS (...)
+func (p *Parser) parseGroupingSetsGroupingSpecification() (*ast.GroupingSetsGroupingSpecification, error) {
+	p.nextToken() // consume GROUPING
+	p.nextToken() // consume SETS
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after GROUPING SETS, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	spec := &ast.GroupingSetsGroupingSpecification{}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		arg, err := p.parseGroupingSetsArgument()
+		if err != nil {
+			return nil, err
+		}
+		spec.Arguments = append(spec.Arguments, arg)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return spec, nil
+}
+
+// parseGroupingSetsArgument parses an argument inside GROUPING SETS which can be
+// CUBE(...), ROLLUP(...), a column, or a parenthesized group
+func (p *Parser) parseGroupingSetsArgument() (ast.GroupingSpecification, error) {
+	// Check for CUBE
+	if p.curTok.Type == TokenCube {
+		return p.parseCubeGroupingSpecification()
+	}
+
+	// Check for ROLLUP
+	if p.curTok.Type == TokenRollup {
+		return p.parseRollupGroupingSpecification()
+	}
+
+	// Check for parenthesized group
+	if p.curTok.Type == TokenLParen {
+		// Check for empty parens () which is grand total
+		if p.peekTok.Type == TokenRParen {
+			p.nextToken() // consume (
+			p.nextToken() // consume )
+			return &ast.GrandTotalGroupingSpecification{}, nil
+		}
+		return p.parseGroupingSetsCompositeArgument()
+	}
+
+	// Regular expression (column reference or literal)
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	return &ast.ExpressionGroupingSpecification{
+		Expression:             expr,
+		DistributedAggregation: false,
+	}, nil
+}
+
+// parseGroupingSetsCompositeArgument parses a parenthesized group inside GROUPING SETS
+// which can contain CUBE, ROLLUP, columns, or a mix
+func (p *Parser) parseGroupingSetsCompositeArgument() (ast.GroupingSpecification, error) {
+	p.nextToken() // consume (
+
+	// Check what's inside - might be CUBE, ROLLUP, or columns
+	var items []ast.GroupingSpecification
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		var item ast.GroupingSpecification
+		var err error
+
+		if p.curTok.Type == TokenCube {
+			item, err = p.parseCubeGroupingSpecification()
+		} else if p.curTok.Type == TokenRollup {
+			item, err = p.parseRollupGroupingSpecification()
+		} else if p.curTok.Type == TokenLParen {
+			// Check for empty parens () which is grand total
+			if p.peekTok.Type == TokenRParen {
+				p.nextToken() // consume (
+				p.nextToken() // consume )
+				item = &ast.GrandTotalGroupingSpecification{}
+			} else {
+				item, err = p.parseGroupingSetsCompositeArgument()
+			}
+		} else {
+			// Expression
+			expr, e := p.parseScalarExpression()
+			if e != nil {
+				return nil, e
+			}
+			item = &ast.ExpressionGroupingSpecification{
+				Expression:             expr,
+				DistributedAggregation: false,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return &ast.CompositeGroupingSpecification{Items: items}, nil
 }
 
 // parseGroupingSpecificationArgument parses an argument inside ROLLUP/CUBE which can be

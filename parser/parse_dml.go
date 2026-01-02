@@ -14,9 +14,42 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 
 	withClause := &ast.WithCtesAndXmlNamespaces{}
 
-	// Parse CHANGE_TRACKING_CONTEXT or CTEs
+	// Parse XMLNAMESPACES, CHANGE_TRACKING_CONTEXT or CTEs
 	for {
-		if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING_CONTEXT" {
+		if strings.ToUpper(p.curTok.Literal) == "XMLNAMESPACES" {
+			p.nextToken() // consume XMLNAMESPACES
+			xmlNs := &ast.XmlNamespaces{}
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					// Check for DEFAULT element
+					if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+						p.nextToken() // consume DEFAULT
+						strLit, _ := p.parseStringLiteral()
+						elem := &ast.XmlNamespacesDefaultElement{String: strLit}
+						xmlNs.XmlNamespacesElements = append(xmlNs.XmlNamespacesElements, elem)
+					} else {
+						// Alias element: string AS identifier
+						strLit, _ := p.parseStringLiteral()
+						elem := &ast.XmlNamespacesAliasElement{String: strLit}
+						if p.curTok.Type == TokenAs {
+							p.nextToken() // consume AS
+							elem.Identifier = p.parseIdentifier()
+						}
+						xmlNs.XmlNamespacesElements = append(xmlNs.XmlNamespacesElements, elem)
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			withClause.XmlNamespaces = xmlNs
+		} else if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING_CONTEXT" {
 			p.nextToken() // consume CHANGE_TRACKING_CONTEXT
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
@@ -69,7 +102,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 			break
 		}
 
-		// Check for comma (more CTEs)
+		// Check for comma (more CTEs or XMLNAMESPACES followed by CTEs)
 		if p.curTok.Type == TokenComma {
 			p.nextToken()
 		} else {
@@ -105,9 +138,12 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 		stmt.WithCtesAndXmlNamespaces = withClause
 		return stmt, nil
 	case TokenSelect:
-		// For SELECT, we need to handle it differently
-		// Skip for now - return the select without CTE
-		return p.parseSelectStatement()
+		stmt, err := p.parseSelectStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.WithCtesAndXmlNamespaces = withClause
+		return stmt, nil
 	}
 
 	return nil, fmt.Errorf("expected INSERT, UPDATE, DELETE, or SELECT after WITH clause, got %s", p.curTok.Literal)
@@ -253,8 +289,10 @@ func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 }
 
 // parseInsertTarget parses the target for INSERT statements.
-// Unlike parseDMLTarget, it does NOT treat parentheses as function parameters
-// because in INSERT statements, parentheses after the table name are column names.
+// Unlike parseDMLTarget, it needs to distinguish between:
+// - dbo.f1() - a table-valued function call
+// - table (c1, c2) - a table with column list
+// We check if parentheses contain function parameters vs column names.
 func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
 	// Check for variable
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
@@ -277,8 +315,24 @@ func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
 		return nil, err
 	}
 
-	// For INSERT targets, parentheses are column names, not function parameters
-	// So we don't parse them here - the caller handles the column list
+	// Check for function call: dbo.f1() or dbo.tvf(1, -1, DEFAULT)
+	// This is a function if the parens contain:
+	// - Empty: ()
+	// - Non-identifier tokens: numbers, strings, DEFAULT, operators
+	// Otherwise, it's a column list and we don't consume it here.
+	if p.curTok.Type == TokenLParen {
+		if p.isInsertFunctionParams() {
+			params, err := p.parseFunctionParameters()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.SchemaObjectFunctionTableReference{
+				SchemaObject: son,
+				Parameters:   params,
+				ForPath:      false,
+			}, nil
+		}
+	}
 
 	ref := &ast.NamedTableReference{
 		SchemaObject: son,
@@ -307,6 +361,34 @@ func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
 	}
 
 	return ref, nil
+}
+
+// isInsertFunctionParams checks if the current parentheses contain function parameters
+// rather than a column list. Returns true if:
+// - Empty parens: ()
+// - Contains non-identifier tokens: numbers, strings, DEFAULT, minus, etc.
+func (p *Parser) isInsertFunctionParams() bool {
+	// We're at '(' - look at peekTok to see what's inside
+
+	// Empty parens () - definitely function call
+	if p.peekTok.Type == TokenRParen {
+		return true
+	}
+
+	// Look at the first token after (
+	// If it's a number, string, DEFAULT, minus, or other non-identifier, it's function params
+	switch p.peekTok.Type {
+	case TokenNumber, TokenString, TokenNationalString, TokenMinus, TokenPlus:
+		return true
+	case TokenIdent:
+		// Check for DEFAULT keyword
+		if strings.ToUpper(p.peekTok.Literal) == "DEFAULT" {
+			return true
+		}
+	}
+
+	// Otherwise, it's likely a column list
+	return false
 }
 
 func (p *Parser) parseOpenRowset() (ast.TableReference, error) {
@@ -1898,27 +1980,26 @@ func (p *Parser) parseBulkInsertStatement() (*ast.BulkInsertStatement, error) {
 func (p *Parser) parseIdentifierOrValueExpression() (*ast.IdentifierOrValueExpression, error) {
 	result := &ast.IdentifierOrValueExpression{}
 
-	if p.curTok.Type == TokenString {
+	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
 		// String literal
-		value := p.curTok.Literal
-		// Remove quotes
-		if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
-			value = value[1 : len(value)-1]
-		}
-		result.Value = value
-		result.ValueExpression = &ast.StringLiteral{
-			LiteralType:   "String",
-			IsNational:    false,
-			IsLargeObject: false,
-			Value:         value,
-		}
-		p.nextToken()
+		strLit, _ := p.parseStringLiteral()
+		result.Value = strLit.Value
+		result.ValueExpression = strLit
 	} else if p.curTok.Type == TokenNumber {
 		// Integer literal
 		result.Value = p.curTok.Literal
 		result.ValueExpression = &ast.IntegerLiteral{
 			LiteralType: "Integer",
 			Value:       p.curTok.Literal,
+		}
+		p.nextToken()
+	} else if p.curTok.Type == TokenBinary {
+		// Binary/hex literal
+		result.Value = p.curTok.Literal
+		result.ValueExpression = &ast.BinaryLiteral{
+			LiteralType:   "Binary",
+			IsLargeObject: false,
+			Value:         p.curTok.Literal,
 		}
 		p.nextToken()
 	} else if p.curTok.Type == TokenIdent {

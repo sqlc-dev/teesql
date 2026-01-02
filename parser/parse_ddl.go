@@ -124,9 +124,59 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropSignatureStatement(true)
 	case "SENSITIVITY":
 		return p.parseDropSensitivityClassificationStatement()
+	case "FULLTEXT":
+		return p.parseDropFulltextStatement()
+	case "BROKER":
+		return p.parseDropBrokerPriorityStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseDropFulltextStatement() (ast.Statement, error) {
+	// Consume FULLTEXT
+	p.nextToken()
+
+	keyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume CATALOG/INDEX/STOPLIST
+
+	switch keyword {
+	case "STOPLIST":
+		stmt := &ast.DropFullTextStopListStatement{
+			Name:       p.parseIdentifier(),
+			IsIfExists: false,
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	case "CATALOG":
+		stmt := &ast.DropFullTextCatalogStatement{
+			Name: p.parseIdentifier(),
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	case "INDEX":
+		// DROP FULLTEXT INDEX ON table
+		if p.curTok.Type == TokenOn {
+			p.nextToken() // consume ON
+		}
+		name, _ := p.parseSchemaObjectName()
+		stmt := &ast.DropFulltextIndexStatement{
+			OnName: name,
+		}
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	}
+
+	return nil, fmt.Errorf("unexpected token after DROP FULLTEXT: %s", keyword)
 }
 
 func (p *Parser) parseDropExternalStatement() (ast.Statement, error) {
@@ -1625,6 +1675,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterResourceGovernorStatement()
 		case "CRYPTOGRAPHIC":
 			return p.parseAlterCryptographicProviderStatement()
+		case "BROKER":
+			return p.parseAlterBrokerPriorityStatement()
 		case "FEDERATION":
 			return p.parseAlterFederationStatement()
 		case "WORKLOAD":
@@ -1643,6 +1695,11 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 func (p *Parser) parseAlterResourceGovernorStatement() (ast.Statement, error) {
 	// Consume RESOURCE
 	p.nextToken()
+
+	// Check if this is RESOURCE POOL or RESOURCE GOVERNOR
+	if strings.ToUpper(p.curTok.Literal) == "POOL" {
+		return p.parseAlterResourcePoolStatement()
+	}
 
 	// Consume GOVERNOR
 	if strings.ToUpper(p.curTok.Literal) == "GOVERNOR" {
@@ -5857,9 +5914,13 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 	// Consume FULLTEXT
 	p.nextToken()
 
-	// Check CATALOG or INDEX
+	// Check CATALOG, INDEX, or STOPLIST
 	keyword := strings.ToUpper(p.curTok.Literal)
 	p.nextToken()
+
+	if keyword == "STOPLIST" {
+		return p.parseAlterFulltextStopListStatement()
+	}
 
 	if keyword == "CATALOG" {
 		stmt := &ast.AlterFulltextCatalogStatement{}
@@ -5928,6 +5989,49 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterFulltextStopListStatement() (*ast.AlterFullTextStopListStatement, error) {
+	stmt := &ast.AlterFullTextStopListStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	action := &ast.FullTextStopListAction{}
+
+	// Parse ADD or DROP
+	actionLit := strings.ToUpper(p.curTok.Literal)
+	if actionLit == "ADD" {
+		action.IsAdd = true
+		p.nextToken() // consume ADD
+	} else if actionLit == "DROP" {
+		action.IsAdd = false
+		p.nextToken() // consume DROP
+	}
+
+	// Check for ALL
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		action.IsAll = true
+		p.nextToken() // consume ALL
+	} else if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+		// Parse stopword
+		strLit, _ := p.parseStringLiteral()
+		action.StopWord = strLit
+	}
+
+	// Parse LANGUAGE term
+	if p.curTok.Type == TokenLanguage || strings.ToUpper(p.curTok.Literal) == "LANGUAGE" {
+		p.nextToken() // consume LANGUAGE
+		action.LanguageTerm, _ = p.parseIdentifierOrValueExpression()
+	}
+
+	stmt.Action = action
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
 }
 
@@ -7474,5 +7578,310 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 		p.nextToken()
 	}
 
+	return stmt, nil
+}
+
+// parseCreateResourcePoolStatement parses CREATE RESOURCE POOL statement
+func (p *Parser) parseCreateResourcePoolStatement() (*ast.CreateResourcePoolStatement, error) {
+	// We've already consumed CREATE RESOURCE
+	// Consume POOL
+	if strings.ToUpper(p.curTok.Literal) == "POOL" {
+		p.nextToken()
+	}
+
+	stmt := &ast.CreateResourcePoolStatement{}
+
+	// Parse pool name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		params, err := p.parseResourcePoolParameters()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ResourcePoolParameters = params
+	}
+
+	return stmt, nil
+}
+
+// parseAlterResourcePoolStatement parses ALTER RESOURCE POOL statement
+func (p *Parser) parseAlterResourcePoolStatement() (*ast.AlterResourcePoolStatement, error) {
+	// Consume POOL (we've already consumed ALTER RESOURCE)
+	p.nextToken()
+
+	stmt := &ast.AlterResourcePoolStatement{}
+
+	// Parse pool name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		params, err := p.parseResourcePoolParameters()
+		if err != nil {
+			return nil, err
+		}
+		stmt.ResourcePoolParameters = params
+	}
+
+	return stmt, nil
+}
+
+// parseResourcePoolParameters parses resource pool parameters within WITH (...)
+func (p *Parser) parseResourcePoolParameters() ([]*ast.ResourcePoolParameter, error) {
+	var params []*ast.ResourcePoolParameter
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after WITH, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param, err := p.parseResourcePoolParameter()
+		if err != nil {
+			return nil, err
+		}
+		if param != nil {
+			params = append(params, param)
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return params, nil
+}
+
+// parseResourcePoolParameter parses a single resource pool parameter
+func (p *Parser) parseResourcePoolParameter() (*ast.ResourcePoolParameter, error) {
+	paramName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume parameter name
+
+	param := &ast.ResourcePoolParameter{}
+
+	switch paramName {
+	case "MIN_CPU_PERCENT":
+		param.ParameterType = "MinCpuPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MAX_CPU_PERCENT":
+		param.ParameterType = "MaxCpuPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "CAP_CPU_PERCENT":
+		param.ParameterType = "CapCpuPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MIN_MEMORY_PERCENT":
+		param.ParameterType = "MinMemoryPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MAX_MEMORY_PERCENT":
+		param.ParameterType = "MaxMemoryPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "TARGET_MEMORY_PERCENT":
+		param.ParameterType = "TargetMemoryPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MIN_IO_PERCENT":
+		param.ParameterType = "MinIoPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MAX_IO_PERCENT":
+		param.ParameterType = "MaxIoPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "CAP_IO_PERCENT":
+		param.ParameterType = "CapIoPercent"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MIN_IOPS_PER_VOLUME":
+		param.ParameterType = "MinIopsPerVolume"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "MAX_IOPS_PER_VOLUME":
+		param.ParameterType = "MaxIopsPerVolume"
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	case "AFFINITY":
+		param.ParameterType = "Affinity"
+		affSpec, err := p.parseResourcePoolAffinitySpecification()
+		if err != nil {
+			return nil, err
+		}
+		param.AffinitySpecification = affSpec
+	default:
+		// Skip unknown parameter
+		return nil, nil
+	}
+
+	return param, nil
+}
+
+// parseResourcePoolAffinitySpecification parses AFFINITY SCHEDULER/NUMANODE specification
+func (p *Parser) parseResourcePoolAffinitySpecification() (*ast.ResourcePoolAffinitySpecification, error) {
+	spec := &ast.ResourcePoolAffinitySpecification{}
+
+	// Parse SCHEDULER or NUMANODE
+	affinityType := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	switch affinityType {
+	case "SCHEDULER":
+		spec.AffinityType = "Scheduler"
+	case "NUMANODE":
+		spec.AffinityType = "NumaNode"
+	default:
+		return nil, fmt.Errorf("expected SCHEDULER or NUMANODE after AFFINITY, got %s", affinityType)
+	}
+
+	// Expect =
+	if p.curTok.Type == TokenEquals {
+		p.nextToken()
+	}
+
+	// Check for AUTO or range list
+	if strings.ToUpper(p.curTok.Literal) == "AUTO" {
+		spec.IsAuto = true
+		p.nextToken()
+	} else if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		spec.IsAuto = false
+
+		// Parse range list
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			lr := &ast.LiteralRange{}
+
+			// Parse 'from' value
+			lr.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+			p.nextToken()
+
+			// Check for TO
+			if strings.ToUpper(p.curTok.Literal) == "TO" {
+				p.nextToken() // consume TO
+				lr.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+				p.nextToken()
+			}
+
+			spec.PoolAffinityRanges = append(spec.PoolAffinityRanges, lr)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	return spec, nil
+}
+
+func (p *Parser) parseAlterBrokerPriorityStatement() (*ast.AlterBrokerPriorityStatement, error) {
+	// Consume BROKER
+	p.nextToken()
+
+	// Consume PRIORITY
+	if strings.ToUpper(p.curTok.Literal) == "PRIORITY" {
+		p.nextToken()
+	}
+
+	stmt := &ast.AlterBrokerPriorityStatement{}
+
+	// Parse priority name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse FOR CONVERSATION
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "CONVERSATION" {
+			p.nextToken() // consume CONVERSATION
+		}
+	}
+
+	// Parse SET (parameters)
+	if strings.ToUpper(p.curTok.Literal) == "SET" {
+		p.nextToken() // consume SET
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			stmt.BrokerPriorityParameters = p.parseBrokerPriorityParameters()
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseDropBrokerPriorityStatement() (*ast.DropBrokerPriorityStatement, error) {
+	// Consume BROKER
+	p.nextToken()
+
+	// Consume PRIORITY
+	if strings.ToUpper(p.curTok.Literal) == "PRIORITY" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropBrokerPriorityStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken() // consume IF
+		if strings.ToUpper(p.curTok.Literal) == "EXISTS" {
+			stmt.IsIfExists = true
+			p.nextToken() // consume EXISTS
+		}
+	}
+
+	// Parse priority name
+	stmt.Name = p.parseIdentifier()
+
+	p.skipToEndOfStatement()
 	return stmt, nil
 }

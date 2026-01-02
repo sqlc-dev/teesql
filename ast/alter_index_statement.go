@@ -28,10 +28,15 @@ func (s *SelectiveXmlIndexPromotedPath) node() {}
 
 // XmlNamespaces represents a WITH XMLNAMESPACES clause
 type XmlNamespaces struct {
-	XmlNamespacesElements []*XmlNamespacesAliasElement
+	XmlNamespacesElements []XmlNamespacesElement
 }
 
 func (x *XmlNamespaces) node() {}
+
+// XmlNamespacesElement is an interface for XML namespace elements
+type XmlNamespacesElement interface {
+	xmlNamespacesElement()
+}
 
 // XmlNamespacesAliasElement represents an alias element in XMLNAMESPACES
 type XmlNamespacesAliasElement struct {
@@ -39,7 +44,16 @@ type XmlNamespacesAliasElement struct {
 	String     *StringLiteral
 }
 
-func (x *XmlNamespacesAliasElement) node() {}
+func (x *XmlNamespacesAliasElement) node()                 {}
+func (x *XmlNamespacesAliasElement) xmlNamespacesElement() {}
+
+// XmlNamespacesDefaultElement represents a default element in XMLNAMESPACES
+type XmlNamespacesDefaultElement struct {
+	String *StringLiteral
+}
+
+func (x *XmlNamespacesDefaultElement) node()                 {}
+func (x *XmlNamespacesDefaultElement) xmlNamespacesElement() {}
 
 // PartitionSpecifier represents a partition specifier
 type PartitionSpecifier struct {
