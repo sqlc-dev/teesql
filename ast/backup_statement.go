@@ -2,9 +2,16 @@ package ast
 
 // BackupDatabaseStatement represents a BACKUP DATABASE statement
 type BackupDatabaseStatement struct {
-	DatabaseName *IdentifierOrValueExpression
-	Devices      []*DeviceInfo
-	Options      []*BackupOption
+	Files          []*BackupRestoreFileInfo
+	DatabaseName   *IdentifierOrValueExpression
+	MirrorToClauses []*MirrorToClause
+	Devices        []*DeviceInfo
+	Options        []*BackupOption
+}
+
+// MirrorToClause represents a MIRROR TO clause in a BACKUP statement
+type MirrorToClause struct {
+	Devices []*DeviceInfo
 }
 
 func (s *BackupDatabaseStatement) statementNode() {}

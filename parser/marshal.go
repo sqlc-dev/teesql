@@ -10491,8 +10491,29 @@ func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
 	node := jsonNode{
 		"$type": "BackupDatabaseStatement",
 	}
+	if len(s.Files) > 0 {
+		files := make([]jsonNode, len(s.Files))
+		for i, f := range s.Files {
+			files[i] = backupRestoreFileInfoToJSON(f)
+		}
+		node["Files"] = files
+	}
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierOrValueExpressionToJSON(s.DatabaseName)
+	}
+	if len(s.MirrorToClauses) > 0 {
+		clauses := make([]jsonNode, len(s.MirrorToClauses))
+		for i, c := range s.MirrorToClauses {
+			clauses[i] = mirrorToClauseToJSON(c)
+		}
+		node["MirrorToClauses"] = clauses
+	}
+	if len(s.Devices) > 0 {
+		devices := make([]jsonNode, len(s.Devices))
+		for i, d := range s.Devices {
+			devices[i] = deviceInfoToJSON(d)
+		}
+		node["Devices"] = devices
 	}
 	if len(s.Options) > 0 {
 		options := make([]jsonNode, len(s.Options))
@@ -10501,9 +10522,16 @@ func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
 		}
 		node["Options"] = options
 	}
-	if len(s.Devices) > 0 {
-		devices := make([]jsonNode, len(s.Devices))
-		for i, d := range s.Devices {
+	return node
+}
+
+func mirrorToClauseToJSON(c *ast.MirrorToClause) jsonNode {
+	node := jsonNode{
+		"$type": "MirrorToClause",
+	}
+	if len(c.Devices) > 0 {
+		devices := make([]jsonNode, len(c.Devices))
+		for i, d := range c.Devices {
 			devices[i] = deviceInfoToJSON(d)
 		}
 		node["Devices"] = devices

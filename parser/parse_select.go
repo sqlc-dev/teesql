@@ -342,8 +342,8 @@ func (p *Parser) parseTopRowFilter() (*ast.TopRowFilter, error) {
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
 
-		// Check for subquery (SELECT ...)
-		if p.curTok.Type == TokenSelect {
+		// Check for subquery (SELECT ...) or parenthesized query expression starting with (
+		if p.curTok.Type == TokenSelect || p.curTok.Type == TokenLParen {
 			qe, err := p.parseQueryExpression()
 			if err != nil {
 				return nil, err

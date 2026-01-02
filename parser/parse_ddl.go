@@ -3163,13 +3163,16 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 	// Parse column name
 	stmt.ColumnIdentifier = p.parseIdentifier()
 
-	// Check for ADD/DROP ROWGUIDCOL or ADD/DROP NOT FOR REPLICATION
+	// Check for ADD/DROP ROWGUIDCOL or ADD/DROP NOT FOR REPLICATION or ADD/DROP PERSISTED
 	upperLit := strings.ToUpper(p.curTok.Literal)
 	if upperLit == "ADD" {
 		p.nextToken() // consume ADD
 		nextLit := strings.ToUpper(p.curTok.Literal)
 		if nextLit == "ROWGUIDCOL" {
 			stmt.AlterTableAlterColumnOption = "AddRowGuidCol"
+			p.nextToken()
+		} else if nextLit == "PERSISTED" {
+			stmt.AlterTableAlterColumnOption = "AddPersisted"
 			p.nextToken()
 		} else if nextLit == "NOT" {
 			p.nextToken() // consume NOT
@@ -3191,6 +3194,9 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		nextLit := strings.ToUpper(p.curTok.Literal)
 		if nextLit == "ROWGUIDCOL" {
 			stmt.AlterTableAlterColumnOption = "DropRowGuidCol"
+			p.nextToken()
+		} else if nextLit == "PERSISTED" {
+			stmt.AlterTableAlterColumnOption = "DropPersisted"
 			p.nextToken()
 		} else if nextLit == "NOT" {
 			p.nextToken() // consume NOT
