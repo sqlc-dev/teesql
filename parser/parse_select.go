@@ -1404,6 +1404,11 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 
 	// Don't consume .* here - let the caller (parseSelectElement) handle qualified stars
 
+	// Check if this is a function call
+	if p.curTok.Type == TokenLParen && len(identifiers) > 1 {
+		return p.parseFunctionCallFromIdentifiers(identifiers)
+	}
+
 	return &ast.ColumnReferenceExpression{
 		ColumnType: "Regular",
 		MultiPartIdentifier: &ast.MultiPartIdentifier{
