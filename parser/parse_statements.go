@@ -597,7 +597,8 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 					p.nextToken() // consume =
 				}
 				// Parse option value
-				if optionName == "BUCKET_COUNT" {
+				switch optionName {
+				case "BUCKET_COUNT":
 					opt := &ast.IndexExpressionOption{
 						OptionKind: "BucketCount",
 						Expression: &ast.IntegerLiteral{
@@ -607,8 +608,107 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 					}
 					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 					p.nextToken()
-				} else if optionName == "COMPRESSION_DELAY" {
-					// Parse COMPRESSION_DELAY = value [MINUTE|MINUTES]
+				case "FILLFACTOR":
+					opt := &ast.IndexExpressionOption{
+						OptionKind: "FillFactor",
+						Expression: &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						},
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+					p.nextToken()
+				case "PAD_INDEX", "STATISTICS_NORECOMPUTE", "ALLOW_ROW_LOCKS", "ALLOW_PAGE_LOCKS":
+					optionKindMap := map[string]string{
+						"PAD_INDEX":               "PadIndex",
+						"STATISTICS_NORECOMPUTE":  "StatisticsNoRecompute",
+						"ALLOW_ROW_LOCKS":         "AllowRowLocks",
+						"ALLOW_PAGE_LOCKS":        "AllowPageLocks",
+					}
+					state := strings.ToUpper(p.curTok.Literal)
+					optState := "Off"
+					if state == "ON" {
+						optState = "On"
+					}
+					opt := &ast.IndexStateOption{
+						OptionKind:  optionKindMap[optionName],
+						OptionState: optState,
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+					p.nextToken()
+				case "IGNORE_DUP_KEY":
+					state := strings.ToUpper(p.curTok.Literal)
+					optState := "Off"
+					if state == "ON" {
+						optState = "On"
+					}
+					opt := &ast.IgnoreDupKeyIndexOption{
+						OptionKind:  "IgnoreDupKey",
+						OptionState: optState,
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+					p.nextToken()
+				case "DATA_COMPRESSION":
+					compressionLevel := "None"
+					levelStr := strings.ToUpper(p.curTok.Literal)
+					switch levelStr {
+					case "NONE":
+						compressionLevel = "None"
+					case "ROW":
+						compressionLevel = "Row"
+					case "PAGE":
+						compressionLevel = "Page"
+					case "COLUMNSTORE":
+						compressionLevel = "ColumnStore"
+					case "COLUMNSTORE_ARCHIVE":
+						compressionLevel = "ColumnStoreArchive"
+					}
+					p.nextToken() // consume the compression level
+					opt := &ast.DataCompressionOption{
+						OptionKind:       "DataCompression",
+						CompressionLevel: compressionLevel,
+					}
+					// Check for optional ON PARTITIONS(range)
+					if p.curTok.Type == TokenOn {
+						p.nextToken() // consume ON
+						if strings.ToUpper(p.curTok.Literal) == "PARTITIONS" {
+							p.nextToken() // consume PARTITIONS
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									pr := &ast.CompressionPartitionRange{}
+									// Parse From value
+									from := &ast.IntegerLiteral{
+										LiteralType: "Integer",
+										Value:       p.curTok.Literal,
+									}
+									pr.From = from
+									p.nextToken()
+									// Check for TO
+									if strings.ToUpper(p.curTok.Literal) == "TO" {
+										p.nextToken() // consume TO
+										to := &ast.IntegerLiteral{
+											LiteralType: "Integer",
+											Value:       p.curTok.Literal,
+										}
+										pr.To = to
+										p.nextToken()
+									}
+									opt.PartitionRanges = append(opt.PartitionRanges, pr)
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									} else {
+										break
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+							}
+						}
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+				case "COMPRESSION_DELAY":
 					opt := &ast.CompressionDelayIndexOption{
 						OptionKind: "CompressionDelay",
 						Expression: &ast.IntegerLiteral{
@@ -628,8 +728,8 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 						p.nextToken()
 					}
 					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
-				} else {
-					// Skip other options
+				default:
+					// Skip unknown options
 					p.nextToken()
 				}
 				if p.curTok.Type == TokenComma {
@@ -641,6 +741,27 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
+		}
+	}
+
+	// Parse optional ON filegroup clause
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		fg := &ast.FileGroupOrPartitionScheme{
+			Name: &ast.IdentifierOrValueExpression{
+				Value:      p.curTok.Literal,
+				Identifier: p.parseIdentifier(),
+			},
+		}
+		indexDef.OnFileGroupOrPartitionScheme = fg
+	}
+
+	// Parse optional FILESTREAM_ON clause
+	if strings.ToUpper(p.curTok.Literal) == "FILESTREAM_ON" {
+		p.nextToken() // consume FILESTREAM_ON
+		indexDef.FileStreamOn = &ast.IdentifierOrValueExpression{
+			Value:      p.curTok.Literal,
+			Identifier: p.parseIdentifier(),
 		}
 	}
 
