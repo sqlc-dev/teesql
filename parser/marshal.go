@@ -2489,6 +2489,38 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			node["Expression"] = graphMatchExpressionToJSON(e.Expression)
 		}
 		return node
+	case *ast.FullTextPredicate:
+		node := jsonNode{
+			"$type": "FullTextPredicate",
+		}
+		if e.FullTextFunctionType != "" {
+			node["FullTextFunctionType"] = e.FullTextFunctionType
+		}
+		if len(e.Columns) > 0 {
+			cols := make([]jsonNode, len(e.Columns))
+			for i, col := range e.Columns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		if e.Value != nil {
+			node["Value"] = scalarExpressionToJSON(e.Value)
+		}
+		if e.PropertyName != nil {
+			node["PropertyName"] = scalarExpressionToJSON(e.PropertyName)
+		}
+		if e.LanguageTerm != nil {
+			node["LanguageTerm"] = scalarExpressionToJSON(e.LanguageTerm)
+		}
+		return node
+	case *ast.ExistsPredicate:
+		node := jsonNode{
+			"$type": "ExistsPredicate",
+		}
+		if e.Subquery != nil {
+			node["Subquery"] = queryExpressionToJSON(e.Subquery)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownBooleanExpression"}
 	}

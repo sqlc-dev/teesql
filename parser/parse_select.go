@@ -4068,6 +4068,17 @@ func (p *Parser) parseBooleanAndExpression() (ast.BooleanExpression, error) {
 }
 
 func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) {
+	// Check for CONTAINS/FREETEXT predicates
+	if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper == "CONTAINS" || upper == "FREETEXT" {
+			return p.parseFullTextPredicate(upper)
+		}
+		if upper == "EXISTS" {
+			return p.parseExistsPredicate()
+		}
+	}
+
 	// Check for parenthesized expression - could be boolean or scalar subquery
 	if p.curTok.Type == TokenLParen {
 		// Peek ahead to see if it's a subquery (SELECT)
@@ -5244,4 +5255,152 @@ func (p *Parser) parseJsonForClauseOption() (*ast.JsonForClauseOption, error) {
 	}
 
 	return option, nil
+}
+
+// parseFullTextPredicate parses CONTAINS or FREETEXT predicates
+func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate, error) {
+	pred := &ast.FullTextPredicate{
+		FullTextFunctionType: funcType,
+	}
+	p.nextToken() // consume CONTAINS/FREETEXT
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after %s, got %s", funcType, p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse column specification: *, column, (columns), or PROPERTY(column, 'prop')
+	if p.curTok.Type == TokenStar {
+		pred.Columns = []*ast.ColumnReferenceExpression{{ColumnType: "Wildcard"}}
+		p.nextToken() // consume *
+	} else if p.curTok.Type == TokenLParen {
+		// Column list
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			if p.curTok.Type == TokenStar {
+				pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				p.nextToken()
+			} else {
+				col := p.parseIdentifier()
+				pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{col},
+						Count:       1,
+					},
+				})
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PROPERTY" {
+		// PROPERTY(column, 'property_name')
+		p.nextToken() // consume PROPERTY
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Parse column name
+		col := p.parseIdentifier()
+		pred.Columns = []*ast.ColumnReferenceExpression{{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Identifiers: []*ast.Identifier{col},
+				Count:       1,
+			},
+		}}
+
+		// Expect comma
+		if p.curTok.Type != TokenComma {
+			return nil, fmt.Errorf("expected , after column in PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ,
+
+		// Parse property name (string literal)
+		propExpr, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+		pred.PropertyName = propExpr
+
+		// Expect )
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	} else {
+		// Single column
+		col := p.parseIdentifier()
+		pred.Columns = []*ast.ColumnReferenceExpression{{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Identifiers: []*ast.Identifier{col},
+				Count:       1,
+			},
+		}}
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after columns in %s, got %s", funcType, p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse search value
+	value, err := p.parsePrimaryExpression()
+	if err != nil {
+		return nil, err
+	}
+	pred.Value = value
+
+	// Parse optional LANGUAGE term
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		if p.curTok.Type == TokenLanguage {
+			p.nextToken() // consume LANGUAGE
+			langTerm, err := p.parsePrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+			pred.LanguageTerm = langTerm
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after %s, got %s", funcType, p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return pred, nil
+}
+
+// parseExistsPredicate parses EXISTS (subquery)
+func (p *Parser) parseExistsPredicate() (*ast.ExistsPredicate, error) {
+	p.nextToken() // consume EXISTS
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after EXISTS, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse subquery
+	subquery, err := p.parseQueryExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after EXISTS subquery, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.ExistsPredicate{Subquery: subquery}, nil
 }
