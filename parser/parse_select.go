@@ -1167,6 +1167,22 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			p.nextToken()
 			return &ast.ColumnReferenceExpression{ColumnType: "RowGuidCol"}, nil
 		}
+		if upper == "$ACTION" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnAction"}, nil
+		}
+		if upper == "$IDENTITY" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnIdentity"}, nil
+		}
+		if upper == "$ROWGUID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnRowGuid"}, nil
+		}
+		if upper == "$CUID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"}, nil
+		}
 		// Check for NEXT VALUE FOR sequence expression
 		if upper == "NEXT" && strings.ToUpper(p.peekTok.Literal) == "VALUE" {
 			return p.parseNextValueForExpression()

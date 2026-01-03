@@ -9088,6 +9088,15 @@ func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) 
 		}
 	}
 
+	// Parse WHERE filter_predicate
+	if strings.ToUpper(p.curTok.Literal) == "WHERE" {
+		p.nextToken() // consume WHERE
+		filterPred, err := p.parseBooleanExpression()
+		if err == nil {
+			stmt.FilterPredicate = filterPred
+		}
+	}
+
 	// Parse WITH (index options)
 	if p.curTok.Type == TokenWith {
 		p.nextToken() // consume WITH
@@ -9106,6 +9115,20 @@ func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) 
 		p.nextToken() // consume ON
 		fg, _ := p.parseFileGroupOrPartitionScheme()
 		stmt.OnFileGroupOrPartitionScheme = fg
+	}
+
+	// Parse FILESTREAM_ON filegroup
+	if strings.ToUpper(p.curTok.Literal) == "FILESTREAM_ON" {
+		p.nextToken() // consume FILESTREAM_ON
+		value := p.curTok.Literal
+		stmt.FileStreamOn = &ast.IdentifierOrValueExpression{
+			Value: value,
+			Identifier: &ast.Identifier{
+				Value:     value,
+				QuoteType: "NotQuoted",
+			},
+		}
+		p.nextToken()
 	}
 
 	return stmt, nil
@@ -9195,6 +9218,57 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 			if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
 				opt.Unit = "Minutes"
 				p.nextToken() // consume MINUTES
+			}
+			options = append(options, opt)
+		case "DATA_COMPRESSION":
+			// Parse DATA_COMPRESSION = level [ON PARTITIONS(range)]
+			compressionLevel := "None"
+			switch valueStr {
+			case "NONE":
+				compressionLevel = "None"
+			case "ROW":
+				compressionLevel = "Row"
+			case "PAGE":
+				compressionLevel = "Page"
+			case "COLUMNSTORE":
+				compressionLevel = "ColumnStore"
+			case "COLUMNSTORE_ARCHIVE":
+				compressionLevel = "ColumnStoreArchive"
+			}
+			opt := &ast.DataCompressionOption{
+				CompressionLevel: compressionLevel,
+				OptionKind:       "DataCompression",
+			}
+			// Check for optional ON PARTITIONS(range)
+			if p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+				if strings.ToUpper(p.curTok.Literal) == "PARTITIONS" {
+					p.nextToken() // consume PARTITIONS
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							partRange := &ast.CompressionPartitionRange{}
+							// Parse From value
+							partRange.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							p.nextToken()
+							// Check for TO keyword indicating a range
+							if strings.ToUpper(p.curTok.Literal) == "TO" {
+								p.nextToken() // consume TO
+								partRange.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+								p.nextToken()
+							}
+							opt.PartitionRanges = append(opt.PartitionRanges, partRange)
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							} else {
+								break
+							}
+						}
+						if p.curTok.Type == TokenRParen {
+							p.nextToken() // consume )
+						}
+					}
+				}
 			}
 			options = append(options, opt)
 		default:

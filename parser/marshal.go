@@ -14425,6 +14425,12 @@ func createIndexStatementToJSON(s *ast.CreateIndexStatement) jsonNode {
 		}
 		node["IndexOptions"] = opts
 	}
+	if s.FilterPredicate != nil {
+		node["FilterPredicate"] = booleanExpressionToJSON(s.FilterPredicate)
+	}
+	if s.FileStreamOn != nil {
+		node["FileStreamOn"] = identifierOrValueExpressionToJSON(s.FileStreamOn)
+	}
 	return node
 }
 

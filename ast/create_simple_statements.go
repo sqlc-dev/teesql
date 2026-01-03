@@ -396,8 +396,10 @@ type CreateIndexStatement struct {
 	Clustered                    *bool                         `json:"Clustered,omitempty"` // nil = not specified, true = CLUSTERED, false = NONCLUSTERED
 	Columns                      []*ColumnWithSortOrder        `json:"Columns,omitempty"`
 	IncludeColumns               []*ColumnReferenceExpression  `json:"IncludeColumns,omitempty"`
+	FilterPredicate              BooleanExpression             `json:"FilterPredicate,omitempty"`
 	IndexOptions                 []IndexOption                 `json:"IndexOptions,omitempty"`
 	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme   `json:"OnFileGroupOrPartitionScheme,omitempty"`
+	FileStreamOn                 *IdentifierOrValueExpression  `json:"FileStreamOn,omitempty"`
 }
 
 func (s *CreateIndexStatement) node()      {}
