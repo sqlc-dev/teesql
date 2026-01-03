@@ -115,6 +115,16 @@ func (l *LiteralDatabaseOption) node()                 {}
 func (l *LiteralDatabaseOption) databaseOption()       {}
 func (l *LiteralDatabaseOption) createDatabaseOption() {}
 
+// ElasticPoolSpecification represents SERVICE_OBJECTIVE = ELASTIC_POOL(name = poolname)
+type ElasticPoolSpecification struct {
+	ElasticPoolName *Identifier
+	OptionKind      string // "ServiceObjective"
+}
+
+func (e *ElasticPoolSpecification) node()                 {}
+func (e *ElasticPoolSpecification) databaseOption()       {}
+func (e *ElasticPoolSpecification) createDatabaseOption() {}
+
 // AlterDatabaseAddFileStatement represents ALTER DATABASE ... ADD FILE statement
 type AlterDatabaseAddFileStatement struct {
 	DatabaseName     *Identifier

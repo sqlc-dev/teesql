@@ -1142,6 +1142,17 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			node["OptionKind"] = o.OptionKind
 		}
 		return node
+	case *ast.ElasticPoolSpecification:
+		node := jsonNode{
+			"$type": "ElasticPoolSpecification",
+		}
+		if o.ElasticPoolName != nil {
+			node["ElasticPoolName"] = identifierToJSON(o.ElasticPoolName)
+		}
+		if o.OptionKind != "" {
+			node["OptionKind"] = o.OptionKind
+		}
+		return node
 	case *ast.RemoteDataArchiveDatabaseOption:
 		node := jsonNode{
 			"$type":       "RemoteDataArchiveDatabaseOption",
@@ -15030,6 +15041,17 @@ func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 		}
 		if o.Value != nil {
 			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		if o.OptionKind != "" {
+			node["OptionKind"] = o.OptionKind
+		}
+		return node
+	case *ast.ElasticPoolSpecification:
+		node := jsonNode{
+			"$type": "ElasticPoolSpecification",
+		}
+		if o.ElasticPoolName != nil {
+			node["ElasticPoolName"] = identifierToJSON(o.ElasticPoolName)
 		}
 		if o.OptionKind != "" {
 			node["OptionKind"] = o.OptionKind

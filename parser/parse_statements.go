@@ -9139,6 +9139,19 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 				}
 				multiPart.Count = len(multiPart.Identifiers)
 				stmt.CopyOf = multiPart
+
+				// Check for Azure-style options after COPY OF
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					opts, err := p.parseAzureDatabaseOptions()
+					if err != nil {
+						return nil, err
+					}
+					stmt.Options = append(stmt.Options, opts...)
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
 			}
 		}
 	}
@@ -9368,6 +9381,39 @@ func (p *Parser) parseAzureDatabaseOptions() ([]ast.CreateDatabaseOption, error)
 				Value:      value,
 			}
 			options = append(options, opt)
+
+		case "SERVICE_OBJECTIVE":
+			// Check for elastic_pool(name = [epool1]) syntax
+			if strings.ToUpper(p.curTok.Literal) == "ELASTIC_POOL" {
+				p.nextToken() // consume ELASTIC_POOL
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					// Parse NAME = [poolname]
+					if strings.ToUpper(p.curTok.Literal) == "NAME" {
+						p.nextToken() // consume NAME
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						poolName := p.parseIdentifier()
+						opt := &ast.ElasticPoolSpecification{
+							OptionKind:      "ServiceObjective",
+							ElasticPoolName: poolName,
+						}
+						options = append(options, opt)
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			} else {
+				// Parse service objective value (string literal)
+				value, _ := p.parseStringLiteral()
+				opt := &ast.LiteralDatabaseOption{
+					OptionKind: "ServiceObjective",
+					Value:      value,
+				}
+				options = append(options, opt)
+			}
 
 		default:
 			// Skip unknown option value
