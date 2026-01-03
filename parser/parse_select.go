@@ -1892,6 +1892,19 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 }
 
 func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier) (ast.ScalarExpression, error) {
+	// Check for special functions that need custom handling
+	if len(identifiers) == 1 {
+		funcName := strings.ToUpper(identifiers[0].Value)
+		switch funcName {
+		case "IIF":
+			return p.parseIIfCall()
+		case "PARSE":
+			return p.parseParseCall(false)
+		case "TRY_PARSE":
+			return p.parseParseCall(true)
+		}
+	}
+
 	fc := &ast.FunctionCall{
 		UniqueRowFilter:  "NotSpecified",
 		WithArrayWrapper: false,
@@ -5403,4 +5416,100 @@ func (p *Parser) parseExistsPredicate() (*ast.ExistsPredicate, error) {
 	p.nextToken() // consume )
 
 	return &ast.ExistsPredicate{Subquery: subquery}, nil
+}
+
+// parseIIfCall parses IIF(condition, true_value, false_value)
+func (p *Parser) parseIIfCall() (*ast.IIfCall, error) {
+	p.nextToken() // consume (
+
+	// Parse boolean predicate
+	pred, err := p.parseBooleanExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after IIF condition, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse then expression
+	thenExpr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after IIF then expression, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse else expression
+	elseExpr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after IIF, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.IIfCall{
+		Predicate:      pred,
+		ThenExpression: thenExpr,
+		ElseExpression: elseExpr,
+	}, nil
+}
+
+// parseParseCall parses PARSE(string AS type [USING culture]) or TRY_PARSE(string AS type [USING culture])
+func (p *Parser) parseParseCall(isTry bool) (ast.ScalarExpression, error) {
+	p.nextToken() // consume (
+
+	// Parse string value expression
+	strVal, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect AS
+	if strings.ToUpper(p.curTok.Literal) != "AS" {
+		return nil, fmt.Errorf("expected AS after PARSE value, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume AS
+
+	// Parse data type
+	dataType, err := p.parseDataType()
+	if err != nil {
+		return nil, err
+	}
+
+	var culture ast.ScalarExpression
+
+	// Check for USING culture
+	if strings.ToUpper(p.curTok.Literal) == "USING" {
+		p.nextToken() // consume USING
+		culture, err = p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after PARSE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	if isTry {
+		return &ast.TryParseCall{
+			StringValue: strVal,
+			DataType:    dataType,
+			Culture:     culture,
+		}, nil
+	}
+	return &ast.ParseCall{
+		StringValue: strVal,
+		DataType:    dataType,
+		Culture:     culture,
+	}, nil
 }

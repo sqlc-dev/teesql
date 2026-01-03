@@ -1815,6 +1815,48 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["OverClause"] = overClauseToJSON(e.OverClause)
 		}
 		return node
+	case *ast.IIfCall:
+		node := jsonNode{
+			"$type": "IIfCall",
+		}
+		if e.Predicate != nil {
+			node["Predicate"] = booleanExpressionToJSON(e.Predicate)
+		}
+		if e.ThenExpression != nil {
+			node["ThenExpression"] = scalarExpressionToJSON(e.ThenExpression)
+		}
+		if e.ElseExpression != nil {
+			node["ElseExpression"] = scalarExpressionToJSON(e.ElseExpression)
+		}
+		return node
+	case *ast.ParseCall:
+		node := jsonNode{
+			"$type": "ParseCall",
+		}
+		if e.StringValue != nil {
+			node["StringValue"] = scalarExpressionToJSON(e.StringValue)
+		}
+		if e.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(e.DataType)
+		}
+		if e.Culture != nil {
+			node["Culture"] = scalarExpressionToJSON(e.Culture)
+		}
+		return node
+	case *ast.TryParseCall:
+		node := jsonNode{
+			"$type": "TryParseCall",
+		}
+		if e.StringValue != nil {
+			node["StringValue"] = scalarExpressionToJSON(e.StringValue)
+		}
+		if e.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(e.DataType)
+		}
+		if e.Culture != nil {
+			node["Culture"] = scalarExpressionToJSON(e.Culture)
+		}
+		return node
 	case *ast.VariableReference:
 		node := jsonNode{
 			"$type": "VariableReference",
