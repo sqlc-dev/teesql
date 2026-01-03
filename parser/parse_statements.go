@@ -4161,9 +4161,21 @@ func (p *Parser) parseCreateViewStatement() (*ast.CreateViewStatement, error) {
 	// Check for WITH options
 	if p.curTok.Type == TokenWith {
 		p.nextToken()
-		// Parse view options
-		for p.curTok.Type == TokenIdent {
-			opt := &ast.ViewStatementOption{OptionKind: p.curTok.Literal}
+		// Parse view options (can be identifiers or keywords like ENCRYPTION)
+		for p.curTok.Type != TokenAs && p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+			optName := strings.ToUpper(p.curTok.Literal)
+			var optionKind string
+			switch optName {
+			case "ENCRYPTION":
+				optionKind = "Encryption"
+			case "SCHEMABINDING":
+				optionKind = "SchemaBinding"
+			case "VIEW_METADATA":
+				optionKind = "ViewMetadata"
+			default:
+				optionKind = p.curTok.Literal
+			}
+			opt := &ast.ViewStatementOption{OptionKind: optionKind}
 			stmt.ViewOptions = append(stmt.ViewOptions, opt)
 			p.nextToken()
 			if p.curTok.Type == TokenComma {
@@ -4187,6 +4199,18 @@ func (p *Parser) parseCreateViewStatement() (*ast.CreateViewStatement, error) {
 		return stmt, nil
 	}
 	stmt.SelectStatement = selStmt
+
+	// Check for WITH CHECK OPTION
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "CHECK" {
+			p.nextToken()
+			if strings.ToUpper(p.curTok.Literal) == "OPTION" {
+				p.nextToken()
+				stmt.WithCheckOption = true
+			}
+		}
+	}
 
 	return stmt, nil
 }

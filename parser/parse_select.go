@@ -1628,6 +1628,14 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
 			quoteType = "SquareBracket"
 			literal = literal[1 : len(literal)-1]
+			// Unescape ]] to ]
+			literal = strings.ReplaceAll(literal, "]]", "]")
+		} else if len(literal) >= 2 && literal[0] == '"' && literal[len(literal)-1] == '"' {
+			// Handle double-quoted identifiers
+			quoteType = "DoubleQuote"
+			literal = literal[1 : len(literal)-1]
+			// Unescape "" to "
+			literal = strings.ReplaceAll(literal, "\"\"", "\"")
 		} else if upper == "IDENTITYCOL" || upper == "ROWGUIDCOL" {
 			// IDENTITYCOL/ROWGUIDCOL at end of multi-part identifier sets column type
 			// and is not included in the identifier list
@@ -2545,7 +2553,7 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	}
 
 	// Parse optional table hints WITH (hint, hint, ...) or old-style (hint, hint, ...)
-	if p.curTok.Type == TokenWith {
+	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
 	}
 	if p.curTok.Type == TokenLParen {
@@ -2607,7 +2615,7 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 	}
 
 	// Parse optional table hints WITH (hint, hint, ...) or old-style (hint, hint, ...)
-	if p.curTok.Type == TokenWith {
+	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
 	}
 	if p.curTok.Type == TokenLParen {

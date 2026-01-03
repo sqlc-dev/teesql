@@ -1667,6 +1667,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterCredentialStatement()
 	case TokenExternal:
 		return p.parseAlterExternalStatement()
+	case TokenView:
+		return p.parseAlterViewStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -4594,6 +4596,89 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterViewStatement() (*ast.AlterViewStatement, error) {
+	// Consume VIEW
+	p.nextToken()
+
+	stmt := &ast.AlterViewStatement{}
+
+	// Parse view name
+	son, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.SchemaObjectName = son
+
+	// Check for column list
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			stmt.Columns = append(stmt.Columns, p.parseIdentifier())
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Check for WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		// Parse view options (can be identifiers or keywords like ENCRYPTION)
+		for p.curTok.Type != TokenAs && p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+			optName := strings.ToUpper(p.curTok.Literal)
+			var optionKind string
+			switch optName {
+			case "ENCRYPTION":
+				optionKind = "Encryption"
+			case "SCHEMABINDING":
+				optionKind = "SchemaBinding"
+			case "VIEW_METADATA":
+				optionKind = "ViewMetadata"
+			default:
+				optionKind = p.curTok.Literal
+			}
+			opt := &ast.ViewStatementOption{OptionKind: optionKind}
+			stmt.ViewOptions = append(stmt.ViewOptions, opt)
+			p.nextToken()
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Expect AS
+	if p.curTok.Type != TokenAs {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	p.nextToken()
+
+	// Parse SELECT statement
+	selStmt, err := p.parseSelectStatement()
+	if err != nil {
+		p.skipToEndOfStatement()
+		return stmt, nil
+	}
+	stmt.SelectStatement = selStmt
+
+	// Check for WITH CHECK OPTION
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "CHECK" {
+			p.nextToken()
+			if p.curTok.Type == TokenOption {
+				p.nextToken()
+				stmt.WithCheckOption = true
+			}
+		}
 	}
 
 	return stmt, nil

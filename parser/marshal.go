@@ -82,6 +82,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createViewStatementToJSON(s)
 	case *ast.CreateOrAlterViewStatement:
 		return createOrAlterViewStatementToJSON(s)
+	case *ast.AlterViewStatement:
+		return alterViewStatementToJSON(s)
 	case *ast.CreateSchemaStatement:
 		return createSchemaStatementToJSON(s)
 	case *ast.CreateProcedureStatement:
@@ -3689,6 +3691,37 @@ func createOrAlterViewStatementToJSON(s *ast.CreateOrAlterViewStatement) jsonNod
 	node := jsonNode{
 		"$type": "CreateOrAlterViewStatement",
 	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, c := range s.Columns {
+			cols[i] = identifierToJSON(c)
+		}
+		node["Columns"] = cols
+	}
+	if len(s.ViewOptions) > 0 {
+		opts := make([]jsonNode, len(s.ViewOptions))
+		for i, opt := range s.ViewOptions {
+			opts[i] = viewOptionToJSON(opt)
+		}
+		node["ViewOptions"] = opts
+	}
+	if s.SelectStatement != nil {
+		node["SelectStatement"] = selectStatementToJSON(s.SelectStatement)
+	}
+	node["WithCheckOption"] = s.WithCheckOption
+	node["IsMaterialized"] = s.IsMaterialized
+	return node
+}
+
+func alterViewStatementToJSON(s *ast.AlterViewStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterViewStatement",
+	}
+	node["IsRebuild"] = s.IsRebuild
+	node["IsDisable"] = s.IsDisable
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
