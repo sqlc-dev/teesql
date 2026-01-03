@@ -26,6 +26,21 @@ type CreateOrAlterViewStatement struct {
 func (c *CreateOrAlterViewStatement) node()      {}
 func (c *CreateOrAlterViewStatement) statement() {}
 
+// AlterViewStatement represents an ALTER VIEW statement.
+type AlterViewStatement struct {
+	SchemaObjectName *SchemaObjectName `json:"SchemaObjectName,omitempty"`
+	Columns          []*Identifier     `json:"Columns,omitempty"`
+	SelectStatement  *SelectStatement  `json:"SelectStatement,omitempty"`
+	WithCheckOption  bool              `json:"WithCheckOption"`
+	ViewOptions      []ViewOption      `json:"ViewOptions,omitempty"`
+	IsMaterialized   bool              `json:"IsMaterialized"`
+	IsRebuild        bool              `json:"IsRebuild"`
+	IsDisable        bool              `json:"IsDisable"`
+}
+
+func (a *AlterViewStatement) node()      {}
+func (a *AlterViewStatement) statement() {}
+
 // ViewOption is an interface for different view option types.
 type ViewOption interface {
 	viewOption()

@@ -452,23 +452,33 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		p.nextToken()
 	}
 
-	// Parse optional CLUSTERED/NONCLUSTERED [HASH]
+	// Parse optional CLUSTERED/NONCLUSTERED [HASH/COLUMNSTORE]
 	if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
 		p.nextToken()
-		// Check for HASH
+		// Check for HASH or COLUMNSTORE
 		if strings.ToUpper(p.curTok.Literal) == "HASH" {
 			indexDef.IndexType.IndexTypeKind = "ClusteredHash"
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
+			indexDef.IndexType.IndexTypeKind = "ClusteredColumnStore"
 			p.nextToken()
 		}
 	} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 		p.nextToken()
-		// Check for HASH
+		// Check for HASH or COLUMNSTORE
 		if strings.ToUpper(p.curTok.Literal) == "HASH" {
 			indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
 			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
+			indexDef.IndexType.IndexTypeKind = "NonClusteredColumnStore"
+			p.nextToken()
 		}
+	} else if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
+		// Implicit NONCLUSTERED COLUMNSTORE
+		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredColumnStore"}
+		p.nextToken()
 	}
 
 	// Parse column list
@@ -565,6 +575,16 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		}
 	}
 
+	// Parse optional WHERE clause for filtered indexes
+	if strings.ToUpper(p.curTok.Literal) == "WHERE" {
+		p.nextToken() // consume WHERE
+		filterPredicate, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+		indexDef.FilterPredicate = filterPredicate
+	}
+
 	// Parse optional WITH options
 	if strings.ToUpper(p.curTok.Literal) == "WITH" {
 		p.nextToken() // consume WITH
@@ -577,7 +597,8 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 					p.nextToken() // consume =
 				}
 				// Parse option value
-				if optionName == "BUCKET_COUNT" {
+				switch optionName {
+				case "BUCKET_COUNT":
 					opt := &ast.IndexExpressionOption{
 						OptionKind: "BucketCount",
 						Expression: &ast.IntegerLiteral{
@@ -587,8 +608,128 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 					}
 					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 					p.nextToken()
-				} else {
-					// Skip other options
+				case "FILLFACTOR":
+					opt := &ast.IndexExpressionOption{
+						OptionKind: "FillFactor",
+						Expression: &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						},
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+					p.nextToken()
+				case "PAD_INDEX", "STATISTICS_NORECOMPUTE", "ALLOW_ROW_LOCKS", "ALLOW_PAGE_LOCKS":
+					optionKindMap := map[string]string{
+						"PAD_INDEX":               "PadIndex",
+						"STATISTICS_NORECOMPUTE":  "StatisticsNoRecompute",
+						"ALLOW_ROW_LOCKS":         "AllowRowLocks",
+						"ALLOW_PAGE_LOCKS":        "AllowPageLocks",
+					}
+					state := strings.ToUpper(p.curTok.Literal)
+					optState := "Off"
+					if state == "ON" {
+						optState = "On"
+					}
+					opt := &ast.IndexStateOption{
+						OptionKind:  optionKindMap[optionName],
+						OptionState: optState,
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+					p.nextToken()
+				case "IGNORE_DUP_KEY":
+					state := strings.ToUpper(p.curTok.Literal)
+					optState := "Off"
+					if state == "ON" {
+						optState = "On"
+					}
+					opt := &ast.IgnoreDupKeyIndexOption{
+						OptionKind:  "IgnoreDupKey",
+						OptionState: optState,
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+					p.nextToken()
+				case "DATA_COMPRESSION":
+					compressionLevel := "None"
+					levelStr := strings.ToUpper(p.curTok.Literal)
+					switch levelStr {
+					case "NONE":
+						compressionLevel = "None"
+					case "ROW":
+						compressionLevel = "Row"
+					case "PAGE":
+						compressionLevel = "Page"
+					case "COLUMNSTORE":
+						compressionLevel = "ColumnStore"
+					case "COLUMNSTORE_ARCHIVE":
+						compressionLevel = "ColumnStoreArchive"
+					}
+					p.nextToken() // consume the compression level
+					opt := &ast.DataCompressionOption{
+						OptionKind:       "DataCompression",
+						CompressionLevel: compressionLevel,
+					}
+					// Check for optional ON PARTITIONS(range)
+					if p.curTok.Type == TokenOn {
+						p.nextToken() // consume ON
+						if strings.ToUpper(p.curTok.Literal) == "PARTITIONS" {
+							p.nextToken() // consume PARTITIONS
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									pr := &ast.CompressionPartitionRange{}
+									// Parse From value
+									from := &ast.IntegerLiteral{
+										LiteralType: "Integer",
+										Value:       p.curTok.Literal,
+									}
+									pr.From = from
+									p.nextToken()
+									// Check for TO
+									if strings.ToUpper(p.curTok.Literal) == "TO" {
+										p.nextToken() // consume TO
+										to := &ast.IntegerLiteral{
+											LiteralType: "Integer",
+											Value:       p.curTok.Literal,
+										}
+										pr.To = to
+										p.nextToken()
+									}
+									opt.PartitionRanges = append(opt.PartitionRanges, pr)
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									} else {
+										break
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+							}
+						}
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+				case "COMPRESSION_DELAY":
+					opt := &ast.CompressionDelayIndexOption{
+						OptionKind: "CompressionDelay",
+						Expression: &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						},
+						TimeUnit: "Unitless",
+					}
+					p.nextToken() // consume the number
+					// Check for optional MINUTE/MINUTES time unit
+					upperLit := strings.ToUpper(p.curTok.Literal)
+					if upperLit == "MINUTE" {
+						opt.TimeUnit = "Minute"
+						p.nextToken()
+					} else if upperLit == "MINUTES" {
+						opt.TimeUnit = "Minutes"
+						p.nextToken()
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+				default:
+					// Skip unknown options
 					p.nextToken()
 				}
 				if p.curTok.Type == TokenComma {
@@ -600,6 +741,27 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
+		}
+	}
+
+	// Parse optional ON filegroup clause
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		fg := &ast.FileGroupOrPartitionScheme{
+			Name: &ast.IdentifierOrValueExpression{
+				Value:      p.curTok.Literal,
+				Identifier: p.parseIdentifier(),
+			},
+		}
+		indexDef.OnFileGroupOrPartitionScheme = fg
+	}
+
+	// Parse optional FILESTREAM_ON clause
+	if strings.ToUpper(p.curTok.Literal) == "FILESTREAM_ON" {
+		p.nextToken() // consume FILESTREAM_ON
+		indexDef.FileStreamOn = &ast.IdentifierOrValueExpression{
+			Value:      p.curTok.Literal,
+			Identifier: p.parseIdentifier(),
 		}
 	}
 
@@ -1892,10 +2054,22 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 						p.nextToken() // consume =
 					}
 				}
-				// Parse the isolation level identifier
+				// Parse the isolation level identifier - may be multi-word like "READ COMMITTED"
+				levelValue := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				// Check for two-word isolation levels
+				nextWord := strings.ToUpper(p.curTok.Literal)
+				if (levelValue == "READ" && (nextWord == "COMMITTED" || nextWord == "UNCOMMITTED")) ||
+					(levelValue == "REPEATABLE" && nextWord == "READ") {
+					levelValue = levelValue + " " + nextWord
+					p.nextToken()
+				}
 				opt := &ast.IdentifierAtomicBlockOption{
 					OptionKind: "IsolationLevel",
-					Value:      p.parseIdentifier(),
+					Value: &ast.Identifier{
+						Value:     levelValue,
+						QuoteType: "NotQuoted",
+					},
 				}
 				stmt.Options = append(stmt.Options, opt)
 			case "LANGUAGE":
@@ -1929,10 +2103,48 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 					}
 					stmt.Options = append(stmt.Options, opt)
 				}
-			case "DATEFIRST", "DATEFORMAT":
-				opt := &ast.IdentifierAtomicBlockOption{
-					OptionKind: optName,
-					Value:      p.parseIdentifier(),
+			case "DATEFIRST":
+				// Parse as integer literal
+				intLit := &ast.IntegerLiteral{
+					LiteralType: "Integer",
+					Value:       p.curTok.Literal,
+				}
+				p.nextToken()
+				opt := &ast.LiteralAtomicBlockOption{
+					OptionKind: "DateFirst",
+					Value:      intLit,
+				}
+				stmt.Options = append(stmt.Options, opt)
+			case "DATEFORMAT":
+				// Parse as string literal
+				value := p.curTok.Literal
+				// Strip quotes if present
+				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+					value = value[1 : len(value)-1]
+				}
+				strLit := &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         value,
+					IsNational:    false,
+					IsLargeObject: false,
+				}
+				p.nextToken()
+				opt := &ast.LiteralAtomicBlockOption{
+					OptionKind: "DateFormat",
+					Value:      strLit,
+				}
+				stmt.Options = append(stmt.Options, opt)
+			case "DELAYED_DURABILITY":
+				// Parse ON/OFF as OnOffAtomicBlockOption
+				stateUpper := strings.ToUpper(p.curTok.Literal)
+				optState := "Off"
+				if stateUpper == "ON" {
+					optState = "On"
+				}
+				p.nextToken()
+				opt := &ast.OnOffAtomicBlockOption{
+					OptionKind:  "DelayedDurability",
+					OptionState: optState,
 				}
 				stmt.Options = append(stmt.Options, opt)
 			default:
@@ -2626,6 +2838,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			default:
 				return nil, fmt.Errorf("expected ROLE or AUDIT after SERVER, got %s", p.curTok.Literal)
 			}
+		case "AVAILABILITY":
+			return p.parseCreateAvailabilityGroupStatement()
 		}
 		// Lenient: skip unknown CREATE statements
 		p.skipToEndOfStatement()
@@ -2642,6 +2856,278 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		p.skipToEndOfStatement()
 		return &ast.CreateProcedureStatement{}, nil
 	}
+}
+
+func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilityGroupStatement, error) {
+	// Consume AVAILABILITY
+	p.nextToken()
+
+	// Expect GROUP
+	if strings.ToUpper(p.curTok.Literal) != "GROUP" {
+		return nil, fmt.Errorf("expected GROUP after AVAILABILITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.CreateAvailabilityGroupStatement{}
+
+	// Parse group name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse WITH clause for group options
+	if p.curTok.Type == TokenWith || strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume option name
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+
+				switch optName {
+				case "REQUIRED_COPIES_TO_COMMIT":
+					val, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					stmt.Options = append(stmt.Options, &ast.LiteralAvailabilityGroupOption{
+						OptionKind: "RequiredCopiesToCommit",
+						Value:      val,
+					})
+				default:
+					// Skip unknown options
+					if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
+						p.nextToken()
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Parse FOR DATABASE clause
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "DATABASE" {
+			p.nextToken() // consume DATABASE
+			// Parse comma-separated database names
+			for {
+				stmt.Databases = append(stmt.Databases, p.parseIdentifier())
+				if p.curTok.Type != TokenComma {
+					break
+				}
+				p.nextToken() // consume comma
+			}
+		}
+	}
+
+	// Parse REPLICA ON clause
+	if strings.ToUpper(p.curTok.Literal) == "REPLICA" {
+		p.nextToken() // consume REPLICA
+		if strings.ToUpper(p.curTok.Literal) == "ON" {
+			p.nextToken() // consume ON
+		}
+
+		// Parse comma-separated replica definitions
+		for {
+			replica := &ast.AvailabilityReplica{}
+
+			// Parse server name (string literal)
+			if p.curTok.Type == TokenString {
+				replica.ServerName, _ = p.parseStringLiteral()
+			}
+
+			// Parse WITH clause for replica options
+			if p.curTok.Type == TokenWith || strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						optName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken() // consume option name
+
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+
+						switch optName {
+						case "AVAILABILITY_MODE":
+							modeStr := strings.ToUpper(p.curTok.Literal)
+							p.nextToken()
+							// Handle SYNCHRONOUS_COMMIT or ASYNCHRONOUS_COMMIT
+							if p.curTok.Type == TokenIdent && strings.HasPrefix(strings.ToUpper(p.curTok.Literal), "_") {
+								modeStr += strings.ToUpper(p.curTok.Literal)
+								p.nextToken()
+							}
+							var mode string
+							switch modeStr {
+							case "SYNCHRONOUS_COMMIT":
+								mode = "SynchronousCommit"
+							case "ASYNCHRONOUS_COMMIT":
+								mode = "AsynchronousCommit"
+							default:
+								mode = modeStr
+							}
+							replica.Options = append(replica.Options, &ast.AvailabilityModeReplicaOption{
+								OptionKind: "AvailabilityMode",
+								Value:      mode,
+							})
+						case "FAILOVER_MODE":
+							modeStr := strings.ToUpper(p.curTok.Literal)
+							p.nextToken()
+							var mode string
+							switch modeStr {
+							case "AUTOMATIC":
+								mode = "Automatic"
+							case "MANUAL":
+								mode = "Manual"
+							default:
+								mode = modeStr
+							}
+							replica.Options = append(replica.Options, &ast.FailoverModeReplicaOption{
+								OptionKind: "FailoverMode",
+								Value:      mode,
+							})
+						case "ENDPOINT_URL":
+							val, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							replica.Options = append(replica.Options, &ast.LiteralReplicaOption{
+								OptionKind: "EndpointUrl",
+								Value:      val,
+							})
+						case "SESSION_TIMEOUT":
+							val, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							replica.Options = append(replica.Options, &ast.LiteralReplicaOption{
+								OptionKind: "SessionTimeout",
+								Value:      val,
+							})
+						case "APPLY_DELAY":
+							val, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							replica.Options = append(replica.Options, &ast.LiteralReplicaOption{
+								OptionKind: "ApplyDelay",
+								Value:      val,
+							})
+						case "PRIMARY_ROLE":
+							// Parse (ALLOW_CONNECTIONS = ...)
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									innerOpt := strings.ToUpper(p.curTok.Literal)
+									p.nextToken()
+									if p.curTok.Type == TokenEquals {
+										p.nextToken()
+									}
+									if innerOpt == "ALLOW_CONNECTIONS" {
+										connMode := strings.ToUpper(p.curTok.Literal)
+										p.nextToken()
+										var mode string
+										switch connMode {
+										case "READ_WRITE":
+											mode = "ReadWrite"
+										case "ALL":
+											mode = "All"
+										default:
+											mode = connMode
+										}
+										replica.Options = append(replica.Options, &ast.PrimaryRoleReplicaOption{
+											OptionKind:       "PrimaryRole",
+											AllowConnections: mode,
+										})
+									}
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+							}
+						case "SECONDARY_ROLE":
+							// Parse (ALLOW_CONNECTIONS = ...)
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									innerOpt := strings.ToUpper(p.curTok.Literal)
+									p.nextToken()
+									if p.curTok.Type == TokenEquals {
+										p.nextToken()
+									}
+									if innerOpt == "ALLOW_CONNECTIONS" {
+										connMode := strings.ToUpper(p.curTok.Literal)
+										p.nextToken()
+										var mode string
+										switch connMode {
+										case "NO":
+											mode = "No"
+										case "READ_ONLY":
+											mode = "ReadOnly"
+										case "ALL":
+											mode = "All"
+										default:
+											mode = connMode
+										}
+										replica.Options = append(replica.Options, &ast.SecondaryRoleReplicaOption{
+											OptionKind:       "SecondaryRole",
+											AllowConnections: mode,
+										})
+									}
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+							}
+						default:
+							// Skip unknown options
+							if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
+								p.nextToken()
+							}
+						}
+
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
+				}
+			}
+
+			stmt.Replicas = append(stmt.Replicas, replica)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseCreateCryptographicProviderStatement() (*ast.CreateCryptographicProviderStatement, error) {
@@ -2912,9 +3398,14 @@ func (p *Parser) parseCreateServerRoleStatementBody() (*ast.CreateServerRoleStat
 	return stmt, nil
 }
 
-func (p *Parser) parseCreateServerAuditStatement() (*ast.CreateServerAuditStatement, error) {
+func (p *Parser) parseCreateServerAuditStatement() (ast.Statement, error) {
 	// AUDIT keyword should be current token, consume it
 	p.nextToken()
+
+	// Check if this is CREATE SERVER AUDIT SPECIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
+		return p.parseCreateServerAuditSpecificationStatement()
+	}
 
 	stmt := &ast.CreateServerAuditStatement{}
 
@@ -2972,10 +3463,332 @@ func (p *Parser) parseCreateServerAuditStatement() (*ast.CreateServerAuditStatem
 	return stmt, nil
 }
 
+func (p *Parser) parseCreateServerAuditSpecificationStatement() (*ast.CreateServerAuditSpecificationStatement, error) {
+	// SPECIFICATION keyword should be current token, consume it
+	p.nextToken()
+
+	stmt := &ast.CreateServerAuditSpecificationStatement{
+		AuditState: "NotSet",
+	}
+
+	// Parse specification name
+	stmt.SpecificationName = p.parseIdentifier()
+
+	// Parse FOR SERVER AUDIT audit_name
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+		if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+			p.nextToken() // consume AUDIT
+		}
+		stmt.AuditName = p.parseIdentifier()
+	}
+
+	// Parse ADD/DROP parts
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ADD" || upperLit == "DROP" {
+			part := &ast.AuditSpecificationPart{
+				IsDrop: upperLit == "DROP",
+			}
+			p.nextToken() // consume ADD/DROP
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse audit action group reference
+				groupName := p.curTok.Literal
+				part.Details = &ast.AuditActionGroupReference{
+					Group: convertAuditGroupName(groupName),
+				}
+				p.nextToken() // consume group name
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Parts = append(stmt.Parts, part)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				continue
+			}
+		}
+		break
+	}
+
+	// Parse WITH (STATE = ON/OFF)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if strings.ToUpper(p.curTok.Literal) == "STATE" {
+				p.nextToken() // consume STATE
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				if strings.ToUpper(p.curTok.Literal) == "ON" {
+					stmt.AuditState = "On"
+				} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+					stmt.AuditState = "Off"
+				}
+				p.nextToken() // consume ON/OFF
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterServerAuditSpecificationStatement() (*ast.AlterServerAuditSpecificationStatement, error) {
+	// SPECIFICATION keyword should be current token, consume it
+	p.nextToken()
+
+	stmt := &ast.AlterServerAuditSpecificationStatement{
+		AuditState: "NotSet",
+	}
+
+	// Parse specification name
+	stmt.SpecificationName = p.parseIdentifier()
+
+	// Parse FOR SERVER AUDIT audit_name
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+		if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+			p.nextToken() // consume AUDIT
+		}
+		stmt.AuditName = p.parseIdentifier()
+	}
+
+	// Parse ADD/DROP parts
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ADD" || upperLit == "DROP" {
+			part := &ast.AuditSpecificationPart{
+				IsDrop: upperLit == "DROP",
+			}
+			p.nextToken() // consume ADD/DROP
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse audit action group reference
+				groupName := p.curTok.Literal
+				part.Details = &ast.AuditActionGroupReference{
+					Group: convertAuditGroupName(groupName),
+				}
+				p.nextToken() // consume group name
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Parts = append(stmt.Parts, part)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				continue
+			}
+		}
+		break
+	}
+
+	// Parse WITH (STATE = ON/OFF)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if strings.ToUpper(p.curTok.Literal) == "STATE" {
+				p.nextToken() // consume STATE
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				if strings.ToUpper(p.curTok.Literal) == "ON" {
+					stmt.AuditState = "On"
+				} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+					stmt.AuditState = "Off"
+				}
+				p.nextToken() // consume ON/OFF
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateDatabaseAuditSpecificationStatement() (*ast.CreateDatabaseAuditSpecificationStatement, error) {
+	stmt := &ast.CreateDatabaseAuditSpecificationStatement{
+		AuditState: "NotSet",
+	}
+
+	// Parse specification name
+	stmt.SpecificationName = p.parseIdentifier()
+
+	// Parse FOR SERVER AUDIT audit_name
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+		if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+			p.nextToken() // consume AUDIT
+		}
+		stmt.AuditName = p.parseIdentifier()
+	}
+
+	// Parse ADD/DROP parts
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ADD" || upperLit == "DROP" {
+			part := &ast.AuditSpecificationPart{
+				IsDrop: upperLit == "DROP",
+			}
+			p.nextToken() // consume ADD/DROP
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse audit action group reference
+				groupName := p.curTok.Literal
+				part.Details = &ast.AuditActionGroupReference{
+					Group: convertAuditGroupName(groupName),
+				}
+				p.nextToken() // consume group name
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Parts = append(stmt.Parts, part)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				continue
+			}
+		}
+		break
+	}
+
+	// Parse WITH (STATE = ON/OFF)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if strings.ToUpper(p.curTok.Literal) == "STATE" {
+				p.nextToken() // consume STATE
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				if strings.ToUpper(p.curTok.Literal) == "ON" {
+					stmt.AuditState = "On"
+				} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+					stmt.AuditState = "Off"
+				}
+				p.nextToken() // consume ON/OFF
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterDatabaseAuditSpecificationStatement() (*ast.AlterDatabaseAuditSpecificationStatement, error) {
+	stmt := &ast.AlterDatabaseAuditSpecificationStatement{
+		AuditState: "NotSet",
+	}
+
+	// Parse specification name
+	stmt.SpecificationName = p.parseIdentifier()
+
+	// Parse FOR SERVER AUDIT audit_name (optional in ALTER)
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+		if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+			p.nextToken() // consume AUDIT
+		}
+		stmt.AuditName = p.parseIdentifier()
+	}
+
+	// Parse ADD/DROP parts
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ADD" || upperLit == "DROP" {
+			part := &ast.AuditSpecificationPart{
+				IsDrop: upperLit == "DROP",
+			}
+			p.nextToken() // consume ADD/DROP
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse audit action group reference
+				groupName := p.curTok.Literal
+				part.Details = &ast.AuditActionGroupReference{
+					Group: convertAuditGroupName(groupName),
+				}
+				p.nextToken() // consume group name
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Parts = append(stmt.Parts, part)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				continue
+			}
+		}
+		break
+	}
+
+	// Parse WITH (STATE = ON/OFF)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if strings.ToUpper(p.curTok.Literal) == "STATE" {
+				p.nextToken() // consume STATE
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				if strings.ToUpper(p.curTok.Literal) == "ON" {
+					stmt.AuditState = "On"
+				} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+					stmt.AuditState = "Off"
+				}
+				p.nextToken() // consume ON/OFF
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	return stmt, nil
+}
+
+// convertAuditGroupName converts an audit group name to the expected format
+func convertAuditGroupName(name string) string {
+	// Map of audit group names to their expected format
+	groupMap := map[string]string{
+		"SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP": "SuccessfulDatabaseAuthenticationGroup",
+		"FAILED_DATABASE_AUTHENTICATION_GROUP":     "FailedDatabaseAuthenticationGroup",
+		"DATABASE_LOGOUT_GROUP":                    "DatabaseLogoutGroup",
+		"USER_CHANGE_PASSWORD_GROUP":               "UserChangePasswordGroup",
+		"USER_DEFINED_AUDIT_GROUP":                 "UserDefinedAuditGroup",
+	}
+	if mapped, ok := groupMap[strings.ToUpper(name)]; ok {
+		return mapped
+	}
+	return capitalizeFirst(strings.ToLower(strings.ReplaceAll(name, "_", " ")))
+}
+
 func (p *Parser) parseAuditTarget() (*ast.AuditTarget, error) {
 	target := &ast.AuditTarget{}
 
-	// Parse target kind (FILE, APPLICATION_LOG, SECURITY_LOG)
+	// Parse target kind (FILE, APPLICATION_LOG, SECURITY_LOG, URL, EXTERNAL_MONITOR)
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "FILE":
 		target.TargetKind = "File"
@@ -2983,6 +3796,10 @@ func (p *Parser) parseAuditTarget() (*ast.AuditTarget, error) {
 		target.TargetKind = "ApplicationLog"
 	case "SECURITY_LOG":
 		target.TargetKind = "SecurityLog"
+	case "URL":
+		target.TargetKind = "Url"
+	case "EXTERNAL_MONITOR":
+		target.TargetKind = "ExternalMonitor"
 	default:
 		target.TargetKind = capitalizeFirst(p.curTok.Literal)
 	}
@@ -3082,6 +3899,17 @@ func (p *Parser) parseAuditTargetOption() (ast.AuditTargetOption, error) {
 		return &ast.OnOffAuditTargetOption{
 			OptionKind: "ReserveDiskSpace",
 			Value:      value,
+		}, nil
+
+	case "RETENTION_DAYS":
+		// Parse the number of days
+		days, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.RetentionDaysAuditTargetOption{
+			OptionKind: "RetentionDays",
+			Days:       days,
 		}, nil
 
 	default:
@@ -3533,6 +4361,12 @@ func (p *Parser) parseCreateProcedureStatement() (*ast.CreateProcedureStatement,
 			} else if upperLit == "ENCRYPTION" {
 				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "Encryption"})
 				p.nextToken()
+			} else if upperLit == "NATIVE_COMPILATION" {
+				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "NativeCompilation"})
+				p.nextToken()
+			} else if upperLit == "SCHEMABINDING" {
+				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "SchemaBinding"})
+				p.nextToken()
 			} else if upperLit == "EXECUTE" {
 				p.nextToken() // consume EXECUTE
 				if p.curTok.Type == TokenAs {
@@ -3793,9 +4627,21 @@ func (p *Parser) parseCreateViewStatement() (*ast.CreateViewStatement, error) {
 	// Check for WITH options
 	if p.curTok.Type == TokenWith {
 		p.nextToken()
-		// Parse view options
-		for p.curTok.Type == TokenIdent {
-			opt := &ast.ViewStatementOption{OptionKind: p.curTok.Literal}
+		// Parse view options (can be identifiers or keywords like ENCRYPTION)
+		for p.curTok.Type != TokenAs && p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+			optName := strings.ToUpper(p.curTok.Literal)
+			var optionKind string
+			switch optName {
+			case "ENCRYPTION":
+				optionKind = "Encryption"
+			case "SCHEMABINDING":
+				optionKind = "SchemaBinding"
+			case "VIEW_METADATA":
+				optionKind = "ViewMetadata"
+			default:
+				optionKind = p.curTok.Literal
+			}
+			opt := &ast.ViewStatementOption{OptionKind: optionKind}
 			stmt.ViewOptions = append(stmt.ViewOptions, opt)
 			p.nextToken()
 			if p.curTok.Type == TokenComma {
@@ -3819,6 +4665,18 @@ func (p *Parser) parseCreateViewStatement() (*ast.CreateViewStatement, error) {
 		return stmt, nil
 	}
 	stmt.SelectStatement = selStmt
+
+	// Check for WITH CHECK OPTION
+	if p.curTok.Type == TokenWith {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "CHECK" {
+			p.nextToken()
+			if strings.ToUpper(p.curTok.Literal) == "OPTION" {
+				p.nextToken()
+				stmt.WithCheckOption = true
+			}
+		}
+	}
 
 	return stmt, nil
 }
@@ -6396,51 +7254,63 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 	}
 
 	// Parse optional WITH clause
-	var options []*ast.BackupOption
+	var options []ast.BackupOptionBase
 	if p.curTok.Type == TokenWith {
 		p.nextToken()
 
 		for {
 			optionName := strings.ToUpper(p.curTok.Literal)
-			option := &ast.BackupOption{}
 
-			switch optionName {
-			case "COMPRESSION":
-				option.OptionKind = "Compression"
-			case "NO_COMPRESSION":
-				option.OptionKind = "NoCompression"
-			case "STOP_ON_ERROR":
-				option.OptionKind = "StopOnError"
-			case "CONTINUE_AFTER_ERROR":
-				option.OptionKind = "ContinueAfterError"
-			case "CHECKSUM":
-				option.OptionKind = "Checksum"
-			case "NO_CHECKSUM":
-				option.OptionKind = "NoChecksum"
-			case "INIT":
-				option.OptionKind = "Init"
-			case "NOINIT":
-				option.OptionKind = "NoInit"
-			case "FORMAT":
-				option.OptionKind = "Format"
-			case "NOFORMAT":
-				option.OptionKind = "NoFormat"
-			default:
-				option.OptionKind = optionName
-			}
-			p.nextToken()
-
-			// Check for = value
-			if p.curTok.Type == TokenEquals {
-				p.nextToken()
-				val, err := p.parseScalarExpression()
+			// Check for ENCRYPTION with parentheses
+			if optionName == "ENCRYPTION" && p.peekTok.Type == TokenLParen {
+				encOpt, err := p.parseBackupEncryptionOption()
 				if err != nil {
 					return nil, err
 				}
-				option.Value = val
-			}
+				options = append(options, encOpt)
+			} else {
+				option := &ast.BackupOption{}
 
-			options = append(options, option)
+				switch optionName {
+				case "COMPRESSION":
+					option.OptionKind = "Compression"
+				case "NO_COMPRESSION":
+					option.OptionKind = "NoCompression"
+				case "STOP_ON_ERROR":
+					option.OptionKind = "StopOnError"
+				case "CONTINUE_AFTER_ERROR":
+					option.OptionKind = "ContinueAfterError"
+				case "CHECKSUM":
+					option.OptionKind = "Checksum"
+				case "NO_CHECKSUM":
+					option.OptionKind = "NoChecksum"
+				case "INIT":
+					option.OptionKind = "Init"
+				case "NOINIT":
+					option.OptionKind = "NoInit"
+				case "FORMAT":
+					option.OptionKind = "Format"
+				case "NOFORMAT":
+					option.OptionKind = "NoFormat"
+				case "STATS":
+					option.OptionKind = "Stats"
+				default:
+					option.OptionKind = optionName
+				}
+				p.nextToken()
+
+				// Check for = value
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					val, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					option.Value = val
+				}
+
+				options = append(options, option)
+			}
 
 			if p.curTok.Type == TokenComma {
 				p.nextToken()
@@ -6469,6 +7339,85 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		Devices:         devices,
 		Options:         options,
 	}, nil
+}
+
+func (p *Parser) parseBackupEncryptionOption() (*ast.BackupEncryptionOption, error) {
+	// curTok is ENCRYPTION
+	p.nextToken() // consume ENCRYPTION
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after ENCRYPTION, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	opt := &ast.BackupEncryptionOption{
+		OptionKind: "None",
+	}
+
+	// Parse options inside parentheses
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		switch optName {
+		case "ALGORITHM":
+			// Parse algorithm type: AES_128, AES_192, AES_256, TRIPLE_DES_3KEY
+			algName := strings.ToUpper(p.curTok.Literal)
+			switch algName {
+			case "AES_128":
+				opt.Algorithm = "Aes128"
+			case "AES_192":
+				opt.Algorithm = "Aes192"
+			case "AES_256":
+				opt.Algorithm = "Aes256"
+			case "TRIPLE_DES_3KEY":
+				opt.Algorithm = "TripleDes3Key"
+			default:
+				opt.Algorithm = algName
+			}
+			p.nextToken()
+		case "SERVER":
+			// SERVER CERTIFICATE or SERVER ASYMMETRIC KEY
+			mechType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			opt.Encryptor = &ast.CryptoMechanism{}
+			switch mechType {
+			case "CERTIFICATE":
+				opt.Encryptor.CryptoMechanismType = "Certificate"
+			case "ASYMMETRIC":
+				// Consume KEY
+				if p.curTok.Type == TokenKey {
+					p.nextToken()
+				}
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				opt.Encryptor.CryptoMechanismType = "AsymmetricKey"
+			}
+
+			// Parse identifier
+			opt.Encryptor.Identifier = p.parseIdentifier()
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return opt, nil
 }
 
 func (p *Parser) parseBackupCertificateStatement() (*ast.BackupCertificateStatement, error) {
@@ -7224,6 +8173,45 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 				switch optName {
 				case "DATA_SOURCE":
 					stmt.DataSource = p.parseIdentifier()
+				case "REJECT_TYPE":
+					opt := &ast.ExternalTableRejectTypeOption{
+						OptionKind: "RejectType",
+					}
+					// VALUE or PERCENTAGE
+					val := strings.ToUpper(p.curTok.Literal)
+					switch val {
+					case "VALUE":
+						opt.Value = "Value"
+					case "PERCENTAGE":
+						opt.Value = "Percentage"
+					default:
+						opt.Value = val
+					}
+					p.nextToken() // consume value
+					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
+				case "REJECT_VALUE", "REJECT_SAMPLE_VALUE":
+					opt := &ast.ExternalTableLiteralOrIdentifierOption{
+						Value: &ast.IdentifierOrValueExpression{},
+					}
+					if optName == "REJECT_VALUE" {
+						opt.OptionKind = "RejectValue"
+					} else {
+						opt.OptionKind = "RejectSampleValue"
+					}
+					// Parse numeric or integer literal
+					if p.curTok.Type == TokenNumber {
+						if strings.Contains(p.curTok.Literal, ".") {
+							numLit := &ast.NumericLiteral{LiteralType: "Numeric", Value: p.curTok.Literal}
+							opt.Value.Value = p.curTok.Literal
+							opt.Value.ValueExpression = numLit
+						} else {
+							intLit := &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							opt.Value.Value = p.curTok.Literal
+							opt.Value.ValueExpression = intLit
+						}
+						p.nextToken()
+					}
+					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
 				case "LOCATION", "FILE_FORMAT", "TABLE_OPTIONS":
 					opt := &ast.ExternalTableLiteralOrIdentifierOption{
 						Value: &ast.IdentifierOrValueExpression{},
@@ -7268,6 +8256,16 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 				p.nextToken() // consume )
 			}
 		}
+	}
+
+	// Parse optional AS SELECT (CTAS syntax)
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		selectStmt, err := p.parseSelectStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.SelectStatement = selectStmt
 	}
 
 	if p.curTok.Type == TokenSemicolon {
@@ -8253,6 +9251,15 @@ func (p *Parser) parseCreatePartitionSchemeStatementFromPartition() (*ast.Create
 func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 	p.nextToken() // consume DATABASE
 
+	// Check for DATABASE AUDIT SPECIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+		p.nextToken() // consume AUDIT
+		if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
+			p.nextToken() // consume SPECIFICATION
+			return p.parseCreateDatabaseAuditSpecificationStatement()
+		}
+	}
+
 	// Check for DATABASE ENCRYPTION KEY
 	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
 		return p.parseCreateDatabaseEncryptionKeyStatement()
@@ -8324,6 +9331,19 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 				}
 				multiPart.Count = len(multiPart.Identifiers)
 				stmt.CopyOf = multiPart
+
+				// Check for Azure-style options after COPY OF
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					opts, err := p.parseAzureDatabaseOptions()
+					if err != nil {
+						return nil, err
+					}
+					stmt.Options = append(stmt.Options, opts...)
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
 			}
 		}
 	}
@@ -8367,6 +9387,21 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 		case "ATTACH_REBUILD_LOG":
 			stmt.AttachMode = "AttachRebuildLog"
 			p.nextToken()
+		case "ATTACH_FORCE_REBUILD_LOG":
+			stmt.AttachMode = "AttachForceRebuildLog"
+			p.nextToken()
+		}
+	}
+
+	// Check for AS SNAPSHOT OF clause
+	if strings.ToUpper(p.curTok.Literal) == "AS" {
+		p.nextToken() // consume AS
+		if strings.ToUpper(p.curTok.Literal) == "SNAPSHOT" {
+			p.nextToken() // consume SNAPSHOT
+			if strings.ToUpper(p.curTok.Literal) == "OF" {
+				p.nextToken() // consume OF
+			}
+			stmt.DatabaseSnapshot = p.parseIdentifier()
 		}
 	}
 
@@ -8463,6 +9498,20 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 			}
 			options = append(options, opt)
 
+		case "NEW_BROKER":
+			p.nextToken() // consume NEW_BROKER
+			opt := &ast.SimpleDatabaseOption{
+				OptionKind: "NewBroker",
+			}
+			options = append(options, opt)
+
+		case "ERROR_BROKER_CONVERSATIONS":
+			p.nextToken() // consume ERROR_BROKER_CONVERSATIONS
+			opt := &ast.SimpleDatabaseOption{
+				OptionKind: "ErrorBrokerConversations",
+			}
+			options = append(options, opt)
+
 		case "NESTED_TRIGGERS":
 			p.nextToken() // consume NESTED_TRIGGERS
 			if p.curTok.Type == TokenEquals {
@@ -8553,6 +9602,39 @@ func (p *Parser) parseAzureDatabaseOptions() ([]ast.CreateDatabaseOption, error)
 				Value:      value,
 			}
 			options = append(options, opt)
+
+		case "SERVICE_OBJECTIVE":
+			// Check for elastic_pool(name = [epool1]) syntax
+			if strings.ToUpper(p.curTok.Literal) == "ELASTIC_POOL" {
+				p.nextToken() // consume ELASTIC_POOL
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					// Parse NAME = [poolname]
+					if strings.ToUpper(p.curTok.Literal) == "NAME" {
+						p.nextToken() // consume NAME
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						poolName := p.parseIdentifier()
+						opt := &ast.ElasticPoolSpecification{
+							OptionKind:      "ServiceObjective",
+							ElasticPoolName: poolName,
+						}
+						options = append(options, opt)
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			} else {
+				// Parse service objective value (string literal)
+				value, _ := p.parseStringLiteral()
+				opt := &ast.LiteralDatabaseOption{
+					OptionKind: "ServiceObjective",
+					Value:      value,
+				}
+				options = append(options, opt)
+			}
 
 		default:
 			// Skip unknown option value
@@ -8805,6 +9887,13 @@ func (p *Parser) parseFileDeclarationOptions() ([]ast.FileDeclarationOption, err
 			}
 			opts = append(opts, opt)
 
+		case "OFFLINE":
+			p.nextToken() // consume OFFLINE
+			opt := &ast.SimpleFileDeclarationOption{
+				OptionKind: "Offline",
+			}
+			opts = append(opts, opt)
+
 		default:
 			// Unknown option, break
 			return opts, nil
@@ -9047,6 +10136,15 @@ func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) 
 		}
 	}
 
+	// Parse WHERE filter_predicate
+	if strings.ToUpper(p.curTok.Literal) == "WHERE" {
+		p.nextToken() // consume WHERE
+		filterPred, err := p.parseBooleanExpression()
+		if err == nil {
+			stmt.FilterPredicate = filterPred
+		}
+	}
+
 	// Parse WITH (index options)
 	if p.curTok.Type == TokenWith {
 		p.nextToken() // consume WITH
@@ -9065,6 +10163,20 @@ func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) 
 		p.nextToken() // consume ON
 		fg, _ := p.parseFileGroupOrPartitionScheme()
 		stmt.OnFileGroupOrPartitionScheme = fg
+	}
+
+	// Parse FILESTREAM_ON filegroup
+	if strings.ToUpper(p.curTok.Literal) == "FILESTREAM_ON" {
+		p.nextToken() // consume FILESTREAM_ON
+		value := p.curTok.Literal
+		stmt.FileStreamOn = &ast.IdentifierOrValueExpression{
+			Value: value,
+			Identifier: &ast.Identifier{
+				Value:     value,
+				QuoteType: "NotQuoted",
+			},
+		}
+		p.nextToken()
 	}
 
 	return stmt, nil
@@ -9154,6 +10266,57 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 			if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
 				opt.Unit = "Minutes"
 				p.nextToken() // consume MINUTES
+			}
+			options = append(options, opt)
+		case "DATA_COMPRESSION":
+			// Parse DATA_COMPRESSION = level [ON PARTITIONS(range)]
+			compressionLevel := "None"
+			switch valueStr {
+			case "NONE":
+				compressionLevel = "None"
+			case "ROW":
+				compressionLevel = "Row"
+			case "PAGE":
+				compressionLevel = "Page"
+			case "COLUMNSTORE":
+				compressionLevel = "ColumnStore"
+			case "COLUMNSTORE_ARCHIVE":
+				compressionLevel = "ColumnStoreArchive"
+			}
+			opt := &ast.DataCompressionOption{
+				CompressionLevel: compressionLevel,
+				OptionKind:       "DataCompression",
+			}
+			// Check for optional ON PARTITIONS(range)
+			if p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+				if strings.ToUpper(p.curTok.Literal) == "PARTITIONS" {
+					p.nextToken() // consume PARTITIONS
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							partRange := &ast.CompressionPartitionRange{}
+							// Parse From value
+							partRange.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							p.nextToken()
+							// Check for TO keyword indicating a range
+							if strings.ToUpper(p.curTok.Literal) == "TO" {
+								p.nextToken() // consume TO
+								partRange.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+								p.nextToken()
+							}
+							opt.PartitionRanges = append(opt.PartitionRanges, partRange)
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							} else {
+								break
+							}
+						}
+						if p.curTok.Type == TokenRParen {
+							p.nextToken() // consume )
+						}
+					}
+				}
 			}
 			options = append(options, opt)
 		default:
@@ -9571,10 +10734,50 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 		Name: p.parseIdentifier(),
 	}
 
-	// Check for FROM PROVIDER
+	// Check for AUTHORIZATION clause
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Check for FROM clause (FILE, EXECUTABLE FILE, ASSEMBLY, PROVIDER)
 	if p.curTok.Type == TokenFrom {
 		p.nextToken() // consume FROM
-		if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+		fromType := strings.ToUpper(p.curTok.Literal)
+		switch fromType {
+		case "FILE":
+			p.nextToken() // consume FILE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			file, _ := p.parseStringLiteral()
+			stmt.KeySource = &ast.FileEncryptionSource{
+				IsExecutable: false,
+				File:         file,
+			}
+			stmt.EncryptionAlgorithm = "None"
+		case "EXECUTABLE":
+			p.nextToken() // consume EXECUTABLE
+			if strings.ToUpper(p.curTok.Literal) == "FILE" {
+				p.nextToken() // consume FILE
+			}
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			file, _ := p.parseStringLiteral()
+			stmt.KeySource = &ast.FileEncryptionSource{
+				IsExecutable: true,
+				File:         file,
+			}
+			stmt.EncryptionAlgorithm = "None"
+		case "ASSEMBLY":
+			p.nextToken() // consume ASSEMBLY
+			assemblyName := p.parseIdentifier()
+			stmt.KeySource = &ast.AssemblyEncryptionSource{
+				Assembly: assemblyName,
+			}
+			stmt.EncryptionAlgorithm = "None"
+		case "PROVIDER":
 			p.nextToken() // consume PROVIDER
 			source := &ast.ProviderEncryptionSource{
 				Name: p.parseIdentifier(),
@@ -9593,28 +10796,7 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 							p.nextToken() // consume =
 						}
 						alg := strings.ToUpper(p.curTok.Literal)
-						// Map algorithm names to proper case
-						algMap := map[string]string{
-							"DES":         "Des",
-							"RC2":         "RC2",
-							"RC4":         "RC4",
-							"RC4_128":     "RC4_128",
-							"TRIPLE_DES":  "TripleDes",
-							"AES_128":     "Aes128",
-							"AES_192":     "Aes192",
-							"AES_256":     "Aes256",
-							"RSA_512":     "Rsa512",
-							"RSA_1024":    "Rsa1024",
-							"RSA_2048":    "Rsa2048",
-							"RSA_3072":    "Rsa3072",
-							"RSA_4096":    "Rsa4096",
-							"DESX":        "DesX",
-							"TRIPLE_DES_3KEY": "TripleDes3Key",
-						}
-						mappedAlg := alg
-						if mapped, ok := algMap[alg]; ok {
-							mappedAlg = mapped
-						}
+						mappedAlg := p.mapEncryptionAlgorithm(alg)
 						source.KeyOptions = append(source.KeyOptions, &ast.AlgorithmKeyOption{
 							Algorithm:  mappedAlg,
 							OptionKind: "Algorithm",
@@ -9642,7 +10824,7 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 						})
 						p.nextToken()
 					default:
-						goto doneWithOptions
+						goto doneWithProviderOptions
 					}
 
 					if p.curTok.Type == TokenComma {
@@ -9653,9 +10835,23 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 						break
 					}
 				}
-			doneWithOptions:
+			doneWithProviderOptions:
 			}
 			stmt.KeySource = source
+		}
+	}
+
+	// Check for WITH ALGORITHM = ... (without FROM clause)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "ALGORITHM" {
+			p.nextToken() // consume ALGORITHM
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			alg := strings.ToUpper(p.curTok.Literal)
+			stmt.EncryptionAlgorithm = p.mapEncryptionAlgorithm(alg)
+			p.nextToken()
 		}
 	}
 
@@ -9680,6 +10876,31 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 		p.nextToken()
 	}
 	return stmt, nil
+}
+
+// mapEncryptionAlgorithm maps SQL encryption algorithm names to proper case
+func (p *Parser) mapEncryptionAlgorithm(alg string) string {
+	algMap := map[string]string{
+		"DES":             "Des",
+		"RC2":             "RC2",
+		"RC4":             "RC4",
+		"RC4_128":         "RC4_128",
+		"TRIPLE_DES":      "TripleDes",
+		"AES_128":         "Aes128",
+		"AES_192":         "Aes192",
+		"AES_256":         "Aes256",
+		"RSA_512":         "Rsa512",
+		"RSA_1024":        "Rsa1024",
+		"RSA_2048":        "Rsa2048",
+		"RSA_3072":        "Rsa3072",
+		"RSA_4096":        "Rsa4096",
+		"DESX":            "DesX",
+		"TRIPLE_DES_3KEY": "TripleDes3Key",
+	}
+	if mapped, ok := algMap[alg]; ok {
+		return mapped
+	}
+	return alg
 }
 
 func (p *Parser) parseCreateSymmetricKeyStatement() (*ast.CreateSymmetricKeyStatement, error) {

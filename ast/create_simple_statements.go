@@ -2,14 +2,15 @@ package ast
 
 // CreateDatabaseStatement represents a CREATE DATABASE statement.
 type CreateDatabaseStatement struct {
-	DatabaseName *Identifier                `json:"DatabaseName,omitempty"`
-	Options      []CreateDatabaseOption     `json:"Options,omitempty"`
-	AttachMode   string                     `json:"AttachMode,omitempty"` // "None", "Attach", "AttachRebuildLog"
-	CopyOf       *MultiPartIdentifier       `json:"CopyOf,omitempty"`     // For AS COPY OF syntax
-	FileGroups   []*FileGroupDefinition     `json:"FileGroups,omitempty"`
-	LogOn        []*FileDeclaration         `json:"LogOn,omitempty"`
-	Collation    *Identifier                `json:"Collation,omitempty"`
-	Containment  *ContainmentDatabaseOption `json:"Containment,omitempty"`
+	DatabaseName     *Identifier                `json:"DatabaseName,omitempty"`
+	Options          []CreateDatabaseOption     `json:"Options,omitempty"`
+	AttachMode       string                     `json:"AttachMode,omitempty"` // "None", "Attach", "AttachRebuildLog", "AttachForceRebuildLog"
+	CopyOf           *MultiPartIdentifier       `json:"CopyOf,omitempty"`     // For AS COPY OF syntax
+	FileGroups       []*FileGroupDefinition     `json:"FileGroups,omitempty"`
+	LogOn            []*FileDeclaration         `json:"LogOn,omitempty"`
+	Collation        *Identifier                `json:"Collation,omitempty"`
+	Containment      *ContainmentDatabaseOption `json:"Containment,omitempty"`
+	DatabaseSnapshot *Identifier                `json:"DatabaseSnapshot,omitempty"` // For AS SNAPSHOT OF syntax
 }
 
 // ContainmentDatabaseOption represents CONTAINMENT = NONE/PARTIAL
@@ -211,6 +212,7 @@ type CreateAsymmetricKeyStatement struct {
 	Name                *Identifier            `json:"Name,omitempty"`
 	KeySource           EncryptionSource       `json:"KeySource,omitempty"`
 	EncryptionAlgorithm string                 `json:"EncryptionAlgorithm,omitempty"`
+	Owner               *Identifier            `json:"Owner,omitempty"`
 	Password            ScalarExpression       `json:"Password,omitempty"`
 }
 
@@ -396,8 +398,10 @@ type CreateIndexStatement struct {
 	Clustered                    *bool                         `json:"Clustered,omitempty"` // nil = not specified, true = CLUSTERED, false = NONCLUSTERED
 	Columns                      []*ColumnWithSortOrder        `json:"Columns,omitempty"`
 	IncludeColumns               []*ColumnReferenceExpression  `json:"IncludeColumns,omitempty"`
+	FilterPredicate              BooleanExpression             `json:"FilterPredicate,omitempty"`
 	IndexOptions                 []IndexOption                 `json:"IndexOptions,omitempty"`
 	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme   `json:"OnFileGroupOrPartitionScheme,omitempty"`
+	FileStreamOn                 *IdentifierOrValueExpression  `json:"FileStreamOn,omitempty"`
 }
 
 func (s *CreateIndexStatement) node()      {}

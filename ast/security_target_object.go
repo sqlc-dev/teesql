@@ -4,6 +4,7 @@ package ast
 type SecurityTargetObject struct {
 	ObjectKind string // e.g., "ServerRole", "NotSpecified", "Type", etc.
 	ObjectName *SecurityTargetObjectName
+	Columns    []*Identifier // Column list for column-level permissions
 }
 
 func (s *SecurityTargetObject) node() {}

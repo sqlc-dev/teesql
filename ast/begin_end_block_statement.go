@@ -38,6 +38,14 @@ type LiteralAtomicBlockOption struct {
 
 func (o *LiteralAtomicBlockOption) atomicBlockOption() {}
 
+// OnOffAtomicBlockOption represents an atomic block option with an ON/OFF value.
+type OnOffAtomicBlockOption struct {
+	OptionKind  string
+	OptionState string // "On" or "Off"
+}
+
+func (o *OnOffAtomicBlockOption) atomicBlockOption() {}
+
 // StatementList is a list of statements.
 type StatementList struct {
 	Statements []Statement `json:"Statements,omitempty"`

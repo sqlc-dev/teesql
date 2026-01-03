@@ -53,11 +53,17 @@ type CreateExternalTableStatement struct {
 	SchemaObjectName     *SchemaObjectName
 	ColumnDefinitions    []*ExternalTableColumnDefinition
 	DataSource           *Identifier
-	ExternalTableOptions []*ExternalTableLiteralOrIdentifierOption
+	ExternalTableOptions []ExternalTableOptionItem
+	SelectStatement      *SelectStatement // For CTAS (CREATE TABLE AS SELECT)
 }
 
 func (s *CreateExternalTableStatement) node()      {}
 func (s *CreateExternalTableStatement) statement() {}
+
+// ExternalTableOptionItem is an interface for external table options
+type ExternalTableOptionItem interface {
+	externalTableOptionItem()
+}
 
 // ExternalTableColumnDefinition represents a column definition in an external table
 type ExternalTableColumnDefinition struct {
@@ -70,6 +76,16 @@ type ExternalTableLiteralOrIdentifierOption struct {
 	OptionKind string
 	Value      *IdentifierOrValueExpression
 }
+
+func (o *ExternalTableLiteralOrIdentifierOption) externalTableOptionItem() {}
+
+// ExternalTableRejectTypeOption represents a REJECT_TYPE option
+type ExternalTableRejectTypeOption struct {
+	OptionKind string
+	Value      string // Value, Percentage
+}
+
+func (o *ExternalTableRejectTypeOption) externalTableOptionItem() {}
 
 // ExternalTableOption represents a simple option for external table (legacy)
 type ExternalTableOption struct {

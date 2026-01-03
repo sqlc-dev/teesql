@@ -4,6 +4,7 @@ package ast
 type AlterProcedureStatement struct {
 	ProcedureReference *ProcedureReference
 	Parameters         []*ProcedureParameter
+	Options            []ProcedureOptionBase
 	StatementList      *StatementList
 	IsForReplication   bool
 }
