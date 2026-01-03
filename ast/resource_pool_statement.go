@@ -46,3 +46,26 @@ type LiteralRange struct {
 	From ScalarExpression `json:"From,omitempty"`
 	To   ScalarExpression `json:"To,omitempty"`
 }
+
+// AlterExternalResourcePoolStatement represents an ALTER EXTERNAL RESOURCE POOL statement
+type AlterExternalResourcePoolStatement struct {
+	Name                         *Identifier                     `json:"Name,omitempty"`
+	ExternalResourcePoolParameters []*ExternalResourcePoolParameter `json:"ExternalResourcePoolParameters,omitempty"`
+}
+
+func (*AlterExternalResourcePoolStatement) node()      {}
+func (*AlterExternalResourcePoolStatement) statement() {}
+
+// ExternalResourcePoolParameter represents a parameter in an external resource pool statement
+type ExternalResourcePoolParameter struct {
+	ParameterType         string                                    `json:"ParameterType,omitempty"` // MaxCpuPercent, MaxMemoryPercent, MaxProcesses, Affinity
+	ParameterValue        ScalarExpression                          `json:"ParameterValue,omitempty"`
+	AffinitySpecification *ExternalResourcePoolAffinitySpecification `json:"AffinitySpecification,omitempty"`
+}
+
+// ExternalResourcePoolAffinitySpecification represents an AFFINITY specification in an external resource pool
+type ExternalResourcePoolAffinitySpecification struct {
+	AffinityType       string          `json:"AffinityType,omitempty"` // Cpu, NumaNode
+	IsAuto             bool            `json:"IsAuto"`
+	PoolAffinityRanges []*LiteralRange `json:"PoolAffinityRanges,omitempty"`
+}

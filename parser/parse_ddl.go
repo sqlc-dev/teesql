@@ -7223,6 +7223,8 @@ func (p *Parser) parseAlterExternalStatement() (ast.Statement, error) {
 		return p.parseAlterExternalLanguageStatement()
 	case "LIBRARY":
 		return p.parseAlterExternalLibraryStatement()
+	case "RESOURCE":
+		return p.parseAlterExternalResourcePoolStatement()
 	default:
 		// Skip to end of statement for unsupported external statements
 		p.skipToEndOfStatement()
@@ -7472,6 +7474,154 @@ func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibrary
 				p.nextToken()
 			}
 		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterExternalResourcePoolStatement() (*ast.AlterExternalResourcePoolStatement, error) {
+	// Consume RESOURCE
+	p.nextToken()
+
+	// Expect POOL
+	if strings.ToUpper(p.curTok.Literal) != "POOL" {
+		return nil, fmt.Errorf("expected POOL, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterExternalResourcePoolStatement{}
+
+	// Parse pool name
+	stmt.Name = p.parseIdentifier()
+
+	// Expect WITH
+	if p.curTok.Type != TokenWith && strings.ToUpper(p.curTok.Literal) != "WITH" {
+		return nil, fmt.Errorf("expected WITH, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected (, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		paramName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		param := &ast.ExternalResourcePoolParameter{}
+
+		switch paramName {
+		case "MAX_CPU_PERCENT":
+			param.ParameterType = "MaxCpuPercent"
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			param.ParameterValue = val
+		case "MAX_MEMORY_PERCENT":
+			param.ParameterType = "MaxMemoryPercent"
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			param.ParameterValue = val
+		case "MAX_PROCESSES":
+			param.ParameterType = "MaxProcesses"
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			param.ParameterValue = val
+		case "AFFINITY":
+			param.ParameterType = "Affinity"
+			affinitySpec := &ast.ExternalResourcePoolAffinitySpecification{}
+
+			// Parse CPU or NUMANODE
+			affinityType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			if affinityType == "CPU" {
+				affinitySpec.AffinityType = "Cpu"
+			} else if affinityType == "NUMANODE" {
+				affinitySpec.AffinityType = "NumaNode"
+			}
+
+			// Expect =
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+
+			// Check for AUTO or range list
+			if strings.ToUpper(p.curTok.Literal) == "AUTO" {
+				affinitySpec.IsAuto = true
+				p.nextToken()
+			} else {
+				// Parse range list: (1) or (1 TO 5, 6 TO 7)
+				if p.curTok.Type == TokenLParen {
+					p.nextToken()
+				}
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					fromVal, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					rangeItem := &ast.LiteralRange{From: fromVal}
+
+					// Check for TO
+					if strings.ToUpper(p.curTok.Literal) == "TO" {
+						p.nextToken()
+						toVal, err := p.parseScalarExpression()
+						if err != nil {
+							return nil, err
+						}
+						rangeItem.To = toVal
+					}
+
+					affinitySpec.PoolAffinityRanges = append(affinitySpec.PoolAffinityRanges, rangeItem)
+
+					// Check for comma
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+			param.AffinitySpecification = affinitySpec
+		}
+
+		stmt.ExternalResourcePoolParameters = append(stmt.ExternalResourcePoolParameters, param)
+
+		// Check for comma
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Consume )
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
 	}
 
 	// Skip optional semicolon

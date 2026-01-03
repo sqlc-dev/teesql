@@ -156,6 +156,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterResourcePoolStatementToJSON(s)
 	case *ast.DropResourcePoolStatement:
 		return dropResourcePoolStatementToJSON(s)
+	case *ast.AlterExternalResourcePoolStatement:
+		return alterExternalResourcePoolStatementToJSON(s)
 	case *ast.CreateCryptographicProviderStatement:
 		return createCryptographicProviderStatementToJSON(s)
 	case *ast.CreateColumnMasterKeyStatement:
@@ -15835,6 +15837,57 @@ func dropResourcePoolStatementToJSON(s *ast.DropResourcePoolStatement) jsonNode 
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func alterExternalResourcePoolStatementToJSON(s *ast.AlterExternalResourcePoolStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterExternalResourcePoolStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ExternalResourcePoolParameters) > 0 {
+		params := make([]jsonNode, len(s.ExternalResourcePoolParameters))
+		for i, param := range s.ExternalResourcePoolParameters {
+			params[i] = externalResourcePoolParameterToJSON(param)
+		}
+		node["ExternalResourcePoolParameters"] = params
+	}
+	return node
+}
+
+func externalResourcePoolParameterToJSON(p *ast.ExternalResourcePoolParameter) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalResourcePoolParameter",
+	}
+	if p.ParameterType != "" {
+		node["ParameterType"] = p.ParameterType
+	}
+	if p.ParameterValue != nil {
+		node["ParameterValue"] = scalarExpressionToJSON(p.ParameterValue)
+	}
+	if p.AffinitySpecification != nil {
+		node["AffinitySpecification"] = externalResourcePoolAffinitySpecificationToJSON(p.AffinitySpecification)
+	}
+	return node
+}
+
+func externalResourcePoolAffinitySpecificationToJSON(s *ast.ExternalResourcePoolAffinitySpecification) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalResourcePoolAffinitySpecification",
+	}
+	if s.AffinityType != "" {
+		node["AffinityType"] = s.AffinityType
+	}
+	node["IsAuto"] = s.IsAuto
+	if len(s.PoolAffinityRanges) > 0 {
+		ranges := make([]jsonNode, len(s.PoolAffinityRanges))
+		for i, r := range s.PoolAffinityRanges {
+			ranges[i] = literalRangeToJSON(r)
+		}
+		node["PoolAffinityRanges"] = ranges
+	}
 	return node
 }
 
