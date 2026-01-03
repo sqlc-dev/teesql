@@ -9955,6 +9955,15 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 				param.DataType = dataType
 			}
 
+			// Check for default value (= expr)
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+				defaultValue, err := p.parseScalarExpression()
+				if err == nil {
+					param.Value = defaultValue
+				}
+			}
+
 			// Check for NULL/NOT NULL nullability
 			if p.curTok.Type == TokenNull {
 				param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
@@ -10406,6 +10415,15 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 				param.DataType = dataType
 			}
 
+			// Check for default value (= expr)
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+				defaultValue, err := p.parseScalarExpression()
+				if err == nil {
+					param.Value = defaultValue
+				}
+			}
+
 			// Check for NULL/NOT NULL nullability
 			if p.curTok.Type == TokenNull {
 				param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
@@ -10478,14 +10496,23 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 					OptionState: state,
 				})
 			case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION", "CALLED":
-				optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
+				var optKind string
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "ENCRYPTION":
+					optKind = "Encryption"
+				case "SCHEMABINDING":
+					optKind = "SchemaBinding"
+				case "NATIVE_COMPILATION":
+					optKind = "NativeCompilation"
+				case "CALLED":
+					optKind = "CalledOnNullInput"
+				}
 				p.nextToken()
-				// Handle CALLED ON NULL INPUT
-				if optKind == "Called" {
+				// Handle CALLED ON NULL INPUT - skip additional tokens
+				if optKind == "CalledOnNullInput" {
 					for strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
 						p.nextToken()
 					}
-					optKind = "CalledOnNullInput"
 				}
 				stmt.Options = append(stmt.Options, &ast.FunctionOption{
 					OptionKind: optKind,
@@ -10498,6 +10525,45 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 				stmt.Options = append(stmt.Options, &ast.FunctionOption{
 					OptionKind: "ReturnsNullOnNullInput",
 				})
+			case "EXECUTE":
+				p.nextToken() // consume EXECUTE
+				if p.curTok.Type == TokenAs {
+					p.nextToken() // consume AS
+				}
+				execAsOpt := &ast.ExecuteAsFunctionOption{
+					OptionKind: "ExecuteAs",
+					ExecuteAs:  &ast.ExecuteAsClause{},
+				}
+				upperOption := strings.ToUpper(p.curTok.Literal)
+				switch upperOption {
+				case "CALLER":
+					execAsOpt.ExecuteAs.ExecuteAsOption = "Caller"
+					p.nextToken()
+				case "SELF":
+					execAsOpt.ExecuteAs.ExecuteAsOption = "Self"
+					p.nextToken()
+				case "OWNER":
+					execAsOpt.ExecuteAs.ExecuteAsOption = "Owner"
+					p.nextToken()
+				default:
+					// String literal for user name
+					if p.curTok.Type == TokenString {
+						execAsOpt.ExecuteAs.ExecuteAsOption = "String"
+						value := p.curTok.Literal
+						// Strip quotes
+						if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+							value = value[1 : len(value)-1]
+						}
+						execAsOpt.ExecuteAs.Literal = &ast.StringLiteral{
+							LiteralType:   "String",
+							IsNational:    false,
+							IsLargeObject: false,
+							Value:         value,
+						}
+						p.nextToken()
+					}
+				}
+				stmt.Options = append(stmt.Options, execAsOpt)
 			default:
 				// Unknown option - skip it
 				if p.curTok.Type == TokenIdent {
