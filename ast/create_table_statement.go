@@ -81,9 +81,13 @@ type DataTypeReference interface {
 type DefaultConstraintDefinition struct {
 	ConstraintIdentifier *Identifier
 	Expression           ScalarExpression
+	Column               *Identifier // For table-level DEFAULT constraint (DEFAULT ... FOR column)
+	WithValues           bool
 }
 
-func (d *DefaultConstraintDefinition) node() {}
+func (d *DefaultConstraintDefinition) node()                 {}
+func (d *DefaultConstraintDefinition) constraintDefinition() {}
+func (d *DefaultConstraintDefinition) tableConstraint()      {}
 
 // IdentityOptions represents IDENTITY options
 type IdentityOptions struct {

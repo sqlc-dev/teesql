@@ -5038,6 +5038,14 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				return nil, err
 			}
 			defaultConstraint.Expression = expr
+			// Parse optional WITH VALUES
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if strings.ToUpper(p.curTok.Literal) == "VALUES" {
+					p.nextToken() // consume VALUES
+					defaultConstraint.WithValues = true
+				}
+			}
 			col.DefaultConstraint = defaultConstraint
 		} else if upperLit == "CHECK" {
 			p.nextToken() // consume CHECK
@@ -6879,13 +6887,16 @@ func columnStorageOptionsToJSON(o *ast.ColumnStorageOptions) jsonNode {
 func defaultConstraintToJSON(d *ast.DefaultConstraintDefinition) jsonNode {
 	node := jsonNode{
 		"$type":      "DefaultConstraintDefinition",
-		"WithValues": false,
+		"WithValues": d.WithValues,
 	}
 	if d.ConstraintIdentifier != nil {
 		node["ConstraintIdentifier"] = identifierToJSON(d.ConstraintIdentifier)
 	}
 	if d.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(d.Expression)
+	}
+	if d.Column != nil {
+		node["Column"] = identifierToJSON(d.Column)
 	}
 	return node
 }
