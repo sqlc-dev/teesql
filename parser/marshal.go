@@ -146,6 +146,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterDatabaseRemoveFileGroupStatementToJSON(s)
 	case *ast.AlterDatabaseCollateStatement:
 		return alterDatabaseCollateStatementToJSON(s)
+	case *ast.AlterDatabaseRebuildLogStatement:
+		return alterDatabaseRebuildLogStatementToJSON(s)
 	case *ast.AlterDatabaseScopedConfigurationClearStatement:
 		return alterDatabaseScopedConfigurationClearStatementToJSON(s)
 	case *ast.AlterResourceGovernorStatement:
@@ -15141,6 +15143,9 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 	if s.Collation != nil {
 		node["Collation"] = identifierToJSON(s.Collation)
 	}
+	if s.DatabaseSnapshot != nil {
+		node["DatabaseSnapshot"] = identifierToJSON(s.DatabaseSnapshot)
+	}
 	return node
 }
 
@@ -15222,6 +15227,11 @@ func fileDeclarationToJSON(fd *ast.FileDeclaration) jsonNode {
 
 func fileDeclarationOptionToJSON(opt ast.FileDeclarationOption) jsonNode {
 	switch o := opt.(type) {
+	case *ast.SimpleFileDeclarationOption:
+		return jsonNode{
+			"$type":      "FileDeclarationOption",
+			"OptionKind": o.OptionKind,
+		}
 	case *ast.NameFileDeclarationOption:
 		node := jsonNode{
 			"$type":      "NameFileDeclarationOption",
@@ -16187,10 +16197,25 @@ func alterDatabaseModifyFileGroupStatementToJSON(s *ast.AlterDatabaseModifyFileG
 	} else {
 		node["UpdatabilityOption"] = "None"
 	}
+	if s.Termination != nil {
+		node["Termination"] = alterDatabaseTerminationToJSON(s.Termination)
+	}
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
-	node["UseCurrent"] = false
+	node["UseCurrent"] = s.UseCurrent
+	return node
+}
+
+func alterDatabaseTerminationToJSON(t *ast.AlterDatabaseTermination) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseTermination",
+	}
+	node["ImmediateRollback"] = t.ImmediateRollback
+	if t.RollbackAfter != nil {
+		node["RollbackAfter"] = scalarExpressionToJSON(t.RollbackAfter)
+	}
+	node["NoWait"] = t.NoWait
 	return node
 }
 
@@ -16247,6 +16272,20 @@ func alterDatabaseCollateStatementToJSON(s *ast.AlterDatabaseCollateStatement) j
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = false
+	return node
+}
+
+func alterDatabaseRebuildLogStatementToJSON(s *ast.AlterDatabaseRebuildLogStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseRebuildLogStatement",
+	}
+	if s.FileDeclaration != nil {
+		node["FileDeclaration"] = fileDeclarationToJSON(s.FileDeclaration)
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = s.UseCurrent
 	return node
 }
 

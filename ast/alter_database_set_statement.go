@@ -166,10 +166,22 @@ type AlterDatabaseModifyFileGroupStatement struct {
 	MakeDefault        bool
 	UpdatabilityOption string // "ReadOnly", "ReadWrite", "ReadOnlyOld", "ReadWriteOld", or ""
 	NewFileGroupName   *Identifier
+	Termination        *AlterDatabaseTermination
+	UseCurrent         bool
 }
 
 func (a *AlterDatabaseModifyFileGroupStatement) node()      {}
 func (a *AlterDatabaseModifyFileGroupStatement) statement() {}
+
+// AlterDatabaseRebuildLogStatement represents ALTER DATABASE ... REBUILD LOG statement
+type AlterDatabaseRebuildLogStatement struct {
+	DatabaseName    *Identifier
+	FileDeclaration *FileDeclaration
+	UseCurrent      bool
+}
+
+func (a *AlterDatabaseRebuildLogStatement) node()      {}
+func (a *AlterDatabaseRebuildLogStatement) statement() {}
 
 // AlterDatabaseModifyNameStatement represents ALTER DATABASE ... MODIFY NAME statement
 type AlterDatabaseModifyNameStatement struct {

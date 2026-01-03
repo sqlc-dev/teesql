@@ -1859,6 +1859,9 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 			if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
 				return p.parseAlterDatabaseRemoveStatement(dbName)
 			}
+			if strings.ToUpper(p.curTok.Literal) == "REBUILD" {
+				return p.parseAlterDatabaseRebuildLogStatement(dbName)
+			}
 			if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
 				p.nextToken() // consume COLLATE
 				stmt := &ast.AlterDatabaseCollateStatement{
@@ -2230,6 +2233,38 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 	return stmt, nil
 }
 
+// parseAlterDatabaseTermination parses the termination clause for ALTER DATABASE statements
+// Forms: WITH NO_WAIT | WITH ROLLBACK AFTER N [SECONDS] | WITH ROLLBACK IMMEDIATE
+func (p *Parser) parseAlterDatabaseTermination() *ast.AlterDatabaseTermination {
+	if p.curTok.Type != TokenWith && strings.ToUpper(p.curTok.Literal) != "WITH" {
+		return nil
+	}
+	p.nextToken() // consume WITH
+	term := &ast.AlterDatabaseTermination{}
+	termKeyword := strings.ToUpper(p.curTok.Literal)
+	if termKeyword == "NO_WAIT" {
+		term.NoWait = true
+		p.nextToken()
+	} else if termKeyword == "ROLLBACK" {
+		p.nextToken() // consume ROLLBACK
+		rollbackType := strings.ToUpper(p.curTok.Literal)
+		if rollbackType == "AFTER" {
+			p.nextToken() // consume AFTER
+			// Parse the number
+			val, _ := p.parseScalarExpression()
+			term.RollbackAfter = val
+			// Optional SECONDS keyword
+			if strings.ToUpper(p.curTok.Literal) == "SECONDS" {
+				p.nextToken()
+			}
+		} else if rollbackType == "IMMEDIATE" {
+			term.ImmediateRollback = true
+			p.nextToken()
+		}
+	}
+	return term
+}
+
 // parseRemoteDataArchiveOption parses REMOTE_DATA_ARCHIVE option
 // Forms:
 //   - REMOTE_DATA_ARCHIVE = ON (options...)
@@ -2517,6 +2552,14 @@ func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Sta
 			return nil, err
 		}
 		stmt.FileDeclarations = decls
+		// Parse TO FILEGROUP
+		if strings.ToUpper(p.curTok.Literal) == "TO" {
+			p.nextToken() // consume TO
+			if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+				p.nextToken() // consume FILEGROUP
+			}
+			stmt.FileGroup = p.parseIdentifier()
+		}
 		p.skipToEndOfStatement()
 		return stmt, nil
 	case "FILEGROUP":
@@ -2595,6 +2638,7 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 			FileGroupName: p.parseIdentifier(),
 		}
 		// Parse optional modifiers
+	filegroupLoop:
 		for {
 			switch strings.ToUpper(p.curTok.Literal) {
 			case "DEFAULT":
@@ -2625,10 +2669,15 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 				}
 				stmt.NewFileGroupName = p.parseIdentifier()
 			default:
-				p.skipToEndOfStatement()
-				return stmt, nil
+				break filegroupLoop
 			}
 		}
+		// Parse optional WITH clause for termination
+		if p.curTok.Type == TokenWith {
+			stmt.Termination = p.parseAlterDatabaseTermination()
+		}
+		p.skipToEndOfStatement()
+		return stmt, nil
 	case "NAME":
 		p.nextToken() // consume NAME
 		if p.curTok.Type == TokenEquals {
@@ -2671,6 +2720,31 @@ func (p *Parser) parseAlterDatabaseRemoveStatement(dbName *ast.Identifier) (ast.
 		p.skipToEndOfStatement()
 		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
 	}
+}
+
+func (p *Parser) parseAlterDatabaseRebuildLogStatement(dbName *ast.Identifier) (*ast.AlterDatabaseRebuildLogStatement, error) {
+	p.nextToken() // consume REBUILD
+
+	stmt := &ast.AlterDatabaseRebuildLogStatement{
+		DatabaseName: dbName,
+	}
+
+	// Expect LOG
+	if strings.ToUpper(p.curTok.Literal) == "LOG" {
+		p.nextToken() // consume LOG
+	}
+
+	// Check for optional ON clause with file declaration
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		decls, _ := p.parseFileDeclarationList(false)
+		if len(decls) > 0 {
+			stmt.FileDeclaration = decls[0]
+		}
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
 }
 
 func (p *Parser) parseAlterDatabaseScopedCredentialStatement() (*ast.AlterCredentialStatement, error) {

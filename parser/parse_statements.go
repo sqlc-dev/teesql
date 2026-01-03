@@ -9266,6 +9266,21 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 		case "ATTACH_REBUILD_LOG":
 			stmt.AttachMode = "AttachRebuildLog"
 			p.nextToken()
+		case "ATTACH_FORCE_REBUILD_LOG":
+			stmt.AttachMode = "AttachForceRebuildLog"
+			p.nextToken()
+		}
+	}
+
+	// Check for AS SNAPSHOT OF clause
+	if strings.ToUpper(p.curTok.Literal) == "AS" {
+		p.nextToken() // consume AS
+		if strings.ToUpper(p.curTok.Literal) == "SNAPSHOT" {
+			p.nextToken() // consume SNAPSHOT
+			if strings.ToUpper(p.curTok.Literal) == "OF" {
+				p.nextToken() // consume OF
+			}
+			stmt.DatabaseSnapshot = p.parseIdentifier()
 		}
 	}
 
@@ -9359,6 +9374,20 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 			p.nextToken() // consume ENABLE_BROKER
 			opt := &ast.SimpleDatabaseOption{
 				OptionKind: "EnableBroker",
+			}
+			options = append(options, opt)
+
+		case "NEW_BROKER":
+			p.nextToken() // consume NEW_BROKER
+			opt := &ast.SimpleDatabaseOption{
+				OptionKind: "NewBroker",
+			}
+			options = append(options, opt)
+
+		case "ERROR_BROKER_CONVERSATIONS":
+			p.nextToken() // consume ERROR_BROKER_CONVERSATIONS
+			opt := &ast.SimpleDatabaseOption{
+				OptionKind: "ErrorBrokerConversations",
 			}
 			options = append(options, opt)
 
@@ -9734,6 +9763,13 @@ func (p *Parser) parseFileDeclarationOptions() ([]ast.FileDeclarationOption, err
 				GrowthIncrement: size,
 				Units:           units,
 				OptionKind:      "FileGrowth",
+			}
+			opts = append(opts, opt)
+
+		case "OFFLINE":
+			p.nextToken() // consume OFFLINE
+			opt := &ast.SimpleFileDeclarationOption{
+				OptionKind: "Offline",
 			}
 			opts = append(opts, opt)
 

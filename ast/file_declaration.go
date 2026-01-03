@@ -25,6 +25,14 @@ type FileDeclarationOption interface {
 	fileDeclarationOption()
 }
 
+// SimpleFileDeclarationOption represents a simple file option like OFFLINE
+type SimpleFileDeclarationOption struct {
+	OptionKind string // "Offline"
+}
+
+func (s *SimpleFileDeclarationOption) node()                  {}
+func (s *SimpleFileDeclarationOption) fileDeclarationOption() {}
+
 // NameFileDeclarationOption represents the NAME option for a file
 type NameFileDeclarationOption struct {
 	LogicalFileName *IdentifierOrValueExpression
