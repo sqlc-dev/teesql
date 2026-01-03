@@ -5272,8 +5272,13 @@ func (p *Parser) parseJsonForClauseOption() (*ast.JsonForClauseOption, error) {
 
 // parseFullTextPredicate parses CONTAINS or FREETEXT predicates
 func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate, error) {
+	// Convert to PascalCase: "CONTAINS" -> "Contains", "FREETEXT" -> "FreeText"
+	pascalType := strings.ToUpper(funcType[:1]) + strings.ToLower(funcType[1:])
+	if funcType == "FREETEXT" {
+		pascalType = "FreeText"
+	}
 	pred := &ast.FullTextPredicate{
-		FullTextFunctionType: funcType,
+		FullTextFunctionType: pascalType,
 	}
 	p.nextToken() // consume CONTAINS/FREETEXT
 
