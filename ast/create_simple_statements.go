@@ -211,6 +211,7 @@ type CreateAsymmetricKeyStatement struct {
 	Name                *Identifier            `json:"Name,omitempty"`
 	KeySource           EncryptionSource       `json:"KeySource,omitempty"`
 	EncryptionAlgorithm string                 `json:"EncryptionAlgorithm,omitempty"`
+	Owner               *Identifier            `json:"Owner,omitempty"`
 	Password            ScalarExpression       `json:"Password,omitempty"`
 }
 

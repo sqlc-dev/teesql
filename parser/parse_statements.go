@@ -10577,10 +10577,50 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 		Name: p.parseIdentifier(),
 	}
 
-	// Check for FROM PROVIDER
+	// Check for AUTHORIZATION clause
+	if strings.ToUpper(p.curTok.Literal) == "AUTHORIZATION" {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
+	// Check for FROM clause (FILE, EXECUTABLE FILE, ASSEMBLY, PROVIDER)
 	if p.curTok.Type == TokenFrom {
 		p.nextToken() // consume FROM
-		if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
+		fromType := strings.ToUpper(p.curTok.Literal)
+		switch fromType {
+		case "FILE":
+			p.nextToken() // consume FILE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			file, _ := p.parseStringLiteral()
+			stmt.KeySource = &ast.FileEncryptionSource{
+				IsExecutable: false,
+				File:         file,
+			}
+			stmt.EncryptionAlgorithm = "None"
+		case "EXECUTABLE":
+			p.nextToken() // consume EXECUTABLE
+			if strings.ToUpper(p.curTok.Literal) == "FILE" {
+				p.nextToken() // consume FILE
+			}
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			file, _ := p.parseStringLiteral()
+			stmt.KeySource = &ast.FileEncryptionSource{
+				IsExecutable: true,
+				File:         file,
+			}
+			stmt.EncryptionAlgorithm = "None"
+		case "ASSEMBLY":
+			p.nextToken() // consume ASSEMBLY
+			assemblyName := p.parseIdentifier()
+			stmt.KeySource = &ast.AssemblyEncryptionSource{
+				Assembly: assemblyName,
+			}
+			stmt.EncryptionAlgorithm = "None"
+		case "PROVIDER":
 			p.nextToken() // consume PROVIDER
 			source := &ast.ProviderEncryptionSource{
 				Name: p.parseIdentifier(),
@@ -10599,28 +10639,7 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 							p.nextToken() // consume =
 						}
 						alg := strings.ToUpper(p.curTok.Literal)
-						// Map algorithm names to proper case
-						algMap := map[string]string{
-							"DES":         "Des",
-							"RC2":         "RC2",
-							"RC4":         "RC4",
-							"RC4_128":     "RC4_128",
-							"TRIPLE_DES":  "TripleDes",
-							"AES_128":     "Aes128",
-							"AES_192":     "Aes192",
-							"AES_256":     "Aes256",
-							"RSA_512":     "Rsa512",
-							"RSA_1024":    "Rsa1024",
-							"RSA_2048":    "Rsa2048",
-							"RSA_3072":    "Rsa3072",
-							"RSA_4096":    "Rsa4096",
-							"DESX":        "DesX",
-							"TRIPLE_DES_3KEY": "TripleDes3Key",
-						}
-						mappedAlg := alg
-						if mapped, ok := algMap[alg]; ok {
-							mappedAlg = mapped
-						}
+						mappedAlg := p.mapEncryptionAlgorithm(alg)
 						source.KeyOptions = append(source.KeyOptions, &ast.AlgorithmKeyOption{
 							Algorithm:  mappedAlg,
 							OptionKind: "Algorithm",
@@ -10648,7 +10667,7 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 						})
 						p.nextToken()
 					default:
-						goto doneWithOptions
+						goto doneWithProviderOptions
 					}
 
 					if p.curTok.Type == TokenComma {
@@ -10659,9 +10678,23 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 						break
 					}
 				}
-			doneWithOptions:
+			doneWithProviderOptions:
 			}
 			stmt.KeySource = source
+		}
+	}
+
+	// Check for WITH ALGORITHM = ... (without FROM clause)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "ALGORITHM" {
+			p.nextToken() // consume ALGORITHM
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			alg := strings.ToUpper(p.curTok.Literal)
+			stmt.EncryptionAlgorithm = p.mapEncryptionAlgorithm(alg)
+			p.nextToken()
 		}
 	}
 
@@ -10686,6 +10719,31 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 		p.nextToken()
 	}
 	return stmt, nil
+}
+
+// mapEncryptionAlgorithm maps SQL encryption algorithm names to proper case
+func (p *Parser) mapEncryptionAlgorithm(alg string) string {
+	algMap := map[string]string{
+		"DES":             "Des",
+		"RC2":             "RC2",
+		"RC4":             "RC4",
+		"RC4_128":         "RC4_128",
+		"TRIPLE_DES":      "TripleDes",
+		"AES_128":         "Aes128",
+		"AES_192":         "Aes192",
+		"AES_256":         "Aes256",
+		"RSA_512":         "Rsa512",
+		"RSA_1024":        "Rsa1024",
+		"RSA_2048":        "Rsa2048",
+		"RSA_3072":        "Rsa3072",
+		"RSA_4096":        "Rsa4096",
+		"DESX":            "DesX",
+		"TRIPLE_DES_3KEY": "TripleDes3Key",
+	}
+	if mapped, ok := algMap[alg]; ok {
+		return mapped
+	}
+	return alg
 }
 
 func (p *Parser) parseCreateSymmetricKeyStatement() (*ast.CreateSymmetricKeyStatement, error) {

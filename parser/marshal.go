@@ -15458,6 +15458,9 @@ func createAsymmetricKeyStatementToJSON(s *ast.CreateAsymmetricKeyStatement) jso
 	if s.EncryptionAlgorithm != "" {
 		node["EncryptionAlgorithm"] = s.EncryptionAlgorithm
 	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
