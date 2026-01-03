@@ -541,6 +541,51 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		return sse, nil
 	}
 
+	// Check for equals-style alias: column1 = expr, [column1] = expr, 'string' = expr, N'string' = expr
+	// This is detected by seeing identifier or string followed by =
+	if p.peekTok.Type == TokenEquals {
+		// We have alias = expr pattern
+		var columnName *ast.IdentifierOrValueExpression
+
+		if p.curTok.Type == TokenIdent {
+			// identifier = expr
+			alias := p.parseIdentifier()
+			columnName = &ast.IdentifierOrValueExpression{
+				Value:      alias.Value,
+				Identifier: alias,
+			}
+		} else if p.curTok.Type == TokenString {
+			// 'string' = expr
+			str := p.parseStringLiteralValue()
+			p.nextToken()
+			columnName = &ast.IdentifierOrValueExpression{
+				Value:           str.Value,
+				ValueExpression: str,
+			}
+		} else if p.curTok.Type == TokenNationalString {
+			// N'string' = expr
+			str, _ := p.parseNationalStringFromToken()
+			columnName = &ast.IdentifierOrValueExpression{
+				Value:           str.Value,
+				ValueExpression: str,
+			}
+		}
+
+		if columnName != nil {
+			p.nextToken() // consume =
+
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			return &ast.SelectScalarExpression{
+				Expression: expr,
+				ColumnName: columnName,
+			}, nil
+		}
+	}
+
 	// Otherwise parse a scalar expression
 	expr, err := p.parseScalarExpression()
 	if err != nil {
@@ -606,6 +651,21 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 				Value:      alias.Value,
 				Identifier: alias,
 			}
+		}
+	} else if p.curTok.Type == TokenString {
+		// String literal alias without AS: expr 'alias'
+		str := p.parseStringLiteralValue()
+		p.nextToken()
+		sse.ColumnName = &ast.IdentifierOrValueExpression{
+			Value:           str.Value,
+			ValueExpression: str,
+		}
+	} else if p.curTok.Type == TokenNationalString {
+		// National string literal alias without AS: expr N'alias'
+		str, _ := p.parseNationalStringFromToken()
+		sse.ColumnName = &ast.IdentifierOrValueExpression{
+			Value:           str.Value,
+			ValueExpression: str,
 		}
 	} else if p.curTok.Type == TokenIdent {
 		// Check if this is an alias (not a keyword that starts a new clause)
