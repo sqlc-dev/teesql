@@ -13401,11 +13401,33 @@ func createExternalTableStatementToJSON(s *ast.CreateExternalTableStatement) jso
 	if len(s.ExternalTableOptions) > 0 {
 		opts := make([]jsonNode, len(s.ExternalTableOptions))
 		for i, opt := range s.ExternalTableOptions {
-			opts[i] = externalTableLiteralOrIdentifierOptionToJSON(opt)
+			opts[i] = externalTableOptionItemToJSON(opt)
 		}
 		node["ExternalTableOptions"] = opts
 	}
+	if s.SelectStatement != nil {
+		node["SelectStatement"] = selectStatementToJSON(s.SelectStatement)
+	}
 	return node
+}
+
+func externalTableOptionItemToJSON(opt ast.ExternalTableOptionItem) jsonNode {
+	switch o := opt.(type) {
+	case *ast.ExternalTableLiteralOrIdentifierOption:
+		return externalTableLiteralOrIdentifierOptionToJSON(o)
+	case *ast.ExternalTableRejectTypeOption:
+		return externalTableRejectTypeOptionToJSON(o)
+	default:
+		return jsonNode{}
+	}
+}
+
+func externalTableRejectTypeOptionToJSON(opt *ast.ExternalTableRejectTypeOption) jsonNode {
+	return jsonNode{
+		"$type":      "ExternalTableRejectTypeOption",
+		"Value":      opt.Value,
+		"OptionKind": opt.OptionKind,
+	}
 }
 
 func externalTableColumnDefinitionToJSON(col *ast.ExternalTableColumnDefinition) jsonNode {

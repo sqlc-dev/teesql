@@ -7592,6 +7592,45 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 				switch optName {
 				case "DATA_SOURCE":
 					stmt.DataSource = p.parseIdentifier()
+				case "REJECT_TYPE":
+					opt := &ast.ExternalTableRejectTypeOption{
+						OptionKind: "RejectType",
+					}
+					// VALUE or PERCENTAGE
+					val := strings.ToUpper(p.curTok.Literal)
+					switch val {
+					case "VALUE":
+						opt.Value = "Value"
+					case "PERCENTAGE":
+						opt.Value = "Percentage"
+					default:
+						opt.Value = val
+					}
+					p.nextToken() // consume value
+					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
+				case "REJECT_VALUE", "REJECT_SAMPLE_VALUE":
+					opt := &ast.ExternalTableLiteralOrIdentifierOption{
+						Value: &ast.IdentifierOrValueExpression{},
+					}
+					if optName == "REJECT_VALUE" {
+						opt.OptionKind = "RejectValue"
+					} else {
+						opt.OptionKind = "RejectSampleValue"
+					}
+					// Parse numeric or integer literal
+					if p.curTok.Type == TokenNumber {
+						if strings.Contains(p.curTok.Literal, ".") {
+							numLit := &ast.NumericLiteral{LiteralType: "Numeric", Value: p.curTok.Literal}
+							opt.Value.Value = p.curTok.Literal
+							opt.Value.ValueExpression = numLit
+						} else {
+							intLit := &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							opt.Value.Value = p.curTok.Literal
+							opt.Value.ValueExpression = intLit
+						}
+						p.nextToken()
+					}
+					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
 				case "LOCATION", "FILE_FORMAT", "TABLE_OPTIONS":
 					opt := &ast.ExternalTableLiteralOrIdentifierOption{
 						Value: &ast.IdentifierOrValueExpression{},
@@ -7636,6 +7675,16 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 				p.nextToken() // consume )
 			}
 		}
+	}
+
+	// Parse optional AS SELECT (CTAS syntax)
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		selectStmt, err := p.parseSelectStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.SelectStatement = selectStmt
 	}
 
 	if p.curTok.Type == TokenSemicolon {
