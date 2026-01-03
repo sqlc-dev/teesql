@@ -5886,12 +5886,32 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			p.curTok.Type == TokenSelect || p.curTok.Type == TokenInsert ||
 			p.curTok.Type == TokenUpdate || p.curTok.Type == TokenDelete ||
 			p.curTok.Type == TokenAlter || p.curTok.Type == TokenExecute ||
-			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal {
+			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal ||
+			p.curTok.Type == TokenAll || p.curTok.Type == TokenExec ||
+			p.curTok.Type == TokenDatabase || p.curTok.Type == TokenTable ||
+			p.curTok.Type == TokenFunction || p.curTok.Type == TokenBackup ||
+			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
+			p.curTok.Type == TokenSchema {
 			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
 			})
 			p.nextToken()
+		} else if p.curTok.Type == TokenLParen {
+			// Column list for permission (e.g., SELECT (c1, c2))
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseIdentifier()
+				perm.Columns = append(perm.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		} else if p.curTok.Type == TokenComma {
 			stmt.Permissions = append(stmt.Permissions, perm)
 			perm = &ast.Permission{}
@@ -6118,6 +6138,12 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 		stmt.WithGrantOption = true
 	}
 
+	// Check for AS clause
+	if strings.ToUpper(p.curTok.Literal) == "AS" {
+		p.nextToken() // consume AS
+		stmt.AsClause = p.parseIdentifier()
+	}
+
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
@@ -6153,7 +6179,11 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			p.curTok.Type == TokenUpdate || p.curTok.Type == TokenDelete ||
 			p.curTok.Type == TokenAlter || p.curTok.Type == TokenExecute ||
 			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal ||
-			p.curTok.Type == TokenAll {
+			p.curTok.Type == TokenAll || p.curTok.Type == TokenExec ||
+			p.curTok.Type == TokenDatabase || p.curTok.Type == TokenTable ||
+			p.curTok.Type == TokenFunction || p.curTok.Type == TokenBackup ||
+			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
+			p.curTok.Type == TokenSchema {
 			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
@@ -6163,13 +6193,9 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			// Parse column list for permission
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				if p.curTok.Type == TokenIdent {
-					perm.Columns = append(perm.Columns, &ast.Identifier{
-						Value:     p.curTok.Literal,
-						QuoteType: "NotQuoted",
-					})
-					p.nextToken()
-				} else if p.curTok.Type == TokenComma {
+				col := p.parseIdentifier()
+				perm.Columns = append(perm.Columns, col)
+				if p.curTok.Type == TokenComma {
 					p.nextToken()
 				} else {
 					break
@@ -6424,12 +6450,32 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			p.curTok.Type == TokenSelect || p.curTok.Type == TokenInsert ||
 			p.curTok.Type == TokenUpdate || p.curTok.Type == TokenDelete ||
 			p.curTok.Type == TokenAlter || p.curTok.Type == TokenExecute ||
-			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal {
+			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal ||
+			p.curTok.Type == TokenAll || p.curTok.Type == TokenExec ||
+			p.curTok.Type == TokenDatabase || p.curTok.Type == TokenTable ||
+			p.curTok.Type == TokenFunction || p.curTok.Type == TokenBackup ||
+			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
+			p.curTok.Type == TokenSchema {
 			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
 			})
 			p.nextToken()
+		} else if p.curTok.Type == TokenLParen {
+			// Column list for permission (e.g., SELECT (c1, c2))
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseIdentifier()
+				perm.Columns = append(perm.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		} else if p.curTok.Type == TokenComma {
 			stmt.Permissions = append(stmt.Permissions, perm)
 			perm = &ast.Permission{}
@@ -7150,6 +7196,9 @@ func grantStatementToJSON(s *ast.GrantStatement) jsonNode {
 			principals[i] = securityPrincipalToJSON(p)
 		}
 		node["Principals"] = principals
+	}
+	if s.AsClause != nil {
+		node["AsClause"] = identifierToJSON(s.AsClause)
 	}
 	return node
 }
