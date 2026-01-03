@@ -6,7 +6,7 @@ type BackupDatabaseStatement struct {
 	DatabaseName   *IdentifierOrValueExpression
 	MirrorToClauses []*MirrorToClause
 	Devices        []*DeviceInfo
-	Options        []*BackupOption
+	Options        []BackupOptionBase
 }
 
 // MirrorToClause represents a MIRROR TO clause in a BACKUP statement
@@ -22,18 +22,36 @@ func (s *BackupDatabaseStatement) node()          {}
 type BackupTransactionLogStatement struct {
 	DatabaseName *IdentifierOrValueExpression
 	Devices      []*DeviceInfo
-	Options      []*BackupOption
+	Options      []BackupOptionBase
 }
 
 func (s *BackupTransactionLogStatement) statementNode() {}
 func (s *BackupTransactionLogStatement) statement()     {}
 func (s *BackupTransactionLogStatement) node()          {}
 
+// BackupOptionBase is an interface for backup options
+type BackupOptionBase interface {
+	backupOption()
+}
+
 // BackupOption represents a backup option
 type BackupOption struct {
 	OptionKind string // Compression, NoCompression, StopOnError, ContinueAfterError, etc.
 	Value      ScalarExpression
 }
+
+func (o *BackupOption) backupOption() {}
+
+// BackupEncryptionOption represents an ENCRYPTION(...) backup option
+type BackupEncryptionOption struct {
+	Algorithm  string           // Aes128, Aes192, Aes256, TripleDes3Key
+	Encryptor  *CryptoMechanism
+	OptionKind string           // typically "None"
+}
+
+func (o *BackupEncryptionOption) backupOption() {}
+
+// CryptoMechanism is defined in create_simple_statements.go
 
 // BackupCertificateStatement represents a BACKUP CERTIFICATE statement
 type BackupCertificateStatement struct {

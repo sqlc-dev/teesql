@@ -11534,7 +11534,7 @@ func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
 	if len(s.Options) > 0 {
 		options := make([]jsonNode, len(s.Options))
 		for i, o := range s.Options {
-			options[i] = backupOptionToJSON(o)
+			options[i] = backupOptionBaseToJSON(o)
 		}
 		node["Options"] = options
 	}
@@ -11565,7 +11565,7 @@ func backupTransactionLogStatementToJSON(s *ast.BackupTransactionLogStatement) j
 	if len(s.Options) > 0 {
 		options := make([]jsonNode, len(s.Options))
 		for i, o := range s.Options {
-			options[i] = backupOptionToJSON(o)
+			options[i] = backupOptionBaseToJSON(o)
 		}
 		node["Options"] = options
 	}
@@ -11659,6 +11659,17 @@ func restoreMasterKeyStatementToJSON(s *ast.RestoreMasterKeyStatement) jsonNode 
 	return node
 }
 
+func backupOptionBaseToJSON(o ast.BackupOptionBase) jsonNode {
+	switch opt := o.(type) {
+	case *ast.BackupOption:
+		return backupOptionToJSON(opt)
+	case *ast.BackupEncryptionOption:
+		return backupEncryptionOptionToJSON(opt)
+	default:
+		return jsonNode{"$type": "Unknown"}
+	}
+}
+
 func backupOptionToJSON(o *ast.BackupOption) jsonNode {
 	node := jsonNode{
 		"$type":      "BackupOption",
@@ -11666,6 +11677,18 @@ func backupOptionToJSON(o *ast.BackupOption) jsonNode {
 	}
 	if o.Value != nil {
 		node["Value"] = scalarExpressionToJSON(o.Value)
+	}
+	return node
+}
+
+func backupEncryptionOptionToJSON(o *ast.BackupEncryptionOption) jsonNode {
+	node := jsonNode{
+		"$type":      "BackupEncryptionOption",
+		"Algorithm":  o.Algorithm,
+		"OptionKind": o.OptionKind,
+	}
+	if o.Encryptor != nil {
+		node["Encryptor"] = cryptoMechanismToJSON(o.Encryptor)
 	}
 	return node
 }

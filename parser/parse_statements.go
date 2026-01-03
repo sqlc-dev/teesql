@@ -7062,51 +7062,63 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 	}
 
 	// Parse optional WITH clause
-	var options []*ast.BackupOption
+	var options []ast.BackupOptionBase
 	if p.curTok.Type == TokenWith {
 		p.nextToken()
 
 		for {
 			optionName := strings.ToUpper(p.curTok.Literal)
-			option := &ast.BackupOption{}
 
-			switch optionName {
-			case "COMPRESSION":
-				option.OptionKind = "Compression"
-			case "NO_COMPRESSION":
-				option.OptionKind = "NoCompression"
-			case "STOP_ON_ERROR":
-				option.OptionKind = "StopOnError"
-			case "CONTINUE_AFTER_ERROR":
-				option.OptionKind = "ContinueAfterError"
-			case "CHECKSUM":
-				option.OptionKind = "Checksum"
-			case "NO_CHECKSUM":
-				option.OptionKind = "NoChecksum"
-			case "INIT":
-				option.OptionKind = "Init"
-			case "NOINIT":
-				option.OptionKind = "NoInit"
-			case "FORMAT":
-				option.OptionKind = "Format"
-			case "NOFORMAT":
-				option.OptionKind = "NoFormat"
-			default:
-				option.OptionKind = optionName
-			}
-			p.nextToken()
-
-			// Check for = value
-			if p.curTok.Type == TokenEquals {
-				p.nextToken()
-				val, err := p.parseScalarExpression()
+			// Check for ENCRYPTION with parentheses
+			if optionName == "ENCRYPTION" && p.peekTok.Type == TokenLParen {
+				encOpt, err := p.parseBackupEncryptionOption()
 				if err != nil {
 					return nil, err
 				}
-				option.Value = val
-			}
+				options = append(options, encOpt)
+			} else {
+				option := &ast.BackupOption{}
 
-			options = append(options, option)
+				switch optionName {
+				case "COMPRESSION":
+					option.OptionKind = "Compression"
+				case "NO_COMPRESSION":
+					option.OptionKind = "NoCompression"
+				case "STOP_ON_ERROR":
+					option.OptionKind = "StopOnError"
+				case "CONTINUE_AFTER_ERROR":
+					option.OptionKind = "ContinueAfterError"
+				case "CHECKSUM":
+					option.OptionKind = "Checksum"
+				case "NO_CHECKSUM":
+					option.OptionKind = "NoChecksum"
+				case "INIT":
+					option.OptionKind = "Init"
+				case "NOINIT":
+					option.OptionKind = "NoInit"
+				case "FORMAT":
+					option.OptionKind = "Format"
+				case "NOFORMAT":
+					option.OptionKind = "NoFormat"
+				case "STATS":
+					option.OptionKind = "Stats"
+				default:
+					option.OptionKind = optionName
+				}
+				p.nextToken()
+
+				// Check for = value
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					val, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					option.Value = val
+				}
+
+				options = append(options, option)
+			}
 
 			if p.curTok.Type == TokenComma {
 				p.nextToken()
@@ -7135,6 +7147,85 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		Devices:         devices,
 		Options:         options,
 	}, nil
+}
+
+func (p *Parser) parseBackupEncryptionOption() (*ast.BackupEncryptionOption, error) {
+	// curTok is ENCRYPTION
+	p.nextToken() // consume ENCRYPTION
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after ENCRYPTION, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	opt := &ast.BackupEncryptionOption{
+		OptionKind: "None",
+	}
+
+	// Parse options inside parentheses
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		switch optName {
+		case "ALGORITHM":
+			// Parse algorithm type: AES_128, AES_192, AES_256, TRIPLE_DES_3KEY
+			algName := strings.ToUpper(p.curTok.Literal)
+			switch algName {
+			case "AES_128":
+				opt.Algorithm = "Aes128"
+			case "AES_192":
+				opt.Algorithm = "Aes192"
+			case "AES_256":
+				opt.Algorithm = "Aes256"
+			case "TRIPLE_DES_3KEY":
+				opt.Algorithm = "TripleDes3Key"
+			default:
+				opt.Algorithm = algName
+			}
+			p.nextToken()
+		case "SERVER":
+			// SERVER CERTIFICATE or SERVER ASYMMETRIC KEY
+			mechType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			opt.Encryptor = &ast.CryptoMechanism{}
+			switch mechType {
+			case "CERTIFICATE":
+				opt.Encryptor.CryptoMechanismType = "Certificate"
+			case "ASYMMETRIC":
+				// Consume KEY
+				if p.curTok.Type == TokenKey {
+					p.nextToken()
+				}
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				opt.Encryptor.CryptoMechanismType = "AsymmetricKey"
+			}
+
+			// Parse identifier
+			opt.Encryptor.Identifier = p.parseIdentifier()
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return opt, nil
 }
 
 func (p *Parser) parseBackupCertificateStatement() (*ast.BackupCertificateStatement, error) {
