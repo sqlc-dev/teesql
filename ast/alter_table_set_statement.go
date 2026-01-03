@@ -47,9 +47,27 @@ func (o *MemoryOptimizedTableOption) node()        {}
 
 // DurabilityTableOption represents a DURABILITY table option
 type DurabilityTableOption struct {
-	OptionKind                 string // "Durability"
-	DurabilityTableOptionKind  string // "SchemaOnly", "SchemaAndData"
+	OptionKind                string // "Durability"
+	DurabilityTableOptionKind string // "SchemaOnly", "SchemaAndData"
 }
 
 func (o *DurabilityTableOption) tableOption() {}
 func (o *DurabilityTableOption) node()        {}
+
+// LockEscalationTableOption represents LOCK_ESCALATION option
+type LockEscalationTableOption struct {
+	OptionKind string // "LockEscalation"
+	Value      string // "Auto", "Table", "Disable"
+}
+
+func (o *LockEscalationTableOption) tableOption() {}
+func (o *LockEscalationTableOption) node()        {}
+
+// FileStreamOnTableOption represents FILESTREAM_ON option
+type FileStreamOnTableOption struct {
+	OptionKind string // "FileStreamOn"
+	Value      *IdentifierOrValueExpression
+}
+
+func (o *FileStreamOnTableOption) tableOption() {}
+func (o *FileStreamOnTableOption) node()        {}

@@ -506,6 +506,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTableConstraintModificationStatementToJSON(s)
 	case *ast.AlterTableSetStatement:
 		return alterTableSetStatementToJSON(s)
+	case *ast.AlterTableRebuildStatement:
+		return alterTableRebuildStatementToJSON(s)
+	case *ast.AlterTableChangeTrackingModificationStatement:
+		return alterTableChangeTrackingStatementToJSON(s)
 	case *ast.InsertBulkStatement:
 		return insertBulkStatementToJSON(s)
 	case *ast.BulkInsertStatement:
@@ -863,6 +867,9 @@ func alterTableAlterColumnStatementToJSON(s *ast.AlterTableAlterColumnStatement)
 		node["DataType"] = dataTypeReferenceToJSON(s.DataType)
 	}
 	node["AlterTableAlterColumnOption"] = s.AlterTableAlterColumnOption
+	if s.StorageOptions != nil {
+		node["StorageOptions"] = columnStorageOptionsToJSON(s.StorageOptions)
+	}
 	node["IsHidden"] = s.IsHidden
 	if s.Collation != nil {
 		node["Collation"] = identifierToJSON(s.Collation)
@@ -6513,6 +6520,21 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		}
 		if o.Value != nil {
 			node["Value"] = identifierToJSON(o.Value)
+		}
+		return node
+	case *ast.LockEscalationTableOption:
+		return jsonNode{
+			"$type":      "LockEscalationTableOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.FileStreamOnTableOption:
+		node := jsonNode{
+			"$type":      "FileStreamOnTableOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = identifierOrValueExpressionToJSON(o.Value)
 		}
 		return node
 	default:
@@ -12896,6 +12918,45 @@ func alterTableSetStatementToJSON(s *ast.AlterTableSetStatement) jsonNode {
 			options = append(options, tableOptionToJSON(opt))
 		}
 		node["Options"] = options
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func alterTableRebuildStatementToJSON(s *ast.AlterTableRebuildStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterTableRebuildStatement",
+	}
+	if s.Partition != nil {
+		partNode := jsonNode{
+			"$type": "PartitionSpecifier",
+			"All":   s.Partition.All,
+		}
+		if s.Partition.Number != nil {
+			partNode["Number"] = scalarExpressionToJSON(s.Partition.Number)
+		}
+		node["Partition"] = partNode
+	}
+	if len(s.IndexOptions) > 0 {
+		var opts []jsonNode
+		for _, opt := range s.IndexOptions {
+			opts = append(opts, indexOptionToJSON(opt))
+		}
+		node["IndexOptions"] = opts
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func alterTableChangeTrackingStatementToJSON(s *ast.AlterTableChangeTrackingModificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":               "AlterTableChangeTrackingModificationStatement",
+		"IsEnable":            s.IsEnable,
+		"TrackColumnsUpdated": s.TrackColumnsUpdated,
 	}
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
