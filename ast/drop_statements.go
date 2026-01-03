@@ -293,8 +293,9 @@ func (s *DropRoleStatement) node()      {}
 
 // DropAssemblyStatement represents a DROP ASSEMBLY statement
 type DropAssemblyStatement struct {
-	IsIfExists bool
-	Objects    []*SchemaObjectName
+	IsIfExists       bool
+	Objects          []*SchemaObjectName
+	WithNoDependents bool
 }
 
 func (s *DropAssemblyStatement) statement() {}

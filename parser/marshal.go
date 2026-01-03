@@ -13269,8 +13269,8 @@ func dropRoleStatementToJSON(s *ast.DropRoleStatement) jsonNode {
 
 func dropAssemblyStatementToJSON(s *ast.DropAssemblyStatement) jsonNode {
 	node := jsonNode{
-		"$type":      "DropAssemblyStatement",
-		"IsIfExists": s.IsIfExists,
+		"$type":            "DropAssemblyStatement",
+		"WithNoDependents": s.WithNoDependents,
 	}
 	if len(s.Objects) > 0 {
 		objects := make([]jsonNode, len(s.Objects))
@@ -13279,6 +13279,7 @@ func dropAssemblyStatementToJSON(s *ast.DropAssemblyStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
+	node["IsIfExists"] = s.IsIfExists
 	return node
 }
 

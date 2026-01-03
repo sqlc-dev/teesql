@@ -927,6 +927,16 @@ func (p *Parser) parseDropSequenceStatement() (*ast.DropSequenceStatement, error
 
 	stmt := &ast.DropSequenceStatement{}
 
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF")
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
 	// Parse comma-separated list of schema object names
 	for {
 		name, err := p.parseSchemaObjectName()
@@ -3069,6 +3079,17 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 			p.nextToken()
 		}
 
+		// Check for IF EXISTS
+		var isIfExists bool
+		if strings.ToUpper(p.curTok.Literal) == "IF" {
+			p.nextToken()
+			if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+				return nil, fmt.Errorf("expected EXISTS after IF")
+			}
+			p.nextToken()
+			isIfExists = true
+		}
+
 		// Parse the element name
 		if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLBracket {
 			if len(stmt.AlterTableDropTableElements) > 0 {
@@ -3080,7 +3101,7 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 		element := &ast.AlterTableDropTableElement{
 			TableElementType: currentElementType,
 			Name:             p.parseIdentifier(),
-			IsIfExists:       false,
+			IsIfExists:       isIfExists,
 		}
 
 		// Check for WITH clause
