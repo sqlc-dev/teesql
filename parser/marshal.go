@@ -9884,7 +9884,17 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 	}
 	p.nextToken()
 
-	// Check if RETURNS TABLE (table-valued function)
+	// Check if RETURNS @varName TABLE or RETURNS TABLE (table-valued function)
+	var tableVarName *ast.Identifier
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		// Parse variable name for multi-statement table-valued function
+		tableVarName = &ast.Identifier{
+			Value:     p.curTok.Literal,
+			QuoteType: "NotQuoted",
+		}
+		p.nextToken()
+	}
+
 	if strings.ToUpper(p.curTok.Literal) == "TABLE" {
 		p.nextToken()
 
@@ -9893,7 +9903,8 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 			p.nextToken()
 			tableReturnType := &ast.TableValuedFunctionReturnType{
 				DeclareTableVariableBody: &ast.DeclareTableVariableBody{
-					AsDefined: false,
+					VariableName: tableVarName,
+					AsDefined:    false,
 					Definition: &ast.TableDefinition{
 						ColumnDefinitions: []*ast.ColumnDefinition{},
 					},
@@ -9919,6 +9930,40 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 						return nil, err
 					}
 					colDef.DataType = dataType
+				}
+
+				// Parse column constraints (PRIMARY KEY, NOT NULL, NULL, etc.)
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma && p.curTok.Type != TokenEOF {
+					upperLit := strings.ToUpper(p.curTok.Literal)
+					if upperLit == "PRIMARY" {
+						p.nextToken() // consume PRIMARY
+						if strings.ToUpper(p.curTok.Literal) == "KEY" {
+							p.nextToken() // consume KEY
+						}
+						colDef.Constraints = append(colDef.Constraints, &ast.UniqueConstraintDefinition{
+							IsPrimaryKey: true,
+						})
+					} else if upperLit == "NOT" {
+						p.nextToken() // consume NOT
+						if p.curTok.Type == TokenNull {
+							p.nextToken() // consume NULL
+							colDef.Constraints = append(colDef.Constraints, &ast.NullableConstraintDefinition{
+								Nullable: false,
+							})
+						}
+					} else if p.curTok.Type == TokenNull {
+						p.nextToken() // consume NULL
+						colDef.Constraints = append(colDef.Constraints, &ast.NullableConstraintDefinition{
+							Nullable: true,
+						})
+					} else if upperLit == "UNIQUE" {
+						p.nextToken() // consume UNIQUE
+						colDef.Constraints = append(colDef.Constraints, &ast.UniqueConstraintDefinition{
+							IsPrimaryKey: false,
+						})
+					} else {
+						break
+					}
 				}
 
 				tableReturnType.DeclareTableVariableBody.Definition.ColumnDefinitions = append(
@@ -10034,6 +10079,14 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 					SelectStatement: sel,
 				}
 			}
+		} else {
+			// Multi-statement table-valued function: BEGIN ... END
+			stmtList, err := p.parseFunctionStatementList()
+			if err != nil {
+				p.skipToEndOfStatement()
+				return stmt, nil
+			}
+			stmt.StatementList = stmtList
 		}
 	} else {
 		// Scalar function - parse return type

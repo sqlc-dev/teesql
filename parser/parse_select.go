@@ -82,6 +82,27 @@ func (p *Parser) parseThrowStatement() (*ast.ThrowStatement, error) {
 func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
 	stmt := &ast.SelectStatement{}
 
+	// Check for parenthesized WITH expression: (WITH ... SELECT ...)
+	// Only handle this case specially, let normal parsing handle other cases
+	if p.curTok.Type == TokenLParen && p.peekTok.Type == TokenWith {
+		p.nextToken() // consume (
+		// Parse WITH clause and SELECT statement
+		withStmt, err := p.parseWithStatement()
+		if err != nil {
+			return nil, err
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		// Return the SelectStatement with its WithCtesAndXmlNamespaces
+		if selStmt, ok := withStmt.(*ast.SelectStatement); ok {
+			return selStmt, nil
+		}
+		return nil, fmt.Errorf("expected SELECT statement after WITH, got %T", withStmt)
+	}
+
 	// Parse query expression (handles UNION, parens, etc.)
 	qe, into, on, err := p.parseQueryExpressionWithInto()
 	if err != nil {
