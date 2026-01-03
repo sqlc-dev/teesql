@@ -2922,8 +2922,30 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 		return p.parseAlterTableSwitchStatement(tableName)
 	}
 
-	// Check for WITH CHECK/NOCHECK or CHECK/NOCHECK CONSTRAINT
-	if strings.ToUpper(p.curTok.Literal) == "WITH" || strings.ToUpper(p.curTok.Literal) == "CHECK" || strings.ToUpper(p.curTok.Literal) == "NOCHECK" {
+	// Check for WITH CHECK/NOCHECK ADD - this is an add with enforcement option
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "CHECK" || strings.ToUpper(p.curTok.Literal) == "NOCHECK" {
+			enforcement := "Check"
+			if strings.ToUpper(p.curTok.Literal) == "NOCHECK" {
+				enforcement = "NoCheck"
+			}
+			p.nextToken() // consume CHECK/NOCHECK
+			if strings.ToUpper(p.curTok.Literal) == "ADD" {
+				stmt, err := p.parseAlterTableAddStatement(tableName)
+				if err != nil {
+					return nil, err
+				}
+				stmt.ExistingRowsCheckEnforcement = enforcement
+				return stmt, nil
+			}
+			// It's a constraint modification statement (WITH CHECK/NOCHECK CONSTRAINT ...)
+			return p.parseAlterTableConstraintModificationStatementAfterWith(tableName, enforcement)
+		}
+	}
+
+	// Check for CHECK/NOCHECK CONSTRAINT
+	if strings.ToUpper(p.curTok.Literal) == "CHECK" || strings.ToUpper(p.curTok.Literal) == "NOCHECK" {
 		return p.parseAlterTableConstraintModificationStatement(tableName)
 	}
 
@@ -3485,8 +3507,10 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 		Definition:                   &ast.TableDefinition{},
 	}
 
-	// Check if this is ADD CONSTRAINT
-	if strings.ToUpper(p.curTok.Literal) == "CONSTRAINT" {
+	// Loop to parse multiple elements separated by commas
+	for {
+		// Check if this is ADD CONSTRAINT
+		if strings.ToUpper(p.curTok.Literal) == "CONSTRAINT" {
 		p.nextToken() // consume CONSTRAINT
 		// Parse constraint name
 		constraintName := p.parseIdentifier()
@@ -3608,6 +3632,18 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 						p.nextToken()
 					}
 				}
+			}
+			// Parse ON filegroup
+			if p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+				fgIdent := p.parseIdentifier()
+				fg := &ast.FileGroupOrPartitionScheme{
+					Name: &ast.IdentifierOrValueExpression{
+						Identifier: fgIdent,
+						Value:      fgIdent.Value,
+					},
+				}
+				constraint.OnFileGroupOrPartitionScheme = fg
 			}
 			// Parse NOT ENFORCED
 			if strings.ToUpper(p.curTok.Literal) == "NOT" {
@@ -3734,6 +3770,18 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					}
 				}
 			}
+			// Parse ON filegroup
+			if p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+				fgIdent := p.parseIdentifier()
+				fg := &ast.FileGroupOrPartitionScheme{
+					Name: &ast.IdentifierOrValueExpression{
+						Identifier: fgIdent,
+						Value:      fgIdent.Value,
+					},
+				}
+				constraint.OnFileGroupOrPartitionScheme = fg
+			}
 			// Parse NOT ENFORCED
 			if strings.ToUpper(p.curTok.Literal) == "NOT" {
 				p.nextToken()
@@ -3799,6 +3847,52 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					if p.curTok.Type == TokenRParen {
 						p.nextToken() // consume )
 					}
+				}
+			}
+			// Parse ON DELETE/ON UPDATE actions
+			for p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+				actionType := strings.ToUpper(p.curTok.Literal)
+				if actionType == "DELETE" || actionType == "UPDATE" {
+					p.nextToken() // consume DELETE/UPDATE
+					action := ""
+					upperAction := strings.ToUpper(p.curTok.Literal)
+					if upperAction == "CASCADE" {
+						action = "Cascade"
+						p.nextToken()
+					} else if upperAction == "SET" {
+						p.nextToken()
+						if strings.ToUpper(p.curTok.Literal) == "NULL" {
+							action = "SetNull"
+							p.nextToken()
+						} else if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+							action = "SetDefault"
+							p.nextToken()
+						}
+					} else if upperAction == "NO" {
+						p.nextToken()
+						if strings.ToUpper(p.curTok.Literal) == "ACTION" {
+							action = "NoAction"
+							p.nextToken()
+						}
+					}
+					if actionType == "DELETE" {
+						constraint.DeleteAction = action
+					} else {
+						constraint.UpdateAction = action
+					}
+				} else {
+					break
+				}
+			}
+			// Parse NOT FOR REPLICATION
+			if strings.ToUpper(p.curTok.Literal) == "NOT" &&
+				strings.ToUpper(p.peekTok.Literal) == "FOR" {
+				p.nextToken() // consume NOT
+				p.nextToken() // consume FOR
+				if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+					constraint.NotForReplication = true
+					p.nextToken()
 				}
 			}
 			// Parse NOT ENFORCED
@@ -3993,13 +4087,85 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 		}
 
 		stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
-	} else {
-		// Parse column definition (column_name data_type ...)
-		colDef, err := p.parseColumnDefinition()
-		if err != nil {
-			return nil, err
+		} else if strings.ToUpper(p.curTok.Literal) == "CHECK" {
+			// Table-level CHECK constraint without CONSTRAINT keyword
+			p.nextToken() // consume CHECK
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				expr, err := p.parseBooleanExpression()
+				if err != nil {
+					p.skipToEndOfStatement()
+				} else {
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
+					constraint := &ast.CheckConstraintDefinition{
+						CheckCondition: expr,
+					}
+					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+				}
+			}
+		} else {
+			// Parse column definition (column_name data_type ...)
+			colDef, err := p.parseColumnDefinition()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Definition.ColumnDefinitions = append(stmt.Definition.ColumnDefinitions, colDef)
 		}
-		stmt.Definition.ColumnDefinitions = append(stmt.Definition.ColumnDefinitions, colDef)
+
+		// Check for comma to continue parsing more elements
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterTableConstraintModificationStatementAfterWith(tableName *ast.SchemaObjectName, existingEnforcement string) (*ast.AlterTableConstraintModificationStatement, error) {
+	stmt := &ast.AlterTableConstraintModificationStatement{
+		SchemaObjectName:             tableName,
+		ExistingRowsCheckEnforcement: existingEnforcement,
+	}
+
+	// Expect CHECK or NOCHECK
+	if strings.ToUpper(p.curTok.Literal) == "CHECK" {
+		stmt.ConstraintEnforcement = "Check"
+		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "NOCHECK" {
+		stmt.ConstraintEnforcement = "NoCheck"
+		p.nextToken()
+	} else {
+		return nil, fmt.Errorf("expected CHECK or NOCHECK, got %s", p.curTok.Literal)
+	}
+
+	// Expect CONSTRAINT
+	if strings.ToUpper(p.curTok.Literal) != "CONSTRAINT" {
+		return nil, fmt.Errorf("expected CONSTRAINT, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for ALL or constraint names
+	if strings.ToUpper(p.curTok.Literal) == "ALL" {
+		stmt.All = true
+		p.nextToken()
+	} else {
+		stmt.All = false
+		// Parse constraint names (comma-separated)
+		for {
+			stmt.ConstraintNames = append(stmt.ConstraintNames, p.parseIdentifier())
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume comma
+		}
 	}
 
 	// Skip optional semicolon
