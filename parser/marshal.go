@@ -9845,6 +9845,18 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 				param.DataType = dataType
 			}
 
+			// Check for NULL/NOT NULL nullability
+			if p.curTok.Type == TokenNull {
+				param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+				p.nextToken()
+			} else if p.curTok.Type == TokenNot {
+				p.nextToken() // consume NOT
+				if p.curTok.Type == TokenNull {
+					param.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+					p.nextToken()
+				}
+			}
+
 			// Check for READONLY modifier
 			if strings.ToUpper(p.curTok.Literal) == "READONLY" {
 				param.Modifier = "ReadOnly"
@@ -10104,7 +10116,15 @@ func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
 				OptionState: state,
 			})
 		case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION":
-			optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
+			var optKind string
+			switch upperOpt {
+			case "ENCRYPTION":
+				optKind = "Encryption"
+			case "SCHEMABINDING":
+				optKind = "SchemaBinding"
+			case "NATIVE_COMPILATION":
+				optKind = "NativeCompilation"
+			}
 			p.nextToken()
 			stmt.Options = append(stmt.Options, &ast.FunctionOption{
 				OptionKind: optKind,
@@ -10221,6 +10241,18 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 					return nil, err
 				}
 				param.DataType = dataType
+			}
+
+			// Check for NULL/NOT NULL nullability
+			if p.curTok.Type == TokenNull {
+				param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+				p.nextToken()
+			} else if p.curTok.Type == TokenNot {
+				p.nextToken() // consume NOT
+				if p.curTok.Type == TokenNull {
+					param.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+					p.nextToken()
+				}
 			}
 
 			// Check for READONLY modifier
