@@ -5397,6 +5397,33 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					p.nextToken() // consume )
 				}
 			}
+			// Parse ON DELETE and ON UPDATE actions
+			for {
+				actionUpperLit := strings.ToUpper(p.curTok.Literal)
+				if actionUpperLit == "ON" {
+					p.nextToken() // consume ON
+					actionType := strings.ToUpper(p.curTok.Literal)
+					p.nextToken() // consume DELETE or UPDATE
+
+					action := p.parseForeignKeyAction()
+					if actionType == "DELETE" {
+						constraint.DeleteAction = action
+					} else if actionType == "UPDATE" {
+						constraint.UpdateAction = action
+					}
+				} else if actionUpperLit == "NOT" {
+					p.nextToken() // consume NOT
+					if strings.ToUpper(p.curTok.Literal) == "FOR" {
+						p.nextToken() // consume FOR
+						if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+							p.nextToken() // consume REPLICATION
+							constraint.NotForReplication = true
+						}
+					}
+				} else {
+					break
+				}
+			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "CONSTRAINT" {
 			p.nextToken() // consume CONSTRAINT
@@ -6031,7 +6058,67 @@ func (p *Parser) parseForeignKeyConstraint() (*ast.ForeignKeyConstraintDefinitio
 		}
 	}
 
+	// Parse ON DELETE and ON UPDATE actions
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ON" {
+			p.nextToken() // consume ON
+			actionType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume DELETE or UPDATE
+
+			// Parse action: NO ACTION, CASCADE, SET NULL, SET DEFAULT
+			action := p.parseForeignKeyAction()
+
+			if actionType == "DELETE" {
+				constraint.DeleteAction = action
+			} else if actionType == "UPDATE" {
+				constraint.UpdateAction = action
+			}
+		} else if upperLit == "NOT" {
+			// NOT FOR REPLICATION
+			p.nextToken() // consume NOT
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+				if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+					p.nextToken() // consume REPLICATION
+					constraint.NotForReplication = true
+				}
+			}
+		} else {
+			break
+		}
+	}
+
 	return constraint, nil
+}
+
+// parseForeignKeyAction parses CASCADE, NO ACTION, SET NULL, SET DEFAULT
+func (p *Parser) parseForeignKeyAction() string {
+	upperLit := strings.ToUpper(p.curTok.Literal)
+
+	switch upperLit {
+	case "CASCADE":
+		p.nextToken()
+		return "Cascade"
+	case "NO":
+		p.nextToken() // consume NO
+		if strings.ToUpper(p.curTok.Literal) == "ACTION" {
+			p.nextToken() // consume ACTION
+		}
+		return "NoAction"
+	case "SET":
+		p.nextToken() // consume SET
+		setType := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume NULL or DEFAULT
+		if setType == "NULL" {
+			return "SetNull"
+		} else if setType == "DEFAULT" {
+			return "SetDefault"
+		}
+		return "NotSpecified"
+	default:
+		return "NotSpecified"
+	}
 }
 
 // parseCheckConstraint parses CHECK (expression)
