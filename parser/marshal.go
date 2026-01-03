@@ -6027,15 +6027,18 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			stmt.SecurityTargetObject.ObjectKind = "User"
 		}
 
-		// Expect ::
+		// Parse object name
 		if p.curTok.Type == TokenColonColon {
 			p.nextToken() // consume ::
+		}
 
-			// Parse object name as multi-part identifier
+		// Parse object name as multi-part identifier
+		// This handles both "OBJECT::name" and plain "..name" syntax
+		if p.curTok.Type == TokenDot || p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
 			multiPart := &ast.MultiPartIdentifier{}
 			for {
-				// Handle double dots (e.g., a.b..d) by adding empty identifier
+				// Handle double dots (e.g., ..t1) by adding empty identifier
 				if p.curTok.Type == TokenDot {
 					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
 						Value:     "",
@@ -6053,6 +6056,23 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			}
 			multiPart.Count = len(multiPart.Identifiers)
 			stmt.SecurityTargetObject.ObjectName.MultiPartIdentifier = multiPart
+		}
+
+		// Parse optional column list (c1, c2, ...)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseIdentifier()
+				stmt.SecurityTargetObject.Columns = append(stmt.SecurityTargetObject.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		}
 	}
 
@@ -6292,15 +6312,18 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			stmt.SecurityTargetObject.ObjectKind = "User"
 		}
 
-		// Expect ::
+		// Parse object name
 		if p.curTok.Type == TokenColonColon {
 			p.nextToken() // consume ::
+		}
 
-			// Parse object name as multi-part identifier
+		// Parse object name as multi-part identifier
+		// This handles both "OBJECT::name" and plain "..name" syntax
+		if p.curTok.Type == TokenDot || p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
 			multiPart := &ast.MultiPartIdentifier{}
 			for {
-				// Handle double dots (e.g., a.b..d) by adding empty identifier
+				// Handle double dots (e.g., ..t1) by adding empty identifier
 				if p.curTok.Type == TokenDot {
 					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
 						Value:     "",
@@ -6318,6 +6341,23 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			}
 			multiPart.Count = len(multiPart.Identifiers)
 			stmt.SecurityTargetObject.ObjectName.MultiPartIdentifier = multiPart
+		}
+
+		// Parse optional column list (c1, c2, ...)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseIdentifier()
+				stmt.SecurityTargetObject.Columns = append(stmt.SecurityTargetObject.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		}
 	}
 
@@ -6524,15 +6564,18 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			stmt.SecurityTargetObject.ObjectKind = "User"
 		}
 
-		// Expect ::
+		// Parse object name
 		if p.curTok.Type == TokenColonColon {
 			p.nextToken() // consume ::
+		}
 
-			// Parse object name as multi-part identifier
+		// Parse object name as multi-part identifier
+		// This handles both "OBJECT::name" and plain "..name" syntax
+		if p.curTok.Type == TokenDot || p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
 			multiPart := &ast.MultiPartIdentifier{}
 			for {
-				// Handle double dots (e.g., a.b..d) by adding empty identifier
+				// Handle double dots (e.g., ..t1) by adding empty identifier
 				if p.curTok.Type == TokenDot {
 					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
 						Value:     "",
@@ -6550,6 +6593,23 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			}
 			multiPart.Count = len(multiPart.Identifiers)
 			stmt.SecurityTargetObject.ObjectName.MultiPartIdentifier = multiPart
+		}
+
+		// Parse optional column list (c1, c2, ...)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseIdentifier()
+				stmt.SecurityTargetObject.Columns = append(stmt.SecurityTargetObject.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		}
 	}
 
@@ -7155,6 +7215,13 @@ func securityTargetObjectToJSON(s *ast.SecurityTargetObject) jsonNode {
 	}
 	if s.ObjectName != nil {
 		node["ObjectName"] = securityTargetObjectNameToJSON(s.ObjectName)
+	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, c := range s.Columns {
+			cols[i] = identifierToJSON(c)
+		}
+		node["Columns"] = cols
 	}
 	return node
 }
