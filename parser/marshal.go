@@ -344,6 +344,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createServerRoleStatementToJSON(s)
 	case *ast.AlterServerRoleStatement:
 		return alterServerRoleStatementToJSON(s)
+	case *ast.CreateAvailabilityGroupStatement:
+		return createAvailabilityGroupStatementToJSON(s)
 	case *ast.CreateServerAuditStatement:
 		return createServerAuditStatementToJSON(s)
 	case *ast.AlterServerAuditStatement:
@@ -8029,6 +8031,110 @@ func alterServerRoleStatementToJSON(s *ast.AlterServerRoleStatement) jsonNode {
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	return node
+}
+
+func createAvailabilityGroupStatementToJSON(s *ast.CreateAvailabilityGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateAvailabilityGroupStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = availabilityGroupOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	if len(s.Databases) > 0 {
+		dbs := make([]jsonNode, len(s.Databases))
+		for i, db := range s.Databases {
+			dbs[i] = identifierToJSON(db)
+		}
+		node["Databases"] = dbs
+	}
+	if len(s.Replicas) > 0 {
+		reps := make([]jsonNode, len(s.Replicas))
+		for i, rep := range s.Replicas {
+			reps[i] = availabilityReplicaToJSON(rep)
+		}
+		node["Replicas"] = reps
+	}
+	return node
+}
+
+func availabilityGroupOptionToJSON(opt ast.AvailabilityGroupOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.LiteralAvailabilityGroupOption:
+		node := jsonNode{
+			"$type": "LiteralAvailabilityGroupOption",
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		node["OptionKind"] = o.OptionKind
+		return node
+	default:
+		return jsonNode{"$type": "UnknownAvailabilityGroupOption"}
+	}
+}
+
+func availabilityReplicaToJSON(rep *ast.AvailabilityReplica) jsonNode {
+	node := jsonNode{
+		"$type": "AvailabilityReplica",
+	}
+	if rep.ServerName != nil {
+		node["ServerName"] = stringLiteralToJSON(rep.ServerName)
+	}
+	if len(rep.Options) > 0 {
+		opts := make([]jsonNode, len(rep.Options))
+		for i, opt := range rep.Options {
+			opts[i] = availabilityReplicaOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func availabilityReplicaOptionToJSON(opt ast.AvailabilityReplicaOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.AvailabilityModeReplicaOption:
+		return jsonNode{
+			"$type":      "AvailabilityModeReplicaOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.FailoverModeReplicaOption:
+		return jsonNode{
+			"$type":      "FailoverModeReplicaOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.LiteralReplicaOption:
+		node := jsonNode{
+			"$type": "LiteralReplicaOption",
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		node["OptionKind"] = o.OptionKind
+		return node
+	case *ast.PrimaryRoleReplicaOption:
+		return jsonNode{
+			"$type":            "PrimaryRoleReplicaOption",
+			"AllowConnections": o.AllowConnections,
+			"OptionKind":       o.OptionKind,
+		}
+	case *ast.SecondaryRoleReplicaOption:
+		return jsonNode{
+			"$type":            "SecondaryRoleReplicaOption",
+			"AllowConnections": o.AllowConnections,
+			"OptionKind":       o.OptionKind,
+		}
+	default:
+		return jsonNode{"$type": "UnknownReplicaOption"}
+	}
 }
 
 func createServerAuditStatementToJSON(s *ast.CreateServerAuditStatement) jsonNode {

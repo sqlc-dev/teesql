@@ -2667,6 +2667,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			default:
 				return nil, fmt.Errorf("expected ROLE or AUDIT after SERVER, got %s", p.curTok.Literal)
 			}
+		case "AVAILABILITY":
+			return p.parseCreateAvailabilityGroupStatement()
 		}
 		// Lenient: skip unknown CREATE statements
 		p.skipToEndOfStatement()
@@ -2683,6 +2685,278 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 		p.skipToEndOfStatement()
 		return &ast.CreateProcedureStatement{}, nil
 	}
+}
+
+func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilityGroupStatement, error) {
+	// Consume AVAILABILITY
+	p.nextToken()
+
+	// Expect GROUP
+	if strings.ToUpper(p.curTok.Literal) != "GROUP" {
+		return nil, fmt.Errorf("expected GROUP after AVAILABILITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.CreateAvailabilityGroupStatement{}
+
+	// Parse group name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse WITH clause for group options
+	if p.curTok.Type == TokenWith || strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume option name
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+
+				switch optName {
+				case "REQUIRED_COPIES_TO_COMMIT":
+					val, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					stmt.Options = append(stmt.Options, &ast.LiteralAvailabilityGroupOption{
+						OptionKind: "RequiredCopiesToCommit",
+						Value:      val,
+					})
+				default:
+					// Skip unknown options
+					if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
+						p.nextToken()
+					}
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	}
+
+	// Parse FOR DATABASE clause
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "DATABASE" {
+			p.nextToken() // consume DATABASE
+			// Parse comma-separated database names
+			for {
+				stmt.Databases = append(stmt.Databases, p.parseIdentifier())
+				if p.curTok.Type != TokenComma {
+					break
+				}
+				p.nextToken() // consume comma
+			}
+		}
+	}
+
+	// Parse REPLICA ON clause
+	if strings.ToUpper(p.curTok.Literal) == "REPLICA" {
+		p.nextToken() // consume REPLICA
+		if strings.ToUpper(p.curTok.Literal) == "ON" {
+			p.nextToken() // consume ON
+		}
+
+		// Parse comma-separated replica definitions
+		for {
+			replica := &ast.AvailabilityReplica{}
+
+			// Parse server name (string literal)
+			if p.curTok.Type == TokenString {
+				replica.ServerName, _ = p.parseStringLiteral()
+			}
+
+			// Parse WITH clause for replica options
+			if p.curTok.Type == TokenWith || strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						optName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken() // consume option name
+
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+
+						switch optName {
+						case "AVAILABILITY_MODE":
+							modeStr := strings.ToUpper(p.curTok.Literal)
+							p.nextToken()
+							// Handle SYNCHRONOUS_COMMIT or ASYNCHRONOUS_COMMIT
+							if p.curTok.Type == TokenIdent && strings.HasPrefix(strings.ToUpper(p.curTok.Literal), "_") {
+								modeStr += strings.ToUpper(p.curTok.Literal)
+								p.nextToken()
+							}
+							var mode string
+							switch modeStr {
+							case "SYNCHRONOUS_COMMIT":
+								mode = "SynchronousCommit"
+							case "ASYNCHRONOUS_COMMIT":
+								mode = "AsynchronousCommit"
+							default:
+								mode = modeStr
+							}
+							replica.Options = append(replica.Options, &ast.AvailabilityModeReplicaOption{
+								OptionKind: "AvailabilityMode",
+								Value:      mode,
+							})
+						case "FAILOVER_MODE":
+							modeStr := strings.ToUpper(p.curTok.Literal)
+							p.nextToken()
+							var mode string
+							switch modeStr {
+							case "AUTOMATIC":
+								mode = "Automatic"
+							case "MANUAL":
+								mode = "Manual"
+							default:
+								mode = modeStr
+							}
+							replica.Options = append(replica.Options, &ast.FailoverModeReplicaOption{
+								OptionKind: "FailoverMode",
+								Value:      mode,
+							})
+						case "ENDPOINT_URL":
+							val, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							replica.Options = append(replica.Options, &ast.LiteralReplicaOption{
+								OptionKind: "EndpointUrl",
+								Value:      val,
+							})
+						case "SESSION_TIMEOUT":
+							val, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							replica.Options = append(replica.Options, &ast.LiteralReplicaOption{
+								OptionKind: "SessionTimeout",
+								Value:      val,
+							})
+						case "APPLY_DELAY":
+							val, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							replica.Options = append(replica.Options, &ast.LiteralReplicaOption{
+								OptionKind: "ApplyDelay",
+								Value:      val,
+							})
+						case "PRIMARY_ROLE":
+							// Parse (ALLOW_CONNECTIONS = ...)
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									innerOpt := strings.ToUpper(p.curTok.Literal)
+									p.nextToken()
+									if p.curTok.Type == TokenEquals {
+										p.nextToken()
+									}
+									if innerOpt == "ALLOW_CONNECTIONS" {
+										connMode := strings.ToUpper(p.curTok.Literal)
+										p.nextToken()
+										var mode string
+										switch connMode {
+										case "READ_WRITE":
+											mode = "ReadWrite"
+										case "ALL":
+											mode = "All"
+										default:
+											mode = connMode
+										}
+										replica.Options = append(replica.Options, &ast.PrimaryRoleReplicaOption{
+											OptionKind:       "PrimaryRole",
+											AllowConnections: mode,
+										})
+									}
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+							}
+						case "SECONDARY_ROLE":
+							// Parse (ALLOW_CONNECTIONS = ...)
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									innerOpt := strings.ToUpper(p.curTok.Literal)
+									p.nextToken()
+									if p.curTok.Type == TokenEquals {
+										p.nextToken()
+									}
+									if innerOpt == "ALLOW_CONNECTIONS" {
+										connMode := strings.ToUpper(p.curTok.Literal)
+										p.nextToken()
+										var mode string
+										switch connMode {
+										case "NO":
+											mode = "No"
+										case "READ_ONLY":
+											mode = "ReadOnly"
+										case "ALL":
+											mode = "All"
+										default:
+											mode = connMode
+										}
+										replica.Options = append(replica.Options, &ast.SecondaryRoleReplicaOption{
+											OptionKind:       "SecondaryRole",
+											AllowConnections: mode,
+										})
+									}
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+							}
+						default:
+							// Skip unknown options
+							if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
+								p.nextToken()
+							}
+						}
+
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
+				}
+			}
+
+			stmt.Replicas = append(stmt.Replicas, replica)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+			} else {
+				break
+			}
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func (p *Parser) parseCreateCryptographicProviderStatement() (*ast.CreateCryptographicProviderStatement, error) {
