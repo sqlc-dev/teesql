@@ -44,3 +44,12 @@ type MemoryOptimizedTableOption struct {
 
 func (o *MemoryOptimizedTableOption) tableOption() {}
 func (o *MemoryOptimizedTableOption) node()        {}
+
+// DurabilityTableOption represents a DURABILITY table option
+type DurabilityTableOption struct {
+	OptionKind                 string // "Durability"
+	DurabilityTableOptionKind  string // "SchemaOnly", "SchemaAndData"
+}
+
+func (o *DurabilityTableOption) tableOption() {}
+func (o *DurabilityTableOption) node()        {}

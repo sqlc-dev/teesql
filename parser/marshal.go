@@ -4084,6 +4084,20 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							OptionKind:  "MemoryOptimized",
 							OptionState: state,
 						})
+					} else if optionName == "DURABILITY" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						durabilityKind := "SchemaOnly"
+						if valueUpper == "SCHEMA_AND_DATA" {
+							durabilityKind = "SchemaAndData"
+						}
+						p.nextToken() // consume value
+						stmt.Options = append(stmt.Options, &ast.DurabilityTableOption{
+							OptionKind:                "Durability",
+							DurabilityTableOptionKind: durabilityKind,
+						})
 					} else {
 						// Skip unknown option value
 						if p.curTok.Type == TokenEquals {
@@ -4290,6 +4304,20 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 						stmt.Options = append(stmt.Options, &ast.MemoryOptimizedTableOption{
 							OptionKind:  "MemoryOptimized",
 							OptionState: state,
+						})
+					} else if optionName == "DURABILITY" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						durabilityKind := "SchemaOnly"
+						if valueUpper == "SCHEMA_AND_DATA" {
+							durabilityKind = "SchemaAndData"
+						}
+						p.nextToken() // consume value
+						stmt.Options = append(stmt.Options, &ast.DurabilityTableOption{
+							OptionKind:                "Durability",
+							DurabilityTableOptionKind: durabilityKind,
 						})
 					} else if optionName == "FILETABLE_PRIMARY_KEY_CONSTRAINT_NAME" {
 						if p.curTok.Type == TokenEquals {
@@ -5058,18 +5086,33 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			indexDef := &ast.IndexDefinition{
 				IndexType: &ast.IndexType{},
 			}
-			// Parse index name (skip if it's CLUSTERED/NONCLUSTERED)
+			// Parse index name (skip if it's CLUSTERED/NONCLUSTERED/UNIQUE)
 			idxUpper := strings.ToUpper(p.curTok.Literal)
-			if p.curTok.Type == TokenIdent && idxUpper != "CLUSTERED" && idxUpper != "NONCLUSTERED" && p.curTok.Type != TokenLParen {
+			if p.curTok.Type == TokenIdent && idxUpper != "CLUSTERED" && idxUpper != "NONCLUSTERED" && idxUpper != "UNIQUE" && p.curTok.Type != TokenLParen {
 				indexDef.Name = p.parseIdentifier()
 			}
-			// Parse optional CLUSTERED/NONCLUSTERED
+			// Parse optional UNIQUE
+			if strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
+				indexDef.Unique = true
+				p.nextToken()
+			}
+			// Parse optional CLUSTERED/NONCLUSTERED [HASH]
 			if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 				indexDef.IndexType.IndexTypeKind = "Clustered"
 				p.nextToken()
+				// Check for HASH
+				if strings.ToUpper(p.curTok.Literal) == "HASH" {
+					indexDef.IndexType.IndexTypeKind = "ClusteredHash"
+					p.nextToken()
+				}
 			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 				indexDef.IndexType.IndexTypeKind = "NonClustered"
 				p.nextToken()
+				// Check for HASH
+				if strings.ToUpper(p.curTok.Literal) == "HASH" {
+					indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
+					p.nextToken()
+				}
 			}
 			// Parse optional column list: (col1 [ASC|DESC], ...)
 			if p.curTok.Type == TokenLParen {
@@ -5106,6 +5149,42 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				}
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
+				}
+			}
+			// Parse optional WITH (index_options)
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						optionName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken() // consume option name
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						if optionName == "BUCKET_COUNT" {
+							opt := &ast.IndexExpressionOption{
+								OptionKind: "BucketCount",
+								Expression: &ast.IntegerLiteral{
+									LiteralType: "Integer",
+									Value:       p.curTok.Literal,
+								},
+							}
+							indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+							p.nextToken()
+						} else {
+							// Skip other options
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
 				}
 			}
 			// Parse optional INCLUDE clause
@@ -6402,6 +6481,12 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 			"$type":       "MemoryOptimizedTableOption",
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
+		}
+	case *ast.DurabilityTableOption:
+		return jsonNode{
+			"$type":                     "DurabilityTableOption",
+			"OptionKind":                o.OptionKind,
+			"DurabilityTableOptionKind": o.DurabilityTableOptionKind,
 		}
 	case *ast.FileTableDirectoryTableOption:
 		node := jsonNode{
