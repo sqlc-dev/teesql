@@ -4842,6 +4842,12 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 				p.nextToken()
 			}
 			stmt.Options = append(stmt.Options, opt)
+		} else if optionName == "REMOTE_DATA_ARCHIVE" {
+			rdaOpt, err := p.parseRemoteDataArchiveTableOption(true)
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = append(stmt.Options, rdaOpt)
 		}
 
 		if p.curTok.Type == TokenComma {

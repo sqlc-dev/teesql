@@ -4263,6 +4263,12 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							OptionKind:                "Durability",
 							DurabilityTableOptionKind: durabilityKind,
 						})
+					} else if optionName == "REMOTE_DATA_ARCHIVE" {
+						opt, err := p.parseRemoteDataArchiveTableOption(false)
+						if err != nil {
+							return nil, err
+						}
+						stmt.Options = append(stmt.Options, opt)
 					} else {
 						// Skip unknown option value
 						if p.curTok.Type == TokenEquals {
@@ -4511,6 +4517,12 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 							OptionKind: "FileTableFullPathUniqueConstraintName",
 							Value:      constraintName,
 						})
+					} else if optionName == "REMOTE_DATA_ARCHIVE" {
+						opt, err := p.parseRemoteDataArchiveTableOption(false)
+						if err != nil {
+							return nil, err
+						}
+						stmt.Options = append(stmt.Options, opt)
 					} else {
 						// Skip unknown option value
 						if p.curTok.Type == TokenEquals {
@@ -4538,6 +4550,101 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 	}
 
 	return stmt, nil
+}
+
+// parseRemoteDataArchiveTableOption parses REMOTE_DATA_ARCHIVE = ON/OFF (options...) for tables
+// isAlterTable indicates if this is for ALTER TABLE SET (which uses RemoteDataArchiveAlterTableOption)
+func (p *Parser) parseRemoteDataArchiveTableOption(isAlterTable bool) (ast.TableOption, error) {
+	// curTok should be = or (
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+	}
+
+	// Parse ON, OFF, or OFF_WITHOUT_DATA_RECOVERY
+	rdaOption := "Enable"
+	stateUpper := strings.ToUpper(p.curTok.Literal)
+	if stateUpper == "ON" {
+		rdaOption = "Enable"
+		p.nextToken()
+	} else if stateUpper == "OFF" {
+		rdaOption = "Disable"
+		p.nextToken()
+	} else if stateUpper == "OFF_WITHOUT_DATA_RECOVERY" {
+		rdaOption = "OffWithoutDataRecovery"
+		p.nextToken()
+	}
+
+	var migrationState string
+	var filterPredicate ast.ScalarExpression
+	isMigrationStateSpecified := false
+	isFilterPredicateSpecified := false
+
+	// Parse options in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			optName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume option name
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			switch optName {
+			case "MIGRATION_STATE":
+				isMigrationStateSpecified = true
+				msUpper := strings.ToUpper(p.curTok.Literal)
+				if msUpper == "PAUSED" {
+					migrationState = "Paused"
+				} else if msUpper == "OUTBOUND" {
+					migrationState = "Outbound"
+				} else if msUpper == "INBOUND" {
+					migrationState = "Inbound"
+				}
+				p.nextToken()
+			case "FILTER_PREDICATE":
+				isFilterPredicateSpecified = true
+				if strings.ToUpper(p.curTok.Literal) == "NULL" {
+					// When FILTER_PREDICATE = NULL, filterPredicate stays nil
+					p.nextToken()
+				} else {
+					// Parse function call like dbo.f1(c1)
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					filterPredicate = expr
+				}
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	if isAlterTable {
+		return &ast.RemoteDataArchiveAlterTableOption{
+			RdaTableOption:             rdaOption,
+			MigrationState:             migrationState,
+			IsMigrationStateSpecified:  isMigrationStateSpecified,
+			FilterPredicate:            filterPredicate,
+			IsFilterPredicateSpecified: isFilterPredicateSpecified,
+			OptionKind:                 "RemoteDataArchive",
+		}, nil
+	}
+
+	return &ast.RemoteDataArchiveTableOption{
+		RdaTableOption:  rdaOption,
+		MigrationState:  migrationState,
+		FilterPredicate: filterPredicate,
+		OptionKind:      "RemoteDataArchive",
+	}, nil
 }
 
 // parseMergeStatement parses a MERGE statement
@@ -6924,6 +7031,30 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		}
 		if o.Value != nil {
 			node["Value"] = identifierOrValueExpressionToJSON(o.Value)
+		}
+		return node
+	case *ast.RemoteDataArchiveTableOption:
+		node := jsonNode{
+			"$type":          "RemoteDataArchiveTableOption",
+			"RdaTableOption": o.RdaTableOption,
+			"MigrationState": o.MigrationState,
+			"OptionKind":     o.OptionKind,
+		}
+		if o.FilterPredicate != nil {
+			node["FilterPredicate"] = scalarExpressionToJSON(o.FilterPredicate)
+		}
+		return node
+	case *ast.RemoteDataArchiveAlterTableOption:
+		node := jsonNode{
+			"$type":                      "RemoteDataArchiveAlterTableOption",
+			"RdaTableOption":             o.RdaTableOption,
+			"MigrationState":             o.MigrationState,
+			"IsMigrationStateSpecified":  o.IsMigrationStateSpecified,
+			"IsFilterPredicateSpecified": o.IsFilterPredicateSpecified,
+			"OptionKind":                 o.OptionKind,
+		}
+		if o.FilterPredicate != nil {
+			node["FilterPredicate"] = scalarExpressionToJSON(o.FilterPredicate)
 		}
 		return node
 	default:
