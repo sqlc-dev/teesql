@@ -1001,12 +1001,18 @@ func alterCredentialStatementToJSON(s *ast.AlterCredentialStatement) jsonNode {
 
 func alterDatabaseSetStatementToJSON(s *ast.AlterDatabaseSetStatement) jsonNode {
 	node := jsonNode{
-		"$type":             "AlterDatabaseSetStatement",
-		"WithManualCutover": s.WithManualCutover,
-		"UseCurrent":        s.UseCurrent,
+		"$type": "AlterDatabaseSetStatement",
 	}
-	if s.DatabaseName != nil {
-		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	if s.Termination != nil {
+		termNode := jsonNode{
+			"$type":             "AlterDatabaseTermination",
+			"ImmediateRollback": s.Termination.ImmediateRollback,
+			"NoWait":            s.Termination.NoWait,
+		}
+		if s.Termination.RollbackAfter != nil {
+			termNode["RollbackAfter"] = scalarExpressionToJSON(s.Termination.RollbackAfter)
+		}
+		node["Termination"] = termNode
 	}
 	if len(s.Options) > 0 {
 		opts := make([]jsonNode, len(s.Options))
@@ -1015,6 +1021,11 @@ func alterDatabaseSetStatementToJSON(s *ast.AlterDatabaseSetStatement) jsonNode 
 		}
 		node["Options"] = opts
 	}
+	node["WithManualCutover"] = s.WithManualCutover
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = s.UseCurrent
 	return node
 }
 
@@ -1040,11 +1051,13 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		}
 	case *ast.AutoCreateStatisticsDatabaseOption:
 		node := jsonNode{
-			"$type": "AutoCreateStatisticsDatabaseOption",
+			"$type":          "AutoCreateStatisticsDatabaseOption",
+			"HasIncremental": o.HasIncremental,
 		}
-		if o.HasIncremental {
-			node["HasIncremental"] = o.HasIncremental
+		if o.IncrementalState != "" {
 			node["IncrementalState"] = o.IncrementalState
+		} else {
+			node["IncrementalState"] = "NotSet"
 		}
 		node["OptionState"] = o.OptionState
 		node["OptionKind"] = o.OptionKind
@@ -1102,6 +1115,23 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			node["Details"] = details
 		}
 		return node
+	case *ast.RecoveryDatabaseOption:
+		return jsonNode{
+			"$type":      "RecoveryDatabaseOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.CursorDefaultDatabaseOption:
+		return jsonNode{
+			"$type":      "CursorDefaultDatabaseOption",
+			"IsLocal":    o.IsLocal,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.SimpleDatabaseOption:
+		return jsonNode{
+			"$type":      "DatabaseOption",
+			"OptionKind": o.OptionKind,
+		}
 	default:
 		return jsonNode{"$type": "UnknownDatabaseOption"}
 	}

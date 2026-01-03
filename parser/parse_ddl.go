@@ -1951,6 +1951,56 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 		p.nextToken()
 
 		switch optionName {
+		// Simple database options without ON/OFF
+		case "ONLINE", "OFFLINE":
+			opt := &ast.SimpleDatabaseOption{OptionKind: capitalizeFirst(strings.ToLower(optionName))}
+			stmt.Options = append(stmt.Options, opt)
+		case "SINGLE_USER":
+			opt := &ast.SimpleDatabaseOption{OptionKind: "SingleUser"}
+			stmt.Options = append(stmt.Options, opt)
+		case "RESTRICTED_USER":
+			opt := &ast.SimpleDatabaseOption{OptionKind: "RestrictedUser"}
+			stmt.Options = append(stmt.Options, opt)
+		case "MULTI_USER":
+			opt := &ast.SimpleDatabaseOption{OptionKind: "MultiUser"}
+			stmt.Options = append(stmt.Options, opt)
+		case "READ_ONLY":
+			opt := &ast.SimpleDatabaseOption{OptionKind: "ReadOnly"}
+			stmt.Options = append(stmt.Options, opt)
+		case "READ_WRITE":
+			opt := &ast.SimpleDatabaseOption{OptionKind: "ReadWrite"}
+			stmt.Options = append(stmt.Options, opt)
+		case "RECOVERY":
+			// Expect FULL, BULK_LOGGED, or SIMPLE
+			recoveryType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			recoveryValue := "Full"
+			switch recoveryType {
+			case "BULK_LOGGED":
+				recoveryValue = "BulkLogged"
+			case "SIMPLE":
+				recoveryValue = "Simple"
+			}
+			opt := &ast.RecoveryDatabaseOption{OptionKind: "Recovery", Value: recoveryValue}
+			stmt.Options = append(stmt.Options, opt)
+		case "CURSOR_CLOSE_ON_COMMIT":
+			// Expects ON/OFF
+			optionValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			opt := &ast.OnOffDatabaseOption{
+				OptionKind:  "CursorCloseOnCommit",
+				OptionState: capitalizeFirst(optionValue),
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "CURSOR_DEFAULT":
+			// Expects LOCAL or GLOBAL
+			cursorValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			opt := &ast.CursorDefaultDatabaseOption{
+				OptionKind: "CursorDefault",
+				IsLocal:    cursorValue == "LOCAL",
+			}
+			stmt.Options = append(stmt.Options, opt)
 		case "ACCELERATED_DATABASE_RECOVERY":
 			// Expect = for this option
 			if p.curTok.Type != TokenEquals {
@@ -2077,6 +2127,37 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 		} else {
 			break
 		}
+	}
+
+	// Parse optional termination clause: WITH NO_WAIT | WITH ROLLBACK AFTER N [SECONDS] | WITH ROLLBACK IMMEDIATE
+	if p.curTok.Type == TokenWith || strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		term := &ast.AlterDatabaseTermination{}
+		termKeyword := strings.ToUpper(p.curTok.Literal)
+		if termKeyword == "NO_WAIT" {
+			term.NoWait = true
+			p.nextToken()
+		} else if termKeyword == "ROLLBACK" {
+			p.nextToken() // consume ROLLBACK
+			rollbackType := strings.ToUpper(p.curTok.Literal)
+			if rollbackType == "AFTER" {
+				p.nextToken() // consume AFTER
+				// Parse the number
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				term.RollbackAfter = val
+				// Optional SECONDS keyword
+				if strings.ToUpper(p.curTok.Literal) == "SECONDS" {
+					p.nextToken()
+				}
+			} else if rollbackType == "IMMEDIATE" {
+				term.ImmediateRollback = true
+				p.nextToken()
+			}
+		}
+		stmt.Termination = term
 	}
 
 	// Skip optional semicolon
@@ -7407,6 +7488,10 @@ func convertOptionKind(optionName string) string {
 	switch optionName {
 	case "VARDECIMAL_STORAGE_FORMAT":
 		return "VarDecimalStorageFormat"
+	case "ARITHABORT":
+		return "ArithAbort"
+	case "NUMERIC_ROUNDABORT":
+		return "NumericRoundAbort"
 	}
 
 	// Split by underscores and capitalize each word

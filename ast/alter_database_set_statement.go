@@ -6,7 +6,17 @@ type AlterDatabaseSetStatement struct {
 	UseCurrent        bool
 	WithManualCutover bool
 	Options           []DatabaseOption
+	Termination       *AlterDatabaseTermination
 }
+
+// AlterDatabaseTermination represents the termination clause (WITH NO_WAIT, WITH ROLLBACK AFTER N, WITH ROLLBACK IMMEDIATE)
+type AlterDatabaseTermination struct {
+	NoWait            bool
+	ImmediateRollback bool
+	RollbackAfter     ScalarExpression
+}
+
+func (a *AlterDatabaseTermination) node() {}
 
 func (a *AlterDatabaseSetStatement) node()      {}
 func (a *AlterDatabaseSetStatement) statement() {}
@@ -82,6 +92,7 @@ type SimpleDatabaseOption struct {
 
 func (d *SimpleDatabaseOption) node()                 {}
 func (d *SimpleDatabaseOption) createDatabaseOption() {}
+func (d *SimpleDatabaseOption) databaseOption()       {}
 
 // MaxSizeDatabaseOption represents a MAXSIZE option.
 type MaxSizeDatabaseOption struct {
@@ -279,3 +290,21 @@ type ChangeRetentionChangeTrackingOptionDetail struct {
 
 func (c *ChangeRetentionChangeTrackingOptionDetail) node()                        {}
 func (c *ChangeRetentionChangeTrackingOptionDetail) changeTrackingOptionDetail() {}
+
+// RecoveryDatabaseOption represents RECOVERY database option
+type RecoveryDatabaseOption struct {
+	OptionKind string // "Recovery"
+	Value      string // "Full", "BulkLogged", "Simple"
+}
+
+func (r *RecoveryDatabaseOption) node()           {}
+func (r *RecoveryDatabaseOption) databaseOption() {}
+
+// CursorDefaultDatabaseOption represents CURSOR_DEFAULT database option
+type CursorDefaultDatabaseOption struct {
+	OptionKind string // "CursorDefault"
+	IsLocal    bool   // true for LOCAL, false for GLOBAL
+}
+
+func (c *CursorDefaultDatabaseOption) node()           {}
+func (c *CursorDefaultDatabaseOption) databaseOption() {}
