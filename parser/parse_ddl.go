@@ -3590,47 +3590,60 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken()
 				}
 			}
-			// Parse WITH (index_options)
+			// Parse WITH (index_options) or WITH option = value (no parentheses)
 			if p.curTok.Type == TokenWith {
 				p.nextToken() // consume WITH
-				if p.curTok.Type == TokenLParen {
+				hasParen := p.curTok.Type == TokenLParen
+				if hasParen {
 					p.nextToken() // consume (
-					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-						optionName := strings.ToUpper(p.curTok.Literal)
-						p.nextToken()
-						if p.curTok.Type == TokenEquals {
-							p.nextToken() // consume =
-						}
-						// Check for ON/OFF state options
-						valueUpper := strings.ToUpper(p.curTok.Literal)
-						if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
-							state := "On"
-							if valueUpper == "OFF" {
-								state = "Off"
-							}
-							p.nextToken() // consume ON/OFF
-							option := &ast.IndexStateOption{
-								OptionKind:  convertIndexOptionKind(optionName),
-								OptionState: state,
-							}
-							constraint.IndexOptions = append(constraint.IndexOptions, option)
-						} else {
-							expr, _ := p.parseScalarExpression()
-							option := &ast.IndexExpressionOption{
-								OptionKind: convertIndexOptionKind(optionName),
-								Expression: expr,
-							}
-							constraint.IndexOptions = append(constraint.IndexOptions, option)
-						}
-						if p.curTok.Type == TokenComma {
-							p.nextToken()
-						} else {
-							break
-						}
+				}
+				for {
+					// Check for end conditions
+					if hasParen && p.curTok.Type == TokenRParen {
+						break
 					}
-					if p.curTok.Type == TokenRParen {
-						p.nextToken()
+					if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
+						break
 					}
+					// Check for ON (filegroup) which means we're done with options
+					if p.curTok.Type == TokenOn {
+						break
+					}
+
+					optionName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					// Check for ON/OFF state options
+					valueUpper := strings.ToUpper(p.curTok.Literal)
+					if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
+						state := "On"
+						if valueUpper == "OFF" {
+							state = "Off"
+						}
+						p.nextToken() // consume ON/OFF
+						option := &ast.IndexStateOption{
+							OptionKind:  convertIndexOptionKind(optionName),
+							OptionState: state,
+						}
+						constraint.IndexOptions = append(constraint.IndexOptions, option)
+					} else {
+						expr, _ := p.parseScalarExpression()
+						option := &ast.IndexExpressionOption{
+							OptionKind: convertIndexOptionKind(optionName),
+							Expression: expr,
+						}
+						constraint.IndexOptions = append(constraint.IndexOptions, option)
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if hasParen && p.curTok.Type == TokenRParen {
+					p.nextToken()
 				}
 			}
 			// Parse ON filegroup
@@ -3727,47 +3740,60 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken()
 				}
 			}
-			// Parse WITH (index_options)
+			// Parse WITH (index_options) or WITH option = value (no parentheses)
 			if p.curTok.Type == TokenWith {
 				p.nextToken() // consume WITH
-				if p.curTok.Type == TokenLParen {
+				hasParen := p.curTok.Type == TokenLParen
+				if hasParen {
 					p.nextToken() // consume (
-					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-						optionName := strings.ToUpper(p.curTok.Literal)
-						p.nextToken()
-						if p.curTok.Type == TokenEquals {
-							p.nextToken() // consume =
-						}
-						// Check for ON/OFF state options
-						valueUpper := strings.ToUpper(p.curTok.Literal)
-						if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
-							state := "On"
-							if valueUpper == "OFF" {
-								state = "Off"
-							}
-							p.nextToken() // consume ON/OFF
-							option := &ast.IndexStateOption{
-								OptionKind:  convertIndexOptionKind(optionName),
-								OptionState: state,
-							}
-							constraint.IndexOptions = append(constraint.IndexOptions, option)
-						} else {
-							expr, _ := p.parseScalarExpression()
-							option := &ast.IndexExpressionOption{
-								OptionKind: convertIndexOptionKind(optionName),
-								Expression: expr,
-							}
-							constraint.IndexOptions = append(constraint.IndexOptions, option)
-						}
-						if p.curTok.Type == TokenComma {
-							p.nextToken()
-						} else {
-							break
-						}
+				}
+				for {
+					// Check for end conditions
+					if hasParen && p.curTok.Type == TokenRParen {
+						break
 					}
-					if p.curTok.Type == TokenRParen {
-						p.nextToken()
+					if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
+						break
 					}
+					// Check for ON (filegroup) which means we're done with options
+					if p.curTok.Type == TokenOn {
+						break
+					}
+
+					optionName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					// Check for ON/OFF state options
+					valueUpper := strings.ToUpper(p.curTok.Literal)
+					if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
+						state := "On"
+						if valueUpper == "OFF" {
+							state = "Off"
+						}
+						p.nextToken() // consume ON/OFF
+						option := &ast.IndexStateOption{
+							OptionKind:  convertIndexOptionKind(optionName),
+							OptionState: state,
+						}
+						constraint.IndexOptions = append(constraint.IndexOptions, option)
+					} else {
+						expr, _ := p.parseScalarExpression()
+						option := &ast.IndexExpressionOption{
+							OptionKind: convertIndexOptionKind(optionName),
+							Expression: expr,
+						}
+						constraint.IndexOptions = append(constraint.IndexOptions, option)
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if hasParen && p.curTok.Type == TokenRParen {
+					p.nextToken()
 				}
 			}
 			// Parse ON filegroup
