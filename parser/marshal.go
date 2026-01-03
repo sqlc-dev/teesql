@@ -152,6 +152,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createResourcePoolStatementToJSON(s)
 	case *ast.AlterResourcePoolStatement:
 		return alterResourcePoolStatementToJSON(s)
+	case *ast.DropResourcePoolStatement:
+		return dropResourcePoolStatementToJSON(s)
 	case *ast.CreateCryptographicProviderStatement:
 		return createCryptographicProviderStatementToJSON(s)
 	case *ast.CreateColumnMasterKeyStatement:
@@ -15630,6 +15632,17 @@ func alterResourcePoolStatementToJSON(s *ast.AlterResourcePoolStatement) jsonNod
 		}
 		node["ResourcePoolParameters"] = params
 	}
+	return node
+}
+
+func dropResourcePoolStatementToJSON(s *ast.DropResourcePoolStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropResourcePoolStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
 	return node
 }
 

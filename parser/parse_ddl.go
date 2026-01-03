@@ -128,6 +128,8 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropFulltextStatement()
 	case "BROKER":
 		return p.parseDropBrokerPriorityStatement()
+	case "RESOURCE":
+		return p.parseDropResourcePoolStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -383,6 +385,39 @@ func (p *Parser) parseDropExternalResourcePoolStatement() (*ast.DropExternalReso
 	p.nextToken()
 
 	stmt := &ast.DropExternalResourcePoolStatement{}
+
+	// Check for IF EXISTS
+	if p.curTok.Type == TokenIf {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) != "EXISTS" {
+			return nil, fmt.Errorf("expected EXISTS after IF, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+		stmt.IsIfExists = true
+	}
+
+	// Parse pool name
+	stmt.Name = p.parseIdentifier()
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropResourcePoolStatement() (*ast.DropResourcePoolStatement, error) {
+	// Consume RESOURCE
+	p.nextToken()
+
+	// Expect POOL
+	if strings.ToUpper(p.curTok.Literal) != "POOL" {
+		return nil, fmt.Errorf("expected POOL after RESOURCE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.DropResourcePoolStatement{}
 
 	// Check for IF EXISTS
 	if p.curTok.Type == TokenIf {

@@ -18,6 +18,15 @@ type AlterResourcePoolStatement struct {
 func (*AlterResourcePoolStatement) node()      {}
 func (*AlterResourcePoolStatement) statement() {}
 
+// DropResourcePoolStatement represents a DROP RESOURCE POOL statement
+type DropResourcePoolStatement struct {
+	Name       *Identifier
+	IsIfExists bool
+}
+
+func (*DropResourcePoolStatement) node()      {}
+func (*DropResourcePoolStatement) statement() {}
+
 // ResourcePoolParameter represents a parameter in a resource pool statement
 type ResourcePoolParameter struct {
 	ParameterType         string                            `json:"ParameterType,omitempty"` // MinCpuPercent, MaxCpuPercent, CapCpuPercent, MinMemoryPercent, MaxMemoryPercent, MinIoPercent, MaxIoPercent, CapIoPercent, Affinity, etc.
