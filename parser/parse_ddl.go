@@ -3362,7 +3362,8 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 	}
 
 	// Parse data type - be lenient if no data type is provided
-	dataType, err := p.parseDataType()
+	// Use parseDataTypeReference to handle all data types including XML
+	dataType, err := p.parseDataTypeReference()
 	if err != nil {
 		// Lenient: return statement without data type
 		p.skipToEndOfStatement()
