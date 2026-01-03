@@ -4330,6 +4330,43 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 				}, nil
 			}
 
+			// Check for SOME/ANY/ALL (subquery)
+			upperLit := strings.ToUpper(p.curTok.Literal)
+			if upperLit == "SOME" || upperLit == "ANY" || upperLit == "ALL" {
+				predicateType := "Any"
+				if upperLit == "ALL" {
+					predicateType = "All"
+				}
+				p.nextToken() // consume SOME/ANY/ALL
+
+				if p.curTok.Type != TokenLParen {
+					return nil, fmt.Errorf("expected ( after %s, got %s", upperLit, p.curTok.Literal)
+				}
+				p.nextToken() // consume (
+
+				subqueryExpr, err := p.parseQueryExpression()
+				if err != nil {
+					return nil, err
+				}
+
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+
+				compType := "IsDistinctFrom"
+				if isNot {
+					compType = "IsNotDistinctFrom"
+				}
+
+				return &ast.SubqueryComparisonPredicate{
+					Expression:                      left,
+					ComparisonType:                  compType,
+					Subquery:                        &ast.ScalarSubquery{QueryExpression: subqueryExpr},
+					SubqueryComparisonPredicateType: predicateType,
+				}, nil
+			}
+
 			// Parse the second expression
 			secondExpr, err := p.parseScalarExpression()
 			if err != nil {

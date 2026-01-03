@@ -2519,6 +2519,19 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		}
 		node["IsNot"] = e.IsNot
 		return node
+	case *ast.SubqueryComparisonPredicate:
+		node := jsonNode{
+			"$type":                          "SubqueryComparisonPredicate",
+			"ComparisonType":                 e.ComparisonType,
+			"SubqueryComparisonPredicateType": e.SubqueryComparisonPredicateType,
+		}
+		if e.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(e.Expression)
+		}
+		if e.Subquery != nil {
+			node["Subquery"] = scalarExpressionToJSON(e.Subquery)
+		}
+		return node
 	case *ast.BooleanInExpression:
 		node := jsonNode{
 			"$type": "InPredicate",
