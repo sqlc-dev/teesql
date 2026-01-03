@@ -342,6 +342,14 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createServerAuditStatementToJSON(s)
 	case *ast.AlterServerAuditStatement:
 		return alterServerAuditStatementToJSON(s)
+	case *ast.CreateServerAuditSpecificationStatement:
+		return createServerAuditSpecificationStatementToJSON(s)
+	case *ast.AlterServerAuditSpecificationStatement:
+		return alterServerAuditSpecificationStatementToJSON(s)
+	case *ast.CreateDatabaseAuditSpecificationStatement:
+		return createDatabaseAuditSpecificationStatementToJSON(s)
+	case *ast.AlterDatabaseAuditSpecificationStatement:
+		return alterDatabaseAuditSpecificationStatementToJSON(s)
 	case *ast.AlterRemoteServiceBindingStatement:
 		return alterRemoteServiceBindingStatementToJSON(s)
 	case *ast.AlterXmlSchemaCollectionStatement:
@@ -7875,6 +7883,113 @@ func alterServerAuditStatementToJSON(s *ast.AlterServerAuditStatement) jsonNode 
 		node["PredicateExpression"] = booleanExpressionToJSON(s.PredicateExpression)
 	}
 	return node
+}
+
+func createServerAuditSpecificationStatementToJSON(s *ast.CreateServerAuditSpecificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "CreateServerAuditSpecificationStatement",
+		"AuditState": s.AuditState,
+	}
+	if len(s.Parts) > 0 {
+		parts := make([]jsonNode, len(s.Parts))
+		for i, p := range s.Parts {
+			parts[i] = auditSpecificationPartToJSON(p)
+		}
+		node["Parts"] = parts
+	}
+	if s.SpecificationName != nil {
+		node["SpecificationName"] = identifierToJSON(s.SpecificationName)
+	}
+	if s.AuditName != nil {
+		node["AuditName"] = identifierToJSON(s.AuditName)
+	}
+	return node
+}
+
+func alterServerAuditSpecificationStatementToJSON(s *ast.AlterServerAuditSpecificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "AlterServerAuditSpecificationStatement",
+		"AuditState": s.AuditState,
+	}
+	if len(s.Parts) > 0 {
+		parts := make([]jsonNode, len(s.Parts))
+		for i, p := range s.Parts {
+			parts[i] = auditSpecificationPartToJSON(p)
+		}
+		node["Parts"] = parts
+	}
+	if s.SpecificationName != nil {
+		node["SpecificationName"] = identifierToJSON(s.SpecificationName)
+	}
+	if s.AuditName != nil {
+		node["AuditName"] = identifierToJSON(s.AuditName)
+	}
+	return node
+}
+
+func createDatabaseAuditSpecificationStatementToJSON(s *ast.CreateDatabaseAuditSpecificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "CreateDatabaseAuditSpecificationStatement",
+		"AuditState": s.AuditState,
+	}
+	if len(s.Parts) > 0 {
+		parts := make([]jsonNode, len(s.Parts))
+		for i, p := range s.Parts {
+			parts[i] = auditSpecificationPartToJSON(p)
+		}
+		node["Parts"] = parts
+	}
+	if s.SpecificationName != nil {
+		node["SpecificationName"] = identifierToJSON(s.SpecificationName)
+	}
+	if s.AuditName != nil {
+		node["AuditName"] = identifierToJSON(s.AuditName)
+	}
+	return node
+}
+
+func alterDatabaseAuditSpecificationStatementToJSON(s *ast.AlterDatabaseAuditSpecificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "AlterDatabaseAuditSpecificationStatement",
+		"AuditState": s.AuditState,
+	}
+	if len(s.Parts) > 0 {
+		parts := make([]jsonNode, len(s.Parts))
+		for i, p := range s.Parts {
+			parts[i] = auditSpecificationPartToJSON(p)
+		}
+		node["Parts"] = parts
+	}
+	if s.SpecificationName != nil {
+		node["SpecificationName"] = identifierToJSON(s.SpecificationName)
+	}
+	if s.AuditName != nil {
+		node["AuditName"] = identifierToJSON(s.AuditName)
+	}
+	return node
+}
+
+func auditSpecificationPartToJSON(p *ast.AuditSpecificationPart) jsonNode {
+	node := jsonNode{
+		"$type":  "AuditSpecificationPart",
+		"IsDrop": p.IsDrop,
+	}
+	if p.Details != nil {
+		node["Details"] = auditSpecificationDetailToJSON(p.Details)
+	}
+	return node
+}
+
+func auditSpecificationDetailToJSON(d ast.AuditSpecificationDetail) jsonNode {
+	switch detail := d.(type) {
+	case *ast.AuditActionGroupReference:
+		return jsonNode{
+			"$type": "AuditActionGroupReference",
+			"Group": detail.Group,
+		}
+	default:
+		return jsonNode{}
+	}
 }
 
 func dropServerAuditStatementToJSON(s *ast.DropServerAuditStatement) jsonNode {

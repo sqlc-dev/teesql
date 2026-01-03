@@ -2953,9 +2953,14 @@ func (p *Parser) parseCreateServerRoleStatementBody() (*ast.CreateServerRoleStat
 	return stmt, nil
 }
 
-func (p *Parser) parseCreateServerAuditStatement() (*ast.CreateServerAuditStatement, error) {
+func (p *Parser) parseCreateServerAuditStatement() (ast.Statement, error) {
 	// AUDIT keyword should be current token, consume it
 	p.nextToken()
+
+	// Check if this is CREATE SERVER AUDIT SPECIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
+		return p.parseCreateServerAuditSpecificationStatement()
+	}
 
 	stmt := &ast.CreateServerAuditStatement{}
 
@@ -3011,6 +3016,328 @@ func (p *Parser) parseCreateServerAuditStatement() (*ast.CreateServerAuditStatem
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseCreateServerAuditSpecificationStatement() (*ast.CreateServerAuditSpecificationStatement, error) {
+	// SPECIFICATION keyword should be current token, consume it
+	p.nextToken()
+
+	stmt := &ast.CreateServerAuditSpecificationStatement{
+		AuditState: "NotSet",
+	}
+
+	// Parse specification name
+	stmt.SpecificationName = p.parseIdentifier()
+
+	// Parse FOR SERVER AUDIT audit_name
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+		if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+			p.nextToken() // consume AUDIT
+		}
+		stmt.AuditName = p.parseIdentifier()
+	}
+
+	// Parse ADD/DROP parts
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ADD" || upperLit == "DROP" {
+			part := &ast.AuditSpecificationPart{
+				IsDrop: upperLit == "DROP",
+			}
+			p.nextToken() // consume ADD/DROP
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse audit action group reference
+				groupName := p.curTok.Literal
+				part.Details = &ast.AuditActionGroupReference{
+					Group: convertAuditGroupName(groupName),
+				}
+				p.nextToken() // consume group name
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Parts = append(stmt.Parts, part)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				continue
+			}
+		}
+		break
+	}
+
+	// Parse WITH (STATE = ON/OFF)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if strings.ToUpper(p.curTok.Literal) == "STATE" {
+				p.nextToken() // consume STATE
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				if strings.ToUpper(p.curTok.Literal) == "ON" {
+					stmt.AuditState = "On"
+				} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+					stmt.AuditState = "Off"
+				}
+				p.nextToken() // consume ON/OFF
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterServerAuditSpecificationStatement() (*ast.AlterServerAuditSpecificationStatement, error) {
+	// SPECIFICATION keyword should be current token, consume it
+	p.nextToken()
+
+	stmt := &ast.AlterServerAuditSpecificationStatement{
+		AuditState: "NotSet",
+	}
+
+	// Parse specification name
+	stmt.SpecificationName = p.parseIdentifier()
+
+	// Parse FOR SERVER AUDIT audit_name
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+		if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+			p.nextToken() // consume AUDIT
+		}
+		stmt.AuditName = p.parseIdentifier()
+	}
+
+	// Parse ADD/DROP parts
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ADD" || upperLit == "DROP" {
+			part := &ast.AuditSpecificationPart{
+				IsDrop: upperLit == "DROP",
+			}
+			p.nextToken() // consume ADD/DROP
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse audit action group reference
+				groupName := p.curTok.Literal
+				part.Details = &ast.AuditActionGroupReference{
+					Group: convertAuditGroupName(groupName),
+				}
+				p.nextToken() // consume group name
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Parts = append(stmt.Parts, part)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				continue
+			}
+		}
+		break
+	}
+
+	// Parse WITH (STATE = ON/OFF)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if strings.ToUpper(p.curTok.Literal) == "STATE" {
+				p.nextToken() // consume STATE
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				if strings.ToUpper(p.curTok.Literal) == "ON" {
+					stmt.AuditState = "On"
+				} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+					stmt.AuditState = "Off"
+				}
+				p.nextToken() // consume ON/OFF
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateDatabaseAuditSpecificationStatement() (*ast.CreateDatabaseAuditSpecificationStatement, error) {
+	stmt := &ast.CreateDatabaseAuditSpecificationStatement{
+		AuditState: "NotSet",
+	}
+
+	// Parse specification name
+	stmt.SpecificationName = p.parseIdentifier()
+
+	// Parse FOR SERVER AUDIT audit_name
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+		if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+			p.nextToken() // consume AUDIT
+		}
+		stmt.AuditName = p.parseIdentifier()
+	}
+
+	// Parse ADD/DROP parts
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ADD" || upperLit == "DROP" {
+			part := &ast.AuditSpecificationPart{
+				IsDrop: upperLit == "DROP",
+			}
+			p.nextToken() // consume ADD/DROP
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse audit action group reference
+				groupName := p.curTok.Literal
+				part.Details = &ast.AuditActionGroupReference{
+					Group: convertAuditGroupName(groupName),
+				}
+				p.nextToken() // consume group name
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Parts = append(stmt.Parts, part)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				continue
+			}
+		}
+		break
+	}
+
+	// Parse WITH (STATE = ON/OFF)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if strings.ToUpper(p.curTok.Literal) == "STATE" {
+				p.nextToken() // consume STATE
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				if strings.ToUpper(p.curTok.Literal) == "ON" {
+					stmt.AuditState = "On"
+				} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+					stmt.AuditState = "Off"
+				}
+				p.nextToken() // consume ON/OFF
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterDatabaseAuditSpecificationStatement() (*ast.AlterDatabaseAuditSpecificationStatement, error) {
+	stmt := &ast.AlterDatabaseAuditSpecificationStatement{
+		AuditState: "NotSet",
+	}
+
+	// Parse specification name
+	stmt.SpecificationName = p.parseIdentifier()
+
+	// Parse FOR SERVER AUDIT audit_name (optional in ALTER)
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
+			p.nextToken() // consume SERVER
+		}
+		if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+			p.nextToken() // consume AUDIT
+		}
+		stmt.AuditName = p.parseIdentifier()
+	}
+
+	// Parse ADD/DROP parts
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ADD" || upperLit == "DROP" {
+			part := &ast.AuditSpecificationPart{
+				IsDrop: upperLit == "DROP",
+			}
+			p.nextToken() // consume ADD/DROP
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse audit action group reference
+				groupName := p.curTok.Literal
+				part.Details = &ast.AuditActionGroupReference{
+					Group: convertAuditGroupName(groupName),
+				}
+				p.nextToken() // consume group name
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Parts = append(stmt.Parts, part)
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				continue
+			}
+		}
+		break
+	}
+
+	// Parse WITH (STATE = ON/OFF)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			if strings.ToUpper(p.curTok.Literal) == "STATE" {
+				p.nextToken() // consume STATE
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				if strings.ToUpper(p.curTok.Literal) == "ON" {
+					stmt.AuditState = "On"
+				} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+					stmt.AuditState = "Off"
+				}
+				p.nextToken() // consume ON/OFF
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	return stmt, nil
+}
+
+// convertAuditGroupName converts an audit group name to the expected format
+func convertAuditGroupName(name string) string {
+	// Map of audit group names to their expected format
+	groupMap := map[string]string{
+		"SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP": "SuccessfulDatabaseAuthenticationGroup",
+		"FAILED_DATABASE_AUTHENTICATION_GROUP":     "FailedDatabaseAuthenticationGroup",
+		"DATABASE_LOGOUT_GROUP":                    "DatabaseLogoutGroup",
+		"USER_CHANGE_PASSWORD_GROUP":               "UserChangePasswordGroup",
+		"USER_DEFINED_AUDIT_GROUP":                 "UserDefinedAuditGroup",
+	}
+	if mapped, ok := groupMap[strings.ToUpper(name)]; ok {
+		return mapped
+	}
+	return capitalizeFirst(strings.ToLower(strings.ReplaceAll(name, "_", " ")))
 }
 
 func (p *Parser) parseAuditTarget() (*ast.AuditTarget, error) {
@@ -8293,6 +8620,15 @@ func (p *Parser) parseCreatePartitionSchemeStatementFromPartition() (*ast.Create
 
 func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 	p.nextToken() // consume DATABASE
+
+	// Check for DATABASE AUDIT SPECIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+		p.nextToken() // consume AUDIT
+		if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
+			p.nextToken() // consume SPECIFICATION
+			return p.parseCreateDatabaseAuditSpecificationStatement()
+		}
+	}
 
 	// Check for DATABASE ENCRYPTION KEY
 	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {

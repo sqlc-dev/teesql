@@ -1754,6 +1754,15 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
 
+	// Check for DATABASE AUDIT SPECIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+		p.nextToken() // consume AUDIT
+		if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
+			p.nextToken() // consume SPECIFICATION
+			return p.parseAlterDatabaseAuditSpecificationStatement()
+		}
+	}
+
 	// Check for DATABASE ENCRYPTION KEY
 	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
 		return p.parseAlterDatabaseEncryptionKeyStatement()
@@ -4614,9 +4623,14 @@ func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement,
 	return stmt, nil
 }
 
-func (p *Parser) parseAlterServerAuditStatement() (*ast.AlterServerAuditStatement, error) {
+func (p *Parser) parseAlterServerAuditStatement() (ast.Statement, error) {
 	// AUDIT keyword should be current token, consume it
 	p.nextToken()
+
+	// Check if this is ALTER SERVER AUDIT SPECIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
+		return p.parseAlterServerAuditSpecificationStatement()
+	}
 
 	stmt := &ast.AlterServerAuditStatement{}
 
