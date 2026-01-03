@@ -8564,6 +8564,15 @@ func auditTargetOptionToJSON(o ast.AuditTargetOption) jsonNode {
 			"Value":      opt.Value,
 			"OptionKind": opt.OptionKind,
 		}
+	case *ast.RetentionDaysAuditTargetOption:
+		node := jsonNode{
+			"$type":      "RetentionDaysAuditTargetOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Days != nil {
+			node["Days"] = scalarExpressionToJSON(opt.Days)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownAuditTargetOption"}
 	}

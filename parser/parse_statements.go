@@ -3617,7 +3617,7 @@ func convertAuditGroupName(name string) string {
 func (p *Parser) parseAuditTarget() (*ast.AuditTarget, error) {
 	target := &ast.AuditTarget{}
 
-	// Parse target kind (FILE, APPLICATION_LOG, SECURITY_LOG)
+	// Parse target kind (FILE, APPLICATION_LOG, SECURITY_LOG, URL, EXTERNAL_MONITOR)
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "FILE":
 		target.TargetKind = "File"
@@ -3625,6 +3625,10 @@ func (p *Parser) parseAuditTarget() (*ast.AuditTarget, error) {
 		target.TargetKind = "ApplicationLog"
 	case "SECURITY_LOG":
 		target.TargetKind = "SecurityLog"
+	case "URL":
+		target.TargetKind = "Url"
+	case "EXTERNAL_MONITOR":
+		target.TargetKind = "ExternalMonitor"
 	default:
 		target.TargetKind = capitalizeFirst(p.curTok.Literal)
 	}
@@ -3724,6 +3728,17 @@ func (p *Parser) parseAuditTargetOption() (ast.AuditTargetOption, error) {
 		return &ast.OnOffAuditTargetOption{
 			OptionKind: "ReserveDiskSpace",
 			Value:      value,
+		}, nil
+
+	case "RETENTION_DAYS":
+		// Parse the number of days
+		days, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.RetentionDaysAuditTargetOption{
+			OptionKind: "RetentionDays",
+			Days:       days,
 		}, nil
 
 	default:

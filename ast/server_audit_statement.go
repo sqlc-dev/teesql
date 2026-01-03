@@ -79,6 +79,14 @@ type OnOffAuditTargetOption struct {
 
 func (o *OnOffAuditTargetOption) auditTargetOption() {}
 
+// RetentionDaysAuditTargetOption represents the RETENTION_DAYS option
+type RetentionDaysAuditTargetOption struct {
+	OptionKind string
+	Days       ScalarExpression
+}
+
+func (o *RetentionDaysAuditTargetOption) auditTargetOption() {}
+
 // AuditOption is an interface for audit options
 type AuditOption interface {
 	auditOption()
