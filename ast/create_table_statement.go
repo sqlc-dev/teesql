@@ -116,13 +116,15 @@ type TableConstraint interface {
 
 // IndexDefinition represents an index definition within CREATE TABLE
 type IndexDefinition struct {
-	Name            *Identifier
-	Columns         []*ColumnWithSortOrder
-	Unique          bool
-	IndexType       *IndexType
-	IndexOptions    []IndexOption
-	IncludeColumns  []*ColumnReferenceExpression
-	FilterPredicate BooleanExpression
+	Name                         *Identifier
+	Columns                      []*ColumnWithSortOrder
+	Unique                       bool
+	IndexType                    *IndexType
+	IndexOptions                 []IndexOption
+	IncludeColumns               []*ColumnReferenceExpression
+	FilterPredicate              BooleanExpression
+	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme
+	FileStreamOn                 *IdentifierOrValueExpression
 }
 
 func (i *IndexDefinition) node() {}

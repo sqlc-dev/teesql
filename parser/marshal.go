@@ -1182,6 +1182,12 @@ func indexDefinitionToJSON(idx *ast.IndexDefinition) jsonNode {
 	if idx.FilterPredicate != nil {
 		node["FilterPredicate"] = booleanExpressionToJSON(idx.FilterPredicate)
 	}
+	if idx.OnFileGroupOrPartitionScheme != nil {
+		node["OnFileGroupOrPartitionScheme"] = fileGroupOrPartitionSchemeToJSON(idx.OnFileGroupOrPartitionScheme)
+	}
+	if idx.FileStreamOn != nil {
+		node["FileStreamOn"] = identifierOrValueExpressionToJSON(idx.FileStreamOn)
+	}
 	return node
 }
 
@@ -5120,6 +5126,10 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
 					p.nextToken()
 				}
+			} else if strings.ToUpper(p.curTok.Literal) == "HASH" {
+				// Standalone HASH is treated as NonClusteredHash
+				indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
+				p.nextToken()
 			}
 			// Parse optional column list: (col1 [ASC|DESC], ...)
 			if p.curTok.Type == TokenLParen {
@@ -5179,6 +5189,104 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 							}
 							indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 							p.nextToken()
+						} else if optionName == "DATA_COMPRESSION" {
+							// Parse DATA_COMPRESSION = level [ON PARTITIONS(...)]
+							compressionLevel := "None"
+							levelUpper := strings.ToUpper(p.curTok.Literal)
+							switch levelUpper {
+							case "NONE":
+								compressionLevel = "None"
+							case "ROW":
+								compressionLevel = "Row"
+							case "PAGE":
+								compressionLevel = "Page"
+							case "COLUMNSTORE":
+								compressionLevel = "ColumnStore"
+							case "COLUMNSTORE_ARCHIVE":
+								compressionLevel = "ColumnStoreArchive"
+							}
+							p.nextToken() // consume compression level
+							opt := &ast.DataCompressionOption{
+								CompressionLevel: compressionLevel,
+								OptionKind:       "DataCompression",
+							}
+							// Check for optional ON PARTITIONS(range)
+							if p.curTok.Type == TokenOn {
+								p.nextToken() // consume ON
+								if strings.ToUpper(p.curTok.Literal) == "PARTITIONS" {
+									p.nextToken() // consume PARTITIONS
+									if p.curTok.Type == TokenLParen {
+										p.nextToken() // consume (
+										for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+											partRange := &ast.CompressionPartitionRange{}
+											partRange.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+											p.nextToken()
+											if strings.ToUpper(p.curTok.Literal) == "TO" {
+												p.nextToken() // consume TO
+												partRange.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+												p.nextToken()
+											}
+											opt.PartitionRanges = append(opt.PartitionRanges, partRange)
+											if p.curTok.Type == TokenComma {
+												p.nextToken()
+											} else {
+												break
+											}
+										}
+										if p.curTok.Type == TokenRParen {
+											p.nextToken() // consume )
+										}
+									}
+								}
+							}
+							indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+						} else if optionName == "PAD_INDEX" || optionName == "STATISTICS_NORECOMPUTE" ||
+							optionName == "ALLOW_ROW_LOCKS" || optionName == "ALLOW_PAGE_LOCKS" ||
+							optionName == "DROP_EXISTING" || optionName == "SORT_IN_TEMPDB" {
+							// ON/OFF options
+							stateUpper := strings.ToUpper(p.curTok.Literal)
+							optState := "On"
+							if stateUpper == "OFF" {
+								optState = "Off"
+							}
+							p.nextToken()
+							optKind := map[string]string{
+								"PAD_INDEX":              "PadIndex",
+								"STATISTICS_NORECOMPUTE": "StatisticsNoRecompute",
+								"ALLOW_ROW_LOCKS":        "AllowRowLocks",
+								"ALLOW_PAGE_LOCKS":       "AllowPageLocks",
+								"DROP_EXISTING":          "DropExisting",
+								"SORT_IN_TEMPDB":         "SortInTempDB",
+							}[optionName]
+							indexDef.IndexOptions = append(indexDef.IndexOptions, &ast.IndexStateOption{
+								OptionKind:  optKind,
+								OptionState: optState,
+							})
+						} else if optionName == "IGNORE_DUP_KEY" {
+							stateUpper := strings.ToUpper(p.curTok.Literal)
+							optState := "On"
+							if stateUpper == "OFF" {
+								optState = "Off"
+							}
+							p.nextToken()
+							indexDef.IndexOptions = append(indexDef.IndexOptions, &ast.IgnoreDupKeyIndexOption{
+								OptionKind:  "IgnoreDupKey",
+								OptionState: optState,
+							})
+						} else if optionName == "FILLFACTOR" || optionName == "MAXDOP" {
+							// Integer expression options
+							optKind := "FillFactor"
+							if optionName == "MAXDOP" {
+								optKind = "MaxDop"
+							}
+							indexDef.IndexOptions = append(indexDef.IndexOptions, &ast.IndexExpressionOption{
+								OptionKind: optKind,
+								Expression: &ast.IntegerLiteral{
+									LiteralType: "Integer",
+									Value:       p.curTok.Literal,
+								},
+							})
+							p.nextToken()
 						} else {
 							// Skip other options
 							p.nextToken()
@@ -5192,6 +5300,21 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					if p.curTok.Type == TokenRParen {
 						p.nextToken() // consume )
 					}
+				}
+			}
+			// Parse optional ON filegroup for inline index
+			if p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+				fg, _ := p.parseFileGroupOrPartitionScheme()
+				indexDef.OnFileGroupOrPartitionScheme = fg
+			}
+			// Parse optional FILESTREAM_ON for inline index
+			if strings.ToUpper(p.curTok.Literal) == "FILESTREAM_ON" {
+				p.nextToken() // consume FILESTREAM_ON
+				ident := p.parseIdentifier()
+				indexDef.FileStreamOn = &ast.IdentifierOrValueExpression{
+					Value:      ident.Value,
+					Identifier: ident,
 				}
 			}
 			// Parse optional INCLUDE clause
