@@ -3683,6 +3683,12 @@ func atomicBlockOptionToJSON(o ast.AtomicBlockOption) jsonNode {
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
 		return node
+	case *ast.OnOffAtomicBlockOption:
+		return jsonNode{
+			"$type":       "OnOffAtomicBlockOption",
+			"OptionState": opt.OptionState,
+			"OptionKind":  opt.OptionKind,
+		}
 	default:
 		return jsonNode{"$type": "UnknownAtomicBlockOption"}
 	}
@@ -16547,6 +16553,13 @@ func alterProcedureStatementToJSON(s *ast.AlterProcedureStatement) jsonNode {
 		node["ProcedureReference"] = procedureReferenceToJSON(s.ProcedureReference)
 	}
 	node["IsForReplication"] = s.IsForReplication
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			opts[i] = procedureOptionToJSON(o)
+		}
+		node["Options"] = opts
+	}
 	if len(s.Parameters) > 0 {
 		params := make([]jsonNode, len(s.Parameters))
 		for i, p := range s.Parameters {

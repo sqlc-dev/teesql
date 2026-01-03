@@ -1933,10 +1933,22 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 						p.nextToken() // consume =
 					}
 				}
-				// Parse the isolation level identifier
+				// Parse the isolation level identifier - may be multi-word like "READ COMMITTED"
+				levelValue := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				// Check for two-word isolation levels
+				nextWord := strings.ToUpper(p.curTok.Literal)
+				if (levelValue == "READ" && (nextWord == "COMMITTED" || nextWord == "UNCOMMITTED")) ||
+					(levelValue == "REPEATABLE" && nextWord == "READ") {
+					levelValue = levelValue + " " + nextWord
+					p.nextToken()
+				}
 				opt := &ast.IdentifierAtomicBlockOption{
 					OptionKind: "IsolationLevel",
-					Value:      p.parseIdentifier(),
+					Value: &ast.Identifier{
+						Value:     levelValue,
+						QuoteType: "NotQuoted",
+					},
 				}
 				stmt.Options = append(stmt.Options, opt)
 			case "LANGUAGE":
@@ -1970,10 +1982,48 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 					}
 					stmt.Options = append(stmt.Options, opt)
 				}
-			case "DATEFIRST", "DATEFORMAT":
-				opt := &ast.IdentifierAtomicBlockOption{
-					OptionKind: optName,
-					Value:      p.parseIdentifier(),
+			case "DATEFIRST":
+				// Parse as integer literal
+				intLit := &ast.IntegerLiteral{
+					LiteralType: "Integer",
+					Value:       p.curTok.Literal,
+				}
+				p.nextToken()
+				opt := &ast.LiteralAtomicBlockOption{
+					OptionKind: "DateFirst",
+					Value:      intLit,
+				}
+				stmt.Options = append(stmt.Options, opt)
+			case "DATEFORMAT":
+				// Parse as string literal
+				value := p.curTok.Literal
+				// Strip quotes if present
+				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+					value = value[1 : len(value)-1]
+				}
+				strLit := &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         value,
+					IsNational:    false,
+					IsLargeObject: false,
+				}
+				p.nextToken()
+				opt := &ast.LiteralAtomicBlockOption{
+					OptionKind: "DateFormat",
+					Value:      strLit,
+				}
+				stmt.Options = append(stmt.Options, opt)
+			case "DELAYED_DURABILITY":
+				// Parse ON/OFF as OnOffAtomicBlockOption
+				stateUpper := strings.ToUpper(p.curTok.Literal)
+				optState := "Off"
+				if stateUpper == "ON" {
+					optState = "On"
+				}
+				p.nextToken()
+				opt := &ast.OnOffAtomicBlockOption{
+					OptionKind:  "DelayedDurability",
+					OptionState: optState,
 				}
 				stmt.Options = append(stmt.Options, opt)
 			default:
@@ -4189,6 +4239,12 @@ func (p *Parser) parseCreateProcedureStatement() (*ast.CreateProcedureStatement,
 				p.nextToken()
 			} else if upperLit == "ENCRYPTION" {
 				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "Encryption"})
+				p.nextToken()
+			} else if upperLit == "NATIVE_COMPILATION" {
+				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "NativeCompilation"})
+				p.nextToken()
+			} else if upperLit == "SCHEMABINDING" {
+				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "SchemaBinding"})
 				p.nextToken()
 			} else if upperLit == "EXECUTE" {
 				p.nextToken() // consume EXECUTE

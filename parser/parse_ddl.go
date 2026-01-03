@@ -7310,20 +7310,70 @@ func (p *Parser) parseAlterProcedureStatement() (*ast.AlterProcedureStatement, e
 		stmt.Parameters = params
 	}
 
-	// Skip WITH options (like RECOMPILE, ENCRYPTION, etc.)
+	// Parse WITH options (like RECOMPILE, ENCRYPTION, NATIVE_COMPILATION, etc.)
 	if p.curTok.Type == TokenWith {
 		p.nextToken()
 		for {
 			if strings.ToUpper(p.curTok.Literal) == "FOR" || p.curTok.Type == TokenAs || p.curTok.Type == TokenEOF {
 				break
 			}
-			if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+			upperLit := strings.ToUpper(p.curTok.Literal)
+			if upperLit == "RECOMPILE" {
+				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "Recompile"})
+				p.nextToken()
+			} else if upperLit == "ENCRYPTION" {
+				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "Encryption"})
+				p.nextToken()
+			} else if upperLit == "NATIVE_COMPILATION" {
+				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "NativeCompilation"})
+				p.nextToken()
+			} else if upperLit == "SCHEMABINDING" {
+				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "SchemaBinding"})
+				p.nextToken()
+			} else if upperLit == "EXECUTE" {
+				p.nextToken() // consume EXECUTE
+				if p.curTok.Type == TokenAs {
+					p.nextToken() // consume AS
+				}
+				executeAsOpt := &ast.ExecuteAsProcedureOption{
+					OptionKind: "ExecuteAs",
+					ExecuteAs:  &ast.ExecuteAsClause{},
+				}
+				upperOption := strings.ToUpper(p.curTok.Literal)
+				if upperOption == "CALLER" {
+					executeAsOpt.ExecuteAs.ExecuteAsOption = "Caller"
+					p.nextToken()
+				} else if upperOption == "SELF" {
+					executeAsOpt.ExecuteAs.ExecuteAsOption = "Self"
+					p.nextToken()
+				} else if upperOption == "OWNER" {
+					executeAsOpt.ExecuteAs.ExecuteAsOption = "Owner"
+					p.nextToken()
+				} else if p.curTok.Type == TokenString {
+					executeAsOpt.ExecuteAs.ExecuteAsOption = "String"
+					value := p.curTok.Literal
+					// Strip quotes
+					if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+						value = value[1 : len(value)-1]
+					}
+					executeAsOpt.ExecuteAs.Literal = &ast.StringLiteral{
+						LiteralType:   "String",
+						IsNational:    false,
+						IsLargeObject: false,
+						Value:         value,
+					}
+					p.nextToken()
+				}
+				stmt.Options = append(stmt.Options, executeAsOpt)
+			} else if upperLit == "REPLICATION" {
 				stmt.IsForReplication = true
-			}
-			p.nextToken()
-			if p.curTok.Type == TokenComma {
 				p.nextToken()
 			} else {
+				p.nextToken()
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else if p.curTok.Type == TokenAs || strings.ToUpper(p.curTok.Literal) == "FOR" || p.curTok.Type == TokenEOF {
 				break
 			}
 		}
