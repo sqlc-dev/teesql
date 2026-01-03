@@ -1154,7 +1154,7 @@ func indexDefinitionToJSON(idx *ast.IndexDefinition) jsonNode {
 	if len(idx.IndexOptions) > 0 {
 		options := make([]jsonNode, len(idx.IndexOptions))
 		for i, o := range idx.IndexOptions {
-			options[i] = indexExpressionOptionToJSON(o)
+			options[i] = indexOptionToJSON(o)
 		}
 		node["IndexOptions"] = options
 	}
@@ -1171,6 +1171,9 @@ func indexDefinitionToJSON(idx *ast.IndexDefinition) jsonNode {
 			cols[i] = scalarExpressionToJSON(c)
 		}
 		node["IncludeColumns"] = cols
+	}
+	if idx.FilterPredicate != nil {
+		node["FilterPredicate"] = booleanExpressionToJSON(idx.FilterPredicate)
 	}
 	return node
 }

@@ -452,23 +452,33 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		p.nextToken()
 	}
 
-	// Parse optional CLUSTERED/NONCLUSTERED [HASH]
+	// Parse optional CLUSTERED/NONCLUSTERED [HASH/COLUMNSTORE]
 	if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
 		p.nextToken()
-		// Check for HASH
+		// Check for HASH or COLUMNSTORE
 		if strings.ToUpper(p.curTok.Literal) == "HASH" {
 			indexDef.IndexType.IndexTypeKind = "ClusteredHash"
+			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
+			indexDef.IndexType.IndexTypeKind = "ClusteredColumnStore"
 			p.nextToken()
 		}
 	} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 		p.nextToken()
-		// Check for HASH
+		// Check for HASH or COLUMNSTORE
 		if strings.ToUpper(p.curTok.Literal) == "HASH" {
 			indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
 			p.nextToken()
+		} else if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
+			indexDef.IndexType.IndexTypeKind = "NonClusteredColumnStore"
+			p.nextToken()
 		}
+	} else if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
+		// Implicit NONCLUSTERED COLUMNSTORE
+		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredColumnStore"}
+		p.nextToken()
 	}
 
 	// Parse column list
@@ -565,6 +575,16 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		}
 	}
 
+	// Parse optional WHERE clause for filtered indexes
+	if strings.ToUpper(p.curTok.Literal) == "WHERE" {
+		p.nextToken() // consume WHERE
+		filterPredicate, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+		indexDef.FilterPredicate = filterPredicate
+	}
+
 	// Parse optional WITH options
 	if strings.ToUpper(p.curTok.Literal) == "WITH" {
 		p.nextToken() // consume WITH
@@ -587,6 +607,27 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 					}
 					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 					p.nextToken()
+				} else if optionName == "COMPRESSION_DELAY" {
+					// Parse COMPRESSION_DELAY = value [MINUTE|MINUTES]
+					opt := &ast.CompressionDelayIndexOption{
+						OptionKind: "CompressionDelay",
+						Expression: &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						},
+						TimeUnit: "Unitless",
+					}
+					p.nextToken() // consume the number
+					// Check for optional MINUTE/MINUTES time unit
+					upperLit := strings.ToUpper(p.curTok.Literal)
+					if upperLit == "MINUTE" {
+						opt.TimeUnit = "Minute"
+						p.nextToken()
+					} else if upperLit == "MINUTES" {
+						opt.TimeUnit = "Minutes"
+						p.nextToken()
+					}
+					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 				} else {
 					// Skip other options
 					p.nextToken()
