@@ -2099,6 +2099,58 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				return nil, err
 			}
 			stmt.Options = append(stmt.Options, ctOpt)
+		case "EMERGENCY":
+			opt := &ast.GenericDatabaseOption{OptionKind: "Emergency"}
+			stmt.Options = append(stmt.Options, opt)
+		case "ERROR_BROKER_CONVERSATIONS":
+			opt := &ast.GenericDatabaseOption{OptionKind: "ErrorBrokerConversations"}
+			stmt.Options = append(stmt.Options, opt)
+		case "ENABLE_BROKER":
+			opt := &ast.GenericDatabaseOption{OptionKind: "EnableBroker"}
+			stmt.Options = append(stmt.Options, opt)
+		case "DISABLE_BROKER":
+			opt := &ast.GenericDatabaseOption{OptionKind: "DisableBroker"}
+			stmt.Options = append(stmt.Options, opt)
+		case "NEW_BROKER":
+			opt := &ast.GenericDatabaseOption{OptionKind: "NewBroker"}
+			stmt.Options = append(stmt.Options, opt)
+		case "PAGE_VERIFY":
+			// PAGE_VERIFY CHECKSUM | NONE | TORN_PAGE_DETECTION
+			verifyValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			value := "None"
+			switch verifyValue {
+			case "CHECKSUM":
+				value = "Checksum"
+			case "TORN_PAGE_DETECTION":
+				value = "TornPageDetection"
+			}
+			opt := &ast.PageVerifyDatabaseOption{
+				OptionKind: "PageVerify",
+				Value:      value,
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "PARTNER":
+			opt, err := p.parsePartnerDatabaseOption()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "WITNESS":
+			opt, err := p.parseWitnessDatabaseOption()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "PARAMETERIZATION":
+			// PARAMETERIZATION SIMPLE | FORCED
+			paramValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			opt := &ast.ParameterizationDatabaseOption{
+				OptionKind: "Parameterization",
+				IsSimple:   paramValue == "SIMPLE",
+			}
+			stmt.Options = append(stmt.Options, opt)
 		default:
 			// Handle generic options with = syntax (e.g., OPTIMIZED_LOCKING = ON)
 			if p.curTok.Type == TokenEquals {
@@ -2337,6 +2389,87 @@ func (p *Parser) parseChangeTrackingOption() (*ast.ChangeTrackingDatabaseOption,
 			return nil, fmt.Errorf("expected ) after CHANGE_TRACKING details, got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume )
+	}
+
+	return opt, nil
+}
+
+// parsePartnerDatabaseOption parses PARTNER database mirroring option
+func (p *Parser) parsePartnerDatabaseOption() (*ast.PartnerDatabaseOption, error) {
+	opt := &ast.PartnerDatabaseOption{
+		OptionKind: "Partner",
+	}
+
+	// Check if next token is = (PARTNER = 'server')
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+		server, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		opt.PartnerServer = server
+		opt.PartnerOption = "PartnerServer"
+		return opt, nil
+	}
+
+	// Otherwise, parse partner action
+	action := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	switch action {
+	case "FAILOVER":
+		opt.PartnerOption = "Failover"
+	case "FORCE_SERVICE_ALLOW_DATA_LOSS":
+		opt.PartnerOption = "ForceServiceAllowDataLoss"
+	case "RESUME":
+		opt.PartnerOption = "Resume"
+	case "SUSPEND":
+		opt.PartnerOption = "Suspend"
+	case "SAFETY":
+		// SAFETY FULL or SAFETY OFF
+		safetyVal := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+		if safetyVal == "FULL" {
+			opt.PartnerOption = "SafetyFull"
+		} else {
+			opt.PartnerOption = "SafetyOff"
+		}
+	case "TIMEOUT":
+		// TIMEOUT value
+		opt.PartnerOption = "Timeout"
+		val, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		opt.Timeout = val
+	default:
+		opt.PartnerOption = capitalizeFirst(strings.ToLower(action))
+	}
+
+	return opt, nil
+}
+
+// parseWitnessDatabaseOption parses WITNESS database mirroring option
+func (p *Parser) parseWitnessDatabaseOption() (*ast.WitnessDatabaseOption, error) {
+	opt := &ast.WitnessDatabaseOption{
+		OptionKind: "Witness",
+	}
+
+	// Check if next token is = (WITNESS = 'server')
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+		server, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		opt.WitnessServer = server
+		return opt, nil
+	}
+
+	// Check for WITNESS OFF
+	if strings.ToUpper(p.curTok.Literal) == "OFF" {
+		opt.IsOff = true
+		p.nextToken()
 	}
 
 	return opt, nil
@@ -7826,6 +7959,18 @@ func convertOptionKind(optionName string) string {
 		return "ArithAbort"
 	case "NUMERIC_ROUNDABORT":
 		return "NumericRoundAbort"
+	case "DB_CHAINING":
+		return "DBChaining"
+	case "AUTO_UPDATE_STATISTICS_ASYNC":
+		return "AutoUpdateStatisticsAsync"
+	case "DATE_CORRELATION_OPTIMIZATION":
+		return "DateCorrelationOptimization"
+	case "ALLOW_SNAPSHOT_ISOLATION":
+		return "AllowSnapshotIsolation"
+	case "READ_COMMITTED_SNAPSHOT":
+		return "ReadCommittedSnapshot"
+	case "SUPPLEMENTAL_LOGGING":
+		return "SupplementalLogging"
 	}
 
 	// Split by underscores and capitalize each word

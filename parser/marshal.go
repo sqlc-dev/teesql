@@ -1198,6 +1198,46 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			"$type":      "DatabaseOption",
 			"OptionKind": o.OptionKind,
 		}
+	case *ast.GenericDatabaseOption:
+		return jsonNode{
+			"$type":      "DatabaseOption",
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.PageVerifyDatabaseOption:
+		return jsonNode{
+			"$type":      "PageVerifyDatabaseOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.PartnerDatabaseOption:
+		node := jsonNode{
+			"$type":         "PartnerDatabaseOption",
+			"PartnerOption": o.PartnerOption,
+			"OptionKind":    o.OptionKind,
+		}
+		if o.PartnerServer != nil {
+			node["PartnerServer"] = scalarExpressionToJSON(o.PartnerServer)
+		}
+		if o.Timeout != nil {
+			node["Timeout"] = scalarExpressionToJSON(o.Timeout)
+		}
+		return node
+	case *ast.WitnessDatabaseOption:
+		node := jsonNode{
+			"$type":      "WitnessDatabaseOption",
+			"IsOff":      o.IsOff,
+			"OptionKind": o.OptionKind,
+		}
+		if o.WitnessServer != nil {
+			node["WitnessServer"] = scalarExpressionToJSON(o.WitnessServer)
+		}
+		return node
+	case *ast.ParameterizationDatabaseOption:
+		return jsonNode{
+			"$type":      "ParameterizationDatabaseOption",
+			"IsSimple":   o.IsSimple,
+			"OptionKind": o.OptionKind,
+		}
 	default:
 		return jsonNode{"$type": "UnknownDatabaseOption"}
 	}

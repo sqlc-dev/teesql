@@ -318,3 +318,50 @@ type CursorDefaultDatabaseOption struct {
 
 func (c *CursorDefaultDatabaseOption) node()           {}
 func (c *CursorDefaultDatabaseOption) databaseOption() {}
+
+// PageVerifyDatabaseOption represents PAGE_VERIFY database option
+type PageVerifyDatabaseOption struct {
+	OptionKind string // "PageVerify"
+	Value      string // "Checksum", "None", "TornPageDetection"
+}
+
+func (p *PageVerifyDatabaseOption) node()           {}
+func (p *PageVerifyDatabaseOption) databaseOption() {}
+
+// PartnerDatabaseOption represents PARTNER database mirroring option
+type PartnerDatabaseOption struct {
+	OptionKind    string           // "Partner"
+	PartnerServer ScalarExpression // For PARTNER = 'server'
+	PartnerOption string           // "PartnerServer", "Failover", "ForceServiceAllowDataLoss", "Resume", "SafetyFull", "SafetyOff", "Suspend", "Timeout"
+	Timeout       ScalarExpression // For PARTNER TIMEOUT value
+}
+
+func (p *PartnerDatabaseOption) node()           {}
+func (p *PartnerDatabaseOption) databaseOption() {}
+
+// WitnessDatabaseOption represents WITNESS database mirroring option
+type WitnessDatabaseOption struct {
+	OptionKind    string           // "Witness"
+	WitnessServer ScalarExpression // For WITNESS = 'server'
+	IsOff         bool             // For WITNESS OFF
+}
+
+func (w *WitnessDatabaseOption) node()           {}
+func (w *WitnessDatabaseOption) databaseOption() {}
+
+// ParameterizationDatabaseOption represents PARAMETERIZATION database option
+type ParameterizationDatabaseOption struct {
+	OptionKind string // "Parameterization"
+	IsSimple   bool   // true for SIMPLE, false for FORCED
+}
+
+func (p *ParameterizationDatabaseOption) node()           {}
+func (p *ParameterizationDatabaseOption) databaseOption() {}
+
+// GenericDatabaseOption represents a simple database option with just OptionKind
+type GenericDatabaseOption struct {
+	OptionKind string // e.g., "Emergency", "ErrorBrokerConversations", "EnableBroker", etc.
+}
+
+func (g *GenericDatabaseOption) node()           {}
+func (g *GenericDatabaseOption) databaseOption() {}
