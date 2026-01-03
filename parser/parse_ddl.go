@@ -3804,11 +3804,9 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 			constraint := &ast.ForeignKeyConstraintDefinition{
 				ConstraintIdentifier: constraintName,
 			}
-			// Parse column list - track if we have a complete constraint
-			hasColumnsFK := false
+			// Parse optional column list
 			hasReferences := false
 			if p.curTok.Type == TokenLParen {
-				hasColumnsFK = true
 				p.nextToken() // consume (
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 					ident := p.parseIdentifier()
@@ -3904,8 +3902,8 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					constraint.IsEnforced = &f
 				}
 			}
-			// Only add constraint if we have columns and references
-			if hasColumnsFK && hasReferences {
+			// Only add constraint if we have references (columns are optional)
+			if hasReferences {
 				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 			}
 
@@ -3948,15 +3946,57 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 			}
 			stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 
+		case "DEFAULT":
+			// CONSTRAINT name DEFAULT value FOR column [WITH VALUES]
+			p.nextToken() // consume DEFAULT
+			constraint := &ast.DefaultConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+			}
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				// Invalid/incomplete DEFAULT constraint - skip it
+				break
+			}
+			constraint.Expression = expr
+			// Check for FOR column
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+				constraint.Column = p.parseIdentifier()
+			}
+			// Check for WITH VALUES
+			if p.curTok.Type == TokenWith && strings.ToUpper(p.peekTok.Literal) == "VALUES" {
+				p.nextToken() // consume WITH
+				p.nextToken() // consume VALUES
+				constraint.WithValues = true
+			}
+			stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+
+		case "CHECK":
+			// CONSTRAINT name CHECK (condition)
+			p.nextToken() // consume CHECK
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				expr, err := p.parseBooleanExpression()
+				if err != nil {
+					return nil, err
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+				constraint := &ast.CheckConstraintDefinition{
+					ConstraintIdentifier: constraintName,
+					CheckCondition:       expr,
+				}
+				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+			}
+
 		default:
 			// Unknown constraint type - skip to end of statement
 			p.skipToEndOfStatement()
 		}
-		return stmt, nil
-	}
-
-	// Check if this is ADD INDEX
-	if p.curTok.Type == TokenIndex {
+		// Continue to check for comma (don't return here - allow multiple constraints)
+	} else if p.curTok.Type == TokenIndex {
+		// ADD INDEX
 		p.nextToken() // consume INDEX
 
 		indexDef := &ast.IndexDefinition{}

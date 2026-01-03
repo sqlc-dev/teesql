@@ -6786,6 +6786,8 @@ func tableConstraintToJSON(c ast.TableConstraint) jsonNode {
 		return foreignKeyConstraintToJSON(constraint)
 	case *ast.GraphConnectionConstraintDefinition:
 		return graphConnectionConstraintToJSON(constraint)
+	case *ast.DefaultConstraintDefinition:
+		return defaultConstraintToJSON(constraint)
 	default:
 		return jsonNode{"$type": "UnknownTableConstraint"}
 	}
