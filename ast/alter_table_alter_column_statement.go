@@ -10,6 +10,8 @@ type AlterTableAlterColumnStatement struct {
 	IsHidden                    bool
 	Collation                   *Identifier
 	IsMasked                    bool
+	Encryption                  *ColumnEncryptionDefinition
+	MaskingFunction             ScalarExpression
 }
 
 func (a *AlterTableAlterColumnStatement) node()      {}

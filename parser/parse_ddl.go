@@ -3487,6 +3487,9 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		} else if nextLit == "SPARSE" {
 			stmt.AlterTableAlterColumnOption = "AddSparse"
 			p.nextToken()
+		} else if nextLit == "HIDDEN" {
+			stmt.AlterTableAlterColumnOption = "AddHidden"
+			p.nextToken()
 		} else if nextLit == "NOT" {
 			p.nextToken() // consume NOT
 			if strings.ToUpper(p.curTok.Literal) == "FOR" {
@@ -3513,6 +3516,9 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 			p.nextToken()
 		} else if nextLit == "SPARSE" {
 			stmt.AlterTableAlterColumnOption = "DropSparse"
+			p.nextToken()
+		} else if nextLit == "HIDDEN" {
+			stmt.AlterTableAlterColumnOption = "DropHidden"
 			p.nextToken()
 		} else if nextLit == "NOT" {
 			p.nextToken() // consume NOT
@@ -3547,7 +3553,7 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		stmt.Collation = p.parseIdentifier()
 	}
 
-	// Parse optional SPARSE, FILESTREAM, COLUMN_SET FOR ALL_SPARSE_COLUMNS
+	// Parse optional SPARSE, FILESTREAM, COLUMN_SET FOR ALL_SPARSE_COLUMNS, HIDDEN, ENCRYPTED WITH, MASKED WITH
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 		if upperLit == "SPARSE" {
@@ -3574,6 +3580,48 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 				stmt.StorageOptions = &ast.ColumnStorageOptions{}
 			}
 			stmt.StorageOptions.SparseOption = "ColumnSetForAllSparseColumns"
+		} else if upperLit == "HIDDEN" {
+			stmt.IsHidden = true
+			p.nextToken()
+		} else if upperLit == "ENCRYPTED" {
+			p.nextToken() // consume ENCRYPTED
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken() // consume WITH
+			}
+			// Parse encryption specification: (COLUMN_ENCRYPTION_KEY = key1, ENCRYPTION_TYPE = ..., ALGORITHM = ...)
+			if p.curTok.Type == TokenLParen {
+				encSpec, err := p.parseColumnEncryptionSpecification()
+				if err != nil {
+					return nil, err
+				}
+				stmt.Encryption = encSpec
+			}
+		} else if upperLit == "MASKED" {
+			stmt.IsMasked = true
+			p.nextToken() // consume MASKED
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken() // consume WITH
+			}
+			// Parse masking function: (function = 'default()')
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				if strings.ToUpper(p.curTok.Literal) == "FUNCTION" {
+					p.nextToken() // consume FUNCTION
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					if p.curTok.Type == TokenString {
+						maskFunc, err := p.parseStringLiteral()
+						if err != nil {
+							return nil, err
+						}
+						stmt.MaskingFunction = maskFunc
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
 		} else {
 			break
 		}
@@ -3597,6 +3645,65 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseColumnEncryptionSpecification() (*ast.ColumnEncryptionDefinition, error) {
+	// curTok should be (
+	p.nextToken() // consume (
+
+	encDef := &ast.ColumnEncryptionDefinition{}
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		paramName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		switch paramName {
+		case "COLUMN_ENCRYPTION_KEY":
+			param := &ast.ColumnEncryptionKeyNameParameter{
+				ParameterKind: "ColumnEncryptionKey",
+				Name:          p.parseIdentifier(),
+			}
+			encDef.Parameters = append(encDef.Parameters, param)
+		case "ENCRYPTION_TYPE":
+			encType := strings.ToUpper(p.curTok.Literal)
+			param := &ast.ColumnEncryptionTypeParameter{
+				ParameterKind: "EncryptionType",
+			}
+			if encType == "DETERMINISTIC" {
+				param.EncryptionType = "Deterministic"
+			} else if encType == "RANDOMIZED" {
+				param.EncryptionType = "Randomized"
+			} else {
+				param.EncryptionType = encType
+			}
+			p.nextToken()
+			encDef.Parameters = append(encDef.Parameters, param)
+		case "ALGORITHM":
+			str, err := p.parseStringLiteral()
+			if err != nil {
+				return nil, err
+			}
+			param := &ast.ColumnEncryptionAlgorithmParameter{
+				ParameterKind:       "Algorithm",
+				EncryptionAlgorithm: str,
+			}
+			encDef.Parameters = append(encDef.Parameters, param)
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return encDef, nil
 }
 
 func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableAddTableElementStatement, error) {

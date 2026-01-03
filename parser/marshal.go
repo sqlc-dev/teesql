@@ -887,14 +887,65 @@ func alterTableAlterColumnStatementToJSON(s *ast.AlterTableAlterColumnStatement)
 		node["StorageOptions"] = columnStorageOptionsToJSON(s.StorageOptions)
 	}
 	node["IsHidden"] = s.IsHidden
+	if s.Encryption != nil {
+		node["Encryption"] = columnEncryptionDefinitionToJSON(s.Encryption)
+	}
 	if s.Collation != nil {
 		node["Collation"] = identifierToJSON(s.Collation)
 	}
 	node["IsMasked"] = s.IsMasked
+	if s.MaskingFunction != nil {
+		node["MaskingFunction"] = scalarExpressionToJSON(s.MaskingFunction)
+	}
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
 	return node
+}
+
+func columnEncryptionDefinitionToJSON(e *ast.ColumnEncryptionDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "ColumnEncryptionDefinition",
+	}
+	if len(e.Parameters) > 0 {
+		params := make([]jsonNode, len(e.Parameters))
+		for i, p := range e.Parameters {
+			params[i] = columnEncryptionParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	return node
+}
+
+func columnEncryptionParameterToJSON(p ast.ColumnEncryptionParameter) jsonNode {
+	switch param := p.(type) {
+	case *ast.ColumnEncryptionKeyNameParameter:
+		node := jsonNode{
+			"$type":         "ColumnEncryptionKeyNameParameter",
+			"ParameterKind": param.ParameterKind,
+		}
+		if param.Name != nil {
+			node["Name"] = identifierToJSON(param.Name)
+		}
+		return node
+	case *ast.ColumnEncryptionTypeParameter:
+		return jsonNode{
+			"$type":          "ColumnEncryptionTypeParameter",
+			"EncryptionType": param.EncryptionType,
+			"ParameterKind":  param.ParameterKind,
+		}
+	case *ast.ColumnEncryptionAlgorithmParameter:
+		node := jsonNode{
+			"$type":         "ColumnEncryptionAlgorithmParameter",
+			"ParameterKind": param.ParameterKind,
+		}
+		if param.EncryptionAlgorithm != nil {
+			node["EncryptionAlgorithm"] = scalarExpressionToJSON(param.EncryptionAlgorithm)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "Unknown"}
+	}
 }
 
 func alterMessageTypeStatementToJSON(s *ast.AlterMessageTypeStatement) jsonNode {
