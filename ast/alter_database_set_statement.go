@@ -6,7 +6,17 @@ type AlterDatabaseSetStatement struct {
 	UseCurrent        bool
 	WithManualCutover bool
 	Options           []DatabaseOption
+	Termination       *AlterDatabaseTermination
 }
+
+// AlterDatabaseTermination represents the termination clause (WITH NO_WAIT, WITH ROLLBACK AFTER N, WITH ROLLBACK IMMEDIATE)
+type AlterDatabaseTermination struct {
+	NoWait            bool
+	ImmediateRollback bool
+	RollbackAfter     ScalarExpression
+}
+
+func (a *AlterDatabaseTermination) node() {}
 
 func (a *AlterDatabaseSetStatement) node()      {}
 func (a *AlterDatabaseSetStatement) statement() {}
@@ -82,6 +92,7 @@ type SimpleDatabaseOption struct {
 
 func (d *SimpleDatabaseOption) node()                 {}
 func (d *SimpleDatabaseOption) createDatabaseOption() {}
+func (d *SimpleDatabaseOption) databaseOption()       {}
 
 // MaxSizeDatabaseOption represents a MAXSIZE option.
 type MaxSizeDatabaseOption struct {
@@ -103,6 +114,16 @@ type LiteralDatabaseOption struct {
 func (l *LiteralDatabaseOption) node()                 {}
 func (l *LiteralDatabaseOption) databaseOption()       {}
 func (l *LiteralDatabaseOption) createDatabaseOption() {}
+
+// ElasticPoolSpecification represents SERVICE_OBJECTIVE = ELASTIC_POOL(name = poolname)
+type ElasticPoolSpecification struct {
+	ElasticPoolName *Identifier
+	OptionKind      string // "ServiceObjective"
+}
+
+func (e *ElasticPoolSpecification) node()                 {}
+func (e *ElasticPoolSpecification) databaseOption()       {}
+func (e *ElasticPoolSpecification) createDatabaseOption() {}
 
 // AlterDatabaseAddFileStatement represents ALTER DATABASE ... ADD FILE statement
 type AlterDatabaseAddFileStatement struct {
@@ -145,10 +166,22 @@ type AlterDatabaseModifyFileGroupStatement struct {
 	MakeDefault        bool
 	UpdatabilityOption string // "ReadOnly", "ReadWrite", "ReadOnlyOld", "ReadWriteOld", or ""
 	NewFileGroupName   *Identifier
+	Termination        *AlterDatabaseTermination
+	UseCurrent         bool
 }
 
 func (a *AlterDatabaseModifyFileGroupStatement) node()      {}
 func (a *AlterDatabaseModifyFileGroupStatement) statement() {}
+
+// AlterDatabaseRebuildLogStatement represents ALTER DATABASE ... REBUILD LOG statement
+type AlterDatabaseRebuildLogStatement struct {
+	DatabaseName    *Identifier
+	FileDeclaration *FileDeclaration
+	UseCurrent      bool
+}
+
+func (a *AlterDatabaseRebuildLogStatement) node()      {}
+func (a *AlterDatabaseRebuildLogStatement) statement() {}
 
 // AlterDatabaseModifyNameStatement represents ALTER DATABASE ... MODIFY NAME statement
 type AlterDatabaseModifyNameStatement struct {
@@ -279,3 +312,68 @@ type ChangeRetentionChangeTrackingOptionDetail struct {
 
 func (c *ChangeRetentionChangeTrackingOptionDetail) node()                        {}
 func (c *ChangeRetentionChangeTrackingOptionDetail) changeTrackingOptionDetail() {}
+
+// RecoveryDatabaseOption represents RECOVERY database option
+type RecoveryDatabaseOption struct {
+	OptionKind string // "Recovery"
+	Value      string // "Full", "BulkLogged", "Simple"
+}
+
+func (r *RecoveryDatabaseOption) node()           {}
+func (r *RecoveryDatabaseOption) databaseOption() {}
+
+// CursorDefaultDatabaseOption represents CURSOR_DEFAULT database option
+type CursorDefaultDatabaseOption struct {
+	OptionKind string // "CursorDefault"
+	IsLocal    bool   // true for LOCAL, false for GLOBAL
+}
+
+func (c *CursorDefaultDatabaseOption) node()           {}
+func (c *CursorDefaultDatabaseOption) databaseOption() {}
+
+// PageVerifyDatabaseOption represents PAGE_VERIFY database option
+type PageVerifyDatabaseOption struct {
+	OptionKind string // "PageVerify"
+	Value      string // "Checksum", "None", "TornPageDetection"
+}
+
+func (p *PageVerifyDatabaseOption) node()           {}
+func (p *PageVerifyDatabaseOption) databaseOption() {}
+
+// PartnerDatabaseOption represents PARTNER database mirroring option
+type PartnerDatabaseOption struct {
+	OptionKind    string           // "Partner"
+	PartnerServer ScalarExpression // For PARTNER = 'server'
+	PartnerOption string           // "PartnerServer", "Failover", "ForceServiceAllowDataLoss", "Resume", "SafetyFull", "SafetyOff", "Suspend", "Timeout"
+	Timeout       ScalarExpression // For PARTNER TIMEOUT value
+}
+
+func (p *PartnerDatabaseOption) node()           {}
+func (p *PartnerDatabaseOption) databaseOption() {}
+
+// WitnessDatabaseOption represents WITNESS database mirroring option
+type WitnessDatabaseOption struct {
+	OptionKind    string           // "Witness"
+	WitnessServer ScalarExpression // For WITNESS = 'server'
+	IsOff         bool             // For WITNESS OFF
+}
+
+func (w *WitnessDatabaseOption) node()           {}
+func (w *WitnessDatabaseOption) databaseOption() {}
+
+// ParameterizationDatabaseOption represents PARAMETERIZATION database option
+type ParameterizationDatabaseOption struct {
+	OptionKind string // "Parameterization"
+	IsSimple   bool   // true for SIMPLE, false for FORCED
+}
+
+func (p *ParameterizationDatabaseOption) node()           {}
+func (p *ParameterizationDatabaseOption) databaseOption() {}
+
+// GenericDatabaseOption represents a simple database option with just OptionKind
+type GenericDatabaseOption struct {
+	OptionKind string // e.g., "Emergency", "ErrorBrokerConversations", "EnableBroker", etc.
+}
+
+func (g *GenericDatabaseOption) node()           {}
+func (g *GenericDatabaseOption) databaseOption() {}

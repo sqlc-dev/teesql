@@ -82,6 +82,27 @@ func (p *Parser) parseThrowStatement() (*ast.ThrowStatement, error) {
 func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
 	stmt := &ast.SelectStatement{}
 
+	// Check for parenthesized WITH expression: (WITH ... SELECT ...)
+	// Only handle this case specially, let normal parsing handle other cases
+	if p.curTok.Type == TokenLParen && p.peekTok.Type == TokenWith {
+		p.nextToken() // consume (
+		// Parse WITH clause and SELECT statement
+		withStmt, err := p.parseWithStatement()
+		if err != nil {
+			return nil, err
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		// Return the SelectStatement with its WithCtesAndXmlNamespaces
+		if selStmt, ok := withStmt.(*ast.SelectStatement); ok {
+			return selStmt, nil
+		}
+		return nil, fmt.Errorf("expected SELECT statement after WITH, got %T", withStmt)
+	}
+
 	// Parse query expression (handles UNION, parens, etc.)
 	qe, into, on, err := p.parseQueryExpressionWithInto()
 	if err != nil {
@@ -520,6 +541,51 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		return sse, nil
 	}
 
+	// Check for equals-style alias: column1 = expr, [column1] = expr, 'string' = expr, N'string' = expr
+	// This is detected by seeing identifier or string followed by =
+	if p.peekTok.Type == TokenEquals {
+		// We have alias = expr pattern
+		var columnName *ast.IdentifierOrValueExpression
+
+		if p.curTok.Type == TokenIdent {
+			// identifier = expr
+			alias := p.parseIdentifier()
+			columnName = &ast.IdentifierOrValueExpression{
+				Value:      alias.Value,
+				Identifier: alias,
+			}
+		} else if p.curTok.Type == TokenString {
+			// 'string' = expr
+			str := p.parseStringLiteralValue()
+			p.nextToken()
+			columnName = &ast.IdentifierOrValueExpression{
+				Value:           str.Value,
+				ValueExpression: str,
+			}
+		} else if p.curTok.Type == TokenNationalString {
+			// N'string' = expr
+			str, _ := p.parseNationalStringFromToken()
+			columnName = &ast.IdentifierOrValueExpression{
+				Value:           str.Value,
+				ValueExpression: str,
+			}
+		}
+
+		if columnName != nil {
+			p.nextToken() // consume =
+
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			return &ast.SelectScalarExpression{
+				Expression: expr,
+				ColumnName: columnName,
+			}, nil
+		}
+	}
+
 	// Otherwise parse a scalar expression
 	expr, err := p.parseScalarExpression()
 	if err != nil {
@@ -585,6 +651,21 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 				Value:      alias.Value,
 				Identifier: alias,
 			}
+		}
+	} else if p.curTok.Type == TokenString {
+		// String literal alias without AS: expr 'alias'
+		str := p.parseStringLiteralValue()
+		p.nextToken()
+		sse.ColumnName = &ast.IdentifierOrValueExpression{
+			Value:           str.Value,
+			ValueExpression: str,
+		}
+	} else if p.curTok.Type == TokenNationalString {
+		// National string literal alias without AS: expr N'alias'
+		str, _ := p.parseNationalStringFromToken()
+		sse.ColumnName = &ast.IdentifierOrValueExpression{
+			Value:           str.Value,
+			ValueExpression: str,
 		}
 	} else if p.curTok.Type == TokenIdent {
 		// Check if this is an alias (not a keyword that starts a new clause)
@@ -1086,6 +1167,22 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			p.nextToken()
 			return &ast.ColumnReferenceExpression{ColumnType: "RowGuidCol"}, nil
 		}
+		if upper == "$ACTION" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnAction"}, nil
+		}
+		if upper == "$IDENTITY" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnIdentity"}, nil
+		}
+		if upper == "$ROWGUID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnRowGuid"}, nil
+		}
+		if upper == "$CUID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"}, nil
+		}
 		// Check for NEXT VALUE FOR sequence expression
 		if upper == "NEXT" && strings.ToUpper(p.peekTok.Literal) == "VALUE" {
 			return p.parseNextValueForExpression()
@@ -1531,6 +1628,14 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
 			quoteType = "SquareBracket"
 			literal = literal[1 : len(literal)-1]
+			// Unescape ]] to ]
+			literal = strings.ReplaceAll(literal, "]]", "]")
+		} else if len(literal) >= 2 && literal[0] == '"' && literal[len(literal)-1] == '"' {
+			// Handle double-quoted identifiers
+			quoteType = "DoubleQuote"
+			literal = literal[1 : len(literal)-1]
+			// Unescape "" to "
+			literal = strings.ReplaceAll(literal, "\"\"", "\"")
 		} else if upper == "IDENTITYCOL" || upper == "ROWGUIDCOL" {
 			// IDENTITYCOL/ROWGUIDCOL at end of multi-part identifier sets column type
 			// and is not included in the identifier list
@@ -1892,6 +1997,19 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 }
 
 func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier) (ast.ScalarExpression, error) {
+	// Check for special functions that need custom handling
+	if len(identifiers) == 1 {
+		funcName := strings.ToUpper(identifiers[0].Value)
+		switch funcName {
+		case "IIF":
+			return p.parseIIfCall()
+		case "PARSE":
+			return p.parseParseCall(false)
+		case "TRY_PARSE":
+			return p.parseParseCall(true)
+		}
+	}
+
 	fc := &ast.FunctionCall{
 		UniqueRowFilter:  "NotSpecified",
 		WithArrayWrapper: false,
@@ -2435,7 +2553,7 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	}
 
 	// Parse optional table hints WITH (hint, hint, ...) or old-style (hint, hint, ...)
-	if p.curTok.Type == TokenWith {
+	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
 	}
 	if p.curTok.Type == TokenLParen {
@@ -2497,7 +2615,7 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 	}
 
 	// Parse optional table hints WITH (hint, hint, ...) or old-style (hint, hint, ...)
-	if p.curTok.Type == TokenWith {
+	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
 	}
 	if p.curTok.Type == TokenLParen {
@@ -4068,6 +4186,17 @@ func (p *Parser) parseBooleanAndExpression() (ast.BooleanExpression, error) {
 }
 
 func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) {
+	// Check for CONTAINS/FREETEXT predicates
+	if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper == "CONTAINS" || upper == "FREETEXT" {
+			return p.parseFullTextPredicate(upper)
+		}
+		if upper == "EXISTS" {
+			return p.parseExistsPredicate()
+		}
+	}
+
 	// Check for parenthesized expression - could be boolean or scalar subquery
 	if p.curTok.Type == TokenLParen {
 		// Peek ahead to see if it's a subquery (SELECT)
@@ -4198,6 +4327,43 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 				return &ast.BooleanIsNullExpression{
 					IsNot:      !isNot,
 					Expression: left,
+				}, nil
+			}
+
+			// Check for SOME/ANY/ALL (subquery)
+			upperLit := strings.ToUpper(p.curTok.Literal)
+			if upperLit == "SOME" || upperLit == "ANY" || upperLit == "ALL" {
+				predicateType := "Any"
+				if upperLit == "ALL" {
+					predicateType = "All"
+				}
+				p.nextToken() // consume SOME/ANY/ALL
+
+				if p.curTok.Type != TokenLParen {
+					return nil, fmt.Errorf("expected ( after %s, got %s", upperLit, p.curTok.Literal)
+				}
+				p.nextToken() // consume (
+
+				subqueryExpr, err := p.parseQueryExpression()
+				if err != nil {
+					return nil, err
+				}
+
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume )
+
+				compType := "IsDistinctFrom"
+				if isNot {
+					compType = "IsNotDistinctFrom"
+				}
+
+				return &ast.SubqueryComparisonPredicate{
+					Expression:                      left,
+					ComparisonType:                  compType,
+					Subquery:                        &ast.ScalarSubquery{QueryExpression: subqueryExpr},
+					SubqueryComparisonPredicateType: predicateType,
 				}, nil
 			}
 
@@ -5244,4 +5410,253 @@ func (p *Parser) parseJsonForClauseOption() (*ast.JsonForClauseOption, error) {
 	}
 
 	return option, nil
+}
+
+// parseFullTextPredicate parses CONTAINS or FREETEXT predicates
+func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate, error) {
+	// Convert to PascalCase: "CONTAINS" -> "Contains", "FREETEXT" -> "FreeText"
+	pascalType := strings.ToUpper(funcType[:1]) + strings.ToLower(funcType[1:])
+	if funcType == "FREETEXT" {
+		pascalType = "FreeText"
+	}
+	pred := &ast.FullTextPredicate{
+		FullTextFunctionType: pascalType,
+	}
+	p.nextToken() // consume CONTAINS/FREETEXT
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after %s, got %s", funcType, p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse column specification: *, column, (columns), or PROPERTY(column, 'prop')
+	if p.curTok.Type == TokenStar {
+		pred.Columns = []*ast.ColumnReferenceExpression{{ColumnType: "Wildcard"}}
+		p.nextToken() // consume *
+	} else if p.curTok.Type == TokenLParen {
+		// Column list
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			if p.curTok.Type == TokenStar {
+				pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				p.nextToken()
+			} else {
+				col := p.parseIdentifier()
+				pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{col},
+						Count:       1,
+					},
+				})
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PROPERTY" {
+		// PROPERTY(column, 'property_name')
+		p.nextToken() // consume PROPERTY
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Parse column name
+		col := p.parseIdentifier()
+		pred.Columns = []*ast.ColumnReferenceExpression{{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Identifiers: []*ast.Identifier{col},
+				Count:       1,
+			},
+		}}
+
+		// Expect comma
+		if p.curTok.Type != TokenComma {
+			return nil, fmt.Errorf("expected , after column in PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ,
+
+		// Parse property name (string literal)
+		propExpr, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+		pred.PropertyName = propExpr
+
+		// Expect )
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after PROPERTY, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	} else {
+		// Single column
+		col := p.parseIdentifier()
+		pred.Columns = []*ast.ColumnReferenceExpression{{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Identifiers: []*ast.Identifier{col},
+				Count:       1,
+			},
+		}}
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after columns in %s, got %s", funcType, p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse search value
+	value, err := p.parsePrimaryExpression()
+	if err != nil {
+		return nil, err
+	}
+	pred.Value = value
+
+	// Parse optional LANGUAGE term
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		if p.curTok.Type == TokenLanguage {
+			p.nextToken() // consume LANGUAGE
+			langTerm, err := p.parsePrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+			pred.LanguageTerm = langTerm
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after %s, got %s", funcType, p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return pred, nil
+}
+
+// parseExistsPredicate parses EXISTS (subquery)
+func (p *Parser) parseExistsPredicate() (*ast.ExistsPredicate, error) {
+	p.nextToken() // consume EXISTS
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after EXISTS, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse subquery
+	subquery, err := p.parseQueryExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after EXISTS subquery, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.ExistsPredicate{Subquery: subquery}, nil
+}
+
+// parseIIfCall parses IIF(condition, true_value, false_value)
+func (p *Parser) parseIIfCall() (*ast.IIfCall, error) {
+	p.nextToken() // consume (
+
+	// Parse boolean predicate
+	pred, err := p.parseBooleanExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after IIF condition, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse then expression
+	thenExpr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after IIF then expression, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse else expression
+	elseExpr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after IIF, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.IIfCall{
+		Predicate:      pred,
+		ThenExpression: thenExpr,
+		ElseExpression: elseExpr,
+	}, nil
+}
+
+// parseParseCall parses PARSE(string AS type [USING culture]) or TRY_PARSE(string AS type [USING culture])
+func (p *Parser) parseParseCall(isTry bool) (ast.ScalarExpression, error) {
+	p.nextToken() // consume (
+
+	// Parse string value expression
+	strVal, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect AS
+	if strings.ToUpper(p.curTok.Literal) != "AS" {
+		return nil, fmt.Errorf("expected AS after PARSE value, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume AS
+
+	// Parse data type
+	dataType, err := p.parseDataType()
+	if err != nil {
+		return nil, err
+	}
+
+	var culture ast.ScalarExpression
+
+	// Check for USING culture
+	if strings.ToUpper(p.curTok.Literal) == "USING" {
+		p.nextToken() // consume USING
+		culture, err = p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after PARSE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	if isTry {
+		return &ast.TryParseCall{
+			StringValue: strVal,
+			DataType:    dataType,
+			Culture:     culture,
+		}, nil
+	}
+	return &ast.ParseCall{
+		StringValue: strVal,
+		DataType:    dataType,
+		Culture:     culture,
+	}, nil
 }

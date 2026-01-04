@@ -82,6 +82,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createViewStatementToJSON(s)
 	case *ast.CreateOrAlterViewStatement:
 		return createOrAlterViewStatementToJSON(s)
+	case *ast.AlterViewStatement:
+		return alterViewStatementToJSON(s)
 	case *ast.CreateSchemaStatement:
 		return createSchemaStatementToJSON(s)
 	case *ast.CreateProcedureStatement:
@@ -144,6 +146,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterDatabaseRemoveFileGroupStatementToJSON(s)
 	case *ast.AlterDatabaseCollateStatement:
 		return alterDatabaseCollateStatementToJSON(s)
+	case *ast.AlterDatabaseRebuildLogStatement:
+		return alterDatabaseRebuildLogStatementToJSON(s)
 	case *ast.AlterDatabaseScopedConfigurationClearStatement:
 		return alterDatabaseScopedConfigurationClearStatementToJSON(s)
 	case *ast.AlterResourceGovernorStatement:
@@ -152,6 +156,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createResourcePoolStatementToJSON(s)
 	case *ast.AlterResourcePoolStatement:
 		return alterResourcePoolStatementToJSON(s)
+	case *ast.DropResourcePoolStatement:
+		return dropResourcePoolStatementToJSON(s)
+	case *ast.AlterExternalResourcePoolStatement:
+		return alterExternalResourcePoolStatementToJSON(s)
 	case *ast.CreateCryptographicProviderStatement:
 		return createCryptographicProviderStatementToJSON(s)
 	case *ast.CreateColumnMasterKeyStatement:
@@ -338,10 +346,20 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createServerRoleStatementToJSON(s)
 	case *ast.AlterServerRoleStatement:
 		return alterServerRoleStatementToJSON(s)
+	case *ast.CreateAvailabilityGroupStatement:
+		return createAvailabilityGroupStatementToJSON(s)
 	case *ast.CreateServerAuditStatement:
 		return createServerAuditStatementToJSON(s)
 	case *ast.AlterServerAuditStatement:
 		return alterServerAuditStatementToJSON(s)
+	case *ast.CreateServerAuditSpecificationStatement:
+		return createServerAuditSpecificationStatementToJSON(s)
+	case *ast.AlterServerAuditSpecificationStatement:
+		return alterServerAuditSpecificationStatementToJSON(s)
+	case *ast.CreateDatabaseAuditSpecificationStatement:
+		return createDatabaseAuditSpecificationStatementToJSON(s)
+	case *ast.AlterDatabaseAuditSpecificationStatement:
+		return alterDatabaseAuditSpecificationStatementToJSON(s)
 	case *ast.AlterRemoteServiceBindingStatement:
 		return alterRemoteServiceBindingStatementToJSON(s)
 	case *ast.AlterXmlSchemaCollectionStatement:
@@ -506,6 +524,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTableConstraintModificationStatementToJSON(s)
 	case *ast.AlterTableSetStatement:
 		return alterTableSetStatementToJSON(s)
+	case *ast.AlterTableRebuildStatement:
+		return alterTableRebuildStatementToJSON(s)
+	case *ast.AlterTableChangeTrackingModificationStatement:
+		return alterTableChangeTrackingStatementToJSON(s)
 	case *ast.InsertBulkStatement:
 		return insertBulkStatementToJSON(s)
 	case *ast.BulkInsertStatement:
@@ -863,15 +885,69 @@ func alterTableAlterColumnStatementToJSON(s *ast.AlterTableAlterColumnStatement)
 		node["DataType"] = dataTypeReferenceToJSON(s.DataType)
 	}
 	node["AlterTableAlterColumnOption"] = s.AlterTableAlterColumnOption
+	if s.StorageOptions != nil {
+		node["StorageOptions"] = columnStorageOptionsToJSON(s.StorageOptions)
+	}
 	node["IsHidden"] = s.IsHidden
+	if s.Encryption != nil {
+		node["Encryption"] = columnEncryptionDefinitionToJSON(s.Encryption)
+	}
 	if s.Collation != nil {
 		node["Collation"] = identifierToJSON(s.Collation)
 	}
 	node["IsMasked"] = s.IsMasked
+	if s.MaskingFunction != nil {
+		node["MaskingFunction"] = scalarExpressionToJSON(s.MaskingFunction)
+	}
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
 	return node
+}
+
+func columnEncryptionDefinitionToJSON(e *ast.ColumnEncryptionDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "ColumnEncryptionDefinition",
+	}
+	if len(e.Parameters) > 0 {
+		params := make([]jsonNode, len(e.Parameters))
+		for i, p := range e.Parameters {
+			params[i] = columnEncryptionParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	return node
+}
+
+func columnEncryptionParameterToJSON(p ast.ColumnEncryptionParameter) jsonNode {
+	switch param := p.(type) {
+	case *ast.ColumnEncryptionKeyNameParameter:
+		node := jsonNode{
+			"$type":         "ColumnEncryptionKeyNameParameter",
+			"ParameterKind": param.ParameterKind,
+		}
+		if param.Name != nil {
+			node["Name"] = identifierToJSON(param.Name)
+		}
+		return node
+	case *ast.ColumnEncryptionTypeParameter:
+		return jsonNode{
+			"$type":          "ColumnEncryptionTypeParameter",
+			"EncryptionType": param.EncryptionType,
+			"ParameterKind":  param.ParameterKind,
+		}
+	case *ast.ColumnEncryptionAlgorithmParameter:
+		node := jsonNode{
+			"$type":         "ColumnEncryptionAlgorithmParameter",
+			"ParameterKind": param.ParameterKind,
+		}
+		if param.EncryptionAlgorithm != nil {
+			node["EncryptionAlgorithm"] = scalarExpressionToJSON(param.EncryptionAlgorithm)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "Unknown"}
+	}
 }
 
 func alterMessageTypeStatementToJSON(s *ast.AlterMessageTypeStatement) jsonNode {
@@ -982,12 +1058,18 @@ func alterCredentialStatementToJSON(s *ast.AlterCredentialStatement) jsonNode {
 
 func alterDatabaseSetStatementToJSON(s *ast.AlterDatabaseSetStatement) jsonNode {
 	node := jsonNode{
-		"$type":             "AlterDatabaseSetStatement",
-		"WithManualCutover": s.WithManualCutover,
-		"UseCurrent":        s.UseCurrent,
+		"$type": "AlterDatabaseSetStatement",
 	}
-	if s.DatabaseName != nil {
-		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	if s.Termination != nil {
+		termNode := jsonNode{
+			"$type":             "AlterDatabaseTermination",
+			"ImmediateRollback": s.Termination.ImmediateRollback,
+			"NoWait":            s.Termination.NoWait,
+		}
+		if s.Termination.RollbackAfter != nil {
+			termNode["RollbackAfter"] = scalarExpressionToJSON(s.Termination.RollbackAfter)
+		}
+		node["Termination"] = termNode
 	}
 	if len(s.Options) > 0 {
 		opts := make([]jsonNode, len(s.Options))
@@ -996,6 +1078,11 @@ func alterDatabaseSetStatementToJSON(s *ast.AlterDatabaseSetStatement) jsonNode 
 		}
 		node["Options"] = opts
 	}
+	node["WithManualCutover"] = s.WithManualCutover
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = s.UseCurrent
 	return node
 }
 
@@ -1021,11 +1108,13 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		}
 	case *ast.AutoCreateStatisticsDatabaseOption:
 		node := jsonNode{
-			"$type": "AutoCreateStatisticsDatabaseOption",
+			"$type":          "AutoCreateStatisticsDatabaseOption",
+			"HasIncremental": o.HasIncremental,
 		}
-		if o.HasIncremental {
-			node["HasIncremental"] = o.HasIncremental
+		if o.IncrementalState != "" {
 			node["IncrementalState"] = o.IncrementalState
+		} else {
+			node["IncrementalState"] = "NotSet"
 		}
 		node["OptionState"] = o.OptionState
 		node["OptionKind"] = o.OptionKind
@@ -1050,6 +1139,17 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		}
 		if o.Value != nil {
 			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		if o.OptionKind != "" {
+			node["OptionKind"] = o.OptionKind
+		}
+		return node
+	case *ast.ElasticPoolSpecification:
+		node := jsonNode{
+			"$type": "ElasticPoolSpecification",
+		}
+		if o.ElasticPoolName != nil {
+			node["ElasticPoolName"] = identifierToJSON(o.ElasticPoolName)
 		}
 		if o.OptionKind != "" {
 			node["OptionKind"] = o.OptionKind
@@ -1083,6 +1183,63 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			node["Details"] = details
 		}
 		return node
+	case *ast.RecoveryDatabaseOption:
+		return jsonNode{
+			"$type":      "RecoveryDatabaseOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.CursorDefaultDatabaseOption:
+		return jsonNode{
+			"$type":      "CursorDefaultDatabaseOption",
+			"IsLocal":    o.IsLocal,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.SimpleDatabaseOption:
+		return jsonNode{
+			"$type":      "DatabaseOption",
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.GenericDatabaseOption:
+		return jsonNode{
+			"$type":      "DatabaseOption",
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.PageVerifyDatabaseOption:
+		return jsonNode{
+			"$type":      "PageVerifyDatabaseOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.PartnerDatabaseOption:
+		node := jsonNode{
+			"$type":         "PartnerDatabaseOption",
+			"PartnerOption": o.PartnerOption,
+			"OptionKind":    o.OptionKind,
+		}
+		if o.PartnerServer != nil {
+			node["PartnerServer"] = scalarExpressionToJSON(o.PartnerServer)
+		}
+		if o.Timeout != nil {
+			node["Timeout"] = scalarExpressionToJSON(o.Timeout)
+		}
+		return node
+	case *ast.WitnessDatabaseOption:
+		node := jsonNode{
+			"$type":      "WitnessDatabaseOption",
+			"IsOff":      o.IsOff,
+			"OptionKind": o.OptionKind,
+		}
+		if o.WitnessServer != nil {
+			node["WitnessServer"] = scalarExpressionToJSON(o.WitnessServer)
+		}
+		return node
+	case *ast.ParameterizationDatabaseOption:
+		return jsonNode{
+			"$type":      "ParameterizationDatabaseOption",
+			"IsSimple":   o.IsSimple,
+			"OptionKind": o.OptionKind,
+		}
 	default:
 		return jsonNode{"$type": "UnknownDatabaseOption"}
 	}
@@ -1154,7 +1311,7 @@ func indexDefinitionToJSON(idx *ast.IndexDefinition) jsonNode {
 	if len(idx.IndexOptions) > 0 {
 		options := make([]jsonNode, len(idx.IndexOptions))
 		for i, o := range idx.IndexOptions {
-			options[i] = indexExpressionOptionToJSON(o)
+			options[i] = indexOptionToJSON(o)
 		}
 		node["IndexOptions"] = options
 	}
@@ -1171,6 +1328,15 @@ func indexDefinitionToJSON(idx *ast.IndexDefinition) jsonNode {
 			cols[i] = scalarExpressionToJSON(c)
 		}
 		node["IncludeColumns"] = cols
+	}
+	if idx.FilterPredicate != nil {
+		node["FilterPredicate"] = booleanExpressionToJSON(idx.FilterPredicate)
+	}
+	if idx.OnFileGroupOrPartitionScheme != nil {
+		node["OnFileGroupOrPartitionScheme"] = fileGroupOrPartitionSchemeToJSON(idx.OnFileGroupOrPartitionScheme)
+	}
+	if idx.FileStreamOn != nil {
+		node["FileStreamOn"] = identifierOrValueExpressionToJSON(idx.FileStreamOn)
 	}
 	return node
 }
@@ -1815,6 +1981,48 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["OverClause"] = overClauseToJSON(e.OverClause)
 		}
 		return node
+	case *ast.IIfCall:
+		node := jsonNode{
+			"$type": "IIfCall",
+		}
+		if e.Predicate != nil {
+			node["Predicate"] = booleanExpressionToJSON(e.Predicate)
+		}
+		if e.ThenExpression != nil {
+			node["ThenExpression"] = scalarExpressionToJSON(e.ThenExpression)
+		}
+		if e.ElseExpression != nil {
+			node["ElseExpression"] = scalarExpressionToJSON(e.ElseExpression)
+		}
+		return node
+	case *ast.ParseCall:
+		node := jsonNode{
+			"$type": "ParseCall",
+		}
+		if e.StringValue != nil {
+			node["StringValue"] = scalarExpressionToJSON(e.StringValue)
+		}
+		if e.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(e.DataType)
+		}
+		if e.Culture != nil {
+			node["Culture"] = scalarExpressionToJSON(e.Culture)
+		}
+		return node
+	case *ast.TryParseCall:
+		node := jsonNode{
+			"$type": "TryParseCall",
+		}
+		if e.StringValue != nil {
+			node["StringValue"] = scalarExpressionToJSON(e.StringValue)
+		}
+		if e.DataType != nil {
+			node["DataType"] = dataTypeReferenceToJSON(e.DataType)
+		}
+		if e.Culture != nil {
+			node["Culture"] = scalarExpressionToJSON(e.Culture)
+		}
+		return node
 	case *ast.VariableReference:
 		node := jsonNode{
 			"$type": "VariableReference",
@@ -2415,6 +2623,19 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		}
 		node["IsNot"] = e.IsNot
 		return node
+	case *ast.SubqueryComparisonPredicate:
+		node := jsonNode{
+			"$type":                          "SubqueryComparisonPredicate",
+			"ComparisonType":                 e.ComparisonType,
+			"SubqueryComparisonPredicateType": e.SubqueryComparisonPredicateType,
+		}
+		if e.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(e.Expression)
+		}
+		if e.Subquery != nil {
+			node["Subquery"] = scalarExpressionToJSON(e.Subquery)
+		}
+		return node
 	case *ast.BooleanInExpression:
 		node := jsonNode{
 			"$type": "InPredicate",
@@ -2487,6 +2708,38 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		}
 		if e.Expression != nil {
 			node["Expression"] = graphMatchExpressionToJSON(e.Expression)
+		}
+		return node
+	case *ast.FullTextPredicate:
+		node := jsonNode{
+			"$type": "FullTextPredicate",
+		}
+		if e.FullTextFunctionType != "" {
+			node["FullTextFunctionType"] = e.FullTextFunctionType
+		}
+		if len(e.Columns) > 0 {
+			cols := make([]jsonNode, len(e.Columns))
+			for i, col := range e.Columns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["Columns"] = cols
+		}
+		if e.Value != nil {
+			node["Value"] = scalarExpressionToJSON(e.Value)
+		}
+		if e.PropertyName != nil {
+			node["PropertyName"] = scalarExpressionToJSON(e.PropertyName)
+		}
+		if e.LanguageTerm != nil {
+			node["LanguageTerm"] = scalarExpressionToJSON(e.LanguageTerm)
+		}
+		return node
+	case *ast.ExistsPredicate:
+		node := jsonNode{
+			"$type": "ExistsPredicate",
+		}
+		if e.Subquery != nil {
+			node["Subquery"] = queryExpressionToJSON(e.Subquery)
 		}
 		return node
 	default:
@@ -3472,6 +3725,12 @@ func atomicBlockOptionToJSON(o ast.AtomicBlockOption) jsonNode {
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
 		return node
+	case *ast.OnOffAtomicBlockOption:
+		return jsonNode{
+			"$type":       "OnOffAtomicBlockOption",
+			"OptionState": opt.OptionState,
+			"OptionKind":  opt.OptionKind,
+		}
 	default:
 		return jsonNode{"$type": "UnknownAtomicBlockOption"}
 	}
@@ -3589,6 +3848,37 @@ func createOrAlterViewStatementToJSON(s *ast.CreateOrAlterViewStatement) jsonNod
 	node := jsonNode{
 		"$type": "CreateOrAlterViewStatement",
 	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, c := range s.Columns {
+			cols[i] = identifierToJSON(c)
+		}
+		node["Columns"] = cols
+	}
+	if len(s.ViewOptions) > 0 {
+		opts := make([]jsonNode, len(s.ViewOptions))
+		for i, opt := range s.ViewOptions {
+			opts[i] = viewOptionToJSON(opt)
+		}
+		node["ViewOptions"] = opts
+	}
+	if s.SelectStatement != nil {
+		node["SelectStatement"] = selectStatementToJSON(s.SelectStatement)
+	}
+	node["WithCheckOption"] = s.WithCheckOption
+	node["IsMaterialized"] = s.IsMaterialized
+	return node
+}
+
+func alterViewStatementToJSON(s *ast.AlterViewStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterViewStatement",
+	}
+	node["IsRebuild"] = s.IsRebuild
+	node["IsDisable"] = s.IsDisable
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
@@ -4007,6 +4297,26 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							OptionKind:  "MemoryOptimized",
 							OptionState: state,
 						})
+					} else if optionName == "DURABILITY" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						durabilityKind := "SchemaOnly"
+						if valueUpper == "SCHEMA_AND_DATA" {
+							durabilityKind = "SchemaAndData"
+						}
+						p.nextToken() // consume value
+						stmt.Options = append(stmt.Options, &ast.DurabilityTableOption{
+							OptionKind:                "Durability",
+							DurabilityTableOptionKind: durabilityKind,
+						})
+					} else if optionName == "REMOTE_DATA_ARCHIVE" {
+						opt, err := p.parseRemoteDataArchiveTableOption(false)
+						if err != nil {
+							return nil, err
+						}
+						stmt.Options = append(stmt.Options, opt)
 					} else {
 						// Skip unknown option value
 						if p.curTok.Type == TokenEquals {
@@ -4214,6 +4524,20 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 							OptionKind:  "MemoryOptimized",
 							OptionState: state,
 						})
+					} else if optionName == "DURABILITY" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						durabilityKind := "SchemaOnly"
+						if valueUpper == "SCHEMA_AND_DATA" {
+							durabilityKind = "SchemaAndData"
+						}
+						p.nextToken() // consume value
+						stmt.Options = append(stmt.Options, &ast.DurabilityTableOption{
+							OptionKind:                "Durability",
+							DurabilityTableOptionKind: durabilityKind,
+						})
 					} else if optionName == "FILETABLE_PRIMARY_KEY_CONSTRAINT_NAME" {
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
@@ -4241,6 +4565,12 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 							OptionKind: "FileTableFullPathUniqueConstraintName",
 							Value:      constraintName,
 						})
+					} else if optionName == "REMOTE_DATA_ARCHIVE" {
+						opt, err := p.parseRemoteDataArchiveTableOption(false)
+						if err != nil {
+							return nil, err
+						}
+						stmt.Options = append(stmt.Options, opt)
 					} else {
 						// Skip unknown option value
 						if p.curTok.Type == TokenEquals {
@@ -4268,6 +4598,101 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 	}
 
 	return stmt, nil
+}
+
+// parseRemoteDataArchiveTableOption parses REMOTE_DATA_ARCHIVE = ON/OFF (options...) for tables
+// isAlterTable indicates if this is for ALTER TABLE SET (which uses RemoteDataArchiveAlterTableOption)
+func (p *Parser) parseRemoteDataArchiveTableOption(isAlterTable bool) (ast.TableOption, error) {
+	// curTok should be = or (
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+	}
+
+	// Parse ON, OFF, or OFF_WITHOUT_DATA_RECOVERY
+	rdaOption := "Enable"
+	stateUpper := strings.ToUpper(p.curTok.Literal)
+	if stateUpper == "ON" {
+		rdaOption = "Enable"
+		p.nextToken()
+	} else if stateUpper == "OFF" {
+		rdaOption = "Disable"
+		p.nextToken()
+	} else if stateUpper == "OFF_WITHOUT_DATA_RECOVERY" {
+		rdaOption = "OffWithoutDataRecovery"
+		p.nextToken()
+	}
+
+	var migrationState string
+	var filterPredicate ast.ScalarExpression
+	isMigrationStateSpecified := false
+	isFilterPredicateSpecified := false
+
+	// Parse options in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			optName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume option name
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			switch optName {
+			case "MIGRATION_STATE":
+				isMigrationStateSpecified = true
+				msUpper := strings.ToUpper(p.curTok.Literal)
+				if msUpper == "PAUSED" {
+					migrationState = "Paused"
+				} else if msUpper == "OUTBOUND" {
+					migrationState = "Outbound"
+				} else if msUpper == "INBOUND" {
+					migrationState = "Inbound"
+				}
+				p.nextToken()
+			case "FILTER_PREDICATE":
+				isFilterPredicateSpecified = true
+				if strings.ToUpper(p.curTok.Literal) == "NULL" {
+					// When FILTER_PREDICATE = NULL, filterPredicate stays nil
+					p.nextToken()
+				} else {
+					// Parse function call like dbo.f1(c1)
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					filterPredicate = expr
+				}
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	if isAlterTable {
+		return &ast.RemoteDataArchiveAlterTableOption{
+			RdaTableOption:             rdaOption,
+			MigrationState:             migrationState,
+			IsMigrationStateSpecified:  isMigrationStateSpecified,
+			FilterPredicate:            filterPredicate,
+			IsFilterPredicateSpecified: isFilterPredicateSpecified,
+			OptionKind:                 "RemoteDataArchive",
+		}, nil
+	}
+
+	return &ast.RemoteDataArchiveTableOption{
+		RdaTableOption:  rdaOption,
+		MigrationState:  migrationState,
+		FilterPredicate: filterPredicate,
+		OptionKind:      "RemoteDataArchive",
+	}, nil
 }
 
 // parseMergeStatement parses a MERGE statement
@@ -4910,6 +5335,14 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				return nil, err
 			}
 			defaultConstraint.Expression = expr
+			// Parse optional WITH VALUES
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if strings.ToUpper(p.curTok.Literal) == "VALUES" {
+					p.nextToken() // consume VALUES
+					defaultConstraint.WithValues = true
+				}
+			}
 			col.DefaultConstraint = defaultConstraint
 		} else if upperLit == "CHECK" {
 			p.nextToken() // consume CHECK
@@ -4966,6 +5399,33 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					p.nextToken() // consume )
 				}
 			}
+			// Parse ON DELETE and ON UPDATE actions
+			for {
+				actionUpperLit := strings.ToUpper(p.curTok.Literal)
+				if actionUpperLit == "ON" {
+					p.nextToken() // consume ON
+					actionType := strings.ToUpper(p.curTok.Literal)
+					p.nextToken() // consume DELETE or UPDATE
+
+					action := p.parseForeignKeyAction()
+					if actionType == "DELETE" {
+						constraint.DeleteAction = action
+					} else if actionType == "UPDATE" {
+						constraint.UpdateAction = action
+					}
+				} else if actionUpperLit == "NOT" {
+					p.nextToken() // consume NOT
+					if strings.ToUpper(p.curTok.Literal) == "FOR" {
+						p.nextToken() // consume FOR
+						if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+							p.nextToken() // consume REPLICATION
+							constraint.NotForReplication = true
+						}
+					}
+				} else {
+					break
+				}
+			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "CONSTRAINT" {
 			p.nextToken() // consume CONSTRAINT
@@ -4981,17 +5441,36 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			indexDef := &ast.IndexDefinition{
 				IndexType: &ast.IndexType{},
 			}
-			// Parse index name (skip if it's CLUSTERED/NONCLUSTERED)
+			// Parse index name (skip if it's CLUSTERED/NONCLUSTERED/UNIQUE)
 			idxUpper := strings.ToUpper(p.curTok.Literal)
-			if p.curTok.Type == TokenIdent && idxUpper != "CLUSTERED" && idxUpper != "NONCLUSTERED" && p.curTok.Type != TokenLParen {
+			if p.curTok.Type == TokenIdent && idxUpper != "CLUSTERED" && idxUpper != "NONCLUSTERED" && idxUpper != "UNIQUE" && p.curTok.Type != TokenLParen {
 				indexDef.Name = p.parseIdentifier()
 			}
-			// Parse optional CLUSTERED/NONCLUSTERED
+			// Parse optional UNIQUE
+			if strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
+				indexDef.Unique = true
+				p.nextToken()
+			}
+			// Parse optional CLUSTERED/NONCLUSTERED [HASH]
 			if strings.ToUpper(p.curTok.Literal) == "CLUSTERED" {
 				indexDef.IndexType.IndexTypeKind = "Clustered"
 				p.nextToken()
+				// Check for HASH
+				if strings.ToUpper(p.curTok.Literal) == "HASH" {
+					indexDef.IndexType.IndexTypeKind = "ClusteredHash"
+					p.nextToken()
+				}
 			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 				indexDef.IndexType.IndexTypeKind = "NonClustered"
+				p.nextToken()
+				// Check for HASH
+				if strings.ToUpper(p.curTok.Literal) == "HASH" {
+					indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
+					p.nextToken()
+				}
+			} else if strings.ToUpper(p.curTok.Literal) == "HASH" {
+				// Standalone HASH is treated as NonClusteredHash
+				indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
 				p.nextToken()
 			}
 			// Parse optional column list: (col1 [ASC|DESC], ...)
@@ -5029,6 +5508,155 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				}
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
+				}
+			}
+			// Parse optional WITH (index_options)
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						optionName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken() // consume option name
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						if optionName == "BUCKET_COUNT" {
+							opt := &ast.IndexExpressionOption{
+								OptionKind: "BucketCount",
+								Expression: &ast.IntegerLiteral{
+									LiteralType: "Integer",
+									Value:       p.curTok.Literal,
+								},
+							}
+							indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+							p.nextToken()
+						} else if optionName == "DATA_COMPRESSION" {
+							// Parse DATA_COMPRESSION = level [ON PARTITIONS(...)]
+							compressionLevel := "None"
+							levelUpper := strings.ToUpper(p.curTok.Literal)
+							switch levelUpper {
+							case "NONE":
+								compressionLevel = "None"
+							case "ROW":
+								compressionLevel = "Row"
+							case "PAGE":
+								compressionLevel = "Page"
+							case "COLUMNSTORE":
+								compressionLevel = "ColumnStore"
+							case "COLUMNSTORE_ARCHIVE":
+								compressionLevel = "ColumnStoreArchive"
+							}
+							p.nextToken() // consume compression level
+							opt := &ast.DataCompressionOption{
+								CompressionLevel: compressionLevel,
+								OptionKind:       "DataCompression",
+							}
+							// Check for optional ON PARTITIONS(range)
+							if p.curTok.Type == TokenOn {
+								p.nextToken() // consume ON
+								if strings.ToUpper(p.curTok.Literal) == "PARTITIONS" {
+									p.nextToken() // consume PARTITIONS
+									if p.curTok.Type == TokenLParen {
+										p.nextToken() // consume (
+										for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+											partRange := &ast.CompressionPartitionRange{}
+											partRange.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+											p.nextToken()
+											if strings.ToUpper(p.curTok.Literal) == "TO" {
+												p.nextToken() // consume TO
+												partRange.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+												p.nextToken()
+											}
+											opt.PartitionRanges = append(opt.PartitionRanges, partRange)
+											if p.curTok.Type == TokenComma {
+												p.nextToken()
+											} else {
+												break
+											}
+										}
+										if p.curTok.Type == TokenRParen {
+											p.nextToken() // consume )
+										}
+									}
+								}
+							}
+							indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
+						} else if optionName == "PAD_INDEX" || optionName == "STATISTICS_NORECOMPUTE" ||
+							optionName == "ALLOW_ROW_LOCKS" || optionName == "ALLOW_PAGE_LOCKS" ||
+							optionName == "DROP_EXISTING" || optionName == "SORT_IN_TEMPDB" {
+							// ON/OFF options
+							stateUpper := strings.ToUpper(p.curTok.Literal)
+							optState := "On"
+							if stateUpper == "OFF" {
+								optState = "Off"
+							}
+							p.nextToken()
+							optKind := map[string]string{
+								"PAD_INDEX":              "PadIndex",
+								"STATISTICS_NORECOMPUTE": "StatisticsNoRecompute",
+								"ALLOW_ROW_LOCKS":        "AllowRowLocks",
+								"ALLOW_PAGE_LOCKS":       "AllowPageLocks",
+								"DROP_EXISTING":          "DropExisting",
+								"SORT_IN_TEMPDB":         "SortInTempDB",
+							}[optionName]
+							indexDef.IndexOptions = append(indexDef.IndexOptions, &ast.IndexStateOption{
+								OptionKind:  optKind,
+								OptionState: optState,
+							})
+						} else if optionName == "IGNORE_DUP_KEY" {
+							stateUpper := strings.ToUpper(p.curTok.Literal)
+							optState := "On"
+							if stateUpper == "OFF" {
+								optState = "Off"
+							}
+							p.nextToken()
+							indexDef.IndexOptions = append(indexDef.IndexOptions, &ast.IgnoreDupKeyIndexOption{
+								OptionKind:  "IgnoreDupKey",
+								OptionState: optState,
+							})
+						} else if optionName == "FILLFACTOR" || optionName == "MAXDOP" {
+							// Integer expression options
+							optKind := "FillFactor"
+							if optionName == "MAXDOP" {
+								optKind = "MaxDop"
+							}
+							indexDef.IndexOptions = append(indexDef.IndexOptions, &ast.IndexExpressionOption{
+								OptionKind: optKind,
+								Expression: &ast.IntegerLiteral{
+									LiteralType: "Integer",
+									Value:       p.curTok.Literal,
+								},
+							})
+							p.nextToken()
+						} else {
+							// Skip other options
+							p.nextToken()
+						}
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			}
+			// Parse optional ON filegroup for inline index
+			if p.curTok.Type == TokenOn {
+				p.nextToken() // consume ON
+				fg, _ := p.parseFileGroupOrPartitionScheme()
+				indexDef.OnFileGroupOrPartitionScheme = fg
+			}
+			// Parse optional FILESTREAM_ON for inline index
+			if strings.ToUpper(p.curTok.Literal) == "FILESTREAM_ON" {
+				p.nextToken() // consume FILESTREAM_ON
+				ident := p.parseIdentifier()
+				indexDef.FileStreamOn = &ast.IdentifierOrValueExpression{
+					Value:      ident.Value,
+					Identifier: ident,
 				}
 			}
 			// Parse optional INCLUDE clause
@@ -5432,7 +6060,67 @@ func (p *Parser) parseForeignKeyConstraint() (*ast.ForeignKeyConstraintDefinitio
 		}
 	}
 
+	// Parse ON DELETE and ON UPDATE actions
+	for {
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "ON" {
+			p.nextToken() // consume ON
+			actionType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume DELETE or UPDATE
+
+			// Parse action: NO ACTION, CASCADE, SET NULL, SET DEFAULT
+			action := p.parseForeignKeyAction()
+
+			if actionType == "DELETE" {
+				constraint.DeleteAction = action
+			} else if actionType == "UPDATE" {
+				constraint.UpdateAction = action
+			}
+		} else if upperLit == "NOT" {
+			// NOT FOR REPLICATION
+			p.nextToken() // consume NOT
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+				if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+					p.nextToken() // consume REPLICATION
+					constraint.NotForReplication = true
+				}
+			}
+		} else {
+			break
+		}
+	}
+
 	return constraint, nil
+}
+
+// parseForeignKeyAction parses CASCADE, NO ACTION, SET NULL, SET DEFAULT
+func (p *Parser) parseForeignKeyAction() string {
+	upperLit := strings.ToUpper(p.curTok.Literal)
+
+	switch upperLit {
+	case "CASCADE":
+		p.nextToken()
+		return "Cascade"
+	case "NO":
+		p.nextToken() // consume NO
+		if strings.ToUpper(p.curTok.Literal) == "ACTION" {
+			p.nextToken() // consume ACTION
+		}
+		return "NoAction"
+	case "SET":
+		p.nextToken() // consume SET
+		setType := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume NULL or DEFAULT
+		if setType == "NULL" {
+			return "SetNull"
+		} else if setType == "DEFAULT" {
+			return "SetDefault"
+		}
+		return "NotSpecified"
+	default:
+		return "NotSpecified"
+	}
 }
 
 // parseCheckConstraint parses CHECK (expression)
@@ -5549,12 +6237,32 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			p.curTok.Type == TokenSelect || p.curTok.Type == TokenInsert ||
 			p.curTok.Type == TokenUpdate || p.curTok.Type == TokenDelete ||
 			p.curTok.Type == TokenAlter || p.curTok.Type == TokenExecute ||
-			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal {
+			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal ||
+			p.curTok.Type == TokenAll || p.curTok.Type == TokenExec ||
+			p.curTok.Type == TokenDatabase || p.curTok.Type == TokenTable ||
+			p.curTok.Type == TokenFunction || p.curTok.Type == TokenBackup ||
+			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
+			p.curTok.Type == TokenSchema {
 			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
 			})
 			p.nextToken()
+		} else if p.curTok.Type == TokenLParen {
+			// Column list for permission (e.g., SELECT (c1, c2))
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseIdentifier()
+				perm.Columns = append(perm.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		} else if p.curTok.Type == TokenComma {
 			stmt.Permissions = append(stmt.Permissions, perm)
 			perm = &ast.Permission{}
@@ -5690,15 +6398,18 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			stmt.SecurityTargetObject.ObjectKind = "User"
 		}
 
-		// Expect ::
+		// Parse object name
 		if p.curTok.Type == TokenColonColon {
 			p.nextToken() // consume ::
+		}
 
-			// Parse object name as multi-part identifier
+		// Parse object name as multi-part identifier
+		// This handles both "OBJECT::name" and plain "..name" syntax
+		if p.curTok.Type == TokenDot || p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
 			multiPart := &ast.MultiPartIdentifier{}
 			for {
-				// Handle double dots (e.g., a.b..d) by adding empty identifier
+				// Handle double dots (e.g., ..t1) by adding empty identifier
 				if p.curTok.Type == TokenDot {
 					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
 						Value:     "",
@@ -5716,6 +6427,23 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			}
 			multiPart.Count = len(multiPart.Identifiers)
 			stmt.SecurityTargetObject.ObjectName.MultiPartIdentifier = multiPart
+		}
+
+		// Parse optional column list (c1, c2, ...)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseIdentifier()
+				stmt.SecurityTargetObject.Columns = append(stmt.SecurityTargetObject.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		}
 	}
 
@@ -5761,6 +6489,12 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 		stmt.WithGrantOption = true
 	}
 
+	// Check for AS clause
+	if strings.ToUpper(p.curTok.Literal) == "AS" {
+		p.nextToken() // consume AS
+		stmt.AsClause = p.parseIdentifier()
+	}
+
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
@@ -5796,7 +6530,11 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			p.curTok.Type == TokenUpdate || p.curTok.Type == TokenDelete ||
 			p.curTok.Type == TokenAlter || p.curTok.Type == TokenExecute ||
 			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal ||
-			p.curTok.Type == TokenAll {
+			p.curTok.Type == TokenAll || p.curTok.Type == TokenExec ||
+			p.curTok.Type == TokenDatabase || p.curTok.Type == TokenTable ||
+			p.curTok.Type == TokenFunction || p.curTok.Type == TokenBackup ||
+			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
+			p.curTok.Type == TokenSchema {
 			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
@@ -5806,13 +6544,9 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			// Parse column list for permission
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				if p.curTok.Type == TokenIdent {
-					perm.Columns = append(perm.Columns, &ast.Identifier{
-						Value:     p.curTok.Literal,
-						QuoteType: "NotQuoted",
-					})
-					p.nextToken()
-				} else if p.curTok.Type == TokenComma {
+				col := p.parseIdentifier()
+				perm.Columns = append(perm.Columns, col)
+				if p.curTok.Type == TokenComma {
 					p.nextToken()
 				} else {
 					break
@@ -5955,15 +6689,18 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			stmt.SecurityTargetObject.ObjectKind = "User"
 		}
 
-		// Expect ::
+		// Parse object name
 		if p.curTok.Type == TokenColonColon {
 			p.nextToken() // consume ::
+		}
 
-			// Parse object name as multi-part identifier
+		// Parse object name as multi-part identifier
+		// This handles both "OBJECT::name" and plain "..name" syntax
+		if p.curTok.Type == TokenDot || p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
 			multiPart := &ast.MultiPartIdentifier{}
 			for {
-				// Handle double dots (e.g., a.b..d) by adding empty identifier
+				// Handle double dots (e.g., ..t1) by adding empty identifier
 				if p.curTok.Type == TokenDot {
 					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
 						Value:     "",
@@ -5981,6 +6718,23 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			}
 			multiPart.Count = len(multiPart.Identifiers)
 			stmt.SecurityTargetObject.ObjectName.MultiPartIdentifier = multiPart
+		}
+
+		// Parse optional column list (c1, c2, ...)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseIdentifier()
+				stmt.SecurityTargetObject.Columns = append(stmt.SecurityTargetObject.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		}
 	}
 
@@ -6047,12 +6801,32 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			p.curTok.Type == TokenSelect || p.curTok.Type == TokenInsert ||
 			p.curTok.Type == TokenUpdate || p.curTok.Type == TokenDelete ||
 			p.curTok.Type == TokenAlter || p.curTok.Type == TokenExecute ||
-			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal {
+			p.curTok.Type == TokenDrop || p.curTok.Type == TokenExternal ||
+			p.curTok.Type == TokenAll || p.curTok.Type == TokenExec ||
+			p.curTok.Type == TokenDatabase || p.curTok.Type == TokenTable ||
+			p.curTok.Type == TokenFunction || p.curTok.Type == TokenBackup ||
+			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
+			p.curTok.Type == TokenSchema {
 			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
 			})
 			p.nextToken()
+		} else if p.curTok.Type == TokenLParen {
+			// Column list for permission (e.g., SELECT (c1, c2))
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseIdentifier()
+				perm.Columns = append(perm.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		} else if p.curTok.Type == TokenComma {
 			stmt.Permissions = append(stmt.Permissions, perm)
 			perm = &ast.Permission{}
@@ -6187,15 +6961,18 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			stmt.SecurityTargetObject.ObjectKind = "User"
 		}
 
-		// Expect ::
+		// Parse object name
 		if p.curTok.Type == TokenColonColon {
 			p.nextToken() // consume ::
+		}
 
-			// Parse object name as multi-part identifier
+		// Parse object name as multi-part identifier
+		// This handles both "OBJECT::name" and plain "..name" syntax
+		if p.curTok.Type == TokenDot || p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
 			multiPart := &ast.MultiPartIdentifier{}
 			for {
-				// Handle double dots (e.g., a.b..d) by adding empty identifier
+				// Handle double dots (e.g., ..t1) by adding empty identifier
 				if p.curTok.Type == TokenDot {
 					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
 						Value:     "",
@@ -6213,6 +6990,23 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			}
 			multiPart.Count = len(multiPart.Identifiers)
 			stmt.SecurityTargetObject.ObjectName.MultiPartIdentifier = multiPart
+		}
+
+		// Parse optional column list (c1, c2, ...)
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col := p.parseIdentifier()
+				stmt.SecurityTargetObject.Columns = append(stmt.SecurityTargetObject.Columns, col)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
 		}
 	}
 
@@ -6326,6 +7120,12 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
 		}
+	case *ast.DurabilityTableOption:
+		return jsonNode{
+			"$type":                     "DurabilityTableOption",
+			"OptionKind":                o.OptionKind,
+			"DurabilityTableOptionKind": o.DurabilityTableOptionKind,
+		}
 	case *ast.FileTableDirectoryTableOption:
 		node := jsonNode{
 			"$type":      "FileTableDirectoryTableOption",
@@ -6351,6 +7151,45 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		}
 		if o.Value != nil {
 			node["Value"] = identifierToJSON(o.Value)
+		}
+		return node
+	case *ast.LockEscalationTableOption:
+		return jsonNode{
+			"$type":      "LockEscalationTableOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.FileStreamOnTableOption:
+		node := jsonNode{
+			"$type":      "FileStreamOnTableOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = identifierOrValueExpressionToJSON(o.Value)
+		}
+		return node
+	case *ast.RemoteDataArchiveTableOption:
+		node := jsonNode{
+			"$type":          "RemoteDataArchiveTableOption",
+			"RdaTableOption": o.RdaTableOption,
+			"MigrationState": o.MigrationState,
+			"OptionKind":     o.OptionKind,
+		}
+		if o.FilterPredicate != nil {
+			node["FilterPredicate"] = scalarExpressionToJSON(o.FilterPredicate)
+		}
+		return node
+	case *ast.RemoteDataArchiveAlterTableOption:
+		node := jsonNode{
+			"$type":                      "RemoteDataArchiveAlterTableOption",
+			"RdaTableOption":             o.RdaTableOption,
+			"MigrationState":             o.MigrationState,
+			"IsMigrationStateSpecified":  o.IsMigrationStateSpecified,
+			"IsFilterPredicateSpecified": o.IsFilterPredicateSpecified,
+			"OptionKind":                 o.OptionKind,
+		}
+		if o.FilterPredicate != nil {
+			node["FilterPredicate"] = scalarExpressionToJSON(o.FilterPredicate)
 		}
 		return node
 	default:
@@ -6428,6 +7267,8 @@ func tableConstraintToJSON(c ast.TableConstraint) jsonNode {
 		return foreignKeyConstraintToJSON(constraint)
 	case *ast.GraphConnectionConstraintDefinition:
 		return graphConnectionConstraintToJSON(constraint)
+	case *ast.DefaultConstraintDefinition:
+		return defaultConstraintToJSON(constraint)
 	default:
 		return jsonNode{"$type": "UnknownTableConstraint"}
 	}
@@ -6562,13 +7403,16 @@ func columnStorageOptionsToJSON(o *ast.ColumnStorageOptions) jsonNode {
 func defaultConstraintToJSON(d *ast.DefaultConstraintDefinition) jsonNode {
 	node := jsonNode{
 		"$type":      "DefaultConstraintDefinition",
-		"WithValues": false,
+		"WithValues": d.WithValues,
 	}
 	if d.ConstraintIdentifier != nil {
 		node["ConstraintIdentifier"] = identifierToJSON(d.ConstraintIdentifier)
 	}
 	if d.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(d.Expression)
+	}
+	if d.Column != nil {
+		node["Column"] = identifierToJSON(d.Column)
 	}
 	return node
 }
@@ -6728,6 +7572,9 @@ func grantStatementToJSON(s *ast.GrantStatement) jsonNode {
 		}
 		node["Principals"] = principals
 	}
+	if s.AsClause != nil {
+		node["AsClause"] = identifierToJSON(s.AsClause)
+	}
 	return node
 }
 
@@ -6792,6 +7639,13 @@ func securityTargetObjectToJSON(s *ast.SecurityTargetObject) jsonNode {
 	}
 	if s.ObjectName != nil {
 		node["ObjectName"] = securityTargetObjectNameToJSON(s.ObjectName)
+	}
+	if len(s.Columns) > 0 {
+		cols := make([]jsonNode, len(s.Columns))
+		for i, c := range s.Columns {
+			cols[i] = identifierToJSON(c)
+		}
+		node["Columns"] = cols
 	}
 	return node
 }
@@ -7520,6 +8374,110 @@ func alterServerRoleStatementToJSON(s *ast.AlterServerRoleStatement) jsonNode {
 	return node
 }
 
+func createAvailabilityGroupStatementToJSON(s *ast.CreateAvailabilityGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateAvailabilityGroupStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = availabilityGroupOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	if len(s.Databases) > 0 {
+		dbs := make([]jsonNode, len(s.Databases))
+		for i, db := range s.Databases {
+			dbs[i] = identifierToJSON(db)
+		}
+		node["Databases"] = dbs
+	}
+	if len(s.Replicas) > 0 {
+		reps := make([]jsonNode, len(s.Replicas))
+		for i, rep := range s.Replicas {
+			reps[i] = availabilityReplicaToJSON(rep)
+		}
+		node["Replicas"] = reps
+	}
+	return node
+}
+
+func availabilityGroupOptionToJSON(opt ast.AvailabilityGroupOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.LiteralAvailabilityGroupOption:
+		node := jsonNode{
+			"$type": "LiteralAvailabilityGroupOption",
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		node["OptionKind"] = o.OptionKind
+		return node
+	default:
+		return jsonNode{"$type": "UnknownAvailabilityGroupOption"}
+	}
+}
+
+func availabilityReplicaToJSON(rep *ast.AvailabilityReplica) jsonNode {
+	node := jsonNode{
+		"$type": "AvailabilityReplica",
+	}
+	if rep.ServerName != nil {
+		node["ServerName"] = stringLiteralToJSON(rep.ServerName)
+	}
+	if len(rep.Options) > 0 {
+		opts := make([]jsonNode, len(rep.Options))
+		for i, opt := range rep.Options {
+			opts[i] = availabilityReplicaOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func availabilityReplicaOptionToJSON(opt ast.AvailabilityReplicaOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.AvailabilityModeReplicaOption:
+		return jsonNode{
+			"$type":      "AvailabilityModeReplicaOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.FailoverModeReplicaOption:
+		return jsonNode{
+			"$type":      "FailoverModeReplicaOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.LiteralReplicaOption:
+		node := jsonNode{
+			"$type": "LiteralReplicaOption",
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		node["OptionKind"] = o.OptionKind
+		return node
+	case *ast.PrimaryRoleReplicaOption:
+		return jsonNode{
+			"$type":            "PrimaryRoleReplicaOption",
+			"AllowConnections": o.AllowConnections,
+			"OptionKind":       o.OptionKind,
+		}
+	case *ast.SecondaryRoleReplicaOption:
+		return jsonNode{
+			"$type":            "SecondaryRoleReplicaOption",
+			"AllowConnections": o.AllowConnections,
+			"OptionKind":       o.OptionKind,
+		}
+	default:
+		return jsonNode{"$type": "UnknownReplicaOption"}
+	}
+}
+
 func createServerAuditStatementToJSON(s *ast.CreateServerAuditStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateServerAuditStatement",
@@ -7568,6 +8526,113 @@ func alterServerAuditStatementToJSON(s *ast.AlterServerAuditStatement) jsonNode 
 		node["PredicateExpression"] = booleanExpressionToJSON(s.PredicateExpression)
 	}
 	return node
+}
+
+func createServerAuditSpecificationStatementToJSON(s *ast.CreateServerAuditSpecificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "CreateServerAuditSpecificationStatement",
+		"AuditState": s.AuditState,
+	}
+	if len(s.Parts) > 0 {
+		parts := make([]jsonNode, len(s.Parts))
+		for i, p := range s.Parts {
+			parts[i] = auditSpecificationPartToJSON(p)
+		}
+		node["Parts"] = parts
+	}
+	if s.SpecificationName != nil {
+		node["SpecificationName"] = identifierToJSON(s.SpecificationName)
+	}
+	if s.AuditName != nil {
+		node["AuditName"] = identifierToJSON(s.AuditName)
+	}
+	return node
+}
+
+func alterServerAuditSpecificationStatementToJSON(s *ast.AlterServerAuditSpecificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "AlterServerAuditSpecificationStatement",
+		"AuditState": s.AuditState,
+	}
+	if len(s.Parts) > 0 {
+		parts := make([]jsonNode, len(s.Parts))
+		for i, p := range s.Parts {
+			parts[i] = auditSpecificationPartToJSON(p)
+		}
+		node["Parts"] = parts
+	}
+	if s.SpecificationName != nil {
+		node["SpecificationName"] = identifierToJSON(s.SpecificationName)
+	}
+	if s.AuditName != nil {
+		node["AuditName"] = identifierToJSON(s.AuditName)
+	}
+	return node
+}
+
+func createDatabaseAuditSpecificationStatementToJSON(s *ast.CreateDatabaseAuditSpecificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "CreateDatabaseAuditSpecificationStatement",
+		"AuditState": s.AuditState,
+	}
+	if len(s.Parts) > 0 {
+		parts := make([]jsonNode, len(s.Parts))
+		for i, p := range s.Parts {
+			parts[i] = auditSpecificationPartToJSON(p)
+		}
+		node["Parts"] = parts
+	}
+	if s.SpecificationName != nil {
+		node["SpecificationName"] = identifierToJSON(s.SpecificationName)
+	}
+	if s.AuditName != nil {
+		node["AuditName"] = identifierToJSON(s.AuditName)
+	}
+	return node
+}
+
+func alterDatabaseAuditSpecificationStatementToJSON(s *ast.AlterDatabaseAuditSpecificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "AlterDatabaseAuditSpecificationStatement",
+		"AuditState": s.AuditState,
+	}
+	if len(s.Parts) > 0 {
+		parts := make([]jsonNode, len(s.Parts))
+		for i, p := range s.Parts {
+			parts[i] = auditSpecificationPartToJSON(p)
+		}
+		node["Parts"] = parts
+	}
+	if s.SpecificationName != nil {
+		node["SpecificationName"] = identifierToJSON(s.SpecificationName)
+	}
+	if s.AuditName != nil {
+		node["AuditName"] = identifierToJSON(s.AuditName)
+	}
+	return node
+}
+
+func auditSpecificationPartToJSON(p *ast.AuditSpecificationPart) jsonNode {
+	node := jsonNode{
+		"$type":  "AuditSpecificationPart",
+		"IsDrop": p.IsDrop,
+	}
+	if p.Details != nil {
+		node["Details"] = auditSpecificationDetailToJSON(p.Details)
+	}
+	return node
+}
+
+func auditSpecificationDetailToJSON(d ast.AuditSpecificationDetail) jsonNode {
+	switch detail := d.(type) {
+	case *ast.AuditActionGroupReference:
+		return jsonNode{
+			"$type": "AuditActionGroupReference",
+			"Group": detail.Group,
+		}
+	default:
+		return jsonNode{}
+	}
 }
 
 func dropServerAuditStatementToJSON(s *ast.DropServerAuditStatement) jsonNode {
@@ -7634,6 +8699,15 @@ func auditTargetOptionToJSON(o ast.AuditTargetOption) jsonNode {
 			"Value":      opt.Value,
 			"OptionKind": opt.OptionKind,
 		}
+	case *ast.RetentionDaysAuditTargetOption:
+		node := jsonNode{
+			"$type":      "RetentionDaysAuditTargetOption",
+			"OptionKind": opt.OptionKind,
+		}
+		if opt.Days != nil {
+			node["Days"] = scalarExpressionToJSON(opt.Days)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownAuditTargetOption"}
 	}
@@ -9771,6 +10845,27 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 				param.DataType = dataType
 			}
 
+			// Check for default value (= expr)
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+				defaultValue, err := p.parseScalarExpression()
+				if err == nil {
+					param.Value = defaultValue
+				}
+			}
+
+			// Check for NULL/NOT NULL nullability
+			if p.curTok.Type == TokenNull {
+				param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+				p.nextToken()
+			} else if p.curTok.Type == TokenNot {
+				p.nextToken() // consume NOT
+				if p.curTok.Type == TokenNull {
+					param.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+					p.nextToken()
+				}
+			}
+
 			// Check for READONLY modifier
 			if strings.ToUpper(p.curTok.Literal) == "READONLY" {
 				param.Modifier = "ReadOnly"
@@ -9798,7 +10893,17 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 	}
 	p.nextToken()
 
-	// Check if RETURNS TABLE (table-valued function)
+	// Check if RETURNS @varName TABLE or RETURNS TABLE (table-valued function)
+	var tableVarName *ast.Identifier
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		// Parse variable name for multi-statement table-valued function
+		tableVarName = &ast.Identifier{
+			Value:     p.curTok.Literal,
+			QuoteType: "NotQuoted",
+		}
+		p.nextToken()
+	}
+
 	if strings.ToUpper(p.curTok.Literal) == "TABLE" {
 		p.nextToken()
 
@@ -9807,7 +10912,8 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 			p.nextToken()
 			tableReturnType := &ast.TableValuedFunctionReturnType{
 				DeclareTableVariableBody: &ast.DeclareTableVariableBody{
-					AsDefined: false,
+					VariableName: tableVarName,
+					AsDefined:    false,
 					Definition: &ast.TableDefinition{
 						ColumnDefinitions: []*ast.ColumnDefinition{},
 					},
@@ -9833,6 +10939,40 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 						return nil, err
 					}
 					colDef.DataType = dataType
+				}
+
+				// Parse column constraints (PRIMARY KEY, NOT NULL, NULL, etc.)
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma && p.curTok.Type != TokenEOF {
+					upperLit := strings.ToUpper(p.curTok.Literal)
+					if upperLit == "PRIMARY" {
+						p.nextToken() // consume PRIMARY
+						if strings.ToUpper(p.curTok.Literal) == "KEY" {
+							p.nextToken() // consume KEY
+						}
+						colDef.Constraints = append(colDef.Constraints, &ast.UniqueConstraintDefinition{
+							IsPrimaryKey: true,
+						})
+					} else if upperLit == "NOT" {
+						p.nextToken() // consume NOT
+						if p.curTok.Type == TokenNull {
+							p.nextToken() // consume NULL
+							colDef.Constraints = append(colDef.Constraints, &ast.NullableConstraintDefinition{
+								Nullable: false,
+							})
+						}
+					} else if p.curTok.Type == TokenNull {
+						p.nextToken() // consume NULL
+						colDef.Constraints = append(colDef.Constraints, &ast.NullableConstraintDefinition{
+							Nullable: true,
+						})
+					} else if upperLit == "UNIQUE" {
+						p.nextToken() // consume UNIQUE
+						colDef.Constraints = append(colDef.Constraints, &ast.UniqueConstraintDefinition{
+							IsPrimaryKey: false,
+						})
+					} else {
+						break
+					}
 				}
 
 				tableReturnType.DeclareTableVariableBody.Definition.ColumnDefinitions = append(
@@ -9948,6 +11088,14 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 					SelectStatement: sel,
 				}
 			}
+		} else {
+			// Multi-statement table-valued function: BEGIN ... END
+			stmtList, err := p.parseFunctionStatementList()
+			if err != nil {
+				p.skipToEndOfStatement()
+				return stmt, nil
+			}
+			stmt.StatementList = stmtList
 		}
 	} else {
 		// Scalar function - parse return type
@@ -10030,7 +11178,15 @@ func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
 				OptionState: state,
 			})
 		case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION":
-			optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
+			var optKind string
+			switch upperOpt {
+			case "ENCRYPTION":
+				optKind = "Encryption"
+			case "SCHEMABINDING":
+				optKind = "SchemaBinding"
+			case "NATIVE_COMPILATION":
+				optKind = "NativeCompilation"
+			}
 			p.nextToken()
 			stmt.Options = append(stmt.Options, &ast.FunctionOption{
 				OptionKind: optKind,
@@ -10149,6 +11305,27 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 				param.DataType = dataType
 			}
 
+			// Check for default value (= expr)
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+				defaultValue, err := p.parseScalarExpression()
+				if err == nil {
+					param.Value = defaultValue
+				}
+			}
+
+			// Check for NULL/NOT NULL nullability
+			if p.curTok.Type == TokenNull {
+				param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+				p.nextToken()
+			} else if p.curTok.Type == TokenNot {
+				p.nextToken() // consume NOT
+				if p.curTok.Type == TokenNull {
+					param.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+					p.nextToken()
+				}
+			}
+
 			// Check for READONLY modifier
 			if strings.ToUpper(p.curTok.Literal) == "READONLY" {
 				param.Modifier = "ReadOnly"
@@ -10209,14 +11386,23 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 					OptionState: state,
 				})
 			case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION", "CALLED":
-				optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
+				var optKind string
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "ENCRYPTION":
+					optKind = "Encryption"
+				case "SCHEMABINDING":
+					optKind = "SchemaBinding"
+				case "NATIVE_COMPILATION":
+					optKind = "NativeCompilation"
+				case "CALLED":
+					optKind = "CalledOnNullInput"
+				}
 				p.nextToken()
-				// Handle CALLED ON NULL INPUT
-				if optKind == "Called" {
+				// Handle CALLED ON NULL INPUT - skip additional tokens
+				if optKind == "CalledOnNullInput" {
 					for strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
 						p.nextToken()
 					}
-					optKind = "CalledOnNullInput"
 				}
 				stmt.Options = append(stmt.Options, &ast.FunctionOption{
 					OptionKind: optKind,
@@ -10229,6 +11415,45 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 				stmt.Options = append(stmt.Options, &ast.FunctionOption{
 					OptionKind: "ReturnsNullOnNullInput",
 				})
+			case "EXECUTE":
+				p.nextToken() // consume EXECUTE
+				if p.curTok.Type == TokenAs {
+					p.nextToken() // consume AS
+				}
+				execAsOpt := &ast.ExecuteAsFunctionOption{
+					OptionKind: "ExecuteAs",
+					ExecuteAs:  &ast.ExecuteAsClause{},
+				}
+				upperOption := strings.ToUpper(p.curTok.Literal)
+				switch upperOption {
+				case "CALLER":
+					execAsOpt.ExecuteAs.ExecuteAsOption = "Caller"
+					p.nextToken()
+				case "SELF":
+					execAsOpt.ExecuteAs.ExecuteAsOption = "Self"
+					p.nextToken()
+				case "OWNER":
+					execAsOpt.ExecuteAs.ExecuteAsOption = "Owner"
+					p.nextToken()
+				default:
+					// String literal for user name
+					if p.curTok.Type == TokenString {
+						execAsOpt.ExecuteAs.ExecuteAsOption = "String"
+						value := p.curTok.Literal
+						// Strip quotes
+						if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+							value = value[1 : len(value)-1]
+						}
+						execAsOpt.ExecuteAs.Literal = &ast.StringLiteral{
+							LiteralType:   "String",
+							IsNational:    false,
+							IsLargeObject: false,
+							Value:         value,
+						}
+						p.nextToken()
+					}
+				}
+				stmt.Options = append(stmt.Options, execAsOpt)
 			default:
 				// Unknown option - skip it
 				if p.curTok.Type == TokenIdent {
@@ -10659,7 +11884,7 @@ func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
 	if len(s.Options) > 0 {
 		options := make([]jsonNode, len(s.Options))
 		for i, o := range s.Options {
-			options[i] = backupOptionToJSON(o)
+			options[i] = backupOptionBaseToJSON(o)
 		}
 		node["Options"] = options
 	}
@@ -10690,7 +11915,7 @@ func backupTransactionLogStatementToJSON(s *ast.BackupTransactionLogStatement) j
 	if len(s.Options) > 0 {
 		options := make([]jsonNode, len(s.Options))
 		for i, o := range s.Options {
-			options[i] = backupOptionToJSON(o)
+			options[i] = backupOptionBaseToJSON(o)
 		}
 		node["Options"] = options
 	}
@@ -10784,6 +12009,17 @@ func restoreMasterKeyStatementToJSON(s *ast.RestoreMasterKeyStatement) jsonNode 
 	return node
 }
 
+func backupOptionBaseToJSON(o ast.BackupOptionBase) jsonNode {
+	switch opt := o.(type) {
+	case *ast.BackupOption:
+		return backupOptionToJSON(opt)
+	case *ast.BackupEncryptionOption:
+		return backupEncryptionOptionToJSON(opt)
+	default:
+		return jsonNode{"$type": "Unknown"}
+	}
+}
+
 func backupOptionToJSON(o *ast.BackupOption) jsonNode {
 	node := jsonNode{
 		"$type":      "BackupOption",
@@ -10791,6 +12027,18 @@ func backupOptionToJSON(o *ast.BackupOption) jsonNode {
 	}
 	if o.Value != nil {
 		node["Value"] = scalarExpressionToJSON(o.Value)
+	}
+	return node
+}
+
+func backupEncryptionOptionToJSON(o *ast.BackupEncryptionOption) jsonNode {
+	node := jsonNode{
+		"$type":      "BackupEncryptionOption",
+		"Algorithm":  o.Algorithm,
+		"OptionKind": o.OptionKind,
+	}
+	if o.Encryptor != nil {
+		node["Encryptor"] = cryptoMechanismToJSON(o.Encryptor)
 	}
 	return node
 }
@@ -12500,8 +13748,8 @@ func dropRoleStatementToJSON(s *ast.DropRoleStatement) jsonNode {
 
 func dropAssemblyStatementToJSON(s *ast.DropAssemblyStatement) jsonNode {
 	node := jsonNode{
-		"$type":      "DropAssemblyStatement",
-		"IsIfExists": s.IsIfExists,
+		"$type":            "DropAssemblyStatement",
+		"WithNoDependents": s.WithNoDependents,
 	}
 	if len(s.Objects) > 0 {
 		objects := make([]jsonNode, len(s.Objects))
@@ -12510,6 +13758,7 @@ func dropAssemblyStatementToJSON(s *ast.DropAssemblyStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
+	node["IsIfExists"] = s.IsIfExists
 	return node
 }
 
@@ -12656,6 +13905,45 @@ func alterTableSetStatementToJSON(s *ast.AlterTableSetStatement) jsonNode {
 	return node
 }
 
+func alterTableRebuildStatementToJSON(s *ast.AlterTableRebuildStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterTableRebuildStatement",
+	}
+	if s.Partition != nil {
+		partNode := jsonNode{
+			"$type": "PartitionSpecifier",
+			"All":   s.Partition.All,
+		}
+		if s.Partition.Number != nil {
+			partNode["Number"] = scalarExpressionToJSON(s.Partition.Number)
+		}
+		node["Partition"] = partNode
+	}
+	if len(s.IndexOptions) > 0 {
+		var opts []jsonNode
+		for _, opt := range s.IndexOptions {
+			opts = append(opts, indexOptionToJSON(opt))
+		}
+		node["IndexOptions"] = opts
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func alterTableChangeTrackingStatementToJSON(s *ast.AlterTableChangeTrackingModificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":               "AlterTableChangeTrackingModificationStatement",
+		"IsEnable":            s.IsEnable,
+		"TrackColumnsUpdated": s.TrackColumnsUpdated,
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
 func systemVersioningTableOptionToJSON(o *ast.SystemVersioningTableOption) jsonNode {
 	node := jsonNode{
 		"$type":                   "SystemVersioningTableOption",
@@ -12789,11 +14077,33 @@ func createExternalTableStatementToJSON(s *ast.CreateExternalTableStatement) jso
 	if len(s.ExternalTableOptions) > 0 {
 		opts := make([]jsonNode, len(s.ExternalTableOptions))
 		for i, opt := range s.ExternalTableOptions {
-			opts[i] = externalTableLiteralOrIdentifierOptionToJSON(opt)
+			opts[i] = externalTableOptionItemToJSON(opt)
 		}
 		node["ExternalTableOptions"] = opts
 	}
+	if s.SelectStatement != nil {
+		node["SelectStatement"] = selectStatementToJSON(s.SelectStatement)
+	}
 	return node
+}
+
+func externalTableOptionItemToJSON(opt ast.ExternalTableOptionItem) jsonNode {
+	switch o := opt.(type) {
+	case *ast.ExternalTableLiteralOrIdentifierOption:
+		return externalTableLiteralOrIdentifierOptionToJSON(o)
+	case *ast.ExternalTableRejectTypeOption:
+		return externalTableRejectTypeOptionToJSON(o)
+	default:
+		return jsonNode{}
+	}
+}
+
+func externalTableRejectTypeOptionToJSON(opt *ast.ExternalTableRejectTypeOption) jsonNode {
+	return jsonNode{
+		"$type":      "ExternalTableRejectTypeOption",
+		"Value":      opt.Value,
+		"OptionKind": opt.OptionKind,
+	}
 }
 
 func externalTableColumnDefinitionToJSON(col *ast.ExternalTableColumnDefinition) jsonNode {
@@ -13833,6 +15143,9 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 	if s.Collation != nil {
 		node["Collation"] = identifierToJSON(s.Collation)
 	}
+	if s.DatabaseSnapshot != nil {
+		node["DatabaseSnapshot"] = identifierToJSON(s.DatabaseSnapshot)
+	}
 	return node
 }
 
@@ -13914,6 +15227,11 @@ func fileDeclarationToJSON(fd *ast.FileDeclaration) jsonNode {
 
 func fileDeclarationOptionToJSON(opt ast.FileDeclarationOption) jsonNode {
 	switch o := opt.(type) {
+	case *ast.SimpleFileDeclarationOption:
+		return jsonNode{
+			"$type":      "FileDeclarationOption",
+			"OptionKind": o.OptionKind,
+		}
 	case *ast.NameFileDeclarationOption:
 		node := jsonNode{
 			"$type":      "NameFileDeclarationOption",
@@ -14006,6 +15324,17 @@ func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 		}
 		if o.Value != nil {
 			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		if o.OptionKind != "" {
+			node["OptionKind"] = o.OptionKind
+		}
+		return node
+	case *ast.ElasticPoolSpecification:
+		node := jsonNode{
+			"$type": "ElasticPoolSpecification",
+		}
+		if o.ElasticPoolName != nil {
+			node["ElasticPoolName"] = identifierToJSON(o.ElasticPoolName)
 		}
 		if o.OptionKind != "" {
 			node["OptionKind"] = o.OptionKind
@@ -14117,6 +15446,12 @@ func createIndexStatementToJSON(s *ast.CreateIndexStatement) jsonNode {
 		}
 		node["IndexOptions"] = opts
 	}
+	if s.FilterPredicate != nil {
+		node["FilterPredicate"] = booleanExpressionToJSON(s.FilterPredicate)
+	}
+	if s.FileStreamOn != nil {
+		node["FileStreamOn"] = identifierOrValueExpressionToJSON(s.FileStreamOn)
+	}
 	return node
 }
 
@@ -14132,6 +15467,9 @@ func createAsymmetricKeyStatementToJSON(s *ast.CreateAsymmetricKeyStatement) jso
 	}
 	if s.EncryptionAlgorithm != "" {
 		node["EncryptionAlgorithm"] = s.EncryptionAlgorithm
+	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
 	}
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
@@ -14859,10 +16197,25 @@ func alterDatabaseModifyFileGroupStatementToJSON(s *ast.AlterDatabaseModifyFileG
 	} else {
 		node["UpdatabilityOption"] = "None"
 	}
+	if s.Termination != nil {
+		node["Termination"] = alterDatabaseTerminationToJSON(s.Termination)
+	}
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
-	node["UseCurrent"] = false
+	node["UseCurrent"] = s.UseCurrent
+	return node
+}
+
+func alterDatabaseTerminationToJSON(t *ast.AlterDatabaseTermination) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseTermination",
+	}
+	node["ImmediateRollback"] = t.ImmediateRollback
+	if t.RollbackAfter != nil {
+		node["RollbackAfter"] = scalarExpressionToJSON(t.RollbackAfter)
+	}
+	node["NoWait"] = t.NoWait
 	return node
 }
 
@@ -14919,6 +16272,20 @@ func alterDatabaseCollateStatementToJSON(s *ast.AlterDatabaseCollateStatement) j
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = false
+	return node
+}
+
+func alterDatabaseRebuildLogStatementToJSON(s *ast.AlterDatabaseRebuildLogStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseRebuildLogStatement",
+	}
+	if s.FileDeclaration != nil {
+		node["FileDeclaration"] = fileDeclarationToJSON(s.FileDeclaration)
+	}
+	if s.DatabaseName != nil {
+		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
+	}
+	node["UseCurrent"] = s.UseCurrent
 	return node
 }
 
@@ -14989,6 +16356,68 @@ func alterResourcePoolStatementToJSON(s *ast.AlterResourcePoolStatement) jsonNod
 			params[i] = resourcePoolParameterToJSON(param)
 		}
 		node["ResourcePoolParameters"] = params
+	}
+	return node
+}
+
+func dropResourcePoolStatementToJSON(s *ast.DropResourcePoolStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropResourcePoolStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func alterExternalResourcePoolStatementToJSON(s *ast.AlterExternalResourcePoolStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterExternalResourcePoolStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ExternalResourcePoolParameters) > 0 {
+		params := make([]jsonNode, len(s.ExternalResourcePoolParameters))
+		for i, param := range s.ExternalResourcePoolParameters {
+			params[i] = externalResourcePoolParameterToJSON(param)
+		}
+		node["ExternalResourcePoolParameters"] = params
+	}
+	return node
+}
+
+func externalResourcePoolParameterToJSON(p *ast.ExternalResourcePoolParameter) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalResourcePoolParameter",
+	}
+	if p.ParameterType != "" {
+		node["ParameterType"] = p.ParameterType
+	}
+	if p.ParameterValue != nil {
+		node["ParameterValue"] = scalarExpressionToJSON(p.ParameterValue)
+	}
+	if p.AffinitySpecification != nil {
+		node["AffinitySpecification"] = externalResourcePoolAffinitySpecificationToJSON(p.AffinitySpecification)
+	}
+	return node
+}
+
+func externalResourcePoolAffinitySpecificationToJSON(s *ast.ExternalResourcePoolAffinitySpecification) jsonNode {
+	node := jsonNode{
+		"$type": "ExternalResourcePoolAffinitySpecification",
+	}
+	if s.AffinityType != "" {
+		node["AffinityType"] = s.AffinityType
+	}
+	node["IsAuto"] = s.IsAuto
+	if len(s.PoolAffinityRanges) > 0 {
+		ranges := make([]jsonNode, len(s.PoolAffinityRanges))
+		for i, r := range s.PoolAffinityRanges {
+			ranges[i] = literalRangeToJSON(r)
+		}
+		node["PoolAffinityRanges"] = ranges
 	}
 	return node
 }
@@ -15293,6 +16722,13 @@ func alterProcedureStatementToJSON(s *ast.AlterProcedureStatement) jsonNode {
 		node["ProcedureReference"] = procedureReferenceToJSON(s.ProcedureReference)
 	}
 	node["IsForReplication"] = s.IsForReplication
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			opts[i] = procedureOptionToJSON(o)
+		}
+		node["Options"] = opts
+	}
 	if len(s.Parameters) > 0 {
 		params := make([]jsonNode, len(s.Parameters))
 		for i, p := range s.Parameters {

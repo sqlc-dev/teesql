@@ -6,6 +6,7 @@ type GrantStatement struct {
 	Principals           []*SecurityPrincipal
 	WithGrantOption      bool
 	SecurityTargetObject *SecurityTargetObject
+	AsClause             *Identifier
 }
 
 func (s *GrantStatement) node()      {}

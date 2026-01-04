@@ -5,10 +5,13 @@ type AlterTableAlterColumnStatement struct {
 	SchemaObjectName            *SchemaObjectName
 	ColumnIdentifier            *Identifier
 	DataType                    DataTypeReference
-	AlterTableAlterColumnOption string // "NoOptionDefined", "AddRowGuidCol", "DropRowGuidCol", "Null", "NotNull", etc.
+	AlterTableAlterColumnOption string // "NoOptionDefined", "AddRowGuidCol", "DropRowGuidCol", "Null", "NotNull", "AddSparse", "DropSparse", etc.
+	StorageOptions              *ColumnStorageOptions
 	IsHidden                    bool
 	Collation                   *Identifier
 	IsMasked                    bool
+	Encryption                  *ColumnEncryptionDefinition
+	MaskingFunction             ScalarExpression
 }
 
 func (a *AlterTableAlterColumnStatement) node()      {}

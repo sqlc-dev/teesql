@@ -81,9 +81,13 @@ type DataTypeReference interface {
 type DefaultConstraintDefinition struct {
 	ConstraintIdentifier *Identifier
 	Expression           ScalarExpression
+	Column               *Identifier // For table-level DEFAULT constraint (DEFAULT ... FOR column)
+	WithValues           bool
 }
 
-func (d *DefaultConstraintDefinition) node() {}
+func (d *DefaultConstraintDefinition) node()                 {}
+func (d *DefaultConstraintDefinition) constraintDefinition() {}
+func (d *DefaultConstraintDefinition) tableConstraint()      {}
 
 // IdentityOptions represents IDENTITY options
 type IdentityOptions struct {
@@ -116,12 +120,15 @@ type TableConstraint interface {
 
 // IndexDefinition represents an index definition within CREATE TABLE
 type IndexDefinition struct {
-	Name           *Identifier
-	Columns        []*ColumnWithSortOrder
-	Unique         bool
-	IndexType      *IndexType
-	IndexOptions   []*IndexExpressionOption
-	IncludeColumns []*ColumnReferenceExpression
+	Name                         *Identifier
+	Columns                      []*ColumnWithSortOrder
+	Unique                       bool
+	IndexType                    *IndexType
+	IndexOptions                 []IndexOption
+	IncludeColumns               []*ColumnReferenceExpression
+	FilterPredicate              BooleanExpression
+	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme
+	FileStreamOn                 *IdentifierOrValueExpression
 }
 
 func (i *IndexDefinition) node() {}

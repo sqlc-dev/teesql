@@ -79,6 +79,14 @@ type OnOffAuditTargetOption struct {
 
 func (o *OnOffAuditTargetOption) auditTargetOption() {}
 
+// RetentionDaysAuditTargetOption represents the RETENTION_DAYS option
+type RetentionDaysAuditTargetOption struct {
+	OptionKind string
+	Days       ScalarExpression
+}
+
+func (o *RetentionDaysAuditTargetOption) auditTargetOption() {}
+
 // AuditOption is an interface for audit options
 type AuditOption interface {
 	auditOption()
@@ -131,3 +139,69 @@ type EventSessionObjectName struct {
 }
 
 func (e *EventSessionObjectName) node() {}
+
+// CreateServerAuditSpecificationStatement represents a CREATE SERVER AUDIT SPECIFICATION statement
+type CreateServerAuditSpecificationStatement struct {
+	SpecificationName *Identifier
+	AuditName         *Identifier
+	Parts             []*AuditSpecificationPart
+	AuditState        string // NotSet, On, Off
+}
+
+func (s *CreateServerAuditSpecificationStatement) statement() {}
+func (s *CreateServerAuditSpecificationStatement) node()      {}
+
+// AlterServerAuditSpecificationStatement represents an ALTER SERVER AUDIT SPECIFICATION statement
+type AlterServerAuditSpecificationStatement struct {
+	SpecificationName *Identifier
+	AuditName         *Identifier
+	Parts             []*AuditSpecificationPart
+	AuditState        string // NotSet, On, Off
+}
+
+func (s *AlterServerAuditSpecificationStatement) statement() {}
+func (s *AlterServerAuditSpecificationStatement) node()      {}
+
+// CreateDatabaseAuditSpecificationStatement represents a CREATE DATABASE AUDIT SPECIFICATION statement
+type CreateDatabaseAuditSpecificationStatement struct {
+	SpecificationName *Identifier
+	AuditName         *Identifier
+	Parts             []*AuditSpecificationPart
+	AuditState        string // NotSet, On, Off
+}
+
+func (s *CreateDatabaseAuditSpecificationStatement) statement() {}
+func (s *CreateDatabaseAuditSpecificationStatement) node()      {}
+
+// AlterDatabaseAuditSpecificationStatement represents an ALTER DATABASE AUDIT SPECIFICATION statement
+type AlterDatabaseAuditSpecificationStatement struct {
+	SpecificationName *Identifier
+	AuditName         *Identifier
+	Parts             []*AuditSpecificationPart
+	AuditState        string // NotSet, On, Off
+}
+
+func (s *AlterDatabaseAuditSpecificationStatement) statement() {}
+func (s *AlterDatabaseAuditSpecificationStatement) node()      {}
+
+// AuditSpecificationPart represents an ADD or DROP part in an audit specification
+type AuditSpecificationPart struct {
+	IsDrop  bool
+	Details AuditSpecificationDetail
+}
+
+func (p *AuditSpecificationPart) node() {}
+
+// AuditSpecificationDetail is an interface for audit specification details
+type AuditSpecificationDetail interface {
+	Node
+	auditSpecificationDetail()
+}
+
+// AuditActionGroupReference represents a reference to an audit action group
+type AuditActionGroupReference struct {
+	Group string
+}
+
+func (r *AuditActionGroupReference) node()                    {}
+func (r *AuditActionGroupReference) auditSpecificationDetail() {}
