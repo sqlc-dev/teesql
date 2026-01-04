@@ -747,9 +747,10 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 	// Parse optional ON filegroup clause
 	if p.curTok.Type == TokenOn {
 		p.nextToken() // consume ON
+		fgName := p.curTok.Literal
 		fg := &ast.FileGroupOrPartitionScheme{
 			Name: &ast.IdentifierOrValueExpression{
-				Value:      p.curTok.Literal,
+				Value:      fgName,
 				Identifier: p.parseIdentifier(),
 			},
 		}
@@ -759,8 +760,9 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 	// Parse optional FILESTREAM_ON clause
 	if strings.ToUpper(p.curTok.Literal) == "FILESTREAM_ON" {
 		p.nextToken() // consume FILESTREAM_ON
+		fsName := p.curTok.Literal
 		indexDef.FileStreamOn = &ast.IdentifierOrValueExpression{
-			Value:      p.curTok.Literal,
+			Value:      fsName,
 			Identifier: p.parseIdentifier(),
 		}
 	}
