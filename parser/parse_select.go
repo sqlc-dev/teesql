@@ -2044,6 +2044,17 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 
 	// Parse parameters
 	funcNameUpper := strings.ToUpper(fc.FunctionName.Value)
+
+	// Special handling for TRIM function with LEADING/TRAILING/BOTH options
+	if funcNameUpper == "TRIM" && p.curTok.Type != TokenRParen {
+		// Check for LEADING, TRAILING, or BOTH keyword
+		trimOpt := strings.ToUpper(p.curTok.Literal)
+		if trimOpt == "LEADING" || trimOpt == "TRAILING" || trimOpt == "BOTH" {
+			fc.TrimOptions = &ast.Identifier{Value: trimOpt, QuoteType: "NotQuoted"}
+			p.nextToken()
+		}
+	}
+
 	if p.curTok.Type != TokenRParen {
 		for {
 			param, err := p.parseScalarExpression()

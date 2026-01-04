@@ -50,6 +50,7 @@ type FunctionCall struct {
 	OverClause         *OverClause        `json:"OverClause,omitempty"`
 	IgnoreRespectNulls []*Identifier      `json:"IgnoreRespectNulls,omitempty"`
 	WithArrayWrapper   bool               `json:"WithArrayWrapper,omitempty"`
+	TrimOptions        *Identifier        `json:"TrimOptions,omitempty"` // For TRIM(LEADING/TRAILING/BOTH chars FROM string)
 	Collation          *Identifier        `json:"Collation,omitempty"`
 }
 

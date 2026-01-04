@@ -1832,6 +1832,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["IgnoreRespectNulls"] = idents
 		}
 		node["WithArrayWrapper"] = e.WithArrayWrapper
+		if e.TrimOptions != nil {
+			node["TrimOptions"] = identifierToJSON(e.TrimOptions)
+		}
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
