@@ -10419,6 +10419,31 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 						stmt.IndexOptions = append(stmt.IndexOptions, orderOpt)
 					}
 
+				case "DATA_COMPRESSION":
+					p.nextToken() // consume DATA_COMPRESSION
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					level := strings.ToUpper(p.curTok.Literal)
+					compressionLevel := "None"
+					switch level {
+					case "COLUMNSTORE":
+						compressionLevel = "ColumnStore"
+					case "COLUMNSTORE_ARCHIVE":
+						compressionLevel = "ColumnStoreArchive"
+					case "PAGE":
+						compressionLevel = "Page"
+					case "ROW":
+						compressionLevel = "Row"
+					case "NONE":
+						compressionLevel = "None"
+					}
+					p.nextToken() // consume compression level
+					stmt.IndexOptions = append(stmt.IndexOptions, &ast.DataCompressionOption{
+						CompressionLevel: compressionLevel,
+						OptionKind:       "DataCompression",
+					})
+
 				default:
 					// Skip unknown options
 					p.nextToken()
@@ -12707,6 +12732,20 @@ func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
 		}
 		if o.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(o.Expression)
+		}
+		return node
+	case *ast.DataCompressionOption:
+		node := jsonNode{
+			"$type":            "DataCompressionOption",
+			"CompressionLevel": o.CompressionLevel,
+			"OptionKind":       o.OptionKind,
+		}
+		if len(o.PartitionRanges) > 0 {
+			ranges := make([]jsonNode, len(o.PartitionRanges))
+			for i, r := range o.PartitionRanges {
+				ranges[i] = compressionPartitionRangeToJSON(r)
+			}
+			node["PartitionRanges"] = ranges
 		}
 		return node
 	default:
