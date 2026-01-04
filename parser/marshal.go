@@ -2401,6 +2401,54 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		node["ForPath"] = r.ForPath
 		return node
+	case *ast.OpenRowsetCosmos:
+		node := jsonNode{
+			"$type": "OpenRowsetCosmos",
+		}
+		if len(r.Options) > 0 {
+			opts := make([]jsonNode, len(r.Options))
+			for i, o := range r.Options {
+				opts[i] = openRowsetCosmosOptionToJSON(o)
+			}
+			node["Options"] = opts
+		}
+		if len(r.WithColumns) > 0 {
+			cols := make([]jsonNode, len(r.WithColumns))
+			for i, c := range r.WithColumns {
+				cols[i] = openRowsetColumnDefinitionToJSON(c)
+			}
+			node["WithColumns"] = cols
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.OpenRowsetTableReference:
+		node := jsonNode{
+			"$type": "OpenRowsetTableReference",
+		}
+		if r.ProviderName != nil {
+			node["ProviderName"] = scalarExpressionToJSON(r.ProviderName)
+		}
+		if r.ProviderString != nil {
+			node["ProviderString"] = scalarExpressionToJSON(r.ProviderString)
+		}
+		if r.Object != nil {
+			node["Object"] = schemaObjectNameToJSON(r.Object)
+		}
+		if len(r.WithColumns) > 0 {
+			cols := make([]jsonNode, len(r.WithColumns))
+			for i, c := range r.WithColumns {
+				cols[i] = openRowsetColumnDefinitionToJSON(c)
+			}
+			node["WithColumns"] = cols
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
 	case *ast.PredictTableReference:
 		node := jsonNode{
 			"$type": "PredictTableReference",
@@ -17214,6 +17262,35 @@ func sensitivityClassificationOptionToJSON(opt *ast.SensitivityClassificationOpt
 	}
 	if opt.Value != nil {
 		node["Value"] = scalarExpressionToJSON(opt.Value)
+	}
+	return node
+}
+
+func openRowsetCosmosOptionToJSON(opt ast.OpenRowsetCosmosOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.LiteralOpenRowsetCosmosOption:
+		node := jsonNode{
+			"$type":      "LiteralOpenRowsetCosmosOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownOpenRowsetCosmosOption"}
+	}
+}
+
+func openRowsetColumnDefinitionToJSON(col *ast.OpenRowsetColumnDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "OpenRowsetColumnDefinition",
+	}
+	if col.ColumnIdentifier != nil {
+		node["ColumnIdentifier"] = identifierToJSON(col.ColumnIdentifier)
+	}
+	if col.DataType != nil {
+		node["DataType"] = dataTypeReferenceToJSON(col.DataType)
 	}
 	return node
 }

@@ -405,6 +405,16 @@ func (p *Parser) parseOpenRowset() (ast.TableReference, error) {
 		return p.parseBulkOpenRowset()
 	}
 
+	// Check for Cosmos form: OPENROWSET(PROVIDER = '...', CONNECTION = '...', ...)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PROVIDER" && p.peekTok.Type == TokenEquals {
+		return p.parseOpenRowsetCosmos()
+	}
+
+	// Check for traditional form: OPENROWSET('provider', 'connstr', tablename)
+	if p.curTok.Type == TokenString {
+		return p.parseOpenRowsetTableReference()
+	}
+
 	// Parse identifier
 	if p.curTok.Type != TokenIdent {
 		return nil, fmt.Errorf("expected identifier in OPENROWSET, got %s", p.curTok.Literal)
@@ -432,6 +442,192 @@ func (p *Parser) parseOpenRowset() (ast.TableReference, error) {
 		VarArgs:    varArgs,
 		ForPath:    false,
 	}, nil
+}
+
+func (p *Parser) parseOpenRowsetCosmos() (*ast.OpenRowsetCosmos, error) {
+	result := &ast.OpenRowsetCosmos{
+		ForPath: false,
+	}
+
+	// Parse options: PROVIDER = 'value', CONNECTION = 'value', etc.
+	// Note: Some option names like CREDENTIAL are keywords, so check for those too
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		// Check if this is a valid option name (identifier or keyword like CREDENTIAL)
+		optionName := strings.ToUpper(p.curTok.Literal)
+		isValidOption := p.curTok.Type == TokenIdent || p.curTok.Type == TokenCredential ||
+			optionName == "PROVIDER" || optionName == "CONNECTION" || optionName == "OBJECT" ||
+			optionName == "SERVER_CREDENTIAL"
+		if !isValidOption {
+			break
+		}
+
+		p.nextToken() // consume option name
+
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+		}
+		p.nextToken() // consume =
+
+		// Parse option value
+		value, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		// Map option names to expected OptionKind values
+		optionKind := optionName
+		switch optionName {
+		case "PROVIDER":
+			optionKind = "Provider"
+		case "CONNECTION":
+			optionKind = "Connection"
+		case "OBJECT":
+			optionKind = "Object"
+		case "CREDENTIAL":
+			optionKind = "Credential"
+		case "SERVER_CREDENTIAL":
+			optionKind = "Server_Credential"
+		}
+
+		opt := &ast.LiteralOpenRowsetCosmosOption{
+			Value:      value,
+			OptionKind: optionKind,
+		}
+		result.Options = append(result.Options, opt)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in OPENROWSET, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse optional WITH (columns)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colDef := &ast.OpenRowsetColumnDefinition{}
+				colDef.ColumnIdentifier = p.parseIdentifier()
+
+				// Parse data type
+				dataType, err := p.parseDataTypeReference()
+				if err != nil {
+					return nil, err
+				}
+				colDef.DataType = dataType
+
+				result.WithColumns = append(result.WithColumns, colDef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
+}
+
+func (p *Parser) parseOpenRowsetTableReference() (*ast.OpenRowsetTableReference, error) {
+	result := &ast.OpenRowsetTableReference{
+		ForPath: false,
+	}
+
+	// Parse provider name (string literal)
+	providerName, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	result.ProviderName = providerName
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after provider name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse provider string (string literal)
+	providerString, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	result.ProviderString = providerString
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after provider string, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse object (schema object name or expression)
+	obj, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	result.Object = obj
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in OPENROWSET, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse optional WITH (columns)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colDef := &ast.OpenRowsetColumnDefinition{}
+				colDef.ColumnIdentifier = p.parseIdentifier()
+
+				// Parse data type
+				dataType, err := p.parseDataTypeReference()
+				if err != nil {
+					return nil, err
+				}
+				colDef.DataType = dataType
+
+				result.WithColumns = append(result.WithColumns, colDef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
 }
 
 func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {

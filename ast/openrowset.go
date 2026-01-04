@@ -1,0 +1,44 @@
+package ast
+
+// OpenRowsetCosmos represents an OPENROWSET with PROVIDER = ..., CONNECTION = ..., OBJECT = ... syntax.
+type OpenRowsetCosmos struct {
+	Options     []OpenRowsetCosmosOption     `json:"Options,omitempty"`
+	WithColumns []*OpenRowsetColumnDefinition `json:"WithColumns,omitempty"`
+	Alias       *Identifier                  `json:"Alias,omitempty"`
+	ForPath     bool                         `json:"ForPath"`
+}
+
+func (o *OpenRowsetCosmos) node()           {}
+func (o *OpenRowsetCosmos) tableReference() {}
+
+// OpenRowsetCosmosOption is the interface for OpenRowset Cosmos options.
+type OpenRowsetCosmosOption interface {
+	openRowsetCosmosOption()
+}
+
+// LiteralOpenRowsetCosmosOption represents an option with a literal value.
+type LiteralOpenRowsetCosmosOption struct {
+	Value      ScalarExpression `json:"Value,omitempty"`
+	OptionKind string           `json:"OptionKind,omitempty"`
+}
+
+func (l *LiteralOpenRowsetCosmosOption) openRowsetCosmosOption() {}
+
+// OpenRowsetTableReference represents a traditional OPENROWSET('provider', 'connstr', object) syntax.
+type OpenRowsetTableReference struct {
+	ProviderName   ScalarExpression              `json:"ProviderName,omitempty"`
+	ProviderString ScalarExpression              `json:"ProviderString,omitempty"`
+	Object         *SchemaObjectName             `json:"Object,omitempty"`
+	WithColumns    []*OpenRowsetColumnDefinition `json:"WithColumns,omitempty"`
+	Alias          *Identifier                   `json:"Alias,omitempty"`
+	ForPath        bool                          `json:"ForPath"`
+}
+
+func (o *OpenRowsetTableReference) node()           {}
+func (o *OpenRowsetTableReference) tableReference() {}
+
+// OpenRowsetColumnDefinition represents a column definition in WITH clause.
+type OpenRowsetColumnDefinition struct {
+	ColumnIdentifier *Identifier       `json:"ColumnIdentifier,omitempty"`
+	DataType         DataTypeReference `json:"DataType,omitempty"`
+}
