@@ -2389,6 +2389,13 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			}
 			node["Options"] = opts
 		}
+		if len(r.WithColumns) > 0 {
+			cols := make([]jsonNode, len(r.WithColumns))
+			for i, c := range r.WithColumns {
+				cols[i] = openRowsetColumnDefinitionToJSON(c)
+			}
+			node["WithColumns"] = cols
+		}
 		if len(r.Columns) > 0 {
 			cols := make([]jsonNode, len(r.Columns))
 			for i, c := range r.Columns {
@@ -17301,11 +17308,17 @@ func openRowsetColumnDefinitionToJSON(col *ast.OpenRowsetColumnDefinition) jsonN
 	node := jsonNode{
 		"$type": "OpenRowsetColumnDefinition",
 	}
+	if col.ColumnOrdinal != nil {
+		node["ColumnOrdinal"] = scalarExpressionToJSON(col.ColumnOrdinal)
+	}
 	if col.ColumnIdentifier != nil {
 		node["ColumnIdentifier"] = identifierToJSON(col.ColumnIdentifier)
 	}
 	if col.DataType != nil {
 		node["DataType"] = dataTypeReferenceToJSON(col.DataType)
+	}
+	if col.Collation != nil {
+		node["Collation"] = identifierToJSON(col.Collation)
 	}
 	return node
 }

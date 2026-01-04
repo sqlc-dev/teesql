@@ -687,6 +687,60 @@ func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
 	}
 	p.nextToken()
 
+	// Parse optional WITH (column_definitions) - for schema specification
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colDef := &ast.OpenRowsetColumnDefinition{}
+				colDef.ColumnIdentifier = p.parseIdentifier()
+
+				// Parse data type
+				dataType, err := p.parseDataTypeReference()
+				if err != nil {
+					return nil, err
+				}
+				colDef.DataType = dataType
+
+				// Parse optional COLLATE
+				if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+					p.nextToken() // consume COLLATE
+					colDef.Collation = p.parseIdentifier()
+				}
+
+				// Parse optional column ordinal (integer) or JSON path (string)
+				if p.curTok.Type == TokenNumber {
+					colDef.ColumnOrdinal = &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					}
+					p.nextToken()
+				} else if p.curTok.Type == TokenString {
+					// JSON path specification like '$.stateName' or 'strict $.population'
+					colDef.ColumnOrdinal = &ast.StringLiteral{
+						LiteralType:   "String",
+						IsNational:    false,
+						IsLargeObject: false,
+						Value:         strings.Trim(p.curTok.Literal, "'"),
+					}
+					p.nextToken()
+				}
+
+				result.WithColumns = append(result.WithColumns, colDef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
 	// Parse optional alias
 	if p.curTok.Type == TokenAs {
 		p.nextToken()

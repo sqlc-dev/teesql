@@ -66,11 +66,12 @@ func (o *OrderBulkInsertOption) bulkInsertOption() {}
 
 // BulkOpenRowset represents an OPENROWSET (BULK ...) table reference.
 type BulkOpenRowset struct {
-	DataFiles []ScalarExpression `json:"DataFiles,omitempty"`
-	Options   []BulkInsertOption `json:"Options,omitempty"`
-	Columns   []*Identifier      `json:"Columns,omitempty"`
-	Alias     *Identifier        `json:"Alias,omitempty"`
-	ForPath   bool               `json:"ForPath"`
+	DataFiles   []ScalarExpression            `json:"DataFiles,omitempty"`
+	Options     []BulkInsertOption            `json:"Options,omitempty"`
+	WithColumns []*OpenRowsetColumnDefinition `json:"WithColumns,omitempty"`
+	Columns     []*Identifier                 `json:"Columns,omitempty"`
+	Alias       *Identifier                   `json:"Alias,omitempty"`
+	ForPath     bool                          `json:"ForPath"`
 }
 
 func (b *BulkOpenRowset) node()           {}
