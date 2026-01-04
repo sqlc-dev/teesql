@@ -2447,6 +2447,11 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		return p.parsePredictTableReference()
 	}
 
+	// Check for CHANGETABLE
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "CHANGETABLE" {
+		return p.parseChangeTableReference()
+	}
+
 	// Check for full-text table functions (CONTAINSTABLE, FREETEXTTABLE)
 	if p.curTok.Type == TokenIdent {
 		upper := strings.ToUpper(p.curTok.Literal)
@@ -2482,9 +2487,57 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		// Parse optional alias (AS alias or just alias) and optional column list
+		var alias *ast.Identifier
+		var columns []*ast.Identifier
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+			alias = p.parseIdentifier()
+		} else if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" &&
+				upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+				upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+				upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+				alias = p.parseIdentifier()
+			}
+		}
+		// Check for column list: alias(c1, c2, ...)
+		if alias != nil && p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				columns = append(columns, p.parseIdentifier())
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+
+		// Use GlobalFunctionTableReference for specific built-in global functions
+		if son.Count == 1 && son.BaseIdentifier != nil {
+			upper := strings.ToUpper(son.BaseIdentifier.Value)
+			if upper == "STRING_SPLIT" || upper == "GENERATE_SERIES" {
+				return &ast.GlobalFunctionTableReference{
+					Name:       son.BaseIdentifier,
+					Parameters: params,
+					Alias:      alias,
+					Columns:    columns,
+					ForPath:    false,
+				}, nil
+			}
+		}
+
 		ref := &ast.SchemaObjectFunctionTableReference{
 			SchemaObject: son,
 			Parameters:   params,
+			Alias:        alias,
+			Columns:      columns,
 			ForPath:      false,
 		}
 		return ref, nil
@@ -2495,8 +2548,14 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 }
 
 // parseDerivedTableReference parses a derived table (parenthesized query) like (SELECT ...) AS alias
-func (p *Parser) parseDerivedTableReference() (*ast.QueryDerivedTable, error) {
+// or an inline derived table (VALUES clause) like (VALUES (...), (...)) AS alias(cols)
+func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 	p.nextToken() // consume (
+
+	// Check for VALUES clause (inline derived table)
+	if strings.ToUpper(p.curTok.Literal) == "VALUES" {
+		return p.parseInlineDerivedTable()
+	}
 
 	// Parse the query expression
 	qe, err := p.parseQueryExpression()
@@ -2528,6 +2587,86 @@ func (p *Parser) parseDerivedTableReference() (*ast.QueryDerivedTable, error) {
 			}
 		} else {
 			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	return ref, nil
+}
+
+// parseInlineDerivedTable parses a VALUES clause used as a table source
+// Called after ( is consumed and VALUES is the current token
+func (p *Parser) parseInlineDerivedTable() (*ast.InlineDerivedTable, error) {
+	p.nextToken() // consume VALUES
+
+	ref := &ast.InlineDerivedTable{
+		ForPath: false,
+	}
+
+	// Parse row values: (val1, val2), (val3, val4), ...
+	for {
+		if p.curTok.Type != TokenLParen {
+			break
+		}
+		p.nextToken() // consume (
+
+		row := &ast.RowValue{}
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			row.ColumnValues = append(row.ColumnValues, expr)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+		ref.RowValues = append(ref.RowValues, row)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume , between rows
+		} else {
+			break
+		}
+	}
+
+	// Expect ) to close the VALUES clause
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after VALUES clause, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse optional alias: AS alias or just alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" &&
+			upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+			upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+			upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	// Parse optional column list: alias(col1, col2, ...)
+	if ref.Alias != nil && p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			ref.Columns = append(ref.Columns, p.parseIdentifier())
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
 		}
 	}
 
@@ -5721,4 +5860,198 @@ func (p *Parser) parseParseCall(isTry bool) (ast.ScalarExpression, error) {
 		DataType:    dataType,
 		Culture:     culture,
 	}, nil
+}
+
+// parseChangeTableReference parses CHANGETABLE(CHANGES ...) or CHANGETABLE(VERSION ...)
+func (p *Parser) parseChangeTableReference() (ast.TableReference, error) {
+	p.nextToken() // consume CHANGETABLE
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after CHANGETABLE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	upper := strings.ToUpper(p.curTok.Literal)
+	if upper == "CHANGES" {
+		return p.parseChangeTableChangesReference()
+	} else if upper == "VERSION" {
+		return p.parseChangeTableVersionReference()
+	}
+
+	return nil, fmt.Errorf("expected CHANGES or VERSION after CHANGETABLE(, got %s", p.curTok.Literal)
+}
+
+// parseChangeTableChangesReference parses CHANGETABLE(CHANGES table, version [, FORCESEEK])
+func (p *Parser) parseChangeTableChangesReference() (*ast.ChangeTableChangesTableReference, error) {
+	p.nextToken() // consume CHANGES
+
+	ref := &ast.ChangeTableChangesTableReference{
+		ForPath: false,
+	}
+
+	// Parse target table
+	son, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	ref.Target = son
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after table name in CHANGETABLE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse since version
+	version, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	ref.SinceVersion = version
+
+	// Check for optional FORCESEEK
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		if strings.ToUpper(p.curTok.Literal) == "FORCESEEK" {
+			ref.ForceSeek = true
+			p.nextToken()
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after CHANGETABLE arguments, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse AS alias
+	if p.curTok.Type != TokenAs {
+		return nil, fmt.Errorf("expected AS after CHANGETABLE(...), got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume AS
+	ref.Alias = p.parseIdentifier()
+
+	// Check for column list: alias(c1, c2, ...)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			ref.Columns = append(ref.Columns, p.parseIdentifier())
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	return ref, nil
+}
+
+// parseChangeTableVersionReference parses CHANGETABLE(VERSION table, (cols), (vals) [, FORCESEEK])
+func (p *Parser) parseChangeTableVersionReference() (*ast.ChangeTableVersionTableReference, error) {
+	p.nextToken() // consume VERSION
+
+	ref := &ast.ChangeTableVersionTableReference{
+		ForPath: false,
+	}
+
+	// Parse target table
+	son, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	ref.Target = son
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after table name in CHANGETABLE VERSION, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse primary key columns: (c1, c2, ...)
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( for primary key columns, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		ref.PrimaryKeyColumns = append(ref.PrimaryKeyColumns, p.parseIdentifier())
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after primary key columns, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse primary key values: (v1, v2, ...)
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( for primary key values, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		val, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		ref.PrimaryKeyValues = append(ref.PrimaryKeyValues, val)
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	// Check for optional FORCESEEK
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		if strings.ToUpper(p.curTok.Literal) == "FORCESEEK" {
+			ref.ForceSeek = true
+			p.nextToken()
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after CHANGETABLE VERSION arguments, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse AS alias
+	if p.curTok.Type != TokenAs {
+		return nil, fmt.Errorf("expected AS after CHANGETABLE(...), got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume AS
+	ref.Alias = p.parseIdentifier()
+
+	// Check for column list: alias(c1, c2, ...)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			ref.Columns = append(ref.Columns, p.parseIdentifier())
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	return ref, nil
 }

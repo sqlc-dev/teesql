@@ -2391,6 +2391,132 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			}
 			node["Parameters"] = params
 		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, c := range r.Columns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["Columns"] = cols
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.GlobalFunctionTableReference:
+		node := jsonNode{
+			"$type": "GlobalFunctionTableReference",
+		}
+		if r.Name != nil {
+			node["Name"] = identifierToJSON(r.Name)
+		}
+		if len(r.Parameters) > 0 {
+			params := make([]jsonNode, len(r.Parameters))
+			for i, p := range r.Parameters {
+				params[i] = scalarExpressionToJSON(p)
+			}
+			node["Parameters"] = params
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, c := range r.Columns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["Columns"] = cols
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.InlineDerivedTable:
+		node := jsonNode{
+			"$type": "InlineDerivedTable",
+		}
+		if len(r.RowValues) > 0 {
+			rows := make([]jsonNode, len(r.RowValues))
+			for i, row := range r.RowValues {
+				rowNode := jsonNode{
+					"$type": "RowValue",
+				}
+				if len(row.ColumnValues) > 0 {
+					vals := make([]jsonNode, len(row.ColumnValues))
+					for j, v := range row.ColumnValues {
+						vals[j] = scalarExpressionToJSON(v)
+					}
+					rowNode["ColumnValues"] = vals
+				}
+				rows[i] = rowNode
+			}
+			node["RowValues"] = rows
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, c := range r.Columns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["Columns"] = cols
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.ChangeTableChangesTableReference:
+		node := jsonNode{
+			"$type": "ChangeTableChangesTableReference",
+		}
+		if r.Target != nil {
+			node["Target"] = schemaObjectNameToJSON(r.Target)
+		}
+		if r.SinceVersion != nil {
+			node["SinceVersion"] = scalarExpressionToJSON(r.SinceVersion)
+		}
+		node["ForceSeek"] = r.ForceSeek
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, c := range r.Columns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["Columns"] = cols
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.ChangeTableVersionTableReference:
+		node := jsonNode{
+			"$type": "ChangeTableVersionTableReference",
+		}
+		if r.Target != nil {
+			node["Target"] = schemaObjectNameToJSON(r.Target)
+		}
+		if len(r.PrimaryKeyColumns) > 0 {
+			cols := make([]jsonNode, len(r.PrimaryKeyColumns))
+			for i, c := range r.PrimaryKeyColumns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["PrimaryKeyColumns"] = cols
+		}
+		if len(r.PrimaryKeyValues) > 0 {
+			vals := make([]jsonNode, len(r.PrimaryKeyValues))
+			for i, v := range r.PrimaryKeyValues {
+				vals[i] = scalarExpressionToJSON(v)
+			}
+			node["PrimaryKeyValues"] = vals
+		}
+		node["ForceSeek"] = r.ForceSeek
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, c := range r.Columns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["Columns"] = cols
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
 		node["ForPath"] = r.ForPath
 		return node
 	case *ast.InternalOpenRowset:
