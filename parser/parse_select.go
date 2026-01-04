@@ -2546,6 +2546,36 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	}
 	ref.SchemaObject = son
 
+	// T-SQL supports two syntaxes for table hints:
+	// 1. Old-style: table_name (nolock) AS alias - hints before alias, no WITH
+	// 2. New-style: table_name AS alias WITH (hints) - alias before hints, WITH required
+
+	// Check for old-style hints (without WITH keyword): table (nolock) as alias
+	if p.curTok.Type == TokenLParen && p.peekIsTableHint() {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			hint, err := p.parseTableHint()
+			if err != nil {
+				return nil, err
+			}
+			if hint != nil {
+				ref.TableHints = append(ref.TableHints, hint)
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else if p.curTok.Type != TokenRParen {
+				// Check if the next token is a valid table hint (space-separated hints)
+				if p.isTableHintToken() {
+					continue // Continue parsing space-separated hints
+				}
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
 	// Parse optional alias (AS alias or just alias)
 	if p.curTok.Type == TokenAs {
 		p.nextToken()
@@ -2563,14 +2593,10 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 		}
 	}
 
-	// Parse optional table hints WITH (hint, hint, ...) or old-style (hint, hint, ...)
+	// Check for new-style hints (with WITH keyword): alias WITH (hints)
 	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
-	}
-	if p.curTok.Type == TokenLParen {
-		// Check if this looks like hints (first token is a hint keyword)
-		// Save position to peek
-		if p.peekIsTableHint() {
+		if p.curTok.Type == TokenLParen && p.peekIsTableHint() {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
@@ -2583,9 +2609,8 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
 				} else if p.curTok.Type != TokenRParen {
-					// Check if the next token is a valid table hint (space-separated hints)
 					if p.isTableHintToken() {
-						continue // Continue parsing space-separated hints
+						continue
 					}
 					break
 				}
@@ -2604,6 +2629,35 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 	ref := &ast.NamedTableReference{
 		SchemaObject: son,
 		ForPath:      false,
+	}
+
+	// T-SQL supports two syntaxes for table hints:
+	// 1. Old-style: table_name (nolock) AS alias - hints before alias, no WITH
+	// 2. New-style: table_name AS alias WITH (hints) - alias before hints, WITH required
+
+	// Check for old-style hints (without WITH keyword): table (nolock) as alias
+	if p.curTok.Type == TokenLParen && p.peekIsTableHint() {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			hint, err := p.parseTableHint()
+			if err != nil {
+				return nil, err
+			}
+			if hint != nil {
+				ref.TableHints = append(ref.TableHints, hint)
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else if p.curTok.Type != TokenRParen {
+				if p.isTableHintToken() {
+					continue
+				}
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
 	}
 
 	// Parse optional alias (AS alias or just alias)
@@ -2625,13 +2679,10 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		}
 	}
 
-	// Parse optional table hints WITH (hint, hint, ...) or old-style (hint, hint, ...)
+	// Check for new-style hints (with WITH keyword): alias WITH (hints)
 	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
-	}
-	if p.curTok.Type == TokenLParen {
-		// Check if this looks like hints (first token is a hint keyword)
-		if p.peekIsTableHint() {
+		if p.curTok.Type == TokenLParen && p.peekIsTableHint() {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
