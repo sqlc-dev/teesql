@@ -10285,6 +10285,11 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 				p.nextToken()
 			}
 
+			// Skip optional AS keyword (e.g., @param AS int)
+			if p.curTok.Type == TokenAs {
+				p.nextToken()
+			}
+
 			// Parse data type if present
 			if p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma && p.curTok.Type != TokenEquals {
 				dataType, err := p.parseDataType()
@@ -10992,6 +10997,11 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 				p.nextToken()
 			}
 
+			// Skip optional AS keyword (e.g., @param AS int)
+			if p.curTok.Type == TokenAs {
+				p.nextToken()
+			}
+
 			// Parse data type if present
 			if p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma {
 				dataType, err := p.parseDataTypeReference()
@@ -11449,6 +11459,11 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 					Value:     p.curTok.Literal,
 					QuoteType: "NotQuoted",
 				}
+				p.nextToken()
+			}
+
+			// Skip optional AS keyword (e.g., @param AS int)
+			if p.curTok.Type == TokenAs {
 				p.nextToken()
 			}
 
