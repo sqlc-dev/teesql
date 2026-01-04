@@ -32,8 +32,9 @@ type IndexExpressionOption struct {
 	Expression ScalarExpression
 }
 
-func (i *IndexExpressionOption) indexOption() {}
-func (i *IndexExpressionOption) node()        {}
+func (i *IndexExpressionOption) indexOption()     {}
+func (i *IndexExpressionOption) dropIndexOption() {}
+func (i *IndexExpressionOption) node()            {}
 
 // CompressionDelayIndexOption represents a COMPRESSION_DELAY option
 type CompressionDelayIndexOption struct {

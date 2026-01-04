@@ -42,7 +42,8 @@ func (s *DropFullTextStopListStatement) statement() {}
 
 // DropFullTextCatalogStatement represents DROP FULLTEXT CATALOG statement
 type DropFullTextCatalogStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name       *Identifier `json:"Name,omitempty"`
+	IsIfExists bool        `json:"IsIfExists"`
 }
 
 func (s *DropFullTextCatalogStatement) node()      {}

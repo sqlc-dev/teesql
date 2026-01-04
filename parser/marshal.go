@@ -522,6 +522,34 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropRuleStatementToJSON(s)
 	case *ast.DropSchemaStatement:
 		return dropSchemaStatementToJSON(s)
+	case *ast.DropPartitionFunctionStatement:
+		return dropPartitionFunctionStatementToJSON(s)
+	case *ast.DropPartitionSchemeStatement:
+		return dropPartitionSchemeStatementToJSON(s)
+	case *ast.DropApplicationRoleStatement:
+		return dropApplicationRoleStatementToJSON(s)
+	case *ast.DropCertificateStatement:
+		return dropCertificateStatementToJSON(s)
+	case *ast.DropMasterKeyStatement:
+		return dropMasterKeyStatementToJSON(s)
+	case *ast.DropXmlSchemaCollectionStatement:
+		return dropXmlSchemaCollectionStatementToJSON(s)
+	case *ast.DropContractStatement:
+		return dropContractStatementToJSON(s)
+	case *ast.DropEndpointStatement:
+		return dropEndpointStatementToJSON(s)
+	case *ast.DropMessageTypeStatement:
+		return dropMessageTypeStatementToJSON(s)
+	case *ast.DropQueueStatement:
+		return dropQueueStatementToJSON(s)
+	case *ast.DropRemoteServiceBindingStatement:
+		return dropRemoteServiceBindingStatementToJSON(s)
+	case *ast.DropRouteStatement:
+		return dropRouteStatementToJSON(s)
+	case *ast.DropServiceStatement:
+		return dropServiceStatementToJSON(s)
+	case *ast.DropEventNotificationStatement:
+		return dropEventNotificationStatementToJSON(s)
 	case *ast.AlterTableTriggerModificationStatement:
 		return alterTableTriggerModificationStatementToJSON(s)
 	case *ast.AlterTableFileTableNamespaceStatement:
@@ -576,6 +604,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterFullTextStopListStatementToJSON(s)
 	case *ast.DropFullTextStopListStatement:
 		return dropFullTextStopListStatementToJSON(s)
+	case *ast.DropFullTextCatalogStatement:
+		return dropFullTextCatalogStatementToJSON(s)
+	case *ast.DropFulltextIndexStatement:
+		return dropFulltextIndexStatementToJSON(s)
 	case *ast.AlterSymmetricKeyStatement:
 		return alterSymmetricKeyStatementToJSON(s)
 	case *ast.AlterServiceMasterKeyStatement:
@@ -13414,6 +13446,15 @@ func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
 			node["Options"] = options
 		}
 		return node
+	case *ast.IndexExpressionOption:
+		node := jsonNode{
+			"$type":      "IndexExpressionOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(o.Expression)
+		}
+		return node
 	}
 	return jsonNode{}
 }
@@ -13476,6 +13517,166 @@ func dropSchemaStatementToJSON(s *ast.DropSchemaStatement) jsonNode {
 		behavior = "None"
 	}
 	node["DropBehavior"] = behavior
+	return node
+}
+
+func dropPartitionFunctionStatementToJSON(s *ast.DropPartitionFunctionStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropPartitionFunctionStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropPartitionSchemeStatementToJSON(s *ast.DropPartitionSchemeStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropPartitionSchemeStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropApplicationRoleStatementToJSON(s *ast.DropApplicationRoleStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropApplicationRoleStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropCertificateStatementToJSON(s *ast.DropCertificateStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropCertificateStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropMasterKeyStatementToJSON(s *ast.DropMasterKeyStatement) jsonNode {
+	return jsonNode{
+		"$type": "DropMasterKeyStatement",
+	}
+}
+
+func dropXmlSchemaCollectionStatementToJSON(s *ast.DropXmlSchemaCollectionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropXmlSchemaCollectionStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	return node
+}
+
+func dropContractStatementToJSON(s *ast.DropContractStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropContractStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropEndpointStatementToJSON(s *ast.DropEndpointStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropEndpointStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropMessageTypeStatementToJSON(s *ast.DropMessageTypeStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropMessageTypeStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropQueueStatementToJSON(s *ast.DropQueueStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropQueueStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	return node
+}
+
+func dropRemoteServiceBindingStatementToJSON(s *ast.DropRemoteServiceBindingStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropRemoteServiceBindingStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropRouteStatementToJSON(s *ast.DropRouteStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropRouteStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropServiceStatementToJSON(s *ast.DropServiceStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropServiceStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropEventNotificationStatementToJSON(s *ast.DropEventNotificationStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropEventNotificationStatement",
+	}
+	if len(s.Notifications) > 0 {
+		notifications := make([]jsonNode, len(s.Notifications))
+		for i, n := range s.Notifications {
+			notifications[i] = identifierToJSON(n)
+		}
+		node["Notifications"] = notifications
+	}
+	if s.Scope != nil {
+		scope := jsonNode{
+			"$type":  "EventNotificationObjectScope",
+			"Target": s.Scope.Target,
+		}
+		if s.Scope.QueueName != nil {
+			scope["QueueName"] = schemaObjectNameToJSON(s.Scope.QueueName)
+		}
+		node["Scope"] = scope
+	}
 	return node
 }
 
@@ -15161,6 +15362,27 @@ func dropFullTextStopListStatementToJSON(s *ast.DropFullTextStopListStatement) j
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropFullTextCatalogStatementToJSON(s *ast.DropFullTextCatalogStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropFullTextCatalogStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropFulltextIndexStatementToJSON(s *ast.DropFulltextIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropFullTextIndexStatement",
+	}
+	if s.OnName != nil {
+		node["OnName"] = schemaObjectNameToJSON(s.OnName)
 	}
 	return node
 }
