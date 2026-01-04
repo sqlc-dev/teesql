@@ -4555,6 +4555,95 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							return nil, err
 						}
 						stmt.Options = append(stmt.Options, opt)
+					} else if optionName == "CLUSTERED" {
+						// Could be CLUSTERED INDEX or CLUSTERED COLUMNSTORE INDEX
+						if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
+							p.nextToken() // consume COLUMNSTORE
+							if p.curTok.Type == TokenIndex {
+								p.nextToken() // consume INDEX
+							}
+							stmt.Options = append(stmt.Options, &ast.TableIndexOption{
+								Value: &ast.TableClusteredIndexType{
+									ColumnStore: true,
+								},
+								OptionKind: "LockEscalation",
+							})
+						} else if p.curTok.Type == TokenIndex {
+							p.nextToken() // consume INDEX
+							// Parse column list
+							indexType := &ast.TableClusteredIndexType{
+								ColumnStore: false,
+							}
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									col := &ast.ColumnWithSortOrder{
+										SortOrder: ast.SortOrderNotSpecified,
+										Column: &ast.ColumnReferenceExpression{
+											ColumnType: "Regular",
+											MultiPartIdentifier: &ast.MultiPartIdentifier{
+												Identifiers: []*ast.Identifier{p.parseIdentifier()},
+												Count:       1,
+											},
+										},
+									}
+									indexType.Columns = append(indexType.Columns, col)
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									} else {
+										break
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+							}
+							stmt.Options = append(stmt.Options, &ast.TableIndexOption{
+								Value:      indexType,
+								OptionKind: "LockEscalation",
+							})
+						}
+					} else if optionName == "HEAP" {
+						stmt.Options = append(stmt.Options, &ast.TableIndexOption{
+							Value:      &ast.TableNonClusteredIndexType{},
+							OptionKind: "LockEscalation",
+						})
+					} else if optionName == "DISTRIBUTION" {
+						// Parse DISTRIBUTION = HASH(col1, col2, ...) or ROUND_ROBIN or REPLICATE
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						distTypeUpper := strings.ToUpper(p.curTok.Literal)
+						if distTypeUpper == "HASH" {
+							p.nextToken() // consume HASH
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								distOpt := &ast.TableDistributionOption{
+									OptionKind: "Distribution",
+									Value:      &ast.TableHashDistributionPolicy{},
+								}
+								// Parse column list
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									col := p.parseIdentifier()
+									if distOpt.Value.DistributionColumn == nil {
+										distOpt.Value.DistributionColumn = col
+									}
+									distOpt.Value.DistributionColumns = append(distOpt.Value.DistributionColumns, col)
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									} else {
+										break
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+								stmt.Options = append(stmt.Options, distOpt)
+							}
+						} else {
+							// ROUND_ROBIN or REPLICATE - skip for now
+							p.nextToken()
+						}
 					} else {
 						// Skip unknown option value
 						if p.curTok.Type == TokenEquals {
@@ -7423,6 +7512,24 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 			node["XmlCompressionOption"] = xmlCompressionOptionToJSON(o.XmlCompressionOption)
 		}
 		return node
+	case *ast.TableIndexOption:
+		node := jsonNode{
+			"$type":      "TableIndexOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = tableIndexTypeToJSON(o.Value)
+		}
+		return node
+	case *ast.TableDistributionOption:
+		node := jsonNode{
+			"$type":      "TableDistributionOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = tableHashDistributionPolicyToJSON(o.Value)
+		}
+		return node
 	case *ast.SystemVersioningTableOption:
 		return systemVersioningTableOptionToJSON(o)
 	case *ast.MemoryOptimizedTableOption:
@@ -7538,6 +7645,52 @@ func xmlCompressionOptionToJSON(opt *ast.XmlCompressionOption) jsonNode {
 		node["PartitionRanges"] = ranges
 	}
 	return node
+}
+
+func tableHashDistributionPolicyToJSON(policy *ast.TableHashDistributionPolicy) jsonNode {
+	node := jsonNode{
+		"$type": "TableHashDistributionPolicy",
+	}
+	if policy.DistributionColumn != nil {
+		node["DistributionColumn"] = identifierToJSON(policy.DistributionColumn)
+	}
+	if len(policy.DistributionColumns) > 0 {
+		cols := make([]jsonNode, len(policy.DistributionColumns))
+		for i, c := range policy.DistributionColumns {
+			// First column is same as DistributionColumn, use $ref
+			if i == 0 && policy.DistributionColumn != nil {
+				cols[i] = jsonNode{"$ref": "Identifier"}
+			} else {
+				cols[i] = identifierToJSON(c)
+			}
+		}
+		node["DistributionColumns"] = cols
+	}
+	return node
+}
+
+func tableIndexTypeToJSON(t ast.TableIndexType) jsonNode {
+	switch v := t.(type) {
+	case *ast.TableClusteredIndexType:
+		node := jsonNode{
+			"$type":       "TableClusteredIndexType",
+			"ColumnStore": v.ColumnStore,
+		}
+		if len(v.Columns) > 0 {
+			cols := make([]jsonNode, len(v.Columns))
+			for i, c := range v.Columns {
+				cols[i] = columnWithSortOrderToJSON(c)
+			}
+			node["Columns"] = cols
+		}
+		return node
+	case *ast.TableNonClusteredIndexType:
+		return jsonNode{
+			"$type": "TableNonClusteredIndexType",
+		}
+	default:
+		return jsonNode{"$type": "UnknownTableIndexType"}
+	}
 }
 
 func compressionPartitionRangeToJSON(pr *ast.CompressionPartitionRange) jsonNode {
