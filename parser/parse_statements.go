@@ -479,6 +479,10 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		// Implicit NONCLUSTERED COLUMNSTORE
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredColumnStore"}
 		p.nextToken()
+	} else if strings.ToUpper(p.curTok.Literal) == "HASH" {
+		// Implicit NONCLUSTERED HASH
+		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+		p.nextToken()
 	}
 
 	// Parse column list
