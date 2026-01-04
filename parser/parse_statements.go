@@ -10123,8 +10123,10 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 	if p.curTok.Type == TokenFrom {
 		p.nextToken() // consume FROM
 
-		// Check for EXTERNAL PROVIDER
-		if strings.ToUpper(p.curTok.Literal) == "EXTERNAL" {
+		upper := strings.ToUpper(p.curTok.Literal)
+		switch upper {
+		case "EXTERNAL":
+			// FROM EXTERNAL PROVIDER
 			p.nextToken() // consume EXTERNAL
 			if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
 				p.nextToken() // consume PROVIDER
@@ -10135,11 +10137,109 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 			// Parse WITH options
 			if p.curTok.Type == TokenWith {
 				p.nextToken() // consume WITH
-				source.Options = p.parseExternalLoginOptions()
+				source.Options = p.parsePrincipalOptions()
+			}
+
+			stmt.Source = source
+
+		case "WINDOWS":
+			// FROM WINDOWS
+			p.nextToken() // consume WINDOWS
+
+			source := &ast.WindowsCreateLoginSource{}
+
+			// Parse WITH options
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				source.Options = p.parsePrincipalOptions()
+			}
+
+			stmt.Source = source
+
+		case "CERTIFICATE":
+			// FROM CERTIFICATE certname
+			p.nextToken() // consume CERTIFICATE
+
+			source := &ast.CertificateCreateLoginSource{
+				Certificate: p.parseIdentifier(),
+			}
+
+			// Parse WITH CREDENTIAL option
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenCredential || strings.ToUpper(p.curTok.Literal) == "CREDENTIAL" {
+					p.nextToken() // consume CREDENTIAL
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					source.Credential = p.parseIdentifier()
+				}
+			}
+
+			stmt.Source = source
+
+		case "ASYMMETRIC":
+			// FROM ASYMMETRIC KEY keyname
+			p.nextToken() // consume ASYMMETRIC
+			if p.curTok.Type == TokenKey || strings.ToUpper(p.curTok.Literal) == "KEY" {
+				p.nextToken() // consume KEY
+			}
+
+			source := &ast.AsymmetricKeyCreateLoginSource{
+				Key: p.parseIdentifier(),
+			}
+
+			// Parse WITH CREDENTIAL option
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenCredential || strings.ToUpper(p.curTok.Literal) == "CREDENTIAL" {
+					p.nextToken() // consume CREDENTIAL
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					source.Credential = p.parseIdentifier()
+				}
 			}
 
 			stmt.Source = source
 		}
+	} else if p.curTok.Type == TokenWith {
+		// WITH PASSWORD = '...'
+		p.nextToken() // consume WITH
+
+		source := &ast.PasswordCreateLoginSource{}
+
+		// Parse PASSWORD = 'value' [HASHED] [MUST_CHANGE]
+		if strings.ToUpper(p.curTok.Literal) == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			// Parse password value (string or binary)
+			source.Password = p.parsePasswordValue()
+
+			// Parse optional flags and other options
+			for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF && strings.ToUpper(p.curTok.Literal) != "GO" {
+				upper := strings.ToUpper(p.curTok.Literal)
+				if upper == "HASHED" {
+					source.Hashed = true
+					p.nextToken()
+				} else if upper == "MUST_CHANGE" {
+					source.MustChange = true
+					p.nextToken()
+				} else if p.curTok.Type == TokenComma {
+					p.nextToken()
+					// Parse remaining options
+					source.Options = append(source.Options, p.parsePrincipalOptions()...)
+					break
+				} else {
+					break
+				}
+			}
+		}
+
+		stmt.Source = source
 	}
 
 	// Skip optional semicolon
@@ -10150,7 +10250,37 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 	return stmt, nil
 }
 
-func (p *Parser) parseExternalLoginOptions() []ast.PrincipalOption {
+func (p *Parser) parsePasswordValue() ast.ScalarExpression {
+	if p.curTok.Type == TokenString {
+		value := p.curTok.Literal
+		isNational := false
+		if len(value) > 0 && (value[0] == 'N' || value[0] == 'n') && len(value) > 1 && value[1] == '\'' {
+			isNational = true
+			value = value[2 : len(value)-1]
+		} else if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
+			value = value[1 : len(value)-1]
+		}
+		p.nextToken()
+		return &ast.StringLiteral{
+			LiteralType:   "String",
+			IsNational:    isNational,
+			IsLargeObject: false,
+			Value:         value,
+		}
+	} else if p.curTok.Type == TokenBinary {
+		value := p.curTok.Literal
+		p.nextToken()
+		return &ast.BinaryLiteral{
+			LiteralType:   "Binary",
+			IsLargeObject: false,
+			Value:         value,
+		}
+	}
+	// Return nil if not a recognized password value
+	return nil
+}
+
+func (p *Parser) parsePrincipalOptions() []ast.PrincipalOption {
 	var options []ast.PrincipalOption
 
 	for {
@@ -10190,6 +10320,33 @@ func (p *Parser) parseExternalLoginOptions() []ast.PrincipalOption {
 		case "DEFAULT_LANGUAGE":
 			options = append(options, &ast.IdentifierPrincipalOption{
 				OptionKind: "DefaultLanguage",
+				Identifier: p.parseIdentifier(),
+			})
+		case "CHECK_EXPIRATION":
+			// CHECK_EXPIRATION = ON/OFF
+			optState := "On"
+			if strings.ToUpper(p.curTok.Literal) == "OFF" {
+				optState = "Off"
+			}
+			options = append(options, &ast.OnOffPrincipalOption{
+				OptionKind:  "CheckExpiration",
+				OptionState: optState,
+			})
+			p.nextToken()
+		case "CHECK_POLICY":
+			// CHECK_POLICY = ON/OFF
+			optState := "On"
+			if strings.ToUpper(p.curTok.Literal) == "OFF" {
+				optState = "Off"
+			}
+			options = append(options, &ast.OnOffPrincipalOption{
+				OptionKind:  "CheckPolicy",
+				OptionState: optState,
+			})
+			p.nextToken()
+		case "CREDENTIAL":
+			options = append(options, &ast.IdentifierPrincipalOption{
+				OptionKind: "Credential",
 				Identifier: p.parseIdentifier(),
 			})
 		default:

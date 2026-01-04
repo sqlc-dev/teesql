@@ -446,6 +446,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropDatabaseEncryptionKeyStatementToJSON(s)
 	case *ast.CreateLoginStatement:
 		return createLoginStatementToJSON(s)
+	case *ast.AlterLoginEnableDisableStatement:
+		return alterLoginEnableDisableStatementToJSON(s)
+	case *ast.AlterLoginOptionsStatement:
+		return alterLoginOptionsStatementToJSON(s)
+	case *ast.DropLoginStatement:
+		return dropLoginStatementToJSON(s)
 	case *ast.CreateIndexStatement:
 		return createIndexStatementToJSON(s)
 	case *ast.CreateSpatialIndexStatement:
@@ -12370,7 +12376,7 @@ func userOptionToJSON(o ast.UserOption) jsonNode {
 			"Hashed":     opt.Hashed,
 		}
 		if opt.Password != nil {
-			node["Password"] = stringLiteralToJSON(opt.Password)
+			node["Password"] = scalarExpressionToJSON(opt.Password)
 		}
 		if opt.OldPassword != nil {
 			node["OldPassword"] = stringLiteralToJSON(opt.OldPassword)
@@ -15555,6 +15561,57 @@ func createLoginSourceToJSON(s ast.CreateLoginSource) jsonNode {
 			node["Options"] = opts
 		}
 		return node
+	case *ast.PasswordCreateLoginSource:
+		node := jsonNode{
+			"$type":      "PasswordCreateLoginSource",
+			"Hashed":     src.Hashed,
+			"MustChange": src.MustChange,
+		}
+		if src.Password != nil {
+			node["Password"] = scalarExpressionToJSON(src.Password)
+		}
+		if len(src.Options) > 0 {
+			opts := make([]jsonNode, len(src.Options))
+			for i, opt := range src.Options {
+				opts[i] = principalOptionToJSON(opt)
+			}
+			node["Options"] = opts
+		}
+		return node
+	case *ast.WindowsCreateLoginSource:
+		node := jsonNode{
+			"$type": "WindowsCreateLoginSource",
+		}
+		if len(src.Options) > 0 {
+			opts := make([]jsonNode, len(src.Options))
+			for i, opt := range src.Options {
+				opts[i] = principalOptionToJSON(opt)
+			}
+			node["Options"] = opts
+		}
+		return node
+	case *ast.CertificateCreateLoginSource:
+		node := jsonNode{
+			"$type": "CertificateCreateLoginSource",
+		}
+		if src.Certificate != nil {
+			node["Certificate"] = identifierToJSON(src.Certificate)
+		}
+		if src.Credential != nil {
+			node["Credential"] = identifierToJSON(src.Credential)
+		}
+		return node
+	case *ast.AsymmetricKeyCreateLoginSource:
+		node := jsonNode{
+			"$type": "AsymmetricKeyCreateLoginSource",
+		}
+		if src.Key != nil {
+			node["Key"] = identifierToJSON(src.Key)
+		}
+		if src.Credential != nil {
+			node["Credential"] = identifierToJSON(src.Credential)
+		}
+		return node
 	default:
 		return jsonNode{}
 	}
@@ -15580,9 +15637,73 @@ func principalOptionToJSON(o ast.PrincipalOption) jsonNode {
 			node["Identifier"] = identifierToJSON(opt.Identifier)
 		}
 		return node
+	case *ast.OnOffPrincipalOption:
+		return jsonNode{
+			"$type":       "OnOffPrincipalOption",
+			"OptionKind":  opt.OptionKind,
+			"OptionState": opt.OptionState,
+		}
+	case *ast.PrincipalOptionSimple:
+		return jsonNode{
+			"$type":      "PrincipalOption",
+			"OptionKind": opt.OptionKind,
+		}
+	case *ast.PasswordAlterPrincipalOption:
+		node := jsonNode{
+			"$type":      "PasswordAlterPrincipalOption",
+			"OptionKind": opt.OptionKind,
+			"MustChange": opt.MustChange,
+			"Unlock":     opt.Unlock,
+			"Hashed":     opt.Hashed,
+		}
+		if opt.Password != nil {
+			node["Password"] = scalarExpressionToJSON(opt.Password)
+		}
+		if opt.OldPassword != nil {
+			node["OldPassword"] = stringLiteralToJSON(opt.OldPassword)
+		}
+		return node
 	default:
 		return jsonNode{}
 	}
+}
+
+func alterLoginEnableDisableStatementToJSON(s *ast.AlterLoginEnableDisableStatement) jsonNode {
+	node := jsonNode{
+		"$type":    "AlterLoginEnableDisableStatement",
+		"IsEnable": s.IsEnable,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func alterLoginOptionsStatementToJSON(s *ast.AlterLoginOptionsStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterLoginOptionsStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = principalOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func dropLoginStatementToJSON(s *ast.DropLoginStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropLoginStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
 }
 
 func createIndexStatementToJSON(s *ast.CreateIndexStatement) jsonNode {

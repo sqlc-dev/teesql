@@ -130,6 +130,13 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropBrokerPriorityStatement()
 	case "RESOURCE":
 		return p.parseDropResourcePoolStatement()
+	case "LOGIN":
+		return p.parseDropLoginStatement()
+	}
+
+	// Handle LOGIN token explicitly
+	if p.curTok.Type == TokenLogin {
+		return p.parseDropLoginStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -649,6 +656,22 @@ func (p *Parser) parseDropSynonymStatement() (*ast.DropSynonymStatement, error) 
 			break
 		}
 		p.nextToken() // consume comma
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropLoginStatement() (*ast.DropLoginStatement, error) {
+	// Consume LOGIN
+	p.nextToken()
+
+	stmt := &ast.DropLoginStatement{
+		Name: p.parseIdentifier(),
 	}
 
 	// Skip optional semicolon
@@ -5898,39 +5921,217 @@ func (p *Parser) parseAlterSchemaStatement() (*ast.AlterSchemaStatement, error) 
 	return stmt, nil
 }
 
-func (p *Parser) parseAlterLoginStatement() (*ast.AlterLoginAddDropCredentialStatement, error) {
+func (p *Parser) parseAlterLoginStatement() (ast.Statement, error) {
 	// Consume LOGIN
 	p.nextToken()
 
-	stmt := &ast.AlterLoginAddDropCredentialStatement{}
-
 	// Parse login name
-	stmt.Name = p.parseIdentifier()
+	name := p.parseIdentifier()
 
-	// Check for ADD or DROP - if not present, skip to end
-	if p.curTok.Type == TokenAdd {
-		stmt.IsAdd = true
-		p.nextToken() // consume ADD
-	} else if p.curTok.Type == TokenDrop {
-		stmt.IsAdd = false
-		p.nextToken() // consume DROP
-	} else {
-		// Handle incomplete statement
-		p.skipToEndOfStatement()
+	// Check for ENABLE/DISABLE
+	upper := strings.ToUpper(p.curTok.Literal)
+	if upper == "ENABLE" {
+		p.nextToken()
+		return &ast.AlterLoginEnableDisableStatement{
+			Name:     name,
+			IsEnable: true,
+		}, nil
+	} else if upper == "DISABLE" {
+		p.nextToken()
+		return &ast.AlterLoginEnableDisableStatement{
+			Name:     name,
+			IsEnable: false,
+		}, nil
+	}
+
+	// Check for ADD or DROP CREDENTIAL
+	if p.curTok.Type == TokenAdd || p.curTok.Type == TokenDrop {
+		stmt := &ast.AlterLoginAddDropCredentialStatement{
+			Name:  name,
+			IsAdd: p.curTok.Type == TokenAdd,
+		}
+		p.nextToken() // consume ADD/DROP
+
+		// Expect CREDENTIAL
+		if p.curTok.Type == TokenCredential {
+			p.nextToken()
+			stmt.CredentialName = p.parseIdentifier()
+		}
+
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
 		return stmt, nil
 	}
 
-	// Expect CREDENTIAL
-	if p.curTok.Type != TokenCredential {
+	// Handle WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		// Check if we have valid options to parse
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper == "PASSWORD" || upper == "NO" || upper == "NAME" || upper == "DEFAULT_DATABASE" ||
+			upper == "DEFAULT_LANGUAGE" || upper == "CHECK_POLICY" || upper == "CHECK_EXPIRATION" || upper == "CREDENTIAL" {
+			return p.parseAlterLoginOptions(name)
+		}
+		// For incomplete statements like "alter login l1 with", fall back to old behavior
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return &ast.AlterLoginAddDropCredentialStatement{Name: name, IsAdd: false}, nil
 	}
-	p.nextToken()
 
-	// Parse credential name
-	stmt.CredentialName = p.parseIdentifier()
+	// Skip to end if we don't recognize the syntax
+	p.skipToEndOfStatement()
+	return &ast.AlterLoginAddDropCredentialStatement{Name: name, IsAdd: false}, nil
+}
 
-	// Skip optional semicolon
+func (p *Parser) parseAlterLoginOptions(name *ast.Identifier) (*ast.AlterLoginOptionsStatement, error) {
+	stmt := &ast.AlterLoginOptionsStatement{
+		Name: name,
+	}
+
+	for {
+		optName := strings.ToUpper(p.curTok.Literal)
+
+		if optName == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			opt := &ast.PasswordAlterPrincipalOption{
+				OptionKind: "Password",
+			}
+
+			// Parse password value
+			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+				val := p.curTok.Literal
+				if len(val) >= 2 && val[0] == '\'' && val[len(val)-1] == '\'' {
+					val = val[1 : len(val)-1]
+				}
+				opt.Password = &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         val,
+					IsNational:    p.curTok.Type == TokenNationalString,
+					IsLargeObject: false,
+				}
+				p.nextToken()
+			} else if p.curTok.Type == TokenBinary {
+				opt.Password = &ast.BinaryLiteral{
+					LiteralType:   "Binary",
+					IsLargeObject: false,
+					Value:         p.curTok.Literal,
+				}
+				p.nextToken()
+			}
+
+			// Parse optional flags
+			for {
+				upper := strings.ToUpper(p.curTok.Literal)
+				if upper == "HASHED" {
+					opt.Hashed = true
+					p.nextToken()
+				} else if upper == "MUST_CHANGE" {
+					opt.MustChange = true
+					p.nextToken()
+				} else if upper == "UNLOCK" {
+					opt.Unlock = true
+					p.nextToken()
+				} else if upper == "OLD_PASSWORD" {
+					p.nextToken() // consume OLD_PASSWORD
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+					}
+					if p.curTok.Type == TokenString {
+						opt.OldPassword = p.parseStringLiteralValue()
+						p.nextToken()
+					}
+				} else {
+					break
+				}
+			}
+
+			stmt.Options = append(stmt.Options, opt)
+		} else if optName == "NO" && strings.ToUpper(p.peekTok.Literal) == "CREDENTIAL" {
+			p.nextToken() // consume NO
+			p.nextToken() // consume CREDENTIAL
+			stmt.Options = append(stmt.Options, &ast.PrincipalOptionSimple{
+				OptionKind: "NoCredential",
+			})
+		} else if optName == "NAME" {
+			p.nextToken() // consume NAME
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			stmt.Options = append(stmt.Options, &ast.IdentifierPrincipalOption{
+				OptionKind: "Name",
+				Identifier: p.parseIdentifier(),
+			})
+		} else if optName == "DEFAULT_DATABASE" {
+			p.nextToken() // consume DEFAULT_DATABASE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			stmt.Options = append(stmt.Options, &ast.IdentifierPrincipalOption{
+				OptionKind: "DefaultDatabase",
+				Identifier: p.parseIdentifier(),
+			})
+		} else if optName == "DEFAULT_LANGUAGE" {
+			p.nextToken() // consume DEFAULT_LANGUAGE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			stmt.Options = append(stmt.Options, &ast.IdentifierPrincipalOption{
+				OptionKind: "DefaultLanguage",
+				Identifier: p.parseIdentifier(),
+			})
+		} else if optName == "CHECK_POLICY" {
+			p.nextToken() // consume CHECK_POLICY
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			optState := "On"
+			if strings.ToUpper(p.curTok.Literal) == "OFF" {
+				optState = "Off"
+			}
+			p.nextToken()
+			stmt.Options = append(stmt.Options, &ast.OnOffPrincipalOption{
+				OptionKind:  "CheckPolicy",
+				OptionState: optState,
+			})
+		} else if optName == "CHECK_EXPIRATION" {
+			p.nextToken() // consume CHECK_EXPIRATION
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			optState := "On"
+			if strings.ToUpper(p.curTok.Literal) == "OFF" {
+				optState = "Off"
+			}
+			p.nextToken()
+			stmt.Options = append(stmt.Options, &ast.OnOffPrincipalOption{
+				OptionKind:  "CheckExpiration",
+				OptionState: optState,
+			})
+		} else if optName == "CREDENTIAL" {
+			p.nextToken() // consume CREDENTIAL
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			stmt.Options = append(stmt.Options, &ast.IdentifierPrincipalOption{
+				OptionKind: "Credential",
+				Identifier: p.parseIdentifier(),
+			})
+		} else {
+			break
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}

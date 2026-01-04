@@ -34,6 +34,32 @@ type CreateLoginStatement struct {
 func (s *CreateLoginStatement) node()      {}
 func (s *CreateLoginStatement) statement() {}
 
+// AlterLoginEnableDisableStatement represents ALTER LOGIN name ENABLE/DISABLE
+type AlterLoginEnableDisableStatement struct {
+	Name     *Identifier `json:"Name,omitempty"`
+	IsEnable bool        `json:"IsEnable"`
+}
+
+func (s *AlterLoginEnableDisableStatement) node()      {}
+func (s *AlterLoginEnableDisableStatement) statement() {}
+
+// AlterLoginOptionsStatement represents ALTER LOGIN name WITH options
+type AlterLoginOptionsStatement struct {
+	Name    *Identifier       `json:"Name,omitempty"`
+	Options []PrincipalOption `json:"Options,omitempty"`
+}
+
+func (s *AlterLoginOptionsStatement) node()      {}
+func (s *AlterLoginOptionsStatement) statement() {}
+
+// DropLoginStatement represents DROP LOGIN name
+type DropLoginStatement struct {
+	Name *Identifier `json:"Name,omitempty"`
+}
+
+func (s *DropLoginStatement) node()      {}
+func (s *DropLoginStatement) statement() {}
+
 // CreateLoginSource is an interface for login sources
 type CreateLoginSource interface {
 	createLoginSource()
@@ -45,6 +71,39 @@ type ExternalCreateLoginSource struct {
 }
 
 func (s *ExternalCreateLoginSource) createLoginSource() {}
+
+// PasswordCreateLoginSource represents WITH PASSWORD = '...' source
+type PasswordCreateLoginSource struct {
+	Password   ScalarExpression  `json:"Password,omitempty"`
+	Hashed     bool              `json:"Hashed"`
+	MustChange bool              `json:"MustChange"`
+	Options    []PrincipalOption `json:"Options,omitempty"`
+}
+
+func (s *PasswordCreateLoginSource) createLoginSource() {}
+
+// WindowsCreateLoginSource represents FROM WINDOWS source
+type WindowsCreateLoginSource struct {
+	Options []PrincipalOption `json:"Options,omitempty"`
+}
+
+func (s *WindowsCreateLoginSource) createLoginSource() {}
+
+// CertificateCreateLoginSource represents FROM CERTIFICATE source
+type CertificateCreateLoginSource struct {
+	Certificate *Identifier `json:"Certificate,omitempty"`
+	Credential  *Identifier `json:"Credential,omitempty"`
+}
+
+func (s *CertificateCreateLoginSource) createLoginSource() {}
+
+// AsymmetricKeyCreateLoginSource represents FROM ASYMMETRIC KEY source
+type AsymmetricKeyCreateLoginSource struct {
+	Key        *Identifier `json:"Key,omitempty"`
+	Credential *Identifier `json:"Credential,omitempty"`
+}
+
+func (s *AsymmetricKeyCreateLoginSource) createLoginSource() {}
 
 // PrincipalOption is an interface for principal options (SID, TYPE, etc.)
 type PrincipalOption interface {
