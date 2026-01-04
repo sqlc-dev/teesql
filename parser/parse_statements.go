@@ -3649,21 +3649,9 @@ func (p *Parser) parseCreateDatabaseAuditSpecificationStatement() (*ast.CreateDa
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 		if upperLit == "ADD" || upperLit == "DROP" {
-			part := &ast.AuditSpecificationPart{
-				IsDrop: upperLit == "DROP",
-			}
-			p.nextToken() // consume ADD/DROP
-			if p.curTok.Type == TokenLParen {
-				p.nextToken() // consume (
-				// Parse audit action group reference
-				groupName := p.curTok.Literal
-				part.Details = &ast.AuditActionGroupReference{
-					Group: convertAuditGroupName(groupName),
-				}
-				p.nextToken() // consume group name
-				if p.curTok.Type == TokenRParen {
-					p.nextToken() // consume )
-				}
+			part, err := p.parseAuditSpecificationPart(upperLit == "DROP")
+			if err != nil {
+				return nil, err
 			}
 			stmt.Parts = append(stmt.Parts, part)
 			if p.curTok.Type == TokenComma {
@@ -3724,21 +3712,9 @@ func (p *Parser) parseAlterDatabaseAuditSpecificationStatement() (*ast.AlterData
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 		if upperLit == "ADD" || upperLit == "DROP" {
-			part := &ast.AuditSpecificationPart{
-				IsDrop: upperLit == "DROP",
-			}
-			p.nextToken() // consume ADD/DROP
-			if p.curTok.Type == TokenLParen {
-				p.nextToken() // consume (
-				// Parse audit action group reference
-				groupName := p.curTok.Literal
-				part.Details = &ast.AuditActionGroupReference{
-					Group: convertAuditGroupName(groupName),
-				}
-				p.nextToken() // consume group name
-				if p.curTok.Type == TokenRParen {
-					p.nextToken() // consume )
-				}
+			part, err := p.parseAuditSpecificationPart(upperLit == "DROP")
+			if err != nil {
+				return nil, err
 			}
 			stmt.Parts = append(stmt.Parts, part)
 			if p.curTok.Type == TokenComma {
@@ -3784,11 +3760,147 @@ func convertAuditGroupName(name string) string {
 		"DATABASE_LOGOUT_GROUP":                    "DatabaseLogoutGroup",
 		"USER_CHANGE_PASSWORD_GROUP":               "UserChangePasswordGroup",
 		"USER_DEFINED_AUDIT_GROUP":                 "UserDefinedAuditGroup",
+		"DATABASE_PERMISSION_CHANGE_GROUP":         "DatabasePermissionChange",
+		"SCHEMA_OBJECT_PERMISSION_CHANGE_GROUP":    "SchemaObjectPermissionChange",
+		"DATABASE_ROLE_MEMBER_CHANGE_GROUP":        "DatabaseRoleMemberChange",
+		"APPLICATION_ROLE_CHANGE_PASSWORD_GROUP":   "ApplicationRoleChangePassword",
+		"SCHEMA_OBJECT_ACCESS_GROUP":               "SchemaObjectAccess",
+		"BACKUP_RESTORE_GROUP":                     "BackupRestore",
+		"DBCC_GROUP":                               "Dbcc",
+		"AUDIT_CHANGE_GROUP":                       "AuditChange",
+		"DATABASE_CHANGE_GROUP":                    "DatabaseChange",
+		"DATABASE_OBJECT_CHANGE_GROUP":             "DatabaseObjectChange",
+		"DATABASE_PRINCIPAL_CHANGE_GROUP":          "DatabasePrincipalChange",
+		"SCHEMA_OBJECT_CHANGE_GROUP":               "SchemaObjectChange",
+		"DATABASE_PRINCIPAL_IMPERSONATION_GROUP":   "DatabasePrincipalImpersonation",
+		"DATABASE_OBJECT_OWNERSHIP_CHANGE_GROUP":   "DatabaseObjectOwnershipChange",
+		"DATABASE_OWNERSHIP_CHANGE_GROUP":          "DatabaseOwnershipChange",
+		"SCHEMA_OBJECT_OWNERSHIP_CHANGE_GROUP":     "SchemaObjectOwnershipChange",
+		"DATABASE_OBJECT_PERMISSION_CHANGE_GROUP":  "DatabaseObjectPermissionChange",
+		"DATABASE_OPERATION_GROUP":                 "DatabaseOperation",
+		"DATABASE_OBJECT_ACCESS_GROUP":             "DatabaseObjectAccess",
+		"BATCH_COMPLETED_GROUP":                    "BatchCompletedGroup",
+		"BATCH_STARTED_GROUP":                      "BatchStartedGroup",
 	}
 	if mapped, ok := groupMap[strings.ToUpper(name)]; ok {
 		return mapped
 	}
 	return capitalizeFirst(strings.ToLower(strings.ReplaceAll(name, "_", " ")))
+}
+
+// isAuditAction checks if the given word is a database audit action
+func isAuditAction(word string) bool {
+	actions := map[string]bool{
+		"SELECT": true, "INSERT": true, "UPDATE": true, "DELETE": true,
+		"EXECUTE": true, "RECEIVE": true, "REFERENCES": true,
+	}
+	return actions[word]
+}
+
+// convertAuditActionKind converts audit action to expected format
+func convertAuditActionKind(action string) string {
+	actionMap := map[string]string{
+		"SELECT":     "Select",
+		"INSERT":     "Insert",
+		"UPDATE":     "Update",
+		"DELETE":     "Delete",
+		"EXECUTE":    "Execute",
+		"RECEIVE":    "Receive",
+		"REFERENCES": "References",
+	}
+	if mapped, ok := actionMap[action]; ok {
+		return mapped
+	}
+	return capitalizeFirst(strings.ToLower(action))
+}
+
+// parseAuditSpecificationPart parses an ADD or DROP part of an audit specification
+func (p *Parser) parseAuditSpecificationPart(isDrop bool) (*ast.AuditSpecificationPart, error) {
+	part := &ast.AuditSpecificationPart{
+		IsDrop: isDrop,
+	}
+	p.nextToken() // consume ADD/DROP
+
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+
+		// Check if it's an action specification (SELECT, INSERT, etc.) or an audit group
+		firstWord := strings.ToUpper(p.curTok.Literal)
+		if isAuditAction(firstWord) {
+			// Parse action specification
+			spec := &ast.AuditActionSpecification{}
+
+			// Parse actions
+			for {
+				actionKind := convertAuditActionKind(strings.ToUpper(p.curTok.Literal))
+				spec.Actions = append(spec.Actions, &ast.DatabaseAuditAction{ActionKind: actionKind})
+				p.nextToken()
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+					// Check if next is ON (end of actions) or another action
+					if strings.ToUpper(p.curTok.Literal) == "ON" {
+						break
+					}
+				} else {
+					break
+				}
+			}
+
+			// Parse ON object
+			if strings.ToUpper(p.curTok.Literal) == "ON" {
+				p.nextToken() // consume ON
+				objIdent := p.parseIdentifier()
+				spec.TargetObject = &ast.SecurityTargetObject{
+					ObjectKind: "NotSpecified",
+					ObjectName: &ast.SecurityTargetObjectName{
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Identifiers: []*ast.Identifier{objIdent},
+							Count:       1,
+						},
+					},
+				}
+			}
+
+			// Parse BY principals
+			if strings.ToUpper(p.curTok.Literal) == "BY" {
+				p.nextToken() // consume BY
+				for {
+					principal := &ast.SecurityPrincipal{}
+					upper := strings.ToUpper(p.curTok.Literal)
+					if upper == "PUBLIC" {
+						principal.PrincipalType = "Public"
+						p.nextToken()
+					} else if upper == "NULL" {
+						principal.PrincipalType = "Null"
+						p.nextToken()
+					} else {
+						principal.PrincipalType = "Identifier"
+						principal.Identifier = p.parseIdentifier()
+					}
+					spec.Principals = append(spec.Principals, principal)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+			}
+			part.Details = spec
+		} else {
+			// Parse audit action group reference
+			groupName := p.curTok.Literal
+			part.Details = &ast.AuditActionGroupReference{
+				Group: convertAuditGroupName(groupName),
+			}
+			p.nextToken() // consume group name
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	return part, nil
 }
 
 func (p *Parser) parseAuditTarget() (*ast.AuditTarget, error) {

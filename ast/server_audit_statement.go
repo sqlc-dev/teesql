@@ -205,3 +205,30 @@ type AuditActionGroupReference struct {
 
 func (r *AuditActionGroupReference) node()                    {}
 func (r *AuditActionGroupReference) auditSpecificationDetail() {}
+
+// AuditActionSpecification represents an action specification in audit parts
+// Example: (select, INSERT, update ON t1 BY dbo)
+type AuditActionSpecification struct {
+	Actions      []*DatabaseAuditAction
+	Principals   []*SecurityPrincipal
+	TargetObject *SecurityTargetObject
+}
+
+func (a *AuditActionSpecification) node()                    {}
+func (a *AuditActionSpecification) auditSpecificationDetail() {}
+
+// DatabaseAuditAction represents a database audit action
+type DatabaseAuditAction struct {
+	ActionKind string // Select, Insert, Update, Delete, Execute, Receive, References
+}
+
+func (a *DatabaseAuditAction) node() {}
+
+// DropDatabaseAuditSpecificationStatement represents DROP DATABASE AUDIT SPECIFICATION
+type DropDatabaseAuditSpecificationStatement struct {
+	Name       *Identifier
+	IsIfExists bool
+}
+
+func (s *DropDatabaseAuditSpecificationStatement) statement() {}
+func (s *DropDatabaseAuditSpecificationStatement) node()      {}

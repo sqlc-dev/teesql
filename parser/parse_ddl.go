@@ -906,6 +906,25 @@ func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
 
+	// Check for DATABASE AUDIT SPECIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+		p.nextToken() // consume AUDIT
+		if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
+			p.nextToken() // consume SPECIFICATION
+		}
+		stmt := &ast.DropDatabaseAuditSpecificationStatement{}
+		// Check for IF EXISTS
+		if strings.ToUpper(p.curTok.Literal) == "IF" {
+			p.nextToken()
+			if strings.ToUpper(p.curTok.Literal) == "EXISTS" {
+				p.nextToken()
+				stmt.IsIfExists = true
+			}
+		}
+		stmt.Name = p.parseIdentifier()
+		return stmt, nil
+	}
+
 	// Check for DATABASE ENCRYPTION KEY
 	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
 		p.nextToken() // consume ENCRYPTION

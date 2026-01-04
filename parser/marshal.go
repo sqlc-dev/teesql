@@ -200,6 +200,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropServerRoleStatementToJSON(s)
 	case *ast.DropServerAuditStatement:
 		return dropServerAuditStatementToJSON(s)
+	case *ast.DropDatabaseAuditSpecificationStatement:
+		return dropDatabaseAuditSpecificationStatementToJSON(s)
 	case *ast.DropAvailabilityGroupStatement:
 		return dropAvailabilityGroupStatementToJSON(s)
 	case *ast.DropFederationStatement:
@@ -8854,6 +8856,38 @@ func auditSpecificationDetailToJSON(d ast.AuditSpecificationDetail) jsonNode {
 			"$type": "AuditActionGroupReference",
 			"Group": detail.Group,
 		}
+	case *ast.AuditActionSpecification:
+		node := jsonNode{
+			"$type": "AuditActionSpecification",
+		}
+		if len(detail.Actions) > 0 {
+			actions := make([]jsonNode, len(detail.Actions))
+			for i, a := range detail.Actions {
+				actions[i] = jsonNode{
+					"$type":      "DatabaseAuditAction",
+					"ActionKind": a.ActionKind,
+				}
+			}
+			node["Actions"] = actions
+		}
+		if len(detail.Principals) > 0 {
+			principals := make([]jsonNode, len(detail.Principals))
+			for i, p := range detail.Principals {
+				principalNode := jsonNode{
+					"$type":         "SecurityPrincipal",
+					"PrincipalType": p.PrincipalType,
+				}
+				if p.Identifier != nil {
+					principalNode["Identifier"] = identifierToJSON(p.Identifier)
+				}
+				principals[i] = principalNode
+			}
+			node["Principals"] = principals
+		}
+		if detail.TargetObject != nil {
+			node["TargetObject"] = securityTargetObjectToJSON(detail.TargetObject)
+		}
+		return node
 	default:
 		return jsonNode{}
 	}
@@ -8862,6 +8896,17 @@ func auditSpecificationDetailToJSON(d ast.AuditSpecificationDetail) jsonNode {
 func dropServerAuditStatementToJSON(s *ast.DropServerAuditStatement) jsonNode {
 	node := jsonNode{
 		"$type":      "DropServerAuditStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropDatabaseAuditSpecificationStatementToJSON(s *ast.DropDatabaseAuditSpecificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropDatabaseAuditSpecificationStatement",
 		"IsIfExists": s.IsIfExists,
 	}
 	if s.Name != nil {
