@@ -15698,7 +15698,8 @@ func alterLoginOptionsStatementToJSON(s *ast.AlterLoginOptionsStatement) jsonNod
 
 func dropLoginStatementToJSON(s *ast.DropLoginStatement) jsonNode {
 	node := jsonNode{
-		"$type": "DropLoginStatement",
+		"$type":      "DropLoginStatement",
+		"IsIfExists": s.IsIfExists,
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)

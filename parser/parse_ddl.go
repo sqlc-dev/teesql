@@ -6005,13 +6005,19 @@ func (p *Parser) parseAlterLoginOptions(name *ast.Identifier) (*ast.AlterLoginOp
 			// Parse password value
 			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
 				val := p.curTok.Literal
+				isNational := p.curTok.Type == TokenNationalString
+				// Strip N prefix for national strings
+				if isNational && len(val) > 0 && (val[0] == 'N' || val[0] == 'n') {
+					val = val[1:]
+				}
+				// Strip surrounding quotes
 				if len(val) >= 2 && val[0] == '\'' && val[len(val)-1] == '\'' {
 					val = val[1 : len(val)-1]
 				}
 				opt.Password = &ast.StringLiteral{
 					LiteralType:   "String",
 					Value:         val,
-					IsNational:    p.curTok.Type == TokenNationalString,
+					IsNational:    isNational,
 					IsLargeObject: false,
 				}
 				p.nextToken()

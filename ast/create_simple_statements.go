@@ -54,7 +54,8 @@ func (s *AlterLoginOptionsStatement) statement() {}
 
 // DropLoginStatement represents DROP LOGIN name
 type DropLoginStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name       *Identifier `json:"Name,omitempty"`
+	IsIfExists bool        `json:"IsIfExists"`
 }
 
 func (s *DropLoginStatement) node()      {}
