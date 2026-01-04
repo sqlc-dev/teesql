@@ -9131,6 +9131,7 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 	}
 
 	stmt := &ast.RestoreStatement{}
+	hasDatabaseName := true
 
 	// Parse restore kind (DATABASE, LOG, etc.)
 	switch strings.ToUpper(p.curTok.Literal) {
@@ -9140,74 +9141,95 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 	case "LOG":
 		stmt.Kind = "TransactionLog"
 		p.nextToken()
+	case "FILELISTONLY":
+		stmt.Kind = "FileListOnly"
+		p.nextToken()
+		hasDatabaseName = false
+	case "VERIFYONLY":
+		stmt.Kind = "VerifyOnly"
+		p.nextToken()
+		hasDatabaseName = false
+	case "LABELONLY":
+		stmt.Kind = "LabelOnly"
+		p.nextToken()
+		hasDatabaseName = false
+	case "REWINDONLY":
+		stmt.Kind = "RewindOnly"
+		p.nextToken()
+		hasDatabaseName = false
+	case "HEADERONLY":
+		stmt.Kind = "HeaderOnly"
+		p.nextToken()
+		hasDatabaseName = false
 	default:
 		stmt.Kind = "Database"
 	}
 
-	// Parse database name
-	dbName := &ast.IdentifierOrValueExpression{}
-	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-		// Variable reference
-		varRef := &ast.VariableReference{Name: p.curTok.Literal}
-		p.nextToken()
-		dbName.Value = varRef.Name
-		dbName.ValueExpression = varRef
-	} else {
-		ident := p.parseIdentifier()
-		dbName.Value = ident.Value
-		dbName.Identifier = ident
-	}
-	stmt.DatabaseName = dbName
-
-	// Parse optional FILE = or FILEGROUP = before FROM
-	for strings.ToUpper(p.curTok.Literal) == "FILE" || strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
-		itemKind := "Files"
-		if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
-			itemKind = "FileGroups"
-		}
-		p.nextToken() // consume FILE/FILEGROUP
-		if p.curTok.Type != TokenEquals {
-			return nil, fmt.Errorf("expected = after FILE/FILEGROUP, got %s", p.curTok.Literal)
-		}
-		p.nextToken() // consume =
-
-		fileInfo := &ast.BackupRestoreFileInfo{ItemKind: itemKind}
-		// Parse the file name
-		var item ast.ScalarExpression
-		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
-			// Strip surrounding quotes
-			val := p.curTok.Literal
-			if len(val) >= 2 && ((val[0] == '\'' && val[len(val)-1] == '\'') || (val[0] == '"' && val[len(val)-1] == '"')) {
-				val = val[1 : len(val)-1]
-			}
-			item = &ast.StringLiteral{
-				LiteralType:   "String",
-				Value:         val,
-				IsNational:    p.curTok.Type == TokenNationalString,
-				IsLargeObject: false,
-			}
+	// Parse database name (only for DATABASE and LOG kinds)
+	if hasDatabaseName {
+		dbName := &ast.IdentifierOrValueExpression{}
+		if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+			// Variable reference
+			varRef := &ast.VariableReference{Name: p.curTok.Literal}
 			p.nextToken()
-		} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-			item = &ast.VariableReference{Name: p.curTok.Literal}
-			p.nextToken()
+			dbName.Value = varRef.Name
+			dbName.ValueExpression = varRef
 		} else {
 			ident := p.parseIdentifier()
-			item = &ast.ColumnReferenceExpression{
-				ColumnType: "Regular",
-				MultiPartIdentifier: &ast.MultiPartIdentifier{
-					Identifiers: []*ast.Identifier{ident},
-					Count:       1,
-				},
+			dbName.Value = ident.Value
+			dbName.Identifier = ident
+		}
+		stmt.DatabaseName = dbName
+
+		// Parse optional FILE = or FILEGROUP = before FROM
+		for strings.ToUpper(p.curTok.Literal) == "FILE" || strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+			itemKind := "Files"
+			if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+				itemKind = "FileGroups"
+			}
+			p.nextToken() // consume FILE/FILEGROUP
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after FILE/FILEGROUP, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume =
+
+			fileInfo := &ast.BackupRestoreFileInfo{ItemKind: itemKind}
+			// Parse the file name
+			var item ast.ScalarExpression
+			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+				// Strip surrounding quotes
+				val := p.curTok.Literal
+				if len(val) >= 2 && ((val[0] == '\'' && val[len(val)-1] == '\'') || (val[0] == '"' && val[len(val)-1] == '"')) {
+					val = val[1 : len(val)-1]
+				}
+				item = &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         val,
+					IsNational:    p.curTok.Type == TokenNationalString,
+					IsLargeObject: false,
+				}
+				p.nextToken()
+			} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+				item = &ast.VariableReference{Name: p.curTok.Literal}
+				p.nextToken()
+			} else {
+				ident := p.parseIdentifier()
+				item = &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{ident},
+						Count:       1,
+					},
+				}
+			}
+			fileInfo.Items = append(fileInfo.Items, item)
+			stmt.Files = append(stmt.Files, fileInfo)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
 			}
 		}
-		fileInfo.Items = append(fileInfo.Items, item)
-		stmt.Files = append(stmt.Files, fileInfo)
-
-		if p.curTok.Type == TokenComma {
-			p.nextToken()
-		}
 	}
-
 	// Check for optional FROM clause
 	if strings.ToUpper(p.curTok.Literal) != "FROM" {
 		// No FROM clause - check for WITH clause
@@ -9228,6 +9250,13 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 
 		// Check for device type
 		switch strings.ToUpper(p.curTok.Literal) {
+		case "TAPE":
+			device.DeviceType = "Tape"
+			p.nextToken()
+			if p.curTok.Type != TokenEquals {
+				return nil, fmt.Errorf("expected = after TAPE, got %s", p.curTok.Literal)
+			}
+			p.nextToken()
 		case "DISK":
 			device.DeviceType = "Disk"
 			p.nextToken()
@@ -9245,8 +9274,8 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 		}
 
 		// Parse device name
-		if device.DeviceType == "Disk" || device.DeviceType == "URL" {
-			// For DISK and URL, use PhysicalDevice with the string literal directly
+		if device.DeviceType == "Disk" || device.DeviceType == "URL" || device.DeviceType == "Tape" {
+			// For DISK, URL, and TAPE, use PhysicalDevice with the string literal directly
 			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
 				// Strip the surrounding quotes from the literal
 				val := p.curTok.Literal
@@ -9358,6 +9387,28 @@ parseWithClause:
 				}
 				stmt.Options = append(stmt.Options, fsOpt)
 
+			case "MOVE":
+				// MOVE 'logical_file_name' TO 'os_file_name'
+				opt := &ast.MoveRestoreOption{OptionKind: "Move"}
+				// Parse logical file name
+				expr, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				opt.LogicalFileName = expr
+				// Expect TO
+				if strings.ToUpper(p.curTok.Literal) != "TO" {
+					return nil, fmt.Errorf("expected TO after logical file name, got %s", p.curTok.Literal)
+				}
+				p.nextToken()
+				// Parse OS file name
+				osExpr, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				opt.OSFileName = osExpr
+				stmt.Options = append(stmt.Options, opt)
+
 			case "STOPATMARK", "STOPBEFOREMARK":
 				opt := &ast.StopRestoreOption{
 					OptionKind: "StopAt",
@@ -9399,21 +9450,73 @@ parseWithClause:
 				}
 				stmt.Options = append(stmt.Options, opt)
 
-			case "KEEP_TEMPORAL_RETENTION", "NOREWIND", "NOUNLOAD", "STATS",
+			case "FILE", "MEDIANAME", "MEDIAPASSWORD", "PASSWORD", "STOPAT":
+				// Options that take a scalar expression value
+				optKind := optionName
+				switch optionName {
+				case "MEDIANAME":
+					optKind = "MediaName"
+				case "MEDIAPASSWORD":
+					optKind = "MediaPassword"
+				case "PASSWORD":
+					optKind = "Password"
+				case "STOPAT":
+					optKind = "StopAt"
+				case "FILE":
+					optKind = "File"
+				}
+				opt := &ast.ScalarExpressionRestoreOption{OptionKind: optKind}
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					opt.Value = expr
+				}
+				stmt.Options = append(stmt.Options, opt)
+
+			case "STATS":
+				// STATS can optionally have a value: STATS or STATS = 10
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+					expr, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					stmt.Options = append(stmt.Options, &ast.ScalarExpressionRestoreOption{
+						OptionKind: "Stats",
+						Value:      expr,
+					})
+				} else {
+					stmt.Options = append(stmt.Options, &ast.SimpleRestoreOption{OptionKind: "Stats"})
+				}
+
+			case "ENABLE_BROKER", "ERROR_BROKER_CONVERSATIONS", "NEW_BROKER",
+				"KEEP_REPLICATION", "RESTRICTED_USER",
+				"KEEP_TEMPORAL_RETENTION", "NOREWIND", "NOUNLOAD",
 				"RECOVERY", "NORECOVERY", "REPLACE", "RESTART", "REWIND",
 				"UNLOAD", "CHECKSUM", "NO_CHECKSUM", "STOP_ON_ERROR",
 				"CONTINUE_AFTER_ERROR":
 				// Map option names to proper casing
 				optKind := optionName
 				switch optionName {
+				case "ENABLE_BROKER":
+					optKind = "EnableBroker"
+				case "ERROR_BROKER_CONVERSATIONS":
+					optKind = "ErrorBrokerConversations"
+				case "NEW_BROKER":
+					optKind = "NewBroker"
+				case "KEEP_REPLICATION":
+					optKind = "KeepReplication"
+				case "RESTRICTED_USER":
+					optKind = "RestrictedUser"
 				case "KEEP_TEMPORAL_RETENTION":
 					optKind = "KeepTemporalRetention"
 				case "NOREWIND":
 					optKind = "NoRewind"
 				case "NOUNLOAD":
 					optKind = "NoUnload"
-				case "STATS":
-					optKind = "Stats"
 				case "RECOVERY":
 					optKind = "Recovery"
 				case "NORECOVERY":
@@ -12115,10 +12218,10 @@ func restoreOptionToJSON(o ast.RestoreOption) jsonNode {
 			"OptionKind": opt.OptionKind,
 		}
 		if opt.LogicalFileName != nil {
-			node["LogicalFileName"] = identifierOrValueExpressionToJSON(opt.LogicalFileName)
+			node["LogicalFileName"] = scalarExpressionToJSON(opt.LogicalFileName)
 		}
 		if opt.OSFileName != nil {
-			node["OSFileName"] = identifierOrValueExpressionToJSON(opt.OSFileName)
+			node["OSFileName"] = scalarExpressionToJSON(opt.OSFileName)
 		}
 		return node
 	default:

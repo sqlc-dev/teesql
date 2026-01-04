@@ -49,9 +49,9 @@ func (o *GeneralSetCommandRestoreOption) restoreOptionNode() {}
 
 // MoveRestoreOption represents a MOVE restore option
 type MoveRestoreOption struct {
-	OptionKind     string
-	LogicalFileName *IdentifierOrValueExpression
-	OSFileName      *IdentifierOrValueExpression
+	OptionKind      string
+	LogicalFileName ScalarExpression
+	OSFileName      ScalarExpression
 }
 
 func (o *MoveRestoreOption) restoreOptionNode() {}
