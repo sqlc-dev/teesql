@@ -4509,6 +4509,18 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							DataCompressionOption: opt,
 							OptionKind:            "DataCompression",
 						})
+					} else if optionName == "XML_COMPRESSION" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						opt, err := p.parseXmlCompressionOption()
+						if err != nil {
+							break
+						}
+						stmt.Options = append(stmt.Options, &ast.TableXmlCompressionOption{
+							XmlCompressionOption: opt,
+							OptionKind:           "XmlCompression",
+						})
 					} else if optionName == "MEMORY_OPTIMIZED" {
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
@@ -5329,6 +5341,70 @@ func (p *Parser) parseDataCompressionOption() (*ast.DataCompressionOption, error
 		opt.CompressionLevel = "ColumnStoreArchive"
 	default:
 		opt.CompressionLevel = levelStr
+	}
+	p.nextToken()
+
+	// Parse optional ON PARTITIONS clause
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+		if strings.ToUpper(p.curTok.Literal) == "PARTITIONS" {
+			p.nextToken() // consume PARTITIONS
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Parse partition ranges
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					pr := &ast.CompressionPartitionRange{}
+
+					// Parse From
+					if p.curTok.Type == TokenNumber {
+						pr.From = &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						}
+						p.nextToken()
+					}
+
+					// Check for TO
+					if strings.ToUpper(p.curTok.Literal) == "TO" {
+						p.nextToken() // consume TO
+						if p.curTok.Type == TokenNumber {
+							pr.To = &ast.IntegerLiteral{
+								LiteralType: "Integer",
+								Value:       p.curTok.Literal,
+							}
+							p.nextToken()
+						}
+					}
+
+					opt.PartitionRanges = append(opt.PartitionRanges, pr)
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+		}
+	}
+
+	return opt, nil
+}
+
+func (p *Parser) parseXmlCompressionOption() (*ast.XmlCompressionOption, error) {
+	opt := &ast.XmlCompressionOption{
+		OptionKind: "XmlCompression",
+	}
+
+	// Parse ON or OFF
+	levelStr := strings.ToUpper(p.curTok.Literal)
+	if levelStr == "ON" {
+		opt.IsCompressed = "On"
+	} else {
+		opt.IsCompressed = "Off"
 	}
 	p.nextToken()
 
@@ -7338,6 +7414,15 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 			node["DataCompressionOption"] = dataCompressionOptionToJSON(o.DataCompressionOption)
 		}
 		return node
+	case *ast.TableXmlCompressionOption:
+		node := jsonNode{
+			"$type":      "TableXmlCompressionOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.XmlCompressionOption != nil {
+			node["XmlCompressionOption"] = xmlCompressionOptionToJSON(o.XmlCompressionOption)
+		}
+		return node
 	case *ast.SystemVersioningTableOption:
 		return systemVersioningTableOptionToJSON(o)
 	case *ast.MemoryOptimizedTableOption:
@@ -7428,6 +7513,22 @@ func dataCompressionOptionToJSON(opt *ast.DataCompressionOption) jsonNode {
 		"$type":            "DataCompressionOption",
 		"CompressionLevel": opt.CompressionLevel,
 		"OptionKind":       opt.OptionKind,
+	}
+	if len(opt.PartitionRanges) > 0 {
+		ranges := make([]jsonNode, len(opt.PartitionRanges))
+		for i, pr := range opt.PartitionRanges {
+			ranges[i] = compressionPartitionRangeToJSON(pr)
+		}
+		node["PartitionRanges"] = ranges
+	}
+	return node
+}
+
+func xmlCompressionOptionToJSON(opt *ast.XmlCompressionOption) jsonNode {
+	node := jsonNode{
+		"$type":        "XmlCompressionOption",
+		"IsCompressed": opt.IsCompressed,
+		"OptionKind":   opt.OptionKind,
 	}
 	if len(opt.PartitionRanges) > 0 {
 		ranges := make([]jsonNode, len(opt.PartitionRanges))
