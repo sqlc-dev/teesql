@@ -236,6 +236,73 @@ func (p *Parser) parseInsertStatement() (ast.Statement, error) {
 	return stmt, nil
 }
 
+// parseInsertSpecification parses an INSERT specification (used in DataModificationTableReference)
+func (p *Parser) parseInsertSpecification() (*ast.InsertSpecification, error) {
+	// Consume INSERT
+	p.nextToken()
+
+	spec := &ast.InsertSpecification{
+		InsertOption: "None",
+	}
+
+	// Check for TOP clause
+	if p.curTok.Type == TokenTop {
+		top, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		spec.TopRowFilter = top
+	}
+
+	// Check for INTO or OVER
+	if p.curTok.Type == TokenInto {
+		spec.InsertOption = "Into"
+		p.nextToken()
+	} else if p.curTok.Type == TokenOver {
+		spec.InsertOption = "Over"
+		p.nextToken()
+	}
+
+	// Parse target
+	target, err := p.parseInsertTarget()
+	if err != nil {
+		return nil, err
+	}
+	spec.Target = target
+
+	// Parse optional column list
+	if p.curTok.Type == TokenLParen {
+		cols, err := p.parseColumnList()
+		if err != nil {
+			return nil, err
+		}
+		spec.Columns = cols
+	}
+
+	// Parse OUTPUT clauses (can have OUTPUT INTO followed by OUTPUT)
+	for p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		outputClause, outputIntoClause, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		if outputIntoClause != nil {
+			spec.OutputIntoClause = outputIntoClause
+		}
+		if outputClause != nil {
+			spec.OutputClause = outputClause
+		}
+	}
+
+	// Parse insert source
+	source, err := p.parseInsertSource()
+	if err != nil {
+		return nil, err
+	}
+	spec.InsertSource = source
+
+	return spec, nil
+}
+
 func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 	// Check for variable
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
@@ -1570,6 +1637,77 @@ func (p *Parser) parseUpdateStatement() (*ast.UpdateStatement, error) {
 	return stmt, nil
 }
 
+// parseUpdateSpecification parses an UPDATE specification (used in DataModificationTableReference)
+func (p *Parser) parseUpdateSpecification() (*ast.UpdateSpecification, error) {
+	// Consume UPDATE
+	p.nextToken()
+
+	spec := &ast.UpdateSpecification{}
+
+	// Check for TOP clause
+	if p.curTok.Type == TokenTop {
+		top, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		spec.TopRowFilter = top
+	}
+
+	// Parse target
+	target, err := p.parseDMLTarget()
+	if err != nil {
+		return nil, err
+	}
+	spec.Target = target
+
+	// Expect SET
+	if p.curTok.Type != TokenSet {
+		return nil, fmt.Errorf("expected SET, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse SET clauses
+	setClauses, err := p.parseSetClauses()
+	if err != nil {
+		return nil, err
+	}
+	spec.SetClauses = setClauses
+
+	// Parse OUTPUT clauses (can have OUTPUT INTO followed by OUTPUT)
+	for p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		outputClause, outputIntoClause, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		if outputIntoClause != nil {
+			spec.OutputIntoClause = outputIntoClause
+		}
+		if outputClause != nil {
+			spec.OutputClause = outputClause
+		}
+	}
+
+	// Parse optional FROM clause
+	if p.curTok.Type == TokenFrom {
+		fromClause, err := p.parseFromClause()
+		if err != nil {
+			return nil, err
+		}
+		spec.FromClause = fromClause
+	}
+
+	// Parse optional WHERE clause
+	if p.curTok.Type == TokenWhere {
+		whereClause, err := p.parseWhereClause()
+		if err != nil {
+			return nil, err
+		}
+		spec.WhereClause = whereClause
+	}
+
+	return spec, nil
+}
+
 func (p *Parser) parseSetClauses() ([]ast.SetClause, error) {
 	var clauses []ast.SetClause
 
@@ -1898,6 +2036,69 @@ func (p *Parser) parseDeleteStatement() (*ast.DeleteStatement, error) {
 	}
 
 	return stmt, nil
+}
+
+// parseDeleteSpecification parses a DELETE specification (used in DataModificationTableReference)
+func (p *Parser) parseDeleteSpecification() (*ast.DeleteSpecification, error) {
+	// Consume DELETE
+	p.nextToken()
+
+	spec := &ast.DeleteSpecification{}
+
+	// Parse optional TOP clause
+	if p.curTok.Type == TokenTop {
+		topRowFilter, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		spec.TopRowFilter = topRowFilter
+	}
+
+	// Skip optional FROM
+	if p.curTok.Type == TokenFrom {
+		p.nextToken()
+	}
+
+	// Parse target
+	target, err := p.parseDMLTarget()
+	if err != nil {
+		return nil, err
+	}
+	spec.Target = target
+
+	// Parse OUTPUT clauses (can have OUTPUT INTO followed by OUTPUT)
+	for p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		outputClause, outputIntoClause, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		if outputIntoClause != nil {
+			spec.OutputIntoClause = outputIntoClause
+		}
+		if outputClause != nil {
+			spec.OutputClause = outputClause
+		}
+	}
+
+	// Parse optional FROM clause
+	if p.curTok.Type == TokenFrom {
+		fromClause, err := p.parseFromClause()
+		if err != nil {
+			return nil, err
+		}
+		spec.FromClause = fromClause
+	}
+
+	// Parse optional WHERE clause
+	if p.curTok.Type == TokenWhere {
+		whereClause, err := p.parseDeleteWhereClause()
+		if err != nil {
+			return nil, err
+		}
+		spec.WhereClause = whereClause
+	}
+
+	return spec, nil
 }
 
 func (p *Parser) parseDeleteWhereClause() (*ast.WhereClause, error) {

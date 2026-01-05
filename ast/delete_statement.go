@@ -19,3 +19,6 @@ type DeleteSpecification struct {
 	OutputClause     *OutputClause     `json:"OutputClause,omitempty"`
 	OutputIntoClause *OutputIntoClause `json:"OutputIntoClause,omitempty"`
 }
+
+func (d *DeleteSpecification) node()                          {}
+func (d *DeleteSpecification) dataModificationSpecification() {}

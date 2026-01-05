@@ -21,6 +21,9 @@ type InsertSpecification struct {
 	OutputIntoClause *OutputIntoClause            `json:"OutputIntoClause,omitempty"`
 }
 
+func (i *InsertSpecification) node()                          {}
+func (i *InsertSpecification) dataModificationSpecification() {}
+
 // OutputClause represents an OUTPUT clause.
 type OutputClause struct {
 	SelectColumns []SelectElement `json:"SelectColumns,omitempty"`

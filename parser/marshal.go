@@ -2481,6 +2481,25 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		node["ForPath"] = r.ForPath
 		return node
+	case *ast.DataModificationTableReference:
+		node := jsonNode{
+			"$type": "DataModificationTableReference",
+		}
+		if r.DataModificationSpecification != nil {
+			node["DataModificationSpecification"] = dataModificationSpecificationToJSON(r.DataModificationSpecification)
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, c := range r.Columns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["Columns"] = cols
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
 	case *ast.ChangeTableChangesTableReference:
 		node := jsonNode{
 			"$type": "ChangeTableChangesTableReference",
@@ -2671,6 +2690,66 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.Join != nil {
 			node["Join"] = tableReferenceToJSON(r.Join)
 		}
+		return node
+	case *ast.PivotedTableReference:
+		node := jsonNode{
+			"$type": "PivotedTableReference",
+		}
+		if r.TableReference != nil {
+			node["TableReference"] = tableReferenceToJSON(r.TableReference)
+		}
+		if len(r.InColumns) > 0 {
+			cols := make([]jsonNode, len(r.InColumns))
+			for i, col := range r.InColumns {
+				cols[i] = identifierToJSON(col)
+			}
+			node["InColumns"] = cols
+		}
+		if r.PivotColumn != nil {
+			node["PivotColumn"] = columnReferenceExpressionToJSON(r.PivotColumn)
+		}
+		if len(r.ValueColumns) > 0 {
+			cols := make([]jsonNode, len(r.ValueColumns))
+			for i, col := range r.ValueColumns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["ValueColumns"] = cols
+		}
+		if r.AggregateFunctionIdentifier != nil {
+			node["AggregateFunctionIdentifier"] = multiPartIdentifierToJSON(r.AggregateFunctionIdentifier)
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.UnpivotedTableReference:
+		node := jsonNode{
+			"$type": "UnpivotedTableReference",
+		}
+		if r.TableReference != nil {
+			node["TableReference"] = tableReferenceToJSON(r.TableReference)
+		}
+		if len(r.InColumns) > 0 {
+			cols := make([]jsonNode, len(r.InColumns))
+			for i, col := range r.InColumns {
+				cols[i] = columnReferenceExpressionToJSON(col)
+			}
+			node["InColumns"] = cols
+		}
+		if r.PivotColumn != nil {
+			node["PivotColumn"] = identifierToJSON(r.PivotColumn)
+		}
+		if r.PivotValue != nil {
+			node["PivotValue"] = identifierToJSON(r.PivotValue)
+		}
+		if r.NullHandling != "" && r.NullHandling != "None" {
+			node["NullHandling"] = r.NullHandling
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
 		return node
 	case *ast.QueryDerivedTable:
 		node := jsonNode{
@@ -3307,6 +3386,21 @@ func insertStatementToJSON(s *ast.InsertStatement) jsonNode {
 		node["OptimizerHints"] = hints
 	}
 	return node
+}
+
+func dataModificationSpecificationToJSON(spec ast.DataModificationSpecification) jsonNode {
+	switch s := spec.(type) {
+	case *ast.InsertSpecification:
+		return insertSpecificationToJSON(s)
+	case *ast.UpdateSpecification:
+		return updateSpecificationToJSON(s)
+	case *ast.DeleteSpecification:
+		return deleteSpecificationToJSON(s)
+	case *ast.MergeSpecification:
+		return mergeSpecificationToJSON(s)
+	default:
+		return jsonNode{"$type": "UnknownDataModificationSpecification"}
+	}
 }
 
 func insertSpecificationToJSON(spec *ast.InsertSpecification) jsonNode {
@@ -5189,6 +5283,83 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 	}
 
 	return stmt, nil
+}
+
+// parseMergeSpecification parses a MERGE specification (used in DataModificationTableReference)
+func (p *Parser) parseMergeSpecification() (*ast.MergeSpecification, error) {
+	// Consume MERGE
+	p.nextToken()
+
+	spec := &ast.MergeSpecification{}
+
+	// Optional INTO keyword
+	if strings.ToUpper(p.curTok.Literal) == "INTO" {
+		p.nextToken()
+	}
+
+	// Parse target table
+	target, err := p.parseSingleTableReference()
+	if err != nil {
+		return nil, err
+	}
+	// If target has an alias, move it to TableAlias (ScriptDOM convention)
+	if ntr, ok := target.(*ast.NamedTableReference); ok && ntr.Alias != nil {
+		spec.TableAlias = ntr.Alias
+		ntr.Alias = nil
+	}
+	spec.Target = target
+
+	// Expect USING
+	if strings.ToUpper(p.curTok.Literal) == "USING" {
+		p.nextToken()
+	}
+
+	// Parse source table reference (may be parenthesized join or subquery)
+	sourceRef, err := p.parseMergeSourceTableReference()
+	if err != nil {
+		return nil, err
+	}
+	spec.TableReference = sourceRef
+
+	// Expect ON
+	if p.curTok.Type == TokenOn {
+		p.nextToken()
+	}
+
+	// Parse ON condition - check for MATCH predicate
+	if strings.ToUpper(p.curTok.Literal) == "MATCH" {
+		matchPred, err := p.parseGraphMatchPredicate()
+		if err != nil {
+			return nil, err
+		}
+		spec.SearchCondition = matchPred
+	} else {
+		cond, err := p.parseBooleanExpression()
+		if err != nil {
+			return nil, err
+		}
+		spec.SearchCondition = cond
+	}
+
+	// Parse WHEN clauses
+	for strings.ToUpper(p.curTok.Literal) == "WHEN" {
+		clause, err := p.parseMergeActionClause()
+		if err != nil {
+			return nil, err
+		}
+		spec.ActionClauses = append(spec.ActionClauses, clause)
+	}
+
+	// Parse optional OUTPUT clause
+	if strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		output, _, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		spec.OutputClause = output
+	}
+
+	return spec, nil
 }
 
 // parseMergeSourceTableReference parses the source table reference in a MERGE statement

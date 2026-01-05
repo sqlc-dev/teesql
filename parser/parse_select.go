@@ -2164,6 +2164,21 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 	}
 	var left ast.TableReference = baseRef
 
+	// Check for PIVOT or UNPIVOT
+	if strings.ToUpper(p.curTok.Literal) == "PIVOT" {
+		pivoted, err := p.parsePivotedTableReference(left)
+		if err != nil {
+			return nil, err
+		}
+		left = pivoted
+	} else if strings.ToUpper(p.curTok.Literal) == "UNPIVOT" {
+		unpivoted, err := p.parseUnpivotedTableReference(left)
+		if err != nil {
+			return nil, err
+		}
+		left = unpivoted
+	}
+
 	// Check for JOINs
 	for {
 		// Check for CROSS JOIN or CROSS APPLY
@@ -2401,12 +2416,27 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 
 // parseDerivedTableReference parses a derived table (parenthesized query) like (SELECT ...) AS alias
 // or an inline derived table (VALUES clause) like (VALUES (...), (...)) AS alias(cols)
+// or a data modification table reference (DML with OUTPUT) like (INSERT ... OUTPUT ...) AS alias
 func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 	p.nextToken() // consume (
 
 	// Check for VALUES clause (inline derived table)
 	if strings.ToUpper(p.curTok.Literal) == "VALUES" {
 		return p.parseInlineDerivedTable()
+	}
+
+	// Check for DML statements (INSERT, UPDATE, DELETE, MERGE) as table sources
+	if p.curTok.Type == TokenInsert {
+		return p.parseDataModificationTableReference("INSERT")
+	}
+	if p.curTok.Type == TokenUpdate {
+		return p.parseDataModificationTableReference("UPDATE")
+	}
+	if p.curTok.Type == TokenDelete {
+		return p.parseDataModificationTableReference("DELETE")
+	}
+	if strings.ToUpper(p.curTok.Literal) == "MERGE" {
+		return p.parseDataModificationTableReference("MERGE")
 	}
 
 	// Parse the query expression
@@ -2434,10 +2464,73 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		if p.curTok.Type == TokenIdent {
 			upper := strings.ToUpper(p.curTok.Literal)
-			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
 				ref.Alias = p.parseIdentifier()
 			}
 		} else {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	return ref, nil
+}
+
+// parseDataModificationTableReference parses a DML statement used as a table source
+// This is called after ( is consumed and the DML keyword is the current token
+func (p *Parser) parseDataModificationTableReference(dmlType string) (*ast.DataModificationTableReference, error) {
+	ref := &ast.DataModificationTableReference{
+		ForPath: false,
+	}
+
+	var err error
+	switch dmlType {
+	case "INSERT":
+		spec, parseErr := p.parseInsertSpecification()
+		if parseErr != nil {
+			return nil, parseErr
+		}
+		ref.DataModificationSpecification = spec
+	case "UPDATE":
+		spec, parseErr := p.parseUpdateSpecification()
+		if parseErr != nil {
+			return nil, parseErr
+		}
+		ref.DataModificationSpecification = spec
+	case "DELETE":
+		spec, parseErr := p.parseDeleteSpecification()
+		if parseErr != nil {
+			return nil, parseErr
+		}
+		ref.DataModificationSpecification = spec
+	case "MERGE":
+		spec, parseErr := p.parseMergeSpecification()
+		if parseErr != nil {
+			return nil, parseErr
+		}
+		ref.DataModificationSpecification = spec
+	default:
+		return nil, fmt.Errorf("unknown DML type: %s", dmlType)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after data modification statement, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse required alias (AS alias)
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
+			upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+			upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+			upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
 			ref.Alias = p.parseIdentifier()
 		}
 	}
@@ -2578,7 +2671,7 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	} else if p.curTok.Type == TokenIdent {
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
 			ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
 			p.nextToken()
 		}
@@ -2662,7 +2755,7 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		if p.curTok.Type == TokenIdent {
 			upper := strings.ToUpper(p.curTok.Literal)
-			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
 				ref.Alias = p.parseIdentifier()
 			}
 		} else {
@@ -6172,4 +6265,191 @@ func (p *Parser) parseWindowClause() (*ast.WindowClause, error) {
 	}
 
 	return clause, nil
+}
+
+// parsePivotedTableReference parses PIVOT clause
+// Syntax: table PIVOT (aggregate_func(columns) FOR pivot_column IN (value1, value2, ...)) AS alias
+func (p *Parser) parsePivotedTableReference(tableRef ast.TableReference) (*ast.PivotedTableReference, error) {
+	p.nextToken() // consume PIVOT
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after PIVOT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	pivoted := &ast.PivotedTableReference{
+		TableReference: tableRef,
+		ForPath:        false,
+	}
+
+	// Parse aggregate function identifier (may be multi-part like dbo.z1.MyAggregate)
+	aggregateId := &ast.MultiPartIdentifier{}
+	for {
+		id := p.parseIdentifier()
+		aggregateId.Identifiers = append(aggregateId.Identifiers, id)
+		aggregateId.Count++
+		if p.curTok.Type == TokenDot {
+			p.nextToken() // consume .
+		} else {
+			break
+		}
+	}
+	pivoted.AggregateFunctionIdentifier = aggregateId
+
+	// Expect ( for aggregate function parameters
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( for aggregate function parameters, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse value columns (parameters to aggregate function)
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		col, err := p.parseColumnReference()
+		if err != nil {
+			return nil, err
+		}
+		pivoted.ValueColumns = append(pivoted.ValueColumns, col)
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after aggregate function parameters, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Expect FOR keyword
+	if strings.ToUpper(p.curTok.Literal) != "FOR" {
+		return nil, fmt.Errorf("expected FOR in PIVOT clause, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume FOR
+
+	// Parse pivot column
+	col, err := p.parseColumnReference()
+	if err != nil {
+		return nil, err
+	}
+	pivoted.PivotColumn = col
+
+	// Expect IN keyword
+	if p.curTok.Type != TokenIn {
+		return nil, fmt.Errorf("expected IN in PIVOT clause, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume IN
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after IN, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse IN columns (values)
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		id := p.parseIdentifier()
+		pivoted.InColumns = append(pivoted.InColumns, id)
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after IN values, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Expect ) to close PIVOT clause
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) to close PIVOT clause, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse required alias (AS alias)
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+		pivoted.Alias = p.parseIdentifier()
+	}
+
+	return pivoted, nil
+}
+
+// parseUnpivotedTableReference parses UNPIVOT clause
+func (p *Parser) parseUnpivotedTableReference(tableRef ast.TableReference) (*ast.UnpivotedTableReference, error) {
+	p.nextToken() // consume UNPIVOT
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after UNPIVOT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	unpivoted := &ast.UnpivotedTableReference{
+		TableReference: tableRef,
+		NullHandling:   "None",
+		ForPath:        false,
+	}
+
+	// Parse pivot value column
+	unpivoted.PivotValue = p.parseIdentifier()
+
+	// Expect FOR keyword
+	if strings.ToUpper(p.curTok.Literal) != "FOR" {
+		return nil, fmt.Errorf("expected FOR in UNPIVOT clause, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume FOR
+
+	// Parse pivot column
+	unpivoted.PivotColumn = p.parseIdentifier()
+
+	// Expect IN keyword
+	if p.curTok.Type != TokenIn {
+		return nil, fmt.Errorf("expected IN in UNPIVOT clause, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume IN
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after IN, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse IN columns
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		col, err := p.parseColumnReference()
+		if err != nil {
+			return nil, err
+		}
+		unpivoted.InColumns = append(unpivoted.InColumns, col)
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after IN columns, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Expect ) to close UNPIVOT clause
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) to close UNPIVOT clause, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse required alias (AS alias)
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+		unpivoted.Alias = p.parseIdentifier()
+	}
+
+	return unpivoted, nil
 }
