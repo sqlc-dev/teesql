@@ -3174,6 +3174,61 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 		return hint, nil
 	}
 
+	// FORCESEEK hint with optional index and column list
+	if hintName == "FORCESEEK" {
+		hint := &ast.ForceSeekTableHint{
+			HintKind: "ForceSeek",
+		}
+		// Check for optional parenthesis with index and columns
+		if p.curTok.Type != TokenLParen {
+			return hint, nil
+		}
+		p.nextToken() // consume (
+		// Parse index value (identifier or number)
+		if p.curTok.Type == TokenNumber {
+			hint.IndexValue = &ast.IdentifierOrValueExpression{
+				Value: p.curTok.Literal,
+				ValueExpression: &ast.IntegerLiteral{
+					LiteralType: "Integer",
+					Value:       p.curTok.Literal,
+				},
+			}
+			p.nextToken()
+		} else if p.curTok.Type == TokenIdent {
+			hint.IndexValue = &ast.IdentifierOrValueExpression{
+				Value: p.curTok.Literal,
+				Identifier: &ast.Identifier{
+					Value:     p.curTok.Literal,
+					QuoteType: "NotQuoted",
+				},
+			}
+			p.nextToken()
+		}
+		// Parse optional column list
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				col, _ := p.parseColumnReference()
+				if col != nil {
+					hint.ColumnValues = append(hint.ColumnValues, col)
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else if p.curTok.Type != TokenRParen {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+		// Consume outer )
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+		return hint, nil
+	}
+
 	// Map hint names to HintKind
 	hintKind := getTableHintKind(hintName)
 	if hintKind == "" {
@@ -3218,6 +3273,10 @@ func getTableHintKind(name string) string {
 		return "XLock"
 	case "NOWAIT":
 		return "NoWait"
+	case "FORCESEEK":
+		return "ForceSeek"
+	case "FORCESCAN":
+		return "ForceScan"
 	default:
 		return ""
 	}

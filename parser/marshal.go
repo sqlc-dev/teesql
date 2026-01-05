@@ -3363,6 +3363,24 @@ func tableHintToJSON(h ast.TableHintType) jsonNode {
 			node["HintKind"] = th.HintKind
 		}
 		return node
+	case *ast.ForceSeekTableHint:
+		node := jsonNode{
+			"$type": "ForceSeekTableHint",
+		}
+		if th.IndexValue != nil {
+			node["IndexValue"] = identifierOrValueExpressionToJSON(th.IndexValue)
+		}
+		if len(th.ColumnValues) > 0 {
+			cols := make([]jsonNode, len(th.ColumnValues))
+			for i, c := range th.ColumnValues {
+				cols[i] = columnReferenceExpressionToJSON(c)
+			}
+			node["ColumnValues"] = cols
+		}
+		if th.HintKind != "" {
+			node["HintKind"] = th.HintKind
+		}
+		return node
 	default:
 		return jsonNode{"$type": "TableHint"}
 	}
