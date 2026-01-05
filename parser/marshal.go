@@ -853,6 +853,20 @@ func lowPriorityLockWaitOptionToJSON(o ast.LowPriorityLockWaitOption) jsonNode {
 	}
 }
 
+func onlineIndexLowPriorityLockWaitOptionToJSON(o *ast.OnlineIndexLowPriorityLockWaitOption) jsonNode {
+	node := jsonNode{
+		"$type": "OnlineIndexLowPriorityLockWaitOption",
+	}
+	if len(o.Options) > 0 {
+		options := make([]jsonNode, len(o.Options))
+		for i, opt := range o.Options {
+			options[i] = lowPriorityLockWaitOptionToJSON(opt)
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
 func fileGroupOrPartitionSchemeToJSON(fg *ast.FileGroupOrPartitionScheme) jsonNode {
 	node := jsonNode{
 		"$type": "FileGroupOrPartitionScheme",
@@ -13699,11 +13713,15 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 			"OptionKind":  o.OptionKind,
 		}
 	case *ast.OnlineIndexOption:
-		return jsonNode{
+		node := jsonNode{
 			"$type":       "OnlineIndexOption",
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
 		}
+		if o.LowPriorityLockWaitOption != nil {
+			node["LowPriorityLockWaitOption"] = onlineIndexLowPriorityLockWaitOptionToJSON(o.LowPriorityLockWaitOption)
+		}
+		return node
 	case *ast.CompressionDelayIndexOption:
 		node := jsonNode{
 			"$type":      "CompressionDelayIndexOption",
@@ -13724,6 +13742,20 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 		}
 		if o.Unit != "" {
 			node["Unit"] = o.Unit
+		}
+		return node
+	case *ast.XmlCompressionOption:
+		node := jsonNode{
+			"$type":        "XmlCompressionOption",
+			"IsCompressed": o.IsCompressed,
+			"OptionKind":   o.OptionKind,
+		}
+		if len(o.PartitionRanges) > 0 {
+			ranges := make([]jsonNode, len(o.PartitionRanges))
+			for i, r := range o.PartitionRanges {
+				ranges[i] = compressionPartitionRangeToJSON(r)
+			}
+			node["PartitionRanges"] = ranges
 		}
 		return node
 	default:
@@ -13939,11 +13971,15 @@ func childObjectNameToJSON(s *ast.SchemaObjectName) jsonNode {
 func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.OnlineIndexOption:
-		return jsonNode{
+		node := jsonNode{
 			"$type":       "OnlineIndexOption",
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
 		}
+		if o.LowPriorityLockWaitOption != nil {
+			node["LowPriorityLockWaitOption"] = onlineIndexLowPriorityLockWaitOptionToJSON(o.LowPriorityLockWaitOption)
+		}
+		return node
 	case *ast.MoveToDropIndexOption:
 		node := jsonNode{
 			"$type":      "MoveToDropIndexOption",

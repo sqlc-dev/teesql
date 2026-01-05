@@ -9,6 +9,7 @@ type XmlCompressionOption struct {
 
 func (x *XmlCompressionOption) node()        {}
 func (x *XmlCompressionOption) tableOption() {}
+func (x *XmlCompressionOption) indexOption() {}
 
 // TableXmlCompressionOption represents a table-level XML compression option
 type TableXmlCompressionOption struct {

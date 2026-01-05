@@ -1434,10 +1434,75 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 				optState = "On"
 			}
 			p.nextToken()
-			options = append(options, &ast.OnlineIndexOption{
+			onlineOpt := &ast.OnlineIndexOption{
 				OptionState: optState,
 				OptionKind:  "Online",
-			})
+			}
+			// Check for optional (WAIT_AT_LOW_PRIORITY (...))
+			if optState == "On" && p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				if strings.ToUpper(p.curTok.Literal) == "WAIT_AT_LOW_PRIORITY" {
+					p.nextToken() // consume WAIT_AT_LOW_PRIORITY
+					lowPriorityOpt := &ast.OnlineIndexLowPriorityLockWaitOption{}
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							optName := strings.ToUpper(p.curTok.Literal)
+							if optName == "MAX_DURATION" {
+								p.nextToken() // consume MAX_DURATION
+								if p.curTok.Type == TokenEquals {
+									p.nextToken() // consume =
+								}
+								durVal, _ := p.parsePrimaryExpression()
+								unit := "Minutes"
+								if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+									p.nextToken()
+								} else if strings.ToUpper(p.curTok.Literal) == "SECONDS" {
+									unit = "Seconds"
+									p.nextToken()
+								}
+								lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitMaxDurationOption{
+									MaxDuration: durVal,
+									Unit:        unit,
+									OptionKind:  "MaxDuration",
+								})
+							} else if optName == "ABORT_AFTER_WAIT" {
+								p.nextToken() // consume ABORT_AFTER_WAIT
+								if p.curTok.Type == TokenEquals {
+									p.nextToken() // consume =
+								}
+								abortType := "None"
+								switch strings.ToUpper(p.curTok.Literal) {
+								case "NONE":
+									abortType = "None"
+								case "SELF":
+									abortType = "Self"
+								case "BLOCKERS":
+									abortType = "Blockers"
+								}
+								p.nextToken()
+								lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+									AbortAfterWait: abortType,
+									OptionKind:     "AbortAfterWait",
+								})
+							} else {
+								break
+							}
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							}
+						}
+						if p.curTok.Type == TokenRParen {
+							p.nextToken() // consume )
+						}
+					}
+					onlineOpt.LowPriorityLockWaitOption = lowPriorityOpt
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			options = append(options, onlineOpt)
 		case "MOVE":
 			p.nextToken() // consume MOVE
 			if strings.ToUpper(p.curTok.Literal) == "TO" {
