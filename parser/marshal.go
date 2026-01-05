@@ -1626,6 +1626,9 @@ func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
 	if q.HavingClause != nil {
 		node["HavingClause"] = havingClauseToJSON(q.HavingClause)
 	}
+	if q.WindowClause != nil {
+		node["WindowClause"] = windowClauseToJSON(q.WindowClause)
+	}
 	if q.OrderByClause != nil {
 		node["OrderByClause"] = orderByClauseToJSON(q.OrderByClause)
 	}
@@ -3106,6 +3109,43 @@ func havingClauseToJSON(hc *ast.HavingClause) jsonNode {
 	return node
 }
 
+func windowClauseToJSON(wc *ast.WindowClause) jsonNode {
+	node := jsonNode{
+		"$type": "WindowClause",
+	}
+	if len(wc.WindowDefinition) > 0 {
+		defs := make([]jsonNode, len(wc.WindowDefinition))
+		for i, def := range wc.WindowDefinition {
+			defs[i] = windowDefinitionToJSON(def)
+		}
+		node["WindowDefinition"] = defs
+	}
+	return node
+}
+
+func windowDefinitionToJSON(wd *ast.WindowDefinition) jsonNode {
+	node := jsonNode{
+		"$type": "WindowDefinition",
+	}
+	if wd.WindowName != nil {
+		node["WindowName"] = identifierToJSON(wd.WindowName)
+	}
+	if wd.RefWindowName != nil {
+		node["RefWindowName"] = identifierToJSON(wd.RefWindowName)
+	}
+	if len(wd.Partitions) > 0 {
+		partitions := make([]jsonNode, len(wd.Partitions))
+		for i, p := range wd.Partitions {
+			partitions[i] = scalarExpressionToJSON(p)
+		}
+		node["Partitions"] = partitions
+	}
+	if wd.OrderByClause != nil {
+		node["OrderByClause"] = orderByClauseToJSON(wd.OrderByClause)
+	}
+	return node
+}
+
 func orderByClauseToJSON(obc *ast.OrderByClause) jsonNode {
 	node := jsonNode{
 		"$type": "OrderByClause",
@@ -3148,6 +3188,9 @@ func overClauseToJSON(oc *ast.OverClause) jsonNode {
 	node := jsonNode{
 		"$type": "OverClause",
 	}
+	if oc.WindowName != nil {
+		node["WindowName"] = identifierToJSON(oc.WindowName)
+	}
 	if len(oc.Partitions) > 0 {
 		partitions := make([]jsonNode, len(oc.Partitions))
 		for i, p := range oc.Partitions {
@@ -3157,6 +3200,34 @@ func overClauseToJSON(oc *ast.OverClause) jsonNode {
 	}
 	if oc.OrderByClause != nil {
 		node["OrderByClause"] = orderByClauseToJSON(oc.OrderByClause)
+	}
+	if oc.WindowFrameClause != nil {
+		node["WindowFrameClause"] = windowFrameClauseToJSON(oc.WindowFrameClause)
+	}
+	return node
+}
+
+func windowFrameClauseToJSON(wfc *ast.WindowFrameClause) jsonNode {
+	node := jsonNode{
+		"$type":           "WindowFrameClause",
+		"WindowFrameType": wfc.WindowFrameType,
+	}
+	if wfc.Top != nil {
+		node["Top"] = windowDelimiterToJSON(wfc.Top)
+	}
+	if wfc.Bottom != nil {
+		node["Bottom"] = windowDelimiterToJSON(wfc.Bottom)
+	}
+	return node
+}
+
+func windowDelimiterToJSON(wd *ast.WindowDelimiter) jsonNode {
+	node := jsonNode{
+		"$type":               "WindowDelimiter",
+		"WindowDelimiterType": wd.WindowDelimiterType,
+	}
+	if wd.OffsetValue != nil {
+		node["OffsetValue"] = scalarExpressionToJSON(wd.OffsetValue)
 	}
 	return node
 }

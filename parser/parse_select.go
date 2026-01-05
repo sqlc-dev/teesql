@@ -308,6 +308,15 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 		qs.HavingClause = havingClause
 	}
 
+	// Parse optional WINDOW clause
+	if strings.ToUpper(p.curTok.Literal) == "WINDOW" {
+		windowClause, err := p.parseWindowClause()
+		if err != nil {
+			return nil, nil, nil, err
+		}
+		qs.WindowClause = windowClause
+	}
+
 	// Note: ORDER BY is parsed at the top level in parseQueryExpressionWithInto
 	// to correctly handle UNION/EXCEPT/INTERSECT cases
 
@@ -530,7 +539,7 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 			}
 		} else if p.curTok.Type == TokenIdent {
 			upper := strings.ToUpper(p.curTok.Literal)
-			if upper != "FROM" && upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "INTO" && upper != "UNION" && upper != "EXCEPT" && upper != "INTERSECT" && upper != "GO" {
+			if upper != "FROM" && upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "INTO" && upper != "UNION" && upper != "EXCEPT" && upper != "INTERSECT" && upper != "GO" {
 				alias := p.parseIdentifier()
 				sse.ColumnName = &ast.IdentifierOrValueExpression{
 					Value:      alias.Value,
@@ -670,7 +679,7 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 	} else if p.curTok.Type == TokenIdent {
 		// Check if this is an alias (not a keyword that starts a new clause)
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "FROM" && upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "INTO" && upper != "UNION" && upper != "EXCEPT" && upper != "INTERSECT" && upper != "GO" && upper != "COLLATE" {
+		if upper != "FROM" && upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "INTO" && upper != "UNION" && upper != "EXCEPT" && upper != "INTERSECT" && upper != "GO" && upper != "COLLATE" {
 			alias := p.parseIdentifier()
 			sse.ColumnName = &ast.IdentifierOrValueExpression{
 				Value:      alias.Value,
@@ -890,49 +899,10 @@ func (p *Parser) parsePostfixExpression() (ast.ScalarExpression, error) {
 
 				// Check for OVER clause
 				if strings.ToUpper(p.curTok.Literal) == "OVER" {
-					p.nextToken() // consume OVER
-					if p.curTok.Type != TokenLParen {
-						return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+					overClause, err := p.parseOverClause()
+					if err != nil {
+						return nil, err
 					}
-					p.nextToken() // consume (
-
-					overClause := &ast.OverClause{}
-
-					// Parse PARTITION BY
-					if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
-						p.nextToken() // consume PARTITION
-						if strings.ToUpper(p.curTok.Literal) == "BY" {
-							p.nextToken() // consume BY
-						}
-						// Parse partition expressions
-						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-							partExpr, err := p.parseScalarExpression()
-							if err != nil {
-								return nil, err
-							}
-							overClause.Partitions = append(overClause.Partitions, partExpr)
-							if p.curTok.Type == TokenComma {
-								p.nextToken()
-							} else {
-								break
-							}
-						}
-					}
-
-					// Parse ORDER BY
-					if p.curTok.Type == TokenOrder {
-						orderBy, err := p.parseOrderByClause()
-						if err != nil {
-							return nil, err
-						}
-						overClause.OrderByClause = orderBy
-					}
-
-					if p.curTok.Type != TokenRParen {
-						return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
-					}
-					p.nextToken() // consume )
-
 					fc.OverClause = overClause
 				}
 
@@ -1035,48 +1005,10 @@ func (p *Parser) handlePostfixOperations(expr ast.ScalarExpression) (ast.ScalarE
 
 				// Check for OVER clause
 				if strings.ToUpper(p.curTok.Literal) == "OVER" {
-					p.nextToken() // consume OVER
-					if p.curTok.Type != TokenLParen {
-						return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+					overClause, err := p.parseOverClause()
+					if err != nil {
+						return nil, err
 					}
-					p.nextToken() // consume (
-
-					overClause := &ast.OverClause{}
-
-					// Parse PARTITION BY
-					if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
-						p.nextToken() // consume PARTITION
-						if strings.ToUpper(p.curTok.Literal) == "BY" {
-							p.nextToken() // consume BY
-						}
-						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-							partExpr, err := p.parseScalarExpression()
-							if err != nil {
-								return nil, err
-							}
-							overClause.Partitions = append(overClause.Partitions, partExpr)
-							if p.curTok.Type == TokenComma {
-								p.nextToken()
-							} else {
-								break
-							}
-						}
-					}
-
-					// Parse ORDER BY
-					if p.curTok.Type == TokenOrder {
-						orderBy, err := p.parseOrderByClause()
-						if err != nil {
-							return nil, err
-						}
-						overClause.OrderByClause = orderBy
-					}
-
-					if p.curTok.Type != TokenRParen {
-						return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
-					}
-					p.nextToken() // consume )
-
 					fc.OverClause = overClause
 				}
 
@@ -1379,51 +1311,11 @@ func (p *Parser) parseNextValueForExpression() (*ast.NextValueForExpression, err
 	expr.SequenceName = seqName
 
 	// Check for optional OVER clause
-	if p.curTok.Type == TokenOver {
-		p.nextToken() // consume OVER
-
-		if p.curTok.Type != TokenLParen {
-			return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+	if p.curTok.Type == TokenOver || strings.ToUpper(p.curTok.Literal) == "OVER" {
+		overClause, err := p.parseOverClause()
+		if err != nil {
+			return nil, err
 		}
-		p.nextToken() // consume (
-
-		overClause := &ast.OverClause{}
-
-		// Parse PARTITION BY
-		if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
-			p.nextToken() // consume PARTITION
-			if strings.ToUpper(p.curTok.Literal) == "BY" {
-				p.nextToken() // consume BY
-			}
-			// Parse partition expressions
-			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				partExpr, err := p.parseScalarExpression()
-				if err != nil {
-					return nil, err
-				}
-				overClause.Partitions = append(overClause.Partitions, partExpr)
-				if p.curTok.Type == TokenComma {
-					p.nextToken()
-				} else {
-					break
-				}
-			}
-		}
-
-		// Parse ORDER BY
-		if p.curTok.Type == TokenOrder {
-			orderBy, err := p.parseOrderByClause()
-			if err != nil {
-				return nil, err
-			}
-			overClause.OrderByClause = orderBy
-		}
-
-		if p.curTok.Type != TokenRParen {
-			return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
-		}
-		p.nextToken() // consume )
-
 		expr.OverClause = overClause
 	}
 
@@ -2217,50 +2109,10 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 
 		// Check for OVER clause for function calls
 		if fc, ok := expr.(*ast.FunctionCall); ok && strings.ToUpper(p.curTok.Literal) == "OVER" {
-			p.nextToken() // consume OVER
-
-			if p.curTok.Type != TokenLParen {
-				return nil, fmt.Errorf("expected ( after OVER, got %s", p.curTok.Literal)
+			overClause, err := p.parseOverClause()
+			if err != nil {
+				return nil, err
 			}
-			p.nextToken() // consume (
-
-			overClause := &ast.OverClause{}
-
-			// Parse PARTITION BY
-			if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
-				p.nextToken() // consume PARTITION
-				if strings.ToUpper(p.curTok.Literal) == "BY" {
-					p.nextToken() // consume BY
-				}
-				// Parse partition expressions
-				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-					partExpr, err := p.parseScalarExpression()
-					if err != nil {
-						return nil, err
-					}
-					overClause.Partitions = append(overClause.Partitions, partExpr)
-					if p.curTok.Type == TokenComma {
-						p.nextToken()
-					} else {
-						break
-					}
-				}
-			}
-
-			// Parse ORDER BY
-			if p.curTok.Type == TokenOrder {
-				orderBy, err := p.parseOrderByClause()
-				if err != nil {
-					return nil, err
-				}
-				overClause.OrderByClause = orderBy
-			}
-
-			if p.curTok.Type != TokenRParen {
-				return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
-			}
-			p.nextToken() // consume )
-
 			fc.OverClause = overClause
 		}
 
@@ -2496,7 +2348,7 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 			alias = p.parseIdentifier()
 		} else if p.curTok.Type == TokenIdent {
 			upper := strings.ToUpper(p.curTok.Literal)
-			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" &&
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
 				upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
 				upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
 				upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
@@ -2582,7 +2434,7 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		if p.curTok.Type == TokenIdent {
 			upper := strings.ToUpper(p.curTok.Literal)
-			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
 				ref.Alias = p.parseIdentifier()
 			}
 		} else {
@@ -2646,7 +2498,7 @@ func (p *Parser) parseInlineDerivedTable() (*ast.InlineDerivedTable, error) {
 		ref.Alias = p.parseIdentifier()
 	} else if p.curTok.Type == TokenIdent {
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" &&
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
 			upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
 			upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
 			upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
@@ -2726,7 +2578,7 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	} else if p.curTok.Type == TokenIdent {
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
 			ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
 			p.nextToken()
 		}
@@ -2810,7 +2662,7 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		// Could be an alias without AS, but need to be careful not to consume keywords
 		if p.curTok.Type == TokenIdent {
 			upper := strings.ToUpper(p.curTok.Literal)
-			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" {
 				ref.Alias = p.parseIdentifier()
 			}
 		} else {
@@ -3004,7 +2856,7 @@ func (p *Parser) parseFullTextTableReference(funcType string) (*ast.FullTextTabl
 		ref.Alias = p.parseIdentifier()
 	} else if p.curTok.Type == TokenIdent {
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
 			ref.Alias = p.parseIdentifier()
 		}
 	}
@@ -3138,7 +2990,7 @@ func (p *Parser) parseSemanticTableReference(funcType string) (*ast.SemanticTabl
 		ref.Alias = p.parseIdentifier()
 	} else if p.curTok.Type == TokenIdent {
 		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
 			ref.Alias = p.parseIdentifier()
 		}
 	}
@@ -6054,4 +5906,270 @@ func (p *Parser) parseChangeTableVersionReference() (*ast.ChangeTableVersionTabl
 	}
 
 	return ref, nil
+}
+
+// parseOverClause parses an OVER clause after a function call
+// Handles both: OVER Win1 and OVER (PARTITION BY c1 ORDER BY c2 ROWS ...)
+func (p *Parser) parseOverClause() (*ast.OverClause, error) {
+	// Current token should be OVER, consume it
+	p.nextToken() // consume OVER
+
+	overClause := &ast.OverClause{}
+
+	// Check if it's just a window name (no parentheses)
+	if p.curTok.Type != TokenLParen {
+		// It's OVER WindowName
+		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			overClause.WindowName = p.parseIdentifier()
+			return overClause, nil
+		}
+		return nil, fmt.Errorf("expected ( or window name after OVER, got %s", p.curTok.Literal)
+	}
+
+	p.nextToken() // consume (
+
+	// Check if it starts with a window name reference
+	// OVER (Win1 ORDER BY ...) or OVER (Win1 PARTITION BY ... )
+	// This is tricky because we need to distinguish between Win1 (window name) and c1 (column name in PARTITION BY)
+	if p.curTok.Type == TokenIdent && p.peekTok.Type != TokenComma && p.peekTok.Type != TokenRParen {
+		upperPeek := strings.ToUpper(p.peekTok.Literal)
+		if upperPeek != "BY" && upperPeek != "," {
+			// Could be a window name reference if followed by ORDER, PARTITION, ROWS, RANGE, or )
+			if upperPeek == "ORDER" || upperPeek == "PARTITION" || upperPeek == "ROWS" || upperPeek == "RANGE" || p.peekTok.Type == TokenRParen {
+				overClause.WindowName = p.parseIdentifier()
+			}
+		}
+	}
+
+	// Parse PARTITION BY
+	if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+		p.nextToken() // consume PARTITION
+		if strings.ToUpper(p.curTok.Literal) == "BY" {
+			p.nextToken() // consume BY
+		}
+		// Parse partition expressions
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			if strings.ToUpper(p.curTok.Literal) == "ORDER" || strings.ToUpper(p.curTok.Literal) == "ROWS" || strings.ToUpper(p.curTok.Literal) == "RANGE" {
+				break
+			}
+			partExpr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			overClause.Partitions = append(overClause.Partitions, partExpr)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+	}
+
+	// Parse ORDER BY
+	if p.curTok.Type == TokenOrder {
+		orderBy, err := p.parseOrderByClause()
+		if err != nil {
+			return nil, err
+		}
+		overClause.OrderByClause = orderBy
+	}
+
+	// Parse window frame (ROWS/RANGE)
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "ROWS" || upperLit == "RANGE" {
+		frameClause, err := p.parseWindowFrameClause()
+		if err != nil {
+			return nil, err
+		}
+		overClause.WindowFrameClause = frameClause
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in OVER clause, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return overClause, nil
+}
+
+// parseWindowFrameClause parses ROWS/RANGE ... BETWEEN ... AND ...
+func (p *Parser) parseWindowFrameClause() (*ast.WindowFrameClause, error) {
+	frame := &ast.WindowFrameClause{}
+
+	// Parse ROWS or RANGE
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "ROWS" {
+		frame.WindowFrameType = "Rows"
+	} else if upperLit == "RANGE" {
+		frame.WindowFrameType = "Range"
+	} else {
+		return nil, fmt.Errorf("expected ROWS or RANGE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse BETWEEN or single boundary
+	if strings.ToUpper(p.curTok.Literal) == "BETWEEN" {
+		p.nextToken() // consume BETWEEN
+		top, err := p.parseWindowDelimiter()
+		if err != nil {
+			return nil, err
+		}
+		frame.Top = top
+
+		if strings.ToUpper(p.curTok.Literal) != "AND" {
+			return nil, fmt.Errorf("expected AND in ROWS BETWEEN, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume AND
+
+		bottom, err := p.parseWindowDelimiter()
+		if err != nil {
+			return nil, err
+		}
+		frame.Bottom = bottom
+	} else {
+		// Single boundary (e.g., ROWS UNBOUNDED PRECEDING)
+		top, err := p.parseWindowDelimiter()
+		if err != nil {
+			return nil, err
+		}
+		frame.Top = top
+	}
+
+	return frame, nil
+}
+
+// parseWindowDelimiter parses UNBOUNDED PRECEDING/FOLLOWING, CURRENT ROW, n PRECEDING/FOLLOWING
+func (p *Parser) parseWindowDelimiter() (*ast.WindowDelimiter, error) {
+	delim := &ast.WindowDelimiter{}
+
+	upperLit := strings.ToUpper(p.curTok.Literal)
+
+	if upperLit == "CURRENT" {
+		p.nextToken() // consume CURRENT
+		if strings.ToUpper(p.curTok.Literal) != "ROW" {
+			return nil, fmt.Errorf("expected ROW after CURRENT, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ROW
+		delim.WindowDelimiterType = "CurrentRow"
+	} else if upperLit == "UNBOUNDED" {
+		p.nextToken() // consume UNBOUNDED
+		upperDir := strings.ToUpper(p.curTok.Literal)
+		if upperDir == "PRECEDING" {
+			delim.WindowDelimiterType = "UnboundedPreceding"
+		} else if upperDir == "FOLLOWING" {
+			delim.WindowDelimiterType = "UnboundedFollowing"
+		} else {
+			return nil, fmt.Errorf("expected PRECEDING or FOLLOWING after UNBOUNDED, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+	} else {
+		// n PRECEDING or n FOLLOWING
+		offset, err := p.parsePrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+		delim.OffsetValue = offset
+
+		upperDir := strings.ToUpper(p.curTok.Literal)
+		if upperDir == "PRECEDING" {
+			delim.WindowDelimiterType = "ValuePreceding"
+		} else if upperDir == "FOLLOWING" {
+			delim.WindowDelimiterType = "ValueFollowing"
+		} else {
+			return nil, fmt.Errorf("expected PRECEDING or FOLLOWING after value, got %s", p.curTok.Literal)
+		}
+		p.nextToken()
+	}
+
+	return delim, nil
+}
+
+// parseWindowClause parses WINDOW Win1 AS (...), Win2 AS (...)
+func (p *Parser) parseWindowClause() (*ast.WindowClause, error) {
+	p.nextToken() // consume WINDOW
+
+	clause := &ast.WindowClause{}
+
+	for {
+		def := &ast.WindowDefinition{}
+
+		// Parse window name
+		def.WindowName = p.parseIdentifier()
+
+		// Expect AS
+		if strings.ToUpper(p.curTok.Literal) != "AS" {
+			return nil, fmt.Errorf("expected AS after window name, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume AS
+
+		// Expect (
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after AS in window definition, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Check if it references another window name
+		if p.curTok.Type == TokenIdent {
+			upperPeek := strings.ToUpper(p.peekTok.Literal)
+			// It's a reference if followed by ) or PARTITION or ORDER
+			if p.peekTok.Type == TokenRParen || upperPeek == "PARTITION" || upperPeek == "ORDER" {
+				// Could be a window name reference
+				if p.peekTok.Type == TokenRParen {
+					// Just a window name reference: Win1 AS (Win2)
+					def.RefWindowName = p.parseIdentifier()
+				} else if upperPeek != "BY" {
+					// Window name followed by more clauses
+					def.RefWindowName = p.parseIdentifier()
+				}
+			}
+		}
+
+		// Parse PARTITION BY
+		if strings.ToUpper(p.curTok.Literal) == "PARTITION" {
+			p.nextToken() // consume PARTITION
+			if strings.ToUpper(p.curTok.Literal) == "BY" {
+				p.nextToken() // consume BY
+			}
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				if strings.ToUpper(p.curTok.Literal) == "ORDER" {
+					break
+				}
+				partExpr, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				def.Partitions = append(def.Partitions, partExpr)
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		}
+
+		// Parse ORDER BY
+		if p.curTok.Type == TokenOrder {
+			orderBy, err := p.parseOrderByClause()
+			if err != nil {
+				return nil, err
+			}
+			def.OrderByClause = orderBy
+		}
+
+		// Expect )
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) in window definition, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		clause.WindowDefinition = append(clause.WindowDefinition, def)
+
+		// Check for comma (more window definitions)
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume ,
+	}
+
+	return clause, nil
 }
