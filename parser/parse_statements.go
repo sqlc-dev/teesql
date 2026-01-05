@@ -7156,11 +7156,31 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 			fileInfo := &ast.BackupRestoreFileInfo{
 				ItemKind: "Files",
 			}
-			expr, err := p.parseScalarExpression()
-			if err != nil {
-				return nil, err
+			// Check for parenthesized list: FILE = ('f1', 'f2')
+			if p.curTok.Type == TokenLParen {
+				p.nextToken()
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					expr, err := p.parsePrimaryExpression()
+					if err != nil {
+						return nil, err
+					}
+					fileInfo.Items = append(fileInfo.Items, expr)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			} else {
+				expr, err := p.parsePrimaryExpression()
+				if err != nil {
+					return nil, err
+				}
+				fileInfo.Items = append(fileInfo.Items, expr)
 			}
-			fileInfo.Items = append(fileInfo.Items, expr)
 			files = append(files, fileInfo)
 		} else if upperLiteral == "FILEGROUP" {
 			p.nextToken()
@@ -7171,11 +7191,31 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 			fileInfo := &ast.BackupRestoreFileInfo{
 				ItemKind: "FileGroups",
 			}
-			expr, err := p.parseScalarExpression()
-			if err != nil {
-				return nil, err
+			// Check for parenthesized list: FILEGROUP = ('fg1', 'fg2')
+			if p.curTok.Type == TokenLParen {
+				p.nextToken()
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					expr, err := p.parsePrimaryExpression()
+					if err != nil {
+						return nil, err
+					}
+					fileInfo.Items = append(fileInfo.Items, expr)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			} else {
+				expr, err := p.parsePrimaryExpression()
+				if err != nil {
+					return nil, err
+				}
+				fileInfo.Items = append(fileInfo.Items, expr)
 			}
-			fileInfo.Items = append(fileInfo.Items, expr)
 			files = append(files, fileInfo)
 		} else {
 			break
@@ -7412,6 +7452,52 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 					option.OptionKind = "NoFormat"
 				case "STATS":
 					option.OptionKind = "Stats"
+				case "BLOCKSIZE":
+					option.OptionKind = "BlockSize"
+				case "BUFFERCOUNT":
+					option.OptionKind = "BufferCount"
+				case "DESCRIPTION":
+					option.OptionKind = "Description"
+				case "DIFFERENTIAL":
+					option.OptionKind = "Differential"
+				case "EXPIREDATE":
+					option.OptionKind = "ExpireDate"
+				case "MEDIANAME":
+					option.OptionKind = "MediaName"
+				case "MEDIADESCRIPTION":
+					option.OptionKind = "MediaDescription"
+				case "RETAINDAYS":
+					option.OptionKind = "RetainDays"
+				case "SKIP":
+					option.OptionKind = "Skip"
+				case "NOSKIP":
+					option.OptionKind = "NoSkip"
+				case "REWIND":
+					option.OptionKind = "Rewind"
+				case "NOREWIND":
+					option.OptionKind = "NoRewind"
+				case "UNLOAD":
+					option.OptionKind = "Unload"
+				case "NOUNLOAD":
+					option.OptionKind = "NoUnload"
+				case "RESTART":
+					option.OptionKind = "Restart"
+				case "COPY_ONLY":
+					option.OptionKind = "CopyOnly"
+				case "NAME":
+					option.OptionKind = "Name"
+				case "MAXTRANSFERSIZE":
+					option.OptionKind = "MaxTransferSize"
+				case "NO_TRUNCATE":
+					option.OptionKind = "NoTruncate"
+				case "NORECOVERY":
+					option.OptionKind = "NoRecovery"
+				case "STANDBY":
+					option.OptionKind = "Standby"
+				case "NO_LOG":
+					option.OptionKind = "NoLog"
+				case "TRUNCATE_ONLY":
+					option.OptionKind = "TruncateOnly"
 				default:
 					option.OptionKind = optionName
 				}
