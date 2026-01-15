@@ -9878,6 +9878,129 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 			}
 			options = append(options, opt)
 
+		case "DEFAULT_LANGUAGE":
+			p.nextToken() // consume DEFAULT_LANGUAGE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			// Can be identifier or integer
+			if p.curTok.Type == TokenNumber {
+				opt := &ast.LiteralDatabaseOption{
+					OptionKind: "DefaultLanguage",
+					Value: &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					},
+				}
+				options = append(options, opt)
+				p.nextToken()
+			} else {
+				opt := &ast.IdentifierDatabaseOption{
+					OptionKind: "DefaultLanguage",
+					Value:      p.parseIdentifier(),
+				}
+				options = append(options, opt)
+			}
+
+		case "DEFAULT_FULLTEXT_LANGUAGE":
+			p.nextToken() // consume DEFAULT_FULLTEXT_LANGUAGE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			// Can be identifier or integer
+			if p.curTok.Type == TokenNumber {
+				opt := &ast.LiteralDatabaseOption{
+					OptionKind: "DefaultFullTextLanguage",
+					Value: &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					},
+				}
+				options = append(options, opt)
+				p.nextToken()
+			} else {
+				opt := &ast.IdentifierDatabaseOption{
+					OptionKind: "DefaultFullTextLanguage",
+					Value:      p.parseIdentifier(),
+				}
+				options = append(options, opt)
+			}
+
+		case "TWO_DIGIT_YEAR_CUTOFF":
+			p.nextToken() // consume TWO_DIGIT_YEAR_CUTOFF
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			opt := &ast.LiteralDatabaseOption{
+				OptionKind: "TwoDigitYearCutoff",
+				Value: &ast.IntegerLiteral{
+					LiteralType: "Integer",
+					Value:       p.curTok.Literal,
+				},
+			}
+			options = append(options, opt)
+			p.nextToken()
+
+		case "RESTRICTED_USER":
+			p.nextToken() // consume RESTRICTED_USER
+			opt := &ast.SimpleDatabaseOption{
+				OptionKind: "RestrictedUser",
+			}
+			options = append(options, opt)
+
+		case "FILESTREAM":
+			p.nextToken() // consume FILESTREAM
+			opt := &ast.FileStreamDatabaseOption{
+				OptionKind: "FileStream",
+			}
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					subOpt := strings.ToUpper(p.curTok.Literal)
+					p.nextToken() // consume option name
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					switch subOpt {
+					case "NON_TRANSACTED_ACCESS":
+						accessVal := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+						switch accessVal {
+						case "OFF":
+							opt.NonTransactedAccess = "Off"
+						case "READ_ONLY":
+							opt.NonTransactedAccess = "ReadOnly"
+						case "FULL":
+							opt.NonTransactedAccess = "Full"
+						}
+					case "DIRECTORY_NAME":
+						// Can be a string literal or NULL
+						if strings.ToUpper(p.curTok.Literal) == "NULL" {
+							opt.DirectoryName = &ast.NullLiteral{
+								LiteralType: "Null",
+								Value:       "null",
+							}
+							p.nextToken()
+						} else if p.curTok.Type == TokenString {
+							opt.DirectoryName = &ast.StringLiteral{
+								LiteralType:   "String",
+								Value:         strings.Trim(p.curTok.Literal, "'"),
+								IsNational:    false,
+								IsLargeObject: false,
+							}
+							p.nextToken()
+						}
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			options = append(options, opt)
+
 		default:
 			// Unknown option, return what we have
 			return options, nil

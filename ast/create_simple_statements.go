@@ -21,6 +21,7 @@ type ContainmentDatabaseOption struct {
 
 func (c *ContainmentDatabaseOption) node()                 {}
 func (c *ContainmentDatabaseOption) createDatabaseOption() {}
+func (c *ContainmentDatabaseOption) databaseOption()       {}
 
 func (s *CreateDatabaseStatement) node()      {}
 func (s *CreateDatabaseStatement) statement() {}

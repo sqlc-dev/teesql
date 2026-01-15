@@ -1296,6 +1296,59 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			"IsSimple":   o.IsSimple,
 			"OptionKind": o.OptionKind,
 		}
+	case *ast.ContainmentDatabaseOption:
+		return jsonNode{
+			"$type":      "ContainmentDatabaseOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.IdentifierDatabaseOption:
+		node := jsonNode{
+			"$type":      "IdentifierDatabaseOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.Value != nil {
+			node["Value"] = identifierToJSON(o.Value)
+		}
+		return node
+	case *ast.HadrDatabaseOption:
+		return jsonNode{
+			"$type":      "HadrDatabaseOption",
+			"HadrOption": o.HadrOption,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.HadrAvailabilityGroupDatabaseOption:
+		node := jsonNode{
+			"$type":      "HadrAvailabilityGroupDatabaseOption",
+			"HadrOption": o.HadrOption,
+			"OptionKind": o.OptionKind,
+		}
+		if o.GroupName != nil {
+			node["GroupName"] = identifierToJSON(o.GroupName)
+		}
+		return node
+	case *ast.FileStreamDatabaseOption:
+		node := jsonNode{
+			"$type":      "FileStreamDatabaseOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.NonTransactedAccess != "" {
+			node["NonTransactedAccess"] = o.NonTransactedAccess
+		}
+		if o.DirectoryName != nil {
+			node["DirectoryName"] = scalarExpressionToJSON(o.DirectoryName)
+		}
+		return node
+	case *ast.TargetRecoveryTimeDatabaseOption:
+		node := jsonNode{
+			"$type":      "TargetRecoveryTimeDatabaseOption",
+			"OptionKind": o.OptionKind,
+			"Unit":       o.Unit,
+		}
+		if o.RecoveryTime != nil {
+			node["RecoveryTime"] = scalarExpressionToJSON(o.RecoveryTime)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownDatabaseOption"}
 	}
@@ -16511,6 +16564,18 @@ func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 			"$type":      "DatabaseOption",
 			"OptionKind": o.OptionKind,
 		}
+	case *ast.FileStreamDatabaseOption:
+		node := jsonNode{
+			"$type":      "FileStreamDatabaseOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.NonTransactedAccess != "" {
+			node["NonTransactedAccess"] = o.NonTransactedAccess
+		}
+		if o.DirectoryName != nil {
+			node["DirectoryName"] = scalarExpressionToJSON(o.DirectoryName)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "CreateDatabaseOption"}
 	}

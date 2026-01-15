@@ -2300,7 +2300,7 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 	}
 
 	// Parse database name followed by various commands
-	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket || p.curTok.Type == TokenCurrent {
 		dbName := p.parseIdentifier()
 
 		switch p.curTok.Type {
@@ -2411,8 +2411,12 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 	// Consume SET
 	p.nextToken()
 
-	stmt := &ast.AlterDatabaseSetStatement{
-		DatabaseName: dbName,
+	stmt := &ast.AlterDatabaseSetStatement{}
+	// Check if this is ALTER DATABASE CURRENT SET
+	if dbName != nil && strings.ToUpper(dbName.Value) == "CURRENT" {
+		stmt.UseCurrent = true
+	} else {
+		stmt.DatabaseName = dbName
 	}
 
 	// Parse options
@@ -2611,6 +2615,206 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				IsSimple:   paramValue == "SIMPLE",
 			}
 			stmt.Options = append(stmt.Options, opt)
+		case "CONTAINMENT":
+			// CONTAINMENT = NONE | PARTIAL
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			containmentValue := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			value := "None"
+			if containmentValue == "PARTIAL" {
+				value = "Partial"
+			}
+			opt := &ast.ContainmentDatabaseOption{
+				OptionKind: "Containment",
+				Value:      value,
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "TRANSFORM_NOISE_WORDS":
+			// TRANSFORM_NOISE_WORDS = ON/OFF
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			state := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			opt := &ast.OnOffDatabaseOption{
+				OptionKind:  "TransformNoiseWords",
+				OptionState: capitalizeFirst(state),
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "DEFAULT_LANGUAGE":
+			// DEFAULT_LANGUAGE = identifier | integer
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			if p.curTok.Type == TokenNumber {
+				opt := &ast.LiteralDatabaseOption{
+					OptionKind: "DefaultLanguage",
+					Value: &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					},
+				}
+				stmt.Options = append(stmt.Options, opt)
+				p.nextToken()
+			} else {
+				opt := &ast.IdentifierDatabaseOption{
+					OptionKind: "DefaultLanguage",
+					Value:      p.parseIdentifier(),
+				}
+				stmt.Options = append(stmt.Options, opt)
+			}
+		case "DEFAULT_FULLTEXT_LANGUAGE":
+			// DEFAULT_FULLTEXT_LANGUAGE = identifier | integer
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			if p.curTok.Type == TokenNumber {
+				opt := &ast.LiteralDatabaseOption{
+					OptionKind: "DefaultFullTextLanguage",
+					Value: &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					},
+				}
+				stmt.Options = append(stmt.Options, opt)
+				p.nextToken()
+			} else {
+				opt := &ast.IdentifierDatabaseOption{
+					OptionKind: "DefaultFullTextLanguage",
+					Value:      p.parseIdentifier(),
+				}
+				stmt.Options = append(stmt.Options, opt)
+			}
+		case "TWO_DIGIT_YEAR_CUTOFF":
+			// TWO_DIGIT_YEAR_CUTOFF = integer
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			opt := &ast.LiteralDatabaseOption{
+				OptionKind: "TwoDigitYearCutoff",
+				Value: &ast.IntegerLiteral{
+					LiteralType: "Integer",
+					Value:       p.curTok.Literal,
+				},
+			}
+			stmt.Options = append(stmt.Options, opt)
+			p.nextToken()
+		case "HADR":
+			// HADR {SUSPEND|RESUME|OFF|AVAILABILITY GROUP = name}
+			hadrOpt := strings.ToUpper(p.curTok.Literal)
+			switch hadrOpt {
+			case "SUSPEND":
+				p.nextToken()
+				stmt.Options = append(stmt.Options, &ast.HadrDatabaseOption{
+					HadrOption: "Suspend",
+					OptionKind: "Hadr",
+				})
+			case "RESUME":
+				p.nextToken()
+				stmt.Options = append(stmt.Options, &ast.HadrDatabaseOption{
+					HadrOption: "Resume",
+					OptionKind: "Hadr",
+				})
+			case "OFF":
+				p.nextToken()
+				stmt.Options = append(stmt.Options, &ast.HadrDatabaseOption{
+					HadrOption: "Off",
+					OptionKind: "Hadr",
+				})
+			case "AVAILABILITY":
+				p.nextToken() // consume AVAILABILITY
+				if strings.ToUpper(p.curTok.Literal) == "GROUP" {
+					p.nextToken() // consume GROUP
+				}
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+				groupName := p.parseIdentifier()
+				stmt.Options = append(stmt.Options, &ast.HadrAvailabilityGroupDatabaseOption{
+					GroupName:  groupName,
+					HadrOption: "AvailabilityGroup",
+					OptionKind: "Hadr",
+				})
+			default:
+				// Unknown HADR option
+				p.nextToken()
+			}
+		case "FILESTREAM":
+			// FILESTREAM(NON_TRANSACTED_ACCESS=OFF|READ_ONLY|FULL, DIRECTORY_NAME='...')
+			opt := &ast.FileStreamDatabaseOption{
+				OptionKind: "FileStream",
+			}
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					subOpt := strings.ToUpper(p.curTok.Literal)
+					p.nextToken() // consume option name
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					switch subOpt {
+					case "NON_TRANSACTED_ACCESS":
+						accessVal := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+						switch accessVal {
+						case "OFF":
+							opt.NonTransactedAccess = "Off"
+						case "READ_ONLY":
+							opt.NonTransactedAccess = "ReadOnly"
+						case "FULL":
+							opt.NonTransactedAccess = "Full"
+						}
+					case "DIRECTORY_NAME":
+						// Can be a string literal or NULL
+						if strings.ToUpper(p.curTok.Literal) == "NULL" {
+							opt.DirectoryName = &ast.NullLiteral{
+								LiteralType: "Null",
+								Value:       "null",
+							}
+							p.nextToken()
+						} else if p.curTok.Type == TokenString {
+							opt.DirectoryName = &ast.StringLiteral{
+								LiteralType:   "String",
+								Value:         strings.Trim(p.curTok.Literal, "'"),
+								IsNational:    false,
+								IsLargeObject: false,
+							}
+							p.nextToken()
+						}
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Options = append(stmt.Options, opt)
+		case "TARGET_RECOVERY_TIME":
+			// TARGET_RECOVERY_TIME = N SECONDS|MINUTES
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			timeVal, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			unit := "Seconds"
+			if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+				unit = "Minutes"
+				p.nextToken()
+			} else if strings.ToUpper(p.curTok.Literal) == "SECONDS" {
+				p.nextToken()
+			}
+			trtOpt := &ast.TargetRecoveryTimeDatabaseOption{
+				OptionKind:   "TargetRecoveryTime",
+				RecoveryTime: timeVal,
+				Unit:         unit,
+			}
+			stmt.Options = append(stmt.Options, trtOpt)
 		default:
 			// Handle generic options with = syntax (e.g., OPTIMIZED_LOCKING = ON)
 			if p.curTok.Type == TokenEquals {

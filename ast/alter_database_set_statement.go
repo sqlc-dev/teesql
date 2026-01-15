@@ -377,3 +377,32 @@ type GenericDatabaseOption struct {
 
 func (g *GenericDatabaseOption) node()           {}
 func (g *GenericDatabaseOption) databaseOption() {}
+
+// HadrDatabaseOption represents ALTER DATABASE SET HADR {SUSPEND|RESUME|OFF}
+type HadrDatabaseOption struct {
+	HadrOption string // "Suspend", "Resume", "Off"
+	OptionKind string // "Hadr"
+}
+
+func (h *HadrDatabaseOption) node()           {}
+func (h *HadrDatabaseOption) databaseOption() {}
+
+// HadrAvailabilityGroupDatabaseOption represents ALTER DATABASE SET HADR AVAILABILITY GROUP = name
+type HadrAvailabilityGroupDatabaseOption struct {
+	GroupName  *Identifier
+	HadrOption string // "AvailabilityGroup"
+	OptionKind string // "Hadr"
+}
+
+func (h *HadrAvailabilityGroupDatabaseOption) node()           {}
+func (h *HadrAvailabilityGroupDatabaseOption) databaseOption() {}
+
+// TargetRecoveryTimeDatabaseOption represents TARGET_RECOVERY_TIME database option
+type TargetRecoveryTimeDatabaseOption struct {
+	OptionKind   string           // "TargetRecoveryTime"
+	RecoveryTime ScalarExpression // Integer literal
+	Unit         string           // "Seconds" or "Minutes"
+}
+
+func (t *TargetRecoveryTimeDatabaseOption) node()           {}
+func (t *TargetRecoveryTimeDatabaseOption) databaseOption() {}

@@ -35,9 +35,14 @@ func (o *FileStreamRestoreOption) restoreOptionNode() {}
 
 // FileStreamDatabaseOption represents a FILESTREAM database option
 type FileStreamDatabaseOption struct {
-	OptionKind    string
-	DirectoryName ScalarExpression
+	OptionKind          string
+	NonTransactedAccess string           // "Off", "ReadOnly", "Full", or "" if not specified
+	DirectoryName       ScalarExpression
 }
+
+func (f *FileStreamDatabaseOption) node()                 {}
+func (f *FileStreamDatabaseOption) databaseOption()       {}
+func (f *FileStreamDatabaseOption) createDatabaseOption() {}
 
 // GeneralSetCommandRestoreOption represents a general restore option
 type GeneralSetCommandRestoreOption struct {
