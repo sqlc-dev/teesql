@@ -3126,6 +3126,34 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 		hint := &ast.IndexTableHint{
 			HintKind: "Index",
 		}
+		// Handle INDEX = value syntax (alternative to INDEX(value))
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+			var iov *ast.IdentifierOrValueExpression
+			if p.curTok.Type == TokenNumber {
+				iov = &ast.IdentifierOrValueExpression{
+					Value: p.curTok.Literal,
+					ValueExpression: &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					},
+				}
+				p.nextToken()
+			} else if p.curTok.Type == TokenIdent {
+				iov = &ast.IdentifierOrValueExpression{
+					Value: p.curTok.Literal,
+					Identifier: &ast.Identifier{
+						Value:     p.curTok.Literal,
+						QuoteType: "NotQuoted",
+					},
+				}
+				p.nextToken()
+			}
+			if iov != nil {
+				hint.IndexValues = append(hint.IndexValues, iov)
+			}
+			return hint, nil
+		}
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
