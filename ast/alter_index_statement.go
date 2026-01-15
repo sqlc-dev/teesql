@@ -20,11 +20,28 @@ type SelectiveXmlIndexPromotedPath struct {
 	Name           *Identifier
 	Path           *StringLiteral
 	XQueryDataType *StringLiteral
+	SQLDataType    *SqlDataTypeReference
 	MaxLength      *IntegerLiteral
 	IsSingleton    bool
 }
 
 func (s *SelectiveXmlIndexPromotedPath) node() {}
+
+// CreateSelectiveXmlIndexStatement represents CREATE SELECTIVE XML INDEX statement
+type CreateSelectiveXmlIndexStatement struct {
+	Name              *Identifier
+	OnName            *SchemaObjectName
+	XmlColumn         *Identifier
+	IsSecondary       bool
+	UsingXmlIndexName *Identifier     // For secondary indexes
+	PathName          *Identifier     // For secondary indexes
+	PromotedPaths     []*SelectiveXmlIndexPromotedPath
+	XmlNamespaces     *XmlNamespaces
+	IndexOptions      []IndexOption
+}
+
+func (s *CreateSelectiveXmlIndexStatement) statement() {}
+func (s *CreateSelectiveXmlIndexStatement) node()      {}
 
 // XmlNamespaces represents a WITH XMLNAMESPACES clause
 type XmlNamespaces struct {

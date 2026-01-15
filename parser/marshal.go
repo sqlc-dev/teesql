@@ -498,6 +498,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createTypeTableStatementToJSON(s)
 	case *ast.CreateXmlIndexStatement:
 		return createXmlIndexStatementToJSON(s)
+	case *ast.CreateSelectiveXmlIndexStatement:
+		return createSelectiveXmlIndexStatementToJSON(s)
 	case *ast.CreatePartitionFunctionStatement:
 		return createPartitionFunctionStatementToJSON(s)
 	case *ast.CreateEventNotificationStatement:
@@ -13972,6 +13974,9 @@ func selectiveXmlIndexPromotedPathToJSON(p *ast.SelectiveXmlIndexPromotedPath) j
 	if p.XQueryDataType != nil {
 		node["XQueryDataType"] = stringLiteralToJSON(p.XQueryDataType)
 	}
+	if p.SQLDataType != nil {
+		node["SQLDataType"] = sqlDataTypeReferenceToJSON(p.SQLDataType)
+	}
 	if p.MaxLength != nil {
 		node["MaxLength"] = scalarExpressionToJSON(p.MaxLength)
 	}
@@ -17475,6 +17480,46 @@ func createXmlIndexStatementToJSON(s *ast.CreateXmlIndexStatement) jsonNode {
 	}
 	if s.SecondaryXmlIndexType != "" {
 		node["SecondaryXmlIndexType"] = s.SecondaryXmlIndexType
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.OnName != nil {
+		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	if len(s.IndexOptions) > 0 {
+		opts := make([]jsonNode, len(s.IndexOptions))
+		for i, opt := range s.IndexOptions {
+			opts[i] = indexOptionToJSON(opt)
+		}
+		node["IndexOptions"] = opts
+	}
+	return node
+}
+
+func createSelectiveXmlIndexStatementToJSON(s *ast.CreateSelectiveXmlIndexStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateSelectiveXmlIndexStatement",
+	}
+	node["IsSecondary"] = s.IsSecondary
+	if s.XmlColumn != nil {
+		node["XmlColumn"] = identifierToJSON(s.XmlColumn)
+	}
+	if s.UsingXmlIndexName != nil {
+		node["UsingXmlIndexName"] = identifierToJSON(s.UsingXmlIndexName)
+	}
+	if s.PathName != nil {
+		node["PathName"] = identifierToJSON(s.PathName)
+	}
+	if len(s.PromotedPaths) > 0 {
+		paths := make([]jsonNode, len(s.PromotedPaths))
+		for i, path := range s.PromotedPaths {
+			paths[i] = selectiveXmlIndexPromotedPathToJSON(path)
+		}
+		node["PromotedPaths"] = paths
+	}
+	if s.XmlNamespaces != nil {
+		node["XmlNamespaces"] = xmlNamespacesToJSON(s.XmlNamespaces)
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)

@@ -2803,6 +2803,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			return p.parseCreateIndexStatement()
 		case "PRIMARY":
 			return p.parseCreateXmlIndexStatement()
+		case "SELECTIVE":
+			return p.parseCreateSelectiveXmlIndexStatement()
 		case "COLUMN":
 			return p.parseCreateColumnMasterKeyStatement()
 		case "CRYPTOGRAPHIC":
@@ -13288,16 +13290,129 @@ func (p *Parser) parseCreateXmlIndexStatement() (*ast.CreateXmlIndexStatement, e
 	return stmt, nil
 }
 
-func (p *Parser) parseCreateXmlIndexFromXml() (*ast.CreateXmlIndexStatement, error) {
+func (p *Parser) parseCreateXmlIndexFromXml() (ast.Statement, error) {
 	// XML has already been consumed, curTok is INDEX
 	if p.curTok.Type == TokenIndex {
 		p.nextToken() // consume INDEX
 	}
 
+	name := p.parseIdentifier()
+	var onName *ast.SchemaObjectName
+	var xmlColumn *ast.Identifier
+
+	// Parse ON table_name
+	if strings.ToUpper(p.curTok.Literal) == "ON" {
+		p.nextToken() // consume ON
+		onName, _ = p.parseSchemaObjectName()
+	}
+
+	// Parse (column)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		xmlColumn = p.parseIdentifier()
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse USING XML INDEX name
+	if strings.ToUpper(p.curTok.Literal) == "USING" {
+		p.nextToken() // consume USING
+		if strings.ToUpper(p.curTok.Literal) == "XML" {
+			p.nextToken() // consume XML
+		}
+		if p.curTok.Type == TokenIndex {
+			p.nextToken() // consume INDEX
+		}
+		usingName := p.parseIdentifier()
+		if strings.ToUpper(p.curTok.Literal) == "FOR" {
+			p.nextToken() // consume FOR
+			// Check if this is a selective XML index (FOR followed by parenthesis with path names)
+			// vs regular secondary XML index (FOR followed by VALUE|PATH|PROPERTY)
+			if p.curTok.Type == TokenLParen {
+				// This is a secondary selective XML index
+				selectiveStmt := &ast.CreateSelectiveXmlIndexStatement{
+					Name:              name,
+					OnName:            onName,
+					XmlColumn:         xmlColumn,
+					IsSecondary:       true,
+					UsingXmlIndexName: usingName,
+				}
+				p.nextToken() // consume (
+				// Parse path name(s)
+				if p.curTok.Type == TokenIdent {
+					selectiveStmt.PathName = p.parseIdentifier()
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+				return selectiveStmt, nil
+			}
+			// Regular secondary XML index
+			stmt := &ast.CreateXmlIndexStatement{
+				Primary:               false,
+				SecondaryXmlIndexType: "NotSpecified",
+				Name:                  name,
+				OnName:                onName,
+				XmlColumn:             xmlColumn,
+				SecondaryXmlIndexName: usingName,
+			}
+			switch strings.ToUpper(p.curTok.Literal) {
+			case "VALUE":
+				stmt.SecondaryXmlIndexType = "Value"
+				p.nextToken()
+			case "PATH":
+				stmt.SecondaryXmlIndexType = "Path"
+				p.nextToken()
+			case "PROPERTY":
+				stmt.SecondaryXmlIndexType = "Property"
+				p.nextToken()
+			}
+			// Parse WITH (options) if present
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenLParen {
+					stmt.IndexOptions = p.parseCreateIndexOptions()
+				}
+			}
+			return stmt, nil
+		}
+	}
+
+	// Non-secondary XML index
 	stmt := &ast.CreateXmlIndexStatement{
 		Primary:               false,
 		SecondaryXmlIndexType: "NotSpecified",
-		Name:                  p.parseIdentifier(),
+		Name:                  name,
+		OnName:                onName,
+		XmlColumn:             xmlColumn,
+	}
+
+	// Parse WITH (options) if present
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			// parseCreateIndexOptions expects to consume ( and ) itself
+			stmt.IndexOptions = p.parseCreateIndexOptions()
+		}
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateSelectiveXmlIndexStatement() (*ast.CreateSelectiveXmlIndexStatement, error) {
+	// SELECTIVE has already been matched, consume it
+	p.nextToken() // consume SELECTIVE
+	if strings.ToUpper(p.curTok.Literal) == "XML" {
+		p.nextToken() // consume XML
+	}
+	if p.curTok.Type == TokenIndex {
+		p.nextToken() // consume INDEX
+	}
+
+	stmt := &ast.CreateSelectiveXmlIndexStatement{
+		IsSecondary: false,
+		Name:        p.parseIdentifier(),
 	}
 
 	// Parse ON table_name
@@ -13315,28 +13430,30 @@ func (p *Parser) parseCreateXmlIndexFromXml() (*ast.CreateXmlIndexStatement, err
 		}
 	}
 
-	// Parse USING XML INDEX name FOR VALUE|PATH|PROPERTY
-	if strings.ToUpper(p.curTok.Literal) == "USING" {
-		p.nextToken() // consume USING
-		if strings.ToUpper(p.curTok.Literal) == "XML" {
-			p.nextToken() // consume XML
-		}
-		if p.curTok.Type == TokenIndex {
-			p.nextToken() // consume INDEX
-		}
-		stmt.SecondaryXmlIndexName = p.parseIdentifier()
-		if strings.ToUpper(p.curTok.Literal) == "FOR" {
-			p.nextToken() // consume FOR
-			switch strings.ToUpper(p.curTok.Literal) {
-			case "VALUE":
-				stmt.SecondaryXmlIndexType = "Value"
-				p.nextToken()
-			case "PATH":
-				stmt.SecondaryXmlIndexType = "Path"
-				p.nextToken()
-			case "PROPERTY":
-				stmt.SecondaryXmlIndexType = "Property"
-				p.nextToken()
+	// Parse optional WITH XMLNAMESPACES clause
+	if strings.ToUpper(p.curTok.Literal) == "WITH" && strings.ToUpper(p.peekTok.Literal) == "XMLNAMESPACES" {
+		p.nextToken() // consume WITH
+		stmt.XmlNamespaces = p.parseXmlNamespaces()
+	}
+
+	// Parse FOR clause with paths
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				path := p.parseSelectiveXmlIndexPath()
+				if path != nil {
+					stmt.PromotedPaths = append(stmt.PromotedPaths, path)
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume ,
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
 			}
 		}
 	}
@@ -13345,12 +13462,76 @@ func (p *Parser) parseCreateXmlIndexFromXml() (*ast.CreateXmlIndexStatement, err
 	if strings.ToUpper(p.curTok.Literal) == "WITH" {
 		p.nextToken() // consume WITH
 		if p.curTok.Type == TokenLParen {
-			// parseCreateIndexOptions expects to consume ( and ) itself
 			stmt.IndexOptions = p.parseCreateIndexOptions()
 		}
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseSelectiveXmlIndexPath() *ast.SelectiveXmlIndexPromotedPath {
+	path := &ast.SelectiveXmlIndexPromotedPath{}
+
+	// Parse path name (identifier)
+	path.Name = p.parseIdentifier()
+
+	// Check for = 'path_value'
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+			path.Path, _ = p.parseStringLiteral()
+		}
+	}
+
+	// Parse optional AS XQUERY/SQL clause
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "XQUERY" {
+			p.nextToken() // consume XQUERY
+			// Check for optional type or MAXLENGTH
+			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+				// XQuery type like 'xs:string' or 'node()'
+				path.XQueryDataType, _ = p.parseStringLiteral()
+			}
+			// Check for MAXLENGTH
+			if strings.ToUpper(p.curTok.Literal) == "MAXLENGTH" {
+				p.nextToken() // consume MAXLENGTH
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					if p.curTok.Type == TokenNumber {
+						path.MaxLength = &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						}
+						p.nextToken() // consume number
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			}
+			// Check for SINGLETON
+			if strings.ToUpper(p.curTok.Literal) == "SINGLETON" {
+				path.IsSingleton = true
+				p.nextToken() // consume SINGLETON
+			}
+		} else if upperLit == "SQL" {
+			p.nextToken() // consume SQL
+			// Parse SQL data type
+			dt, _ := p.parseDataTypeReference()
+			if sdt, ok := dt.(*ast.SqlDataTypeReference); ok {
+				path.SQLDataType = sdt
+			}
+			// Check for SINGLETON
+			if strings.ToUpper(p.curTok.Literal) == "SINGLETON" {
+				path.IsSingleton = true
+				p.nextToken() // consume SINGLETON
+			}
+		}
+	}
+
+	return path
 }
 
 func (p *Parser) parseCreateXmlSchemaCollectionFromXml() (*ast.CreateXmlSchemaCollectionStatement, error) {
