@@ -15707,9 +15707,12 @@ func insertBulkColumnDefinitionToJSON(c *ast.InsertBulkColumnDefinition) jsonNod
 	if c.Column != nil {
 		node["Column"] = columnDefinitionBaseToJSON(c.Column)
 	}
-	if c.NullNotNull != "" && c.NullNotNull != "Unspecified" {
-		node["NullNotNull"] = c.NullNotNull
+	// Always include NullNotNull - use "NotSpecified" if empty
+	nullNotNull := c.NullNotNull
+	if nullNotNull == "" || nullNotNull == "Unspecified" {
+		nullNotNull = "NotSpecified"
 	}
+	node["NullNotNull"] = nullNotNull
 	return node
 }
 
