@@ -1950,6 +1950,24 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
+		if len(e.JsonParameters) > 0 {
+			params := make([]jsonNode, len(e.JsonParameters))
+			for i, kv := range e.JsonParameters {
+				params[i] = jsonNode{
+					"$type":       "JsonKeyValue",
+					"JsonKeyName": scalarExpressionToJSON(kv.JsonKeyName),
+					"JsonValue":   scalarExpressionToJSON(kv.JsonValue),
+				}
+			}
+			node["JsonParameters"] = params
+		}
+		if len(e.AbsentOrNullOnNull) > 0 {
+			idents := make([]jsonNode, len(e.AbsentOrNullOnNull))
+			for i, ident := range e.AbsentOrNullOnNull {
+				idents[i] = identifierToJSON(ident)
+			}
+			node["AbsentOrNullOnNull"] = idents
+		}
 		return node
 	case *ast.PartitionFunctionCall:
 		node := jsonNode{

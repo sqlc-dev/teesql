@@ -471,10 +471,15 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		}
 
 		// Not an assignment, treat as regular scalar expression starting with variable
-		varRef := &ast.VariableReference{Name: varName}
+		var varExpr ast.ScalarExpression
+		if strings.HasPrefix(varName, "@@") {
+			varExpr = &ast.GlobalVariableExpression{Name: varName}
+		} else {
+			varExpr = &ast.VariableReference{Name: varName}
+		}
 
 		// Handle postfix operations (method calls, property access)
-		expr, err := p.handlePostfixOperations(varRef)
+		expr, err := p.handlePostfixOperations(varExpr)
 		if err != nil {
 			return nil, err
 		}
@@ -1899,6 +1904,10 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 			return p.parseParseCall(false)
 		case "TRY_PARSE":
 			return p.parseParseCall(true)
+		case "JSON_OBJECT":
+			return p.parseJsonObjectCall()
+		case "JSON_ARRAY":
+			return p.parseJsonArrayCall()
 		}
 	}
 
@@ -5864,6 +5873,149 @@ func (p *Parser) parseParseCall(isTry bool) (ast.ScalarExpression, error) {
 		DataType:    dataType,
 		Culture:     culture,
 	}, nil
+}
+
+// parseJsonObjectCall parses JSON_OBJECT('key':value, 'key2':value2, ... [NULL|ABSENT ON NULL])
+func (p *Parser) parseJsonObjectCall() (*ast.FunctionCall, error) {
+	fc := &ast.FunctionCall{
+		FunctionName:     &ast.Identifier{Value: "JSON_OBJECT", QuoteType: "NotQuoted"},
+		UniqueRowFilter:  "NotSpecified",
+		WithArrayWrapper: false,
+	}
+
+	p.nextToken() // consume (
+
+	// Parse key-value pairs
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		// Check for NULL ON NULL or ABSENT ON NULL at start of loop
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "NULL" || upperLit == "ABSENT" {
+			// Look ahead to see if this is "NULL ON NULL" or "ABSENT ON NULL"
+			if p.peekIsOnNull() {
+				fc.AbsentOrNullOnNull = append(fc.AbsentOrNullOnNull, &ast.Identifier{Value: upperLit, QuoteType: "NotQuoted"})
+				p.nextToken() // consume NULL or ABSENT
+				p.nextToken() // consume ON
+				p.nextToken() // consume NULL
+				continue
+			}
+		}
+
+		// Parse key expression
+		keyExpr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		// Check for : (JSON key-value separator)
+		if p.curTok.Type == TokenColon {
+			p.nextToken() // consume :
+
+			// Parse value expression
+			valueExpr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			fc.JsonParameters = append(fc.JsonParameters, &ast.JsonKeyValue{
+				JsonKeyName: keyExpr,
+				JsonValue:   valueExpr,
+			})
+		} else {
+			// Just a regular parameter without colon (shouldn't happen for JSON_OBJECT)
+			fc.Parameters = append(fc.Parameters, keyExpr)
+		}
+
+		// After parsing a value, check for NULL ON NULL or ABSENT ON NULL
+		postValueLit := strings.ToUpper(p.curTok.Literal)
+		if postValueLit == "NULL" || postValueLit == "ABSENT" {
+			if p.peekIsOnNull() {
+				fc.AbsentOrNullOnNull = append(fc.AbsentOrNullOnNull, &ast.Identifier{Value: postValueLit, QuoteType: "NotQuoted"})
+				p.nextToken() // consume NULL or ABSENT
+				p.nextToken() // consume ON
+				p.nextToken() // consume NULL
+				// Continue to check for ) or comma
+			}
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in JSON_OBJECT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return fc, nil
+}
+
+// parseJsonArrayCall parses JSON_ARRAY(value1, value2, ... [NULL|ABSENT ON NULL])
+func (p *Parser) parseJsonArrayCall() (*ast.FunctionCall, error) {
+	fc := &ast.FunctionCall{
+		FunctionName:     &ast.Identifier{Value: "JSON_ARRAY", QuoteType: "NotQuoted"},
+		UniqueRowFilter:  "NotSpecified",
+		WithArrayWrapper: false,
+	}
+
+	p.nextToken() // consume (
+
+	// Parse array elements
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		// Check for NULL ON NULL or ABSENT ON NULL at start of loop
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "NULL" || upperLit == "ABSENT" {
+			// Look ahead to see if this is "NULL ON NULL" or "ABSENT ON NULL"
+			if p.peekIsOnNull() {
+				fc.AbsentOrNullOnNull = append(fc.AbsentOrNullOnNull, &ast.Identifier{Value: upperLit, QuoteType: "NotQuoted"})
+				p.nextToken() // consume NULL or ABSENT
+				p.nextToken() // consume ON
+				p.nextToken() // consume NULL
+				continue
+			}
+		}
+
+		// Parse value expression
+		valueExpr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		fc.Parameters = append(fc.Parameters, valueExpr)
+
+		// After parsing a value, check for NULL ON NULL or ABSENT ON NULL
+		postValueLit := strings.ToUpper(p.curTok.Literal)
+		if postValueLit == "NULL" || postValueLit == "ABSENT" {
+			if p.peekIsOnNull() {
+				fc.AbsentOrNullOnNull = append(fc.AbsentOrNullOnNull, &ast.Identifier{Value: postValueLit, QuoteType: "NotQuoted"})
+				p.nextToken() // consume NULL or ABSENT
+				p.nextToken() // consume ON
+				p.nextToken() // consume NULL
+				// Continue to check for ) or comma
+			}
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in JSON_ARRAY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return fc, nil
+}
+
+// peekIsOnNull checks if the next tokens are "ON NULL"
+func (p *Parser) peekIsOnNull() bool {
+	// Just check if the next token is ON
+	// The caller will verify the NULL after ON when consuming
+	return p.peekTok.Type == TokenOn
 }
 
 // parseChangeTableReference parses CHANGETABLE(CHANGES ...) or CHANGETABLE(VERSION ...)

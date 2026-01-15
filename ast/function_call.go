@@ -59,6 +59,14 @@ type WithinGroupClause struct {
 
 func (*WithinGroupClause) node() {}
 
+// JsonKeyValue represents a key-value pair in JSON_OBJECT function
+type JsonKeyValue struct {
+	JsonKeyName ScalarExpression `json:"JsonKeyName,omitempty"`
+	JsonValue   ScalarExpression `json:"JsonValue,omitempty"`
+}
+
+func (*JsonKeyValue) node() {}
+
 // FunctionCall represents a function call.
 type FunctionCall struct {
 	CallTarget         CallTarget         `json:"CallTarget,omitempty"`
@@ -71,6 +79,8 @@ type FunctionCall struct {
 	WithArrayWrapper   bool               `json:"WithArrayWrapper,omitempty"`
 	TrimOptions        *Identifier        `json:"TrimOptions,omitempty"` // For TRIM(LEADING/TRAILING/BOTH chars FROM string)
 	Collation          *Identifier        `json:"Collation,omitempty"`
+	JsonParameters     []*JsonKeyValue    `json:"JsonParameters,omitempty"`  // For JSON_OBJECT function key:value pairs
+	AbsentOrNullOnNull []*Identifier      `json:"AbsentOrNullOnNull,omitempty"` // For JSON_OBJECT/JSON_ARRAY NULL ON NULL or ABSENT ON NULL
 }
 
 func (*FunctionCall) node()             {}
