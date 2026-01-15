@@ -4686,8 +4686,15 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					if p.curTok.Type == TokenOn {
 						break
 					}
+					// Check for keywords that start new constraints
+					upperLiteral := strings.ToUpper(p.curTok.Literal)
+					if upperLiteral == "CONSTRAINT" || upperLiteral == "PRIMARY" || upperLiteral == "UNIQUE" ||
+						upperLiteral == "FOREIGN" || upperLiteral == "CHECK" || upperLiteral == "DEFAULT" ||
+						upperLiteral == "INDEX" {
+						break
+					}
 
-					optionName := strings.ToUpper(p.curTok.Literal)
+					optionName := upperLiteral
 					p.nextToken()
 					if p.curTok.Type == TokenEquals {
 						p.nextToken() // consume =
@@ -4836,8 +4843,15 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					if p.curTok.Type == TokenOn {
 						break
 					}
+					// Check for keywords that start new constraints
+					upperLiteral := strings.ToUpper(p.curTok.Literal)
+					if upperLiteral == "CONSTRAINT" || upperLiteral == "PRIMARY" || upperLiteral == "UNIQUE" ||
+						upperLiteral == "FOREIGN" || upperLiteral == "CHECK" || upperLiteral == "DEFAULT" ||
+						upperLiteral == "INDEX" {
+						break
+					}
 
-					optionName := strings.ToUpper(p.curTok.Literal)
+					optionName := upperLiteral
 					p.nextToken()
 					if p.curTok.Type == TokenEquals {
 						p.nextToken() // consume =

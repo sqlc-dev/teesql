@@ -6671,6 +6671,13 @@ func (p *Parser) parseConstraintIndexOptions() []ast.IndexOption {
 		if !hasParens && p.curTok.Type == TokenRParen {
 			break
 		}
+		// Stop if we hit a keyword that starts a new constraint
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "CONSTRAINT" || upperLit == "PRIMARY" || upperLit == "UNIQUE" ||
+			upperLit == "FOREIGN" || upperLit == "CHECK" || upperLit == "DEFAULT" ||
+			upperLit == "INDEX" {
+			break
+		}
 
 		optionName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
@@ -6707,7 +6714,14 @@ func (p *Parser) parseConstraintIndexOptions() []ast.IndexOption {
 		}
 
 		if p.curTok.Type == TokenComma {
-			p.nextToken()
+			if hasParens {
+				// Inside parentheses, consume comma and continue parsing options
+				p.nextToken()
+			} else {
+				// Without parentheses, the comma separates constraints, not options
+				// Don't consume it - let the outer parser handle it
+				break
+			}
 		} else if !hasParens {
 			break
 		}
