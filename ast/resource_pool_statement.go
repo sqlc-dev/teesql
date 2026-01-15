@@ -47,9 +47,18 @@ type LiteralRange struct {
 	To   ScalarExpression `json:"To,omitempty"`
 }
 
+// CreateExternalResourcePoolStatement represents a CREATE EXTERNAL RESOURCE POOL statement
+type CreateExternalResourcePoolStatement struct {
+	Name                           *Identifier                      `json:"Name,omitempty"`
+	ExternalResourcePoolParameters []*ExternalResourcePoolParameter `json:"ExternalResourcePoolParameters,omitempty"`
+}
+
+func (*CreateExternalResourcePoolStatement) node()      {}
+func (*CreateExternalResourcePoolStatement) statement() {}
+
 // AlterExternalResourcePoolStatement represents an ALTER EXTERNAL RESOURCE POOL statement
 type AlterExternalResourcePoolStatement struct {
-	Name                         *Identifier                     `json:"Name,omitempty"`
+	Name                           *Identifier                      `json:"Name,omitempty"`
 	ExternalResourcePoolParameters []*ExternalResourcePoolParameter `json:"ExternalResourcePoolParameters,omitempty"`
 }
 

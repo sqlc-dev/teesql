@@ -81,13 +81,21 @@ type DropIndexOption interface {
 
 // OnlineIndexOption represents the ONLINE option
 type OnlineIndexOption struct {
-	OptionState string // On, Off
-	OptionKind  string // Online
+	LowPriorityLockWaitOption *OnlineIndexLowPriorityLockWaitOption // For ONLINE = ON (WAIT_AT_LOW_PRIORITY (...))
+	OptionState               string                                // On, Off
+	OptionKind                string                                // Online
 }
 
 func (o *OnlineIndexOption) node()            {}
 func (o *OnlineIndexOption) dropIndexOption() {}
 func (o *OnlineIndexOption) indexOption()     {}
+
+// OnlineIndexLowPriorityLockWaitOption represents WAIT_AT_LOW_PRIORITY options for ONLINE = ON
+type OnlineIndexLowPriorityLockWaitOption struct {
+	Options []LowPriorityLockWaitOption
+}
+
+func (o *OnlineIndexLowPriorityLockWaitOption) node() {}
 
 // MoveToDropIndexOption represents the MOVE TO option
 type MoveToDropIndexOption struct {

@@ -39,6 +39,23 @@ type IdentifierPrincipalOption struct {
 func (o *IdentifierPrincipalOption) userOptionNode()      {}
 func (o *IdentifierPrincipalOption) principalOptionNode() {}
 
+// OnOffPrincipalOption represents an ON/OFF principal option
+type OnOffPrincipalOption struct {
+	OptionKind  string
+	OptionState string // "On" or "Off"
+}
+
+func (o *OnOffPrincipalOption) userOptionNode()      {}
+func (o *OnOffPrincipalOption) principalOptionNode() {}
+
+// PrincipalOptionSimple represents a simple principal option with just an option kind
+type PrincipalOptionSimple struct {
+	OptionKind string
+}
+
+func (o *PrincipalOptionSimple) userOptionNode()      {}
+func (o *PrincipalOptionSimple) principalOptionNode() {}
+
 // DefaultSchemaPrincipalOption represents a default schema option
 type DefaultSchemaPrincipalOption struct {
 	OptionKind string
@@ -47,9 +64,9 @@ type DefaultSchemaPrincipalOption struct {
 
 func (o *DefaultSchemaPrincipalOption) userOptionNode() {}
 
-// PasswordAlterPrincipalOption represents a password option for ALTER USER
+// PasswordAlterPrincipalOption represents a password option for ALTER USER/LOGIN
 type PasswordAlterPrincipalOption struct {
-	Password    *StringLiteral
+	Password    ScalarExpression
 	OldPassword *StringLiteral
 	MustChange  bool
 	Unlock      bool
@@ -57,4 +74,5 @@ type PasswordAlterPrincipalOption struct {
 	OptionKind  string
 }
 
-func (o *PasswordAlterPrincipalOption) userOptionNode() {}
+func (o *PasswordAlterPrincipalOption) userOptionNode()      {}
+func (o *PasswordAlterPrincipalOption) principalOptionNode() {}

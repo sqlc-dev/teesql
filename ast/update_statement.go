@@ -21,6 +21,9 @@ type UpdateSpecification struct {
 	OutputIntoClause *OutputIntoClause `json:"OutputIntoClause,omitempty"`
 }
 
+func (u *UpdateSpecification) node()                          {}
+func (u *UpdateSpecification) dataModificationSpecification() {}
+
 // SetClause is an interface for SET clauses.
 type SetClause interface {
 	setClause()

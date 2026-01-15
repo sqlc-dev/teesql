@@ -27,3 +27,12 @@ type LiteralTableHint struct {
 }
 
 func (*LiteralTableHint) tableHint() {}
+
+// ForceSeekTableHint represents FORCESEEK table hint with optional index and column list.
+type ForceSeekTableHint struct {
+	HintKind     string                        `json:"HintKind,omitempty"`
+	IndexValue   *IdentifierOrValueExpression  `json:"IndexValue,omitempty"`
+	ColumnValues []*ColumnReferenceExpression  `json:"ColumnValues,omitempty"`
+}
+
+func (*ForceSeekTableHint) tableHint() {}

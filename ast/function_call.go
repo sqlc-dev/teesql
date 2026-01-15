@@ -28,9 +28,28 @@ func (*UserDefinedTypeCallTarget) callTarget() {}
 
 // OverClause represents an OVER clause for window functions.
 type OverClause struct {
-	Partitions    []ScalarExpression `json:"Partitions,omitempty"`
-	OrderByClause *OrderByClause     `json:"OrderByClause,omitempty"`
+	WindowName        *Identifier        `json:"WindowName,omitempty"`
+	Partitions        []ScalarExpression `json:"Partitions,omitempty"`
+	OrderByClause     *OrderByClause     `json:"OrderByClause,omitempty"`
+	WindowFrameClause *WindowFrameClause `json:"WindowFrameClause,omitempty"`
 }
+
+// WindowFrameClause represents ROWS/RANGE frame specification in OVER clause
+type WindowFrameClause struct {
+	WindowFrameType string           // "Rows", "Range"
+	Top             *WindowDelimiter // Top boundary
+	Bottom          *WindowDelimiter // Bottom boundary (for BETWEEN)
+}
+
+func (w *WindowFrameClause) node() {}
+
+// WindowDelimiter represents window frame boundary
+type WindowDelimiter struct {
+	WindowDelimiterType string           // "CurrentRow", "UnboundedPreceding", "UnboundedFollowing", "ValuePreceding", "ValueFollowing"
+	OffsetValue         ScalarExpression // For ValuePreceding/ValueFollowing
+}
+
+func (w *WindowDelimiter) node() {}
 
 // WithinGroupClause represents a WITHIN GROUP clause for ordered set aggregate functions.
 type WithinGroupClause struct {
@@ -50,6 +69,7 @@ type FunctionCall struct {
 	OverClause         *OverClause        `json:"OverClause,omitempty"`
 	IgnoreRespectNulls []*Identifier      `json:"IgnoreRespectNulls,omitempty"`
 	WithArrayWrapper   bool               `json:"WithArrayWrapper,omitempty"`
+	TrimOptions        *Identifier        `json:"TrimOptions,omitempty"` // For TRIM(LEADING/TRAILING/BOTH chars FROM string)
 	Collation          *Identifier        `json:"Collation,omitempty"`
 }
 

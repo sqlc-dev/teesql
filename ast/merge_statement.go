@@ -18,7 +18,8 @@ type MergeSpecification struct {
 	OutputClause    *OutputClause
 }
 
-func (s *MergeSpecification) node() {}
+func (s *MergeSpecification) node()                          {}
+func (s *MergeSpecification) dataModificationSpecification() {}
 
 // MergeActionClause represents a WHEN clause in a MERGE statement
 type MergeActionClause struct {

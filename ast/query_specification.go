@@ -9,6 +9,7 @@ type QuerySpecification struct {
 	WhereClause     *WhereClause      `json:"WhereClause,omitempty"`
 	GroupByClause   *GroupByClause    `json:"GroupByClause,omitempty"`
 	HavingClause    *HavingClause     `json:"HavingClause,omitempty"`
+	WindowClause    *WindowClause     `json:"WindowClause,omitempty"`
 	OrderByClause   *OrderByClause    `json:"OrderByClause,omitempty"`
 	OffsetClause    *OffsetClause     `json:"OffsetClause,omitempty"`
 	ForClause       ForClause         `json:"ForClause,omitempty"`

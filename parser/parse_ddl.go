@@ -130,6 +130,41 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropBrokerPriorityStatement()
 	case "RESOURCE":
 		return p.parseDropResourcePoolStatement()
+	case "LOGIN":
+		return p.parseDropLoginStatement()
+	case "PARTITION":
+		return p.parseDropPartitionStatement()
+	case "APPLICATION":
+		return p.parseDropApplicationRoleStatement()
+	case "CERTIFICATE":
+		return p.parseDropCertificateStatement()
+	case "CREDENTIAL":
+		return p.parseDropCredentialStatement(false)
+	case "MASTER":
+		return p.parseDropMasterKeyStatement()
+	case "XML":
+		return p.parseDropXmlSchemaCollectionStatement()
+	case "CONTRACT":
+		return p.parseDropContractStatement()
+	case "ENDPOINT":
+		return p.parseDropEndpointStatement()
+	case "MESSAGE":
+		return p.parseDropMessageTypeStatement()
+	case "QUEUE":
+		return p.parseDropQueueStatement()
+	case "REMOTE":
+		return p.parseDropRemoteServiceBindingStatement()
+	case "ROUTE":
+		return p.parseDropRouteStatement()
+	case "SERVICE":
+		return p.parseDropServiceStatement()
+	case "EVENT":
+		return p.parseDropEventNotificationStatement()
+	}
+
+	// Handle LOGIN token explicitly
+	if p.curTok.Type == TokenLogin {
+		return p.parseDropLoginStatement()
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
@@ -659,6 +694,22 @@ func (p *Parser) parseDropSynonymStatement() (*ast.DropSynonymStatement, error) 
 	return stmt, nil
 }
 
+func (p *Parser) parseDropLoginStatement() (*ast.DropLoginStatement, error) {
+	// Consume LOGIN
+	p.nextToken()
+
+	stmt := &ast.DropLoginStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
 func (p *Parser) parseDropUserStatement() (*ast.DropUserStatement, error) {
 	// Consume USER
 	p.nextToken()
@@ -741,6 +792,18 @@ func (p *Parser) parseDropAssemblyStatement() (*ast.DropAssemblyStatement, error
 			break
 		}
 		p.nextToken() // consume comma
+	}
+
+	// Check for WITH NO DEPENDENTS
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "NO" {
+			p.nextToken() // consume NO
+			if strings.ToUpper(p.curTok.Literal) == "DEPENDENTS" {
+				p.nextToken() // consume DEPENDENTS
+				stmt.WithNoDependents = true
+			}
+		}
 	}
 
 	// Skip optional semicolon
@@ -842,6 +905,25 @@ func (p *Parser) parseDropSymmetricKeyStatement() (*ast.DropSymmetricKeyStatemen
 func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
 	// Consume DATABASE
 	p.nextToken()
+
+	// Check for DATABASE AUDIT SPECIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "AUDIT" {
+		p.nextToken() // consume AUDIT
+		if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
+			p.nextToken() // consume SPECIFICATION
+		}
+		stmt := &ast.DropDatabaseAuditSpecificationStatement{}
+		// Check for IF EXISTS
+		if strings.ToUpper(p.curTok.Literal) == "IF" {
+			p.nextToken()
+			if strings.ToUpper(p.curTok.Literal) == "EXISTS" {
+				p.nextToken()
+				stmt.IsIfExists = true
+			}
+		}
+		stmt.Name = p.parseIdentifier()
+		return stmt, nil
+	}
 
 	// Check for DATABASE ENCRYPTION KEY
 	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
@@ -1352,10 +1434,75 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 				optState = "On"
 			}
 			p.nextToken()
-			options = append(options, &ast.OnlineIndexOption{
+			onlineOpt := &ast.OnlineIndexOption{
 				OptionState: optState,
 				OptionKind:  "Online",
-			})
+			}
+			// Check for optional (WAIT_AT_LOW_PRIORITY (...))
+			if optState == "On" && p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				if strings.ToUpper(p.curTok.Literal) == "WAIT_AT_LOW_PRIORITY" {
+					p.nextToken() // consume WAIT_AT_LOW_PRIORITY
+					lowPriorityOpt := &ast.OnlineIndexLowPriorityLockWaitOption{}
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							optName := strings.ToUpper(p.curTok.Literal)
+							if optName == "MAX_DURATION" {
+								p.nextToken() // consume MAX_DURATION
+								if p.curTok.Type == TokenEquals {
+									p.nextToken() // consume =
+								}
+								durVal, _ := p.parsePrimaryExpression()
+								unit := "Minutes"
+								if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+									p.nextToken()
+								} else if strings.ToUpper(p.curTok.Literal) == "SECONDS" {
+									unit = "Seconds"
+									p.nextToken()
+								}
+								lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitMaxDurationOption{
+									MaxDuration: durVal,
+									Unit:        unit,
+									OptionKind:  "MaxDuration",
+								})
+							} else if optName == "ABORT_AFTER_WAIT" {
+								p.nextToken() // consume ABORT_AFTER_WAIT
+								if p.curTok.Type == TokenEquals {
+									p.nextToken() // consume =
+								}
+								abortType := "None"
+								switch strings.ToUpper(p.curTok.Literal) {
+								case "NONE":
+									abortType = "None"
+								case "SELF":
+									abortType = "Self"
+								case "BLOCKERS":
+									abortType = "Blockers"
+								}
+								p.nextToken()
+								lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+									AbortAfterWait: abortType,
+									OptionKind:     "AbortAfterWait",
+								})
+							} else {
+								break
+							}
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							}
+						}
+						if p.curTok.Type == TokenRParen {
+							p.nextToken() // consume )
+						}
+					}
+					onlineOpt.LowPriorityLockWaitOption = lowPriorityOpt
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			options = append(options, onlineOpt)
 		case "MOVE":
 			p.nextToken() // consume MOVE
 			if strings.ToUpper(p.curTok.Literal) == "TO" {
@@ -1417,6 +1564,23 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 			options = append(options, &ast.DataCompressionOption{
 				CompressionLevel: level,
 				OptionKind:       "DataCompression",
+			})
+		case "MAXDOP":
+			p.nextToken() // consume MAXDOP
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			var expr ast.ScalarExpression
+			if p.curTok.Type == TokenNumber {
+				expr = &ast.IntegerLiteral{
+					LiteralType: "Integer",
+					Value:       p.curTok.Literal,
+				}
+				p.nextToken()
+			}
+			options = append(options, &ast.IndexExpressionOption{
+				Expression: expr,
+				OptionKind: "MaxDop",
 			})
 		case "WAIT_AT_LOW_PRIORITY":
 			p.nextToken() // consume WAIT_AT_LOW_PRIORITY
@@ -1612,7 +1776,9 @@ func (p *Parser) parseDropSchemaStatement() (*ast.DropSchemaStatement, error) {
 	// Consume SCHEMA
 	p.nextToken()
 
-	stmt := &ast.DropSchemaStatement{}
+	stmt := &ast.DropSchemaStatement{
+		DropBehavior: "None",
+	}
 
 	// Check for IF EXISTS
 	if strings.ToUpper(p.curTok.Literal) == "IF" {
@@ -1631,7 +1797,298 @@ func (p *Parser) parseDropSchemaStatement() (*ast.DropSchemaStatement, error) {
 	}
 	stmt.Schema = schema
 
+	// Check for CASCADE or RESTRICT
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "CASCADE":
+		stmt.DropBehavior = "Cascade"
+		p.nextToken()
+	case "RESTRICT":
+		stmt.DropBehavior = "Restrict"
+		p.nextToken()
+	}
+
 	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropPartitionStatement() (ast.Statement, error) {
+	// Consume PARTITION
+	p.nextToken()
+
+	keyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	switch keyword {
+	case "FUNCTION":
+		stmt := &ast.DropPartitionFunctionStatement{
+			Name: p.parseIdentifier(),
+		}
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	case "SCHEME":
+		stmt := &ast.DropPartitionSchemeStatement{
+			Name: p.parseIdentifier(),
+		}
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	}
+
+	return nil, fmt.Errorf("expected FUNCTION or SCHEME after PARTITION, got %s", keyword)
+}
+
+func (p *Parser) parseDropApplicationRoleStatement() (*ast.DropApplicationRoleStatement, error) {
+	// Consume APPLICATION
+	p.nextToken()
+	// Consume ROLE
+	if strings.ToUpper(p.curTok.Literal) == "ROLE" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropApplicationRoleStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropCertificateStatement() (*ast.DropCertificateStatement, error) {
+	// Consume CERTIFICATE
+	p.nextToken()
+
+	stmt := &ast.DropCertificateStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropMasterKeyStatement() (*ast.DropMasterKeyStatement, error) {
+	// Consume MASTER
+	p.nextToken()
+	// Consume KEY
+	if strings.ToUpper(p.curTok.Literal) == "KEY" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropMasterKeyStatement{}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropXmlSchemaCollectionStatement() (*ast.DropXmlSchemaCollectionStatement, error) {
+	// Consume XML
+	p.nextToken()
+	// Consume SCHEMA
+	if strings.ToUpper(p.curTok.Literal) == "SCHEMA" {
+		p.nextToken()
+	}
+	// Consume COLLECTION
+	if strings.ToUpper(p.curTok.Literal) == "COLLECTION" {
+		p.nextToken()
+	}
+
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+
+	stmt := &ast.DropXmlSchemaCollectionStatement{
+		Name: name,
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropContractStatement() (*ast.DropContractStatement, error) {
+	// Consume CONTRACT
+	p.nextToken()
+
+	stmt := &ast.DropContractStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropEndpointStatement() (*ast.DropEndpointStatement, error) {
+	// Consume ENDPOINT
+	p.nextToken()
+
+	stmt := &ast.DropEndpointStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropMessageTypeStatement() (*ast.DropMessageTypeStatement, error) {
+	// Consume MESSAGE
+	p.nextToken()
+	// Consume TYPE
+	if strings.ToUpper(p.curTok.Literal) == "TYPE" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropMessageTypeStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropQueueStatement() (*ast.DropQueueStatement, error) {
+	// Consume QUEUE
+	p.nextToken()
+
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+
+	stmt := &ast.DropQueueStatement{
+		Name: name,
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropRemoteServiceBindingStatement() (*ast.DropRemoteServiceBindingStatement, error) {
+	// Consume REMOTE
+	p.nextToken()
+	// Consume SERVICE
+	if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
+		p.nextToken()
+	}
+	// Consume BINDING
+	if strings.ToUpper(p.curTok.Literal) == "BINDING" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropRemoteServiceBindingStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropRouteStatement() (*ast.DropRouteStatement, error) {
+	// Consume ROUTE
+	p.nextToken()
+
+	stmt := &ast.DropRouteStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropServiceStatement() (*ast.DropServiceStatement, error) {
+	// Consume SERVICE
+	p.nextToken()
+
+	stmt := &ast.DropServiceStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropEventNotificationStatement() (*ast.DropEventNotificationStatement, error) {
+	// Consume EVENT
+	p.nextToken()
+	// Consume NOTIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "NOTIFICATION" {
+		p.nextToken()
+	}
+
+	stmt := &ast.DropEventNotificationStatement{}
+
+	// Parse notification names (comma-separated)
+	for {
+		stmt.Notifications = append(stmt.Notifications, p.parseIdentifier())
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+			continue
+		}
+		break
+	}
+
+	// Parse ON clause
+	if p.curTok.Type == TokenOn {
+		p.nextToken()
+	}
+
+	scope := &ast.EventNotificationObjectScope{}
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "SERVER":
+		scope.Target = "Server"
+		p.nextToken()
+	case "DATABASE":
+		scope.Target = "Database"
+		p.nextToken()
+	case "QUEUE":
+		scope.Target = "Queue"
+		p.nextToken()
+		queueName, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		scope.QueueName = queueName
+	}
+	stmt.Scope = scope
+
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
@@ -5898,39 +6355,223 @@ func (p *Parser) parseAlterSchemaStatement() (*ast.AlterSchemaStatement, error) 
 	return stmt, nil
 }
 
-func (p *Parser) parseAlterLoginStatement() (*ast.AlterLoginAddDropCredentialStatement, error) {
+func (p *Parser) parseAlterLoginStatement() (ast.Statement, error) {
 	// Consume LOGIN
 	p.nextToken()
 
-	stmt := &ast.AlterLoginAddDropCredentialStatement{}
-
 	// Parse login name
-	stmt.Name = p.parseIdentifier()
+	name := p.parseIdentifier()
 
-	// Check for ADD or DROP - if not present, skip to end
-	if p.curTok.Type == TokenAdd {
-		stmt.IsAdd = true
-		p.nextToken() // consume ADD
-	} else if p.curTok.Type == TokenDrop {
-		stmt.IsAdd = false
-		p.nextToken() // consume DROP
-	} else {
-		// Handle incomplete statement
-		p.skipToEndOfStatement()
+	// Check for ENABLE/DISABLE
+	upper := strings.ToUpper(p.curTok.Literal)
+	if upper == "ENABLE" {
+		p.nextToken()
+		return &ast.AlterLoginEnableDisableStatement{
+			Name:     name,
+			IsEnable: true,
+		}, nil
+	} else if upper == "DISABLE" {
+		p.nextToken()
+		return &ast.AlterLoginEnableDisableStatement{
+			Name:     name,
+			IsEnable: false,
+		}, nil
+	}
+
+	// Check for ADD or DROP CREDENTIAL
+	if p.curTok.Type == TokenAdd || p.curTok.Type == TokenDrop {
+		stmt := &ast.AlterLoginAddDropCredentialStatement{
+			Name:  name,
+			IsAdd: p.curTok.Type == TokenAdd,
+		}
+		p.nextToken() // consume ADD/DROP
+
+		// Expect CREDENTIAL
+		if p.curTok.Type == TokenCredential {
+			p.nextToken()
+			stmt.CredentialName = p.parseIdentifier()
+		}
+
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
 		return stmt, nil
 	}
 
-	// Expect CREDENTIAL
-	if p.curTok.Type != TokenCredential {
+	// Handle WITH options
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		// Check if we have valid options to parse
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper == "PASSWORD" || upper == "NO" || upper == "NAME" || upper == "DEFAULT_DATABASE" ||
+			upper == "DEFAULT_LANGUAGE" || upper == "CHECK_POLICY" || upper == "CHECK_EXPIRATION" || upper == "CREDENTIAL" {
+			return p.parseAlterLoginOptions(name)
+		}
+		// For incomplete statements like "alter login l1 with", fall back to old behavior
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return &ast.AlterLoginAddDropCredentialStatement{Name: name, IsAdd: false}, nil
 	}
-	p.nextToken()
 
-	// Parse credential name
-	stmt.CredentialName = p.parseIdentifier()
+	// Skip to end if we don't recognize the syntax
+	p.skipToEndOfStatement()
+	return &ast.AlterLoginAddDropCredentialStatement{Name: name, IsAdd: false}, nil
+}
 
-	// Skip optional semicolon
+func (p *Parser) parseAlterLoginOptions(name *ast.Identifier) (*ast.AlterLoginOptionsStatement, error) {
+	stmt := &ast.AlterLoginOptionsStatement{
+		Name: name,
+	}
+
+	for {
+		optName := strings.ToUpper(p.curTok.Literal)
+
+		if optName == "PASSWORD" {
+			p.nextToken() // consume PASSWORD
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			opt := &ast.PasswordAlterPrincipalOption{
+				OptionKind: "Password",
+			}
+
+			// Parse password value
+			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+				val := p.curTok.Literal
+				isNational := p.curTok.Type == TokenNationalString
+				// Strip N prefix for national strings
+				if isNational && len(val) > 0 && (val[0] == 'N' || val[0] == 'n') {
+					val = val[1:]
+				}
+				// Strip surrounding quotes
+				if len(val) >= 2 && val[0] == '\'' && val[len(val)-1] == '\'' {
+					val = val[1 : len(val)-1]
+				}
+				opt.Password = &ast.StringLiteral{
+					LiteralType:   "String",
+					Value:         val,
+					IsNational:    isNational,
+					IsLargeObject: false,
+				}
+				p.nextToken()
+			} else if p.curTok.Type == TokenBinary {
+				opt.Password = &ast.BinaryLiteral{
+					LiteralType:   "Binary",
+					IsLargeObject: false,
+					Value:         p.curTok.Literal,
+				}
+				p.nextToken()
+			}
+
+			// Parse optional flags
+			for {
+				upper := strings.ToUpper(p.curTok.Literal)
+				if upper == "HASHED" {
+					opt.Hashed = true
+					p.nextToken()
+				} else if upper == "MUST_CHANGE" {
+					opt.MustChange = true
+					p.nextToken()
+				} else if upper == "UNLOCK" {
+					opt.Unlock = true
+					p.nextToken()
+				} else if upper == "OLD_PASSWORD" {
+					p.nextToken() // consume OLD_PASSWORD
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+					}
+					if p.curTok.Type == TokenString {
+						opt.OldPassword = p.parseStringLiteralValue()
+						p.nextToken()
+					}
+				} else {
+					break
+				}
+			}
+
+			stmt.Options = append(stmt.Options, opt)
+		} else if optName == "NO" && strings.ToUpper(p.peekTok.Literal) == "CREDENTIAL" {
+			p.nextToken() // consume NO
+			p.nextToken() // consume CREDENTIAL
+			stmt.Options = append(stmt.Options, &ast.PrincipalOptionSimple{
+				OptionKind: "NoCredential",
+			})
+		} else if optName == "NAME" {
+			p.nextToken() // consume NAME
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			stmt.Options = append(stmt.Options, &ast.IdentifierPrincipalOption{
+				OptionKind: "Name",
+				Identifier: p.parseIdentifier(),
+			})
+		} else if optName == "DEFAULT_DATABASE" {
+			p.nextToken() // consume DEFAULT_DATABASE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			stmt.Options = append(stmt.Options, &ast.IdentifierPrincipalOption{
+				OptionKind: "DefaultDatabase",
+				Identifier: p.parseIdentifier(),
+			})
+		} else if optName == "DEFAULT_LANGUAGE" {
+			p.nextToken() // consume DEFAULT_LANGUAGE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			stmt.Options = append(stmt.Options, &ast.IdentifierPrincipalOption{
+				OptionKind: "DefaultLanguage",
+				Identifier: p.parseIdentifier(),
+			})
+		} else if optName == "CHECK_POLICY" {
+			p.nextToken() // consume CHECK_POLICY
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			optState := "On"
+			if strings.ToUpper(p.curTok.Literal) == "OFF" {
+				optState = "Off"
+			}
+			p.nextToken()
+			stmt.Options = append(stmt.Options, &ast.OnOffPrincipalOption{
+				OptionKind:  "CheckPolicy",
+				OptionState: optState,
+			})
+		} else if optName == "CHECK_EXPIRATION" {
+			p.nextToken() // consume CHECK_EXPIRATION
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			optState := "On"
+			if strings.ToUpper(p.curTok.Literal) == "OFF" {
+				optState = "Off"
+			}
+			p.nextToken()
+			stmt.Options = append(stmt.Options, &ast.OnOffPrincipalOption{
+				OptionKind:  "CheckExpiration",
+				OptionState: optState,
+			})
+		} else if optName == "CREDENTIAL" {
+			p.nextToken() // consume CREDENTIAL
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+			stmt.Options = append(stmt.Options, &ast.IdentifierPrincipalOption{
+				OptionKind: "Credential",
+				Identifier: p.parseIdentifier(),
+			})
+		} else {
+			break
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}

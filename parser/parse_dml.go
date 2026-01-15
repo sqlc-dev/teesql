@@ -236,6 +236,73 @@ func (p *Parser) parseInsertStatement() (ast.Statement, error) {
 	return stmt, nil
 }
 
+// parseInsertSpecification parses an INSERT specification (used in DataModificationTableReference)
+func (p *Parser) parseInsertSpecification() (*ast.InsertSpecification, error) {
+	// Consume INSERT
+	p.nextToken()
+
+	spec := &ast.InsertSpecification{
+		InsertOption: "None",
+	}
+
+	// Check for TOP clause
+	if p.curTok.Type == TokenTop {
+		top, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		spec.TopRowFilter = top
+	}
+
+	// Check for INTO or OVER
+	if p.curTok.Type == TokenInto {
+		spec.InsertOption = "Into"
+		p.nextToken()
+	} else if p.curTok.Type == TokenOver {
+		spec.InsertOption = "Over"
+		p.nextToken()
+	}
+
+	// Parse target
+	target, err := p.parseInsertTarget()
+	if err != nil {
+		return nil, err
+	}
+	spec.Target = target
+
+	// Parse optional column list
+	if p.curTok.Type == TokenLParen {
+		cols, err := p.parseColumnList()
+		if err != nil {
+			return nil, err
+		}
+		spec.Columns = cols
+	}
+
+	// Parse OUTPUT clauses (can have OUTPUT INTO followed by OUTPUT)
+	for p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		outputClause, outputIntoClause, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		if outputIntoClause != nil {
+			spec.OutputIntoClause = outputIntoClause
+		}
+		if outputClause != nil {
+			spec.OutputClause = outputClause
+		}
+	}
+
+	// Parse insert source
+	source, err := p.parseInsertSource()
+	if err != nil {
+		return nil, err
+	}
+	spec.InsertSource = source
+
+	return spec, nil
+}
+
 func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 	// Check for variable
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
@@ -405,6 +472,16 @@ func (p *Parser) parseOpenRowset() (ast.TableReference, error) {
 		return p.parseBulkOpenRowset()
 	}
 
+	// Check for Cosmos form: OPENROWSET(PROVIDER = '...', CONNECTION = '...', ...)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PROVIDER" && p.peekTok.Type == TokenEquals {
+		return p.parseOpenRowsetCosmos()
+	}
+
+	// Check for traditional form: OPENROWSET('provider', 'connstr', tablename)
+	if p.curTok.Type == TokenString {
+		return p.parseOpenRowsetTableReference()
+	}
+
 	// Parse identifier
 	if p.curTok.Type != TokenIdent {
 		return nil, fmt.Errorf("expected identifier in OPENROWSET, got %s", p.curTok.Literal)
@@ -432,6 +509,192 @@ func (p *Parser) parseOpenRowset() (ast.TableReference, error) {
 		VarArgs:    varArgs,
 		ForPath:    false,
 	}, nil
+}
+
+func (p *Parser) parseOpenRowsetCosmos() (*ast.OpenRowsetCosmos, error) {
+	result := &ast.OpenRowsetCosmos{
+		ForPath: false,
+	}
+
+	// Parse options: PROVIDER = 'value', CONNECTION = 'value', etc.
+	// Note: Some option names like CREDENTIAL are keywords, so check for those too
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		// Check if this is a valid option name (identifier or keyword like CREDENTIAL)
+		optionName := strings.ToUpper(p.curTok.Literal)
+		isValidOption := p.curTok.Type == TokenIdent || p.curTok.Type == TokenCredential ||
+			optionName == "PROVIDER" || optionName == "CONNECTION" || optionName == "OBJECT" ||
+			optionName == "SERVER_CREDENTIAL"
+		if !isValidOption {
+			break
+		}
+
+		p.nextToken() // consume option name
+
+		if p.curTok.Type != TokenEquals {
+			return nil, fmt.Errorf("expected = after %s, got %s", optionName, p.curTok.Literal)
+		}
+		p.nextToken() // consume =
+
+		// Parse option value
+		value, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		// Map option names to expected OptionKind values
+		optionKind := optionName
+		switch optionName {
+		case "PROVIDER":
+			optionKind = "Provider"
+		case "CONNECTION":
+			optionKind = "Connection"
+		case "OBJECT":
+			optionKind = "Object"
+		case "CREDENTIAL":
+			optionKind = "Credential"
+		case "SERVER_CREDENTIAL":
+			optionKind = "Server_Credential"
+		}
+
+		opt := &ast.LiteralOpenRowsetCosmosOption{
+			Value:      value,
+			OptionKind: optionKind,
+		}
+		result.Options = append(result.Options, opt)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in OPENROWSET, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse optional WITH (columns)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colDef := &ast.OpenRowsetColumnDefinition{}
+				colDef.ColumnIdentifier = p.parseIdentifier()
+
+				// Parse data type
+				dataType, err := p.parseDataTypeReference()
+				if err != nil {
+					return nil, err
+				}
+				colDef.DataType = dataType
+
+				result.WithColumns = append(result.WithColumns, colDef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
+}
+
+func (p *Parser) parseOpenRowsetTableReference() (*ast.OpenRowsetTableReference, error) {
+	result := &ast.OpenRowsetTableReference{
+		ForPath: false,
+	}
+
+	// Parse provider name (string literal)
+	providerName, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	result.ProviderName = providerName
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after provider name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse provider string (string literal)
+	providerString, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	result.ProviderString = providerString
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after provider string, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse object (schema object name or expression)
+	obj, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	result.Object = obj
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in OPENROWSET, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse optional WITH (columns)
+	if strings.ToUpper(p.curTok.Literal) == "WITH" {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colDef := &ast.OpenRowsetColumnDefinition{}
+				colDef.ColumnIdentifier = p.parseIdentifier()
+
+				// Parse data type
+				dataType, err := p.parseDataTypeReference()
+				if err != nil {
+					return nil, err
+				}
+				colDef.DataType = dataType
+
+				result.WithColumns = append(result.WithColumns, colDef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
 }
 
 func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
@@ -490,6 +753,60 @@ func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
 		return nil, fmt.Errorf("expected ) after OPENROWSET BULK, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
+
+	// Parse optional WITH (column_definitions) - for schema specification
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colDef := &ast.OpenRowsetColumnDefinition{}
+				colDef.ColumnIdentifier = p.parseIdentifier()
+
+				// Parse data type
+				dataType, err := p.parseDataTypeReference()
+				if err != nil {
+					return nil, err
+				}
+				colDef.DataType = dataType
+
+				// Parse optional COLLATE
+				if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+					p.nextToken() // consume COLLATE
+					colDef.Collation = p.parseIdentifier()
+				}
+
+				// Parse optional column ordinal (integer) or JSON path (string)
+				if p.curTok.Type == TokenNumber {
+					colDef.ColumnOrdinal = &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					}
+					p.nextToken()
+				} else if p.curTok.Type == TokenString {
+					// JSON path specification like '$.stateName' or 'strict $.population'
+					colDef.ColumnOrdinal = &ast.StringLiteral{
+						LiteralType:   "String",
+						IsNational:    false,
+						IsLargeObject: false,
+						Value:         strings.Trim(p.curTok.Literal, "'"),
+					}
+					p.nextToken()
+				}
+
+				result.WithColumns = append(result.WithColumns, colDef)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	}
 
 	// Parse optional alias
 	if p.curTok.Type == TokenAs {
@@ -1320,6 +1637,77 @@ func (p *Parser) parseUpdateStatement() (*ast.UpdateStatement, error) {
 	return stmt, nil
 }
 
+// parseUpdateSpecification parses an UPDATE specification (used in DataModificationTableReference)
+func (p *Parser) parseUpdateSpecification() (*ast.UpdateSpecification, error) {
+	// Consume UPDATE
+	p.nextToken()
+
+	spec := &ast.UpdateSpecification{}
+
+	// Check for TOP clause
+	if p.curTok.Type == TokenTop {
+		top, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		spec.TopRowFilter = top
+	}
+
+	// Parse target
+	target, err := p.parseDMLTarget()
+	if err != nil {
+		return nil, err
+	}
+	spec.Target = target
+
+	// Expect SET
+	if p.curTok.Type != TokenSet {
+		return nil, fmt.Errorf("expected SET, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse SET clauses
+	setClauses, err := p.parseSetClauses()
+	if err != nil {
+		return nil, err
+	}
+	spec.SetClauses = setClauses
+
+	// Parse OUTPUT clauses (can have OUTPUT INTO followed by OUTPUT)
+	for p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		outputClause, outputIntoClause, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		if outputIntoClause != nil {
+			spec.OutputIntoClause = outputIntoClause
+		}
+		if outputClause != nil {
+			spec.OutputClause = outputClause
+		}
+	}
+
+	// Parse optional FROM clause
+	if p.curTok.Type == TokenFrom {
+		fromClause, err := p.parseFromClause()
+		if err != nil {
+			return nil, err
+		}
+		spec.FromClause = fromClause
+	}
+
+	// Parse optional WHERE clause
+	if p.curTok.Type == TokenWhere {
+		whereClause, err := p.parseWhereClause()
+		if err != nil {
+			return nil, err
+		}
+		spec.WhereClause = whereClause
+	}
+
+	return spec, nil
+}
+
 func (p *Parser) parseSetClauses() ([]ast.SetClause, error) {
 	var clauses []ast.SetClause
 
@@ -1648,6 +2036,69 @@ func (p *Parser) parseDeleteStatement() (*ast.DeleteStatement, error) {
 	}
 
 	return stmt, nil
+}
+
+// parseDeleteSpecification parses a DELETE specification (used in DataModificationTableReference)
+func (p *Parser) parseDeleteSpecification() (*ast.DeleteSpecification, error) {
+	// Consume DELETE
+	p.nextToken()
+
+	spec := &ast.DeleteSpecification{}
+
+	// Parse optional TOP clause
+	if p.curTok.Type == TokenTop {
+		topRowFilter, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		spec.TopRowFilter = topRowFilter
+	}
+
+	// Skip optional FROM
+	if p.curTok.Type == TokenFrom {
+		p.nextToken()
+	}
+
+	// Parse target
+	target, err := p.parseDMLTarget()
+	if err != nil {
+		return nil, err
+	}
+	spec.Target = target
+
+	// Parse OUTPUT clauses (can have OUTPUT INTO followed by OUTPUT)
+	for p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OUTPUT" {
+		outputClause, outputIntoClause, err := p.parseOutputClause()
+		if err != nil {
+			return nil, err
+		}
+		if outputIntoClause != nil {
+			spec.OutputIntoClause = outputIntoClause
+		}
+		if outputClause != nil {
+			spec.OutputClause = outputClause
+		}
+	}
+
+	// Parse optional FROM clause
+	if p.curTok.Type == TokenFrom {
+		fromClause, err := p.parseFromClause()
+		if err != nil {
+			return nil, err
+		}
+		spec.FromClause = fromClause
+	}
+
+	// Parse optional WHERE clause
+	if p.curTok.Type == TokenWhere {
+		whereClause, err := p.parseDeleteWhereClause()
+		if err != nil {
+			return nil, err
+		}
+		spec.WhereClause = whereClause
+	}
+
+	return spec, nil
 }
 
 func (p *Parser) parseDeleteWhereClause() (*ast.WhereClause, error) {
