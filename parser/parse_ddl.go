@@ -2499,6 +2499,60 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				OptionState: capitalizeFirst(optionValue),
 			}
 			stmt.Options = append(stmt.Options, opt)
+		case "AUTOMATIC_TUNING":
+			opt := &ast.AutomaticTuningDatabaseOption{
+				OptionKind:           "AutomaticTuning",
+				AutomaticTuningState: "NotSet",
+			}
+			// Check for = INHERIT/CUSTOM/AUTO or (sub-options)
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+				stateVal := strings.ToUpper(p.curTok.Literal)
+				opt.AutomaticTuningState = capitalizeFirst(stateVal)
+				p.nextToken()
+			}
+			// Parse optional sub-options in parentheses
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					subOptName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken() // consume option name
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					subOptValue := capitalizeFirst(strings.ToUpper(p.curTok.Literal))
+					p.nextToken() // consume value
+					switch subOptName {
+					case "CREATE_INDEX":
+						opt.Options = append(opt.Options, &ast.AutomaticTuningCreateIndexOption{
+							OptionKind: "Create_Index",
+							Value:      subOptValue,
+						})
+					case "DROP_INDEX":
+						opt.Options = append(opt.Options, &ast.AutomaticTuningDropIndexOption{
+							OptionKind: "Drop_Index",
+							Value:      subOptValue,
+						})
+					case "FORCE_LAST_GOOD_PLAN":
+						opt.Options = append(opt.Options, &ast.AutomaticTuningForceLastGoodPlanOption{
+							OptionKind: "Force_Last_Good_Plan",
+							Value:      subOptValue,
+						})
+					case "MAINTAIN_INDEX":
+						opt.Options = append(opt.Options, &ast.AutomaticTuningMaintainIndexOption{
+							OptionKind: "Maintain_Index",
+							Value:      subOptValue,
+						})
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Options = append(stmt.Options, opt)
 		case "DELAYED_DURABILITY":
 			// This option uses = with DISABLED/ALLOWED/FORCED values
 			if p.curTok.Type != TokenEquals {

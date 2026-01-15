@@ -115,6 +115,58 @@ func (l *LiteralDatabaseOption) node()                 {}
 func (l *LiteralDatabaseOption) databaseOption()       {}
 func (l *LiteralDatabaseOption) createDatabaseOption() {}
 
+// AutomaticTuningDatabaseOption represents AUTOMATIC_TUNING option
+type AutomaticTuningDatabaseOption struct {
+	OptionKind            string                   // "AutomaticTuning"
+	AutomaticTuningState  string                   // "Inherit", "Custom", "Auto", "NotSet"
+	Options               []AutomaticTuningOption  // Sub-options like CREATE_INDEX, DROP_INDEX, etc.
+}
+
+func (a *AutomaticTuningDatabaseOption) node()           {}
+func (a *AutomaticTuningDatabaseOption) databaseOption() {}
+
+// AutomaticTuningOption is an interface for automatic tuning sub-options
+type AutomaticTuningOption interface {
+	Node
+	automaticTuningOption()
+}
+
+// AutomaticTuningCreateIndexOption represents CREATE_INDEX option
+type AutomaticTuningCreateIndexOption struct {
+	OptionKind string // "Create_Index"
+	Value      string // "On", "Off", "Default"
+}
+
+func (a *AutomaticTuningCreateIndexOption) node()                  {}
+func (a *AutomaticTuningCreateIndexOption) automaticTuningOption() {}
+
+// AutomaticTuningDropIndexOption represents DROP_INDEX option
+type AutomaticTuningDropIndexOption struct {
+	OptionKind string // "Drop_Index"
+	Value      string // "On", "Off", "Default"
+}
+
+func (a *AutomaticTuningDropIndexOption) node()                  {}
+func (a *AutomaticTuningDropIndexOption) automaticTuningOption() {}
+
+// AutomaticTuningForceLastGoodPlanOption represents FORCE_LAST_GOOD_PLAN option
+type AutomaticTuningForceLastGoodPlanOption struct {
+	OptionKind string // "Force_Last_Good_Plan"
+	Value      string // "On", "Off", "Default"
+}
+
+func (a *AutomaticTuningForceLastGoodPlanOption) node()                  {}
+func (a *AutomaticTuningForceLastGoodPlanOption) automaticTuningOption() {}
+
+// AutomaticTuningMaintainIndexOption represents MAINTAIN_INDEX option
+type AutomaticTuningMaintainIndexOption struct {
+	OptionKind string // "Maintain_Index"
+	Value      string // "On", "Off", "Default"
+}
+
+func (a *AutomaticTuningMaintainIndexOption) node()                  {}
+func (a *AutomaticTuningMaintainIndexOption) automaticTuningOption() {}
+
 // ElasticPoolSpecification represents SERVICE_OBJECTIVE = ELASTIC_POOL(name = poolname)
 type ElasticPoolSpecification struct {
 	ElasticPoolName *Identifier

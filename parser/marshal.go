@@ -1160,6 +1160,22 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
 		}
+	case *ast.AutomaticTuningDatabaseOption:
+		node := jsonNode{
+			"$type":      "AutomaticTuningDatabaseOption",
+		}
+		if o.AutomaticTuningState != "" {
+			node["AutomaticTuningState"] = o.AutomaticTuningState
+		}
+		if len(o.Options) > 0 {
+			opts := make([]jsonNode, len(o.Options))
+			for i, subOpt := range o.Options {
+				opts[i] = automaticTuningOptionToJSON(subOpt)
+			}
+			node["Options"] = opts
+		}
+		node["OptionKind"] = o.OptionKind
+		return node
 	case *ast.DelayedDurabilityDatabaseOption:
 		return jsonNode{
 			"$type":      "DelayedDurabilityDatabaseOption",
@@ -1355,6 +1371,37 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		return node
 	default:
 		return jsonNode{"$type": "UnknownDatabaseOption"}
+	}
+}
+
+func automaticTuningOptionToJSON(opt ast.AutomaticTuningOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.AutomaticTuningCreateIndexOption:
+		return jsonNode{
+			"$type":      "AutomaticTuningCreateIndexOption",
+			"OptionKind": o.OptionKind,
+			"Value":      o.Value,
+		}
+	case *ast.AutomaticTuningDropIndexOption:
+		return jsonNode{
+			"$type":      "AutomaticTuningDropIndexOption",
+			"OptionKind": o.OptionKind,
+			"Value":      o.Value,
+		}
+	case *ast.AutomaticTuningForceLastGoodPlanOption:
+		return jsonNode{
+			"$type":      "AutomaticTuningForceLastGoodPlanOption",
+			"OptionKind": o.OptionKind,
+			"Value":      o.Value,
+		}
+	case *ast.AutomaticTuningMaintainIndexOption:
+		return jsonNode{
+			"$type":      "AutomaticTuningMaintainIndexOption",
+			"OptionKind": o.OptionKind,
+			"Value":      o.Value,
+		}
+	default:
+		return jsonNode{"$type": "UnknownAutomaticTuningOption"}
 	}
 }
 
