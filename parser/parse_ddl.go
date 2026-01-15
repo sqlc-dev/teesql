@@ -2773,7 +2773,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 						if strings.ToUpper(p.curTok.Literal) == "NULL" {
 							opt.DirectoryName = &ast.NullLiteral{
 								LiteralType: "Null",
-								Value:       "null",
+								Value:       p.curTok.Literal, // Preserve original case
 							}
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
