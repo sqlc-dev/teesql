@@ -2189,6 +2189,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterSequenceStatement()
 		case "SEARCH":
 			return p.parseAlterSearchPropertyListStatement()
+		case "AVAILABILITY":
+			return p.parseAlterAvailabilityGroupStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -10111,4 +10113,365 @@ func (p *Parser) parseAlterTableChangeTrackingStatement(tableName *ast.SchemaObj
 	}
 
 	return stmt, nil
+}
+
+func (p *Parser) parseAlterAvailabilityGroupStatement() (*ast.AlterAvailabilityGroupStatement, error) {
+	// Consume AVAILABILITY
+	p.nextToken()
+
+	// Expect GROUP
+	if strings.ToUpper(p.curTok.Literal) != "GROUP" {
+		return nil, fmt.Errorf("expected GROUP after AVAILABILITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterAvailabilityGroupStatement{}
+
+	// Parse group name
+	stmt.Name = p.parseIdentifier()
+
+	// Determine the action type
+	actionKeyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	switch actionKeyword {
+	case "JOIN":
+		stmt.StatementType = "Action"
+		stmt.Action = &ast.AlterAvailabilityGroupAction{ActionType: "Join"}
+	case "ADD":
+		// ADD DATABASE or ADD REPLICA
+		nextKeyword := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+		if nextKeyword == "DATABASE" {
+			stmt.StatementType = "AddDatabase"
+			stmt.Databases = p.parseIdentifierList()
+		} else if nextKeyword == "REPLICA" {
+			stmt.StatementType = "AddReplica"
+			// Expect ON
+			if strings.ToUpper(p.curTok.Literal) == "ON" {
+				p.nextToken()
+			}
+			stmt.Replicas = p.parseAvailabilityReplicas()
+		}
+	case "REMOVE":
+		// REMOVE DATABASE or REMOVE REPLICA
+		nextKeyword := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+		if nextKeyword == "DATABASE" {
+			stmt.StatementType = "RemoveDatabase"
+			stmt.Databases = p.parseIdentifierList()
+		} else if nextKeyword == "REPLICA" {
+			stmt.StatementType = "RemoveReplica"
+			// Expect ON
+			if strings.ToUpper(p.curTok.Literal) == "ON" {
+				p.nextToken()
+			}
+			stmt.Replicas = p.parseAvailabilityReplicasServerOnly()
+		}
+	case "MODIFY":
+		// MODIFY REPLICA
+		nextKeyword := strings.ToUpper(p.curTok.Literal)
+		p.nextToken()
+		if nextKeyword == "REPLICA" {
+			stmt.StatementType = "ModifyReplica"
+			// Expect ON
+			if strings.ToUpper(p.curTok.Literal) == "ON" {
+				p.nextToken()
+			}
+			stmt.Replicas = p.parseAvailabilityReplicas()
+		}
+	case "SET":
+		stmt.StatementType = "Set"
+		// Parse SET options
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+				if optName == "REQUIRED_COPIES_TO_COMMIT" {
+					val, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					stmt.Options = append(stmt.Options, &ast.LiteralAvailabilityGroupOption{
+						OptionKind: "RequiredCopiesToCommit",
+						Value:      val,
+					})
+				} else {
+					// Skip unknown options
+					if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	case "FAILOVER":
+		stmt.StatementType = "Action"
+		action := &ast.AlterAvailabilityGroupFailoverAction{ActionType: "Failover"}
+		// Check for WITH clause
+		if p.curTok.Type == TokenWith || strings.ToUpper(p.curTok.Literal) == "WITH" {
+			p.nextToken() // consume WITH
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+					}
+					if optName == "TARGET" {
+						val, err := p.parseScalarExpression()
+						if err != nil {
+							return nil, err
+						}
+						action.Options = append(action.Options, &ast.AlterAvailabilityGroupFailoverOption{
+							OptionKind: "Target",
+							Value:      val,
+						})
+					} else {
+						// Skip unknown options
+						if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
+							p.nextToken()
+						}
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+		}
+		stmt.Action = action
+	case "FORCE_FAILOVER_ALLOW_DATA_LOSS":
+		stmt.StatementType = "Action"
+		stmt.Action = &ast.AlterAvailabilityGroupAction{ActionType: "ForceFailoverAllowDataLoss"}
+	case "ONLINE":
+		stmt.StatementType = "Action"
+		stmt.Action = &ast.AlterAvailabilityGroupAction{ActionType: "Online"}
+	case "OFFLINE":
+		stmt.StatementType = "Action"
+		stmt.Action = &ast.AlterAvailabilityGroupAction{ActionType: "Offline"}
+	}
+
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+// parseIdentifierList parses a comma-separated list of identifiers
+func (p *Parser) parseIdentifierList() []*ast.Identifier {
+	var ids []*ast.Identifier
+	for {
+		ids = append(ids, p.parseIdentifier())
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+	return ids
+}
+
+// parseAvailabilityReplicas parses replica definitions with full options
+func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
+	var replicas []*ast.AvailabilityReplica
+	for {
+		replica := &ast.AvailabilityReplica{}
+
+		// Parse server name (string literal)
+		if p.curTok.Type == TokenString {
+			replica.ServerName, _ = p.parseStringLiteral()
+		}
+
+		// Parse WITH clause for replica options
+		if p.curTok.Type == TokenWith || strings.ToUpper(p.curTok.Literal) == "WITH" {
+			p.nextToken() // consume WITH
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken() // consume option name
+
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+
+					switch optName {
+					case "AVAILABILITY_MODE":
+						modeStr := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+						// Handle SYNCHRONOUS_COMMIT or ASYNCHRONOUS_COMMIT
+						if p.curTok.Type == TokenIdent && strings.HasPrefix(strings.ToUpper(p.curTok.Literal), "_") {
+							modeStr += strings.ToUpper(p.curTok.Literal)
+							p.nextToken()
+						}
+						var mode string
+						switch modeStr {
+						case "SYNCHRONOUS_COMMIT":
+							mode = "SynchronousCommit"
+						case "ASYNCHRONOUS_COMMIT":
+							mode = "AsynchronousCommit"
+						default:
+							mode = modeStr
+						}
+						replica.Options = append(replica.Options, &ast.AvailabilityModeReplicaOption{
+							OptionKind: "AvailabilityMode",
+							Value:      mode,
+						})
+					case "FAILOVER_MODE":
+						modeStr := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+						var mode string
+						switch modeStr {
+						case "AUTOMATIC":
+							mode = "Automatic"
+						case "MANUAL":
+							mode = "Manual"
+						default:
+							mode = modeStr
+						}
+						replica.Options = append(replica.Options, &ast.FailoverModeReplicaOption{
+							OptionKind: "FailoverMode",
+							Value:      mode,
+						})
+					case "ENDPOINT_URL":
+						val, _ := p.parseScalarExpression()
+						replica.Options = append(replica.Options, &ast.LiteralReplicaOption{
+							OptionKind: "EndpointUrl",
+							Value:      val,
+						})
+					case "SESSION_TIMEOUT":
+						val, _ := p.parseScalarExpression()
+						replica.Options = append(replica.Options, &ast.LiteralReplicaOption{
+							OptionKind: "SessionTimeout",
+							Value:      val,
+						})
+					case "APPLY_DELAY":
+						val, _ := p.parseScalarExpression()
+						replica.Options = append(replica.Options, &ast.LiteralReplicaOption{
+							OptionKind: "ApplyDelay",
+							Value:      val,
+						})
+					case "PRIMARY_ROLE":
+						if p.curTok.Type == TokenLParen {
+							p.nextToken() // consume (
+							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+								innerOpt := strings.ToUpper(p.curTok.Literal)
+								p.nextToken()
+								if p.curTok.Type == TokenEquals {
+									p.nextToken()
+								}
+								if innerOpt == "ALLOW_CONNECTIONS" {
+									connMode := strings.ToUpper(p.curTok.Literal)
+									p.nextToken()
+									var mode string
+									switch connMode {
+									case "READ_WRITE":
+										mode = "ReadWrite"
+									case "ALL":
+										mode = "All"
+									default:
+										mode = connMode
+									}
+									replica.Options = append(replica.Options, &ast.PrimaryRoleReplicaOption{
+										OptionKind:       "PrimaryRole",
+										AllowConnections: mode,
+									})
+								}
+								if p.curTok.Type == TokenComma {
+									p.nextToken()
+								}
+							}
+							if p.curTok.Type == TokenRParen {
+								p.nextToken()
+							}
+						}
+					case "SECONDARY_ROLE":
+						if p.curTok.Type == TokenLParen {
+							p.nextToken() // consume (
+							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+								innerOpt := strings.ToUpper(p.curTok.Literal)
+								p.nextToken()
+								if p.curTok.Type == TokenEquals {
+									p.nextToken()
+								}
+								if innerOpt == "ALLOW_CONNECTIONS" {
+									connMode := strings.ToUpper(p.curTok.Literal)
+									p.nextToken()
+									var mode string
+									switch connMode {
+									case "NO":
+										mode = "No"
+									case "READ_ONLY":
+										mode = "ReadOnly"
+									case "ALL":
+										mode = "All"
+									default:
+										mode = connMode
+									}
+									replica.Options = append(replica.Options, &ast.SecondaryRoleReplicaOption{
+										OptionKind:       "SecondaryRole",
+										AllowConnections: mode,
+									})
+								}
+								if p.curTok.Type == TokenComma {
+									p.nextToken()
+								}
+							}
+							if p.curTok.Type == TokenRParen {
+								p.nextToken()
+							}
+						}
+					default:
+						// Skip unknown options
+						if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
+							p.nextToken()
+						}
+					}
+
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+		}
+
+		replicas = append(replicas, replica)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume comma
+		} else {
+			break
+		}
+	}
+	return replicas
+}
+
+// parseAvailabilityReplicasServerOnly parses replicas with only server names (for REMOVE REPLICA)
+func (p *Parser) parseAvailabilityReplicasServerOnly() []*ast.AvailabilityReplica {
+	var replicas []*ast.AvailabilityReplica
+	for {
+		replica := &ast.AvailabilityReplica{}
+		if p.curTok.Type == TokenString {
+			replica.ServerName, _ = p.parseStringLiteral()
+		}
+		replicas = append(replicas, replica)
+		if p.curTok.Type != TokenComma {
+			break
+		}
+		p.nextToken() // consume comma
+	}
+	return replicas
 }

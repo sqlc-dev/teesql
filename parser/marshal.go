@@ -352,6 +352,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterServerRoleStatementToJSON(s)
 	case *ast.CreateAvailabilityGroupStatement:
 		return createAvailabilityGroupStatementToJSON(s)
+	case *ast.AlterAvailabilityGroupStatement:
+		return alterAvailabilityGroupStatementToJSON(s)
 	case *ast.CreateServerAuditStatement:
 		return createServerAuditStatementToJSON(s)
 	case *ast.AlterServerAuditStatement:
@@ -9239,6 +9241,75 @@ func availabilityGroupOptionToJSON(opt ast.AvailabilityGroupOption) jsonNode {
 		return node
 	default:
 		return jsonNode{"$type": "UnknownAvailabilityGroupOption"}
+	}
+}
+
+func alterAvailabilityGroupStatementToJSON(s *ast.AlterAvailabilityGroupStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterAvailabilityGroupStatement",
+	}
+	if s.StatementType != "" {
+		node["AlterAvailabilityGroupStatementType"] = s.StatementType
+	}
+	if s.Action != nil {
+		node["Action"] = availabilityGroupActionToJSON(s.Action)
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.Databases) > 0 {
+		dbs := make([]jsonNode, len(s.Databases))
+		for i, db := range s.Databases {
+			dbs[i] = identifierToJSON(db)
+		}
+		node["Databases"] = dbs
+	}
+	if len(s.Replicas) > 0 {
+		reps := make([]jsonNode, len(s.Replicas))
+		for i, rep := range s.Replicas {
+			reps[i] = availabilityReplicaToJSON(rep)
+		}
+		node["Replicas"] = reps
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = availabilityGroupOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func availabilityGroupActionToJSON(action ast.AvailabilityGroupAction) jsonNode {
+	switch a := action.(type) {
+	case *ast.AlterAvailabilityGroupAction:
+		return jsonNode{
+			"$type":      "AlterAvailabilityGroupAction",
+			"ActionType": a.ActionType,
+		}
+	case *ast.AlterAvailabilityGroupFailoverAction:
+		node := jsonNode{
+			"$type":      "AlterAvailabilityGroupFailoverAction",
+			"ActionType": a.ActionType,
+		}
+		if len(a.Options) > 0 {
+			opts := make([]jsonNode, len(a.Options))
+			for i, opt := range a.Options {
+				optNode := jsonNode{
+					"$type":      "AlterAvailabilityGroupFailoverOption",
+					"OptionKind": opt.OptionKind,
+				}
+				if opt.Value != nil {
+					optNode["Value"] = scalarExpressionToJSON(opt.Value)
+				}
+				opts[i] = optNode
+			}
+			node["Options"] = opts
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownAvailabilityGroupAction"}
 	}
 }
 
