@@ -2229,6 +2229,12 @@ func (p *Parser) parseInsertBulkColumnDefinition() (*ast.InsertBulkColumnDefinit
 			}
 			colDef.Column.DataType = dataType
 		}
+	} else if colDef.Column.DataType == nil {
+		// If no data type was parsed, check if the column name is TIMESTAMP
+		// This is a special case where TIMESTAMP alone is both the column name and type indicator
+		if strings.ToUpper(colDef.Column.ColumnIdentifier.Value) == "TIMESTAMP" {
+			colDef.Column.ColumnIdentifier.Value = "TIMESTAMP"
+		}
 	}
 
 	// Check for NULL or NOT NULL
