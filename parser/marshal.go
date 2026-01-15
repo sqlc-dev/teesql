@@ -6684,6 +6684,13 @@ func (p *Parser) parseConstraintIndexOptions() []ast.IndexOption {
 		optionName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
 
+		// Handle deprecated standalone options (no value, just skip them)
+		// These are deprecated SQL Server options that don't produce AST nodes
+		if optionName == "SORTED_DATA" || optionName == "SORTED_DATA_REORG" {
+			// Skip these deprecated options - they don't produce IndexOption nodes
+			continue
+		}
+
 		// Check for = sign
 		if p.curTok.Type == TokenEquals {
 			p.nextToken() // consume =
@@ -6725,6 +6732,14 @@ func (p *Parser) parseConstraintIndexOptions() []ast.IndexOption {
 				break
 			}
 		} else if !hasParens {
+			// Before breaking, check if current token is a deprecated standalone option
+			// that should be skipped. These options can appear after other options.
+			nextUpperLit := strings.ToUpper(p.curTok.Literal)
+			if nextUpperLit == "SORTED_DATA" || nextUpperLit == "SORTED_DATA_REORG" {
+				p.nextToken() // consume the deprecated option
+				// Continue the loop to potentially find more options or ON/comma
+				continue
+			}
 			break
 		}
 	}
