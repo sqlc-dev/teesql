@@ -7231,19 +7231,25 @@ func (p *Parser) parseRetentionPeriodDefinition() (*ast.RetentionPeriodDefinitio
 		return nil, fmt.Errorf("expected number for retention period, got %s", p.curTok.Literal)
 	}
 
-	// Parse unit
+	// Parse unit - preserve singular vs plural from SQL syntax
 	unitVal := strings.ToUpper(p.curTok.Literal)
 	switch unitVal {
-	case "DAY", "DAYS":
+	case "DAY":
 		ret.Units = "Day"
-	case "WEEK", "WEEKS":
+	case "DAYS":
+		ret.Units = "Days"
+	case "WEEK":
 		ret.Units = "Week"
+	case "WEEKS":
+		ret.Units = "Weeks"
 	case "MONTH":
 		ret.Units = "Month"
 	case "MONTHS":
 		ret.Units = "Months"
-	case "YEAR", "YEARS":
+	case "YEAR":
 		ret.Units = "Year"
+	case "YEARS":
+		ret.Units = "Years"
 	default:
 		return nil, fmt.Errorf("unexpected unit %s for retention period", unitVal)
 	}
