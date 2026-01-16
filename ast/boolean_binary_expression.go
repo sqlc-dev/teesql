@@ -7,5 +7,6 @@ type BooleanBinaryExpression struct {
 	SecondExpression     BooleanExpression `json:"SecondExpression,omitempty"`
 }
 
-func (*BooleanBinaryExpression) node()              {}
-func (*BooleanBinaryExpression) booleanExpression() {}
+func (*BooleanBinaryExpression) node()                 {}
+func (*BooleanBinaryExpression) booleanExpression()    {}
+func (*BooleanBinaryExpression) graphMatchExpression() {}

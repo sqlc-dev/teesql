@@ -545,13 +545,13 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 					p.nextToken()
 				} else if upperLit == "$FROM_ID" {
 					includeCol := &ast.ColumnReferenceExpression{
-						ColumnType: "PseudoColumnFromNodeId",
+						ColumnType: "PseudoColumnGraphFromId",
 					}
 					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
 					p.nextToken()
 				} else if upperLit == "$TO_ID" {
 					includeCol := &ast.ColumnReferenceExpression{
-						ColumnType: "PseudoColumnToNodeId",
+						ColumnType: "PseudoColumnGraphToId",
 					}
 					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
 					p.nextToken()
@@ -11077,12 +11077,37 @@ func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) 
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				colRef := &ast.ColumnReferenceExpression{
-					ColumnType: "Regular",
-					MultiPartIdentifier: &ast.MultiPartIdentifier{
-						Count:       1,
-						Identifiers: []*ast.Identifier{p.parseIdentifier()},
-					},
+				// Check for graph pseudo-columns
+				upperLit := strings.ToUpper(p.curTok.Literal)
+				var colRef *ast.ColumnReferenceExpression
+				if upperLit == "$NODE_ID" {
+					colRef = &ast.ColumnReferenceExpression{
+						ColumnType: "PseudoColumnGraphNodeId",
+					}
+					p.nextToken()
+				} else if upperLit == "$EDGE_ID" {
+					colRef = &ast.ColumnReferenceExpression{
+						ColumnType: "PseudoColumnGraphEdgeId",
+					}
+					p.nextToken()
+				} else if upperLit == "$FROM_ID" {
+					colRef = &ast.ColumnReferenceExpression{
+						ColumnType: "PseudoColumnGraphFromId",
+					}
+					p.nextToken()
+				} else if upperLit == "$TO_ID" {
+					colRef = &ast.ColumnReferenceExpression{
+						ColumnType: "PseudoColumnGraphToId",
+					}
+					p.nextToken()
+				} else {
+					colRef = &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Count:       1,
+							Identifiers: []*ast.Identifier{p.parseIdentifier()},
+						},
+					}
 				}
 				stmt.IncludeColumns = append(stmt.IncludeColumns, colRef)
 

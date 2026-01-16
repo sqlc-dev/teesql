@@ -95,6 +95,7 @@ type GraphMatchCompositeExpression struct {
 
 func (g *GraphMatchCompositeExpression) node()                 {}
 func (g *GraphMatchCompositeExpression) graphMatchExpression() {}
+func (g *GraphMatchCompositeExpression) booleanExpression()    {}
 
 // GraphMatchNodeExpression represents a node in a graph match pattern
 type GraphMatchNodeExpression struct {

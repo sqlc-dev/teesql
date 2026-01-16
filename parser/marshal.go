@@ -3550,6 +3550,22 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			node["Subquery"] = queryExpressionToJSON(e.Subquery)
 		}
 		return node
+	case *ast.GraphMatchCompositeExpression:
+		// GraphMatchCompositeExpression can appear as a BooleanExpression in chained patterns
+		node := jsonNode{
+			"$type": "GraphMatchCompositeExpression",
+		}
+		if e.LeftNode != nil {
+			node["LeftNode"] = graphMatchNodeExpressionToJSON(e.LeftNode)
+		}
+		if e.Edge != nil {
+			node["Edge"] = identifierToJSON(e.Edge)
+		}
+		if e.RightNode != nil {
+			node["RightNode"] = graphMatchNodeExpressionToJSON(e.RightNode)
+		}
+		node["ArrowOnRight"] = e.ArrowOnRight
+		return node
 	default:
 		return jsonNode{"$type": "UnknownBooleanExpression"}
 	}
@@ -3574,6 +3590,9 @@ func graphMatchExpressionToJSON(expr ast.GraphMatchExpression) jsonNode {
 		return node
 	case *ast.GraphMatchNodeExpression:
 		return graphMatchNodeExpressionToJSON(e)
+	case *ast.BooleanBinaryExpression:
+		// Chained patterns produce BooleanBinaryExpression with And
+		return booleanExpressionToJSON(e)
 	default:
 		return jsonNode{"$type": "UnknownGraphMatchExpression"}
 	}
@@ -5155,6 +5174,35 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 				if constraint != nil {
 					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 				}
+			} else if upperLit == "PERIOD" {
+				// Parse PERIOD FOR SYSTEM_TIME
+				p.nextToken() // consume PERIOD
+				if strings.ToUpper(p.curTok.Literal) == "FOR" {
+					p.nextToken() // consume FOR
+				}
+				if strings.ToUpper(p.curTok.Literal) == "SYSTEM_TIME" {
+					p.nextToken() // consume SYSTEM_TIME
+				}
+				// Expect (
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+				}
+				// Parse start column
+				startCol := p.parseIdentifier()
+				// Expect comma
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume ,
+				}
+				// Parse end column
+				endCol := p.parseIdentifier()
+				// Expect )
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+				stmt.Definition.SystemTimePeriod = &ast.SystemTimePeriodDefinition{
+					StartTimeColumn: startCol,
+					EndTimeColumn:   endCol,
+				}
 			} else if upperLit == "INDEX" {
 				// Parse inline index definition
 				indexDef, err := p.parseInlineIndexDefinition()
@@ -5313,6 +5361,21 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							return nil, err
 						}
 						stmt.Options = append(stmt.Options, opt)
+					} else if optionName == "SYSTEM_VERSIONING" {
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						stateUpper := strings.ToUpper(p.curTok.Literal)
+						state := "On"
+						if stateUpper == "OFF" {
+							state = "Off"
+						}
+						p.nextToken() // consume ON/OFF
+						stmt.Options = append(stmt.Options, &ast.SystemVersioningTableOption{
+							OptionKind:              "LockEscalation",
+							OptionState:             state,
+							ConsistencyCheckEnabled: "NotSet",
+						})
 					} else if optionName == "CLUSTERED" {
 						// Could be CLUSTERED INDEX or CLUSTERED COLUMNSTORE INDEX
 						if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
@@ -6262,8 +6325,8 @@ func (p *Parser) parseGraphMatchPredicate() (*ast.GraphMatchPredicate, error) {
 	}
 	p.nextToken()
 
-	// Parse the graph pattern: Node-(Edge)->Node or Node<-(Edge)-Node
-	expr, err := p.parseGraphMatchExpression()
+	// Parse the graph pattern expression (may be multiple composites joined by AND)
+	expr, err := p.parseGraphMatchAndExpression()
 	if err != nil {
 		return nil, err
 	}
@@ -6277,15 +6340,77 @@ func (p *Parser) parseGraphMatchPredicate() (*ast.GraphMatchPredicate, error) {
 	return pred, nil
 }
 
-// parseGraphMatchExpression parses a graph match expression like Node-(Edge)->Node
-func (p *Parser) parseGraphMatchExpression() (ast.GraphMatchExpression, error) {
+// parseGraphMatchAndExpression parses graph match expressions connected by AND
+func (p *Parser) parseGraphMatchAndExpression() (ast.GraphMatchExpression, error) {
+	left, err := p.parseGraphMatchChainedExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check for AND
+	for p.curTok.Type == TokenAnd {
+		p.nextToken() // consume AND
+
+		right, err := p.parseGraphMatchChainedExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		// Wrap in BooleanBinaryExpression
+		left = &ast.BooleanBinaryExpression{
+			BinaryExpressionType: "And",
+			FirstExpression:      left.(ast.BooleanExpression),
+			SecondExpression:     right.(ast.BooleanExpression),
+		}
+	}
+
+	return left, nil
+}
+
+// parseGraphMatchChainedExpression parses a chain like A-(B)->C-(D)->E
+func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, error) {
+	// Parse first composite pattern
+	first, rightNode, err := p.parseGraphMatchSingleComposite(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var result ast.GraphMatchExpression = first
+
+	// Check for continuation - if the right node is followed by - or <, it's a chain
+	for p.curTok.Type == TokenMinus || p.curTok.Type == TokenLessThan {
+		// The previous right node becomes the left node of the next composite
+		next, nextRightNode, err := p.parseGraphMatchSingleComposite(rightNode)
+		if err != nil {
+			return nil, err
+		}
+
+		// Wrap in BooleanBinaryExpression with And
+		result = &ast.BooleanBinaryExpression{
+			BinaryExpressionType: "And",
+			FirstExpression:      result.(ast.BooleanExpression),
+			SecondExpression:     next,
+		}
+		rightNode = nextRightNode
+	}
+
+	return result, nil
+}
+
+// parseGraphMatchSingleComposite parses a single Node-(Edge)->Node pattern
+// leftNode is provided when chaining (the previous right node becomes the left node)
+// Returns the composite and the right node (for potential chaining)
+func (p *Parser) parseGraphMatchSingleComposite(leftNode *ast.GraphMatchNodeExpression) (*ast.GraphMatchCompositeExpression, *ast.GraphMatchNodeExpression, error) {
 	composite := &ast.GraphMatchCompositeExpression{}
 
-	// Parse left node
-	leftNode := &ast.GraphMatchNodeExpression{
-		Node: p.parseIdentifier(),
+	// Parse left node (or use provided one from chaining)
+	if leftNode != nil {
+		composite.LeftNode = leftNode
+	} else {
+		composite.LeftNode = &ast.GraphMatchNodeExpression{
+			Node: p.parseIdentifier(),
+		}
 	}
-	composite.LeftNode = leftNode
 
 	// Check for arrow direction at the start: <- means arrow on left
 	arrowOnRight := true
@@ -6310,7 +6435,7 @@ func (p *Parser) parseGraphMatchExpression() (ast.GraphMatchExpression, error) {
 		composite.Edge = p.parseIdentifier()
 	}
 
-	// Check for arrow direction at the end: -> means arrow on right
+	// Check for arrow direction at the end: - > or -> means arrow on right
 	if p.curTok.Type == TokenMinus {
 		p.nextToken() // consume -
 		if p.curTok.Type == TokenGreaterThan {
@@ -6326,7 +6451,7 @@ func (p *Parser) parseGraphMatchExpression() (ast.GraphMatchExpression, error) {
 	}
 	composite.RightNode = rightNode
 
-	return composite, nil
+	return composite, rightNode, nil
 }
 
 // parseMergeActionClause parses a WHEN clause in a MERGE statement
@@ -6717,7 +6842,44 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 
-		if p.curTok.Type == TokenNot {
+		if upperLit == "GENERATED" {
+			p.nextToken() // consume GENERATED
+			if strings.ToUpper(p.curTok.Literal) == "ALWAYS" {
+				p.nextToken() // consume ALWAYS
+			}
+			if p.curTok.Type == TokenAs {
+				p.nextToken() // consume AS
+			}
+			// Parse the generated type: ROW START/END, SUSER_SID, SUSER_SNAME, etc.
+			genType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			if genType == "ROW" {
+				// Parse START or END
+				startEnd := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				if startEnd == "START" {
+					col.GeneratedAlways = "RowStart"
+				} else if startEnd == "END" {
+					col.GeneratedAlways = "RowEnd"
+				}
+			} else if genType == "SUSER_SID" {
+				startEnd := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				if startEnd == "START" {
+					col.GeneratedAlways = "UserIdStart"
+				} else if startEnd == "END" {
+					col.GeneratedAlways = "UserIdEnd"
+				}
+			} else if genType == "SUSER_SNAME" {
+				startEnd := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				if startEnd == "START" {
+					col.GeneratedAlways = "UserNameStart"
+				} else if startEnd == "END" {
+					col.GeneratedAlways = "UserNameEnd"
+				}
+			}
+		} else if p.curTok.Type == TokenNot {
 			p.nextToken() // consume NOT
 			if p.curTok.Type == TokenNull {
 				p.nextToken() // consume NULL
@@ -7760,18 +7922,42 @@ func (p *Parser) parseColumnWithSortOrder() *ast.ColumnWithSortOrder {
 		SortOrder: ast.SortOrderNotSpecified,
 	}
 
-	// Parse column name
-	ident := p.parseIdentifier()
-	col.Column = &ast.ColumnReferenceExpression{
-		ColumnType: "Regular",
-		MultiPartIdentifier: &ast.MultiPartIdentifier{
-			Count:       1,
-			Identifiers: []*ast.Identifier{ident},
-		},
+	// Check for graph pseudo-columns
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "$NODE_ID" {
+		col.Column = &ast.ColumnReferenceExpression{
+			ColumnType: "PseudoColumnGraphNodeId",
+		}
+		p.nextToken()
+	} else if upperLit == "$EDGE_ID" {
+		col.Column = &ast.ColumnReferenceExpression{
+			ColumnType: "PseudoColumnGraphEdgeId",
+		}
+		p.nextToken()
+	} else if upperLit == "$FROM_ID" {
+		col.Column = &ast.ColumnReferenceExpression{
+			ColumnType: "PseudoColumnGraphFromId",
+		}
+		p.nextToken()
+	} else if upperLit == "$TO_ID" {
+		col.Column = &ast.ColumnReferenceExpression{
+			ColumnType: "PseudoColumnGraphToId",
+		}
+		p.nextToken()
+	} else {
+		// Parse regular column name
+		ident := p.parseIdentifier()
+		col.Column = &ast.ColumnReferenceExpression{
+			ColumnType: "Regular",
+			MultiPartIdentifier: &ast.MultiPartIdentifier{
+				Count:       1,
+				Identifiers: []*ast.Identifier{ident},
+			},
+		}
 	}
 
 	// Parse optional ASC/DESC
-	upperLit := strings.ToUpper(p.curTok.Literal)
+	upperLit = strings.ToUpper(p.curTok.Literal)
 	if upperLit == "ASC" {
 		col.SortOrder = ast.SortOrderAscending
 		p.nextToken()
@@ -8954,7 +9140,18 @@ func tableDefinitionToJSON(t *ast.TableDefinition) jsonNode {
 		}
 		node["Indexes"] = indexes
 	}
+	if t.SystemTimePeriod != nil {
+		node["SystemTimePeriod"] = systemTimePeriodDefinitionToJSON(t.SystemTimePeriod)
+	}
 	return node
+}
+
+func systemTimePeriodDefinitionToJSON(s *ast.SystemTimePeriodDefinition) jsonNode {
+	return jsonNode{
+		"$type":           "SystemTimePeriodDefinition",
+		"StartTimeColumn": identifierToJSON(s.StartTimeColumn),
+		"EndTimeColumn":   identifierToJSON(s.EndTimeColumn),
+	}
 }
 
 func tableConstraintToJSON(c ast.TableConstraint) jsonNode {
@@ -9056,6 +9253,9 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 		"IsHidden":         c.IsHidden,
 		"IsMasked":         c.IsMasked,
 		"ColumnIdentifier": identifierToJSON(c.ColumnIdentifier),
+	}
+	if c.GeneratedAlways != "" {
+		node["GeneratedAlways"] = c.GeneratedAlways
 	}
 	if c.StorageOptions != nil {
 		node["StorageOptions"] = columnStorageOptionsToJSON(c.StorageOptions)
@@ -11950,13 +12150,38 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-			colRef := &ast.ColumnReferenceExpression{
-				ColumnType: "Regular",
-				MultiPartIdentifier: &ast.MultiPartIdentifier{
-					Identifiers: []*ast.Identifier{p.parseIdentifier()},
-				},
+			// Check for graph pseudo-columns
+			upperLit := strings.ToUpper(p.curTok.Literal)
+			var colRef *ast.ColumnReferenceExpression
+			if upperLit == "$NODE_ID" {
+				colRef = &ast.ColumnReferenceExpression{
+					ColumnType: "PseudoColumnGraphNodeId",
+				}
+				p.nextToken()
+			} else if upperLit == "$EDGE_ID" {
+				colRef = &ast.ColumnReferenceExpression{
+					ColumnType: "PseudoColumnGraphEdgeId",
+				}
+				p.nextToken()
+			} else if upperLit == "$FROM_ID" {
+				colRef = &ast.ColumnReferenceExpression{
+					ColumnType: "PseudoColumnGraphFromId",
+				}
+				p.nextToken()
+			} else if upperLit == "$TO_ID" {
+				colRef = &ast.ColumnReferenceExpression{
+					ColumnType: "PseudoColumnGraphToId",
+				}
+				p.nextToken()
+			} else {
+				colRef = &ast.ColumnReferenceExpression{
+					ColumnType: "Regular",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{p.parseIdentifier()},
+					},
+				}
+				colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
 			}
-			colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
 			stmt.Columns = append(stmt.Columns, colRef)
 
 			if p.curTok.Type == TokenComma {

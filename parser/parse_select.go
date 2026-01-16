@@ -4876,6 +4876,16 @@ func (p *Parser) parseBooleanAndExpression() (ast.BooleanExpression, error) {
 }
 
 func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) {
+	// Check for NOT before other predicates (NOT EXISTS, NOT MATCH, etc.)
+	if p.curTok.Type == TokenNot {
+		p.nextToken() // consume NOT
+		inner, err := p.parseBooleanPrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.BooleanNotExpression{Expression: inner}, nil
+	}
+
 	// Check for CONTAINS/FREETEXT predicates
 	if p.curTok.Type == TokenIdent {
 		upper := strings.ToUpper(p.curTok.Literal)
@@ -4884,6 +4894,18 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		}
 		if upper == "EXISTS" {
 			return p.parseExistsPredicate()
+		}
+		if upper == "MATCH" {
+			return p.parseGraphMatchPredicate()
+		}
+		if upper == "NOT" {
+			// Handle NOT followed by MATCH, EXISTS, etc.
+			p.nextToken() // consume NOT
+			inner, err := p.parseBooleanPrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.BooleanNotExpression{Expression: inner}, nil
 		}
 	}
 
