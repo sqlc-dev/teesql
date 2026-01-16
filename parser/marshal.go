@@ -175,6 +175,12 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createColumnMasterKeyStatementToJSON(s)
 	case *ast.DropColumnMasterKeyStatement:
 		return dropColumnMasterKeyStatementToJSON(s)
+	case *ast.CreateColumnEncryptionKeyStatement:
+		return createColumnEncryptionKeyStatementToJSON(s)
+	case *ast.AlterColumnEncryptionKeyStatement:
+		return alterColumnEncryptionKeyStatementToJSON(s)
+	case *ast.DropColumnEncryptionKeyStatement:
+		return dropColumnEncryptionKeyStatementToJSON(s)
 	case *ast.AlterCryptographicProviderStatement:
 		return alterCryptographicProviderStatementToJSON(s)
 	case *ast.DropCryptographicProviderStatement:
@@ -8466,7 +8472,8 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			p.curTok.Type == TokenDatabase || p.curTok.Type == TokenTable ||
 			p.curTok.Type == TokenFunction || p.curTok.Type == TokenBackup ||
 			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
-			p.curTok.Type == TokenSchema {
+			p.curTok.Type == TokenSchema || p.curTok.Type == TokenMaster ||
+			p.curTok.Type == TokenKey || p.curTok.Type == TokenEncryption {
 			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
@@ -9040,7 +9047,8 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			p.curTok.Type == TokenDatabase || p.curTok.Type == TokenTable ||
 			p.curTok.Type == TokenFunction || p.curTok.Type == TokenBackup ||
 			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
-			p.curTok.Type == TokenSchema {
+			p.curTok.Type == TokenSchema || p.curTok.Type == TokenMaster ||
+			p.curTok.Type == TokenKey || p.curTok.Type == TokenEncryption {
 			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
 				Value:     p.curTok.Literal,
 				QuoteType: "NotQuoted",
@@ -20827,7 +20835,104 @@ func dropColumnMasterKeyStatementToJSON(s *ast.DropColumnMasterKeyStatement) jso
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
+	node["IsIfExists"] = s.IsIfExists
 	return node
+}
+
+func createColumnEncryptionKeyStatementToJSON(s *ast.CreateColumnEncryptionKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CreateColumnEncryptionKeyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ColumnEncryptionKeyValues) > 0 {
+		values := make([]jsonNode, len(s.ColumnEncryptionKeyValues))
+		for i, v := range s.ColumnEncryptionKeyValues {
+			values[i] = columnEncryptionKeyValueToJSON(v)
+		}
+		node["ColumnEncryptionKeyValues"] = values
+	}
+	return node
+}
+
+func alterColumnEncryptionKeyStatementToJSON(s *ast.AlterColumnEncryptionKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterColumnEncryptionKeyStatement",
+	}
+	if s.AlterType != "" {
+		node["AlterType"] = s.AlterType
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if len(s.ColumnEncryptionKeyValues) > 0 {
+		values := make([]jsonNode, len(s.ColumnEncryptionKeyValues))
+		for i, v := range s.ColumnEncryptionKeyValues {
+			values[i] = columnEncryptionKeyValueToJSON(v)
+		}
+		node["ColumnEncryptionKeyValues"] = values
+	}
+	return node
+}
+
+func dropColumnEncryptionKeyStatementToJSON(s *ast.DropColumnEncryptionKeyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "DropColumnEncryptionKeyStatement",
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	node["IsIfExists"] = s.IsIfExists
+	return node
+}
+
+func columnEncryptionKeyValueToJSON(v *ast.ColumnEncryptionKeyValue) jsonNode {
+	node := jsonNode{
+		"$type": "ColumnEncryptionKeyValue",
+	}
+	if len(v.Parameters) > 0 {
+		params := make([]jsonNode, len(v.Parameters))
+		for i, p := range v.Parameters {
+			params[i] = columnEncryptionKeyValueParameterToJSON(p)
+		}
+		node["Parameters"] = params
+	}
+	return node
+}
+
+func columnEncryptionKeyValueParameterToJSON(p ast.ColumnEncryptionKeyValueParameter) jsonNode {
+	switch param := p.(type) {
+	case *ast.ColumnMasterKeyNameParameter:
+		node := jsonNode{
+			"$type": "ColumnMasterKeyNameParameter",
+		}
+		if param.Name != nil {
+			node["Name"] = identifierToJSON(param.Name)
+		}
+		node["ParameterKind"] = param.ParameterKind
+		return node
+	case *ast.ColumnEncryptionAlgorithmNameParameter:
+		node := jsonNode{
+			"$type": "ColumnEncryptionAlgorithmNameParameter",
+		}
+		if param.Algorithm != nil {
+			node["Algorithm"] = scalarExpressionToJSON(param.Algorithm)
+		}
+		node["ParameterKind"] = param.ParameterKind
+		return node
+	case *ast.EncryptedValueParameter:
+		node := jsonNode{
+			"$type": "EncryptedValueParameter",
+		}
+		if param.Value != nil {
+			node["Value"] = scalarExpressionToJSON(param.Value)
+		}
+		node["ParameterKind"] = param.ParameterKind
+		return node
+	default:
+		return jsonNode{"$type": "UnknownColumnEncryptionKeyValueParameter"}
+	}
 }
 
 func alterCryptographicProviderStatementToJSON(s *ast.AlterCryptographicProviderStatement) jsonNode {

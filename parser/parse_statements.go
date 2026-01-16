@@ -3289,15 +3289,21 @@ func (p *Parser) parseDropCryptographicProviderStatement() (*ast.DropCryptograph
 	return stmt, nil
 }
 
-func (p *Parser) parseCreateColumnMasterKeyStatement() (*ast.CreateColumnMasterKeyStatement, error) {
-	// CREATE COLUMN MASTER KEY name WITH (options)
-	// Already consumed CREATE COLUMN, now need to consume MASTER KEY
+func (p *Parser) parseCreateColumnMasterKeyStatement() (ast.Statement, error) {
+	// CREATE COLUMN MASTER KEY or CREATE COLUMN ENCRYPTION KEY
+	// Already consumed CREATE, now need to consume COLUMN
 	p.nextToken() // consume COLUMN
 
-	if strings.ToUpper(p.curTok.Literal) != "MASTER" {
-		return nil, fmt.Errorf("expected MASTER after COLUMN, got %s", p.curTok.Literal)
+	keyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume MASTER or ENCRYPTION
+
+	if keyword == "ENCRYPTION" {
+		return p.parseCreateColumnEncryptionKeyStatement()
 	}
-	p.nextToken() // consume MASTER
+
+	if keyword != "MASTER" {
+		return nil, fmt.Errorf("expected MASTER or ENCRYPTION after COLUMN, got %s", keyword)
+	}
 
 	if strings.ToUpper(p.curTok.Literal) != "KEY" {
 		return nil, fmt.Errorf("expected KEY after MASTER, got %s", p.curTok.Literal)
@@ -3389,6 +3395,92 @@ func (p *Parser) parseCreateColumnMasterKeyStatement() (*ast.CreateColumnMasterK
 		// Consume closing )
 		if p.curTok.Type == TokenRParen {
 			p.nextToken()
+		}
+	}
+
+	// Skip any remaining tokens
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseCreateColumnEncryptionKeyStatement() (*ast.CreateColumnEncryptionKeyStatement, error) {
+	// CREATE COLUMN ENCRYPTION KEY name WITH VALUES (...)
+	// Already consumed CREATE COLUMN ENCRYPTION, now need to consume KEY
+	if strings.ToUpper(p.curTok.Literal) != "KEY" {
+		return nil, fmt.Errorf("expected KEY after ENCRYPTION, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume KEY
+
+	stmt := &ast.CreateColumnEncryptionKeyStatement{}
+
+	// Parse key name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse WITH VALUES clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		if strings.ToUpper(p.curTok.Literal) == "VALUES" {
+			p.nextToken() // consume VALUES
+		}
+
+		// Parse one or more values - each enclosed in ( ... )
+		for p.curTok.Type == TokenLParen {
+			value := &ast.ColumnEncryptionKeyValue{}
+			p.nextToken() // consume (
+
+			// Parse parameters
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				paramName := strings.ToUpper(p.curTok.Literal)
+				p.nextToken() // consume parameter name
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken() // consume =
+				}
+
+				switch paramName {
+				case "COLUMN_MASTER_KEY":
+					value.Parameters = append(value.Parameters, &ast.ColumnMasterKeyNameParameter{
+						Name:          p.parseIdentifier(),
+						ParameterKind: "ColumnMasterKeyName",
+					})
+				case "ALGORITHM":
+					expr, _ := p.parseScalarExpression()
+					value.Parameters = append(value.Parameters, &ast.ColumnEncryptionAlgorithmNameParameter{
+						Algorithm:     expr,
+						ParameterKind: "EncryptionAlgorithmName",
+					})
+				case "ENCRYPTED_VALUE":
+					expr, _ := p.parseScalarExpression()
+					value.Parameters = append(value.Parameters, &ast.EncryptedValueParameter{
+						Value:         expr,
+						ParameterKind: "EncryptedValue",
+					})
+				default:
+					// Skip unknown parameter
+					p.nextToken()
+				}
+
+				// Skip comma if present
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+
+			// Consume closing )
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+
+			stmt.ColumnEncryptionKeyValues = append(stmt.ColumnEncryptionKeyValues, value)
+
+			// Skip comma between values
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
 		}
 	}
 

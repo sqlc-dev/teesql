@@ -44,7 +44,8 @@ func (c *ColumnMasterKeyEnclaveComputationsParameter) columnMasterKeyParameter()
 
 // DropColumnMasterKeyStatement represents a DROP COLUMN MASTER KEY statement.
 type DropColumnMasterKeyStatement struct {
-	Name *Identifier
+	Name       *Identifier
+	IsIfExists bool
 }
 
 func (d *DropColumnMasterKeyStatement) node()      {}

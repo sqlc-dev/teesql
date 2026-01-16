@@ -160,6 +160,8 @@ func (p *Parser) parseDropStatement() (ast.Statement, error) {
 		return p.parseDropServiceStatement()
 	case "EVENT":
 		return p.parseDropEventNotificationStatement()
+	case "COLUMN":
+		return p.parseDropColumnStatement()
 	}
 
 	// Handle LOGIN token explicitly
@@ -2275,6 +2277,42 @@ func (p *Parser) parseDropMasterKeyStatement() (*ast.DropMasterKeyStatement, err
 	return stmt, nil
 }
 
+func (p *Parser) parseDropColumnStatement() (ast.Statement, error) {
+	// Consume COLUMN
+	p.nextToken()
+
+	keyword := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume MASTER or ENCRYPTION
+
+	if keyword == "MASTER" {
+		// DROP COLUMN MASTER KEY
+		if strings.ToUpper(p.curTok.Literal) == "KEY" {
+			p.nextToken() // consume KEY
+		}
+		stmt := &ast.DropColumnMasterKeyStatement{
+			Name: p.parseIdentifier(),
+		}
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	} else if keyword == "ENCRYPTION" {
+		// DROP COLUMN ENCRYPTION KEY
+		if strings.ToUpper(p.curTok.Literal) == "KEY" {
+			p.nextToken() // consume KEY
+		}
+		stmt := &ast.DropColumnEncryptionKeyStatement{
+			Name: p.parseIdentifier(),
+		}
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
+		return stmt, nil
+	}
+
+	return nil, fmt.Errorf("unexpected token after DROP COLUMN: expected MASTER or ENCRYPTION, got %s", keyword)
+}
+
 func (p *Parser) parseDropXmlSchemaCollectionStatement() (*ast.DropXmlSchemaCollectionStatement, error) {
 	// Consume XML
 	p.nextToken()
@@ -2621,6 +2659,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterEventSessionStatement()
 		case "SECURITY":
 			return p.parseAlterSecurityPolicyStatement()
+		case "COLUMN":
+			return p.parseAlterColumnEncryptionKeyStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -12696,6 +12736,100 @@ func (p *Parser) parseAlterAuthorizationStatement() (*ast.AlterAuthorizationStat
 	} else {
 		// Parse principal name
 		stmt.PrincipalName = p.parseIdentifier()
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterColumnEncryptionKeyStatement() (ast.Statement, error) {
+	// ALTER COLUMN ENCRYPTION KEY name ADD|DROP VALUE (...)
+	// Currently on COLUMN
+	p.nextToken() // consume COLUMN
+
+	if strings.ToUpper(p.curTok.Literal) != "ENCRYPTION" {
+		return nil, fmt.Errorf("expected ENCRYPTION after COLUMN, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ENCRYPTION
+
+	if strings.ToUpper(p.curTok.Literal) != "KEY" {
+		return nil, fmt.Errorf("expected KEY after ENCRYPTION, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume KEY
+
+	stmt := &ast.AlterColumnEncryptionKeyStatement{}
+
+	// Parse key name
+	stmt.Name = p.parseIdentifier()
+
+	// Parse ADD VALUE or DROP VALUE
+	keyword := strings.ToUpper(p.curTok.Literal)
+	if keyword == "ADD" {
+		stmt.AlterType = "Add"
+		p.nextToken() // consume ADD
+	} else if keyword == "DROP" {
+		stmt.AlterType = "Drop"
+		p.nextToken() // consume DROP
+	} else {
+		return nil, fmt.Errorf("expected ADD or DROP, got %s", p.curTok.Literal)
+	}
+
+	if strings.ToUpper(p.curTok.Literal) == "VALUE" {
+		p.nextToken() // consume VALUE
+	}
+
+	// Parse the value - enclosed in ( ... )
+	if p.curTok.Type == TokenLParen {
+		value := &ast.ColumnEncryptionKeyValue{}
+		p.nextToken() // consume (
+
+		// Parse parameters
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			paramName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume parameter name
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			switch paramName {
+			case "COLUMN_MASTER_KEY":
+				value.Parameters = append(value.Parameters, &ast.ColumnMasterKeyNameParameter{
+					Name:          p.parseIdentifier(),
+					ParameterKind: "ColumnMasterKeyName",
+				})
+			case "ALGORITHM":
+				expr, _ := p.parseScalarExpression()
+				value.Parameters = append(value.Parameters, &ast.ColumnEncryptionAlgorithmNameParameter{
+					Algorithm:     expr,
+					ParameterKind: "EncryptionAlgorithmName",
+				})
+			case "ENCRYPTED_VALUE":
+				expr, _ := p.parseScalarExpression()
+				value.Parameters = append(value.Parameters, &ast.EncryptedValueParameter{
+					Value:         expr,
+					ParameterKind: "EncryptedValue",
+				})
+			default:
+				// Skip unknown parameter
+				p.nextToken()
+			}
+
+			// Skip comma if present
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		// Consume closing )
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+
+		stmt.ColumnEncryptionKeyValues = append(stmt.ColumnEncryptionKeyValues, value)
 	}
 
 	if p.curTok.Type == TokenSemicolon {
