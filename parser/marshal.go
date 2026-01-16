@@ -17568,6 +17568,63 @@ func columnDefinitionBaseToJSON(c *ast.ColumnDefinitionBase) jsonNode {
 	return node
 }
 
+// normalizeRowsetOptionsJSON normalizes a JSON string for ROWSET_OPTIONS
+// by removing whitespace and uppercasing keys to match ScriptDOM behavior
+func normalizeRowsetOptionsJSON(jsonStr string) string {
+	// Parse and re-serialize the JSON to normalize it
+	var data map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		// If parsing fails, return as-is
+		return jsonStr
+	}
+
+	// Normalize keys to uppercase and values
+	normalized := normalizeJSONObject(data)
+
+	// Re-serialize without extra whitespace
+	result, err := json.Marshal(normalized)
+	if err != nil {
+		return jsonStr
+	}
+	return string(result)
+}
+
+// normalizeJSONObject recursively normalizes JSON object keys to uppercase
+func normalizeJSONObject(data map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	for k, v := range data {
+		upperKey := strings.ToUpper(k)
+		switch val := v.(type) {
+		case map[string]interface{}:
+			result[upperKey] = normalizeJSONObject(val)
+		case []interface{}:
+			result[upperKey] = normalizeJSONArray(val)
+		default:
+			result[upperKey] = v
+		}
+	}
+	return result
+}
+
+// normalizeJSONArray recursively normalizes JSON array values
+func normalizeJSONArray(data []interface{}) []interface{} {
+	result := make([]interface{}, len(data))
+	for i, v := range data {
+		switch val := v.(type) {
+		case map[string]interface{}:
+			result[i] = normalizeJSONObject(val)
+		case []interface{}:
+			result[i] = normalizeJSONArray(val)
+		case string:
+			// Uppercase string values in arrays
+			result[i] = strings.ToUpper(val)
+		default:
+			result[i] = v
+		}
+	}
+	return result
+}
+
 func bulkInsertOptionToJSON(opt ast.BulkInsertOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.BulkInsertOptionBase:
@@ -17581,7 +17638,23 @@ func bulkInsertOptionToJSON(opt ast.BulkInsertOption) jsonNode {
 			"OptionKind": o.OptionKind,
 		}
 		if o.Value != nil {
-			node["Value"] = scalarExpressionToJSON(o.Value)
+			// For RowsetOptions, normalize the JSON string value
+			if o.OptionKind == "RowsetOptions" {
+				if strLit, ok := o.Value.(*ast.StringLiteral); ok {
+					normalizedValue := normalizeRowsetOptionsJSON(strLit.Value)
+					normalizedLit := &ast.StringLiteral{
+						LiteralType:   strLit.LiteralType,
+						IsNational:    strLit.IsNational,
+						IsLargeObject: strLit.IsLargeObject,
+						Value:         normalizedValue,
+					}
+					node["Value"] = scalarExpressionToJSON(normalizedLit)
+				} else {
+					node["Value"] = scalarExpressionToJSON(o.Value)
+				}
+			} else {
+				node["Value"] = scalarExpressionToJSON(o.Value)
+			}
 		}
 		return node
 	case *ast.OrderBulkInsertOption:
