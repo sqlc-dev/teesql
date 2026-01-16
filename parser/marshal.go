@@ -4812,59 +4812,87 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 	}
 	p.nextToken()
 
-	stmt.Definition = &ast.TableDefinition{}
-
-	// Parse column definitions and table constraints
-	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-		upperLit := strings.ToUpper(p.curTok.Literal)
-
-		// Check for table-level constraints
-		if upperLit == "CONSTRAINT" {
-			constraint, err := p.parseNamedTableConstraint()
-			if err != nil {
-				p.skipToEndOfStatement()
-				return stmt, nil
-			}
-			if constraint != nil {
-				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
-			}
-		} else if upperLit == "PRIMARY" || upperLit == "UNIQUE" || upperLit == "FOREIGN" || upperLit == "CHECK" {
-			constraint, err := p.parseUnnamedTableConstraint()
-			if err != nil {
-				p.skipToEndOfStatement()
-				return stmt, nil
-			}
-			if constraint != nil {
-				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
-			}
-		} else if upperLit == "INDEX" {
-			// Parse inline index definition
-			indexDef, err := p.parseInlineIndexDefinition()
-			if err != nil {
-				p.skipToEndOfStatement()
-				return stmt, nil
-			}
-			stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
-		} else {
-			// Parse column definition
-			colDef, err := p.parseColumnDefinition()
-			if err != nil {
-				p.skipToEndOfStatement()
-				return stmt, nil
-			}
-			stmt.Definition.ColumnDefinitions = append(stmt.Definition.ColumnDefinitions, colDef)
-		}
-
-		if p.curTok.Type == TokenComma {
-			p.nextToken()
-		} else {
-			break
+	// Check if this is a CTAS column list (just column names) or regular table definition
+	// CTAS columns: (col1, col2) - identifier followed by comma or )
+	// Regular: (col1 INT, col2 VARCHAR(50)) - identifier followed by data type
+	isCtasColumnList := false
+	if p.curTok.Type == TokenIdent {
+		// Check if next token is comma or rparen (CTAS column list)
+		// Use peekTok directly instead of advancing to avoid lexer state issues
+		if p.peekTok.Type == TokenComma || p.peekTok.Type == TokenRParen {
+			isCtasColumnList = true
 		}
 	}
 
-	// Expect )
-	if p.curTok.Type == TokenRParen {
-		p.nextToken()
+	if isCtasColumnList {
+		// Parse CTAS column names
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			col := p.parseIdentifier()
+			stmt.CtasColumns = append(stmt.CtasColumns, col)
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	} else {
+		stmt.Definition = &ast.TableDefinition{}
+
+		// Parse column definitions and table constraints
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			upperLit := strings.ToUpper(p.curTok.Literal)
+
+			// Check for table-level constraints
+			if upperLit == "CONSTRAINT" {
+				constraint, err := p.parseNamedTableConstraint()
+				if err != nil {
+					p.skipToEndOfStatement()
+					return stmt, nil
+				}
+				if constraint != nil {
+					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+				}
+			} else if upperLit == "PRIMARY" || upperLit == "UNIQUE" || upperLit == "FOREIGN" || upperLit == "CHECK" {
+				constraint, err := p.parseUnnamedTableConstraint()
+				if err != nil {
+					p.skipToEndOfStatement()
+					return stmt, nil
+				}
+				if constraint != nil {
+					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+				}
+			} else if upperLit == "INDEX" {
+				// Parse inline index definition
+				indexDef, err := p.parseInlineIndexDefinition()
+				if err != nil {
+					p.skipToEndOfStatement()
+					return stmt, nil
+				}
+				stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
+			} else {
+				// Parse column definition
+				colDef, err := p.parseColumnDefinition()
+				if err != nil {
+					p.skipToEndOfStatement()
+					return stmt, nil
+				}
+				stmt.Definition.ColumnDefinitions = append(stmt.Definition.ColumnDefinitions, colDef)
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		// Expect )
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
 	}
 
 	// Parse optional ON filegroup, TEXTIMAGE_ON, FILESTREAM_ON, and WITH clauses
@@ -5001,10 +5029,36 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							if p.curTok.Type == TokenIndex {
 								p.nextToken() // consume INDEX
 							}
+							indexType := &ast.TableClusteredIndexType{
+								ColumnStore: true,
+							}
+							// Check for ORDER(columns)
+							if strings.ToUpper(p.curTok.Literal) == "ORDER" {
+								p.nextToken() // consume ORDER
+								if p.curTok.Type == TokenLParen {
+									p.nextToken() // consume (
+									for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+										col := &ast.ColumnReferenceExpression{
+											ColumnType: "Regular",
+											MultiPartIdentifier: &ast.MultiPartIdentifier{
+												Identifiers: []*ast.Identifier{p.parseIdentifier()},
+												Count:       1,
+											},
+										}
+										indexType.OrderedColumns = append(indexType.OrderedColumns, col)
+										if p.curTok.Type == TokenComma {
+											p.nextToken()
+										} else {
+											break
+										}
+									}
+									if p.curTok.Type == TokenRParen {
+										p.nextToken()
+									}
+								}
+							}
 							stmt.Options = append(stmt.Options, &ast.TableIndexOption{
-								Value: &ast.TableClusteredIndexType{
-									ColumnStore: true,
-								},
+								Value:      indexType,
 								OptionKind: "LockEscalation",
 							})
 						} else if p.curTok.Type == TokenIndex {
@@ -5057,17 +5111,14 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							p.nextToken() // consume HASH
 							if p.curTok.Type == TokenLParen {
 								p.nextToken() // consume (
-								distOpt := &ast.TableDistributionOption{
-									OptionKind: "Distribution",
-									Value:      &ast.TableHashDistributionPolicy{},
-								}
+								hashPolicy := &ast.TableHashDistributionPolicy{}
 								// Parse column list
 								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 									col := p.parseIdentifier()
-									if distOpt.Value.DistributionColumn == nil {
-										distOpt.Value.DistributionColumn = col
+									if hashPolicy.DistributionColumn == nil {
+										hashPolicy.DistributionColumn = col
 									}
-									distOpt.Value.DistributionColumns = append(distOpt.Value.DistributionColumns, col)
+									hashPolicy.DistributionColumns = append(hashPolicy.DistributionColumns, col)
 									if p.curTok.Type == TokenComma {
 										p.nextToken()
 									} else {
@@ -5077,10 +5128,25 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 								if p.curTok.Type == TokenRParen {
 									p.nextToken()
 								}
-								stmt.Options = append(stmt.Options, distOpt)
+								stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+									OptionKind: "Distribution",
+									Value:      hashPolicy,
+								})
 							}
+						} else if distTypeUpper == "ROUND_ROBIN" {
+							p.nextToken() // consume ROUND_ROBIN
+							stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+								OptionKind: "Distribution",
+								Value:      &ast.TableRoundRobinDistributionPolicy{},
+							})
+						} else if distTypeUpper == "REPLICATE" {
+							p.nextToken() // consume REPLICATE
+							stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+								OptionKind: "Distribution",
+								Value:      &ast.TableReplicateDistributionPolicy{},
+							})
 						} else {
-							// ROUND_ROBIN or REPLICATE - skip for now
+							// Unknown distribution - skip for now
 							p.nextToken()
 						}
 					} else {
@@ -5100,7 +5166,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 				}
 			}
 		} else if p.curTok.Type == TokenAs {
-			// Parse AS NODE or AS EDGE
+			// Parse AS NODE, AS EDGE, or AS SELECT (CTAS)
 			p.nextToken() // consume AS
 			nodeOrEdge := strings.ToUpper(p.curTok.Literal)
 			if nodeOrEdge == "NODE" {
@@ -5109,6 +5175,13 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 			} else if nodeOrEdge == "EDGE" {
 				stmt.AsEdge = true
 				p.nextToken()
+			} else if p.curTok.Type == TokenSelect {
+				// CTAS: CREATE TABLE ... AS SELECT
+				selectStmt, err := p.parseSelectStatement()
+				if err != nil {
+					return nil, err
+				}
+				stmt.SelectStatement = selectStmt
 			}
 		} else if upperLit == "FEDERATED" {
 			p.nextToken() // consume FEDERATED
@@ -5337,6 +5410,133 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 							return nil, err
 						}
 						stmt.Options = append(stmt.Options, opt)
+					} else if optionName == "CLUSTERED" {
+						// Could be CLUSTERED INDEX or CLUSTERED COLUMNSTORE INDEX
+						if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
+							p.nextToken() // consume COLUMNSTORE
+							if p.curTok.Type == TokenIndex {
+								p.nextToken() // consume INDEX
+							}
+							indexType := &ast.TableClusteredIndexType{
+								ColumnStore: true,
+							}
+							// Check for ORDER(columns)
+							if strings.ToUpper(p.curTok.Literal) == "ORDER" {
+								p.nextToken() // consume ORDER
+								if p.curTok.Type == TokenLParen {
+									p.nextToken() // consume (
+									for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+										col := &ast.ColumnReferenceExpression{
+											ColumnType: "Regular",
+											MultiPartIdentifier: &ast.MultiPartIdentifier{
+												Identifiers: []*ast.Identifier{p.parseIdentifier()},
+												Count:       1,
+											},
+										}
+										indexType.OrderedColumns = append(indexType.OrderedColumns, col)
+										if p.curTok.Type == TokenComma {
+											p.nextToken()
+										} else {
+											break
+										}
+									}
+									if p.curTok.Type == TokenRParen {
+										p.nextToken()
+									}
+								}
+							}
+							stmt.Options = append(stmt.Options, &ast.TableIndexOption{
+								Value:      indexType,
+								OptionKind: "LockEscalation",
+							})
+						} else if p.curTok.Type == TokenIndex {
+							p.nextToken() // consume INDEX
+							// Parse column list
+							indexType := &ast.TableClusteredIndexType{
+								ColumnStore: false,
+							}
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									col := &ast.ColumnWithSortOrder{
+										SortOrder: ast.SortOrderNotSpecified,
+										Column: &ast.ColumnReferenceExpression{
+											ColumnType: "Regular",
+											MultiPartIdentifier: &ast.MultiPartIdentifier{
+												Identifiers: []*ast.Identifier{p.parseIdentifier()},
+												Count:       1,
+											},
+										},
+									}
+									indexType.Columns = append(indexType.Columns, col)
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									} else {
+										break
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+							}
+							stmt.Options = append(stmt.Options, &ast.TableIndexOption{
+								Value:      indexType,
+								OptionKind: "LockEscalation",
+							})
+						}
+					} else if optionName == "HEAP" {
+						stmt.Options = append(stmt.Options, &ast.TableIndexOption{
+							Value:      &ast.TableNonClusteredIndexType{},
+							OptionKind: "LockEscalation",
+						})
+					} else if optionName == "DISTRIBUTION" {
+						// Parse DISTRIBUTION = HASH(col1, col2, ...) or ROUND_ROBIN or REPLICATE
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						distTypeUpper := strings.ToUpper(p.curTok.Literal)
+						if distTypeUpper == "HASH" {
+							p.nextToken() // consume HASH
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								hashPolicy := &ast.TableHashDistributionPolicy{}
+								// Parse column list
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									col := p.parseIdentifier()
+									if hashPolicy.DistributionColumn == nil {
+										hashPolicy.DistributionColumn = col
+									}
+									hashPolicy.DistributionColumns = append(hashPolicy.DistributionColumns, col)
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									} else {
+										break
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken()
+								}
+								stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+									OptionKind: "Distribution",
+									Value:      hashPolicy,
+								})
+							}
+						} else if distTypeUpper == "ROUND_ROBIN" {
+							p.nextToken() // consume ROUND_ROBIN
+							stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+								OptionKind: "Distribution",
+								Value:      &ast.TableRoundRobinDistributionPolicy{},
+							})
+						} else if distTypeUpper == "REPLICATE" {
+							p.nextToken() // consume REPLICATE
+							stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+								OptionKind: "Distribution",
+								Value:      &ast.TableReplicateDistributionPolicy{},
+							})
+						} else {
+							// Unknown distribution - skip for now
+							p.nextToken()
+						}
 					} else {
 						// Skip unknown option value
 						if p.curTok.Type == TokenEquals {
@@ -5352,6 +5552,24 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 				if p.curTok.Type == TokenRParen {
 					p.nextToken()
 				}
+			}
+		} else if p.curTok.Type == TokenAs {
+			// Parse AS NODE, AS EDGE, or AS SELECT (CTAS)
+			p.nextToken() // consume AS
+			nodeOrEdge := strings.ToUpper(p.curTok.Literal)
+			if nodeOrEdge == "NODE" {
+				stmt.AsNode = true
+				p.nextToken()
+			} else if nodeOrEdge == "EDGE" {
+				stmt.AsEdge = true
+				p.nextToken()
+			} else if p.curTok.Type == TokenSelect {
+				// CTAS: CREATE TABLE ... AS SELECT
+				selectStmt, err := p.parseSelectStatement()
+				if err != nil {
+					return nil, err
+				}
+				stmt.SelectStatement = selectStmt
 			}
 		} else {
 			break
@@ -8136,6 +8354,16 @@ func createTableStatementToJSON(s *ast.CreateTableStatement) jsonNode {
 	if s.FederationScheme != nil {
 		node["FederationScheme"] = federationSchemeToJSON(s.FederationScheme)
 	}
+	if s.SelectStatement != nil {
+		node["SelectStatement"] = selectStatementToJSON(s.SelectStatement)
+	}
+	if len(s.CtasColumns) > 0 {
+		cols := make([]jsonNode, len(s.CtasColumns))
+		for i, col := range s.CtasColumns {
+			cols[i] = identifierToJSON(col)
+		}
+		node["CtasColumns"] = cols
+	}
 	return node
 }
 
@@ -8187,7 +8415,7 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 			"OptionKind": o.OptionKind,
 		}
 		if o.Value != nil {
-			node["Value"] = tableHashDistributionPolicyToJSON(o.Value)
+			node["Value"] = tableDistributionPolicyToJSON(o.Value)
 		}
 		return node
 	case *ast.SystemVersioningTableOption:
@@ -8307,26 +8535,39 @@ func xmlCompressionOptionToJSON(opt *ast.XmlCompressionOption) jsonNode {
 	return node
 }
 
-func tableHashDistributionPolicyToJSON(policy *ast.TableHashDistributionPolicy) jsonNode {
-	node := jsonNode{
-		"$type": "TableHashDistributionPolicy",
-	}
-	if policy.DistributionColumn != nil {
-		node["DistributionColumn"] = identifierToJSON(policy.DistributionColumn)
-	}
-	if len(policy.DistributionColumns) > 0 {
-		cols := make([]jsonNode, len(policy.DistributionColumns))
-		for i, c := range policy.DistributionColumns {
-			// First column is same as DistributionColumn, use $ref
-			if i == 0 && policy.DistributionColumn != nil {
-				cols[i] = jsonNode{"$ref": "Identifier"}
-			} else {
-				cols[i] = identifierToJSON(c)
-			}
+func tableDistributionPolicyToJSON(policy ast.TableDistributionPolicy) jsonNode {
+	switch p := policy.(type) {
+	case *ast.TableHashDistributionPolicy:
+		node := jsonNode{
+			"$type": "TableHashDistributionPolicy",
 		}
-		node["DistributionColumns"] = cols
+		if p.DistributionColumn != nil {
+			node["DistributionColumn"] = identifierToJSON(p.DistributionColumn)
+		}
+		if len(p.DistributionColumns) > 0 {
+			cols := make([]jsonNode, len(p.DistributionColumns))
+			for i, c := range p.DistributionColumns {
+				// First column is same as DistributionColumn, use $ref
+				if i == 0 && p.DistributionColumn != nil {
+					cols[i] = jsonNode{"$ref": "Identifier"}
+				} else {
+					cols[i] = identifierToJSON(c)
+				}
+			}
+			node["DistributionColumns"] = cols
+		}
+		return node
+	case *ast.TableRoundRobinDistributionPolicy:
+		return jsonNode{
+			"$type": "TableRoundRobinDistributionPolicy",
+		}
+	case *ast.TableReplicateDistributionPolicy:
+		return jsonNode{
+			"$type": "TableReplicateDistributionPolicy",
+		}
+	default:
+		return jsonNode{"$type": "UnknownDistributionPolicy"}
 	}
-	return node
 }
 
 func tableIndexTypeToJSON(t ast.TableIndexType) jsonNode {
@@ -8342,6 +8583,13 @@ func tableIndexTypeToJSON(t ast.TableIndexType) jsonNode {
 				cols[i] = columnWithSortOrderToJSON(c)
 			}
 			node["Columns"] = cols
+		}
+		if len(v.OrderedColumns) > 0 {
+			cols := make([]jsonNode, len(v.OrderedColumns))
+			for i, c := range v.OrderedColumns {
+				cols[i] = columnReferenceExpressionToJSON(c)
+			}
+			node["OrderedColumns"] = cols
 		}
 		return node
 	case *ast.TableNonClusteredIndexType:

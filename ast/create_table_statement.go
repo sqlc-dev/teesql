@@ -12,6 +12,8 @@ type CreateTableStatement struct {
 	FileStreamOn                 *IdentifierOrValueExpression
 	Options                      []TableOption
 	FederationScheme             *FederationScheme
+	SelectStatement              *SelectStatement   // For CTAS: CREATE TABLE ... AS SELECT
+	CtasColumns                  []*Identifier      // For CTAS with column names: CREATE TABLE (col1, col2) WITH ... AS SELECT
 }
 
 // FederationScheme represents a FEDERATED ON clause

@@ -17,8 +17,9 @@ type TableIndexType interface {
 
 // TableClusteredIndexType represents a clustered index type
 type TableClusteredIndexType struct {
-	Columns     []*ColumnWithSortOrder
-	ColumnStore bool
+	Columns        []*ColumnWithSortOrder
+	ColumnStore    bool
+	OrderedColumns []*ColumnReferenceExpression // For COLUMNSTORE INDEX ORDER(columns)
 }
 
 func (t *TableClusteredIndexType) node()           {}
