@@ -12796,11 +12796,79 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 			OnName: onName,
 		}
 
-		// Parse optional (column_list) - skip for now
+		// Parse optional (column_list)
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				p.nextToken()
+				col := &ast.FullTextIndexColumn{}
+				col.Name = p.parseIdentifier()
+
+				// Parse optional TYPE COLUMN type_column_name
+				if strings.ToUpper(p.curTok.Literal) == "TYPE" {
+					p.nextToken() // consume TYPE
+					if strings.ToUpper(p.curTok.Literal) == "COLUMN" {
+						p.nextToken() // consume COLUMN
+					}
+					col.TypeColumn = p.parseIdentifier()
+				}
+
+				// Parse optional LANGUAGE language_term
+				if p.curTok.Type == TokenLanguage {
+					p.nextToken() // consume LANGUAGE
+					col.LanguageTerm = &ast.IdentifierOrValueExpression{}
+					if p.curTok.Type == TokenString {
+						strLit, _ := p.parseStringLiteral()
+						col.LanguageTerm.Value = strLit.Value
+						col.LanguageTerm.ValueExpression = strLit
+					} else if p.curTok.Type == TokenNumber {
+						// Check for hex literal (0x...)
+						if strings.HasPrefix(strings.ToLower(p.curTok.Literal), "0x") {
+							lit := &ast.BinaryLiteral{
+								LiteralType:   "Binary",
+								IsLargeObject: false,
+								Value:         p.curTok.Literal,
+							}
+							col.LanguageTerm.Value = p.curTok.Literal
+							col.LanguageTerm.ValueExpression = lit
+						} else {
+							// Parse integer literal directly
+							lit := &ast.IntegerLiteral{
+								LiteralType: "Integer",
+								Value:       p.curTok.Literal,
+							}
+							col.LanguageTerm.Value = p.curTok.Literal
+							col.LanguageTerm.ValueExpression = lit
+						}
+						p.nextToken()
+					} else if p.curTok.Type == TokenBinary {
+						// Handle binary/hex literal
+						lit := &ast.BinaryLiteral{
+							LiteralType:   "Binary",
+							IsLargeObject: false,
+							Value:         p.curTok.Literal,
+						}
+						col.LanguageTerm.Value = p.curTok.Literal
+						col.LanguageTerm.ValueExpression = lit
+						p.nextToken()
+					} else {
+						col.LanguageTerm.Identifier = p.parseIdentifier()
+						col.LanguageTerm.Value = col.LanguageTerm.Identifier.Value
+					}
+				}
+
+				// Parse optional STATISTICAL_SEMANTICS
+				if strings.ToUpper(p.curTok.Literal) == "STATISTICAL_SEMANTICS" {
+					col.StatisticalSemantics = true
+					p.nextToken()
+				}
+
+				stmt.FullTextIndexColumns = append(stmt.FullTextIndexColumns, col)
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume comma
+				} else {
+					break
+				}
 			}
 			if p.curTok.Type == TokenRParen {
 				p.nextToken() // consume )

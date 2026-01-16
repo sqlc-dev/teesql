@@ -425,10 +425,11 @@ func (s *CreateFulltextCatalogStatement) statement() {}
 
 // CreateFulltextIndexStatement represents a CREATE FULLTEXT INDEX statement.
 type CreateFulltextIndexStatement struct {
-	OnName            *SchemaObjectName            `json:"OnName,omitempty"`
-	KeyIndexName      *Identifier                  `json:"KeyIndexName,omitempty"`
-	CatalogAndFileGroup *FullTextCatalogAndFileGroup `json:"CatalogAndFileGroup,omitempty"`
-	Options           []FullTextIndexOption        `json:"Options,omitempty"`
+	OnName               *SchemaObjectName            `json:"OnName,omitempty"`
+	FullTextIndexColumns []*FullTextIndexColumn       `json:"FullTextIndexColumns,omitempty"`
+	KeyIndexName         *Identifier                  `json:"KeyIndexName,omitempty"`
+	CatalogAndFileGroup  *FullTextCatalogAndFileGroup `json:"CatalogAndFileGroup,omitempty"`
+	Options              []FullTextIndexOption        `json:"Options,omitempty"`
 }
 
 func (s *CreateFulltextIndexStatement) node()      {}

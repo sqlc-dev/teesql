@@ -204,7 +204,7 @@ func (p *Parser) parseDropFulltextStatement() (ast.Statement, error) {
 		}
 		name, _ := p.parseSchemaObjectName()
 		stmt := &ast.DropFulltextIndexStatement{
-			OnName: name,
+			TableName: name,
 		}
 		// Skip optional semicolon
 		if p.curTok.Type == TokenSemicolon {

@@ -51,7 +51,7 @@ func (s *DropFullTextCatalogStatement) statement() {}
 
 // DropFulltextIndexStatement represents DROP FULLTEXT INDEX statement
 type DropFulltextIndexStatement struct {
-	OnName *SchemaObjectName `json:"OnName,omitempty"`
+	TableName *SchemaObjectName `json:"TableName,omitempty"`
 }
 
 func (s *DropFulltextIndexStatement) node()      {}

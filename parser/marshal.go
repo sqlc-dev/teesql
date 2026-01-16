@@ -17512,8 +17512,8 @@ func dropFulltextIndexStatementToJSON(s *ast.DropFulltextIndexStatement) jsonNod
 	node := jsonNode{
 		"$type": "DropFullTextIndexStatement",
 	}
-	if s.OnName != nil {
-		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	if s.TableName != nil {
+		node["TableName"] = schemaObjectNameToJSON(s.TableName)
 	}
 	return node
 }
@@ -18567,6 +18567,13 @@ func createFulltextIndexStatementToJSON(s *ast.CreateFulltextIndexStatement) jso
 	}
 	if s.OnName != nil {
 		node["OnName"] = schemaObjectNameToJSON(s.OnName)
+	}
+	if len(s.FullTextIndexColumns) > 0 {
+		cols := make([]jsonNode, len(s.FullTextIndexColumns))
+		for i, col := range s.FullTextIndexColumns {
+			cols[i] = fullTextIndexColumnToJSON(col)
+		}
+		node["FullTextIndexColumns"] = cols
 	}
 	if s.KeyIndexName != nil {
 		node["KeyIndexName"] = identifierToJSON(s.KeyIndexName)
