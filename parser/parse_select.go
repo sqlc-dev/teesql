@@ -2922,6 +2922,31 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		ref.TableSampleClause = tableSample
 	}
 
+	// Check for old-style hints after TABLESAMPLE (without WITH keyword): alias TABLESAMPLE (...)(nolock)
+	if p.curTok.Type == TokenLParen && p.peekIsTableHint() {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			hint, err := p.parseTableHint()
+			if err != nil {
+				return nil, err
+			}
+			if hint != nil {
+				ref.TableHints = append(ref.TableHints, hint)
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else if p.curTok.Type != TokenRParen {
+				if p.isTableHintToken() {
+					continue
+				}
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
 	// Check for new-style hints (with WITH keyword): alias WITH (hints)
 	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
