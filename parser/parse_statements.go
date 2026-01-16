@@ -2842,6 +2842,8 @@ func (p *Parser) parseCreateStatement() (ast.Statement, error) {
 			// RESOURCE GOVERNOR not supported for CREATE
 			p.skipToEndOfStatement()
 			return &ast.CreateProcedureStatement{}, nil
+		case "SECURITY":
+			return p.parseCreateSecurityPolicyStatement()
 		case "SEQUENCE":
 			return p.parseCreateSequenceStatement()
 		case "SPATIAL":

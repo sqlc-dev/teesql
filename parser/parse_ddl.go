@@ -519,6 +519,375 @@ func (p *Parser) parseDropSecurityPolicyStatement() (*ast.DropSecurityPolicyStat
 	return stmt, nil
 }
 
+func (p *Parser) parseCreateSecurityPolicyStatement() (*ast.CreateSecurityPolicyStatement, error) {
+	// Consume SECURITY
+	p.nextToken()
+
+	// Expect POLICY
+	if strings.ToUpper(p.curTok.Literal) != "POLICY" {
+		return nil, fmt.Errorf("expected POLICY after SECURITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.CreateSecurityPolicyStatement{
+		ActionType: "Create",
+	}
+
+	// Parse policy name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Parse optional clauses in any order
+	for {
+		upper := strings.ToUpper(p.curTok.Literal)
+		switch upper {
+		case "ADD":
+			action, err := p.parseSecurityPredicateAction("Create")
+			if err != nil {
+				p.skipToEndOfStatement()
+				return stmt, nil
+			}
+			stmt.SecurityPredicateActions = append(stmt.SecurityPredicateActions, action)
+
+		case "WITH":
+			p.nextToken() // consume WITH
+			if p.curTok.Type != TokenLParen {
+				continue
+			}
+			p.nextToken() // consume (
+
+			// Parse options
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				opt := p.parseSecurityPolicyOption()
+				if opt != nil {
+					stmt.SecurityPolicyOptions = append(stmt.SecurityPolicyOptions, opt)
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+
+		case "NOT":
+			p.nextToken() // consume NOT
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+				if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+					p.nextToken() // consume REPLICATION
+					stmt.NotForReplication = true
+				}
+			}
+
+		default:
+			// Handle comma-separated predicates
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+				continue
+			}
+			// End of statement
+			if p.curTok.Type == TokenSemicolon {
+				p.nextToken()
+			}
+			return stmt, nil
+		}
+	}
+}
+
+func (p *Parser) parseAlterSecurityPolicyStatement() (*ast.AlterSecurityPolicyStatement, error) {
+	// Consume SECURITY
+	p.nextToken()
+
+	// Expect POLICY
+	if strings.ToUpper(p.curTok.Literal) != "POLICY" {
+		return nil, fmt.Errorf("expected POLICY after SECURITY, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterSecurityPolicyStatement{
+		ActionType: "Alter",
+	}
+
+	// Parse policy name
+	name, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Name = name
+
+	// Parse optional clauses in any order
+	for {
+		upper := strings.ToUpper(p.curTok.Literal)
+		switch upper {
+		case "ADD":
+			// Check if it's ADD NOT FOR REPLICATION
+			if strings.ToUpper(p.peekTok.Literal) == "NOT" {
+				p.nextToken() // consume ADD
+				p.nextToken() // consume NOT
+				if strings.ToUpper(p.curTok.Literal) == "FOR" {
+					p.nextToken() // consume FOR
+					if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+						p.nextToken() // consume REPLICATION
+						stmt.NotForReplication = true
+						stmt.NotForReplicationModified = true
+					}
+				}
+			} else {
+				action, err := p.parseSecurityPredicateAction("Create")
+				if err != nil {
+					p.skipToEndOfStatement()
+					return stmt, nil
+				}
+				stmt.SecurityPredicateActions = append(stmt.SecurityPredicateActions, action)
+			}
+
+		case "DROP":
+			// Check if it's DROP NOT FOR REPLICATION
+			if strings.ToUpper(p.peekTok.Literal) == "NOT" {
+				p.nextToken() // consume DROP
+				p.nextToken() // consume NOT
+				if strings.ToUpper(p.curTok.Literal) == "FOR" {
+					p.nextToken() // consume FOR
+					if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+						p.nextToken() // consume REPLICATION
+						stmt.NotForReplication = false
+						stmt.NotForReplicationModified = true
+					}
+				}
+			} else {
+				action, err := p.parseSecurityPredicateAction("Drop")
+				if err != nil {
+					p.skipToEndOfStatement()
+					return stmt, nil
+				}
+				stmt.SecurityPredicateActions = append(stmt.SecurityPredicateActions, action)
+			}
+
+		case "ALTER":
+			// Check if this is ALTER FILTER/BLOCK (predicate action) or ALTER SECURITY (new statement)
+			peekUpper := strings.ToUpper(p.peekTok.Literal)
+			if peekUpper != "FILTER" && peekUpper != "BLOCK" {
+				// This is a new statement, not a predicate action
+				return stmt, nil
+			}
+			action, err := p.parseSecurityPredicateAction("Alter")
+			if err != nil {
+				p.skipToEndOfStatement()
+				return stmt, nil
+			}
+			stmt.SecurityPredicateActions = append(stmt.SecurityPredicateActions, action)
+
+		case "WITH":
+			p.nextToken() // consume WITH
+			if p.curTok.Type != TokenLParen {
+				continue
+			}
+			p.nextToken() // consume (
+
+			// Parse options
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				opt := p.parseSecurityPolicyOption()
+				if opt != nil {
+					stmt.SecurityPolicyOptions = append(stmt.SecurityPolicyOptions, opt)
+				}
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+
+		default:
+			// Handle comma-separated actions
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+				continue
+			}
+			// End of statement
+			if p.curTok.Type == TokenSemicolon {
+				p.nextToken()
+			}
+			return stmt, nil
+		}
+	}
+}
+
+func (p *Parser) parseSecurityPolicyOption() *ast.SecurityPolicyOption {
+	opt := &ast.SecurityPolicyOption{}
+
+	// Parse option kind (STATE or SCHEMABINDING)
+	optKind := strings.ToUpper(p.curTok.Literal)
+	switch optKind {
+	case "STATE":
+		opt.OptionKind = "State"
+	case "SCHEMABINDING":
+		opt.OptionKind = "SchemaBinding"
+	default:
+		p.nextToken()
+		return nil
+	}
+	p.nextToken()
+
+	// Consume =
+	if p.curTok.Type == TokenEquals {
+		p.nextToken()
+	}
+
+	// Parse option state (ON or OFF)
+	optState := strings.ToUpper(p.curTok.Literal)
+	switch optState {
+	case "ON":
+		opt.OptionState = "On"
+	case "OFF":
+		opt.OptionState = "Off"
+	default:
+		return nil
+	}
+	p.nextToken()
+
+	return opt
+}
+
+func (p *Parser) parseSecurityPredicateAction(actionType string) (*ast.SecurityPredicateAction, error) {
+	action := &ast.SecurityPredicateAction{
+		ActionType: actionType,
+	}
+
+	p.nextToken() // consume ADD/DROP/ALTER
+
+	// Parse predicate type (FILTER or BLOCK)
+	predType := strings.ToUpper(p.curTok.Literal)
+	switch predType {
+	case "FILTER":
+		action.SecurityPredicateType = "Filter"
+	case "BLOCK":
+		action.SecurityPredicateType = "Block"
+	default:
+		return nil, fmt.Errorf("expected FILTER or BLOCK, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect PREDICATE
+	if strings.ToUpper(p.curTok.Literal) != "PREDICATE" {
+		return nil, fmt.Errorf("expected PREDICATE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// For DROP, we don't parse function call - only ON target
+	if actionType != "Drop" {
+		// Parse function call (the predicate function)
+		funcCall, err := p.parseFunctionCallForPredicate()
+		if err != nil {
+			return nil, err
+		}
+		action.FunctionCall = funcCall
+	}
+
+	// Expect ON
+	if strings.ToUpper(p.curTok.Literal) != "ON" {
+		return nil, fmt.Errorf("expected ON, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse target table name
+	targetName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	action.TargetObjectName = targetName
+
+	// Parse optional operation (AFTER INSERT, AFTER UPDATE, BEFORE UPDATE, BEFORE DELETE)
+	action.SecurityPredicateOperation = "All"
+	upper := strings.ToUpper(p.curTok.Literal)
+	if upper == "AFTER" || upper == "BEFORE" {
+		prefix := upper
+		p.nextToken()
+		opType := strings.ToUpper(p.curTok.Literal)
+		switch prefix + opType {
+		case "AFTERINSERT":
+			action.SecurityPredicateOperation = "AfterInsert"
+		case "AFTERUPDATE":
+			action.SecurityPredicateOperation = "AfterUpdate"
+		case "BEFOREUPDATE":
+			action.SecurityPredicateOperation = "BeforeUpdate"
+		case "BEFOREDELETE":
+			action.SecurityPredicateOperation = "BeforeDelete"
+		}
+		p.nextToken()
+	}
+
+	return action, nil
+}
+
+func (p *Parser) parseFunctionCallForPredicate() (*ast.FunctionCall, error) {
+	fc := &ast.FunctionCall{
+		UniqueRowFilter:  "NotSpecified",
+		WithArrayWrapper: false,
+	}
+
+	// Parse schema.function or just function name
+	// Could be db.schema.func(args) or schema.func(args) or func(args)
+	var parts []*ast.Identifier
+	for {
+		id := p.parseIdentifier()
+		parts = append(parts, id)
+		if p.curTok.Type == TokenDot {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Last part before ( is the function name
+	if len(parts) > 0 {
+		fc.FunctionName = parts[len(parts)-1]
+		if len(parts) > 1 {
+			// Build CallTarget from the preceding parts
+			fc.CallTarget = &ast.MultiPartIdentifierCallTarget{
+				MultiPartIdentifier: &ast.MultiPartIdentifier{
+					Count:       len(parts) - 1,
+					Identifiers: parts[:len(parts)-1],
+				},
+			}
+		}
+	}
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return fc, nil
+	}
+	p.nextToken()
+
+	// Parse parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			break
+		}
+		fc.Parameters = append(fc.Parameters, param)
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	return fc, nil
+}
+
 func (p *Parser) parseDropWorkloadStatement() (ast.Statement, error) {
 	// Consume WORKLOAD
 	p.nextToken()
@@ -2250,6 +2619,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterMaterializedViewStatement()
 		case "EVENT":
 			return p.parseAlterEventSessionStatement()
+		case "SECURITY":
+			return p.parseAlterSecurityPolicyStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:

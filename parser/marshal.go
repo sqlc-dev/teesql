@@ -521,6 +521,10 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return createPartitionFunctionStatementToJSON(s)
 	case *ast.CreateEventNotificationStatement:
 		return createEventNotificationStatementToJSON(s)
+	case *ast.CreateSecurityPolicyStatement:
+		return createSecurityPolicyStatementToJSON(s)
+	case *ast.AlterSecurityPolicyStatement:
+		return alterSecurityPolicyStatementToJSON(s)
 	case *ast.AlterIndexStatement:
 		return alterIndexStatementToJSON(s)
 	case *ast.DropDatabaseStatement:
@@ -20321,6 +20325,92 @@ func openRowsetColumnDefinitionToJSON(col *ast.OpenRowsetColumnDefinition) jsonN
 	}
 	if col.Collation != nil {
 		node["Collation"] = identifierToJSON(col.Collation)
+	}
+	return node
+}
+
+func createSecurityPolicyStatementToJSON(s *ast.CreateSecurityPolicyStatement) jsonNode {
+	node := jsonNode{
+		"$type":             "CreateSecurityPolicyStatement",
+		"NotForReplication": s.NotForReplication,
+		"ActionType":        s.ActionType,
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if len(s.SecurityPolicyOptions) > 0 {
+		opts := make([]jsonNode, len(s.SecurityPolicyOptions))
+		for i, opt := range s.SecurityPolicyOptions {
+			opts[i] = securityPolicyOptionToJSON(opt)
+		}
+		node["SecurityPolicyOptions"] = opts
+	}
+	if len(s.SecurityPredicateActions) > 0 {
+		actions := make([]jsonNode, len(s.SecurityPredicateActions))
+		for i, action := range s.SecurityPredicateActions {
+			actions[i] = securityPredicateActionToJSON(action)
+		}
+		node["SecurityPredicateActions"] = actions
+	}
+	return node
+}
+
+func alterSecurityPolicyStatementToJSON(s *ast.AlterSecurityPolicyStatement) jsonNode {
+	// Determine ActionType based on statement contents
+	actionType := "Alter"
+	if len(s.SecurityPredicateActions) > 0 {
+		actionType = "AlterPredicates"
+	} else if len(s.SecurityPolicyOptions) > 0 {
+		actionType = "AlterState"
+	} else if s.NotForReplicationModified {
+		actionType = "AlterReplication"
+	}
+
+	node := jsonNode{
+		"$type":             "AlterSecurityPolicyStatement",
+		"NotForReplication": s.NotForReplication,
+		"ActionType":        actionType,
+	}
+	if s.Name != nil {
+		node["Name"] = schemaObjectNameToJSON(s.Name)
+	}
+	if len(s.SecurityPolicyOptions) > 0 {
+		opts := make([]jsonNode, len(s.SecurityPolicyOptions))
+		for i, opt := range s.SecurityPolicyOptions {
+			opts[i] = securityPolicyOptionToJSON(opt)
+		}
+		node["SecurityPolicyOptions"] = opts
+	}
+	if len(s.SecurityPredicateActions) > 0 {
+		actions := make([]jsonNode, len(s.SecurityPredicateActions))
+		for i, action := range s.SecurityPredicateActions {
+			actions[i] = securityPredicateActionToJSON(action)
+		}
+		node["SecurityPredicateActions"] = actions
+	}
+	return node
+}
+
+func securityPolicyOptionToJSON(opt *ast.SecurityPolicyOption) jsonNode {
+	return jsonNode{
+		"$type":       "SecurityPolicyOption",
+		"OptionKind":  opt.OptionKind,
+		"OptionState": opt.OptionState,
+	}
+}
+
+func securityPredicateActionToJSON(action *ast.SecurityPredicateAction) jsonNode {
+	node := jsonNode{
+		"$type":                        "SecurityPredicateAction",
+		"ActionType":                   action.ActionType,
+		"SecurityPredicateType":        action.SecurityPredicateType,
+		"SecurityPredicateOperation":   action.SecurityPredicateOperation,
+	}
+	if action.FunctionCall != nil {
+		node["FunctionCall"] = scalarExpressionToJSON(action.FunctionCall)
+	}
+	if action.TargetObjectName != nil {
+		node["TargetObjectName"] = schemaObjectNameToJSON(action.TargetObjectName)
 	}
 	return node
 }
