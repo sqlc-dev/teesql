@@ -2545,8 +2545,9 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 		return p.parseDataModificationTableReference("MERGE")
 	}
 
-	// Check if this is a query (starts with SELECT, WITH) or a parenthesized table reference
-	if p.curTok.Type != TokenSelect && p.curTok.Type != TokenWith {
+	// Check if this is a query (starts with SELECT, WITH, or another parenthesis for nested query)
+	// or a parenthesized table reference (e.g., (t1 JOIN t2 ON ...))
+	if p.curTok.Type != TokenSelect && p.curTok.Type != TokenWith && p.curTok.Type != TokenLParen {
 		// This is a parenthesized table reference (e.g., (t1 JOIN t2 ON ...))
 		tableRef, err := p.parseTableReference()
 		if err != nil {
