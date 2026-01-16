@@ -924,9 +924,36 @@ func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
 
 	if p.curTok.Type == TokenEquals {
 		p.nextToken()
-		value, err := p.parseScalarExpression()
-		if err != nil {
-			return nil, err
+		var value ast.ScalarExpression
+
+		// Check if value is a bare identifier (e.g., TRUE, FALSE, RAW, ACP, widechar)
+		// that should be treated as IdentifierLiteral, not a column reference
+		if p.curTok.Type == TokenIdent && !strings.HasPrefix(p.curTok.Literal, "@") &&
+			p.peekTok.Type != TokenDot && p.peekTok.Type != TokenLParen {
+			// For options like HEADER_ROW = TRUE, CODEPAGE = 'RAW' or 'ACP', DATAFILETYPE = 'widechar'
+			// These are identifier literals, not column references
+			upperVal := strings.ToUpper(p.curTok.Literal)
+			if upperVal == "TRUE" || upperVal == "FALSE" || upperVal == "RAW" ||
+				upperVal == "ACP" || upperVal == "WIDECHAR" || upperVal == "CHAR" {
+				value = &ast.IdentifierLiteral{
+					LiteralType: "Identifier",
+					QuoteType:   "NotQuoted",
+					Value:       p.curTok.Literal,
+				}
+				p.nextToken()
+			} else {
+				var err error
+				value, err = p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			var err error
+			value, err = p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
 		}
 		return &ast.LiteralBulkInsertOption{
 			OptionKind: optionKind,
