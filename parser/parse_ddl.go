@@ -8597,6 +8597,8 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 				stmt.EndpointType = "ServiceBroker"
 			case "DATABASE_MIRRORING":
 				stmt.EndpointType = "DatabaseMirroring"
+			case "DATA_MIRRORING":
+				stmt.EndpointType = "DatabaseMirroring"
 			case "TSQL":
 				stmt.EndpointType = "Tsql"
 			default:
@@ -8607,82 +8609,44 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-					actionUpper := strings.ToUpper(p.curTok.Literal)
-					if actionUpper == "ADD" || actionUpper == "ALTER" || actionUpper == "DROP" {
+					optUpper := strings.ToUpper(p.curTok.Literal)
+
+					// Handle ADD/ALTER/DROP WEBMETHOD
+					if optUpper == "ADD" || optUpper == "ALTER" || optUpper == "DROP" {
+						actionUpper := optUpper
 						p.nextToken() // consume ADD/ALTER/DROP
-						// Parse WEBMETHOD
 						if strings.ToUpper(p.curTok.Literal) == "WEBMETHOD" {
-							p.nextToken() // consume WEBMETHOD
-							method := &ast.SoapMethod{
-								Format: "NotSpecified",
-								Schema: "NotSpecified",
-							}
-							switch actionUpper {
-							case "ADD":
-								method.Action = "Add"
-								method.Kind = "WebMethod"
-							case "ALTER":
-								method.Action = "Alter"
-								method.Kind = "WebMethod"
-							case "DROP":
-								method.Action = "Drop"
-								method.Kind = "None"
-							}
-							// Parse alias (string literal)
-							if p.curTok.Type == TokenString {
-								method.Alias = p.parseStringLiteralValue()
-								p.nextToken()
-							}
-							// Parse method options
-							if p.curTok.Type == TokenLParen {
-								p.nextToken() // consume (
-								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-									optName := strings.ToUpper(p.curTok.Literal)
-									p.nextToken()
-									if p.curTok.Type == TokenEquals {
-										p.nextToken() // consume =
-									}
-									if optName == "NAME" && p.curTok.Type == TokenString {
-										method.Name = p.parseStringLiteralValue()
-										p.nextToken()
-									} else if optName == "FORMAT" {
-										formatUpper := strings.ToUpper(p.curTok.Literal)
-										switch formatUpper {
-										case "ALL_RESULTS":
-											method.Format = "AllResults"
-										case "ROWSETS_ONLY":
-											method.Format = "RowsetsOnly"
-										case "NONE":
-											method.Format = "None"
-										default:
-											method.Format = formatUpper
-										}
-										p.nextToken()
-									} else if optName == "SCHEMA" {
-										schemaUpper := strings.ToUpper(p.curTok.Literal)
-										switch schemaUpper {
-										case "DEFAULT":
-											method.Schema = "Default"
-										case "NONE":
-											method.Schema = "None"
-										case "STANDARD":
-											method.Schema = "Standard"
-										default:
-											method.Schema = schemaUpper
-										}
-										p.nextToken()
-									} else {
-										p.nextToken()
-									}
-									if p.curTok.Type == TokenComma {
-										p.nextToken()
-									}
-								}
-								if p.curTok.Type == TokenRParen {
-									p.nextToken()
-								}
-							}
+							method := p.parseSoapWebMethod(actionUpper)
 							stmt.PayloadOptions = append(stmt.PayloadOptions, method)
+						}
+					} else if optUpper == "WEBMETHOD" {
+						// WEBMETHOD without action prefix (CREATE ENDPOINT syntax)
+						method := p.parseSoapWebMethod("")
+						stmt.PayloadOptions = append(stmt.PayloadOptions, method)
+					} else if optUpper == "BATCHES" || optUpper == "SESSIONS" || optUpper == "MESSAGE_FORWARDING" {
+						// Enabled/disabled options
+						kind := "Batches"
+						if optUpper == "SESSIONS" {
+							kind = "Sessions"
+						} else if optUpper == "MESSAGE_FORWARDING" {
+							kind = "MessageForwarding"
+						}
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						isEnabled := strings.ToUpper(p.curTok.Literal) == "ENABLED"
+						p.nextToken()
+						stmt.PayloadOptions = append(stmt.PayloadOptions, &ast.EnabledDisabledPayloadOption{
+							IsEnabled: isEnabled,
+							Kind:      kind,
+						})
+					} else {
+						// Skip unknown options
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+							p.nextToken() // consume value
 						}
 					}
 					if p.curTok.Type == TokenComma {
@@ -8791,6 +8755,212 @@ func (p *Parser) parseIPv4Address() *ast.IPv4 {
 	}
 
 	return ipv4
+}
+
+// parseSoapWebMethod parses a SOAP WEBMETHOD option.
+// actionUpper is "Add", "Alter", "Drop", or empty string (for CREATE ENDPOINT without action).
+func (p *Parser) parseSoapWebMethod(actionUpper string) *ast.SoapMethod {
+	p.nextToken() // consume WEBMETHOD
+	method := &ast.SoapMethod{
+		Format: "NotSpecified",
+		Schema: "NotSpecified",
+	}
+
+	switch actionUpper {
+	case "ADD":
+		method.Action = "Add"
+		method.Kind = "WebMethod"
+	case "ALTER":
+		method.Action = "Alter"
+		method.Kind = "WebMethod"
+	case "DROP":
+		method.Action = "Drop"
+		method.Kind = "None"
+	default:
+		// No action prefix (CREATE ENDPOINT syntax)
+		method.Action = "None"
+		method.Kind = "WebMethod"
+	}
+
+	// Parse alias (string literal), possibly with namespace prefix: 'namespace'.'alias'
+	if p.curTok.Type == TokenString {
+		firstStr := p.parseStringLiteralValue()
+		p.nextToken()
+		// Check for dot - if present, first string is namespace, next is alias
+		if p.curTok.Type == TokenDot {
+			p.nextToken() // consume .
+			if p.curTok.Type == TokenString {
+				method.Namespace = firstStr
+				method.Alias = p.parseStringLiteralValue()
+				p.nextToken()
+			}
+		} else {
+			method.Alias = firstStr
+		}
+	}
+
+	// Parse method options
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			optName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			if optName == "NAME" && p.curTok.Type == TokenString {
+				method.Name = p.parseStringLiteralValue()
+				p.nextToken()
+			} else if optName == "FORMAT" {
+				formatUpper := strings.ToUpper(p.curTok.Literal)
+				switch formatUpper {
+				case "ALL_RESULTS":
+					method.Format = "AllResults"
+				case "ROWSETS_ONLY":
+					method.Format = "RowsetsOnly"
+				case "NONE":
+					method.Format = "None"
+				default:
+					method.Format = formatUpper
+				}
+				p.nextToken()
+			} else if optName == "SCHEMA" {
+				schemaUpper := strings.ToUpper(p.curTok.Literal)
+				switch schemaUpper {
+				case "DEFAULT":
+					method.Schema = "Default"
+				case "NONE":
+					method.Schema = "None"
+				case "STANDARD":
+					method.Schema = "Standard"
+				default:
+					method.Schema = schemaUpper
+				}
+				p.nextToken()
+			} else {
+				p.nextToken()
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	return method
+}
+
+// parseAuthenticationPayloadOption parses AUTHENTICATION option for service_broker/database_mirroring.
+// Syntax: AUTHENTICATION = {WINDOWS [{NTLM | KERBEROS | NEGOTIATE}] | CERTIFICATE cert_name [WINDOWS [{NTLM | KERBEROS | NEGOTIATE}]]}
+func (p *Parser) parseAuthenticationPayloadOption() *ast.AuthenticationPayloadOption {
+	opt := &ast.AuthenticationPayloadOption{
+		Kind: "Authentication",
+	}
+
+	// First token determines the authentication method
+	firstUpper := strings.ToUpper(p.curTok.Literal)
+	if firstUpper == "WINDOWS" {
+		p.nextToken()
+		// Check for optional NTLM/KERBEROS/NEGOTIATE
+		secondUpper := strings.ToUpper(p.curTok.Literal)
+		switch secondUpper {
+		case "NTLM":
+			opt.Protocol = "WindowsNtlm"
+			p.nextToken()
+		case "KERBEROS":
+			opt.Protocol = "WindowsKerberos"
+			p.nextToken()
+			// Check for CERTIFICATE after KERBEROS
+			if strings.ToUpper(p.curTok.Literal) == "CERTIFICATE" {
+				p.nextToken()
+				opt.Certificate = p.parseIdentifier()
+			}
+		case "NEGOTIATE":
+			opt.Protocol = "WindowsNegotiate"
+			p.nextToken()
+		default:
+			opt.Protocol = "Windows"
+		}
+	} else if firstUpper == "CERTIFICATE" {
+		p.nextToken()
+		opt.Certificate = p.parseIdentifier()
+		opt.TryCertificateFirst = true
+		// Check for optional WINDOWS after certificate
+		if strings.ToUpper(p.curTok.Literal) == "WINDOWS" {
+			p.nextToken()
+			secondUpper := strings.ToUpper(p.curTok.Literal)
+			switch secondUpper {
+			case "NTLM":
+				opt.Protocol = "WindowsNtlm"
+				p.nextToken()
+			case "KERBEROS":
+				opt.Protocol = "WindowsKerberos"
+				p.nextToken()
+			case "NEGOTIATE":
+				opt.Protocol = "WindowsNegotiate"
+				p.nextToken()
+			default:
+				opt.Protocol = "Windows"
+			}
+		} else {
+			opt.Protocol = "Certificate"
+		}
+	}
+
+	return opt
+}
+
+// parseEncryptionPayloadOption parses ENCRYPTION option for service_broker/database_mirroring.
+// Syntax: ENCRYPTION = {DISABLED | SUPPORTED | REQUIRED} [ALGORITHM {RC4 | AES | AES RC4 | RC4 AES}]
+func (p *Parser) parseEncryptionPayloadOption() *ast.EncryptionPayloadOption {
+	opt := &ast.EncryptionPayloadOption{
+		Kind:             "Encryption",
+		AlgorithmPartOne: "NotSpecified",
+		AlgorithmPartTwo: "NotSpecified",
+	}
+
+	// Parse encryption support level
+	supportUpper := strings.ToUpper(p.curTok.Literal)
+	switch supportUpper {
+	case "DISABLED":
+		opt.EncryptionSupport = "Disabled"
+		p.nextToken()
+	case "SUPPORTED":
+		opt.EncryptionSupport = "Supported"
+		p.nextToken()
+	case "REQUIRED":
+		opt.EncryptionSupport = "Required"
+		p.nextToken()
+	default:
+		opt.EncryptionSupport = "NotSpecified"
+	}
+
+	// Check for ALGORITHM keyword
+	if strings.ToUpper(p.curTok.Literal) == "ALGORITHM" {
+		p.nextToken()
+		// Parse first algorithm
+		alg1Upper := strings.ToUpper(p.curTok.Literal)
+		if alg1Upper == "RC4" {
+			opt.AlgorithmPartOne = "Rc4"
+			p.nextToken()
+		} else if alg1Upper == "AES" {
+			opt.AlgorithmPartOne = "Aes"
+			p.nextToken()
+		}
+		// Check for second algorithm
+		alg2Upper := strings.ToUpper(p.curTok.Literal)
+		if alg2Upper == "RC4" {
+			opt.AlgorithmPartTwo = "Rc4"
+			p.nextToken()
+		} else if alg2Upper == "AES" {
+			opt.AlgorithmPartTwo = "Aes"
+			p.nextToken()
+		}
+	}
+
+	return opt
 }
 
 func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {

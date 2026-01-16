@@ -13018,17 +13018,138 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 							p.nextToken()
 						} else if p.curTok.Type == TokenLParen {
 							p.nextToken() // consume (
-							ipOpt.IPv4PartOne = p.parseIPv4Address()
-							// Check for colon-separated second IP address
-							if p.curTok.Type == TokenColon {
-								p.nextToken() // consume :
-								ipOpt.IPv4PartTwo = p.parseIPv4Address()
+							// Check if it's a string literal (IPv6) or IPv4 address
+							if p.curTok.Type == TokenString {
+								ipOpt.IPv6 = p.parseStringLiteralValue()
+								p.nextToken()
+							} else {
+								ipOpt.IPv4PartOne = p.parseIPv4Address()
+								// Check for colon-separated second IP address
+								if p.curTok.Type == TokenColon {
+									p.nextToken() // consume :
+									ipOpt.IPv4PartTwo = p.parseIPv4Address()
+								}
 							}
 							if p.curTok.Type == TokenRParen {
 								p.nextToken() // consume )
 							}
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, ipOpt)
+					} else if optName == "PATH" {
+						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpPath"}
+						if p.curTok.Type == TokenString {
+							opt.Value = p.parseStringLiteralValue()
+							p.nextToken()
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
+					} else if optName == "AUTHENTICATION" {
+						authOpt := &ast.AuthenticationEndpointProtocolOption{Kind: "HttpAuthentication"}
+						if p.curTok.Type == TokenLParen {
+							p.nextToken() // consume (
+							typeSet := make(map[string]bool)
+							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+								typeUpper := strings.ToUpper(p.curTok.Literal)
+								switch typeUpper {
+								case "BASIC":
+									typeSet["Basic"] = true
+								case "DIGEST":
+									typeSet["Digest"] = true
+								case "INTEGRATED":
+									typeSet["Integrated"] = true
+								case "NTLM":
+									typeSet["Ntlm"] = true
+								case "KERBEROS":
+									typeSet["Kerberos"] = true
+								}
+								p.nextToken()
+								if p.curTok.Type == TokenComma {
+									p.nextToken()
+								}
+							}
+							if p.curTok.Type == TokenRParen {
+								p.nextToken()
+							}
+							// Output in canonical order: Basic, Digest, Integrated, Ntlm, Kerberos
+							var types []string
+							for _, t := range []string{"Basic", "Digest", "Integrated", "Ntlm", "Kerberos"} {
+								if typeSet[t] {
+									types = append(types, t)
+								}
+							}
+							authOpt.AuthenticationTypes = strings.Join(types, ", ")
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, authOpt)
+					} else if optName == "PORTS" {
+						portsOpt := &ast.PortsEndpointProtocolOption{Kind: "HttpPorts"}
+						if p.curTok.Type == TokenLParen {
+							p.nextToken() // consume (
+							var types []string
+							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+								typeUpper := strings.ToUpper(p.curTok.Literal)
+								switch typeUpper {
+								case "CLEAR":
+									types = append(types, "Clear")
+								case "SSL":
+									types = append(types, "Ssl")
+								}
+								p.nextToken()
+								if p.curTok.Type == TokenComma {
+									p.nextToken()
+								}
+							}
+							if p.curTok.Type == TokenRParen {
+								p.nextToken()
+							}
+							sort.Strings(types)
+							portsOpt.PortTypes = strings.Join(types, ", ")
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, portsOpt)
+					} else if optName == "COMPRESSION" {
+						compOpt := &ast.CompressionEndpointProtocolOption{Kind: "HttpCompression"}
+						compOpt.IsEnabled = strings.ToUpper(p.curTok.Literal) == "ENABLED"
+						p.nextToken()
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, compOpt)
+					} else if optName == "SITE" {
+						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpSite"}
+						if p.curTok.Type == TokenString {
+							opt.Value = p.parseStringLiteralValue()
+							p.nextToken()
+						} else if strings.ToUpper(p.curTok.Literal) == "NONE" {
+							p.nextToken()
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
+					} else if optName == "CLEAR_PORT" {
+						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpClearPort"}
+						if p.curTok.Type == TokenNumber {
+							opt.Value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							p.nextToken()
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
+					} else if optName == "SSL_PORT" {
+						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpSslPort"}
+						if p.curTok.Type == TokenNumber {
+							opt.Value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							p.nextToken()
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
+					} else if optName == "AUTH_REALM" {
+						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpAuthenticationRealm"}
+						if p.curTok.Type == TokenString {
+							opt.Value = p.parseStringLiteralValue()
+							p.nextToken()
+						} else if strings.ToUpper(p.curTok.Literal) == "NONE" {
+							p.nextToken()
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
+					} else if optName == "DEFAULT_LOGON_DOMAIN" {
+						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpDefaultLogonDomain"}
+						if p.curTok.Type == TokenString {
+							opt.Value = p.parseStringLiteralValue()
+							p.nextToken()
+						} else if strings.ToUpper(p.curTok.Literal) == "NONE" {
+							p.nextToken()
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
 					} else {
 						opt := &ast.LiteralEndpointProtocolOption{}
 						switch optName {
@@ -13044,10 +13165,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 							}
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
-							opt.Value = &ast.StringLiteral{
-								LiteralType: "String",
-								Value:       p.curTok.Literal,
-							}
+							opt.Value = p.parseStringLiteralValue()
 							p.nextToken()
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
@@ -13070,7 +13188,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 				stmt.EndpointType = "Soap"
 			case "SERVICE_BROKER":
 				stmt.EndpointType = "ServiceBroker"
-			case "DATABASE_MIRRORING":
+			case "DATABASE_MIRRORING", "DATA_MIRRORING":
 				stmt.EndpointType = "DatabaseMirroring"
 			case "TSQL":
 				stmt.EndpointType = "TSql"
@@ -13081,7 +13199,171 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 			// Parse payload options
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
-				// Empty parentheses are ok
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optUpper := strings.ToUpper(p.curTok.Literal)
+					if optUpper == "WEBMETHOD" {
+						method := p.parseSoapWebMethod("")
+						stmt.PayloadOptions = append(stmt.PayloadOptions, method)
+					} else if optUpper == "BATCHES" || optUpper == "SESSIONS" || optUpper == "MESSAGE_FORWARDING" {
+						kind := "Batches"
+						if optUpper == "SESSIONS" {
+							kind = "Sessions"
+						} else if optUpper == "MESSAGE_FORWARDING" {
+							kind = "MessageForwarding"
+						}
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						isEnabled := strings.ToUpper(p.curTok.Literal) == "ENABLED"
+						p.nextToken()
+						stmt.PayloadOptions = append(stmt.PayloadOptions, &ast.EnabledDisabledPayloadOption{
+							IsEnabled: isEnabled,
+							Kind:      kind,
+						})
+					} else if optUpper == "AUTHENTICATION" {
+						p.nextToken() // consume AUTHENTICATION
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						authOpt := p.parseAuthenticationPayloadOption()
+						stmt.PayloadOptions = append(stmt.PayloadOptions, authOpt)
+					} else if optUpper == "ENCRYPTION" {
+						p.nextToken() // consume ENCRYPTION
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						encOpt := p.parseEncryptionPayloadOption()
+						stmt.PayloadOptions = append(stmt.PayloadOptions, encOpt)
+					} else if optUpper == "ROLE" {
+						p.nextToken() // consume ROLE
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						roleOpt := &ast.RolePayloadOption{Kind: "Role"}
+						roleUpper := strings.ToUpper(p.curTok.Literal)
+						switch roleUpper {
+						case "ALL":
+							roleOpt.Role = "All"
+						case "PARTNER":
+							roleOpt.Role = "Partner"
+						case "WITNESS":
+							roleOpt.Role = "Witness"
+						default:
+							roleOpt.Role = "NotSpecified"
+						}
+						p.nextToken()
+						stmt.PayloadOptions = append(stmt.PayloadOptions, roleOpt)
+					} else if optUpper == "WSDL" {
+						p.nextToken() // consume WSDL
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						wsdlOpt := &ast.WsdlPayloadOption{Kind: "Wsdl"}
+						valUpper := strings.ToUpper(p.curTok.Literal)
+						if valUpper == "NONE" {
+							wsdlOpt.IsNone = true
+							p.nextToken()
+						} else if valUpper == "DEFAULT" {
+							wsdlOpt.Value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+							p.nextToken()
+						} else if p.curTok.Type == TokenString {
+							wsdlOpt.Value = p.parseStringLiteralValue()
+							p.nextToken()
+						}
+						stmt.PayloadOptions = append(stmt.PayloadOptions, wsdlOpt)
+					} else if optUpper == "LOGIN_TYPE" {
+						p.nextToken() // consume LOGIN_TYPE
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						loginOpt := &ast.LoginTypePayloadOption{Kind: "LoginType"}
+						loginOpt.IsWindows = strings.ToUpper(p.curTok.Literal) == "WINDOWS"
+						p.nextToken()
+						stmt.PayloadOptions = append(stmt.PayloadOptions, loginOpt)
+					} else if optUpper == "SESSION_TIMEOUT" {
+						p.nextToken() // consume SESSION_TIMEOUT
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						stOpt := &ast.SessionTimeoutPayloadOption{Kind: "SessionTimeout"}
+						if strings.ToUpper(p.curTok.Literal) == "NEVER" {
+							stOpt.IsNever = true
+							p.nextToken()
+						} else if p.curTok.Type == TokenNumber {
+							stOpt.Timeout = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							p.nextToken()
+						}
+						stmt.PayloadOptions = append(stmt.PayloadOptions, stOpt)
+					} else if optUpper == "DATABASE" || optUpper == "NAMESPACE" {
+						kind := "Database"
+						if optUpper == "NAMESPACE" {
+							kind = "Namespace"
+						}
+						p.nextToken() // consume option name
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						litOpt := &ast.LiteralPayloadOption{Kind: kind}
+						valUpper := strings.ToUpper(p.curTok.Literal)
+						if valUpper == "DEFAULT" {
+							litOpt.Value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+							p.nextToken()
+						} else if p.curTok.Type == TokenString {
+							litOpt.Value = p.parseStringLiteralValue()
+							p.nextToken()
+						}
+						stmt.PayloadOptions = append(stmt.PayloadOptions, litOpt)
+					} else if optUpper == "SCHEMA" {
+						p.nextToken() // consume SCHEMA
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						schOpt := &ast.SchemaPayloadOption{Kind: "Schema"}
+						schOpt.IsStandard = strings.ToUpper(p.curTok.Literal) == "STANDARD"
+						p.nextToken()
+						stmt.PayloadOptions = append(stmt.PayloadOptions, schOpt)
+					} else if optUpper == "CHARACTER_SET" {
+						p.nextToken() // consume CHARACTER_SET
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						csOpt := &ast.CharacterSetPayloadOption{Kind: "CharacterSet"}
+						csOpt.IsSql = strings.ToUpper(p.curTok.Literal) == "SQL"
+						p.nextToken()
+						stmt.PayloadOptions = append(stmt.PayloadOptions, csOpt)
+					} else if optUpper == "HEADER_LIMIT" || optUpper == "MESSAGE_FORWARD_SIZE" {
+						kind := "HeaderLimit"
+						if optUpper == "MESSAGE_FORWARD_SIZE" {
+							kind = "MessageForwardSize"
+						}
+						p.nextToken() // consume option name
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+						litOpt := &ast.LiteralPayloadOption{Kind: kind}
+						if p.curTok.Type == TokenNumber {
+							litOpt.Value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							p.nextToken()
+						}
+						stmt.PayloadOptions = append(stmt.PayloadOptions, litOpt)
+					} else {
+						// Skip unknown options - consume all tokens until comma or rparen
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+							// Consume multi-token values until comma/rparen
+							for p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+								p.nextToken()
+							}
+						}
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else if p.curTok.Type != TokenRParen {
+						break
+					}
+				}
 				if p.curTok.Type == TokenRParen {
 					p.nextToken()
 				}

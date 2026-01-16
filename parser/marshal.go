@@ -18030,6 +18030,36 @@ func endpointProtocolOptionToJSON(opt ast.EndpointProtocolOption) jsonNode {
 		if o.IPv4PartTwo != nil {
 			node["IPv4PartTwo"] = ipv4ToJSON(o.IPv4PartTwo)
 		}
+		if o.IPv6 != nil {
+			node["IPv6"] = scalarExpressionToJSON(o.IPv6)
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.AuthenticationEndpointProtocolOption:
+		node := jsonNode{
+			"$type":               "AuthenticationEndpointProtocolOption",
+			"AuthenticationTypes": o.AuthenticationTypes,
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.PortsEndpointProtocolOption:
+		node := jsonNode{
+			"$type":     "PortsEndpointProtocolOption",
+			"PortTypes": o.PortTypes,
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.CompressionEndpointProtocolOption:
+		node := jsonNode{
+			"$type":     "CompressionEndpointProtocolOption",
+			"IsEnabled": o.IsEnabled,
+		}
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
@@ -18067,6 +18097,9 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Alias != nil {
 			node["Alias"] = stringLiteralToJSON(o.Alias)
 		}
+		if o.Namespace != nil {
+			node["Namespace"] = stringLiteralToJSON(o.Namespace)
+		}
 		if o.Action != "" {
 			node["Action"] = o.Action
 		}
@@ -18078,6 +18111,110 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		}
 		if o.Schema != "" {
 			node["Schema"] = o.Schema
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.EnabledDisabledPayloadOption:
+		node := jsonNode{
+			"$type":     "EnabledDisabledPayloadOption",
+			"IsEnabled": o.IsEnabled,
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.AuthenticationPayloadOption:
+		node := jsonNode{
+			"$type":              "AuthenticationPayloadOption",
+			"Protocol":           o.Protocol,
+			"TryCertificateFirst": o.TryCertificateFirst,
+		}
+		if o.Certificate != nil {
+			node["Certificate"] = identifierToJSON(o.Certificate)
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.EncryptionPayloadOption:
+		node := jsonNode{
+			"$type":             "EncryptionPayloadOption",
+			"EncryptionSupport": o.EncryptionSupport,
+			"AlgorithmPartOne":  o.AlgorithmPartOne,
+			"AlgorithmPartTwo":  o.AlgorithmPartTwo,
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.RolePayloadOption:
+		node := jsonNode{
+			"$type": "RolePayloadOption",
+			"Role":  o.Role,
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.LiteralPayloadOption:
+		node := jsonNode{
+			"$type": "LiteralPayloadOption",
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.SchemaPayloadOption:
+		node := jsonNode{
+			"$type":      "SchemaPayloadOption",
+			"IsStandard": o.IsStandard,
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.CharacterSetPayloadOption:
+		node := jsonNode{
+			"$type": "CharacterSetPayloadOption",
+			"IsSql": o.IsSql,
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.SessionTimeoutPayloadOption:
+		node := jsonNode{
+			"$type":   "SessionTimeoutPayloadOption",
+			"IsNever": o.IsNever,
+		}
+		if o.Timeout != nil {
+			node["Timeout"] = scalarExpressionToJSON(o.Timeout)
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.WsdlPayloadOption:
+		node := jsonNode{
+			"$type":  "WsdlPayloadOption",
+			"IsNone": o.IsNone,
+		}
+		if o.Value != nil {
+			node["Value"] = scalarExpressionToJSON(o.Value)
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
+	case *ast.LoginTypePayloadOption:
+		node := jsonNode{
+			"$type":     "LoginTypePayloadOption",
+			"IsWindows": o.IsWindows,
 		}
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
