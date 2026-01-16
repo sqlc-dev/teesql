@@ -3993,6 +3993,13 @@ func mergeStatementToJSON(s *ast.MergeStatement) jsonNode {
 	if s.WithCtesAndXmlNamespaces != nil {
 		node["WithCtesAndXmlNamespaces"] = withCtesAndXmlNamespacesToJSON(s.WithCtesAndXmlNamespaces)
 	}
+	if len(s.OptimizerHints) > 0 {
+		hints := make([]jsonNode, len(s.OptimizerHints))
+		for i, h := range s.OptimizerHints {
+			hints[i] = optimizerHintToJSON(h)
+		}
+		node["OptimizerHints"] = hints
+	}
 	return node
 }
 
@@ -4021,6 +4028,9 @@ func mergeSpecificationToJSON(spec *ast.MergeSpecification) jsonNode {
 	}
 	if spec.OutputClause != nil {
 		node["OutputClause"] = outputClauseToJSON(spec.OutputClause)
+	}
+	if spec.TopRowFilter != nil {
+		node["TopRowFilter"] = topRowFilterToJSON(spec.TopRowFilter)
 	}
 	return node
 }
@@ -4062,12 +4072,8 @@ func mergeActionToJSON(a ast.MergeAction) jsonNode {
 			}
 			node["Columns"] = cols
 		}
-		if len(action.Values) > 0 {
-			vals := make([]jsonNode, len(action.Values))
-			for i, val := range action.Values {
-				vals[i] = scalarExpressionToJSON(val)
-			}
-			node["Values"] = vals
+		if action.Source != nil {
+			node["Source"] = insertSourceToJSON(action.Source)
 		}
 		return node
 	default:
@@ -5452,8 +5458,17 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 		MergeSpecification: &ast.MergeSpecification{},
 	}
 
+	// Check for TOP clause
+	if p.curTok.Type == TokenTop {
+		top, err := p.parseTopRowFilter()
+		if err != nil {
+			return nil, err
+		}
+		stmt.MergeSpecification.TopRowFilter = top
+	}
+
 	// Optional INTO keyword
-	if strings.ToUpper(p.curTok.Literal) == "INTO" {
+	if p.curTok.Type == TokenInto {
 		p.nextToken()
 	}
 
@@ -5517,6 +5532,15 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 			return nil, err
 		}
 		stmt.MergeSpecification.OutputClause = output
+	}
+
+	// Parse optional OPTION clause
+	if strings.ToUpper(p.curTok.Literal) == "OPTION" {
+		hints, err := p.parseOptionClause()
+		if err != nil {
+			return nil, err
+		}
+		stmt.OptimizerHints = hints
 	}
 
 	// Skip optional semicolon
@@ -5858,39 +5882,43 @@ func (p *Parser) parseMergeActionClause() (*ast.MergeActionClause, error) {
 	} else if actionWord == "INSERT" {
 		p.nextToken() // consume INSERT
 		action := &ast.InsertMergeAction{}
-		// Parse optional column list
-		if p.curTok.Type == TokenLParen {
-			p.nextToken() // consume (
-			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				col := &ast.ColumnReferenceExpression{
-					ColumnType: "Regular",
-					MultiPartIdentifier: &ast.MultiPartIdentifier{
-						Identifiers: []*ast.Identifier{p.parseIdentifier()},
-						Count:       1,
-					},
-				}
-				action.Columns = append(action.Columns, col)
-				if p.curTok.Type == TokenComma {
-					p.nextToken()
-				} else {
-					break
-				}
+
+		// Check for DEFAULT VALUES first
+		if p.curTok.Type == TokenDefault {
+			p.nextToken() // consume DEFAULT
+			if strings.ToUpper(p.curTok.Literal) == "VALUES" {
+				p.nextToken() // consume VALUES
 			}
-			if p.curTok.Type == TokenRParen {
-				p.nextToken()
-			}
-		}
-		// Parse VALUES
-		if strings.ToUpper(p.curTok.Literal) == "VALUES" {
-			p.nextToken()
+			action.Source = &ast.ValuesInsertSource{IsDefaultValues: true}
+			clause.Action = action
+		} else {
+			// Parse optional column list
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-					val, err := p.parseScalarExpression()
-					if err != nil {
-						break
+					// Check for pseudo columns $ACTION and $CUID
+					if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "$") {
+						pseudoCol := strings.ToUpper(p.curTok.Literal)
+						if pseudoCol == "$ACTION" {
+							action.Columns = append(action.Columns, &ast.ColumnReferenceExpression{
+								ColumnType: "PseudoColumnAction",
+							})
+						} else if pseudoCol == "$CUID" {
+							action.Columns = append(action.Columns, &ast.ColumnReferenceExpression{
+								ColumnType: "PseudoColumnCuid",
+							})
+						}
+						p.nextToken()
+					} else {
+						col := &ast.ColumnReferenceExpression{
+							ColumnType: "Regular",
+							MultiPartIdentifier: &ast.MultiPartIdentifier{
+								Identifiers: []*ast.Identifier{p.parseIdentifier()},
+								Count:       1,
+							},
+						}
+						action.Columns = append(action.Columns, col)
 					}
-					action.Values = append(action.Values, val)
 					if p.curTok.Type == TokenComma {
 						p.nextToken()
 					} else {
@@ -5901,8 +5929,34 @@ func (p *Parser) parseMergeActionClause() (*ast.MergeActionClause, error) {
 					p.nextToken()
 				}
 			}
+			// Parse VALUES
+			if strings.ToUpper(p.curTok.Literal) == "VALUES" {
+				p.nextToken()
+				source := &ast.ValuesInsertSource{IsDefaultValues: false}
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					rowValue := &ast.RowValue{}
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						val, err := p.parseScalarExpression()
+						if err != nil {
+							break
+						}
+						rowValue.ColumnValues = append(rowValue.ColumnValues, val)
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
+					source.RowValues = append(source.RowValues, rowValue)
+				}
+				action.Source = source
+			}
+			clause.Action = action
 		}
-		clause.Action = action
 	}
 
 	return clause, nil

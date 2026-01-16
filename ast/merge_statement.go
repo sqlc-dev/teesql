@@ -2,7 +2,9 @@ package ast
 
 // MergeStatement represents a MERGE statement
 type MergeStatement struct {
-	MergeSpecification *MergeSpecification
+	MergeSpecification       *MergeSpecification
+	WithCtesAndXmlNamespaces *WithCtesAndXmlNamespaces
+	OptimizerHints           []OptimizerHintBase
 }
 
 func (s *MergeStatement) node()      {}
@@ -16,6 +18,7 @@ type MergeSpecification struct {
 	SearchCondition BooleanExpression // The ON clause condition (may be GraphMatchPredicate)
 	ActionClauses   []*MergeActionClause
 	OutputClause    *OutputClause
+	TopRowFilter    *TopRowFilter
 }
 
 func (s *MergeSpecification) node()                          {}
@@ -53,7 +56,7 @@ func (a *UpdateMergeAction) mergeAction() {}
 // InsertMergeAction represents INSERT in a MERGE WHEN clause
 type InsertMergeAction struct {
 	Columns []*ColumnReferenceExpression
-	Values  []ScalarExpression
+	Source  InsertSource
 }
 
 func (a *InsertMergeAction) node()        {}

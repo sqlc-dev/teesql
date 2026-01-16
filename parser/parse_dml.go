@@ -146,7 +146,17 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 		return stmt, nil
 	}
 
-	return nil, fmt.Errorf("expected INSERT, UPDATE, DELETE, or SELECT after WITH clause, got %s", p.curTok.Literal)
+	// Check for MERGE statement
+	if strings.ToUpper(p.curTok.Literal) == "MERGE" {
+		stmt, err := p.parseMergeStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.WithCtesAndXmlNamespaces = withClause
+		return stmt, nil
+	}
+
+	return nil, fmt.Errorf("expected INSERT, UPDATE, DELETE, SELECT, or MERGE after WITH clause, got %s", p.curTok.Literal)
 }
 
 func (p *Parser) parseInsertStatement() (ast.Statement, error) {
