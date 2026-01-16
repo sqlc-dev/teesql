@@ -5567,22 +5567,39 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					optionName := strings.ToUpper(p.curTok.Literal)
 					p.nextToken()
 
-					if p.curTok.Type != TokenEquals {
-						return nil, fmt.Errorf("expected = after option name, got %s", p.curTok.Literal)
-					}
-					p.nextToken() // consume =
-
-					// Parse option value
-					expr, err := p.parseScalarExpression()
-					if err != nil {
-						return nil, err
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
 					}
 
-					option := &ast.IndexExpressionOption{
-						OptionKind: convertIndexOptionKind(optionName),
-						Expression: expr,
+					// Check for ON/OFF state options
+					valueUpper := strings.ToUpper(p.curTok.Literal)
+					if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
+						state := "On"
+						if valueUpper == "OFF" {
+							state = "Off"
+						}
+						p.nextToken() // consume ON/OFF
+						option := &ast.IndexStateOption{
+							OptionKind:  convertIndexOptionKind(optionName),
+							OptionState: state,
+						}
+						indexDef.IndexOptions = append(indexDef.IndexOptions, option)
+					} else {
+						// Parse expression option value
+						expr, err := p.parseScalarExpression()
+						if err != nil {
+							// Skip on error
+							if p.curTok.Type == TokenComma {
+								p.nextToken()
+							}
+							continue
+						}
+						option := &ast.IndexExpressionOption{
+							OptionKind: convertIndexOptionKind(optionName),
+							Expression: expr,
+						}
+						indexDef.IndexOptions = append(indexDef.IndexOptions, option)
 					}
-					indexDef.IndexOptions = append(indexDef.IndexOptions, option)
 
 					if p.curTok.Type == TokenComma {
 						p.nextToken()

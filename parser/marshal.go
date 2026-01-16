@@ -6464,7 +6464,8 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 							indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 						} else if optionName == "PAD_INDEX" || optionName == "STATISTICS_NORECOMPUTE" ||
 							optionName == "ALLOW_ROW_LOCKS" || optionName == "ALLOW_PAGE_LOCKS" ||
-							optionName == "DROP_EXISTING" || optionName == "SORT_IN_TEMPDB" {
+							optionName == "DROP_EXISTING" || optionName == "SORT_IN_TEMPDB" ||
+							optionName == "OPTIMIZE_FOR_SEQUENTIAL_KEY" {
 							// ON/OFF options
 							stateUpper := strings.ToUpper(p.curTok.Literal)
 							optState := "On"
@@ -6473,12 +6474,13 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 							}
 							p.nextToken()
 							optKind := map[string]string{
-								"PAD_INDEX":              "PadIndex",
-								"STATISTICS_NORECOMPUTE": "StatisticsNoRecompute",
-								"ALLOW_ROW_LOCKS":        "AllowRowLocks",
-								"ALLOW_PAGE_LOCKS":       "AllowPageLocks",
-								"DROP_EXISTING":          "DropExisting",
-								"SORT_IN_TEMPDB":         "SortInTempDB",
+								"PAD_INDEX":                   "PadIndex",
+								"STATISTICS_NORECOMPUTE":      "StatisticsNoRecompute",
+								"ALLOW_ROW_LOCKS":             "AllowRowLocks",
+								"ALLOW_PAGE_LOCKS":            "AllowPageLocks",
+								"DROP_EXISTING":               "DropExisting",
+								"SORT_IN_TEMPDB":              "SortInTempDB",
+								"OPTIMIZE_FOR_SEQUENTIAL_KEY": "OptimizeForSequentialKey",
 							}[optionName]
 							indexDef.IndexOptions = append(indexDef.IndexOptions, &ast.IndexStateOption{
 								OptionKind:  optKind,

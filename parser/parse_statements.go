@@ -622,12 +622,13 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 					}
 					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 					p.nextToken()
-				case "PAD_INDEX", "STATISTICS_NORECOMPUTE", "ALLOW_ROW_LOCKS", "ALLOW_PAGE_LOCKS":
+				case "PAD_INDEX", "STATISTICS_NORECOMPUTE", "ALLOW_ROW_LOCKS", "ALLOW_PAGE_LOCKS", "OPTIMIZE_FOR_SEQUENTIAL_KEY":
 					optionKindMap := map[string]string{
-						"PAD_INDEX":               "PadIndex",
-						"STATISTICS_NORECOMPUTE":  "StatisticsNoRecompute",
-						"ALLOW_ROW_LOCKS":         "AllowRowLocks",
-						"ALLOW_PAGE_LOCKS":        "AllowPageLocks",
+						"PAD_INDEX":                   "PadIndex",
+						"STATISTICS_NORECOMPUTE":      "StatisticsNoRecompute",
+						"ALLOW_ROW_LOCKS":             "AllowRowLocks",
+						"ALLOW_PAGE_LOCKS":            "AllowPageLocks",
+						"OPTIMIZE_FOR_SEQUENTIAL_KEY": "OptimizeForSequentialKey",
 					}
 					state := strings.ToUpper(p.curTok.Literal)
 					optState := "Off"
