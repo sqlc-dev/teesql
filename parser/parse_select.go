@@ -2856,6 +2856,15 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		ForPath:      false,
 	}
 
+	// Parse FOR SYSTEM_TIME clause (temporal tables)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "FOR" && strings.ToUpper(p.peekTok.Literal) == "SYSTEM_TIME" {
+		temporal, err := p.parseTemporalClause()
+		if err != nil {
+			return nil, err
+		}
+		ref.TemporalClause = temporal
+	}
+
 	// Check for TABLESAMPLE before alias
 	if strings.ToUpper(p.curTok.Literal) == "TABLESAMPLE" {
 		tableSample, err := p.parseTableSampleClause()
@@ -2976,6 +2985,127 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 	}
 
 	return ref, nil
+}
+
+// parseTemporalClause parses a FOR SYSTEM_TIME clause for temporal tables
+func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
+	clause := &ast.TemporalClause{}
+
+	p.nextToken() // consume FOR
+	p.nextToken() // consume SYSTEM_TIME
+
+	upper := strings.ToUpper(p.curTok.Literal)
+	switch upper {
+	case "AS":
+		// AS OF <time>
+		p.nextToken() // consume AS
+		if strings.ToUpper(p.curTok.Literal) != "OF" {
+			return nil, fmt.Errorf("expected OF after AS, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume OF
+		clause.TemporalClauseType = "AsOf"
+		startTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.StartTime = startTime
+
+	case "BETWEEN":
+		// BETWEEN <start> AND <end>
+		p.nextToken() // consume BETWEEN
+		clause.TemporalClauseType = "Between"
+		startTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.StartTime = startTime
+		if p.curTok.Type != TokenAnd {
+			return nil, fmt.Errorf("expected AND, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume AND
+		endTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.EndTime = endTime
+
+	case "FROM":
+		// FROM <start> TO <end>
+		p.nextToken() // consume FROM
+		clause.TemporalClauseType = "FromTo"
+		startTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.StartTime = startTime
+		if strings.ToUpper(p.curTok.Literal) != "TO" {
+			return nil, fmt.Errorf("expected TO, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume TO
+		endTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.EndTime = endTime
+
+	case "CONTAINED":
+		// CONTAINED IN (<start>, <end>)
+		p.nextToken() // consume CONTAINED
+		if strings.ToUpper(p.curTok.Literal) != "IN" {
+			return nil, fmt.Errorf("expected IN after CONTAINED, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume IN
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after CONTAINED IN, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+		clause.TemporalClauseType = "ContainedIn"
+		startTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.StartTime = startTime
+		if p.curTok.Type != TokenComma {
+			return nil, fmt.Errorf("expected comma, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ,
+		endTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.EndTime = endTime
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+	case "ALL":
+		// ALL
+		p.nextToken() // consume ALL
+		clause.TemporalClauseType = "TemporalAll"
+
+	default:
+		return nil, fmt.Errorf("unexpected temporal clause type: %s", p.curTok.Literal)
+	}
+
+	return clause, nil
+}
+
+// parseTemporalTimeValue parses a time value in a temporal clause (string literal or variable)
+func (p *Parser) parseTemporalTimeValue() (ast.ScalarExpression, error) {
+	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+		lit, err := p.parseStringLiteral()
+		if err != nil {
+			return nil, err
+		}
+		return lit, nil
+	}
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		varRef := &ast.VariableReference{Name: p.curTok.Literal}
+		p.nextToken()
+		return varRef, nil
+	}
+	return nil, fmt.Errorf("expected string literal or variable for temporal time, got %s", p.curTok.Literal)
 }
 
 // parseFullTextTableReference parses CONTAINSTABLE or FREETEXTTABLE

@@ -2575,15 +2575,18 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.SchemaObject != nil {
 			node["SchemaObject"] = schemaObjectNameToJSON(r.SchemaObject)
 		}
-		if r.TableSampleClause != nil {
-			node["TableSampleClause"] = tableSampleClauseToJSON(r.TableSampleClause)
-		}
 		if len(r.TableHints) > 0 {
 			hints := make([]jsonNode, len(r.TableHints))
 			for i, h := range r.TableHints {
 				hints[i] = tableHintToJSON(h)
 			}
 			node["TableHints"] = hints
+		}
+		if r.TableSampleClause != nil {
+			node["TableSampleClause"] = tableSampleClauseToJSON(r.TableSampleClause)
+		}
+		if r.TemporalClause != nil {
+			node["TemporalClause"] = temporalClauseToJSON(r.TemporalClause)
 		}
 		if r.Alias != nil {
 			node["Alias"] = identifierToJSON(r.Alias)
@@ -3724,6 +3727,22 @@ func tableSampleClauseToJSON(tsc *ast.TableSampleClause) jsonNode {
 	node["TableSampleClauseOption"] = tsc.TableSampleClauseOption
 	if tsc.RepeatSeed != nil {
 		node["RepeatSeed"] = scalarExpressionToJSON(tsc.RepeatSeed)
+	}
+	return node
+}
+
+func temporalClauseToJSON(tc *ast.TemporalClause) jsonNode {
+	node := jsonNode{
+		"$type": "TemporalClause",
+	}
+	if tc.TemporalClauseType != "" {
+		node["TemporalClauseType"] = tc.TemporalClauseType
+	}
+	if tc.StartTime != nil {
+		node["StartTime"] = scalarExpressionToJSON(tc.StartTime)
+	}
+	if tc.EndTime != nil {
+		node["EndTime"] = scalarExpressionToJSON(tc.EndTime)
 	}
 	return node
 }
