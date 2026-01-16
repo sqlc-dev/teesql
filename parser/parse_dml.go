@@ -1035,7 +1035,7 @@ func (p *Parser) parseTableHints() ([]ast.TableHintType, error) {
 // isTableHintKeyword checks if a string is a valid table hint keyword
 func isTableHintKeyword(name string) bool {
 	switch name {
-	case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READPAST",
+	case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READCOMMITTEDLOCK", "READPAST",
 		"READUNCOMMITTED", "REPEATABLEREAD", "ROWLOCK", "SERIALIZABLE",
 		"SNAPSHOT", "TABLOCK", "TABLOCKX", "UPDLOCK", "XLOCK", "NOWAIT",
 		"INDEX", "FORCESEEK", "FORCESCAN", "KEEPIDENTITY", "KEEPDEFAULTS",

@@ -64,7 +64,8 @@ func (a *InsertMergeAction) mergeAction() {}
 
 // JoinParenthesisTableReference represents a parenthesized join table reference
 type JoinParenthesisTableReference struct {
-	Join TableReference // The join inside the parenthesis
+	Join    TableReference `json:"Join,omitempty"` // The join inside the parenthesis
+	ForPath bool           `json:"ForPath"`
 }
 
 func (j *JoinParenthesisTableReference) node()           {}

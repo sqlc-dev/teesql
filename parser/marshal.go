@@ -2573,6 +2573,9 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.SchemaObject != nil {
 			node["SchemaObject"] = schemaObjectNameToJSON(r.SchemaObject)
 		}
+		if r.TableSampleClause != nil {
+			node["TableSampleClause"] = tableSampleClauseToJSON(r.TableSampleClause)
+		}
 		if len(r.TableHints) > 0 {
 			hints := make([]jsonNode, len(r.TableHints))
 			for i, h := range r.TableHints {
@@ -2621,12 +2624,49 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["SecondTableReference"] = tableReferenceToJSON(r.SecondTableReference)
 		}
 		return node
+	case *ast.JoinParenthesisTableReference:
+		node := jsonNode{
+			"$type": "JoinParenthesisTableReference",
+		}
+		if r.Join != nil {
+			node["Join"] = tableReferenceToJSON(r.Join)
+		}
+		return node
 	case *ast.VariableTableReference:
 		node := jsonNode{
 			"$type": "VariableTableReference",
 		}
 		if r.Variable != nil {
 			node["Variable"] = scalarExpressionToJSON(r.Variable)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.VariableMethodCallTableReference:
+		node := jsonNode{
+			"$type": "VariableMethodCallTableReference",
+		}
+		if r.Variable != nil {
+			node["Variable"] = scalarExpressionToJSON(r.Variable)
+		}
+		if r.MethodName != nil {
+			node["MethodName"] = identifierToJSON(r.MethodName)
+		}
+		if len(r.Parameters) > 0 {
+			params := make([]jsonNode, len(r.Parameters))
+			for i, p := range r.Parameters {
+				params[i] = scalarExpressionToJSON(p)
+			}
+			node["Parameters"] = params
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, c := range r.Columns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["Columns"] = cols
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
 		return node
@@ -2659,6 +2699,32 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 	case *ast.GlobalFunctionTableReference:
 		node := jsonNode{
 			"$type": "GlobalFunctionTableReference",
+		}
+		if r.Name != nil {
+			node["Name"] = identifierToJSON(r.Name)
+		}
+		if len(r.Parameters) > 0 {
+			params := make([]jsonNode, len(r.Parameters))
+			for i, p := range r.Parameters {
+				params[i] = scalarExpressionToJSON(p)
+			}
+			node["Parameters"] = params
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, c := range r.Columns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["Columns"] = cols
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.BuiltInFunctionTableReference:
+		node := jsonNode{
+			"$type": "BuiltInFunctionTableReference",
 		}
 		if r.Name != nil {
 			node["Name"] = identifierToJSON(r.Name)
@@ -2917,14 +2983,6 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		node["ForPath"] = r.ForPath
 		return node
-	case *ast.JoinParenthesisTableReference:
-		node := jsonNode{
-			"$type": "JoinParenthesisTableReference",
-		}
-		if r.Join != nil {
-			node["Join"] = tableReferenceToJSON(r.Join)
-		}
-		return node
 	case *ast.PivotedTableReference:
 		node := jsonNode{
 			"$type": "PivotedTableReference",
@@ -2974,8 +3032,8 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.PivotColumn != nil {
 			node["PivotColumn"] = identifierToJSON(r.PivotColumn)
 		}
-		if r.PivotValue != nil {
-			node["PivotValue"] = identifierToJSON(r.PivotValue)
+		if r.ValueColumn != nil {
+			node["ValueColumn"] = identifierToJSON(r.ValueColumn)
 		}
 		if r.NullHandling != "" && r.NullHandling != "None" {
 			node["NullHandling"] = r.NullHandling
@@ -2991,6 +3049,13 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		if r.QueryExpression != nil {
 			node["QueryExpression"] = queryExpressionToJSON(r.QueryExpression)
+		}
+		if len(r.Columns) > 0 {
+			cols := make([]jsonNode, len(r.Columns))
+			for i, c := range r.Columns {
+				cols[i] = identifierToJSON(c)
+			}
+			node["Columns"] = cols
 		}
 		if r.Alias != nil {
 			node["Alias"] = identifierToJSON(r.Alias)
@@ -3560,6 +3625,21 @@ func windowDelimiterToJSON(wd *ast.WindowDelimiter) jsonNode {
 }
 
 // ======================= New Statement JSON Functions =======================
+
+func tableSampleClauseToJSON(tsc *ast.TableSampleClause) jsonNode {
+	node := jsonNode{
+		"$type":  "TableSampleClause",
+		"System": tsc.System,
+	}
+	if tsc.SampleNumber != nil {
+		node["SampleNumber"] = scalarExpressionToJSON(tsc.SampleNumber)
+	}
+	node["TableSampleClauseOption"] = tsc.TableSampleClauseOption
+	if tsc.RepeatSeed != nil {
+		node["RepeatSeed"] = scalarExpressionToJSON(tsc.RepeatSeed)
+	}
+	return node
+}
 
 func tableHintToJSON(h ast.TableHintType) jsonNode {
 	switch th := h.(type) {
