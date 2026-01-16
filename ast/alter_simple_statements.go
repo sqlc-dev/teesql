@@ -133,6 +133,55 @@ type LiteralEndpointProtocolOption struct {
 func (l *LiteralEndpointProtocolOption) node()                   {}
 func (l *LiteralEndpointProtocolOption) endpointProtocolOption() {}
 
+// IPv4 represents an IPv4 address with four octets.
+type IPv4 struct {
+	OctetOne   *IntegerLiteral
+	OctetTwo   *IntegerLiteral
+	OctetThree *IntegerLiteral
+	OctetFour  *IntegerLiteral
+}
+
+func (i *IPv4) node() {}
+
+// ListenerIPEndpointProtocolOption represents an IP address endpoint protocol option.
+type ListenerIPEndpointProtocolOption struct {
+	IsAll       bool
+	IPv4PartOne *IPv4
+	IPv4PartTwo *IPv4
+	IPv6        *StringLiteral
+	Kind        string // TcpListenerIP, HttpListenerIP, etc.
+}
+
+func (l *ListenerIPEndpointProtocolOption) node()                   {}
+func (l *ListenerIPEndpointProtocolOption) endpointProtocolOption() {}
+
+// AuthenticationEndpointProtocolOption represents HTTP authentication option.
+type AuthenticationEndpointProtocolOption struct {
+	AuthenticationTypes string `json:"AuthenticationTypes,omitempty"` // Comma-separated list: Basic, Digest, Integrated, Ntlm, Kerberos
+	Kind                string `json:"Kind,omitempty"`                // HttpAuthentication
+}
+
+func (a *AuthenticationEndpointProtocolOption) node()                   {}
+func (a *AuthenticationEndpointProtocolOption) endpointProtocolOption() {}
+
+// PortsEndpointProtocolOption represents HTTP ports option.
+type PortsEndpointProtocolOption struct {
+	PortTypes string `json:"PortTypes,omitempty"` // Comma-separated list: Clear, Ssl
+	Kind      string `json:"Kind,omitempty"`      // HttpPorts
+}
+
+func (p *PortsEndpointProtocolOption) node()                   {}
+func (p *PortsEndpointProtocolOption) endpointProtocolOption() {}
+
+// CompressionEndpointProtocolOption represents HTTP compression option.
+type CompressionEndpointProtocolOption struct {
+	IsEnabled bool   `json:"IsEnabled"`
+	Kind      string `json:"Kind,omitempty"` // HttpCompression
+}
+
+func (c *CompressionEndpointProtocolOption) node()                   {}
+func (c *CompressionEndpointProtocolOption) endpointProtocolOption() {}
+
 // PayloadOption is an interface for endpoint payload options.
 type PayloadOption interface {
 	Node
@@ -141,16 +190,113 @@ type PayloadOption interface {
 
 // SoapMethod represents a SOAP web method option.
 type SoapMethod struct {
-	Alias  *StringLiteral `json:"Alias,omitempty"`
-	Action string         `json:"Action,omitempty"` // Add, Alter, Drop
-	Name   *StringLiteral `json:"Name,omitempty"`
-	Format string         `json:"Format,omitempty"` // NotSpecified, AllResults, RowsetsOnly, None
-	Schema string         `json:"Schema,omitempty"` // NotSpecified, Default, None, Standard
-	Kind   string         `json:"Kind,omitempty"`   // None, WebMethod
+	Alias     *StringLiteral `json:"Alias,omitempty"`
+	Namespace *StringLiteral `json:"Namespace,omitempty"`
+	Action    string         `json:"Action,omitempty"` // None, Add, Alter, Drop
+	Name      *StringLiteral `json:"Name,omitempty"`
+	Format    string         `json:"Format,omitempty"` // NotSpecified, AllResults, RowsetsOnly, None
+	Schema    string         `json:"Schema,omitempty"` // NotSpecified, Default, None, Standard
+	Kind      string         `json:"Kind,omitempty"`   // None, WebMethod
 }
 
 func (s *SoapMethod) node()          {}
 func (s *SoapMethod) payloadOption() {}
+
+// EnabledDisabledPayloadOption represents an enabled/disabled payload option like BATCHES, SESSIONS.
+type EnabledDisabledPayloadOption struct {
+	IsEnabled bool   `json:"IsEnabled"`
+	Kind      string `json:"Kind,omitempty"` // Batches, Sessions, MessageForwarding, etc.
+}
+
+func (e *EnabledDisabledPayloadOption) node()          {}
+func (e *EnabledDisabledPayloadOption) payloadOption() {}
+
+// AuthenticationPayloadOption represents an authentication option for service_broker/database_mirroring.
+type AuthenticationPayloadOption struct {
+	Protocol            string      `json:"Protocol,omitempty"` // Windows, WindowsNtlm, WindowsKerberos, WindowsNegotiate, Certificate
+	Certificate         *Identifier `json:"Certificate,omitempty"`
+	TryCertificateFirst bool        `json:"TryCertificateFirst"`
+	Kind                string      `json:"Kind,omitempty"` // Authentication
+}
+
+func (a *AuthenticationPayloadOption) node()          {}
+func (a *AuthenticationPayloadOption) payloadOption() {}
+
+// EncryptionPayloadOption represents an encryption option for service_broker/database_mirroring.
+type EncryptionPayloadOption struct {
+	EncryptionSupport string `json:"EncryptionSupport,omitempty"` // Disabled, Supported, Required, NotSpecified
+	AlgorithmPartOne  string `json:"AlgorithmPartOne,omitempty"`  // NotSpecified, Rc4, Aes
+	AlgorithmPartTwo  string `json:"AlgorithmPartTwo,omitempty"`  // NotSpecified, Rc4, Aes
+	Kind              string `json:"Kind,omitempty"`              // Encryption
+}
+
+func (e *EncryptionPayloadOption) node()          {}
+func (e *EncryptionPayloadOption) payloadOption() {}
+
+// RolePayloadOption represents a role option for database_mirroring.
+type RolePayloadOption struct {
+	Role string `json:"Role,omitempty"` // NotSpecified, All, Partner, Witness
+	Kind string `json:"Kind,omitempty"` // Role
+}
+
+func (r *RolePayloadOption) node()          {}
+func (r *RolePayloadOption) payloadOption() {}
+
+// LiteralPayloadOption represents a literal value payload option.
+type LiteralPayloadOption struct {
+	Value ScalarExpression `json:"Value,omitempty"`
+	Kind  string           `json:"Kind,omitempty"`
+}
+
+func (l *LiteralPayloadOption) node()          {}
+func (l *LiteralPayloadOption) payloadOption() {}
+
+// SchemaPayloadOption represents a SCHEMA payload option for SOAP.
+type SchemaPayloadOption struct {
+	IsStandard bool   `json:"IsStandard"`
+	Kind       string `json:"Kind,omitempty"` // Schema
+}
+
+func (s *SchemaPayloadOption) node()          {}
+func (s *SchemaPayloadOption) payloadOption() {}
+
+// CharacterSetPayloadOption represents a CHARACTER_SET payload option for SOAP.
+type CharacterSetPayloadOption struct {
+	IsSql bool   `json:"IsSql"`
+	Kind  string `json:"Kind,omitempty"` // CharacterSet
+}
+
+func (c *CharacterSetPayloadOption) node()          {}
+func (c *CharacterSetPayloadOption) payloadOption() {}
+
+// SessionTimeoutPayloadOption represents a SESSION_TIMEOUT payload option for SOAP.
+type SessionTimeoutPayloadOption struct {
+	Timeout *IntegerLiteral `json:"Timeout,omitempty"`
+	IsNever bool            `json:"IsNever"`
+	Kind    string          `json:"Kind,omitempty"` // SessionTimeout
+}
+
+func (s *SessionTimeoutPayloadOption) node()          {}
+func (s *SessionTimeoutPayloadOption) payloadOption() {}
+
+// WsdlPayloadOption represents a WSDL payload option for SOAP.
+type WsdlPayloadOption struct {
+	Value   ScalarExpression `json:"Value,omitempty"`
+	IsNone  bool             `json:"IsNone"`
+	Kind    string           `json:"Kind,omitempty"` // Wsdl
+}
+
+func (w *WsdlPayloadOption) node()          {}
+func (w *WsdlPayloadOption) payloadOption() {}
+
+// LoginTypePayloadOption represents a LOGIN_TYPE payload option for SOAP.
+type LoginTypePayloadOption struct {
+	IsWindows bool   `json:"IsWindows"`
+	Kind      string `json:"Kind,omitempty"` // LoginType
+}
+
+func (l *LoginTypePayloadOption) node()          {}
+func (l *LoginTypePayloadOption) payloadOption() {}
 
 // AlterServiceStatement represents an ALTER SERVICE statement.
 type AlterServiceStatement struct {
@@ -295,6 +441,15 @@ type DropAlterFullTextIndexAction struct {
 func (*DropAlterFullTextIndexAction) node()                     {}
 func (*DropAlterFullTextIndexAction) alterFullTextIndexAction() {}
 
+// AlterColumnAlterFullTextIndexAction represents an ALTER COLUMN action for fulltext index
+type AlterColumnAlterFullTextIndexAction struct {
+	Column           *FullTextIndexColumn `json:"Column,omitempty"`
+	WithNoPopulation bool                 `json:"WithNoPopulation"`
+}
+
+func (*AlterColumnAlterFullTextIndexAction) node()                     {}
+func (*AlterColumnAlterFullTextIndexAction) alterFullTextIndexAction() {}
+
 // FullTextIndexColumn represents a column in a fulltext index
 type FullTextIndexColumn struct {
 	Name                 *Identifier              `json:"Name,omitempty"`
@@ -304,6 +459,67 @@ type FullTextIndexColumn struct {
 }
 
 func (*FullTextIndexColumn) node() {}
+
+// SetStopListAlterFullTextIndexAction represents a SET STOPLIST action for fulltext index
+type SetStopListAlterFullTextIndexAction struct {
+	StopListOption   *StopListFullTextIndexOption `json:"StopListOption,omitempty"`
+	WithNoPopulation bool                         `json:"WithNoPopulation"`
+}
+
+func (*SetStopListAlterFullTextIndexAction) node()                     {}
+func (*SetStopListAlterFullTextIndexAction) alterFullTextIndexAction() {}
+
+// FullTextIndexOption is an interface for fulltext index options
+type FullTextIndexOption interface {
+	fullTextIndexOption()
+}
+
+// StopListFullTextIndexOption represents a STOPLIST option for fulltext index
+type StopListFullTextIndexOption struct {
+	IsOff        bool        `json:"IsOff"`
+	StopListName *Identifier `json:"StopListName,omitempty"`
+	OptionKind   string      `json:"OptionKind,omitempty"` // "StopList"
+}
+
+func (*StopListFullTextIndexOption) node()                {}
+func (*StopListFullTextIndexOption) fullTextIndexOption() {}
+
+// ChangeTrackingFullTextIndexOption represents a CHANGE_TRACKING option for fulltext index
+type ChangeTrackingFullTextIndexOption struct {
+	Value      string `json:"Value,omitempty"` // "Auto", "Manual", "Off", "OffNoPopulation"
+	OptionKind string `json:"OptionKind,omitempty"` // "ChangeTracking"
+}
+
+func (*ChangeTrackingFullTextIndexOption) node()                {}
+func (*ChangeTrackingFullTextIndexOption) fullTextIndexOption() {}
+
+// SearchPropertyListFullTextIndexOption represents a SEARCH PROPERTY LIST option for fulltext index
+type SearchPropertyListFullTextIndexOption struct {
+	IsOff            bool        `json:"IsOff"`
+	PropertyListName *Identifier `json:"PropertyListName,omitempty"`
+	OptionKind       string      `json:"OptionKind,omitempty"` // "SearchPropertyList"
+}
+
+func (*SearchPropertyListFullTextIndexOption) node()                {}
+func (*SearchPropertyListFullTextIndexOption) fullTextIndexOption() {}
+
+// SetSearchPropertyListAlterFullTextIndexAction represents a SET SEARCH PROPERTY LIST action for fulltext index
+type SetSearchPropertyListAlterFullTextIndexAction struct {
+	SearchPropertyListOption *SearchPropertyListFullTextIndexOption `json:"SearchPropertyListOption,omitempty"`
+	WithNoPopulation         bool                                   `json:"WithNoPopulation"`
+}
+
+func (*SetSearchPropertyListAlterFullTextIndexAction) node()                     {}
+func (*SetSearchPropertyListAlterFullTextIndexAction) alterFullTextIndexAction() {}
+
+// FullTextCatalogAndFileGroup represents catalog and filegroup for fulltext index
+type FullTextCatalogAndFileGroup struct {
+	CatalogName      *Identifier `json:"CatalogName,omitempty"`
+	FileGroupName    *Identifier `json:"FileGroupName,omitempty"`
+	FileGroupIsFirst bool        `json:"FileGroupIsFirst"`
+}
+
+func (*FullTextCatalogAndFileGroup) node() {}
 
 // AlterSymmetricKeyStatement represents an ALTER SYMMETRIC KEY statement.
 type AlterSymmetricKeyStatement struct {

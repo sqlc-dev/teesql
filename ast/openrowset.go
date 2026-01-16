@@ -24,10 +24,16 @@ type LiteralOpenRowsetCosmosOption struct {
 
 func (l *LiteralOpenRowsetCosmosOption) openRowsetCosmosOption() {}
 
-// OpenRowsetTableReference represents a traditional OPENROWSET('provider', 'connstr', object) syntax.
+// OpenRowsetTableReference represents OPENROWSET with various syntaxes:
+// - OPENROWSET('provider', 'connstr', object)
+// - OPENROWSET('provider', 'server'; 'user'; 'password', 'query')
 type OpenRowsetTableReference struct {
 	ProviderName   ScalarExpression              `json:"ProviderName,omitempty"`
 	ProviderString ScalarExpression              `json:"ProviderString,omitempty"`
+	DataSource     ScalarExpression              `json:"DataSource,omitempty"`
+	UserId         ScalarExpression              `json:"UserId,omitempty"`
+	Password       ScalarExpression              `json:"Password,omitempty"`
+	Query          ScalarExpression              `json:"Query,omitempty"`
 	Object         *SchemaObjectName             `json:"Object,omitempty"`
 	WithColumns    []*OpenRowsetColumnDefinition `json:"WithColumns,omitempty"`
 	Alias          *Identifier                   `json:"Alias,omitempty"`
@@ -40,6 +46,7 @@ func (o *OpenRowsetTableReference) tableReference() {}
 // OpenRowsetColumnDefinition represents a column definition in WITH clause.
 type OpenRowsetColumnDefinition struct {
 	ColumnOrdinal    ScalarExpression  `json:"ColumnOrdinal,omitempty"`
+	JsonPath         ScalarExpression  `json:"JsonPath,omitempty"`
 	ColumnIdentifier *Identifier       `json:"ColumnIdentifier,omitempty"`
 	DataType         DataTypeReference `json:"DataType,omitempty"`
 	Collation        *Identifier       `json:"Collation,omitempty"`

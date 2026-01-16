@@ -226,6 +226,10 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 		if strings.ToUpper(p.curTok.Literal) == "MERGE" {
 			return p.parseMergeStatement()
 		}
+		// Check for COPY INTO statement
+		if strings.ToUpper(p.curTok.Literal) == "COPY" {
+			return p.parseCopyStatement()
+		}
 		// Check for label (identifier followed by colon)
 		return p.parseLabelOrError()
 	default:

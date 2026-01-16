@@ -19,7 +19,7 @@ type UnpivotedTableReference struct {
 	TableReference       TableReference
 	InColumns            []*ColumnReferenceExpression
 	PivotColumn          *Identifier
-	PivotValue           *Identifier
+	ValueColumn          *Identifier
 	NullHandling         string // "None", "ExcludeNulls", "IncludeNulls"
 	Alias                *Identifier
 	ForPath              bool

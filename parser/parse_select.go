@@ -250,6 +250,48 @@ func (p *Parser) parsePrimaryQueryExpression() (ast.QueryExpression, *ast.Schema
 	return p.parseQuerySpecificationWithInto()
 }
 
+// parseRestOfBinaryQueryExpression parses binary query operations (UNION/INTERSECT/EXCEPT)
+// starting with a left operand that's already been parsed.
+func (p *Parser) parseRestOfBinaryQueryExpression(left ast.QueryExpression) (ast.QueryExpression, error) {
+	// Check for binary operations (UNION, EXCEPT, INTERSECT)
+	for p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect {
+		var opType string
+		switch p.curTok.Type {
+		case TokenUnion:
+			opType = "Union"
+		case TokenExcept:
+			opType = "Except"
+		case TokenIntersect:
+			opType = "Intersect"
+		}
+		p.nextToken()
+
+		// Check for ALL
+		all := false
+		if p.curTok.Type == TokenAll {
+			all = true
+			p.nextToken()
+		}
+
+		// Parse the right side
+		right, _, _, err := p.parsePrimaryQueryExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		bqe := &ast.BinaryQueryExpression{
+			BinaryQueryExpressionType: opType,
+			All:                       all,
+			FirstQueryExpression:      left,
+			SecondQueryExpression:     right,
+		}
+
+		left = bqe
+	}
+
+	return left, nil
+}
+
 func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *ast.SchemaObjectName, *ast.Identifier, error) {
 	qs, err := p.parseQuerySpecificationCore()
 	if err != nil {
@@ -471,10 +513,15 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		}
 
 		// Not an assignment, treat as regular scalar expression starting with variable
-		varRef := &ast.VariableReference{Name: varName}
+		var varExpr ast.ScalarExpression
+		if strings.HasPrefix(varName, "@@") {
+			varExpr = &ast.GlobalVariableExpression{Name: varName}
+		} else {
+			varExpr = &ast.VariableReference{Name: varName}
+		}
 
 		// Handle postfix operations (method calls, property access)
-		expr, err := p.handlePostfixOperations(varRef)
+		expr, err := p.handlePostfixOperations(varExpr)
 		if err != nil {
 			return nil, err
 		}
@@ -737,7 +784,82 @@ func (p *Parser) isKeywordAsIdentifier() bool {
 }
 
 func (p *Parser) parseScalarExpression() (ast.ScalarExpression, error) {
-	return p.parseShiftExpression()
+	return p.parseBitwiseXorExpression()
+}
+
+// In T-SQL, bitwise operator precedence from lowest to highest is: ^ (XOR), | (OR), & (AND)
+// This is different from C where it's: | (OR), ^ (XOR), & (AND)
+
+func (p *Parser) parseBitwiseXorExpression() (ast.ScalarExpression, error) {
+	left, err := p.parseBitwiseOrExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.curTok.Type == TokenCaret {
+		p.nextToken()
+
+		right, err := p.parseBitwiseOrExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BinaryExpression{
+			BinaryExpressionType: "BitwiseXor",
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
+}
+
+func (p *Parser) parseBitwiseOrExpression() (ast.ScalarExpression, error) {
+	left, err := p.parseBitwiseAndExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.curTok.Type == TokenPipe {
+		p.nextToken()
+
+		right, err := p.parseBitwiseAndExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BinaryExpression{
+			BinaryExpressionType: "BitwiseOr",
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
+}
+
+func (p *Parser) parseBitwiseAndExpression() (ast.ScalarExpression, error) {
+	left, err := p.parseShiftExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.curTok.Type == TokenBitwiseAnd {
+		p.nextToken()
+
+		right, err := p.parseShiftExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BinaryExpression{
+			BinaryExpressionType: "BitwiseAnd",
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
 }
 
 func (p *Parser) parseShiftExpression() (ast.ScalarExpression, error) {
@@ -1056,6 +1178,31 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			return nil, err
 		}
 		return &ast.UnaryExpression{UnaryExpressionType: "Positive", Expression: expr}, nil
+	case TokenError:
+		// Handle ~ (bitwise NOT) operator
+		if p.curTok.Literal == "~" {
+			p.nextToken()
+			expr, err := p.parsePrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.UnaryExpression{UnaryExpressionType: "BitwiseNot", Expression: expr}, nil
+		}
+		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
+	case TokenLeft:
+		// LEFT can be a function name (string function)
+		if p.peekTok.Type == TokenLParen {
+			p.nextToken() // consume LEFT
+			return p.parseLeftFunctionCall()
+		}
+		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
+	case TokenRight:
+		// RIGHT can be a function name (string function)
+		if p.peekTok.Type == TokenLParen {
+			p.nextToken() // consume RIGHT
+			return p.parseRightFunctionCall()
+		}
+		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	case TokenIdent:
 		// Check if it's a global variable reference (starts with @@)
 		if strings.HasPrefix(p.curTok.Literal, "@@") {
@@ -1088,6 +1235,12 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		if upper == "TRY_CONVERT" && p.peekTok.Type == TokenLParen {
 			return p.parseTryConvertCall()
 		}
+		if upper == "NULLIF" && p.peekTok.Type == TokenLParen {
+			return p.parseNullIfExpression()
+		}
+		if upper == "COALESCE" && p.peekTok.Type == TokenLParen {
+			return p.parseCoalesceExpression()
+		}
 		if upper == "IDENTITY" && p.peekTok.Type == TokenLParen {
 			return p.parseIdentityFunctionCall()
 		}
@@ -1115,19 +1268,62 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			p.nextToken()
 			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"}, nil
 		}
+		if upper == "$NODE_ID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphNodeId"}, nil
+		}
+		if upper == "$EDGE_ID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphEdgeId"}, nil
+		}
+		if upper == "$FROM_ID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphFromId"}, nil
+		}
+		if upper == "$TO_ID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphToId"}, nil
+		}
 		// Check for NEXT VALUE FOR sequence expression
 		if upper == "NEXT" && strings.ToUpper(p.peekTok.Literal) == "VALUE" {
 			return p.parseNextValueForExpression()
+		}
+		// Check for parameterless calls (USER, CURRENT_USER, etc.) without parentheses
+		if p.peekTok.Type != TokenLParen {
+			parameterlessType := getParameterlessCallType(upper)
+			if parameterlessType != "" {
+				p.nextToken()
+				call := &ast.ParameterlessCall{ParameterlessCallType: parameterlessType}
+				// Check for optional COLLATE clause
+				if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+					p.nextToken() // consume COLLATE
+					call.Collation = p.parseIdentifier()
+				}
+				return call, nil
+			}
 		}
 		return p.parseColumnReferenceOrFunctionCall()
 	case TokenNumber:
 		val := p.curTok.Literal
 		p.nextToken()
+		// Check if it's scientific notation (real literal)
+		if strings.ContainsAny(val, "eE") {
+			return &ast.RealLiteral{LiteralType: "Real", Value: val}, nil
+		}
 		// Check if it's a decimal number
 		if strings.Contains(val, ".") {
 			return &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, nil
 		}
+		// Large numbers beyond INT range should be NumericLiteral
+		// INT range is -2,147,483,648 to 2,147,483,647
+		if len(val) > 10 || (len(val) == 10 && val > "2147483647") {
+			return &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, nil
+		}
 		return &ast.IntegerLiteral{LiteralType: "Integer", Value: val}, nil
+	case TokenMoney:
+		val := p.curTok.Literal
+		p.nextToken()
+		return &ast.MoneyLiteral{LiteralType: "Money", Value: val}, nil
 	case TokenBinary:
 		val := p.curTok.Literal
 		p.nextToken()
@@ -1151,11 +1347,42 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 			}
 			p.nextToken()
-			return &ast.ScalarSubquery{QueryExpression: qe}, nil
+			ss := &ast.ScalarSubquery{QueryExpression: qe}
+			// Check for optional COLLATE clause
+			if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+				p.nextToken() // consume COLLATE
+				ss.Collation = p.parseIdentifier()
+			}
+			return ss, nil
 		}
 		expr, err := p.parseScalarExpression()
 		if err != nil {
 			return nil, err
+		}
+		// Check if next token is UNION/INTERSECT/EXCEPT - if so, we're actually inside
+		// a query expression, not a scalar expression. This happens with nested parens
+		// like ((SELECT ...) UNION SELECT ...) where the inner parens create a ScalarSubquery
+		// but the outer expression is a binary query expression.
+		if p.curTok.Type == TokenUnion || p.curTok.Type == TokenIntersect || p.curTok.Type == TokenExcept {
+			// Convert the scalar subquery to a query parenthesis expression
+			if ss, ok := expr.(*ast.ScalarSubquery); ok {
+				qpe := &ast.QueryParenthesisExpression{QueryExpression: ss.QueryExpression}
+				qe, err := p.parseRestOfBinaryQueryExpression(qpe)
+				if err != nil {
+					return nil, err
+				}
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+				}
+				p.nextToken()
+				ss := &ast.ScalarSubquery{QueryExpression: qe}
+				// Check for optional COLLATE clause
+				if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+					p.nextToken() // consume COLLATE
+					ss.Collation = p.parseIdentifier()
+				}
+				return ss, nil
+			}
 		}
 		if p.curTok.Type != TokenRParen {
 			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
@@ -1173,8 +1400,21 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		// Multi-part identifier starting with empty parts (e.g., ..t1.c1)
 		return p.parseColumnReferenceWithLeadingDots()
 	case TokenMaster, TokenDatabase, TokenKey, TokenTable, TokenIndex,
-		TokenSchema, TokenUser, TokenView, TokenTime:
+		TokenSchema, TokenView, TokenTime:
 		// Keywords that can be used as identifiers in column/table references
+		return p.parseColumnReferenceOrFunctionCall()
+	case TokenUser:
+		// USER without parentheses is a ParameterlessCall
+		if p.peekTok.Type != TokenLParen && p.peekTok.Type != TokenDot {
+			p.nextToken()
+			call := &ast.ParameterlessCall{ParameterlessCallType: "User"}
+			// Check for optional COLLATE clause
+			if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+				p.nextToken() // consume COLLATE
+				call.Collation = p.parseIdentifier()
+			}
+			return call, nil
+		}
 		return p.parseColumnReferenceOrFunctionCall()
 	default:
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
@@ -1235,6 +1475,12 @@ func (p *Parser) parseSearchedCaseExpression() (*ast.SearchedCaseExpression, err
 	}
 	p.nextToken() // consume END
 
+	// Check for optional COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		expr.Collation = p.parseIdentifier()
+	}
+
 	return expr, nil
 }
 
@@ -1287,6 +1533,12 @@ func (p *Parser) parseSimpleCaseExpression() (*ast.SimpleCaseExpression, error) 
 	}
 	p.nextToken() // consume END
 
+	// Check for optional COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		expr.Collation = p.parseIdentifier()
+	}
+
 	return expr, nil
 }
 
@@ -1322,13 +1574,32 @@ func (p *Parser) parseNextValueForExpression() (*ast.NextValueForExpression, err
 	return expr, nil
 }
 
-func (p *Parser) parseOdbcLiteral() (*ast.OdbcLiteral, error) {
+func (p *Parser) parseOdbcLiteral() (ast.ScalarExpression, error) {
 	// Consume {
 	p.nextToken()
 
-	// Expect "guid" identifier
-	if p.curTok.Type != TokenIdent || strings.ToLower(p.curTok.Literal) != "guid" {
-		return nil, fmt.Errorf("expected guid in ODBC literal, got %s", p.curTok.Literal)
+	// Check what type of ODBC escape this is
+	keyword := strings.ToUpper(p.curTok.Literal)
+
+	// { FN function_name(...) } - ODBC scalar function
+	if keyword == "FN" {
+		p.nextToken() // consume FN
+		return p.parseOdbcFunctionCall()
+	}
+
+	// Determine the ODBC literal type
+	var odbcType string
+	switch keyword {
+	case "GUID":
+		odbcType = "Guid"
+	case "T":
+		odbcType = "Time"
+	case "D":
+		odbcType = "Date"
+	case "TS":
+		odbcType = "Timestamp"
+	default:
+		return nil, fmt.Errorf("expected guid, fn, t, d, or ts in ODBC escape, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
 
@@ -1375,10 +1646,86 @@ func (p *Parser) parseOdbcLiteral() (*ast.OdbcLiteral, error) {
 
 	return &ast.OdbcLiteral{
 		LiteralType:     "Odbc",
-		OdbcLiteralType: "Guid",
+		OdbcLiteralType: odbcType,
 		IsNational:      isNational,
 		Value:           value,
 	}, nil
+}
+
+func (p *Parser) parseOdbcFunctionCall() (*ast.OdbcFunctionCall, error) {
+	// Parse function name
+	name := p.parseIdentifier()
+
+	call := &ast.OdbcFunctionCall{
+		Name: name,
+	}
+
+	// Check for parentheses (parameters)
+	if p.curTok.Type == TokenLParen {
+		call.ParametersUsed = true
+		p.nextToken() // consume (
+
+		// Handle special extract function: extract(element FROM expr)
+		if strings.ToLower(name.Value) == "extract" {
+			// Parse the extracted element (like "hour", "minute", etc.)
+			element := p.parseIdentifier()
+
+			// Expect FROM keyword
+			if p.curTok.Type != TokenFrom {
+				return nil, fmt.Errorf("expected FROM in ODBC extract function, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume FROM
+
+			// Parse the expression to extract from
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			call.Parameters = append(call.Parameters, &ast.ExtractFromExpression{
+				ExtractedElement: element,
+				Expression:       expr,
+			})
+		} else {
+			// Parse parameters
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				// For ODBC convert function, the second parameter is a conversion specifier
+				// like sql_int, sql_varchar, etc.
+				if strings.ToLower(name.Value) == "convert" && len(call.Parameters) == 1 {
+					// Second parameter of convert is an OdbcConvertSpecification
+					spec := &ast.OdbcConvertSpecification{
+						Identifier: p.parseIdentifier(),
+					}
+					call.Parameters = append(call.Parameters, spec)
+				} else {
+					param, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					call.Parameters = append(call.Parameters, param)
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		}
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) in ODBC function call, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	}
+
+	// Consume closing }
+	if p.curTok.Type != TokenRBrace {
+		return nil, fmt.Errorf("expected } in ODBC function call, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	return call, nil
 }
 
 func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
@@ -1504,6 +1851,14 @@ func (p *Parser) isIdentifierToken() bool {
 }
 
 func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, error) {
+	// Check for graph pseudo columns at the start
+	upper := strings.ToUpper(p.curTok.Literal)
+	pseudoType := getPseudoColumnType(upper)
+	if pseudoType != "" && p.peekTok.Type != TokenDot {
+		p.nextToken()
+		return &ast.ColumnReferenceExpression{ColumnType: pseudoType}, nil
+	}
+
 	var identifiers []*ast.Identifier
 	colType := "Regular"
 
@@ -1536,6 +1891,12 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			} else {
 				colType = "RowGuidCol"
 			}
+			p.nextToken()
+			break
+		} else if pseudoType := getPseudoColumnType(upper); pseudoType != "" {
+			// Pseudo columns like $ROWGUID, $IDENTITY at end of multi-part identifier
+			// set column type and are not included in the identifier list
+			colType = pseudoType
 			p.nextToken()
 			break
 		}
@@ -1723,7 +2084,15 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 }
 
 func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) {
-	expr, err := p.parseColumnReferenceOrFunctionCall()
+	var expr ast.ScalarExpression
+	var err error
+
+	// Handle leading dots (like .st.StandardCost)
+	if p.curTok.Type == TokenDot {
+		expr, err = p.parseColumnReferenceWithLeadingDots()
+	} else {
+		expr, err = p.parseColumnReferenceOrFunctionCall()
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -1899,6 +2268,10 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 			return p.parseParseCall(false)
 		case "TRY_PARSE":
 			return p.parseParseCall(true)
+		case "JSON_OBJECT":
+			return p.parseJsonObjectCall()
+		case "JSON_ARRAY":
+			return p.parseJsonArrayCall()
 		}
 	}
 
@@ -2062,12 +2435,17 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 			}
 			p.nextToken() // consume (
 
-			// Parse ORDER BY clause
+			// Parse ORDER BY clause or GRAPH PATH
 			withinGroup := &ast.WithinGroupClause{
 				HasGraphPath: false,
 			}
 
-			if p.curTok.Type == TokenOrder {
+			// Check for GRAPH PATH (case insensitive)
+			if strings.ToUpper(p.curTok.Literal) == "GRAPH" && strings.ToUpper(p.peekTok.Literal) == "PATH" {
+				withinGroup.HasGraphPath = true
+				p.nextToken() // consume GRAPH
+				p.nextToken() // consume PATH
+			} else if p.curTok.Type == TokenOrder {
 				orderBy, err := p.parseOrderByClause()
 				if err != nil {
 					return nil, err
@@ -2164,23 +2542,25 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 	}
 	var left ast.TableReference = baseRef
 
-	// Check for PIVOT or UNPIVOT
-	if strings.ToUpper(p.curTok.Literal) == "PIVOT" {
-		pivoted, err := p.parsePivotedTableReference(left)
-		if err != nil {
-			return nil, err
-		}
-		left = pivoted
-	} else if strings.ToUpper(p.curTok.Literal) == "UNPIVOT" {
-		unpivoted, err := p.parseUnpivotedTableReference(left)
-		if err != nil {
-			return nil, err
-		}
-		left = unpivoted
-	}
-
-	// Check for JOINs
+	// Check for JOINs and PIVOT/UNPIVOT (which can appear after table refs and joins)
 	for {
+		// Check for PIVOT or UNPIVOT that applies to current left
+		if strings.ToUpper(p.curTok.Literal) == "PIVOT" {
+			pivoted, err := p.parsePivotedTableReference(left)
+			if err != nil {
+				return nil, err
+			}
+			left = pivoted
+			continue
+		} else if strings.ToUpper(p.curTok.Literal) == "UNPIVOT" {
+			unpivoted, err := p.parseUnpivotedTableReference(left)
+			if err != nil {
+				return nil, err
+			}
+			left = unpivoted
+			continue
+		}
+
 		// Check for CROSS JOIN or CROSS APPLY
 		if p.curTok.Type == TokenCross {
 			p.nextToken() // consume CROSS
@@ -2266,6 +2646,23 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 			break
 		}
 
+		// Check for LOCAL modifier (undocumented feature) and join hints
+		// Syntax: INNER LOCAL MERGE JOIN - LOCAL is just skipped
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "LOCAL" {
+			p.nextToken() // skip LOCAL
+		}
+
+		// Check for join hints (REMOTE, LOOP, HASH, MERGE, REDUCE, REPLICATE, REDISTRIBUTE)
+		joinHint := ""
+		if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			switch upper {
+			case "REMOTE", "LOOP", "HASH", "MERGE", "REDUCE", "REPLICATE", "REDISTRIBUTE":
+				joinHint = upper[:1] + strings.ToLower(upper[1:]) // "REMOTE" -> "Remote"
+				p.nextToken()
+			}
+		}
+
 		if p.curTok.Type != TokenJoin {
 			return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
 		}
@@ -2274,6 +2671,45 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 		right, err := p.parseSingleTableReference()
 		if err != nil {
 			return nil, err
+		}
+
+		// Check for nested join - if we see another join type instead of ON,
+		// the right side is actually a join expression
+		for p.isJoinKeyword() {
+			nestedJoinType, nestedJoinHint := p.parseJoinTypeAndHint()
+			if nestedJoinType == "" {
+				break
+			}
+
+			if p.curTok.Type != TokenJoin {
+				return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume JOIN
+
+			nestedRight, err := p.parseSingleTableReference()
+			if err != nil {
+				return nil, err
+			}
+
+			// Parse ON clause for nested join
+			if p.curTok.Type != TokenOn {
+				return nil, fmt.Errorf("expected ON after nested JOIN, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume ON
+
+			nestedCondition, err := p.parseBooleanExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			// Wrap right in a QualifiedJoin
+			right = &ast.QualifiedJoin{
+				QualifiedJoinType:    nestedJoinType,
+				JoinHint:             nestedJoinHint,
+				FirstTableReference:  right,
+				SecondTableReference: nestedRight,
+				SearchCondition:      nestedCondition,
+			}
 		}
 
 		// Parse ON clause
@@ -2289,6 +2725,7 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 
 		left = &ast.QualifiedJoin{
 			QualifiedJoinType:    joinType,
+			JoinHint:             joinHint,
 			FirstTableReference:  left,
 			SecondTableReference: right,
 			SearchCondition:      condition,
@@ -2298,15 +2735,90 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 	return left, nil
 }
 
+// isJoinKeyword returns true if the current token starts a join clause
+func (p *Parser) isJoinKeyword() bool {
+	switch p.curTok.Type {
+	case TokenInner, TokenLeft, TokenRight, TokenFull, TokenJoin:
+		return true
+	default:
+		return false
+	}
+}
+
+// parseJoinTypeAndHint parses the join type (INNER, LEFT OUTER, etc.) and optional hint (REMOTE, LOOP, etc.)
+// Returns empty string for joinType if no join is found
+func (p *Parser) parseJoinTypeAndHint() (joinType, joinHint string) {
+	switch p.curTok.Type {
+	case TokenInner:
+		joinType = "Inner"
+		p.nextToken()
+	case TokenLeft:
+		joinType = "LeftOuter"
+		p.nextToken()
+		if p.curTok.Type == TokenOuter {
+			p.nextToken()
+		}
+	case TokenRight:
+		joinType = "RightOuter"
+		p.nextToken()
+		if p.curTok.Type == TokenOuter {
+			p.nextToken()
+		}
+	case TokenFull:
+		joinType = "FullOuter"
+		p.nextToken()
+		if p.curTok.Type == TokenOuter {
+			p.nextToken()
+		}
+	case TokenJoin:
+		joinType = "Inner"
+	default:
+		return "", ""
+	}
+
+	// Check for LOCAL modifier (undocumented feature) and join hints
+	// Syntax: INNER LOCAL MERGE JOIN - LOCAL is just skipped
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "LOCAL" {
+		p.nextToken() // skip LOCAL
+	}
+
+	// Check for join hints (REMOTE, LOOP, HASH, MERGE, REDUCE, REPLICATE, REDISTRIBUTE)
+	if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		switch upper {
+		case "REMOTE", "LOOP", "HASH", "MERGE", "REDUCE", "REPLICATE", "REDISTRIBUTE":
+			joinHint = upper[:1] + strings.ToLower(upper[1:])
+			p.nextToken()
+		}
+	}
+
+	return joinType, joinHint
+}
+
 func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 	// Check for derived table (parenthesized query)
 	if p.curTok.Type == TokenLParen {
 		return p.parseDerivedTableReference()
 	}
 
+	// Check for ODBC outer join escape sequence: { OJ ... }
+	if p.curTok.Type == TokenLBrace {
+		return p.parseOdbcQualifiedJoinTableReference()
+	}
+
+	// Check for built-in function table reference (::fn_name(...))
+	if p.curTok.Type == TokenColonColon {
+		return p.parseBuiltInFunctionTableReference()
+	}
+
 	// Check for OPENROWSET
 	if p.curTok.Type == TokenOpenRowset {
 		return p.parseOpenRowset()
+	}
+
+	// Check for OPENDATASOURCE
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OPENDATASOURCE" {
+		return p.parseAdHocTableReference()
 	}
 
 	// Check for PREDICT
@@ -2317,6 +2829,16 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 	// Check for CHANGETABLE
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "CHANGETABLE" {
 		return p.parseChangeTableReference()
+	}
+
+	// Check for OPENXML
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OPENXML" {
+		return p.parseOpenXmlTableReference()
+	}
+
+	// Check for OPENQUERY
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OPENQUERY" {
+		return p.parseOpenQueryTableReference()
 	}
 
 	// Check for full-text table functions (CONTAINSTABLE, FREETEXTTABLE)
@@ -2331,14 +2853,87 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		}
 	}
 
-	// Check for variable table reference
+	// Check for variable table reference or variable method call
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		name := p.curTok.Literal
 		p.nextToken()
-		return &ast.VariableTableReference{
+
+		// Check for method call: @var.method(...)
+		if p.curTok.Type == TokenDot {
+			p.nextToken() // consume dot
+			methodName := p.parseIdentifier()
+			if p.curTok.Type != TokenLParen {
+				return nil, fmt.Errorf("expected ( after variable method name")
+			}
+			params, err := p.parseFunctionParameters()
+			if err != nil {
+				return nil, err
+			}
+
+			// Parse optional alias and column list
+			var alias *ast.Identifier
+			var columns []*ast.Identifier
+			if p.curTok.Type == TokenAs {
+				p.nextToken()
+				alias = p.parseIdentifier()
+			} else if p.curTok.Type == TokenIdent {
+				upper := strings.ToUpper(p.curTok.Literal)
+				if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
+					upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+					upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+					upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+					alias = p.parseIdentifier()
+				}
+			}
+			// Check for column list: alias(c1, c2, ...)
+			if alias != nil && p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for {
+					col := p.parseIdentifier()
+					columns = append(columns, col)
+					if p.curTok.Type != TokenComma {
+						break
+					}
+					p.nextToken() // consume comma
+				}
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ) after column list")
+				}
+				p.nextToken() // consume )
+			}
+
+			return &ast.VariableMethodCallTableReference{
+				Variable:   &ast.VariableReference{Name: name},
+				MethodName: methodName,
+				Parameters: params,
+				Alias:      alias,
+				Columns:    columns,
+				ForPath:    false,
+			}, nil
+		}
+
+		// Parse optional alias for variable table reference
+		varRef := &ast.VariableTableReference{
 			Variable: &ast.VariableReference{Name: name},
 			ForPath:  false,
-		}, nil
+		}
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+			varRef.Alias = p.parseIdentifier()
+		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			if p.curTok.Type == TokenIdent {
+				upper := strings.ToUpper(p.curTok.Literal)
+				if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
+					upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+					upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+					upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+					varRef.Alias = p.parseIdentifier()
+				}
+			} else {
+				varRef.Alias = p.parseIdentifier()
+			}
+		}
+		return varRef, nil
 	}
 
 	// Check for table-valued function (identifier followed by parentheses that's not a table hint)
@@ -2398,6 +2993,10 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 					ForPath:    false,
 				}, nil
 			}
+			// Handle OPENJSON specially
+			if upper == "OPENJSON" {
+				return p.parseOpenJsonTableReference(params, alias)
+			}
 		}
 
 		ref := &ast.SchemaObjectFunctionTableReference{
@@ -2412,6 +3011,140 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 
 	// It's a regular named table reference
 	return p.parseNamedTableReferenceWithName(son)
+}
+
+// parseOpenJsonTableReference parses OPENJSON function with optional WITH clause
+func (p *Parser) parseOpenJsonTableReference(params []ast.ScalarExpression, alias *ast.Identifier) (ast.TableReference, error) {
+	ref := &ast.OpenJsonTableReference{
+		ForPath: false,
+		Alias:   alias,
+	}
+
+	// First parameter is the Variable (JSON expression)
+	if len(params) > 0 {
+		ref.Variable = params[0]
+	}
+
+	// Second parameter is the RowPattern (optional path expression)
+	if len(params) > 1 {
+		ref.RowPattern = params[1]
+	}
+
+	// Check for WITH clause (schema declaration)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after OPENJSON WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Parse schema declaration items
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			item, err := p.parseSchemaDeclarationItemOpenjson()
+			if err != nil {
+				return nil, err
+			}
+			ref.SchemaDeclarationItems = append(ref.SchemaDeclarationItems, item)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse optional alias after WITH clause
+	if ref.Alias == nil {
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+			ref.Alias = p.parseIdentifier()
+		} else if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
+				upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+				upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+				upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+				ref.Alias = p.parseIdentifier()
+			}
+		}
+	}
+
+	return ref, nil
+}
+
+// parseSchemaDeclarationItemOpenjson parses a column definition in OPENJSON WITH clause
+func (p *Parser) parseSchemaDeclarationItemOpenjson() (*ast.SchemaDeclarationItemOpenjson, error) {
+	item := &ast.SchemaDeclarationItemOpenjson{
+		ColumnDefinition: &ast.ColumnDefinitionBase{},
+	}
+
+	// Parse column name
+	item.ColumnDefinition.ColumnIdentifier = p.parseIdentifier()
+
+	// Parse data type
+	dataType, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+	item.ColumnDefinition.DataType = dataType
+
+	// Parse optional COLLATE
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		item.ColumnDefinition.Collation = p.parseIdentifier()
+	}
+
+	// Parse optional path mapping (string literal) or AS JSON
+	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+		mapping, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		item.Mapping = mapping
+	}
+
+	// Parse optional AS JSON
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		if strings.ToUpper(p.curTok.Literal) == "JSON" {
+			item.AsJson = true
+			p.nextToken() // consume JSON
+		}
+	}
+
+	return item, nil
+}
+
+// parseOdbcQualifiedJoinTableReference parses ODBC outer join escape sequence: { OJ ... }
+func (p *Parser) parseOdbcQualifiedJoinTableReference() (ast.TableReference, error) {
+	p.nextToken() // consume {
+
+	// Expect OJ keyword
+	if strings.ToUpper(p.curTok.Literal) != "OJ" {
+		return nil, fmt.Errorf("expected OJ after {, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume OJ
+
+	// Parse the inner table reference (which can be a join)
+	innerRef, err := p.parseTableReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect closing brace
+	if p.curTok.Type != TokenRBrace {
+		return nil, fmt.Errorf("expected } in ODBC outer join, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume }
+
+	return &ast.OdbcQualifiedJoinTableReference{
+		TableReference: innerRef,
+	}, nil
 }
 
 // parseDerivedTableReference parses a derived table (parenthesized query) like (SELECT ...) AS alias
@@ -2439,21 +3172,448 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 		return p.parseDataModificationTableReference("MERGE")
 	}
 
-	// Parse the query expression
+	// Check if this is a query (starts with SELECT, WITH, or another parenthesis for nested query)
+	// or a parenthesized table reference (e.g., (t1 JOIN t2 ON ...))
+	if p.curTok.Type != TokenSelect && p.curTok.Type != TokenWith && p.curTok.Type != TokenLParen {
+		// This is a parenthesized table reference (e.g., (t1 JOIN t2 ON ...))
+		tableRef, err := p.parseTableReference()
+		if err != nil {
+			return nil, err
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after parenthesized table reference, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+		return &ast.JoinParenthesisTableReference{
+			Join:    tableRef,
+			ForPath: false,
+		}, nil
+	}
+
+	// Handle nested parenthesis specially
+	// This could be:
+	// 1. Query parenthesis: ((SELECT ... UNION ...)) - nested query expression
+	// 2. Join parenthesis: ((SELECT ...) AS t1 JOIN ...) - nested derived table with joins
+	if p.curTok.Type == TokenLParen {
+		// Recursively parse the nested content as a derived table reference
+		innerRef, err := p.parseDerivedTableReference()
+		if err != nil {
+			return nil, err
+		}
+
+		// Check what we got and what follows
+		switch ref := innerRef.(type) {
+		case *ast.QueryDerivedTable:
+			// If no alias and we're at ) or binary query operator, this is a query parenthesis
+			if ref.Alias == nil && (p.curTok.Type == TokenRParen ||
+				p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect) {
+				// Convert to QueryParenthesisExpression and continue with query expression parsing
+				qe := &ast.QueryParenthesisExpression{QueryExpression: ref.QueryExpression}
+
+				// Check for binary operations (UNION, EXCEPT, INTERSECT)
+				if p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect {
+					qe2, err := p.parseRestOfBinaryQueryExpression(qe)
+					if err != nil {
+						return nil, err
+					}
+					// Now expect ) and return as QueryDerivedTable
+					if p.curTok.Type != TokenRParen {
+						return nil, fmt.Errorf("expected ) after binary query expression, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume )
+
+					result := &ast.QueryDerivedTable{
+						QueryExpression: qe2,
+						ForPath:         false,
+					}
+
+					// Parse optional alias
+					if p.curTok.Type == TokenAs {
+						p.nextToken()
+						result.Alias = p.parseIdentifier()
+					} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+						if p.curTok.Type == TokenIdent {
+							upper := strings.ToUpper(p.curTok.Literal)
+							if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
+								result.Alias = p.parseIdentifier()
+							}
+						} else {
+							result.Alias = p.parseIdentifier()
+						}
+					}
+
+					return result, nil
+				}
+
+				// Just closing paren - expect ) and return as QueryDerivedTable
+				p.nextToken() // consume )
+
+				result := &ast.QueryDerivedTable{
+					QueryExpression: qe,
+					ForPath:         false,
+				}
+
+				// Parse optional alias
+				if p.curTok.Type == TokenAs {
+					p.nextToken()
+					result.Alias = p.parseIdentifier()
+				} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+					if p.curTok.Type == TokenIdent {
+						upper := strings.ToUpper(p.curTok.Literal)
+						if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
+							result.Alias = p.parseIdentifier()
+						}
+					} else {
+						result.Alias = p.parseIdentifier()
+					}
+				}
+
+				return result, nil
+			}
+
+			// Otherwise, this is a derived table that may be followed by JOINs
+			// Fall through to handle as table reference
+			innerRef = ref
+
+		case *ast.JoinParenthesisTableReference:
+			// Already a join parenthesis - it may be followed by more JOINs or just )
+		}
+
+		// Handle as a table reference that may be followed by JOINs
+		var tableRef ast.TableReference = innerRef
+		for {
+			// Check for CROSS JOIN / CROSS APPLY
+			if p.curTok.Type == TokenCross {
+				p.nextToken() // consume CROSS
+				if p.curTok.Type == TokenJoin {
+					p.nextToken() // consume JOIN
+					right, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+					tableRef = &ast.UnqualifiedJoin{
+						UnqualifiedJoinType:  "CrossJoin",
+						FirstTableReference:  tableRef,
+						SecondTableReference: right,
+					}
+					continue
+				} else if strings.ToUpper(p.curTok.Literal) == "APPLY" {
+					p.nextToken() // consume APPLY
+					right, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+					tableRef = &ast.UnqualifiedJoin{
+						UnqualifiedJoinType:  "CrossApply",
+						FirstTableReference:  tableRef,
+						SecondTableReference: right,
+					}
+					continue
+				} else {
+					return nil, fmt.Errorf("expected JOIN or APPLY after CROSS, got %s", p.curTok.Literal)
+				}
+			}
+
+			// Check for OUTER APPLY
+			if p.curTok.Type == TokenOuter && strings.ToUpper(p.peekTok.Literal) == "APPLY" {
+				p.nextToken() // consume OUTER
+				p.nextToken() // consume APPLY
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+				tableRef = &ast.UnqualifiedJoin{
+					UnqualifiedJoinType:  "OuterApply",
+					FirstTableReference:  tableRef,
+					SecondTableReference: right,
+				}
+				continue
+			}
+
+			// Check for qualified JOINs
+			if p.isJoinKeyword() {
+				joinType, joinHint := p.parseJoinTypeAndHint()
+				if joinType == "" {
+					break
+				}
+				if p.curTok.Type != TokenJoin {
+					return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume JOIN
+
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+
+				// Check for nested join
+				for p.isJoinKeyword() {
+					nestedJoinType, nestedJoinHint := p.parseJoinTypeAndHint()
+					if nestedJoinType == "" {
+						break
+					}
+					if p.curTok.Type != TokenJoin {
+						return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume JOIN
+
+					nestedRight, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+
+					if p.curTok.Type != TokenOn {
+						return nil, fmt.Errorf("expected ON after nested JOIN, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume ON
+
+					nestedCondition, err := p.parseBooleanExpression()
+					if err != nil {
+						return nil, err
+					}
+
+					right = &ast.QualifiedJoin{
+						QualifiedJoinType:    nestedJoinType,
+						JoinHint:             nestedJoinHint,
+						FirstTableReference:  right,
+						SecondTableReference: nestedRight,
+						SearchCondition:      nestedCondition,
+					}
+				}
+
+				if p.curTok.Type != TokenOn {
+					return nil, fmt.Errorf("expected ON after JOIN, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume ON
+
+				condition, err := p.parseBooleanExpression()
+				if err != nil {
+					return nil, err
+				}
+
+				tableRef = &ast.QualifiedJoin{
+					QualifiedJoinType:    joinType,
+					JoinHint:             joinHint,
+					FirstTableReference:  tableRef,
+					SecondTableReference: right,
+					SearchCondition:      condition,
+				}
+				continue
+			}
+
+			break
+		}
+
+		// Expect closing )
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after nested table reference, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		return &ast.JoinParenthesisTableReference{
+			Join:    tableRef,
+			ForPath: false,
+		}, nil
+	}
+
+	// Parse the query expression (for SELECT or WITH)
 	qe, err := p.parseQueryExpression()
 	if err != nil {
 		return nil, err
 	}
 
-	// Expect )
+	// Check if this is a nested derived table inside a parenthesized table reference
+	// e.g., ((SELECT * FROM t1) AS t10 INNER JOIN t2 ON ...)
+	// In this case, we're not at ) but at AS because the inner query expression
+	// consumed its own parens and we need to build a derived table then continue with JOINs
 	if p.curTok.Type != TokenRParen {
-		return nil, fmt.Errorf("expected ) after derived table query, got %s", p.curTok.Literal)
+		// Build the inner derived table from the query expression
+		innerRef := &ast.QueryDerivedTable{
+			QueryExpression: qe,
+			ForPath:         false,
+		}
+
+		// Parse alias for the inner derived table
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+			innerRef.Alias = p.parseIdentifier()
+		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			if p.curTok.Type == TokenIdent {
+				upper := strings.ToUpper(p.curTok.Literal)
+				if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
+					innerRef.Alias = p.parseIdentifier()
+				}
+			} else {
+				innerRef.Alias = p.parseIdentifier()
+			}
+		}
+
+		// Parse optional column list for inner derived table
+		if innerRef.Alias != nil && p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for {
+				col := p.parseIdentifier()
+				innerRef.Columns = append(innerRef.Columns, col)
+				if p.curTok.Type != TokenComma {
+					break
+				}
+				p.nextToken() // consume comma
+			}
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) after column list")
+			}
+			p.nextToken() // consume )
+		}
+
+		// Now parse any JOINs that follow
+		var tableRef ast.TableReference = innerRef
+		for {
+			// Check for CROSS JOIN / CROSS APPLY
+			if p.curTok.Type == TokenCross {
+				p.nextToken() // consume CROSS
+				if p.curTok.Type == TokenJoin {
+					p.nextToken() // consume JOIN
+					right, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+					tableRef = &ast.UnqualifiedJoin{
+						UnqualifiedJoinType:  "CrossJoin",
+						FirstTableReference:  tableRef,
+						SecondTableReference: right,
+					}
+					continue
+				} else if strings.ToUpper(p.curTok.Literal) == "APPLY" {
+					p.nextToken() // consume APPLY
+					right, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+					tableRef = &ast.UnqualifiedJoin{
+						UnqualifiedJoinType:  "CrossApply",
+						FirstTableReference:  tableRef,
+						SecondTableReference: right,
+					}
+					continue
+				} else {
+					return nil, fmt.Errorf("expected JOIN or APPLY after CROSS, got %s", p.curTok.Literal)
+				}
+			}
+
+			// Check for OUTER APPLY
+			if p.curTok.Type == TokenOuter && strings.ToUpper(p.peekTok.Literal) == "APPLY" {
+				p.nextToken() // consume OUTER
+				p.nextToken() // consume APPLY
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+				tableRef = &ast.UnqualifiedJoin{
+					UnqualifiedJoinType:  "OuterApply",
+					FirstTableReference:  tableRef,
+					SecondTableReference: right,
+				}
+				continue
+			}
+
+			// Check for qualified JOINs
+			if p.isJoinKeyword() {
+				joinType, joinHint := p.parseJoinTypeAndHint()
+				if joinType == "" {
+					break
+				}
+				if p.curTok.Type != TokenJoin {
+					return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume JOIN
+
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+
+				// Check for nested join
+				for p.isJoinKeyword() {
+					nestedJoinType, nestedJoinHint := p.parseJoinTypeAndHint()
+					if nestedJoinType == "" {
+						break
+					}
+					if p.curTok.Type != TokenJoin {
+						return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume JOIN
+
+					nestedRight, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+
+					if p.curTok.Type != TokenOn {
+						return nil, fmt.Errorf("expected ON after nested JOIN, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume ON
+
+					nestedCondition, err := p.parseBooleanExpression()
+					if err != nil {
+						return nil, err
+					}
+
+					right = &ast.QualifiedJoin{
+						QualifiedJoinType:    nestedJoinType,
+						JoinHint:             nestedJoinHint,
+						FirstTableReference:  right,
+						SecondTableReference: nestedRight,
+						SearchCondition:      nestedCondition,
+					}
+				}
+
+				if p.curTok.Type != TokenOn {
+					return nil, fmt.Errorf("expected ON after JOIN, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume ON
+
+				condition, err := p.parseBooleanExpression()
+				if err != nil {
+					return nil, err
+				}
+
+				tableRef = &ast.QualifiedJoin{
+					QualifiedJoinType:    joinType,
+					JoinHint:             joinHint,
+					FirstTableReference:  tableRef,
+					SecondTableReference: right,
+					SearchCondition:      condition,
+				}
+				continue
+			}
+
+			break
+		}
+
+		// Expect closing ) for outer paren
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after parenthesized join expression, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		return &ast.JoinParenthesisTableReference{
+			Join:    tableRef,
+			ForPath: false,
+		}, nil
 	}
+
 	p.nextToken() // consume )
 
 	ref := &ast.QueryDerivedTable{
 		QueryExpression: qe,
 		ForPath:         false,
+	}
+
+	// Check for FOR PATH (graph path table reference)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "FOR" && strings.ToUpper(p.peekTok.Literal) == "PATH" {
+		p.nextToken() // consume FOR
+		p.nextToken() // consume PATH
+		ref.ForPath = true
 	}
 
 	// Parse optional alias (AS alias or just alias)
@@ -2470,6 +3630,23 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 		} else {
 			ref.Alias = p.parseIdentifier()
 		}
+	}
+
+	// Parse optional column list: alias(c1, c2, ...)
+	if ref.Alias != nil && p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for {
+			col := p.parseIdentifier()
+			ref.Columns = append(ref.Columns, col)
+			if p.curTok.Type != TokenComma {
+				break
+			}
+			p.nextToken() // consume comma
+		}
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after column list")
+		}
+		p.nextToken() // consume )
 	}
 
 	return ref, nil
@@ -2660,27 +3837,77 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 		}
 	}
 
+	// Check for naked HOLDLOCK/NOWAIT before alias: table HOLDLOCK, table2
+	if p.curTok.Type == TokenHoldlock {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenNowait {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		p.nextToken()
+	}
+
 	// Parse optional alias (AS alias or just alias)
 	if p.curTok.Type == TokenAs {
 		p.nextToken()
-		if p.curTok.Type != TokenIdent {
+		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			ref.Alias = p.parseIdentifier()
+		} else {
 			return nil, fmt.Errorf("expected identifier after AS, got %s", p.curTok.Literal)
 		}
-		ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
-		p.nextToken()
-	} else if p.curTok.Type == TokenIdent {
+	} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 		// Could be an alias without AS, but need to be careful not to consume keywords
-		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
-			ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+		if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
+				ref.Alias = p.parseIdentifier()
+			}
+		} else {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	// Check for old-style hints AFTER alias: table alias (1) or table alias (nolock)
+	// peekIsOldStyleIndexHint is safe to use here since we're after the alias
+	if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			hint, err := p.parseTableHint()
+			if err != nil {
+				return nil, err
+			}
+			if hint != nil {
+				ref.TableHints = append(ref.TableHints, hint)
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else if p.curTok.Type != TokenRParen {
+				if p.isTableHintToken() {
+					continue
+				}
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
 			p.nextToken()
 		}
+	}
+
+	// Check for naked HOLDLOCK/NOWAIT after alias: table alias HOLDLOCK
+	if p.curTok.Type == TokenHoldlock {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenNowait {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		p.nextToken()
 	}
 
 	// Check for new-style hints (with WITH keyword): alias WITH (hints)
 	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
-		if p.curTok.Type == TokenLParen && p.peekIsTableHint() {
+		// In WITH context, numbers are valid index hints: WITH (0)
+		if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
@@ -2715,6 +3942,31 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		ForPath:      false,
 	}
 
+	// Parse FOR SYSTEM_TIME clause (temporal tables)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "FOR" && strings.ToUpper(p.peekTok.Literal) == "SYSTEM_TIME" {
+		temporal, err := p.parseTemporalClause()
+		if err != nil {
+			return nil, err
+		}
+		ref.TemporalClause = temporal
+	}
+
+	// Parse FOR PATH clause (graph database path references)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "FOR" && strings.ToUpper(p.peekTok.Literal) == "PATH" {
+		p.nextToken() // consume FOR
+		p.nextToken() // consume PATH
+		ref.ForPath = true
+	}
+
+	// Check for TABLESAMPLE before alias
+	if strings.ToUpper(p.curTok.Literal) == "TABLESAMPLE" {
+		tableSample, err := p.parseTableSampleClause()
+		if err != nil {
+			return nil, err
+		}
+		ref.TableSampleClause = tableSample
+	}
+
 	// T-SQL supports two syntaxes for table hints:
 	// 1. Old-style: table_name (nolock) AS alias - hints before alias, no WITH
 	// 2. New-style: table_name AS alias WITH (hints) - alias before hints, WITH required
@@ -2744,6 +3996,16 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		}
 	}
 
+	// Check for naked HOLDLOCK/NOWAIT before alias: table HOLDLOCK, table2
+	if p.curTok.Type == TokenHoldlock {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenNowait {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		p.nextToken()
+	}
+
 	// Parse optional alias (AS alias or just alias)
 	if p.curTok.Type == TokenAs {
 		p.nextToken()
@@ -2763,10 +4025,81 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		}
 	}
 
+	// Check for old-style hints AFTER alias: table alias (1) or table alias (nolock)
+	// peekIsOldStyleIndexHint is safe to use here since we're after the alias
+	if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			hint, err := p.parseTableHint()
+			if err != nil {
+				return nil, err
+			}
+			if hint != nil {
+				ref.TableHints = append(ref.TableHints, hint)
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else if p.curTok.Type != TokenRParen {
+				if p.isTableHintToken() {
+					continue
+				}
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Check for naked HOLDLOCK/NOWAIT after alias: table alias HOLDLOCK
+	if p.curTok.Type == TokenHoldlock {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenNowait {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		p.nextToken()
+	}
+
+	// Check for TABLESAMPLE after alias (supports syntax: t1 AS alias TABLESAMPLE (...))
+	if ref.TableSampleClause == nil && strings.ToUpper(p.curTok.Literal) == "TABLESAMPLE" {
+		tableSample, err := p.parseTableSampleClause()
+		if err != nil {
+			return nil, err
+		}
+		ref.TableSampleClause = tableSample
+	}
+
+	// Check for old-style hints after TABLESAMPLE (without WITH keyword): alias TABLESAMPLE (...)(nolock)
+	if p.curTok.Type == TokenLParen && p.peekIsTableHint() {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			hint, err := p.parseTableHint()
+			if err != nil {
+				return nil, err
+			}
+			if hint != nil {
+				ref.TableHints = append(ref.TableHints, hint)
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else if p.curTok.Type != TokenRParen {
+				if p.isTableHintToken() {
+					continue
+				}
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
 	// Check for new-style hints (with WITH keyword): alias WITH (hints)
 	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
-		if p.curTok.Type == TokenLParen && p.peekIsTableHint() {
+		// In WITH context, numbers are valid index hints: WITH (0)
+		if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
@@ -2792,6 +4125,127 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 	}
 
 	return ref, nil
+}
+
+// parseTemporalClause parses a FOR SYSTEM_TIME clause for temporal tables
+func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
+	clause := &ast.TemporalClause{}
+
+	p.nextToken() // consume FOR
+	p.nextToken() // consume SYSTEM_TIME
+
+	upper := strings.ToUpper(p.curTok.Literal)
+	switch upper {
+	case "AS":
+		// AS OF <time>
+		p.nextToken() // consume AS
+		if strings.ToUpper(p.curTok.Literal) != "OF" {
+			return nil, fmt.Errorf("expected OF after AS, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume OF
+		clause.TemporalClauseType = "AsOf"
+		startTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.StartTime = startTime
+
+	case "BETWEEN":
+		// BETWEEN <start> AND <end>
+		p.nextToken() // consume BETWEEN
+		clause.TemporalClauseType = "Between"
+		startTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.StartTime = startTime
+		if p.curTok.Type != TokenAnd {
+			return nil, fmt.Errorf("expected AND, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume AND
+		endTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.EndTime = endTime
+
+	case "FROM":
+		// FROM <start> TO <end>
+		p.nextToken() // consume FROM
+		clause.TemporalClauseType = "FromTo"
+		startTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.StartTime = startTime
+		if strings.ToUpper(p.curTok.Literal) != "TO" {
+			return nil, fmt.Errorf("expected TO, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume TO
+		endTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.EndTime = endTime
+
+	case "CONTAINED":
+		// CONTAINED IN (<start>, <end>)
+		p.nextToken() // consume CONTAINED
+		if strings.ToUpper(p.curTok.Literal) != "IN" {
+			return nil, fmt.Errorf("expected IN after CONTAINED, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume IN
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after CONTAINED IN, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+		clause.TemporalClauseType = "ContainedIn"
+		startTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.StartTime = startTime
+		if p.curTok.Type != TokenComma {
+			return nil, fmt.Errorf("expected comma, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ,
+		endTime, err := p.parseTemporalTimeValue()
+		if err != nil {
+			return nil, err
+		}
+		clause.EndTime = endTime
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+	case "ALL":
+		// ALL
+		p.nextToken() // consume ALL
+		clause.TemporalClauseType = "TemporalAll"
+
+	default:
+		return nil, fmt.Errorf("unexpected temporal clause type: %s", p.curTok.Literal)
+	}
+
+	return clause, nil
+}
+
+// parseTemporalTimeValue parses a time value in a temporal clause (string literal or variable)
+func (p *Parser) parseTemporalTimeValue() (ast.ScalarExpression, error) {
+	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+		lit, err := p.parseStringLiteral()
+		if err != nil {
+			return nil, err
+		}
+		return lit, nil
+	}
+	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
+		varRef := &ast.VariableReference{Name: p.curTok.Literal}
+		p.nextToken()
+		return varRef, nil
+	}
+	return nil, fmt.Errorf("expected string literal or variable for temporal time, got %s", p.curTok.Literal)
 }
 
 // parseFullTextTableReference parses CONTAINSTABLE or FREETEXTTABLE
@@ -3109,6 +4563,49 @@ func (p *Parser) parseSimpleExpression() (ast.ScalarExpression, error) {
 
 // parseTableHint parses a single table hint
 func (p *Parser) parseTableHint() (ast.TableHintType, error) {
+	// Handle old-style numeric index hint (just a number like "0" or "1")
+	if p.curTok.Type == TokenNumber {
+		hint := &ast.IndexTableHint{
+			HintKind: "Index",
+			IndexValues: []*ast.IdentifierOrValueExpression{
+				{
+					Value: p.curTok.Literal,
+					ValueExpression: &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					},
+				},
+			},
+		}
+		p.nextToken()
+		// Check for additional comma-separated values
+		for p.curTok.Type == TokenComma {
+			p.nextToken()
+			if p.curTok.Type == TokenNumber {
+				hint.IndexValues = append(hint.IndexValues, &ast.IdentifierOrValueExpression{
+					Value: p.curTok.Literal,
+					ValueExpression: &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					},
+				})
+				p.nextToken()
+			} else if p.curTok.Type == TokenIdent {
+				hint.IndexValues = append(hint.IndexValues, &ast.IdentifierOrValueExpression{
+					Value: p.curTok.Literal,
+					Identifier: &ast.Identifier{
+						Value:     p.curTok.Literal,
+						QuoteType: "NotQuoted",
+					},
+				})
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		return hint, nil
+	}
+
 	hintName := strings.ToUpper(p.curTok.Literal)
 	p.nextToken() // consume hint name
 
@@ -3116,6 +4613,34 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 	if hintName == "INDEX" {
 		hint := &ast.IndexTableHint{
 			HintKind: "Index",
+		}
+		// Handle INDEX = value syntax (alternative to INDEX(value))
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+			var iov *ast.IdentifierOrValueExpression
+			if p.curTok.Type == TokenNumber {
+				iov = &ast.IdentifierOrValueExpression{
+					Value: p.curTok.Literal,
+					ValueExpression: &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					},
+				}
+				p.nextToken()
+			} else if p.curTok.Type == TokenIdent {
+				iov = &ast.IdentifierOrValueExpression{
+					Value: p.curTok.Literal,
+					Identifier: &ast.Identifier{
+						Value:     p.curTok.Literal,
+						QuoteType: "NotQuoted",
+					},
+				}
+				p.nextToken()
+			}
+			if iov != nil {
+				hint.IndexValues = append(hint.IndexValues, iov)
+			}
+			return hint, nil
 		}
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
@@ -3277,6 +4802,16 @@ func getTableHintKind(name string) string {
 		return "ForceSeek"
 	case "FORCESCAN":
 		return "ForceScan"
+	case "READCOMMITTEDLOCK":
+		return "ReadCommittedLock"
+	case "KEEPIDENTITY":
+		return "KeepIdentity"
+	case "KEEPDEFAULTS":
+		return "KeepDefaults"
+	case "IGNORE_CONSTRAINTS":
+		return "IgnoreConstraints"
+	case "IGNORE_TRIGGERS":
+		return "IgnoreTriggers"
 	default:
 		return ""
 	}
@@ -3291,7 +4826,7 @@ func (p *Parser) isTableHintToken() bool {
 	// Check for identifiers that are table hints
 	if p.curTok.Type == TokenIdent {
 		switch strings.ToUpper(p.curTok.Literal) {
-		case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READPAST",
+		case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READCOMMITTEDLOCK", "READPAST",
 			"READUNCOMMITTED", "REPEATABLEREAD", "ROWLOCK", "SERIALIZABLE",
 			"SNAPSHOT", "TABLOCK", "TABLOCKX", "UPDLOCK", "XLOCK", "NOWAIT",
 			"INDEX", "FORCESEEK", "FORCESCAN", "KEEPIDENTITY", "KEEPDEFAULTS",
@@ -3311,7 +4846,7 @@ func (p *Parser) peekIsTableHint() bool {
 	// Check for identifiers that are table hints
 	if p.peekTok.Type == TokenIdent {
 		switch strings.ToUpper(p.peekTok.Literal) {
-		case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READPAST",
+		case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READCOMMITTEDLOCK", "READPAST",
 			"READUNCOMMITTED", "REPEATABLEREAD", "ROWLOCK", "SERIALIZABLE",
 			"SNAPSHOT", "TABLOCK", "TABLOCKX", "UPDLOCK", "XLOCK", "NOWAIT",
 			"INDEX", "FORCESEEK", "FORCESCAN", "KEEPIDENTITY", "KEEPDEFAULTS",
@@ -3320,6 +4855,12 @@ func (p *Parser) peekIsTableHint() bool {
 		}
 	}
 	return false
+}
+
+// peekIsOldStyleIndexHint checks if the peek token is a number (for old-style index hint like (0))
+// This is only valid after an alias or table name, not for function calls
+func (p *Parser) peekIsOldStyleIndexHint() bool {
+	return p.peekTok.Type == TokenNumber
 }
 
 func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
@@ -4391,6 +5932,16 @@ func (p *Parser) parseBooleanAndExpression() (ast.BooleanExpression, error) {
 }
 
 func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) {
+	// Check for NOT before other predicates (NOT EXISTS, NOT MATCH, etc.)
+	if p.curTok.Type == TokenNot {
+		p.nextToken() // consume NOT
+		inner, err := p.parseBooleanPrimaryExpression()
+		if err != nil {
+			return nil, err
+		}
+		return &ast.BooleanNotExpression{Expression: inner}, nil
+	}
+
 	// Check for CONTAINS/FREETEXT predicates
 	if p.curTok.Type == TokenIdent {
 		upper := strings.ToUpper(p.curTok.Literal)
@@ -4400,6 +5951,37 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		if upper == "EXISTS" {
 			return p.parseExistsPredicate()
 		}
+		if upper == "MATCH" {
+			return p.parseGraphMatchPredicate()
+		}
+		if upper == "TSEQUAL" {
+			return p.parseTSEqualPredicate()
+		}
+		if upper == "NOT" {
+			// Handle NOT followed by MATCH, EXISTS, etc.
+			p.nextToken() // consume NOT
+			inner, err := p.parseBooleanPrimaryExpression()
+			if err != nil {
+				return nil, err
+			}
+			return &ast.BooleanNotExpression{Expression: inner}, nil
+		}
+	}
+
+	// Check for UPDATE(column) predicate - used in triggers
+	if p.curTok.Type == TokenUpdate && p.peekTok.Type == TokenLParen {
+		p.nextToken() // consume UPDATE
+		p.nextToken() // consume (
+
+		// Parse the column identifier
+		ident := p.parseIdentifier()
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		return &ast.UpdateCall{Identifier: ident}, nil
 	}
 
 	// Check for parenthesized expression - could be boolean or scalar subquery
@@ -4656,11 +6238,29 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		}
 
 		var escapeExpr ast.ScalarExpression
+		var odbcEscape bool
 		if p.curTok.Type == TokenEscape {
 			p.nextToken() // consume ESCAPE
 			escapeExpr, err = p.parseScalarExpression()
 			if err != nil {
 				return nil, err
+			}
+		} else if p.curTok.Type == TokenLBrace {
+			// ODBC escape syntax: {ESCAPE 'x'}
+			p.nextToken() // consume {
+			if p.curTok.Type == TokenEscape {
+				odbcEscape = true
+				p.nextToken() // consume ESCAPE
+				escapeExpr, err = p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				if p.curTok.Type != TokenRBrace {
+					return nil, fmt.Errorf("expected }, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume }
+			} else {
+				return nil, fmt.Errorf("expected ESCAPE after {, got %s", p.curTok.Literal)
 			}
 		}
 
@@ -4669,6 +6269,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			SecondExpression: pattern,
 			EscapeExpression: escapeExpr,
 			NotDefined:       notDefined,
+			OdbcEscape:       odbcEscape,
 		}, nil
 	}
 
@@ -4723,6 +6324,23 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		compType = "LessThanOrEqualTo"
 	case TokenGreaterOrEqual:
 		compType = "GreaterThanOrEqualTo"
+	case TokenError:
+		// Handle T-SQL specific ! operators: !=, !<, !>
+		if p.curTok.Literal == "!" {
+			p.nextToken() // consume !
+			switch p.curTok.Type {
+			case TokenEquals:
+				compType = "NotEqualToExclamation"
+			case TokenLessThan:
+				compType = "NotLessThan"
+			case TokenGreaterThan:
+				compType = "NotGreaterThan"
+			default:
+				return nil, fmt.Errorf("expected =, <, or > after !, got %s", p.curTok.Literal)
+			}
+		} else {
+			return nil, fmt.Errorf("expected comparison operator, got %s", p.curTok.Literal)
+		}
 	case TokenRParen:
 		// We're at ) without a comparison operator - this happens when parsing
 		// a parenthesized scalar expression like (XACT_STATE()) in a boolean context.
@@ -4752,6 +6370,15 @@ func (p *Parser) isComparisonOperator() bool {
 	case TokenEquals, TokenNotEqual, TokenLessThan, TokenGreaterThan,
 		TokenLessOrEqual, TokenGreaterOrEqual:
 		return true
+	case TokenError:
+		// Handle T-SQL specific ! operators: !=, !<, !>
+		if p.curTok.Literal == "!" {
+			switch p.peekTok.Type {
+			case TokenEquals, TokenLessThan, TokenGreaterThan:
+				return true
+			}
+		}
+		return false
 	default:
 		return false
 	}
@@ -4773,6 +6400,23 @@ func (p *Parser) parseComparisonAfterLeft(left ast.ScalarExpression) (ast.Boolea
 		compType = "LessThanOrEqualTo"
 	case TokenGreaterOrEqual:
 		compType = "GreaterThanOrEqualTo"
+	case TokenError:
+		// Handle T-SQL specific ! operators: !=, !<, !>
+		if p.curTok.Literal == "!" {
+			p.nextToken() // consume !
+			switch p.curTok.Type {
+			case TokenEquals:
+				compType = "NotEqualToExclamation"
+			case TokenLessThan:
+				compType = "NotLessThan"
+			case TokenGreaterThan:
+				compType = "NotGreaterThan"
+			default:
+				return nil, fmt.Errorf("expected =, <, or > after !, got %s", p.curTok.Literal)
+			}
+		} else {
+			return nil, fmt.Errorf("expected comparison operator, got %s", p.curTok.Literal)
+		}
 	default:
 		return nil, fmt.Errorf("expected comparison operator, got %s", p.curTok.Literal)
 	}
@@ -4851,11 +6495,29 @@ func (p *Parser) parseLikeExpressionAfterLeft(left ast.ScalarExpression, notDefi
 	}
 
 	var escapeExpr ast.ScalarExpression
+	var odbcEscape bool
 	if p.curTok.Type == TokenEscape {
 		p.nextToken() // consume ESCAPE
 		escapeExpr, err = p.parseScalarExpression()
 		if err != nil {
 			return nil, err
+		}
+	} else if p.curTok.Type == TokenLBrace {
+		// ODBC escape syntax: {ESCAPE 'x'}
+		p.nextToken() // consume {
+		if p.curTok.Type == TokenEscape {
+			odbcEscape = true
+			p.nextToken() // consume ESCAPE
+			escapeExpr, err = p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			if p.curTok.Type != TokenRBrace {
+				return nil, fmt.Errorf("expected }, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume }
+		} else {
+			return nil, fmt.Errorf("expected ESCAPE after {, got %s", p.curTok.Literal)
 		}
 	}
 
@@ -4864,6 +6526,7 @@ func (p *Parser) parseLikeExpressionAfterLeft(left ast.ScalarExpression, notDefi
 		SecondExpression: pattern,
 		EscapeExpression: escapeExpr,
 		NotDefined:       notDefined,
+		OdbcEscape:       odbcEscape,
 	}, nil
 }
 
@@ -5226,6 +6889,80 @@ func (p *Parser) parseTryConvertCall() (ast.ScalarExpression, error) {
 	return convert, nil
 }
 
+// parseNullIfExpression parses a NULLIF(expr1, expr2) expression
+func (p *Parser) parseNullIfExpression() (ast.ScalarExpression, error) {
+	p.nextToken() // consume NULLIF
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after NULLIF, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse first expression
+	first, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , in NULLIF, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse second expression
+	second, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in NULLIF, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.NullIfExpression{
+		FirstExpression:  first,
+		SecondExpression: second,
+	}, nil
+}
+
+// parseCoalesceExpression parses a COALESCE(expr1, expr2, ...) expression
+func (p *Parser) parseCoalesceExpression() (ast.ScalarExpression, error) {
+	p.nextToken() // consume COALESCE
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after COALESCE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	var expressions []ast.ScalarExpression
+
+	// Parse expressions
+	for {
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		expressions = append(expressions, expr)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in COALESCE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.CoalesceExpression{
+		Expressions: expressions,
+	}, nil
+}
+
 // parseIdentityFunctionCall parses an IDENTITY function call: IDENTITY(data_type [, seed, increment])
 func (p *Parser) parseIdentityFunctionCall() (ast.ScalarExpression, error) {
 	p.nextToken() // consume IDENTITY
@@ -5273,6 +7010,72 @@ func (p *Parser) parseIdentityFunctionCall() (ast.ScalarExpression, error) {
 	p.nextToken() // consume )
 
 	return identity, nil
+}
+
+// parseLeftFunctionCall parses LEFT(string, count)
+func (p *Parser) parseLeftFunctionCall() (ast.ScalarExpression, error) {
+	// Already consumed LEFT, now on (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after LEFT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	var params []ast.ScalarExpression
+
+	// Parse parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		params = append(params, param)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in LEFT function, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.LeftFunctionCall{Parameters: params}, nil
+}
+
+// parseRightFunctionCall parses RIGHT(string, count)
+func (p *Parser) parseRightFunctionCall() (ast.ScalarExpression, error) {
+	// Already consumed RIGHT, now on (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after RIGHT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	var params []ast.ScalarExpression
+
+	// Parse parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		params = append(params, param)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in RIGHT function, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.RightFunctionCall{Parameters: params}, nil
 }
 
 // parsePredictTableReference parses PREDICT(...) in FROM clause
@@ -5617,6 +7420,51 @@ func (p *Parser) parseJsonForClauseOption() (*ast.JsonForClauseOption, error) {
 	return option, nil
 }
 
+// getPseudoColumnType returns the ColumnType for pseudo columns like $identity, $action, etc.
+// Returns empty string if not a pseudo column.
+func getPseudoColumnType(value string) string {
+	switch strings.ToUpper(value) {
+	case "$IDENTITY":
+		return "PseudoColumnIdentity"
+	case "$ACTION":
+		return "PseudoColumnAction"
+	case "$ROWGUID":
+		return "PseudoColumnRowGuid"
+	case "$CUID":
+		return "PseudoColumnCuid"
+	case "$NODE_ID":
+		return "PseudoColumnGraphNodeId"
+	case "$EDGE_ID":
+		return "PseudoColumnGraphEdgeId"
+	case "$FROM_ID":
+		return "PseudoColumnGraphFromId"
+	case "$TO_ID":
+		return "PseudoColumnGraphToId"
+	default:
+		return ""
+	}
+}
+
+// getParameterlessCallType returns the ParameterlessCallType for keywords like USER, CURRENT_USER, etc.
+func getParameterlessCallType(value string) string {
+	switch value {
+	case "USER":
+		return "User"
+	case "CURRENT_USER":
+		return "CurrentUser"
+	case "SESSION_USER":
+		return "SessionUser"
+	case "SYSTEM_USER":
+		return "SystemUser"
+	case "CURRENT_TIMESTAMP":
+		return "CurrentTimestamp"
+	case "CURRENT_DATE":
+		return "CurrentDate"
+	default:
+		return ""
+	}
+}
+
 // parseFullTextPredicate parses CONTAINS or FREETEXT predicates
 func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate, error) {
 	// Convert to PascalCase: "CONTAINS" -> "Contains", "FREETEXT" -> "FreeText"
@@ -5647,13 +7495,58 @@ func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate
 				p.nextToken()
 			} else {
 				col := p.parseIdentifier()
-				pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
-					ColumnType: "Regular",
-					MultiPartIdentifier: &ast.MultiPartIdentifier{
-						Identifiers: []*ast.Identifier{col},
-						Count:       1,
-					},
-				})
+				// Check for pseudo column
+				pseudoType := getPseudoColumnType(col.Value)
+				if pseudoType != "" && p.curTok.Type != TokenDot {
+					// Standalone pseudo column like $identity
+					pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+						ColumnType: pseudoType,
+					})
+				} else if p.curTok.Type == TokenDot {
+					// Check for table.column or table.*
+					p.nextToken() // consume .
+					if p.curTok.Type == TokenStar {
+						// table.*
+						p.nextToken() // consume *
+						pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+							ColumnType: "Wildcard",
+							MultiPartIdentifier: &ast.MultiPartIdentifier{
+								Identifiers: []*ast.Identifier{col},
+								Count:       1,
+							},
+						})
+					} else {
+						// table.column or table.$identity
+						col2 := p.parseIdentifier()
+						pseudoType2 := getPseudoColumnType(col2.Value)
+						if pseudoType2 != "" {
+							// table.$identity - pseudo column with table prefix
+							pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+								ColumnType: pseudoType2,
+								MultiPartIdentifier: &ast.MultiPartIdentifier{
+									Identifiers: []*ast.Identifier{col},
+									Count:       1,
+								},
+							})
+						} else {
+							pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+								ColumnType: "Regular",
+								MultiPartIdentifier: &ast.MultiPartIdentifier{
+									Identifiers: []*ast.Identifier{col, col2},
+									Count:       2,
+								},
+							})
+						}
+					}
+				} else {
+					pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Identifiers: []*ast.Identifier{col},
+							Count:       1,
+						},
+					})
+				}
 			}
 			if p.curTok.Type == TokenComma {
 				p.nextToken()
@@ -5701,15 +7594,60 @@ func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate
 		}
 		p.nextToken() // consume )
 	} else {
-		// Single column
+		// Single column or table.column or table.*
 		col := p.parseIdentifier()
-		pred.Columns = []*ast.ColumnReferenceExpression{{
-			ColumnType: "Regular",
-			MultiPartIdentifier: &ast.MultiPartIdentifier{
-				Identifiers: []*ast.Identifier{col},
-				Count:       1,
-			},
-		}}
+		// Check for pseudo column
+		pseudoType := getPseudoColumnType(col.Value)
+		if pseudoType != "" && p.curTok.Type != TokenDot {
+			// Standalone pseudo column like $identity
+			pred.Columns = []*ast.ColumnReferenceExpression{{
+				ColumnType: pseudoType,
+			}}
+		} else if p.curTok.Type == TokenDot {
+			// Check for table.column or table.*
+			p.nextToken() // consume .
+			if p.curTok.Type == TokenStar {
+				// table.*
+				p.nextToken() // consume *
+				pred.Columns = []*ast.ColumnReferenceExpression{{
+					ColumnType: "Wildcard",
+					MultiPartIdentifier: &ast.MultiPartIdentifier{
+						Identifiers: []*ast.Identifier{col},
+						Count:       1,
+					},
+				}}
+			} else {
+				// table.column or table.$identity
+				col2 := p.parseIdentifier()
+				pseudoType2 := getPseudoColumnType(col2.Value)
+				if pseudoType2 != "" {
+					// table.$identity - pseudo column with table prefix
+					pred.Columns = []*ast.ColumnReferenceExpression{{
+						ColumnType: pseudoType2,
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Identifiers: []*ast.Identifier{col},
+							Count:       1,
+						},
+					}}
+				} else {
+					pred.Columns = []*ast.ColumnReferenceExpression{{
+						ColumnType: "Regular",
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Identifiers: []*ast.Identifier{col, col2},
+							Count:       2,
+						},
+					}}
+				}
+			}
+		} else {
+			pred.Columns = []*ast.ColumnReferenceExpression{{
+				ColumnType: "Regular",
+				MultiPartIdentifier: &ast.MultiPartIdentifier{
+					Identifiers: []*ast.Identifier{col},
+					Count:       1,
+				},
+			}}
+		}
 	}
 
 	// Expect comma
@@ -5745,6 +7683,45 @@ func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate
 	p.nextToken() // consume )
 
 	return pred, nil
+}
+
+// parseTSEqualPredicate parses TSEQUAL(expr1, expr2)
+func (p *Parser) parseTSEqualPredicate() (*ast.TSEqualCall, error) {
+	p.nextToken() // consume TSEQUAL
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TSEQUAL, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse first expression
+	first, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , in TSEQUAL, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse second expression
+	second, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after TSEQUAL, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.TSEqualCall{
+		FirstExpression:  first,
+		SecondExpression: second,
+	}, nil
 }
 
 // parseExistsPredicate parses EXISTS (subquery)
@@ -5864,6 +7841,149 @@ func (p *Parser) parseParseCall(isTry bool) (ast.ScalarExpression, error) {
 		DataType:    dataType,
 		Culture:     culture,
 	}, nil
+}
+
+// parseJsonObjectCall parses JSON_OBJECT('key':value, 'key2':value2, ... [NULL|ABSENT ON NULL])
+func (p *Parser) parseJsonObjectCall() (*ast.FunctionCall, error) {
+	fc := &ast.FunctionCall{
+		FunctionName:     &ast.Identifier{Value: "JSON_OBJECT", QuoteType: "NotQuoted"},
+		UniqueRowFilter:  "NotSpecified",
+		WithArrayWrapper: false,
+	}
+
+	p.nextToken() // consume (
+
+	// Parse key-value pairs
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		// Check for NULL ON NULL or ABSENT ON NULL at start of loop
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "NULL" || upperLit == "ABSENT" {
+			// Look ahead to see if this is "NULL ON NULL" or "ABSENT ON NULL"
+			if p.peekIsOnNull() {
+				fc.AbsentOrNullOnNull = append(fc.AbsentOrNullOnNull, &ast.Identifier{Value: upperLit, QuoteType: "NotQuoted"})
+				p.nextToken() // consume NULL or ABSENT
+				p.nextToken() // consume ON
+				p.nextToken() // consume NULL
+				continue
+			}
+		}
+
+		// Parse key expression
+		keyExpr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		// Check for : (JSON key-value separator)
+		if p.curTok.Type == TokenColon {
+			p.nextToken() // consume :
+
+			// Parse value expression
+			valueExpr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			fc.JsonParameters = append(fc.JsonParameters, &ast.JsonKeyValue{
+				JsonKeyName: keyExpr,
+				JsonValue:   valueExpr,
+			})
+		} else {
+			// Just a regular parameter without colon (shouldn't happen for JSON_OBJECT)
+			fc.Parameters = append(fc.Parameters, keyExpr)
+		}
+
+		// After parsing a value, check for NULL ON NULL or ABSENT ON NULL
+		postValueLit := strings.ToUpper(p.curTok.Literal)
+		if postValueLit == "NULL" || postValueLit == "ABSENT" {
+			if p.peekIsOnNull() {
+				fc.AbsentOrNullOnNull = append(fc.AbsentOrNullOnNull, &ast.Identifier{Value: postValueLit, QuoteType: "NotQuoted"})
+				p.nextToken() // consume NULL or ABSENT
+				p.nextToken() // consume ON
+				p.nextToken() // consume NULL
+				// Continue to check for ) or comma
+			}
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in JSON_OBJECT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return fc, nil
+}
+
+// parseJsonArrayCall parses JSON_ARRAY(value1, value2, ... [NULL|ABSENT ON NULL])
+func (p *Parser) parseJsonArrayCall() (*ast.FunctionCall, error) {
+	fc := &ast.FunctionCall{
+		FunctionName:     &ast.Identifier{Value: "JSON_ARRAY", QuoteType: "NotQuoted"},
+		UniqueRowFilter:  "NotSpecified",
+		WithArrayWrapper: false,
+	}
+
+	p.nextToken() // consume (
+
+	// Parse array elements
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		// Check for NULL ON NULL or ABSENT ON NULL at start of loop
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		if upperLit == "NULL" || upperLit == "ABSENT" {
+			// Look ahead to see if this is "NULL ON NULL" or "ABSENT ON NULL"
+			if p.peekIsOnNull() {
+				fc.AbsentOrNullOnNull = append(fc.AbsentOrNullOnNull, &ast.Identifier{Value: upperLit, QuoteType: "NotQuoted"})
+				p.nextToken() // consume NULL or ABSENT
+				p.nextToken() // consume ON
+				p.nextToken() // consume NULL
+				continue
+			}
+		}
+
+		// Parse value expression
+		valueExpr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		fc.Parameters = append(fc.Parameters, valueExpr)
+
+		// After parsing a value, check for NULL ON NULL or ABSENT ON NULL
+		postValueLit := strings.ToUpper(p.curTok.Literal)
+		if postValueLit == "NULL" || postValueLit == "ABSENT" {
+			if p.peekIsOnNull() {
+				fc.AbsentOrNullOnNull = append(fc.AbsentOrNullOnNull, &ast.Identifier{Value: postValueLit, QuoteType: "NotQuoted"})
+				p.nextToken() // consume NULL or ABSENT
+				p.nextToken() // consume ON
+				p.nextToken() // consume NULL
+				// Continue to check for ) or comma
+			}
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in JSON_ARRAY, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return fc, nil
+}
+
+// peekIsOnNull checks if the next tokens are "ON NULL"
+func (p *Parser) peekIsOnNull() bool {
+	// Just check if the next token is ON
+	// The caller will verify the NULL after ON when consuming
+	return p.peekTok.Type == TokenOn
 }
 
 // parseChangeTableReference parses CHANGETABLE(CHANGES ...) or CHANGETABLE(VERSION ...)
@@ -6454,7 +8574,7 @@ func (p *Parser) parseUnpivotedTableReference(tableRef ast.TableReference) (*ast
 	}
 
 	// Parse pivot value column
-	unpivoted.PivotValue = p.parseIdentifier()
+	unpivoted.ValueColumn = p.parseIdentifier()
 
 	// Expect FOR keyword
 	if strings.ToUpper(p.curTok.Literal) != "FOR" {
@@ -6511,4 +8631,418 @@ func (p *Parser) parseUnpivotedTableReference(tableRef ast.TableReference) (*ast
 	}
 
 	return unpivoted, nil
+}
+
+// parseTableSampleClause parses a TABLESAMPLE clause
+// Syntax: TABLESAMPLE [SYSTEM] (expression [PERCENT | ROWS]) [REPEATABLE (seed)]
+func (p *Parser) parseTableSampleClause() (*ast.TableSampleClause, error) {
+	p.nextToken() // consume TABLESAMPLE
+
+	clause := &ast.TableSampleClause{
+		System:                  false,
+		TableSampleClauseOption: "NotSpecified",
+	}
+
+	// Check for SYSTEM keyword
+	if strings.ToUpper(p.curTok.Literal) == "SYSTEM" {
+		clause.System = true
+		p.nextToken() // consume SYSTEM
+	}
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after TABLESAMPLE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse the sample expression
+	expr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	clause.SampleNumber = expr
+
+	// Check for PERCENT or ROWS option
+	upper := strings.ToUpper(p.curTok.Literal)
+	if upper == "PERCENT" {
+		clause.TableSampleClauseOption = "Percent"
+		p.nextToken()
+	} else if upper == "ROWS" {
+		clause.TableSampleClauseOption = "Rows"
+		p.nextToken()
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after TABLESAMPLE expression, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Check for REPEATABLE (seed)
+	if strings.ToUpper(p.curTok.Literal) == "REPEATABLE" {
+		p.nextToken() // consume REPEATABLE
+
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after REPEATABLE, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		seed, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		clause.RepeatSeed = seed
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after REPEATABLE seed, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	}
+
+	return clause, nil
+}
+
+// parseBuiltInFunctionTableReference parses a built-in function table reference
+// Syntax: ::function_name(parameters) [AS alias [(column_list)]]
+func (p *Parser) parseBuiltInFunctionTableReference() (*ast.BuiltInFunctionTableReference, error) {
+	p.nextToken() // consume ::
+
+	ref := &ast.BuiltInFunctionTableReference{
+		ForPath: false,
+	}
+
+	// Parse function name
+	ref.Name = p.parseIdentifier()
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after built-in function name, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		ref.Parameters = append(ref.Parameters, param)
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after built-in function parameters, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	// Parse optional alias (AS alias or just alias)
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		ref.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
+			upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+			upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+			upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" &&
+			upper != "PIVOT" && upper != "UNPIVOT" {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	// Check for column list: alias(c1, c2, ...)
+	if ref.Alias != nil && p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			ref.Columns = append(ref.Columns, p.parseIdentifier())
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	return ref, nil
+}
+
+// parseAdHocTableReference parses OPENDATASOURCE('provider', 'connstr').'object'
+func (p *Parser) parseAdHocTableReference() (*ast.AdHocTableReference, error) {
+	p.nextToken() // consume OPENDATASOURCE
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after OPENDATASOURCE")
+	}
+	p.nextToken() // consume (
+
+	// Parse provider name (should be a string literal)
+	providerNameExpr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	providerName, ok := providerNameExpr.(*ast.StringLiteral)
+	if !ok {
+		return nil, fmt.Errorf("expected string literal for provider name")
+	}
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after provider name")
+	}
+	p.nextToken() // consume ,
+
+	// Parse init string (connection string)
+	initStringExpr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	initString, ok := initStringExpr.(*ast.StringLiteral)
+	if !ok {
+		return nil, fmt.Errorf("expected string literal for init string")
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after init string")
+	}
+	p.nextToken() // consume )
+
+	dataSource := &ast.AdHocDataSource{
+		ProviderName: providerName,
+		InitString:   initString,
+	}
+
+	// Expect dot followed by object
+	if p.curTok.Type != TokenDot {
+		return nil, fmt.Errorf("expected . after OPENDATASOURCE(), got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume .
+
+	// Parse the object - could be a string or schema object name
+	var obj *ast.SchemaObjectNameOrValueExpression
+	if p.curTok.Type == TokenString {
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		obj = &ast.SchemaObjectNameOrValueExpression{
+			ValueExpression: expr,
+		}
+	} else {
+		son, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		obj = &ast.SchemaObjectNameOrValueExpression{
+			SchemaObjectName: son,
+		}
+	}
+
+	result := &ast.AdHocTableReference{
+		DataSource: dataSource,
+		Object:     obj,
+		ForPath:    false,
+	}
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		result.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" &&
+			upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+			upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+			upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
+}
+
+func (p *Parser) parseOpenXmlTableReference() (*ast.OpenXmlTableReference, error) {
+	p.nextToken() // consume OPENXML
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after OPENXML")
+	}
+	p.nextToken() // consume (
+
+	// Parse variable (e.g., @idoc)
+	variable, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after variable")
+	}
+	p.nextToken() // consume ,
+
+	// Parse row pattern (e.g., '/ROOT/Customer')
+	rowPattern, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	result := &ast.OpenXmlTableReference{
+		Variable:   variable,
+		RowPattern: rowPattern,
+		ForPath:    false,
+	}
+
+	// Optional flags parameter
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		flags, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		result.Flags = flags
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after OPENXML parameters")
+	}
+	p.nextToken() // consume )
+
+	// Optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		if p.curTok.Type == TokenLParen {
+			// WITH (schema declarations)
+			p.nextToken() // consume (
+
+			for {
+				// Parse column definition with optional mapping
+				item, err := p.parseSchemaDeclarationItem()
+				if err != nil {
+					return nil, err
+				}
+				result.SchemaDeclarationItems = append(result.SchemaDeclarationItems, item)
+
+				if p.curTok.Type != TokenComma {
+					break
+				}
+				p.nextToken() // consume ,
+			}
+
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) after schema declarations")
+			}
+			p.nextToken() // consume )
+		} else {
+			// WITH table_name
+			tableName, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			result.TableName = tableName
+		}
+	}
+
+	// Optional AS alias or just alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		result.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" &&
+			upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+			upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+			upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
+}
+
+func (p *Parser) parseSchemaDeclarationItem() (*ast.SchemaDeclarationItem, error) {
+	// Parse column name
+	colName := p.parseIdentifier()
+
+	// Parse data type
+	dataType, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	colDef := &ast.ColumnDefinitionBase{
+		ColumnIdentifier: colName,
+		DataType:         dataType,
+	}
+
+	item := &ast.SchemaDeclarationItem{
+		ColumnDefinition: colDef,
+	}
+
+	// Optional mapping (XPath expression as string literal)
+	// e.g., "CustomerID VARCHAR (10) '../@CustomerID'"
+	if p.curTok.Type == TokenString {
+		mapping, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		item.Mapping = mapping
+	}
+
+	return item, nil
+}
+
+func (p *Parser) parseOpenQueryTableReference() (*ast.OpenQueryTableReference, error) {
+	p.nextToken() // consume OPENQUERY
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after OPENQUERY")
+	}
+	p.nextToken() // consume (
+
+	// Parse linked server identifier
+	linkedServer := p.parseIdentifier()
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after linked server")
+	}
+	p.nextToken() // consume ,
+
+	// Parse query (string literal)
+	query, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after OPENQUERY parameters")
+	}
+	p.nextToken() // consume )
+
+	result := &ast.OpenQueryTableReference{
+		LinkedServer: linkedServer,
+		Query:        query,
+		ForPath:      false,
+	}
+
+	// Optional AS alias or just alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		result.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" &&
+			upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+			upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+			upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
 }

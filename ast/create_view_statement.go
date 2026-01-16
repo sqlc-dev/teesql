@@ -53,10 +53,15 @@ type ViewStatementOption struct {
 
 func (v *ViewStatementOption) viewOption() {}
 
+// ViewDistributionPolicy is an interface for distribution policy types
+type ViewDistributionPolicy interface {
+	distributionPolicy()
+}
+
 // ViewDistributionOption represents a DISTRIBUTION option for materialized views.
 type ViewDistributionOption struct {
-	OptionKind string                        `json:"OptionKind,omitempty"`
-	Value      *ViewHashDistributionPolicy `json:"Value,omitempty"`
+	OptionKind string                   `json:"OptionKind,omitempty"`
+	Value      ViewDistributionPolicy   `json:"Value,omitempty"`
 }
 
 func (v *ViewDistributionOption) viewOption() {}
@@ -66,6 +71,13 @@ type ViewHashDistributionPolicy struct {
 	DistributionColumn  *Identifier   `json:"DistributionColumn,omitempty"`
 	DistributionColumns []*Identifier `json:"DistributionColumns,omitempty"`
 }
+
+func (v *ViewHashDistributionPolicy) distributionPolicy() {}
+
+// ViewRoundRobinDistributionPolicy represents the round robin distribution policy for materialized views.
+type ViewRoundRobinDistributionPolicy struct{}
+
+func (v *ViewRoundRobinDistributionPolicy) distributionPolicy() {}
 
 // ViewForAppendOption represents the FOR_APPEND option for materialized views.
 type ViewForAppendOption struct {

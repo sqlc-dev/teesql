@@ -33,6 +33,15 @@ type DropServerAuditStatement struct {
 func (s *DropServerAuditStatement) statement() {}
 func (s *DropServerAuditStatement) node()      {}
 
+// DropServerAuditSpecificationStatement represents a DROP SERVER AUDIT SPECIFICATION statement
+type DropServerAuditSpecificationStatement struct {
+	Name       *Identifier
+	IsIfExists bool
+}
+
+func (s *DropServerAuditSpecificationStatement) statement() {}
+func (s *DropServerAuditSpecificationStatement) node()      {}
+
 // AuditTarget represents the target of a server audit
 type AuditTarget struct {
 	TargetKind    string // File, ApplicationLog, SecurityLog

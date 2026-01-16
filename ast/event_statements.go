@@ -12,9 +12,35 @@ type CreateEventSessionStatement struct {
 func (s *CreateEventSessionStatement) node()      {}
 func (s *CreateEventSessionStatement) statement() {}
 
+// AlterEventSessionStatement represents ALTER EVENT SESSION statement
+type AlterEventSessionStatement struct {
+	Name                   *Identifier
+	SessionScope           string // "Server" or "Database"
+	StatementType          string // "AddEventDeclarationOptionalSessionOptions", "DropEventSpecificationOptionalSessionOptions", "AddTargetDeclarationOptionalSessionOptions", "DropTargetSpecificationOptionalSessionOptions", "RequiredSessionOptions", "AlterStateIsStart", "AlterStateIsStop"
+	EventDeclarations      []*EventDeclaration
+	DropEventDeclarations  []*EventSessionObjectName
+	TargetDeclarations     []*TargetDeclaration
+	DropTargetDeclarations []*EventSessionObjectName
+	SessionOptions         []SessionOption
+}
+
+func (s *AlterEventSessionStatement) node()      {}
+func (s *AlterEventSessionStatement) statement() {}
+
+// DropEventSessionStatement represents DROP EVENT SESSION statement
+type DropEventSessionStatement struct {
+	Name         *Identifier
+	SessionScope string // "Server" or "Database"
+	IsIfExists   bool
+}
+
+func (s *DropEventSessionStatement) node()      {}
+func (s *DropEventSessionStatement) statement() {}
+
 // EventDeclaration represents an event in the event session
 type EventDeclaration struct {
 	ObjectName                         *EventSessionObjectName
+	EventDeclarationSetParameters      []*EventDeclarationSetParameter
 	EventDeclarationActionParameters   []*EventSessionObjectName
 	EventDeclarationPredicateParameter BooleanExpression
 }

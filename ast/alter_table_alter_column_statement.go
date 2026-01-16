@@ -12,6 +12,8 @@ type AlterTableAlterColumnStatement struct {
 	IsMasked                    bool
 	Encryption                  *ColumnEncryptionDefinition
 	MaskingFunction             ScalarExpression
+	Options                     []IndexOption
+	GeneratedAlways             string // UserIdStart, UserIdEnd, UserNameStart, UserNameEnd, etc.
 }
 
 func (a *AlterTableAlterColumnStatement) node()      {}

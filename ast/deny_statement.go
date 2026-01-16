@@ -6,6 +6,7 @@ type DenyStatement struct {
 	Principals           []*SecurityPrincipal
 	CascadeOption        bool
 	SecurityTargetObject *SecurityTargetObject
+	AsClause             *Identifier
 }
 
 func (s *DenyStatement) node()      {}

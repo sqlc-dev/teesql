@@ -43,10 +43,18 @@ func (o *ExternalFileFormatContainerOption) externalFileFormatOption() {}
 // ExternalFileFormatLiteralOption represents a literal value option
 type ExternalFileFormatLiteralOption struct {
 	OptionKind string
-	Value      *StringLiteral
+	Value      ScalarExpression // Can be StringLiteral or IntegerLiteral
 }
 
 func (o *ExternalFileFormatLiteralOption) externalFileFormatOption() {}
+
+// ExternalFileFormatUseDefaultTypeOption represents USE_TYPE_DEFAULT option
+type ExternalFileFormatUseDefaultTypeOption struct {
+	OptionKind                       string
+	ExternalFileFormatUseDefaultType string // "True" or "False"
+}
+
+func (o *ExternalFileFormatUseDefaultTypeOption) externalFileFormatOption() {}
 
 // CreateExternalTableStatement represents CREATE EXTERNAL TABLE statement
 type CreateExternalTableStatement struct {
@@ -86,6 +94,36 @@ type ExternalTableRejectTypeOption struct {
 }
 
 func (o *ExternalTableRejectTypeOption) externalTableOptionItem() {}
+
+// ExternalTableDistributionPolicy is the interface for distribution policies
+type ExternalTableDistributionPolicy interface {
+	externalTableDistributionPolicy()
+}
+
+// ExternalTableDistributionOption represents a DISTRIBUTION option
+type ExternalTableDistributionOption struct {
+	OptionKind string
+	Value      ExternalTableDistributionPolicy
+}
+
+func (o *ExternalTableDistributionOption) externalTableOptionItem() {}
+
+// ExternalTableShardedDistributionPolicy represents SHARDED distribution
+type ExternalTableShardedDistributionPolicy struct {
+	ShardingColumn *Identifier
+}
+
+func (p *ExternalTableShardedDistributionPolicy) externalTableDistributionPolicy() {}
+
+// ExternalTableRoundRobinDistributionPolicy represents ROUND_ROBIN distribution
+type ExternalTableRoundRobinDistributionPolicy struct{}
+
+func (p *ExternalTableRoundRobinDistributionPolicy) externalTableDistributionPolicy() {}
+
+// ExternalTableReplicatedDistributionPolicy represents REPLICATE distribution
+type ExternalTableReplicatedDistributionPolicy struct{}
+
+func (p *ExternalTableReplicatedDistributionPolicy) externalTableDistributionPolicy() {}
 
 // ExternalTableOption represents a simple option for external table (legacy)
 type ExternalTableOption struct {
@@ -140,6 +178,9 @@ type ExternalLibraryOption struct {
 // AlterExternalDataSourceStatement represents ALTER EXTERNAL DATA SOURCE statement
 type AlterExternalDataSourceStatement struct {
 	Name                      *Identifier
+	Location                  ScalarExpression
+	DataSourceType            string // HADOOP, etc.
+	PreviousPushDownOption    string // ON, OFF
 	ExternalDataSourceOptions []*ExternalDataSourceLiteralOrIdentifierOption
 }
 

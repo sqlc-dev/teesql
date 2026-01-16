@@ -146,7 +146,17 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 		return stmt, nil
 	}
 
-	return nil, fmt.Errorf("expected INSERT, UPDATE, DELETE, or SELECT after WITH clause, got %s", p.curTok.Literal)
+	// Check for MERGE statement
+	if strings.ToUpper(p.curTok.Literal) == "MERGE" {
+		stmt, err := p.parseMergeStatement()
+		if err != nil {
+			return nil, err
+		}
+		stmt.WithCtesAndXmlNamespaces = withClause
+		return stmt, nil
+	}
+
+	return nil, fmt.Errorf("expected INSERT, UPDATE, DELETE, SELECT, or MERGE after WITH clause, got %s", p.curTok.Literal)
 }
 
 func (p *Parser) parseInsertStatement() (ast.Statement, error) {
@@ -632,24 +642,72 @@ func (p *Parser) parseOpenRowsetTableReference() (*ast.OpenRowsetTableReference,
 	}
 	p.nextToken() // consume ,
 
-	// Parse provider string (string literal)
-	providerString, err := p.parseScalarExpression()
+	// Parse the second argument - could be:
+	// - ProviderString (connection string) followed by comma and object
+	// - DataSource followed by semicolons for UserId and Password, then comma and Query
+	secondArg, err := p.parseScalarExpression()
 	if err != nil {
 		return nil, err
 	}
-	result.ProviderString = providerString
 
-	if p.curTok.Type != TokenComma {
-		return nil, fmt.Errorf("expected , after provider string, got %s", p.curTok.Literal)
-	}
-	p.nextToken() // consume ,
+	// Check if next token is semicolon (DataSource; UserId; Password format)
+	if p.curTok.Type == TokenSemicolon {
+		result.DataSource = secondArg
+		p.nextToken() // consume ;
 
-	// Parse object (schema object name or expression)
-	obj, err := p.parseSchemaObjectName()
-	if err != nil {
-		return nil, err
+		// Parse UserId
+		userId, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		result.UserId = userId
+
+		if p.curTok.Type != TokenSemicolon {
+			return nil, fmt.Errorf("expected ; after UserId, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ;
+
+		// Parse Password
+		password, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		result.Password = password
+
+		if p.curTok.Type != TokenComma {
+			return nil, fmt.Errorf("expected , after Password, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ,
+
+		// Parse Query
+		query, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		result.Query = query
+	} else if p.curTok.Type == TokenComma {
+		// ProviderString, object format
+		result.ProviderString = secondArg
+		p.nextToken() // consume ,
+
+		// Parse object (schema object name or string expression)
+		if p.curTok.Type == TokenString {
+			// Could be a query string instead of object name
+			query, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			result.Query = query
+		} else {
+			obj, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			result.Object = obj
+		}
+	} else {
+		return nil, fmt.Errorf("expected , or ; after second argument, got %s", p.curTok.Literal)
 	}
-	result.Object = obj
 
 	if p.curTok.Type != TokenRParen {
 		return nil, fmt.Errorf("expected ) in OPENROWSET, got %s", p.curTok.Literal)
@@ -785,7 +843,7 @@ func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
 					p.nextToken()
 				} else if p.curTok.Type == TokenString {
 					// JSON path specification like '$.stateName' or 'strict $.population'
-					colDef.ColumnOrdinal = &ast.StringLiteral{
+					colDef.JsonPath = &ast.StringLiteral{
 						LiteralType:   "String",
 						IsNational:    false,
 						IsLargeObject: false,
@@ -866,9 +924,36 @@ func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
 
 	if p.curTok.Type == TokenEquals {
 		p.nextToken()
-		value, err := p.parseScalarExpression()
-		if err != nil {
-			return nil, err
+		var value ast.ScalarExpression
+
+		// Check if value is a bare identifier (e.g., TRUE, FALSE, RAW, ACP, widechar)
+		// that should be treated as IdentifierLiteral, not a column reference
+		if p.curTok.Type == TokenIdent && !strings.HasPrefix(p.curTok.Literal, "@") &&
+			p.peekTok.Type != TokenDot && p.peekTok.Type != TokenLParen {
+			// For options like HEADER_ROW = TRUE, CODEPAGE = 'RAW' or 'ACP', DATAFILETYPE = 'widechar'
+			// These are identifier literals, not column references
+			upperVal := strings.ToUpper(p.curTok.Literal)
+			if upperVal == "TRUE" || upperVal == "FALSE" || upperVal == "RAW" ||
+				upperVal == "ACP" || upperVal == "WIDECHAR" || upperVal == "CHAR" {
+				value = &ast.IdentifierLiteral{
+					LiteralType: "Identifier",
+					QuoteType:   "NotQuoted",
+					Value:       p.curTok.Literal,
+				}
+				p.nextToken()
+			} else {
+				var err error
+				value, err = p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			var err error
+			value, err = p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
 		}
 		return &ast.LiteralBulkInsertOption{
 			OptionKind: optionKind,
@@ -1025,7 +1110,7 @@ func (p *Parser) parseTableHints() ([]ast.TableHintType, error) {
 // isTableHintKeyword checks if a string is a valid table hint keyword
 func isTableHintKeyword(name string) bool {
 	switch name {
-	case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READPAST",
+	case "HOLDLOCK", "NOLOCK", "PAGLOCK", "READCOMMITTED", "READCOMMITTEDLOCK", "READPAST",
 		"READUNCOMMITTED", "REPEATABLEREAD", "ROWLOCK", "SERIALIZABLE",
 		"SNAPSHOT", "TABLOCK", "TABLOCKX", "UPDLOCK", "XLOCK", "NOWAIT",
 		"INDEX", "FORCESEEK", "FORCESCAN", "KEEPIDENTITY", "KEEPDEFAULTS",
@@ -2229,6 +2314,12 @@ func (p *Parser) parseInsertBulkColumnDefinition() (*ast.InsertBulkColumnDefinit
 			}
 			colDef.Column.DataType = dataType
 		}
+	} else if colDef.Column.DataType == nil {
+		// If no data type was parsed, check if the column name is TIMESTAMP
+		// This is a special case where TIMESTAMP alone is both the column name and type indicator
+		if strings.ToUpper(colDef.Column.ColumnIdentifier.Value) == "TIMESTAMP" {
+			colDef.Column.ColumnIdentifier.Value = "TIMESTAMP"
+		}
 	}
 
 	// Check for NULL or NOT NULL
@@ -2856,5 +2947,201 @@ func (p *Parser) parseOutputClause() (*ast.OutputClause, *ast.OutputIntoClause, 
 	return &ast.OutputClause{
 		SelectColumns: selectColumns,
 	}, nil, nil
+}
+
+// parseCopyStatement parses COPY INTO statement for Azure Synapse Analytics
+func (p *Parser) parseCopyStatement() (*ast.CopyStatement, error) {
+	// Consume COPY
+	p.nextToken()
+
+	stmt := &ast.CopyStatement{}
+
+	// Expect INTO
+	if strings.ToUpper(p.curTok.Literal) == "INTO" {
+		p.nextToken() // consume INTO
+	}
+
+	// Parse target table name
+	tableName, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.Into = tableName
+
+	// Parse optional column list with defaults: (col1 DEFAULT 'value' 1, col2 DEFAULT 2 3)
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		columnOpts := &ast.ListTypeCopyOption{}
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			colOpt := &ast.CopyColumnOption{}
+			colOpt.ColumnName = p.parseIdentifier()
+
+			// Check for DEFAULT
+			if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+				p.nextToken() // consume DEFAULT
+				defValue, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				colOpt.DefaultValue = defValue
+			}
+
+			// Parse field number (integer)
+			if p.curTok.Type == TokenNumber {
+				val := p.curTok.Literal
+				colOpt.FieldNumber = &ast.IntegerLiteral{Value: val, LiteralType: "Integer"}
+				p.nextToken()
+			}
+
+			columnOpts.Options = append(columnOpts.Options, colOpt)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+		// Add column options as an option
+		if len(columnOpts.Options) > 0 {
+			stmt.Options = append(stmt.Options, &ast.CopyOption{
+				Kind:  "ColumnOptions",
+				Value: columnOpts,
+			})
+		}
+	}
+
+	// Expect FROM
+	if strings.ToUpper(p.curTok.Literal) == "FROM" {
+		p.nextToken() // consume FROM
+	}
+
+	// Parse source URLs (comma-separated string literals)
+	for {
+		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+			strLit, err := p.parseStringLiteral()
+			if err != nil {
+				return nil, err
+			}
+			stmt.From = append(stmt.From, strLit)
+		}
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Parse WITH clause if present
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+		}
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+			opt, err := p.parseCopyOption()
+			if err != nil {
+				return nil, err
+			}
+			if opt != nil {
+				stmt.Options = append(stmt.Options, opt)
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+// parseCopyOption parses a single COPY option
+func (p *Parser) parseCopyOption() (*ast.CopyOption, error) {
+	opt := &ast.CopyOption{}
+
+	// Get option name
+	optName := p.curTok.Literal
+	opt.Kind = optName
+	p.nextToken()
+
+	// Handle = sign
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+	}
+
+	// Check for credential option (Identity = ..., Secret = ...)
+	if strings.ToUpper(optName) == "CREDENTIAL" || strings.ToUpper(optName) == "ERRORFILE_CREDENTIAL" {
+		credOpt := &ast.CopyCredentialOption{}
+		// Expect (
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+		}
+		// Parse Identity = '...'
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			keyName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			if keyName == "IDENTITY" {
+				strLit, _ := p.parseStringLiteral()
+				credOpt.Identity = strLit
+			} else if keyName == "SECRET" {
+				strLit, _ := p.parseStringLiteral()
+				credOpt.Secret = strLit
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+		opt.Value = credOpt
+	} else {
+		// Single value option
+		singleOpt := &ast.SingleValueTypeCopyOption{}
+		idOrVal := &ast.IdentifierOrValueExpression{}
+
+		if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+			strLit, _ := p.parseStringLiteral()
+			// Extract value without quotes
+			val := strLit.Value
+			idOrVal.Value = val
+			idOrVal.ValueExpression = strLit
+		} else if p.curTok.Type == TokenNumber {
+			val := p.curTok.Literal
+			idOrVal.Value = val
+			idOrVal.ValueExpression = &ast.IntegerLiteral{Value: val, LiteralType: "Integer"}
+			p.nextToken()
+		} else {
+			// Identifier value (like FILEFORMAT, GZIP, etc.)
+			val := p.curTok.Literal
+			idOrVal.Value = val
+			idOrVal.Identifier = &ast.Identifier{Value: val, QuoteType: "NotQuoted"}
+			p.nextToken()
+		}
+		singleOpt.SingleValue = idOrVal
+		opt.Value = singleOpt
+	}
+
+	return opt, nil
 }
 

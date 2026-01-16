@@ -2,7 +2,9 @@ package ast
 
 // MergeStatement represents a MERGE statement
 type MergeStatement struct {
-	MergeSpecification *MergeSpecification
+	MergeSpecification       *MergeSpecification
+	WithCtesAndXmlNamespaces *WithCtesAndXmlNamespaces
+	OptimizerHints           []OptimizerHintBase
 }
 
 func (s *MergeStatement) node()      {}
@@ -16,6 +18,7 @@ type MergeSpecification struct {
 	SearchCondition BooleanExpression // The ON clause condition (may be GraphMatchPredicate)
 	ActionClauses   []*MergeActionClause
 	OutputClause    *OutputClause
+	TopRowFilter    *TopRowFilter
 }
 
 func (s *MergeSpecification) node()                          {}
@@ -53,7 +56,7 @@ func (a *UpdateMergeAction) mergeAction() {}
 // InsertMergeAction represents INSERT in a MERGE WHEN clause
 type InsertMergeAction struct {
 	Columns []*ColumnReferenceExpression
-	Values  []ScalarExpression
+	Source  InsertSource
 }
 
 func (a *InsertMergeAction) node()        {}
@@ -61,7 +64,8 @@ func (a *InsertMergeAction) mergeAction() {}
 
 // JoinParenthesisTableReference represents a parenthesized join table reference
 type JoinParenthesisTableReference struct {
-	Join TableReference // The join inside the parenthesis
+	Join    TableReference `json:"Join,omitempty"` // The join inside the parenthesis
+	ForPath bool           `json:"ForPath"`
 }
 
 func (j *JoinParenthesisTableReference) node()           {}
@@ -91,6 +95,7 @@ type GraphMatchCompositeExpression struct {
 
 func (g *GraphMatchCompositeExpression) node()                 {}
 func (g *GraphMatchCompositeExpression) graphMatchExpression() {}
+func (g *GraphMatchCompositeExpression) booleanExpression()    {}
 
 // GraphMatchNodeExpression represents a node in a graph match pattern
 type GraphMatchNodeExpression struct {
@@ -100,3 +105,35 @@ type GraphMatchNodeExpression struct {
 
 func (g *GraphMatchNodeExpression) node()                 {}
 func (g *GraphMatchNodeExpression) graphMatchExpression() {}
+
+// GraphMatchRecursivePredicate represents SHORTEST_PATH graph pattern
+type GraphMatchRecursivePredicate struct {
+	Function             string // "ShortestPath"
+	OuterNodeExpression  *GraphMatchNodeExpression
+	Expression           []*GraphMatchCompositeExpression
+	RecursiveQuantifier  *GraphRecursiveMatchQuantifier
+	AnchorOnLeft         bool
+}
+
+func (g *GraphMatchRecursivePredicate) node()                 {}
+func (g *GraphMatchRecursivePredicate) graphMatchExpression() {}
+func (g *GraphMatchRecursivePredicate) booleanExpression()    {}
+
+// GraphRecursiveMatchQuantifier represents the quantifier in SHORTEST_PATH (+ or {min,max})
+type GraphRecursiveMatchQuantifier struct {
+	IsPlusSign bool
+	LowerLimit ScalarExpression
+	UpperLimit ScalarExpression
+}
+
+func (g *GraphRecursiveMatchQuantifier) node() {}
+
+// GraphMatchLastNodePredicate represents LAST_NODE(x) = LAST_NODE(y)
+type GraphMatchLastNodePredicate struct {
+	LeftExpression  *GraphMatchNodeExpression
+	RightExpression *GraphMatchNodeExpression
+}
+
+func (g *GraphMatchLastNodePredicate) node()                 {}
+func (g *GraphMatchLastNodePredicate) graphMatchExpression() {}
+func (g *GraphMatchLastNodePredicate) booleanExpression()    {}

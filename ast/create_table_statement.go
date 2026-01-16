@@ -12,6 +12,8 @@ type CreateTableStatement struct {
 	FileStreamOn                 *IdentifierOrValueExpression
 	Options                      []TableOption
 	FederationScheme             *FederationScheme
+	SelectStatement              *SelectStatement   // For CTAS: CREATE TABLE ... AS SELECT
+	CtasColumns                  []*Identifier      // For CTAS with column names: CREATE TABLE (col1, col2) WITH ... AS SELECT
 }
 
 // FederationScheme represents a FEDERATED ON clause
@@ -39,9 +41,18 @@ type TableDefinition struct {
 	ColumnDefinitions []*ColumnDefinition
 	TableConstraints  []TableConstraint
 	Indexes           []*IndexDefinition
+	SystemTimePeriod  *SystemTimePeriodDefinition
 }
 
 func (t *TableDefinition) node() {}
+
+// SystemTimePeriodDefinition represents PERIOD FOR SYSTEM_TIME clause
+type SystemTimePeriodDefinition struct {
+	StartTimeColumn *Identifier
+	EndTimeColumn   *Identifier
+}
+
+func (s *SystemTimePeriodDefinition) node() {}
 
 // ColumnDefinition represents a column definition in CREATE TABLE
 type ColumnDefinition struct {
@@ -53,10 +64,13 @@ type ColumnDefinition struct {
 	IdentityOptions          *IdentityOptions
 	Constraints              []ConstraintDefinition
 	Index                    *IndexDefinition
+	GeneratedAlways          string // RowStart, RowEnd, etc.
 	IsPersisted              bool
 	IsRowGuidCol             bool
 	IsHidden                 bool
 	IsMasked                 bool
+	MaskingFunction          ScalarExpression
+	Encryption               *ColumnEncryptionDefinition
 	Nullable                 *NullableConstraintDefinition
 	StorageOptions           *ColumnStorageOptions
 }

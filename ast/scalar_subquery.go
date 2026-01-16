@@ -3,6 +3,7 @@ package ast
 // ScalarSubquery represents a scalar subquery expression.
 type ScalarSubquery struct {
 	QueryExpression QueryExpression
+	Collation       *Identifier
 }
 
 func (s *ScalarSubquery) node()             {}

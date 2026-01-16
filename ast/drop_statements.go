@@ -123,6 +123,7 @@ type WaitAtLowPriorityOption struct {
 
 func (o *WaitAtLowPriorityOption) node()            {}
 func (o *WaitAtLowPriorityOption) dropIndexOption() {}
+func (o *WaitAtLowPriorityOption) indexOption()     {}
 
 // LowPriorityLockWaitOption is the interface for options within WAIT_AT_LOW_PRIORITY
 type LowPriorityLockWaitOption interface {

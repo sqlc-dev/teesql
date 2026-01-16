@@ -13,9 +13,10 @@ type PredictTableReference struct {
 func (*PredictTableReference) node()           {}
 func (*PredictTableReference) tableReference() {}
 
-// SchemaDeclarationItem represents a column definition in PREDICT WITH clause
+// SchemaDeclarationItem represents a column definition in PREDICT/OPENXML WITH clause
 type SchemaDeclarationItem struct {
 	ColumnDefinition *ColumnDefinitionBase `json:"ColumnDefinition,omitempty"`
+	Mapping          ScalarExpression      `json:"Mapping,omitempty"` // Optional XPath mapping for OPENXML
 }
 
 func (*SchemaDeclarationItem) node() {}

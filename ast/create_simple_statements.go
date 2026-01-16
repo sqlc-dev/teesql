@@ -21,6 +21,7 @@ type ContainmentDatabaseOption struct {
 
 func (c *ContainmentDatabaseOption) node()                 {}
 func (c *ContainmentDatabaseOption) createDatabaseOption() {}
+func (c *ContainmentDatabaseOption) databaseOption()       {}
 
 func (s *CreateDatabaseStatement) node()      {}
 func (s *CreateDatabaseStatement) statement() {}
@@ -210,7 +211,14 @@ func (r *RouteOption) node() {}
 
 // CreateEndpointStatement represents a CREATE ENDPOINT statement.
 type CreateEndpointStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Owner           *Identifier
+	Name            *Identifier
+	State           string
+	Affinity        *EndpointAffinity
+	Protocol        string
+	ProtocolOptions []EndpointProtocolOption
+	EndpointType    string
+	PayloadOptions  []PayloadOption
 }
 
 func (s *CreateEndpointStatement) node()      {}
@@ -424,7 +432,11 @@ func (s *CreateFulltextCatalogStatement) statement() {}
 
 // CreateFulltextIndexStatement represents a CREATE FULLTEXT INDEX statement.
 type CreateFulltextIndexStatement struct {
-	OnName *SchemaObjectName `json:"OnName,omitempty"`
+	OnName               *SchemaObjectName            `json:"OnName,omitempty"`
+	FullTextIndexColumns []*FullTextIndexColumn       `json:"FullTextIndexColumns,omitempty"`
+	KeyIndexName         *Identifier                  `json:"KeyIndexName,omitempty"`
+	CatalogAndFileGroup  *FullTextCatalogAndFileGroup `json:"CatalogAndFileGroup,omitempty"`
+	Options              []FullTextIndexOption        `json:"Options,omitempty"`
 }
 
 func (s *CreateFulltextIndexStatement) node()      {}
