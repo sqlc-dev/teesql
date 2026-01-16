@@ -3796,6 +3796,22 @@ func convertAuditGroupName(name string) string {
 		"DATABASE_OBJECT_ACCESS_GROUP":             "DatabaseObjectAccess",
 		"BATCH_COMPLETED_GROUP":                    "BatchCompletedGroup",
 		"BATCH_STARTED_GROUP":                      "BatchStartedGroup",
+		"SUCCESSFUL_LOGIN_GROUP":                   "SuccessfulLogin",
+		"LOGOUT_GROUP":                             "Logout",
+		"SERVER_STATE_CHANGE_GROUP":                "ServerStateChange",
+		"FAILED_LOGIN_GROUP":                       "FailedLogin",
+		"LOGIN_CHANGE_PASSWORD_GROUP":              "LoginChangePassword",
+		"SERVER_ROLE_MEMBER_CHANGE_GROUP":          "ServerRoleMemberChange",
+		"SERVER_PRINCIPAL_IMPERSONATION_GROUP":     "ServerPrincipalImpersonation",
+		"SERVER_OBJECT_OWNERSHIP_CHANGE_GROUP":     "ServerObjectOwnershipChange",
+		"DATABASE_MIRRORING_LOGIN_GROUP":           "DatabaseMirroringLogin",
+		"BROKER_LOGIN_GROUP":                       "BrokerLogin",
+		"SERVER_PERMISSION_CHANGE_GROUP":           "ServerPermissionChange",
+		"SERVER_OBJECT_PERMISSION_CHANGE_GROUP":    "ServerObjectPermissionChange",
+		"SERVER_OPERATION_GROUP":                   "ServerOperation",
+		"TRACE_CHANGE_GROUP":                       "TraceChange",
+		"SERVER_OBJECT_CHANGE_GROUP":               "ServerObjectChange",
+		"SERVER_PRINCIPAL_CHANGE_GROUP":            "ServerPrincipalChange",
 	}
 	if mapped, ok := groupMap[strings.ToUpper(name)]; ok {
 		return mapped

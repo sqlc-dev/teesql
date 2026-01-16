@@ -1086,6 +1086,17 @@ func (p *Parser) parseDropServerRoleStatement() (ast.Statement, error) {
 		return stmt, nil
 	case "AUDIT":
 		p.nextToken()
+		// Check if next token is SPECIFICATION
+		if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
+			p.nextToken()
+			stmt := &ast.DropServerAuditSpecificationStatement{}
+			stmt.Name = p.parseIdentifier()
+			// Skip optional semicolon
+			if p.curTok.Type == TokenSemicolon {
+				p.nextToken()
+			}
+			return stmt, nil
+		}
 		stmt := &ast.DropServerAuditStatement{}
 		stmt.Name = p.parseIdentifier()
 		// Skip optional semicolon

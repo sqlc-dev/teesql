@@ -207,6 +207,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropServerRoleStatementToJSON(s)
 	case *ast.DropServerAuditStatement:
 		return dropServerAuditStatementToJSON(s)
+	case *ast.DropServerAuditSpecificationStatement:
+		return dropServerAuditSpecificationStatementToJSON(s)
 	case *ast.DropDatabaseAuditSpecificationStatement:
 		return dropDatabaseAuditSpecificationStatementToJSON(s)
 	case *ast.DropAvailabilityGroupStatement:
@@ -10300,6 +10302,17 @@ func auditSpecificationDetailToJSON(d ast.AuditSpecificationDetail) jsonNode {
 func dropServerAuditStatementToJSON(s *ast.DropServerAuditStatement) jsonNode {
 	node := jsonNode{
 		"$type":      "DropServerAuditStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	return node
+}
+
+func dropServerAuditSpecificationStatementToJSON(s *ast.DropServerAuditSpecificationStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropServerAuditSpecificationStatement",
 		"IsIfExists": s.IsIfExists,
 	}
 	if s.Name != nil {
