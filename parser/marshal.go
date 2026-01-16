@@ -18319,6 +18319,15 @@ func alterFullTextIndexActionToJSON(a ast.AlterFullTextIndexActionOption) jsonNo
 			node["StopListOption"] = stopListFullTextIndexOptionToJSON(action.StopListOption)
 		}
 		return node
+	case *ast.SetSearchPropertyListAlterFullTextIndexAction:
+		node := jsonNode{
+			"$type":            "SetSearchPropertyListAlterFullTextIndexAction",
+			"WithNoPopulation": action.WithNoPopulation,
+		}
+		if action.SearchPropertyListOption != nil {
+			node["SearchPropertyListOption"] = searchPropertyListFullTextIndexOptionToJSON(action.SearchPropertyListOption)
+		}
+		return node
 	case *ast.AlterColumnAlterFullTextIndexAction:
 		node := jsonNode{
 			"$type":            "AlterColumnAlterFullTextIndexAction",
@@ -18340,6 +18349,18 @@ func stopListFullTextIndexOptionToJSON(opt *ast.StopListFullTextIndexOption) jso
 	}
 	if opt.StopListName != nil {
 		node["StopListName"] = identifierToJSON(opt.StopListName)
+	}
+	return node
+}
+
+func searchPropertyListFullTextIndexOptionToJSON(opt *ast.SearchPropertyListFullTextIndexOption) jsonNode {
+	node := jsonNode{
+		"$type":      "SearchPropertyListFullTextIndexOption",
+		"IsOff":      opt.IsOff,
+		"OptionKind": opt.OptionKind,
+	}
+	if opt.PropertyListName != nil {
+		node["PropertyListName"] = identifierToJSON(opt.PropertyListName)
 	}
 	return node
 }
@@ -19399,6 +19420,8 @@ func fullTextIndexOptionToJSON(opt ast.FullTextIndexOption) jsonNode {
 		}
 	case *ast.StopListFullTextIndexOption:
 		return stopListFullTextIndexOptionToJSON(o)
+	case *ast.SearchPropertyListFullTextIndexOption:
+		return searchPropertyListFullTextIndexOptionToJSON(o)
 	}
 	return nil
 }

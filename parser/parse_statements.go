@@ -13511,6 +13511,30 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 						opt.StopListName = p.parseIdentifier()
 					}
 					stmt.Options = append(stmt.Options, opt)
+				} else if optLit == "SEARCH" {
+					p.nextToken() // consume SEARCH
+					// Expect PROPERTY LIST
+					if strings.ToUpper(p.curTok.Literal) == "PROPERTY" {
+						p.nextToken() // consume PROPERTY
+					}
+					if strings.ToUpper(p.curTok.Literal) == "LIST" {
+						p.nextToken() // consume LIST
+					}
+					// Handle optional = sign
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					opt := &ast.SearchPropertyListFullTextIndexOption{
+						OptionKind: "SearchPropertyList",
+					}
+					if strings.ToUpper(p.curTok.Literal) == "OFF" {
+						opt.IsOff = true
+						p.nextToken()
+					} else {
+						opt.IsOff = false
+						opt.PropertyListName = p.parseIdentifier()
+					}
+					stmt.Options = append(stmt.Options, opt)
 				} else if optLit == "NO" {
 					p.nextToken() // consume NO
 					if strings.ToUpper(p.curTok.Literal) == "POPULATION" {

@@ -368,6 +368,25 @@ type ChangeTrackingFullTextIndexOption struct {
 func (*ChangeTrackingFullTextIndexOption) node()                {}
 func (*ChangeTrackingFullTextIndexOption) fullTextIndexOption() {}
 
+// SearchPropertyListFullTextIndexOption represents a SEARCH PROPERTY LIST option for fulltext index
+type SearchPropertyListFullTextIndexOption struct {
+	IsOff            bool        `json:"IsOff"`
+	PropertyListName *Identifier `json:"PropertyListName,omitempty"`
+	OptionKind       string      `json:"OptionKind,omitempty"` // "SearchPropertyList"
+}
+
+func (*SearchPropertyListFullTextIndexOption) node()                {}
+func (*SearchPropertyListFullTextIndexOption) fullTextIndexOption() {}
+
+// SetSearchPropertyListAlterFullTextIndexAction represents a SET SEARCH PROPERTY LIST action for fulltext index
+type SetSearchPropertyListAlterFullTextIndexAction struct {
+	SearchPropertyListOption *SearchPropertyListFullTextIndexOption `json:"SearchPropertyListOption,omitempty"`
+	WithNoPopulation         bool                                   `json:"WithNoPopulation"`
+}
+
+func (*SetSearchPropertyListAlterFullTextIndexAction) node()                     {}
+func (*SetSearchPropertyListAlterFullTextIndexAction) alterFullTextIndexAction() {}
+
 // FullTextCatalogAndFileGroup represents catalog and filegroup for fulltext index
 type FullTextCatalogAndFileGroup struct {
 	CatalogName      *Identifier `json:"CatalogName,omitempty"`

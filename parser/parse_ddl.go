@@ -9375,6 +9375,43 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 				}
 			}
 			return action
+		} else if strings.ToUpper(p.curTok.Literal) == "SEARCH" {
+			// Parse SET SEARCH PROPERTY LIST OFF | name [WITH NO POPULATION]
+			p.nextToken() // consume SEARCH
+			if strings.ToUpper(p.curTok.Literal) == "PROPERTY" {
+				p.nextToken() // consume PROPERTY
+			}
+			if strings.ToUpper(p.curTok.Literal) == "LIST" {
+				p.nextToken() // consume LIST
+			}
+			// Handle optional = sign
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			action := &ast.SetSearchPropertyListAlterFullTextIndexAction{
+				SearchPropertyListOption: &ast.SearchPropertyListFullTextIndexOption{
+					OptionKind: "SearchPropertyList",
+				},
+			}
+			if strings.ToUpper(p.curTok.Literal) == "OFF" {
+				action.SearchPropertyListOption.IsOff = true
+				p.nextToken()
+			} else {
+				action.SearchPropertyListOption.IsOff = false
+				action.SearchPropertyListOption.PropertyListName = p.parseIdentifier()
+			}
+			// Check for WITH NO POPULATION
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if strings.ToUpper(p.curTok.Literal) == "NO" {
+					p.nextToken() // consume NO
+					if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+						p.nextToken() // consume POPULATION
+						action.WithNoPopulation = true
+					}
+				}
+			}
+			return action
 		}
 		return nil
 	case "START":
@@ -9512,7 +9549,11 @@ func (p *Parser) parseAddAlterFullTextIndexAction() (*ast.AddAlterFullTextIndexA
 				}
 			}
 
-			// StatisticalSemantics defaults to false
+			// Check for STATISTICAL_SEMANTICS
+			if strings.ToUpper(p.curTok.Literal) == "STATISTICAL_SEMANTICS" {
+				p.nextToken() // consume STATISTICAL_SEMANTICS
+				col.StatisticalSemantics = true
+			}
 
 			action.Columns = append(action.Columns, col)
 
