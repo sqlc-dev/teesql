@@ -605,6 +605,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterEndpointStatementToJSON(s)
 	case *ast.AlterEventSessionStatement:
 		return alterEventSessionStatementToJSON(s)
+	case *ast.AlterAuthorizationStatement:
+		return alterAuthorizationStatementToJSON(s)
 	case *ast.AlterServiceStatement:
 		return alterServiceStatementToJSON(s)
 	case *ast.AlterCertificateStatement:
@@ -7879,8 +7881,13 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			p.nextToken() // consume FULLTEXT
 			if strings.ToUpper(p.curTok.Literal) == "CATALOG" {
 				p.nextToken() // consume CATALOG
+				stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
+			} else if strings.ToUpper(p.curTok.Literal) == "STOPLIST" {
+				p.nextToken() // consume STOPLIST
+				stmt.SecurityTargetObject.ObjectKind = "FullTextStopList"
+			} else {
+				stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
 			}
-			stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
 		case "MESSAGE":
 			p.nextToken() // consume MESSAGE
 			if strings.ToUpper(p.curTok.Literal) == "TYPE" {
@@ -8170,8 +8177,13 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			p.nextToken()
 			if strings.ToUpper(p.curTok.Literal) == "CATALOG" {
 				p.nextToken()
+				stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
+			} else if strings.ToUpper(p.curTok.Literal) == "STOPLIST" {
+				p.nextToken()
+				stmt.SecurityTargetObject.ObjectKind = "FullTextStopList"
+			} else {
+				stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
 			}
-			stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
 		case "MESSAGE":
 			p.nextToken()
 			if strings.ToUpper(p.curTok.Literal) == "TYPE" {
@@ -8442,8 +8454,13 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			p.nextToken()
 			if strings.ToUpper(p.curTok.Literal) == "CATALOG" {
 				p.nextToken()
+				stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
+			} else if strings.ToUpper(p.curTok.Literal) == "STOPLIST" {
+				p.nextToken()
+				stmt.SecurityTargetObject.ObjectKind = "FullTextStopList"
+			} else {
+				stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
 			}
-			stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
 		case "MESSAGE":
 			p.nextToken()
 			if strings.ToUpper(p.curTok.Literal) == "TYPE" {
@@ -8570,7 +8587,7 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 	}
 
 	// Parse principal(s)
-	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && strings.ToUpper(p.curTok.Literal) != "CASCADE" {
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && strings.ToUpper(p.curTok.Literal) != "CASCADE" && strings.ToUpper(p.curTok.Literal) != "AS" {
 		principal := &ast.SecurityPrincipal{}
 		if p.curTok.Type == TokenPublic {
 			principal.PrincipalType = "Public"
@@ -8597,6 +8614,12 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 	if strings.ToUpper(p.curTok.Literal) == "CASCADE" {
 		stmt.CascadeOption = true
 		p.nextToken()
+	}
+
+	// Check for AS clause
+	if strings.ToUpper(p.curTok.Literal) == "AS" {
+		p.nextToken() // consume AS
+		stmt.AsClause = p.parseIdentifier()
 	}
 
 	// Skip optional semicolon
@@ -9301,6 +9324,9 @@ func denyStatementToJSON(s *ast.DenyStatement) jsonNode {
 			principals[i] = securityPrincipalToJSON(p)
 		}
 		node["Principals"] = principals
+	}
+	if s.AsClause != nil {
+		node["AsClause"] = identifierToJSON(s.AsClause)
 	}
 	return node
 }
@@ -16969,6 +16995,20 @@ func alterEventSessionStatementToJSON(s *ast.AlterEventSessionStatement) jsonNod
 			opts[i] = sessionOptionToJSON(o)
 		}
 		node["SessionOptions"] = opts
+	}
+	return node
+}
+
+func alterAuthorizationStatementToJSON(s *ast.AlterAuthorizationStatement) jsonNode {
+	node := jsonNode{
+		"$type":         "AlterAuthorizationStatement",
+		"ToSchemaOwner": s.ToSchemaOwner,
+	}
+	if s.SecurityTargetObject != nil {
+		node["SecurityTargetObject"] = securityTargetObjectToJSON(s.SecurityTargetObject)
+	}
+	if s.PrincipalName != nil {
+		node["PrincipalName"] = identifierToJSON(s.PrincipalName)
 	}
 	return node
 }

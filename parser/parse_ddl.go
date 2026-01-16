@@ -2189,6 +2189,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 		return p.parseAlterExternalStatement()
 	case TokenView:
 		return p.parseAlterViewStatement()
+	case TokenAuthorization:
+		return p.parseAlterAuthorizationStatement()
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -11742,5 +11744,188 @@ done:
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterAuthorizationStatement() (*ast.AlterAuthorizationStatement, error) {
+	// Consume AUTHORIZATION
+	p.nextToken()
+
+	stmt := &ast.AlterAuthorizationStatement{}
+
+	// Expect ON
+	if p.curTok.Type == TokenOn {
+		p.nextToken() // consume ON
+	}
+
+	// Parse security target object
+	stmt.SecurityTargetObject = &ast.SecurityTargetObject{}
+	stmt.SecurityTargetObject.ObjectKind = "NotSpecified"
+
+	// Parse object kind and ::
+	objectKind := strings.ToUpper(p.curTok.Literal)
+	switch objectKind {
+	case "SERVER":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "ROLE" {
+			p.nextToken()
+			stmt.SecurityTargetObject.ObjectKind = "ServerRole"
+		} else {
+			stmt.SecurityTargetObject.ObjectKind = "Server"
+		}
+	case "APPLICATION":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "ROLE" {
+			p.nextToken()
+		}
+		stmt.SecurityTargetObject.ObjectKind = "ApplicationRole"
+	case "ASYMMETRIC":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "KEY" {
+			p.nextToken()
+		}
+		stmt.SecurityTargetObject.ObjectKind = "AsymmetricKey"
+	case "SYMMETRIC":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "KEY" {
+			p.nextToken()
+		}
+		stmt.SecurityTargetObject.ObjectKind = "SymmetricKey"
+	case "REMOTE":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
+			p.nextToken()
+			if strings.ToUpper(p.curTok.Literal) == "BINDING" {
+				p.nextToken()
+			}
+		}
+		stmt.SecurityTargetObject.ObjectKind = "RemoteServiceBinding"
+	case "FULLTEXT":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "CATALOG" {
+			p.nextToken()
+		}
+		stmt.SecurityTargetObject.ObjectKind = "FullTextCatalog"
+	case "MESSAGE":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "TYPE" {
+			p.nextToken()
+		}
+		stmt.SecurityTargetObject.ObjectKind = "MessageType"
+	case "XML":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "SCHEMA" {
+			p.nextToken()
+			if strings.ToUpper(p.curTok.Literal) == "COLLECTION" {
+				p.nextToken()
+			}
+		}
+		stmt.SecurityTargetObject.ObjectKind = "XmlSchemaCollection"
+	case "SEARCH":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "PROPERTY" {
+			p.nextToken()
+			if strings.ToUpper(p.curTok.Literal) == "LIST" {
+				p.nextToken()
+			}
+		}
+		stmt.SecurityTargetObject.ObjectKind = "SearchPropertyList"
+	case "AVAILABILITY":
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "GROUP" {
+			p.nextToken()
+		}
+		stmt.SecurityTargetObject.ObjectKind = "AvailabilityGroup"
+	case "TYPE":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Type"
+	case "OBJECT":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Object"
+	case "ASSEMBLY":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Assembly"
+	case "CERTIFICATE":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Certificate"
+	case "CONTRACT":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Contract"
+	case "DATABASE":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Database"
+	case "ENDPOINT":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Endpoint"
+	case "LOGIN":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Login"
+	case "ROLE":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Role"
+	case "ROUTE":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Route"
+	case "SCHEMA":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Schema"
+	case "SERVICE":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "Service"
+	case "USER":
+		p.nextToken()
+		stmt.SecurityTargetObject.ObjectKind = "User"
+	}
+
+	// Parse :: if present
+	if p.curTok.Type == TokenColonColon {
+		p.nextToken()
+	}
+
+	// Parse object name as multi-part identifier
+	if p.curTok.Type == TokenDot || p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+		stmt.SecurityTargetObject.ObjectName = &ast.SecurityTargetObjectName{}
+		multiPart := &ast.MultiPartIdentifier{}
+		for {
+			if p.curTok.Type == TokenDot {
+				multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
+					Value:     "",
+					QuoteType: "NotQuoted",
+				})
+			} else {
+				id := p.parseIdentifier()
+				multiPart.Identifiers = append(multiPart.Identifiers, id)
+			}
+			if p.curTok.Type == TokenDot {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		multiPart.Count = len(multiPart.Identifiers)
+		stmt.SecurityTargetObject.ObjectName.MultiPartIdentifier = multiPart
+	}
+
+	// Expect TO
+	if p.curTok.Type == TokenTo {
+		p.nextToken()
+	}
+
+	// Check for SCHEMA OWNER or principal name
+	if strings.ToUpper(p.curTok.Literal) == "SCHEMA" {
+		p.nextToken() // consume SCHEMA
+		if strings.ToUpper(p.curTok.Literal) == "OWNER" {
+			p.nextToken() // consume OWNER
+		}
+		stmt.ToSchemaOwner = true
+	} else {
+		// Parse principal name
+		stmt.PrincipalName = p.parseIdentifier()
+	}
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
 	return stmt, nil
 }
