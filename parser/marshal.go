@@ -9913,6 +9913,9 @@ func variableTableReferenceToJSON(v *ast.VariableTableReference) jsonNode {
 		}
 		node["Variable"] = varNode
 	}
+	if v.Alias != nil {
+		node["Alias"] = identifierToJSON(v.Alias)
+	}
 	node["ForPath"] = v.ForPath
 	return node
 }

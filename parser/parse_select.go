@@ -2449,10 +2449,24 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 			}, nil
 		}
 
-		return &ast.VariableTableReference{
+		// Parse optional alias for variable table reference
+		varRef := &ast.VariableTableReference{
 			Variable: &ast.VariableReference{Name: name},
 			ForPath:  false,
-		}, nil
+		}
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+			varRef.Alias = p.parseIdentifier()
+		} else if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
+				upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+				upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+				upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+				varRef.Alias = p.parseIdentifier()
+			}
+		}
+		return varRef, nil
 	}
 
 	// Check for table-valued function (identifier followed by parentheses that's not a table hint)
