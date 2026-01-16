@@ -381,6 +381,14 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterServerConfigurationSetSoftNumaStatementToJSON(s)
 	case *ast.AlterServerConfigurationSetExternalAuthenticationStatement:
 		return alterServerConfigurationSetExternalAuthenticationStatementToJSON(s)
+	case *ast.AlterServerConfigurationSetDiagnosticsLogStatement:
+		return alterServerConfigurationSetDiagnosticsLogStatementToJSON(s)
+	case *ast.AlterServerConfigurationSetFailoverClusterPropertyStatement:
+		return alterServerConfigurationSetFailoverClusterPropertyStatementToJSON(s)
+	case *ast.AlterServerConfigurationSetBufferPoolExtensionStatement:
+		return alterServerConfigurationSetBufferPoolExtensionStatementToJSON(s)
+	case *ast.AlterServerConfigurationSetHadrClusterStatement:
+		return alterServerConfigurationSetHadrClusterStatementToJSON(s)
 	case *ast.AlterServerConfigurationStatement:
 		return alterServerConfigurationStatementToJSON(s)
 	case *ast.AlterLoginAddDropCredentialStatement:
@@ -10412,6 +10420,136 @@ func literalOptionValueToJSON(o *ast.LiteralOptionValue) jsonNode {
 	}
 	if o.Value != nil {
 		node["Value"] = scalarExpressionToJSON(o.Value)
+	}
+	return node
+}
+
+func alterServerConfigurationSetDiagnosticsLogStatementToJSON(s *ast.AlterServerConfigurationSetDiagnosticsLogStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterServerConfigurationSetDiagnosticsLogStatement",
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			switch opt := o.(type) {
+			case *ast.AlterServerConfigurationDiagnosticsLogOption:
+				optNode := jsonNode{
+					"$type":      "AlterServerConfigurationDiagnosticsLogOption",
+					"OptionKind": opt.OptionKind,
+				}
+				if opt.OptionValue != nil {
+					switch v := opt.OptionValue.(type) {
+					case *ast.OnOffOptionValue:
+						optNode["OptionValue"] = onOffOptionValueToJSON(v)
+					case *ast.LiteralOptionValue:
+						optNode["OptionValue"] = literalOptionValueToJSON(v)
+					}
+				}
+				options[i] = optNode
+			case *ast.AlterServerConfigurationDiagnosticsLogMaxSizeOption:
+				optNode := jsonNode{
+					"$type":      "AlterServerConfigurationDiagnosticsLogMaxSizeOption",
+					"SizeUnit":   opt.SizeUnit,
+					"OptionKind": opt.OptionKind,
+				}
+				if opt.OptionValue != nil {
+					optNode["OptionValue"] = literalOptionValueToJSON(opt.OptionValue)
+				}
+				options[i] = optNode
+			}
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func alterServerConfigurationSetFailoverClusterPropertyStatementToJSON(s *ast.AlterServerConfigurationSetFailoverClusterPropertyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterServerConfigurationSetFailoverClusterPropertyStatement",
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			optNode := jsonNode{
+				"$type":      "AlterServerConfigurationFailoverClusterPropertyOption",
+				"OptionKind": o.OptionKind,
+			}
+			if o.OptionValue != nil {
+				optNode["OptionValue"] = literalOptionValueToJSON(o.OptionValue)
+			}
+			options[i] = optNode
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func alterServerConfigurationSetBufferPoolExtensionStatementToJSON(s *ast.AlterServerConfigurationSetBufferPoolExtensionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterServerConfigurationSetBufferPoolExtensionStatement",
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			optNode := jsonNode{
+				"$type": "AlterServerConfigurationBufferPoolExtensionContainerOption",
+			}
+			if len(o.Suboptions) > 0 {
+				suboptions := make([]jsonNode, len(o.Suboptions))
+				for j, sub := range o.Suboptions {
+					switch s := sub.(type) {
+					case *ast.AlterServerConfigurationBufferPoolExtensionOption:
+						subNode := jsonNode{
+							"$type":      "AlterServerConfigurationBufferPoolExtensionOption",
+							"OptionKind": s.OptionKind,
+						}
+						if s.OptionValue != nil {
+							subNode["OptionValue"] = literalOptionValueToJSON(s.OptionValue)
+						}
+						suboptions[j] = subNode
+					case *ast.AlterServerConfigurationBufferPoolExtensionSizeOption:
+						subNode := jsonNode{
+							"$type":      "AlterServerConfigurationBufferPoolExtensionSizeOption",
+							"SizeUnit":   s.SizeUnit,
+							"OptionKind": s.OptionKind,
+						}
+						if s.OptionValue != nil {
+							subNode["OptionValue"] = literalOptionValueToJSON(s.OptionValue)
+						}
+						suboptions[j] = subNode
+					}
+				}
+				optNode["Suboptions"] = suboptions
+			}
+			optNode["OptionKind"] = o.OptionKind
+			if o.OptionValue != nil {
+				optNode["OptionValue"] = onOffOptionValueToJSON(o.OptionValue)
+			}
+			options[i] = optNode
+		}
+		node["Options"] = options
+	}
+	return node
+}
+
+func alterServerConfigurationSetHadrClusterStatementToJSON(s *ast.AlterServerConfigurationSetHadrClusterStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterServerConfigurationSetHadrClusterStatement",
+	}
+	if len(s.Options) > 0 {
+		options := make([]jsonNode, len(s.Options))
+		for i, o := range s.Options {
+			optNode := jsonNode{
+				"$type":      "AlterServerConfigurationHadrClusterOption",
+				"OptionKind": o.OptionKind,
+			}
+			if o.OptionValue != nil {
+				optNode["OptionValue"] = literalOptionValueToJSON(o.OptionValue)
+			}
+			optNode["IsLocal"] = o.IsLocal
+			options[i] = optNode
+		}
+		node["Options"] = options
 	}
 	return node
 }

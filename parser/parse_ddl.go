@@ -3910,6 +3910,14 @@ func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error)
 		return p.parseAlterServerConfigurationSetProcessAffinityStatement()
 	case "EXTERNAL":
 		return p.parseAlterServerConfigurationSetExternalAuthenticationStatement()
+	case "DIAGNOSTICS":
+		return p.parseAlterServerConfigurationSetDiagnosticsLogStatement()
+	case "FAILOVER":
+		return p.parseAlterServerConfigurationSetFailoverClusterPropertyStatement()
+	case "BUFFER":
+		return p.parseAlterServerConfigurationSetBufferPoolExtensionStatement()
+	case "HADR":
+		return p.parseAlterServerConfigurationSetHadrClusterStatement()
 	default:
 		return nil, fmt.Errorf("unexpected token after SET: %s", p.curTok.Literal)
 	}
@@ -4122,6 +4130,321 @@ func (p *Parser) parseProcessAffinityRanges() ([]*ast.ProcessAffinityRange, erro
 	}
 
 	return ranges, nil
+}
+
+func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast.AlterServerConfigurationSetDiagnosticsLogStatement, error) {
+	// Consume DIAGNOSTICS
+	p.nextToken()
+
+	// Expect LOG
+	if strings.ToUpper(p.curTok.Literal) != "LOG" {
+		return nil, fmt.Errorf("expected LOG after DIAGNOSTICS, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterServerConfigurationSetDiagnosticsLogStatement{}
+
+	// Parse option(s)
+	optionKind := strings.ToUpper(p.curTok.Literal)
+
+	switch optionKind {
+	case "ON":
+		p.nextToken()
+		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogOption{
+			OptionKind:  "OnOff",
+			OptionValue: &ast.OnOffOptionValue{OptionState: "On"},
+		})
+	case "OFF":
+		p.nextToken()
+		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogOption{
+			OptionKind:  "OnOff",
+			OptionValue: &ast.OnOffOptionValue{OptionState: "Off"},
+		})
+	case "MAX_SIZE":
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		var value ast.ScalarExpression
+		sizeUnit := "Unspecified"
+		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+			value = &ast.DefaultLiteral{LiteralType: "Default", Value: "default"}
+			p.nextToken()
+		} else {
+			value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+			p.nextToken()
+			// Check for size unit
+			unitUpper := strings.ToUpper(p.curTok.Literal)
+			if unitUpper == "KB" || unitUpper == "MB" || unitUpper == "GB" {
+				sizeUnit = strings.ToUpper(unitUpper)
+				p.nextToken()
+			}
+		}
+		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogMaxSizeOption{
+			OptionKind:  "MaxSize",
+			OptionValue: &ast.LiteralOptionValue{Value: value},
+			SizeUnit:    sizeUnit,
+		})
+	case "MAX_FILES":
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		var value ast.ScalarExpression
+		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+			value = &ast.DefaultLiteral{LiteralType: "Default", Value: "default"}
+			p.nextToken()
+		} else {
+			value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+			p.nextToken()
+		}
+		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogOption{
+			OptionKind:  "MaxFiles",
+			OptionValue: &ast.LiteralOptionValue{Value: value},
+		})
+	case "PATH":
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+		}
+		var value ast.ScalarExpression
+		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+			value = &ast.DefaultLiteral{LiteralType: "Default", Value: "default"}
+			p.nextToken()
+		} else if p.curTok.Type == TokenString {
+			strVal := p.curTok.Literal
+			if len(strVal) >= 2 && strVal[0] == '\'' && strVal[len(strVal)-1] == '\'' {
+				strVal = strVal[1 : len(strVal)-1]
+			}
+			value = &ast.StringLiteral{LiteralType: "String", Value: strVal}
+			p.nextToken()
+		}
+		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogOption{
+			OptionKind:  "Path",
+			OptionValue: &ast.LiteralOptionValue{Value: value},
+		})
+	}
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterServerConfigurationSetFailoverClusterPropertyStatement() (*ast.AlterServerConfigurationSetFailoverClusterPropertyStatement, error) {
+	// Consume FAILOVER
+	p.nextToken()
+
+	// Expect CLUSTER
+	if strings.ToUpper(p.curTok.Literal) != "CLUSTER" {
+		return nil, fmt.Errorf("expected CLUSTER after FAILOVER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect PROPERTY
+	if strings.ToUpper(p.curTok.Literal) != "PROPERTY" {
+		return nil, fmt.Errorf("expected PROPERTY after CLUSTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterServerConfigurationSetFailoverClusterPropertyStatement{}
+
+	// Parse property name
+	propertyName := p.curTok.Literal
+	propertyNameUpper := strings.ToUpper(propertyName)
+	p.nextToken()
+
+	if p.curTok.Type == TokenEquals {
+		p.nextToken()
+	}
+
+	// Map property names to OptionKind values
+	optionKind := propertyName
+	switch propertyNameUpper {
+	case "VERBOSELOGGING":
+		optionKind = "VerboseLogging"
+	case "SQLDUMPERDUMPFLAGS":
+		optionKind = "SqlDumperDumpFlags"
+	case "SQLDUMPERDUMPPATH":
+		optionKind = "SqlDumperDumpPath"
+	case "SQLDUMPERDUMPTIMEOUT":
+		optionKind = "SqlDumperDumpTimeout"
+	case "FAILURECONDITIONLEVEL":
+		optionKind = "FailureConditionLevel"
+	case "HEALTHCHECKTIMEOUT":
+		optionKind = "HealthCheckTimeout"
+	}
+
+	var value ast.ScalarExpression
+	if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+		value = &ast.DefaultLiteral{LiteralType: "Default", Value: "default"}
+		p.nextToken()
+	} else if p.curTok.Type == TokenNumber {
+		value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		p.nextToken()
+	} else if p.curTok.Type == TokenBinary {
+		value = &ast.BinaryLiteral{LiteralType: "Binary", Value: p.curTok.Literal}
+		p.nextToken()
+	} else if p.curTok.Type == TokenString {
+		strVal := p.curTok.Literal
+		if len(strVal) >= 2 && strVal[0] == '\'' && strVal[len(strVal)-1] == '\'' {
+			strVal = strVal[1 : len(strVal)-1]
+		}
+		value = &ast.StringLiteral{LiteralType: "String", Value: strVal}
+		p.nextToken()
+	}
+
+	stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationFailoverClusterPropertyOption{
+		OptionKind:  optionKind,
+		OptionValue: &ast.LiteralOptionValue{Value: value},
+	})
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterServerConfigurationSetBufferPoolExtensionStatement() (*ast.AlterServerConfigurationSetBufferPoolExtensionStatement, error) {
+	// Consume BUFFER
+	p.nextToken()
+
+	// Expect POOL
+	if strings.ToUpper(p.curTok.Literal) != "POOL" {
+		return nil, fmt.Errorf("expected POOL after BUFFER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect EXTENSION
+	if strings.ToUpper(p.curTok.Literal) != "EXTENSION" {
+		return nil, fmt.Errorf("expected EXTENSION after POOL, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterServerConfigurationSetBufferPoolExtensionStatement{}
+
+	// Parse ON or OFF
+	stateUpper := strings.ToUpper(p.curTok.Literal)
+	containerOption := &ast.AlterServerConfigurationBufferPoolExtensionContainerOption{
+		OptionKind: "OnOff",
+	}
+
+	if stateUpper == "ON" {
+		containerOption.OptionValue = &ast.OnOffOptionValue{OptionState: "On"}
+		p.nextToken()
+
+		// Check for parentheses with suboptions
+		if p.curTok.Type == TokenLParen {
+			p.nextToken()
+
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optionKind := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+
+				if p.curTok.Type == TokenEquals {
+					p.nextToken()
+				}
+
+				switch optionKind {
+				case "FILENAME":
+					strVal := p.curTok.Literal
+					if len(strVal) >= 2 && strVal[0] == '\'' && strVal[len(strVal)-1] == '\'' {
+						strVal = strVal[1 : len(strVal)-1]
+					}
+					containerOption.Suboptions = append(containerOption.Suboptions,
+						&ast.AlterServerConfigurationBufferPoolExtensionOption{
+							OptionKind:  "FileName",
+							OptionValue: &ast.LiteralOptionValue{Value: &ast.StringLiteral{LiteralType: "String", Value: strVal}},
+						})
+					p.nextToken()
+				case "SIZE":
+					sizeVal := p.curTok.Literal
+					p.nextToken()
+					// Get size unit
+					sizeUnit := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					containerOption.Suboptions = append(containerOption.Suboptions,
+						&ast.AlterServerConfigurationBufferPoolExtensionSizeOption{
+							OptionKind:  "Size",
+							OptionValue: &ast.LiteralOptionValue{Value: &ast.IntegerLiteral{LiteralType: "Integer", Value: sizeVal}},
+							SizeUnit:    sizeUnit,
+						})
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				}
+			}
+
+			if p.curTok.Type == TokenRParen {
+				p.nextToken()
+			}
+		}
+	} else if stateUpper == "OFF" {
+		containerOption.OptionValue = &ast.OnOffOptionValue{OptionState: "Off"}
+		p.nextToken()
+	}
+
+	stmt.Options = append(stmt.Options, containerOption)
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterServerConfigurationSetHadrClusterStatement() (*ast.AlterServerConfigurationSetHadrClusterStatement, error) {
+	// Consume HADR
+	p.nextToken()
+
+	// Expect CLUSTER
+	if strings.ToUpper(p.curTok.Literal) != "CLUSTER" {
+		return nil, fmt.Errorf("expected CLUSTER after HADR, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect CONTEXT
+	if strings.ToUpper(p.curTok.Literal) != "CONTEXT" {
+		return nil, fmt.Errorf("expected CONTEXT after CLUSTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterServerConfigurationSetHadrClusterStatement{}
+
+	if p.curTok.Type == TokenEquals {
+		p.nextToken()
+	}
+
+	option := &ast.AlterServerConfigurationHadrClusterOption{
+		OptionKind: "Context",
+	}
+
+	if strings.ToUpper(p.curTok.Literal) == "LOCAL" {
+		option.IsLocal = true
+		p.nextToken()
+	} else if p.curTok.Type == TokenString {
+		strVal := p.curTok.Literal
+		if len(strVal) >= 2 && strVal[0] == '\'' && strVal[len(strVal)-1] == '\'' {
+			strVal = strVal[1 : len(strVal)-1]
+		}
+		option.OptionValue = &ast.LiteralOptionValue{Value: &ast.StringLiteral{LiteralType: "String", Value: strVal}}
+		p.nextToken()
+	}
+
+	stmt.Options = append(stmt.Options, option)
+
+	// Skip optional semicolon
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
 }
 
 func capitalizeFirst(s string) string {
