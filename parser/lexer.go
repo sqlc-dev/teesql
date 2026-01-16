@@ -803,11 +803,18 @@ func (l *Lexer) readNumber() Token {
 	for isDigit(l.ch) {
 		l.readChar()
 	}
-	// Handle decimal point
-	if l.ch == '.' && isDigit(l.peekChar()) {
-		l.readChar()
-		for isDigit(l.ch) {
-			l.readChar()
+	// Handle decimal point (including trailing decimal like "1.")
+	if l.ch == '.' {
+		// Peek ahead to see if this looks like a decimal number
+		// Allow: 1.5, 1., .5 patterns
+		nextCh := l.peekChar()
+		// Only consume the dot if it's followed by a digit, whitespace, comma, or paren
+		// (i.e., not followed by an identifier character that would make it a qualified name like "1.a")
+		if isDigit(nextCh) || nextCh == ',' || nextCh == ')' || nextCh == ' ' || nextCh == '\t' || nextCh == '\r' || nextCh == '\n' || nextCh == 0 {
+			l.readChar() // consume .
+			for isDigit(l.ch) {
+				l.readChar()
+			}
 		}
 	}
 	return Token{

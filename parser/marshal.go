@@ -6122,12 +6122,22 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 		// Fall through to parse constraints (NOT NULL, CHECK, FOREIGN KEY, etc.)
 	} else {
 		// Parse data type - be lenient if no data type is provided
-	dataType, err := p.parseDataTypeReference()
-	if err != nil {
-		// Lenient: return column definition without data type
-		return col, nil
-	}
-	col.DataType = dataType
+		// First check if this looks like a constraint keyword (column without explicit type)
+		upperLit := strings.ToUpper(p.curTok.Literal)
+		isConstraintKeyword := p.curTok.Type == TokenNot || p.curTok.Type == TokenNull ||
+			upperLit == "UNIQUE" || upperLit == "PRIMARY" || upperLit == "CHECK" ||
+			upperLit == "DEFAULT" || upperLit == "CONSTRAINT" || upperLit == "IDENTITY" ||
+			upperLit == "REFERENCES" || upperLit == "FOREIGN" || upperLit == "ROWGUIDCOL" ||
+			p.curTok.Type == TokenComma || p.curTok.Type == TokenRParen
+
+		if !isConstraintKeyword {
+			dataType, err := p.parseDataTypeReference()
+			if err != nil {
+				// Lenient: return column definition without data type
+				return col, nil
+			}
+			col.DataType = dataType
+		}
 
 	// Parse optional IDENTITY specification
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "IDENTITY" {
@@ -6138,10 +6148,10 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 
-			// Parse seed
-			if p.curTok.Type == TokenNumber {
-				identityOpts.IdentitySeed = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
-				p.nextToken()
+			// Parse seed - use parseScalarExpression to handle +/- signs and various literals
+			seed, err := p.parseScalarExpression()
+			if err == nil {
+				identityOpts.IdentitySeed = seed
 			}
 
 			// Expect comma
@@ -6149,9 +6159,9 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				p.nextToken() // consume ,
 
 				// Parse increment
-				if p.curTok.Type == TokenNumber {
-					identityOpts.IdentityIncrement = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
-					p.nextToken()
+				increment, err := p.parseScalarExpression()
+				if err == nil {
+					identityOpts.IdentityIncrement = increment
 				}
 			}
 
@@ -6256,6 +6266,39 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 				}
 			}
+			// Parse optional column list (column ASC, column DESC, ...)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colRef := &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Identifiers: []*ast.Identifier{p.parseIdentifier()},
+							Count:       1,
+						},
+					}
+					sortOrder := ast.SortOrderNotSpecified
+					if strings.ToUpper(p.curTok.Literal) == "ASC" {
+						sortOrder = ast.SortOrderAscending
+						p.nextToken()
+					} else if strings.ToUpper(p.curTok.Literal) == "DESC" {
+						sortOrder = ast.SortOrderDescending
+						p.nextToken()
+					}
+					constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+						Column:    colRef,
+						SortOrder: sortOrder,
+					})
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
 			// Parse WITH (index_options)
 			if strings.ToUpper(p.curTok.Literal) == "WITH" {
 				p.nextToken() // consume WITH
@@ -6270,7 +6313,10 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			col.Constraints = append(col.Constraints, constraint)
 		} else if p.curTok.Type == TokenDefault {
 			p.nextToken() // consume DEFAULT
-			defaultConstraint := &ast.DefaultConstraintDefinition{}
+			defaultConstraint := &ast.DefaultConstraintDefinition{
+				ConstraintIdentifier: constraintName,
+			}
+			constraintName = nil // clear for next constraint
 
 			// Parse the default expression
 			expr, err := p.parseScalarExpression()
@@ -6299,8 +6345,10 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					p.nextToken() // consume )
 				}
 				col.Constraints = append(col.Constraints, &ast.CheckConstraintDefinition{
-					CheckCondition: cond,
+					CheckCondition:       cond,
+					ConstraintIdentifier: constraintName,
 				})
+				constraintName = nil // clear for next constraint
 			}
 		} else if upperLit == "FOREIGN" {
 			// Parse FOREIGN KEY constraint for column
