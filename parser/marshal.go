@@ -150,6 +150,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterDatabaseRebuildLogStatementToJSON(s)
 	case *ast.AlterDatabaseScopedConfigurationClearStatement:
 		return alterDatabaseScopedConfigurationClearStatementToJSON(s)
+	case *ast.AlterDatabaseScopedConfigurationSetStatement:
+		return alterDatabaseScopedConfigurationSetStatementToJSON(s)
 	case *ast.AlterResourceGovernorStatement:
 		return alterResourceGovernorStatementToJSON(s)
 	case *ast.CreateResourcePoolStatement:
@@ -17960,6 +17962,65 @@ func databaseConfigurationClearOptionToJSON(o *ast.DatabaseConfigurationClearOpt
 	}
 	if o.PlanHandle != nil {
 		node["PlanHandle"] = scalarExpressionToJSON(o.PlanHandle)
+	}
+	return node
+}
+
+func alterDatabaseScopedConfigurationSetStatementToJSON(s *ast.AlterDatabaseScopedConfigurationSetStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterDatabaseScopedConfigurationSetStatement",
+	}
+	if s.Option != nil {
+		node["Option"] = databaseConfigurationSetOptionToJSON(s.Option)
+	}
+	node["Secondary"] = s.Secondary
+	return node
+}
+
+func databaseConfigurationSetOptionToJSON(o ast.DatabaseConfigurationSetOption) jsonNode {
+	switch opt := o.(type) {
+	case *ast.MaxDopConfigurationOption:
+		node := jsonNode{
+			"$type":   "MaxDopConfigurationOption",
+			"Primary": opt.Primary,
+		}
+		if opt.Value != nil {
+			node["Value"] = scalarExpressionToJSON(opt.Value)
+		}
+		node["OptionKind"] = opt.OptionKind
+		return node
+	case *ast.OnOffPrimaryConfigurationOption:
+		return jsonNode{
+			"$type":       "OnOffPrimaryConfigurationOption",
+			"OptionState": opt.OptionState,
+			"OptionKind":  opt.OptionKind,
+		}
+	case *ast.GenericConfigurationOption:
+		node := jsonNode{
+			"$type": "GenericConfigurationOption",
+		}
+		if opt.GenericOptionState != nil {
+			node["GenericOptionState"] = identifierOrScalarExpressionToJSON(opt.GenericOptionState)
+		}
+		node["OptionKind"] = opt.OptionKind
+		if opt.GenericOptionKind != nil {
+			node["GenericOptionKind"] = identifierToJSON(opt.GenericOptionKind)
+		}
+		return node
+	default:
+		return jsonNode{"$type": "UnknownDatabaseConfigurationSetOption"}
+	}
+}
+
+func identifierOrScalarExpressionToJSON(i *ast.IdentifierOrScalarExpression) jsonNode {
+	node := jsonNode{
+		"$type": "IdentifierOrScalarExpression",
+	}
+	if i.Identifier != nil {
+		node["Identifier"] = identifierToJSON(i.Identifier)
+	}
+	if i.ScalarExpression != nil {
+		node["ScalarExpression"] = scalarExpressionToJSON(i.ScalarExpression)
 	}
 	return node
 }

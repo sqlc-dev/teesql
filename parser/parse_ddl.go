@@ -3706,46 +3706,162 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationStatement() (ast.Statement
 	// Consume CONFIGURATION
 	p.nextToken()
 
-	stmt := &ast.AlterDatabaseScopedConfigurationClearStatement{}
-
+	secondary := false
 	// Check for FOR SECONDARY
 	if strings.ToUpper(p.curTok.Literal) == "FOR" {
 		p.nextToken() // consume FOR
 		if strings.ToUpper(p.curTok.Literal) == "SECONDARY" {
-			stmt.Secondary = true
+			secondary = true
 			p.nextToken() // consume SECONDARY
 		}
 	}
 
-	// Check for CLEAR
-	if strings.ToUpper(p.curTok.Literal) == "CLEAR" {
-		p.nextToken() // consume CLEAR
+	// Check for CLEAR or SET
+	action := strings.ToUpper(p.curTok.Literal)
+	if action == "CLEAR" {
+		return p.parseAlterDatabaseScopedConfigurationClearStatement(secondary)
+	} else if action == "SET" || p.curTok.Type == TokenSet {
+		return p.parseAlterDatabaseScopedConfigurationSetStatement(secondary)
+	}
 
-		// Parse option (PROCEDURE_CACHE)
-		optionKind := strings.ToUpper(p.curTok.Literal)
-		p.nextToken()
+	// Unknown action, skip to end
+	p.skipToEndOfStatement()
+	return &ast.AlterDatabaseScopedConfigurationClearStatement{Secondary: secondary}, nil
+}
 
-		option := &ast.DatabaseConfigurationClearOption{}
-		if optionKind == "PROCEDURE_CACHE" {
-			option.OptionKind = "ProcedureCache"
-		} else {
-			option.OptionKind = optionKind
+func (p *Parser) parseAlterDatabaseScopedConfigurationClearStatement(secondary bool) (ast.Statement, error) {
+	p.nextToken() // consume CLEAR
+
+	stmt := &ast.AlterDatabaseScopedConfigurationClearStatement{
+		Secondary: secondary,
+	}
+
+	// Parse option (PROCEDURE_CACHE)
+	optionKind := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+
+	option := &ast.DatabaseConfigurationClearOption{}
+	if optionKind == "PROCEDURE_CACHE" {
+		option.OptionKind = "ProcedureCache"
+	} else {
+		option.OptionKind = optionKind
+	}
+
+	// Check for optional plan handle (binary literal)
+	if p.curTok.Type == TokenBinary {
+		option.PlanHandle = &ast.BinaryLiteral{
+			LiteralType: "Binary",
+			Value:       p.curTok.Literal,
 		}
+		p.nextToken()
+	}
 
-		// Check for optional plan handle (binary literal)
-		if p.curTok.Type == TokenBinary {
-			option.PlanHandle = &ast.BinaryLiteral{
-				LiteralType: "Binary",
-				Value:       p.curTok.Literal,
+	stmt.Option = option
+	p.skipToEndOfStatement()
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary bool) (ast.Statement, error) {
+	p.nextToken() // consume SET
+
+	stmt := &ast.AlterDatabaseScopedConfigurationSetStatement{
+		Secondary: secondary,
+	}
+
+	optionName := strings.ToUpper(p.curTok.Literal)
+	p.nextToken() // consume option name
+
+	// Expect =
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+	}
+
+	switch optionName {
+	case "MAXDOP":
+		// MAXDOP = N | PRIMARY
+		if strings.ToUpper(p.curTok.Literal) == "PRIMARY" {
+			stmt.Option = &ast.MaxDopConfigurationOption{
+				OptionKind: "MaxDop",
+				Primary:    true,
 			}
 			p.nextToken()
+		} else {
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Option = &ast.MaxDopConfigurationOption{
+				OptionKind: "MaxDop",
+				Value:      val,
+				Primary:    false,
+			}
+		}
+	case "LEGACY_CARDINALITY_ESTIMATION":
+		state := p.parseOnOffPrimaryState()
+		stmt.Option = &ast.OnOffPrimaryConfigurationOption{
+			OptionKind:  "LegacyCardinalityEstimate",
+			OptionState: state,
+		}
+	case "PARAMETER_SNIFFING":
+		state := p.parseOnOffPrimaryState()
+		stmt.Option = &ast.OnOffPrimaryConfigurationOption{
+			OptionKind:  "ParameterSniffing",
+			OptionState: state,
+		}
+	case "QUERY_OPTIMIZER_HOTFIXES":
+		state := p.parseOnOffPrimaryState()
+		stmt.Option = &ast.OnOffPrimaryConfigurationOption{
+			OptionKind:  "QueryOptimizerHotFixes",
+			OptionState: state,
+		}
+	default:
+		// Handle generic options (like DW_COMPATIBILITY_LEVEL)
+		optionKindIdent := &ast.Identifier{
+			Value:     optionName,
+			QuoteType: "NotQuoted",
 		}
 
-		stmt.Option = option
+		var state *ast.IdentifierOrScalarExpression
+		// Check if value is an identifier or a number
+		if p.curTok.Type == TokenNumber {
+			val, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			state = &ast.IdentifierOrScalarExpression{
+				ScalarExpression: val,
+			}
+		} else {
+			// It's an identifier (like ON, OFF, PRIMARY, or a custom value)
+			state = &ast.IdentifierOrScalarExpression{
+				Identifier: p.parseIdentifier(),
+			}
+		}
+
+		stmt.Option = &ast.GenericConfigurationOption{
+			OptionKind:         "MaxDop", // This seems odd but matches the expected output
+			GenericOptionKind:  optionKindIdent,
+			GenericOptionState: state,
+		}
 	}
 
 	p.skipToEndOfStatement()
 	return stmt, nil
+}
+
+func (p *Parser) parseOnOffPrimaryState() string {
+	state := strings.ToUpper(p.curTok.Literal)
+	p.nextToken()
+	switch state {
+	case "ON":
+		return "On"
+	case "OFF":
+		return "Off"
+	case "PRIMARY":
+		return "Primary"
+	default:
+		return capitalizeFirst(state)
+	}
 }
 
 func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error) {

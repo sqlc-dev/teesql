@@ -549,3 +549,55 @@ type QueryStoreWaitStatsCaptureOption struct {
 
 func (q *QueryStoreWaitStatsCaptureOption) node()             {}
 func (q *QueryStoreWaitStatsCaptureOption) queryStoreOption() {}
+
+// AlterDatabaseScopedConfigurationSetStatement represents ALTER DATABASE SCOPED CONFIGURATION SET statement
+type AlterDatabaseScopedConfigurationSetStatement struct {
+	Secondary bool
+	Option    DatabaseConfigurationSetOption
+}
+
+func (a *AlterDatabaseScopedConfigurationSetStatement) node()      {}
+func (a *AlterDatabaseScopedConfigurationSetStatement) statement() {}
+
+// DatabaseConfigurationSetOption is an interface for scoped configuration options
+type DatabaseConfigurationSetOption interface {
+	Node
+	databaseConfigurationSetOption()
+}
+
+// MaxDopConfigurationOption represents MAXDOP configuration option
+type MaxDopConfigurationOption struct {
+	OptionKind string           // "MaxDop"
+	Value      ScalarExpression // Integer value
+	Primary    bool             // true if set to PRIMARY
+}
+
+func (m *MaxDopConfigurationOption) node()                         {}
+func (m *MaxDopConfigurationOption) databaseConfigurationSetOption() {}
+
+// OnOffPrimaryConfigurationOption represents ON/OFF/PRIMARY configuration option
+type OnOffPrimaryConfigurationOption struct {
+	OptionKind  string // "LegacyCardinalityEstimate", "ParameterSniffing", "QueryOptimizerHotFixes"
+	OptionState string // "On", "Off", "Primary"
+}
+
+func (o *OnOffPrimaryConfigurationOption) node()                         {}
+func (o *OnOffPrimaryConfigurationOption) databaseConfigurationSetOption() {}
+
+// GenericConfigurationOption represents a generic configuration option
+type GenericConfigurationOption struct {
+	OptionKind         string                       // "MaxDop"
+	GenericOptionKind  *Identifier                  // The custom option name
+	GenericOptionState *IdentifierOrScalarExpression // The value (identifier or scalar)
+}
+
+func (g *GenericConfigurationOption) node()                         {}
+func (g *GenericConfigurationOption) databaseConfigurationSetOption() {}
+
+// IdentifierOrScalarExpression represents either an identifier or a scalar expression
+type IdentifierOrScalarExpression struct {
+	Identifier       *Identifier
+	ScalarExpression ScalarExpression
+}
+
+func (i *IdentifierOrScalarExpression) node() {}
