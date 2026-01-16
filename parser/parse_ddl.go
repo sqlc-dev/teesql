@@ -10457,6 +10457,154 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 						OptionState: state,
 					}
 					stmt.IndexOptions = append(stmt.IndexOptions, opt)
+				case "PAD_INDEX":
+					stateUpper := strings.ToUpper(p.curTok.Literal)
+					state := "On"
+					if stateUpper == "OFF" {
+						state = "Off"
+					}
+					p.nextToken()
+					opt := &ast.IndexStateOption{
+						OptionKind:  "PadIndex",
+						OptionState: state,
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, opt)
+				case "FILLFACTOR":
+					opt := &ast.IndexExpressionOption{
+						OptionKind: "FillFactor",
+						Expression: &ast.IntegerLiteral{
+							LiteralType: "Integer",
+							Value:       p.curTok.Literal,
+						},
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, opt)
+					p.nextToken()
+				case "ONLINE":
+					stateUpper := strings.ToUpper(p.curTok.Literal)
+					state := "On"
+					if stateUpper == "OFF" {
+						state = "Off"
+					}
+					p.nextToken()
+					opt := &ast.OnlineIndexOption{
+						OptionKind:  "Online",
+						OptionState: state,
+					}
+					// Check for (WAIT_AT_LOW_PRIORITY ...)
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+						if strings.ToUpper(p.curTok.Literal) == "WAIT_AT_LOW_PRIORITY" {
+							p.nextToken() // consume WAIT_AT_LOW_PRIORITY
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								lwOpt := &ast.OnlineIndexLowPriorityLockWaitOption{}
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									lwOptName := strings.ToUpper(p.curTok.Literal)
+									p.nextToken()
+									if p.curTok.Type == TokenEquals {
+										p.nextToken()
+									}
+									if lwOptName == "MAX_DURATION" {
+										maxDurOpt := &ast.LowPriorityLockWaitMaxDurationOption{
+											OptionKind:  "MaxDuration",
+											MaxDuration: &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal},
+										}
+										p.nextToken()
+										// Check for MINUTES
+										if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+											maxDurOpt.Unit = "Minutes"
+											p.nextToken()
+										}
+										lwOpt.Options = append(lwOpt.Options, maxDurOpt)
+									} else if lwOptName == "ABORT_AFTER_WAIT" {
+										abortVal := strings.ToUpper(p.curTok.Literal)
+										var abortAfterWait string
+										switch abortVal {
+										case "NONE":
+											abortAfterWait = "None"
+										case "SELF":
+											abortAfterWait = "Self"
+										case "BLOCKERS":
+											abortAfterWait = "Blockers"
+										default:
+											abortAfterWait = abortVal
+										}
+										p.nextToken()
+										lwOpt.Options = append(lwOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+											OptionKind:     "AbortAfterWait",
+											AbortAfterWait: abortAfterWait,
+										})
+									}
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken() // consume inner )
+								}
+								opt.LowPriorityLockWaitOption = lwOpt
+							}
+						}
+						if p.curTok.Type == TokenRParen {
+							p.nextToken() // consume outer )
+						}
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, opt)
+				case "DATA_COMPRESSION":
+					compLevel := strings.ToUpper(p.curTok.Literal)
+					var compressionLevel string
+					switch compLevel {
+					case "NONE":
+						compressionLevel = "None"
+					case "ROW":
+						compressionLevel = "Row"
+					case "PAGE":
+						compressionLevel = "Page"
+					case "COLUMNSTORE":
+						compressionLevel = "ColumnStore"
+					case "COLUMNSTORE_ARCHIVE":
+						compressionLevel = "ColumnStoreArchive"
+					default:
+						compressionLevel = compLevel
+					}
+					p.nextToken()
+					opt := &ast.DataCompressionOption{
+						OptionKind:       "DataCompression",
+						CompressionLevel: compressionLevel,
+					}
+					// Check for ON PARTITIONS (...)
+					if p.curTok.Type == TokenOn {
+						p.nextToken() // consume ON
+						if strings.ToUpper(p.curTok.Literal) == "PARTITIONS" {
+							p.nextToken() // consume PARTITIONS
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									pr := &ast.CompressionPartitionRange{}
+									if p.curTok.Type == TokenNumber {
+										pr.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+										p.nextToken()
+									}
+									// Check for TO range
+									if strings.ToUpper(p.curTok.Literal) == "TO" {
+										p.nextToken() // consume TO
+										if p.curTok.Type == TokenNumber {
+											pr.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+											p.nextToken()
+										}
+									}
+									opt.PartitionRanges = append(opt.PartitionRanges, pr)
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken() // consume )
+								}
+							}
+						}
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, opt)
 				default:
 					// Skip unknown options
 					p.nextToken()
