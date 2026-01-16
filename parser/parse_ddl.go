@@ -2191,6 +2191,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterSearchPropertyListStatement()
 		case "AVAILABILITY":
 			return p.parseAlterAvailabilityGroupStatement()
+		case "MATERIALIZED":
+			return p.parseAlterMaterializedViewStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:

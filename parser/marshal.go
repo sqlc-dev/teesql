@@ -4570,25 +4570,32 @@ func viewOptionToJSON(opt ast.ViewOption) jsonNode {
 			"OptionKind": o.OptionKind,
 		}
 		if o.Value != nil {
-			valueNode := jsonNode{
-				"$type": "ViewHashDistributionPolicy",
-			}
-			if o.Value.DistributionColumn != nil {
-				valueNode["DistributionColumn"] = identifierToJSON(o.Value.DistributionColumn)
-			}
-			if len(o.Value.DistributionColumns) > 0 {
-				cols := make([]jsonNode, len(o.Value.DistributionColumns))
-				for i, c := range o.Value.DistributionColumns {
-					// First column is same as DistributionColumn, use $ref
-					if i == 0 && o.Value.DistributionColumn != nil {
-						cols[i] = jsonNode{"$ref": "Identifier"}
-					} else {
-						cols[i] = identifierToJSON(c)
-					}
+			switch v := o.Value.(type) {
+			case *ast.ViewHashDistributionPolicy:
+				valueNode := jsonNode{
+					"$type": "ViewHashDistributionPolicy",
 				}
-				valueNode["DistributionColumns"] = cols
+				if v.DistributionColumn != nil {
+					valueNode["DistributionColumn"] = identifierToJSON(v.DistributionColumn)
+				}
+				if len(v.DistributionColumns) > 0 {
+					cols := make([]jsonNode, len(v.DistributionColumns))
+					for i, c := range v.DistributionColumns {
+						// First column is same as DistributionColumn, use $ref
+						if i == 0 && v.DistributionColumn != nil {
+							cols[i] = jsonNode{"$ref": "Identifier"}
+						} else {
+							cols[i] = identifierToJSON(c)
+						}
+					}
+					valueNode["DistributionColumns"] = cols
+				}
+				node["Value"] = valueNode
+			case *ast.ViewRoundRobinDistributionPolicy:
+				node["Value"] = jsonNode{
+					"$type": "ViewRoundRobinDistributionPolicy",
+				}
 			}
-			node["Value"] = valueNode
 		}
 		return node
 	case *ast.ViewForAppendOption:

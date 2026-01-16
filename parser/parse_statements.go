@@ -4833,7 +4833,7 @@ func (p *Parser) parseCreateMaterializedViewStatement() (*ast.CreateViewStatemen
 				p.nextToken()
 
 				if optionName == "DISTRIBUTION" {
-					// Parse DISTRIBUTION = HASH(col1, col2, ...)
+					// Parse DISTRIBUTION = HASH(col1, col2, ...) or DISTRIBUTION = ROUND_ROBIN
 					if p.curTok.Type == TokenEquals {
 						p.nextToken()
 					}
@@ -4841,17 +4841,14 @@ func (p *Parser) parseCreateMaterializedViewStatement() (*ast.CreateViewStatemen
 						p.nextToken()
 						if p.curTok.Type == TokenLParen {
 							p.nextToken()
-							distOpt := &ast.ViewDistributionOption{
-								OptionKind: "Distribution",
-								Value:      &ast.ViewHashDistributionPolicy{},
-							}
+							hashPolicy := &ast.ViewHashDistributionPolicy{}
 							// Parse column list
 							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 								col := p.parseIdentifier()
-								if distOpt.Value.DistributionColumn == nil {
-									distOpt.Value.DistributionColumn = col
+								if hashPolicy.DistributionColumn == nil {
+									hashPolicy.DistributionColumn = col
 								}
-								distOpt.Value.DistributionColumns = append(distOpt.Value.DistributionColumns, col)
+								hashPolicy.DistributionColumns = append(hashPolicy.DistributionColumns, col)
 								if p.curTok.Type == TokenComma {
 									p.nextToken()
 								} else {
@@ -4861,8 +4858,17 @@ func (p *Parser) parseCreateMaterializedViewStatement() (*ast.CreateViewStatemen
 							if p.curTok.Type == TokenRParen {
 								p.nextToken()
 							}
-							stmt.ViewOptions = append(stmt.ViewOptions, distOpt)
+							stmt.ViewOptions = append(stmt.ViewOptions, &ast.ViewDistributionOption{
+								OptionKind: "Distribution",
+								Value:      hashPolicy,
+							})
 						}
+					} else if strings.ToUpper(p.curTok.Literal) == "ROUND_ROBIN" {
+						p.nextToken() // consume ROUND_ROBIN
+						stmt.ViewOptions = append(stmt.ViewOptions, &ast.ViewDistributionOption{
+							OptionKind: "Distribution",
+							Value:      &ast.ViewRoundRobinDistributionPolicy{},
+						})
 					}
 				} else if optionName == "FOR_APPEND" {
 					stmt.ViewOptions = append(stmt.ViewOptions, &ast.ViewForAppendOption{
@@ -4896,6 +4902,40 @@ func (p *Parser) parseCreateMaterializedViewStatement() (*ast.CreateViewStatemen
 		return stmt, nil
 	}
 	stmt.SelectStatement = selStmt
+
+	return stmt, nil
+}
+
+func (p *Parser) parseAlterMaterializedViewStatement() (*ast.AlterViewStatement, error) {
+	// Consume MATERIALIZED
+	p.nextToken()
+
+	// Expect VIEW
+	if p.curTok.Type != TokenView {
+		return nil, fmt.Errorf("expected VIEW after MATERIALIZED, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	stmt := &ast.AlterViewStatement{
+		IsMaterialized: true,
+	}
+
+	// Parse view name
+	son, err := p.parseSchemaObjectName()
+	if err != nil {
+		return nil, err
+	}
+	stmt.SchemaObjectName = son
+
+	// Parse REBUILD or DISABLE
+	switch strings.ToUpper(p.curTok.Literal) {
+	case "REBUILD":
+		stmt.IsRebuild = true
+		p.nextToken()
+	case "DISABLE":
+		stmt.IsDisable = true
+		p.nextToken()
+	}
 
 	return stmt, nil
 }
