@@ -7151,6 +7151,12 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 				return nil, err
 			}
 			stmt.Options = append(stmt.Options, rdaOpt)
+		} else if optionName == "LEDGER" {
+			opt, err := p.parseLedgerTableOption()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = append(stmt.Options, opt)
 		}
 
 		if p.curTok.Type == TokenComma {
@@ -7229,6 +7235,106 @@ func (p *Parser) parseSystemVersioningTableOption() (*ast.SystemVersioningTableO
 					return nil, err
 				}
 				opt.RetentionPeriod = retPeriod
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+		}
+
+		// Consume )
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	return opt, nil
+}
+
+func (p *Parser) parseLedgerTableOption() (*ast.LedgerTableOption, error) {
+	opt := &ast.LedgerTableOption{
+		AppendOnly:       "NotSet",
+		OptionKind:       "LockEscalation",
+		LedgerViewOption: &ast.LedgerViewOption{OptionKind: "LockEscalation"}, // Always created per ScriptDom
+	}
+
+	// Expect =
+	if p.curTok.Type != TokenEquals {
+		return nil, fmt.Errorf("expected = after LEDGER, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse ON or OFF
+	stateVal := strings.ToUpper(p.curTok.Literal)
+	if stateVal == "ON" {
+		opt.OptionState = "On"
+	} else if stateVal == "OFF" {
+		opt.OptionState = "Off"
+	} else {
+		return nil, fmt.Errorf("expected ON or OFF after =, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Check for optional sub-options in parentheses
+	if p.curTok.Type == TokenLParen {
+		p.nextToken()
+
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			subOptName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken()
+			}
+
+			switch subOptName {
+			case "LEDGER_VIEW":
+				viewOpt := &ast.LedgerViewOption{OptionKind: "LockEscalation"}
+				viewName, err := p.parseSchemaObjectName()
+				if err != nil {
+					return nil, err
+				}
+				viewOpt.ViewName = viewName
+
+				// Check for optional column name mappings in parentheses
+				if p.curTok.Type == TokenLParen {
+					p.nextToken()
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						colOptName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken()
+						}
+
+						switch colOptName {
+						case "TRANSACTION_ID_COLUMN_NAME":
+							viewOpt.TransactionIdColumnName = p.parseIdentifier()
+						case "SEQUENCE_NUMBER_COLUMN_NAME":
+							viewOpt.SequenceNumberColumnName = p.parseIdentifier()
+						case "OPERATION_TYPE_COLUMN_NAME":
+							viewOpt.OperationTypeColumnName = p.parseIdentifier()
+						case "OPERATION_TYPE_DESC_COLUMN_NAME":
+							viewOpt.OperationTypeDescColumnName = p.parseIdentifier()
+						}
+
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
+				}
+				opt.LedgerViewOption = viewOpt
+
+			case "APPEND_ONLY":
+				appendVal := strings.ToUpper(p.curTok.Literal)
+				if appendVal == "ON" {
+					opt.AppendOnly = "On"
+				} else if appendVal == "OFF" {
+					opt.AppendOnly = "Off"
+				}
+				p.nextToken()
 			}
 
 			if p.curTok.Type == TokenComma {

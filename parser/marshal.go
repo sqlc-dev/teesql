@@ -5680,6 +5680,12 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							return nil, err
 						}
 						stmt.Options = append(stmt.Options, opt)
+					} else if optionName == "LEDGER" {
+						opt, err := p.parseLedgerTableOption()
+						if err != nil {
+							return nil, err
+						}
+						stmt.Options = append(stmt.Options, opt)
 					} else if optionName == "CLUSTERED" {
 						// Could be CLUSTERED INDEX or CLUSTERED COLUMNSTORE INDEX
 						if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
@@ -7511,6 +7517,22 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					col.GeneratedAlways = "UserNameStart"
 				} else if startEnd == "END" {
 					col.GeneratedAlways = "UserNameEnd"
+				}
+			} else if genType == "TRANSACTION_ID" {
+				startEnd := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				if startEnd == "START" {
+					col.GeneratedAlways = "TransactionIdStart"
+				} else if startEnd == "END" {
+					col.GeneratedAlways = "TransactionIdEnd"
+				}
+			} else if genType == "SEQUENCE_NUMBER" {
+				startEnd := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				if startEnd == "START" {
+					col.GeneratedAlways = "SequenceNumberStart"
+				} else if startEnd == "END" {
+					col.GeneratedAlways = "SequenceNumberEnd"
 				}
 			}
 		} else if p.curTok.Type == TokenNot {
@@ -9741,6 +9763,8 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		return node
 	case *ast.SystemVersioningTableOption:
 		return systemVersioningTableOptionToJSON(o)
+	case *ast.LedgerTableOption:
+		return ledgerTableOptionToJSON(o)
 	case *ast.MemoryOptimizedTableOption:
 		return jsonNode{
 			"$type":       "MemoryOptimizedTableOption",
@@ -17722,6 +17746,42 @@ func retentionPeriodDefinitionToJSON(r *ast.RetentionPeriodDefinition) jsonNode 
 	}
 	node["Units"] = r.Units
 	node["IsInfinity"] = r.IsInfinity
+	return node
+}
+
+func ledgerTableOptionToJSON(o *ast.LedgerTableOption) jsonNode {
+	node := jsonNode{
+		"$type":       "LedgerTableOption",
+		"OptionState": o.OptionState,
+		"AppendOnly":  o.AppendOnly,
+	}
+	if o.LedgerViewOption != nil {
+		node["LedgerViewOption"] = ledgerViewOptionToJSON(o.LedgerViewOption)
+	}
+	node["OptionKind"] = o.OptionKind
+	return node
+}
+
+func ledgerViewOptionToJSON(o *ast.LedgerViewOption) jsonNode {
+	node := jsonNode{
+		"$type": "LedgerViewOption",
+	}
+	if o.ViewName != nil {
+		node["ViewName"] = schemaObjectNameToJSON(o.ViewName)
+	}
+	if o.TransactionIdColumnName != nil {
+		node["TransactionIdColumnName"] = identifierToJSON(o.TransactionIdColumnName)
+	}
+	if o.SequenceNumberColumnName != nil {
+		node["SequenceNumberColumnName"] = identifierToJSON(o.SequenceNumberColumnName)
+	}
+	if o.OperationTypeColumnName != nil {
+		node["OperationTypeColumnName"] = identifierToJSON(o.OperationTypeColumnName)
+	}
+	if o.OperationTypeDescColumnName != nil {
+		node["OperationTypeDescColumnName"] = identifierToJSON(o.OperationTypeDescColumnName)
+	}
+	node["OptionKind"] = o.OptionKind
 	return node
 }
 
