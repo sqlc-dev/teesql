@@ -9589,9 +9589,16 @@ func (p *Parser) parseCreateEventNotificationFromEvent() (*ast.CreateEventNotifi
 
 			// Convert event name to PascalCase and determine if it's a group or type
 			pascalName := eventNameToPascalCase(eventName)
+			upperName := strings.ToUpper(eventName)
 
-			// If name ends with "Events" (after conversion), it's a group
-			if strings.HasSuffix(strings.ToUpper(eventName), "_EVENTS") || strings.HasSuffix(strings.ToUpper(eventName), "EVENTS") {
+			// Determine if it's a group or a type
+			// Groups are: names ending in "_EVENTS" or "EVENTS", or TRC_* or DDL_* prefixed names
+			isGroup := strings.HasSuffix(upperName, "_EVENTS") ||
+				strings.HasSuffix(upperName, "EVENTS") ||
+				strings.HasPrefix(upperName, "TRC_") ||
+				strings.HasPrefix(upperName, "DDL_")
+
+			if isGroup {
 				stmt.EventTypeGroups = append(stmt.EventTypeGroups, &ast.EventGroupContainer{
 					EventGroup: pascalName,
 				})
@@ -9658,7 +9665,52 @@ func (p *Parser) parseCreateEventNotificationFromEvent() (*ast.CreateEventNotifi
 }
 
 // eventNameToPascalCase converts an event name like "Object_Created" or "DDL_CREDENTIAL_EVENTS" to PascalCase.
+// eventTypeNameMap maps uppercase event type names to their correct PascalCase equivalents
+var eventTypeNameMap = map[string]string{
+	// Audit events with DB (must be uppercase)
+	"AUDIT_ADD_DB_USER_EVENT":                        "AuditAddDBUserEvent",
+	"AUDIT_ADD_MEMBER_TO_DB_ROLE_EVENT":              "AuditAddMemberToDBRoleEvent",
+	"AUDIT_ADDLOGIN_EVENT":                           "AuditAddLoginEvent",
+	// Log events
+	"ERRORLOG":                                       "ErrorLog",
+	"EVENTLOG":                                       "EventLog",
+	// OLEDB events
+	"OLEDB_DATAREAD_EVENT":                           "OledbDataReadEvent",
+	"OLEDB_QUERYINTERFACE_EVENT":                     "OledbQueryInterfaceEvent",
+	// Showplan events
+	"SHOWPLAN_ALL_FOR_QUERY_COMPILE":                 "ShowPlanAllForQueryCompile",
+	"SHOWPLAN_XML_FOR_QUERY_COMPILE":                 "ShowPlanXmlForQueryCompile",
+	"SHOWPLAN_XML":                                   "ShowPlanXml",
+	"SHOWPLAN_XML_STATISTICS_PROFILE":                "ShowPlanXmlStatisticsProfile",
+	// SP cache events
+	"SP_CACHEINSERT":                                 "SpCacheInsert",
+	"SP_CACHEMISS":                                   "SpCacheMiss",
+	"SP_CACHEREMOVE":                                 "SpCacheRemove",
+	// Recompile events
+	"SQL_STMTRECOMPILE":                              "SqlStmtRecompile",
+	// User configurable events
+	"USERCONFIGURABLE_0":                             "UserConfigurable0",
+	"USERCONFIGURABLE_1":                             "UserConfigurable1",
+	"USERCONFIGURABLE_2":                             "UserConfigurable2",
+	"USERCONFIGURABLE_3":                             "UserConfigurable3",
+	"USERCONFIGURABLE_4":                             "UserConfigurable4",
+	"USERCONFIGURABLE_5":                             "UserConfigurable5",
+	"USERCONFIGURABLE_6":                             "UserConfigurable6",
+	"USERCONFIGURABLE_7":                             "UserConfigurable7",
+	"USERCONFIGURABLE_8":                             "UserConfigurable8",
+	"USERCONFIGURABLE_9":                             "UserConfigurable9",
+	// XQuery
+	"XQUERY_STATIC_TYPE":                             "XQueryStaticType",
+	// TSql
+	"TRC_TSQL":                                       "TrcTSql",
+}
+
 func eventNameToPascalCase(name string) string {
+	// Check if we have a specific mapping
+	if mapped, ok := eventTypeNameMap[strings.ToUpper(name)]; ok {
+		return mapped
+	}
+
 	// Split by underscore
 	parts := strings.Split(name, "_")
 	var result strings.Builder
@@ -9666,9 +9718,14 @@ func eventNameToPascalCase(name string) string {
 		if len(part) == 0 {
 			continue
 		}
-		// Capitalize first letter, lowercase rest
-		result.WriteString(strings.ToUpper(part[:1]))
-		result.WriteString(strings.ToLower(part[1:]))
+		// Special case: DB should be uppercase
+		if strings.ToUpper(part) == "DB" {
+			result.WriteString("DB")
+		} else {
+			// Capitalize first letter, lowercase rest
+			result.WriteString(strings.ToUpper(part[:1]))
+			result.WriteString(strings.ToLower(part[1:]))
+		}
 	}
 	return result.String()
 }
