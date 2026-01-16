@@ -1128,11 +1128,19 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 	case TokenNumber:
 		val := p.curTok.Literal
 		p.nextToken()
+		// Check if it's scientific notation (real literal)
+		if strings.ContainsAny(val, "eE") {
+			return &ast.RealLiteral{LiteralType: "Real", Value: val}, nil
+		}
 		// Check if it's a decimal number
 		if strings.Contains(val, ".") {
 			return &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, nil
 		}
 		return &ast.IntegerLiteral{LiteralType: "Integer", Value: val}, nil
+	case TokenMoney:
+		val := p.curTok.Literal
+		p.nextToken()
+		return &ast.MoneyLiteral{LiteralType: "Money", Value: val}, nil
 	case TokenBinary:
 		val := p.curTok.Literal
 		p.nextToken()

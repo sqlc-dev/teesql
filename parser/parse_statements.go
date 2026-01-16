@@ -4686,6 +4686,19 @@ func (p *Parser) parseProcedureParameters() ([]*ast.ProcedureParameter, error) {
 			if err != nil {
 				return nil, err
 			}
+			// Convert single-identifier ColumnReferenceExpression to IdentifierLiteral
+			// (e.g., for default values like false, true, null)
+			if colRef, ok := val.(*ast.ColumnReferenceExpression); ok {
+				if colRef.MultiPartIdentifier != nil && colRef.MultiPartIdentifier.Count == 1 &&
+					len(colRef.MultiPartIdentifier.Identifiers) == 1 {
+					ident := colRef.MultiPartIdentifier.Identifiers[0]
+					val = &ast.IdentifierLiteral{
+						LiteralType: "Identifier",
+						QuoteType:   ident.QuoteType,
+						Value:       ident.Value,
+					}
+				}
+			}
 			param.Value = val
 		}
 

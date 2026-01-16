@@ -2034,6 +2034,28 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Value"] = e.Value
 		}
 		return node
+	case *ast.RealLiteral:
+		node := jsonNode{
+			"$type": "RealLiteral",
+		}
+		if e.LiteralType != "" {
+			node["LiteralType"] = e.LiteralType
+		}
+		if e.Value != "" {
+			node["Value"] = e.Value
+		}
+		return node
+	case *ast.MoneyLiteral:
+		node := jsonNode{
+			"$type": "MoneyLiteral",
+		}
+		if e.LiteralType != "" {
+			node["LiteralType"] = e.LiteralType
+		}
+		if e.Value != "" {
+			node["Value"] = e.Value
+		}
+		return node
 	case *ast.StringLiteral:
 		node := jsonNode{
 			"$type": "StringLiteral",

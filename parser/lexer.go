@@ -18,6 +18,7 @@ const (
 	TokenString
 	TokenNationalString
 	TokenBinary
+	TokenMoney
 	TokenStar
 	TokenComma
 	TokenDot
@@ -491,8 +492,11 @@ func (l *Lexer) NextToken() Token {
 	case '"':
 		tok = l.readDoubleQuotedIdentifier()
 	default:
-		// Handle $ only if followed by a letter (for pseudo-columns like $ROWGUID)
-		if l.ch == '$' && isLetter(l.peekChar()) {
+		// Handle currency symbols for money literals
+		if l.isCurrencySymbol() {
+			tok = l.readMoneyLiteral()
+		} else if l.ch == '$' && isLetter(l.peekChar()) {
+			// Handle $ only if followed by a letter (for pseudo-columns like $ROWGUID)
 			tok = l.readIdentifier()
 		} else if isLetter(l.ch) || l.ch == '_' || l.ch == '@' || l.ch == '#' {
 			tok = l.readIdentifier()
@@ -817,6 +821,19 @@ func (l *Lexer) readNumber() Token {
 			}
 		}
 	}
+	// Handle scientific notation (e.g., 2e, 2e+5, 2E-10, 1.5e3)
+	// T-SQL allows 'e' without exponent digits (e.g., "2e" is a valid real literal)
+	if l.ch == 'e' || l.ch == 'E' {
+		l.readChar() // consume e/E
+		// Optional sign
+		if l.ch == '+' || l.ch == '-' {
+			l.readChar()
+		}
+		// Optional exponent digits (T-SQL allows just "2e" with no exponent)
+		for isDigit(l.ch) {
+			l.readChar()
+		}
+	}
 	return Token{
 		Type:    TokenNumber,
 		Literal: l.input[startPos:l.pos],
@@ -835,6 +852,72 @@ func isLetter(ch byte) bool {
 
 func isDigit(ch byte) bool {
 	return ch >= '0' && ch <= '9'
+}
+
+// isCurrencySymbol checks if current position is a currency symbol for money literals
+func (l *Lexer) isCurrencySymbol() bool {
+	if l.ch == '$' {
+		// Check if followed by digit, space+digit, or +/- then digit
+		next := l.peekChar()
+		if isDigit(next) || next == ' ' || next == '+' || next == '-' {
+			return true
+		}
+		return false
+	}
+	// Check for Unicode currency symbols
+	if l.ch >= 0x80 {
+		r, _ := l.peekRune()
+		// Common currency symbols: £ (U+00A3), ¤ (U+00A4), ¥ (U+00A5)
+		// and various others in the Currency Symbols block
+		if r == '£' || r == '¤' || r == '¥' || r == '৲' || r == '৳' ||
+			r == '฿' || r == '₡' || r == '₢' || r == '₣' || r == '₤' ||
+			r == '₦' || r == '₧' || r == '₨' || r == '₩' || r == '₪' || r == '₫' {
+			return true
+		}
+	}
+	return false
+}
+
+// readMoneyLiteral reads a money literal starting with a currency symbol
+func (l *Lexer) readMoneyLiteral() Token {
+	startPos := l.pos
+
+	// Read currency symbol (may be multi-byte)
+	if l.ch >= 0x80 {
+		_, size := l.peekRune()
+		for i := 0; i < size; i++ {
+			l.readChar()
+		}
+	} else {
+		l.readChar() // consume $
+	}
+
+	// Skip optional +/- after currency symbol
+	if l.ch == '+' || l.ch == '-' {
+		l.readChar()
+	}
+
+	// Skip optional whitespace after currency symbol
+	for l.ch == ' ' || l.ch == '\t' {
+		l.readChar()
+	}
+
+	// Read digits and decimal point
+	for isDigit(l.ch) {
+		l.readChar()
+	}
+	if l.ch == '.' {
+		l.readChar()
+		for isDigit(l.ch) {
+			l.readChar()
+		}
+	}
+
+	return Token{
+		Type:    TokenMoney,
+		Literal: l.input[startPos:l.pos],
+		Pos:     startPos,
+	}
 }
 
 var keywords = map[string]TokenType{
