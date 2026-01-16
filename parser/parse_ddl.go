@@ -5049,7 +5049,48 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 		return p.parseAlterTableRebuildStatement(tableName)
 	}
 
+	// Check for SPLIT RANGE / MERGE RANGE (partition operations)
+	upperLit := strings.ToUpper(p.curTok.Literal)
+	if upperLit == "SPLIT" || upperLit == "MERGE" {
+		return p.parseAlterTableAlterPartitionStatement(tableName, upperLit == "SPLIT")
+	}
+
 	return nil, fmt.Errorf("unexpected token in ALTER TABLE: %s", p.curTok.Literal)
+}
+
+func (p *Parser) parseAlterTableAlterPartitionStatement(tableName *ast.SchemaObjectName, isSplit bool) (*ast.AlterTableAlterPartitionStatement, error) {
+	// Consume SPLIT or MERGE
+	p.nextToken()
+
+	// Expect RANGE
+	if strings.ToUpper(p.curTok.Literal) != "RANGE" {
+		return nil, fmt.Errorf("expected RANGE after SPLIT/MERGE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Expect (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after RANGE, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	// Parse boundary value
+	value, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after boundary value, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	return &ast.AlterTableAlterPartitionStatement{
+		SchemaObjectName: tableName,
+		BoundaryValue:    value,
+		IsSplit:          isSplit,
+	}, nil
 }
 
 func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableDropTableElementStatement, error) {

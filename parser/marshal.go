@@ -591,6 +591,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterTableSetStatementToJSON(s)
 	case *ast.AlterTableRebuildStatement:
 		return alterTableRebuildStatementToJSON(s)
+	case *ast.AlterTableAlterPartitionStatement:
+		return alterTableAlterPartitionStatementToJSON(s)
 	case *ast.AlterTableChangeTrackingModificationStatement:
 		return alterTableChangeTrackingStatementToJSON(s)
 	case *ast.InsertBulkStatement:
@@ -16927,6 +16929,20 @@ func alterTableRebuildStatementToJSON(s *ast.AlterTableRebuildStatement) jsonNod
 			opts = append(opts, indexOptionToJSON(opt))
 		}
 		node["IndexOptions"] = opts
+	}
+	if s.SchemaObjectName != nil {
+		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
+	}
+	return node
+}
+
+func alterTableAlterPartitionStatementToJSON(s *ast.AlterTableAlterPartitionStatement) jsonNode {
+	node := jsonNode{
+		"$type":   "AlterTableAlterPartitionStatement",
+		"IsSplit": s.IsSplit,
+	}
+	if s.BoundaryValue != nil {
+		node["BoundaryValue"] = scalarExpressionToJSON(s.BoundaryValue)
 	}
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
