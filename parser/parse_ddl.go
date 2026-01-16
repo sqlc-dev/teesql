@@ -8737,10 +8737,57 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 	case "DROP":
 		action, _ := p.parseDropAlterFullTextIndexAction()
 		return action
+	case "ALTER":
+		action, _ := p.parseAlterColumnAlterFullTextIndexAction()
+		return action
 	}
 
 	// No action found
 	return nil
+}
+
+func (p *Parser) parseAlterColumnAlterFullTextIndexAction() (*ast.AlterColumnAlterFullTextIndexAction, error) {
+	p.nextToken() // consume ALTER
+
+	if strings.ToUpper(p.curTok.Literal) != "COLUMN" {
+		return nil, fmt.Errorf("expected COLUMN after ALTER, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume COLUMN
+
+	action := &ast.AlterColumnAlterFullTextIndexAction{
+		Column: &ast.FullTextIndexColumn{
+			Name: p.parseIdentifier(),
+		},
+	}
+
+	// Parse ADD or DROP STATISTICAL_SEMANTICS
+	if strings.ToUpper(p.curTok.Literal) == "ADD" {
+		p.nextToken() // consume ADD
+		if strings.ToUpper(p.curTok.Literal) == "STATISTICAL_SEMANTICS" {
+			p.nextToken() // consume STATISTICAL_SEMANTICS
+			action.Column.StatisticalSemantics = true
+		}
+	} else if strings.ToUpper(p.curTok.Literal) == "DROP" {
+		p.nextToken() // consume DROP
+		if strings.ToUpper(p.curTok.Literal) == "STATISTICAL_SEMANTICS" {
+			p.nextToken() // consume STATISTICAL_SEMANTICS
+			action.Column.StatisticalSemantics = false
+		}
+	}
+
+	// Check for WITH NO POPULATION
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if strings.ToUpper(p.curTok.Literal) == "NO" {
+			p.nextToken() // consume NO
+			if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+				p.nextToken() // consume POPULATION
+				action.WithNoPopulation = true
+			}
+		}
+	}
+
+	return action, nil
 }
 
 func (p *Parser) parseAddAlterFullTextIndexAction() (*ast.AddAlterFullTextIndexAction, error) {

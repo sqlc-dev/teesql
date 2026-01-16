@@ -17658,6 +17658,15 @@ func alterFullTextIndexActionToJSON(a ast.AlterFullTextIndexActionOption) jsonNo
 			node["StopListOption"] = stopListFullTextIndexOptionToJSON(action.StopListOption)
 		}
 		return node
+	case *ast.AlterColumnAlterFullTextIndexAction:
+		node := jsonNode{
+			"$type":            "AlterColumnAlterFullTextIndexAction",
+			"WithNoPopulation": action.WithNoPopulation,
+		}
+		if action.Column != nil {
+			node["Column"] = fullTextIndexColumnToJSON(action.Column)
+		}
+		return node
 	}
 	return nil
 }

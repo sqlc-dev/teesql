@@ -295,6 +295,15 @@ type DropAlterFullTextIndexAction struct {
 func (*DropAlterFullTextIndexAction) node()                     {}
 func (*DropAlterFullTextIndexAction) alterFullTextIndexAction() {}
 
+// AlterColumnAlterFullTextIndexAction represents an ALTER COLUMN action for fulltext index
+type AlterColumnAlterFullTextIndexAction struct {
+	Column           *FullTextIndexColumn `json:"Column,omitempty"`
+	WithNoPopulation bool                 `json:"WithNoPopulation"`
+}
+
+func (*AlterColumnAlterFullTextIndexAction) node()                     {}
+func (*AlterColumnAlterFullTextIndexAction) alterFullTextIndexAction() {}
+
 // FullTextIndexColumn represents a column in a fulltext index
 type FullTextIndexColumn struct {
 	Name                 *Identifier              `json:"Name,omitempty"`
