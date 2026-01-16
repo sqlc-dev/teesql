@@ -3429,7 +3429,10 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			node["Values"] = values
 		}
 		if e.Subquery != nil {
-			node["Subquery"] = queryExpressionToJSON(e.Subquery)
+			node["Subquery"] = jsonNode{
+				"$type":           "ScalarSubquery",
+				"QueryExpression": queryExpressionToJSON(e.Subquery),
+			}
 		}
 		return node
 	case *ast.BooleanLikeExpression:
