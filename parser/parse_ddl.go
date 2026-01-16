@@ -8313,8 +8313,8 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "Disable"}
 	case "SET":
 		p.nextToken() // consume SET
-		// Parse CHANGE_TRACKING = MANUAL/AUTO/OFF
 		if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING" {
+			// Parse CHANGE_TRACKING = MANUAL/AUTO/OFF
 			p.nextToken() // consume CHANGE_TRACKING
 			if p.curTok.Type == TokenEquals {
 				p.nextToken() // consume =
@@ -8329,6 +8329,33 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 			case "OFF":
 				return &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingOff"}
 			}
+		} else if strings.ToUpper(p.curTok.Literal) == "STOPLIST" {
+			// Parse SET STOPLIST OFF | SYSTEM | name [WITH NO POPULATION]
+			p.nextToken() // consume STOPLIST
+			action := &ast.SetStopListAlterFullTextIndexAction{
+				StopListOption: &ast.StopListFullTextIndexOption{
+					OptionKind: "StopList",
+				},
+			}
+			if strings.ToUpper(p.curTok.Literal) == "OFF" {
+				action.StopListOption.IsOff = true
+				p.nextToken()
+			} else {
+				action.StopListOption.IsOff = false
+				action.StopListOption.StopListName = p.parseIdentifier()
+			}
+			// Check for WITH NO POPULATION
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if strings.ToUpper(p.curTok.Literal) == "NO" {
+					p.nextToken() // consume NO
+					if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+						p.nextToken() // consume POPULATION
+						action.WithNoPopulation = true
+					}
+				}
+			}
+			return action
 		}
 		return nil
 	case "START":

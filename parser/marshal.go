@@ -16895,8 +16895,29 @@ func alterFullTextIndexActionToJSON(a ast.AlterFullTextIndexActionOption) jsonNo
 			node["Columns"] = cols
 		}
 		return node
+	case *ast.SetStopListAlterFullTextIndexAction:
+		node := jsonNode{
+			"$type":            "SetStopListAlterFullTextIndexAction",
+			"WithNoPopulation": action.WithNoPopulation,
+		}
+		if action.StopListOption != nil {
+			node["StopListOption"] = stopListFullTextIndexOptionToJSON(action.StopListOption)
+		}
+		return node
 	}
 	return nil
+}
+
+func stopListFullTextIndexOptionToJSON(opt *ast.StopListFullTextIndexOption) jsonNode {
+	node := jsonNode{
+		"$type":      "StopListFullTextIndexOption",
+		"IsOff":      opt.IsOff,
+		"OptionKind": opt.OptionKind,
+	}
+	if opt.StopListName != nil {
+		node["StopListName"] = identifierToJSON(opt.StopListName)
+	}
+	return node
 }
 
 func fullTextIndexColumnToJSON(col *ast.FullTextIndexColumn) jsonNode {
@@ -17873,12 +17894,53 @@ func createFulltextCatalogStatementToJSON(s *ast.CreateFulltextCatalogStatement)
 
 func createFulltextIndexStatementToJSON(s *ast.CreateFulltextIndexStatement) jsonNode {
 	node := jsonNode{
-		"$type": "CreateFulltextIndexStatement",
+		"$type": "CreateFullTextIndexStatement",
 	}
 	if s.OnName != nil {
 		node["OnName"] = schemaObjectNameToJSON(s.OnName)
 	}
+	if s.KeyIndexName != nil {
+		node["KeyIndexName"] = identifierToJSON(s.KeyIndexName)
+	}
+	if s.CatalogAndFileGroup != nil {
+		node["CatalogAndFileGroup"] = fullTextCatalogAndFileGroupToJSON(s.CatalogAndFileGroup)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = fullTextIndexOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
 	return node
+}
+
+func fullTextCatalogAndFileGroupToJSON(cfg *ast.FullTextCatalogAndFileGroup) jsonNode {
+	node := jsonNode{
+		"$type":            "FullTextCatalogAndFileGroup",
+		"FileGroupIsFirst": cfg.FileGroupIsFirst,
+	}
+	if cfg.CatalogName != nil {
+		node["CatalogName"] = identifierToJSON(cfg.CatalogName)
+	}
+	if cfg.FileGroupName != nil {
+		node["FileGroupName"] = identifierToJSON(cfg.FileGroupName)
+	}
+	return node
+}
+
+func fullTextIndexOptionToJSON(opt ast.FullTextIndexOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.ChangeTrackingFullTextIndexOption:
+		return jsonNode{
+			"$type":      "ChangeTrackingFullTextIndexOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.StopListFullTextIndexOption:
+		return stopListFullTextIndexOptionToJSON(o)
+	}
+	return nil
 }
 
 func createRemoteServiceBindingStatementToJSON(s *ast.CreateRemoteServiceBindingStatement) jsonNode {

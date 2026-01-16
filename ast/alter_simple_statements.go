@@ -305,6 +305,48 @@ type FullTextIndexColumn struct {
 
 func (*FullTextIndexColumn) node() {}
 
+// SetStopListAlterFullTextIndexAction represents a SET STOPLIST action for fulltext index
+type SetStopListAlterFullTextIndexAction struct {
+	StopListOption   *StopListFullTextIndexOption `json:"StopListOption,omitempty"`
+	WithNoPopulation bool                         `json:"WithNoPopulation"`
+}
+
+func (*SetStopListAlterFullTextIndexAction) node()                     {}
+func (*SetStopListAlterFullTextIndexAction) alterFullTextIndexAction() {}
+
+// FullTextIndexOption is an interface for fulltext index options
+type FullTextIndexOption interface {
+	fullTextIndexOption()
+}
+
+// StopListFullTextIndexOption represents a STOPLIST option for fulltext index
+type StopListFullTextIndexOption struct {
+	IsOff        bool        `json:"IsOff"`
+	StopListName *Identifier `json:"StopListName,omitempty"`
+	OptionKind   string      `json:"OptionKind,omitempty"` // "StopList"
+}
+
+func (*StopListFullTextIndexOption) node()                {}
+func (*StopListFullTextIndexOption) fullTextIndexOption() {}
+
+// ChangeTrackingFullTextIndexOption represents a CHANGE_TRACKING option for fulltext index
+type ChangeTrackingFullTextIndexOption struct {
+	Value      string `json:"Value,omitempty"` // "Auto", "Manual", "Off", "OffNoPopulation"
+	OptionKind string `json:"OptionKind,omitempty"` // "ChangeTracking"
+}
+
+func (*ChangeTrackingFullTextIndexOption) node()                {}
+func (*ChangeTrackingFullTextIndexOption) fullTextIndexOption() {}
+
+// FullTextCatalogAndFileGroup represents catalog and filegroup for fulltext index
+type FullTextCatalogAndFileGroup struct {
+	CatalogName      *Identifier `json:"CatalogName,omitempty"`
+	FileGroupName    *Identifier `json:"FileGroupName,omitempty"`
+	FileGroupIsFirst bool        `json:"FileGroupIsFirst"`
+}
+
+func (*FullTextCatalogAndFileGroup) node() {}
+
 // AlterSymmetricKeyStatement represents an ALTER SYMMETRIC KEY statement.
 type AlterSymmetricKeyStatement struct {
 	Name                 *Identifier        `json:"Name,omitempty"`

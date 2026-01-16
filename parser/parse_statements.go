@@ -12767,7 +12767,144 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 		stmt := &ast.CreateFulltextIndexStatement{
 			OnName: onName,
 		}
-		p.skipToEndOfStatement()
+
+		// Parse optional (column_list) - skip for now
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				p.nextToken()
+			}
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+
+		// Parse KEY INDEX name
+		if strings.ToUpper(p.curTok.Literal) == "KEY" {
+			p.nextToken() // consume KEY
+			if strings.ToUpper(p.curTok.Literal) == "INDEX" {
+				p.nextToken() // consume INDEX
+			}
+			stmt.KeyIndexName = p.parseIdentifier()
+		}
+
+		// Parse ON clause for catalog/filegroup
+		if p.curTok.Type == TokenOn {
+			p.nextToken() // consume ON
+			stmt.CatalogAndFileGroup = &ast.FullTextCatalogAndFileGroup{}
+
+			if p.curTok.Type == TokenLParen {
+				// (FILEGROUP fg, catalog) or (catalog, FILEGROUP fg) format
+				p.nextToken() // consume (
+
+				// Check first element
+				if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+					p.nextToken() // consume FILEGROUP
+					stmt.CatalogAndFileGroup.FileGroupName = p.parseIdentifier()
+					stmt.CatalogAndFileGroup.FileGroupIsFirst = true
+
+					// Check for comma and catalog
+					if p.curTok.Type == TokenComma {
+						p.nextToken() // consume comma
+						stmt.CatalogAndFileGroup.CatalogName = p.parseIdentifier()
+					}
+				} else {
+					// It's a catalog name first
+					stmt.CatalogAndFileGroup.CatalogName = p.parseIdentifier()
+					stmt.CatalogAndFileGroup.FileGroupIsFirst = false
+
+					// Check for comma and filegroup
+					if p.curTok.Type == TokenComma {
+						p.nextToken() // consume comma
+						if strings.ToUpper(p.curTok.Literal) == "FILEGROUP" {
+							p.nextToken() // consume FILEGROUP
+						}
+						stmt.CatalogAndFileGroup.FileGroupName = p.parseIdentifier()
+					}
+				}
+
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			} else {
+				// Just a catalog name without parentheses
+				stmt.CatalogAndFileGroup.CatalogName = p.parseIdentifier()
+				stmt.CatalogAndFileGroup.FileGroupIsFirst = false
+			}
+		}
+
+		// Parse WITH clause
+		if p.curTok.Type == TokenWith {
+			p.nextToken() // consume WITH
+			noPopulation := false
+			for {
+				optLit := strings.ToUpper(p.curTok.Literal)
+				if optLit == "CHANGE_TRACKING" {
+					p.nextToken() // consume CHANGE_TRACKING
+					var trackingValue string
+					if strings.ToUpper(p.curTok.Literal) == "MANUAL" {
+						trackingValue = "Manual"
+						p.nextToken()
+					} else if strings.ToUpper(p.curTok.Literal) == "AUTO" {
+						trackingValue = "Auto"
+						p.nextToken()
+					} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
+						trackingValue = "Off"
+						p.nextToken()
+					}
+					// If we see NO POPULATION after CHANGE_TRACKING OFF, update the value
+					if trackingValue == "Off" && noPopulation {
+						trackingValue = "OffNoPopulation"
+					}
+					stmt.Options = append(stmt.Options, &ast.ChangeTrackingFullTextIndexOption{
+						Value:      trackingValue,
+						OptionKind: "ChangeTracking",
+					})
+				} else if optLit == "STOPLIST" {
+					p.nextToken() // consume STOPLIST
+					opt := &ast.StopListFullTextIndexOption{
+						OptionKind: "StopList",
+					}
+					if strings.ToUpper(p.curTok.Literal) == "OFF" {
+						opt.IsOff = true
+						p.nextToken()
+					} else if strings.ToUpper(p.curTok.Literal) == "SYSTEM" {
+						opt.IsOff = false
+						opt.StopListName = p.parseIdentifier()
+					} else {
+						opt.IsOff = false
+						opt.StopListName = p.parseIdentifier()
+					}
+					stmt.Options = append(stmt.Options, opt)
+				} else if optLit == "NO" {
+					p.nextToken() // consume NO
+					if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+						p.nextToken() // consume POPULATION
+						noPopulation = true
+						// Update CHANGE_TRACKING OFF to OffNoPopulation
+						for i, opt := range stmt.Options {
+							if ctOpt, ok := opt.(*ast.ChangeTrackingFullTextIndexOption); ok && ctOpt.Value == "Off" {
+								ctOpt.Value = "OffNoPopulation"
+								stmt.Options[i] = ctOpt
+							}
+						}
+					}
+				} else {
+					break
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume comma
+				} else if p.curTok.Type == TokenSemicolon || p.curTok.Type == TokenEOF {
+					break
+				}
+			}
+		}
+
+		// Skip optional semicolon
+		if p.curTok.Type == TokenSemicolon {
+			p.nextToken()
+		}
 		return stmt, nil
 	default:
 		// Just create a catalog statement as default
