@@ -3171,11 +3171,12 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 		opt.OptionState = capitalizeFirst(stateVal)
 		p.nextToken() // consume ON/OFF
 	} else if strings.ToUpper(p.curTok.Literal) == "CLEAR" {
-		opt.Clear = true
 		p.nextToken() // consume CLEAR
 		if strings.ToUpper(p.curTok.Literal) == "ALL" {
 			opt.ClearAll = true
 			p.nextToken() // consume ALL
+		} else {
+			opt.Clear = true
 		}
 		return opt, nil
 	}
@@ -3239,6 +3240,16 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 					Value:      val,
 				}
 				opt.Options = append(opt.Options, cleanupOpt)
+			case "FLUSH_INTERVAL_SECONDS", "DATA_FLUSH_INTERVAL_SECONDS":
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				flushOpt := &ast.QueryStoreDataFlushIntervalOption{
+					OptionKind:    "Flush_Interval_Seconds",
+					FlushInterval: val,
+				}
+				opt.Options = append(opt.Options, flushOpt)
 			case "INTERVAL_LENGTH_MINUTES":
 				val, err := p.parseScalarExpression()
 				if err != nil {

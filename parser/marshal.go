@@ -1490,6 +1490,15 @@ func queryStoreOptionToJSON(opt ast.QueryStoreOption) jsonNode {
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
 		}
+	case *ast.QueryStoreDataFlushIntervalOption:
+		node := jsonNode{
+			"$type":      "QueryStoreDataFlushIntervalOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.FlushInterval != nil {
+			node["FlushInterval"] = scalarExpressionToJSON(o.FlushInterval)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownQueryStoreOption"}
 	}

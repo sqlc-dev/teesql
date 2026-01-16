@@ -550,6 +550,15 @@ type QueryStoreWaitStatsCaptureOption struct {
 func (q *QueryStoreWaitStatsCaptureOption) node()             {}
 func (q *QueryStoreWaitStatsCaptureOption) queryStoreOption() {}
 
+// QueryStoreDataFlushIntervalOption represents FLUSH_INTERVAL_SECONDS/DATA_FLUSH_INTERVAL_SECONDS option
+type QueryStoreDataFlushIntervalOption struct {
+	OptionKind    string           // "Flush_Interval_Seconds"
+	FlushInterval ScalarExpression // Integer literal
+}
+
+func (q *QueryStoreDataFlushIntervalOption) node()             {}
+func (q *QueryStoreDataFlushIntervalOption) queryStoreOption() {}
+
 // AlterDatabaseScopedConfigurationSetStatement represents ALTER DATABASE SCOPED CONFIGURATION SET statement
 type AlterDatabaseScopedConfigurationSetStatement struct {
 	Secondary bool
