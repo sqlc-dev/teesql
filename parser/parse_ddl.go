@@ -8082,6 +8082,11 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 						} else if p.curTok.Type == TokenLParen {
 							p.nextToken() // consume (
 							ipOpt.IPv4PartOne = p.parseIPv4Address()
+							// Check for colon-separated second IP address
+							if p.curTok.Type == TokenColon {
+								p.nextToken() // consume :
+								ipOpt.IPv4PartTwo = p.parseIPv4Address()
+							}
 							if p.curTok.Type == TokenRParen {
 								p.nextToken() // consume )
 							}

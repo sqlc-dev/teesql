@@ -12808,6 +12808,12 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 	}
 	hasOptions := false
 
+	// Check for AUTHORIZATION immediately after name
+	if p.curTok.Type == TokenAuthorization {
+		p.nextToken() // consume AUTHORIZATION
+		stmt.Owner = p.parseIdentifier()
+	}
+
 	// Parse endpoint options (STATE, AFFINITY, AS, FOR)
 	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
 		upper := strings.ToUpper(p.curTok.Literal)
@@ -12887,6 +12893,11 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 						} else if p.curTok.Type == TokenLParen {
 							p.nextToken() // consume (
 							ipOpt.IPv4PartOne = p.parseIPv4Address()
+							// Check for colon-separated second IP address
+							if p.curTok.Type == TokenColon {
+								p.nextToken() // consume :
+								ipOpt.IPv4PartTwo = p.parseIPv4Address()
+							}
 							if p.curTok.Type == TokenRParen {
 								p.nextToken() // consume )
 							}

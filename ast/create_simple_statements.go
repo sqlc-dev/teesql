@@ -211,6 +211,7 @@ func (r *RouteOption) node() {}
 
 // CreateEndpointStatement represents a CREATE ENDPOINT statement.
 type CreateEndpointStatement struct {
+	Owner           *Identifier
 	Name            *Identifier
 	State           string
 	Affinity        *EndpointAffinity

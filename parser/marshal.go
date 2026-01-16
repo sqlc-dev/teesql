@@ -18796,6 +18796,9 @@ func createEndpointStatementToJSON(s *ast.CreateEndpointStatement) jsonNode {
 	node := jsonNode{
 		"$type": "CreateEndpointStatement",
 	}
+	if s.Owner != nil {
+		node["Owner"] = identifierToJSON(s.Owner)
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
