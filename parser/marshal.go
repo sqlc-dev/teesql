@@ -2785,12 +2785,23 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Join"] = tableReferenceToJSON(r.Join)
 		}
 		return node
+	case *ast.OdbcQualifiedJoinTableReference:
+		node := jsonNode{
+			"$type": "OdbcQualifiedJoinTableReference",
+		}
+		if r.TableReference != nil {
+			node["TableReference"] = tableReferenceToJSON(r.TableReference)
+		}
+		return node
 	case *ast.VariableTableReference:
 		node := jsonNode{
 			"$type": "VariableTableReference",
 		}
 		if r.Variable != nil {
 			node["Variable"] = scalarExpressionToJSON(r.Variable)
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
 		return node

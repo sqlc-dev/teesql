@@ -2662,6 +2662,45 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 			return nil, err
 		}
 
+		// Check for nested join - if we see another join type instead of ON,
+		// the right side is actually a join expression
+		for p.isJoinKeyword() {
+			nestedJoinType, nestedJoinHint := p.parseJoinTypeAndHint()
+			if nestedJoinType == "" {
+				break
+			}
+
+			if p.curTok.Type != TokenJoin {
+				return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume JOIN
+
+			nestedRight, err := p.parseSingleTableReference()
+			if err != nil {
+				return nil, err
+			}
+
+			// Parse ON clause for nested join
+			if p.curTok.Type != TokenOn {
+				return nil, fmt.Errorf("expected ON after nested JOIN, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume ON
+
+			nestedCondition, err := p.parseBooleanExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			// Wrap right in a QualifiedJoin
+			right = &ast.QualifiedJoin{
+				QualifiedJoinType:    nestedJoinType,
+				JoinHint:             nestedJoinHint,
+				FirstTableReference:  right,
+				SecondTableReference: nestedRight,
+				SearchCondition:      nestedCondition,
+			}
+		}
+
 		// Parse ON clause
 		if p.curTok.Type != TokenOn {
 			return nil, fmt.Errorf("expected ON after JOIN, got %s", p.curTok.Literal)
@@ -2685,10 +2724,69 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 	return left, nil
 }
 
+// isJoinKeyword returns true if the current token starts a join clause
+func (p *Parser) isJoinKeyword() bool {
+	switch p.curTok.Type {
+	case TokenInner, TokenLeft, TokenRight, TokenFull, TokenJoin:
+		return true
+	default:
+		return false
+	}
+}
+
+// parseJoinTypeAndHint parses the join type (INNER, LEFT OUTER, etc.) and optional hint (REMOTE, LOOP, etc.)
+// Returns empty string for joinType if no join is found
+func (p *Parser) parseJoinTypeAndHint() (joinType, joinHint string) {
+	switch p.curTok.Type {
+	case TokenInner:
+		joinType = "Inner"
+		p.nextToken()
+	case TokenLeft:
+		joinType = "LeftOuter"
+		p.nextToken()
+		if p.curTok.Type == TokenOuter {
+			p.nextToken()
+		}
+	case TokenRight:
+		joinType = "RightOuter"
+		p.nextToken()
+		if p.curTok.Type == TokenOuter {
+			p.nextToken()
+		}
+	case TokenFull:
+		joinType = "FullOuter"
+		p.nextToken()
+		if p.curTok.Type == TokenOuter {
+			p.nextToken()
+		}
+	case TokenJoin:
+		joinType = "Inner"
+	default:
+		return "", ""
+	}
+
+	// Check for join hints (REMOTE, LOOP, HASH, MERGE, REDUCE, REPLICATE, REDISTRIBUTE)
+	if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		switch upper {
+		case "REMOTE", "LOOP", "HASH", "MERGE", "REDUCE", "REPLICATE", "REDISTRIBUTE":
+			joinHint = upper[:1] + strings.ToLower(upper[1:])
+			p.nextToken()
+		}
+	}
+
+	return joinType, joinHint
+}
+
 func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 	// Check for derived table (parenthesized query)
 	if p.curTok.Type == TokenLParen {
 		return p.parseDerivedTableReference()
+	}
+
+	// Check for ODBC outer join escape sequence: { OJ ... }
+	if p.curTok.Type == TokenLBrace {
+		return p.parseOdbcQualifiedJoinTableReference()
 	}
 
 	// Check for built-in function table reference (::fn_name(...))
@@ -2805,12 +2903,16 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		if p.curTok.Type == TokenAs {
 			p.nextToken()
 			varRef.Alias = p.parseIdentifier()
-		} else if p.curTok.Type == TokenIdent {
-			upper := strings.ToUpper(p.curTok.Literal)
-			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
-				upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
-				upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
-				upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			if p.curTok.Type == TokenIdent {
+				upper := strings.ToUpper(p.curTok.Literal)
+				if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
+					upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+					upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+					upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+					varRef.Alias = p.parseIdentifier()
+				}
+			} else {
 				varRef.Alias = p.parseIdentifier()
 			}
 		}
@@ -3001,6 +3103,33 @@ func (p *Parser) parseSchemaDeclarationItemOpenjson() (*ast.SchemaDeclarationIte
 	return item, nil
 }
 
+// parseOdbcQualifiedJoinTableReference parses ODBC outer join escape sequence: { OJ ... }
+func (p *Parser) parseOdbcQualifiedJoinTableReference() (ast.TableReference, error) {
+	p.nextToken() // consume {
+
+	// Expect OJ keyword
+	if strings.ToUpper(p.curTok.Literal) != "OJ" {
+		return nil, fmt.Errorf("expected OJ after {, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume OJ
+
+	// Parse the inner table reference (which can be a join)
+	innerRef, err := p.parseTableReference()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect closing brace
+	if p.curTok.Type != TokenRBrace {
+		return nil, fmt.Errorf("expected } in ODBC outer join, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume }
+
+	return &ast.OdbcQualifiedJoinTableReference{
+		TableReference: innerRef,
+	}, nil
+}
+
 // parseDerivedTableReference parses a derived table (parenthesized query) like (SELECT ...) AS alias
 // or an inline derived table (VALUES clause) like (VALUES (...), (...)) AS alias(cols)
 // or a data modification table reference (DML with OUTPUT) like (INSERT ... OUTPUT ...) AS alias
@@ -3044,16 +3173,418 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 		}, nil
 	}
 
-	// Parse the query expression
+	// Handle nested parenthesis specially
+	// This could be:
+	// 1. Query parenthesis: ((SELECT ... UNION ...)) - nested query expression
+	// 2. Join parenthesis: ((SELECT ...) AS t1 JOIN ...) - nested derived table with joins
+	if p.curTok.Type == TokenLParen {
+		// Recursively parse the nested content as a derived table reference
+		innerRef, err := p.parseDerivedTableReference()
+		if err != nil {
+			return nil, err
+		}
+
+		// Check what we got and what follows
+		switch ref := innerRef.(type) {
+		case *ast.QueryDerivedTable:
+			// If no alias and we're at ) or binary query operator, this is a query parenthesis
+			if ref.Alias == nil && (p.curTok.Type == TokenRParen ||
+				p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect) {
+				// Convert to QueryParenthesisExpression and continue with query expression parsing
+				qe := &ast.QueryParenthesisExpression{QueryExpression: ref.QueryExpression}
+
+				// Check for binary operations (UNION, EXCEPT, INTERSECT)
+				if p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect {
+					qe2, err := p.parseRestOfBinaryQueryExpression(qe)
+					if err != nil {
+						return nil, err
+					}
+					// Now expect ) and return as QueryDerivedTable
+					if p.curTok.Type != TokenRParen {
+						return nil, fmt.Errorf("expected ) after binary query expression, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume )
+
+					result := &ast.QueryDerivedTable{
+						QueryExpression: qe2,
+						ForPath:         false,
+					}
+
+					// Parse optional alias
+					if p.curTok.Type == TokenAs {
+						p.nextToken()
+						result.Alias = p.parseIdentifier()
+					} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+						if p.curTok.Type == TokenIdent {
+							upper := strings.ToUpper(p.curTok.Literal)
+							if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
+								result.Alias = p.parseIdentifier()
+							}
+						} else {
+							result.Alias = p.parseIdentifier()
+						}
+					}
+
+					return result, nil
+				}
+
+				// Just closing paren - expect ) and return as QueryDerivedTable
+				p.nextToken() // consume )
+
+				result := &ast.QueryDerivedTable{
+					QueryExpression: qe,
+					ForPath:         false,
+				}
+
+				// Parse optional alias
+				if p.curTok.Type == TokenAs {
+					p.nextToken()
+					result.Alias = p.parseIdentifier()
+				} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+					if p.curTok.Type == TokenIdent {
+						upper := strings.ToUpper(p.curTok.Literal)
+						if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
+							result.Alias = p.parseIdentifier()
+						}
+					} else {
+						result.Alias = p.parseIdentifier()
+					}
+				}
+
+				return result, nil
+			}
+
+			// Otherwise, this is a derived table that may be followed by JOINs
+			// Fall through to handle as table reference
+			innerRef = ref
+
+		case *ast.JoinParenthesisTableReference:
+			// Already a join parenthesis - it may be followed by more JOINs or just )
+		}
+
+		// Handle as a table reference that may be followed by JOINs
+		var tableRef ast.TableReference = innerRef
+		for {
+			// Check for CROSS JOIN / CROSS APPLY
+			if p.curTok.Type == TokenCross {
+				p.nextToken() // consume CROSS
+				if p.curTok.Type == TokenJoin {
+					p.nextToken() // consume JOIN
+					right, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+					tableRef = &ast.UnqualifiedJoin{
+						UnqualifiedJoinType:  "CrossJoin",
+						FirstTableReference:  tableRef,
+						SecondTableReference: right,
+					}
+					continue
+				} else if strings.ToUpper(p.curTok.Literal) == "APPLY" {
+					p.nextToken() // consume APPLY
+					right, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+					tableRef = &ast.UnqualifiedJoin{
+						UnqualifiedJoinType:  "CrossApply",
+						FirstTableReference:  tableRef,
+						SecondTableReference: right,
+					}
+					continue
+				} else {
+					return nil, fmt.Errorf("expected JOIN or APPLY after CROSS, got %s", p.curTok.Literal)
+				}
+			}
+
+			// Check for OUTER APPLY
+			if p.curTok.Type == TokenOuter && strings.ToUpper(p.peekTok.Literal) == "APPLY" {
+				p.nextToken() // consume OUTER
+				p.nextToken() // consume APPLY
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+				tableRef = &ast.UnqualifiedJoin{
+					UnqualifiedJoinType:  "OuterApply",
+					FirstTableReference:  tableRef,
+					SecondTableReference: right,
+				}
+				continue
+			}
+
+			// Check for qualified JOINs
+			if p.isJoinKeyword() {
+				joinType, joinHint := p.parseJoinTypeAndHint()
+				if joinType == "" {
+					break
+				}
+				if p.curTok.Type != TokenJoin {
+					return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume JOIN
+
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+
+				// Check for nested join
+				for p.isJoinKeyword() {
+					nestedJoinType, nestedJoinHint := p.parseJoinTypeAndHint()
+					if nestedJoinType == "" {
+						break
+					}
+					if p.curTok.Type != TokenJoin {
+						return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume JOIN
+
+					nestedRight, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+
+					if p.curTok.Type != TokenOn {
+						return nil, fmt.Errorf("expected ON after nested JOIN, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume ON
+
+					nestedCondition, err := p.parseBooleanExpression()
+					if err != nil {
+						return nil, err
+					}
+
+					right = &ast.QualifiedJoin{
+						QualifiedJoinType:    nestedJoinType,
+						JoinHint:             nestedJoinHint,
+						FirstTableReference:  right,
+						SecondTableReference: nestedRight,
+						SearchCondition:      nestedCondition,
+					}
+				}
+
+				if p.curTok.Type != TokenOn {
+					return nil, fmt.Errorf("expected ON after JOIN, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume ON
+
+				condition, err := p.parseBooleanExpression()
+				if err != nil {
+					return nil, err
+				}
+
+				tableRef = &ast.QualifiedJoin{
+					QualifiedJoinType:    joinType,
+					JoinHint:             joinHint,
+					FirstTableReference:  tableRef,
+					SecondTableReference: right,
+					SearchCondition:      condition,
+				}
+				continue
+			}
+
+			break
+		}
+
+		// Expect closing )
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after nested table reference, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		return &ast.JoinParenthesisTableReference{
+			Join:    tableRef,
+			ForPath: false,
+		}, nil
+	}
+
+	// Parse the query expression (for SELECT or WITH)
 	qe, err := p.parseQueryExpression()
 	if err != nil {
 		return nil, err
 	}
 
-	// Expect )
+	// Check if this is a nested derived table inside a parenthesized table reference
+	// e.g., ((SELECT * FROM t1) AS t10 INNER JOIN t2 ON ...)
+	// In this case, we're not at ) but at AS because the inner query expression
+	// consumed its own parens and we need to build a derived table then continue with JOINs
 	if p.curTok.Type != TokenRParen {
-		return nil, fmt.Errorf("expected ) after derived table query, got %s", p.curTok.Literal)
+		// Build the inner derived table from the query expression
+		innerRef := &ast.QueryDerivedTable{
+			QueryExpression: qe,
+			ForPath:         false,
+		}
+
+		// Parse alias for the inner derived table
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+			innerRef.Alias = p.parseIdentifier()
+		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			if p.curTok.Type == TokenIdent {
+				upper := strings.ToUpper(p.curTok.Literal)
+				if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
+					innerRef.Alias = p.parseIdentifier()
+				}
+			} else {
+				innerRef.Alias = p.parseIdentifier()
+			}
+		}
+
+		// Parse optional column list for inner derived table
+		if innerRef.Alias != nil && p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			for {
+				col := p.parseIdentifier()
+				innerRef.Columns = append(innerRef.Columns, col)
+				if p.curTok.Type != TokenComma {
+					break
+				}
+				p.nextToken() // consume comma
+			}
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) after column list")
+			}
+			p.nextToken() // consume )
+		}
+
+		// Now parse any JOINs that follow
+		var tableRef ast.TableReference = innerRef
+		for {
+			// Check for CROSS JOIN / CROSS APPLY
+			if p.curTok.Type == TokenCross {
+				p.nextToken() // consume CROSS
+				if p.curTok.Type == TokenJoin {
+					p.nextToken() // consume JOIN
+					right, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+					tableRef = &ast.UnqualifiedJoin{
+						UnqualifiedJoinType:  "CrossJoin",
+						FirstTableReference:  tableRef,
+						SecondTableReference: right,
+					}
+					continue
+				} else if strings.ToUpper(p.curTok.Literal) == "APPLY" {
+					p.nextToken() // consume APPLY
+					right, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+					tableRef = &ast.UnqualifiedJoin{
+						UnqualifiedJoinType:  "CrossApply",
+						FirstTableReference:  tableRef,
+						SecondTableReference: right,
+					}
+					continue
+				} else {
+					return nil, fmt.Errorf("expected JOIN or APPLY after CROSS, got %s", p.curTok.Literal)
+				}
+			}
+
+			// Check for OUTER APPLY
+			if p.curTok.Type == TokenOuter && strings.ToUpper(p.peekTok.Literal) == "APPLY" {
+				p.nextToken() // consume OUTER
+				p.nextToken() // consume APPLY
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+				tableRef = &ast.UnqualifiedJoin{
+					UnqualifiedJoinType:  "OuterApply",
+					FirstTableReference:  tableRef,
+					SecondTableReference: right,
+				}
+				continue
+			}
+
+			// Check for qualified JOINs
+			if p.isJoinKeyword() {
+				joinType, joinHint := p.parseJoinTypeAndHint()
+				if joinType == "" {
+					break
+				}
+				if p.curTok.Type != TokenJoin {
+					return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume JOIN
+
+				right, err := p.parseSingleTableReference()
+				if err != nil {
+					return nil, err
+				}
+
+				// Check for nested join
+				for p.isJoinKeyword() {
+					nestedJoinType, nestedJoinHint := p.parseJoinTypeAndHint()
+					if nestedJoinType == "" {
+						break
+					}
+					if p.curTok.Type != TokenJoin {
+						return nil, fmt.Errorf("expected JOIN, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume JOIN
+
+					nestedRight, err := p.parseSingleTableReference()
+					if err != nil {
+						return nil, err
+					}
+
+					if p.curTok.Type != TokenOn {
+						return nil, fmt.Errorf("expected ON after nested JOIN, got %s", p.curTok.Literal)
+					}
+					p.nextToken() // consume ON
+
+					nestedCondition, err := p.parseBooleanExpression()
+					if err != nil {
+						return nil, err
+					}
+
+					right = &ast.QualifiedJoin{
+						QualifiedJoinType:    nestedJoinType,
+						JoinHint:             nestedJoinHint,
+						FirstTableReference:  right,
+						SecondTableReference: nestedRight,
+						SearchCondition:      nestedCondition,
+					}
+				}
+
+				if p.curTok.Type != TokenOn {
+					return nil, fmt.Errorf("expected ON after JOIN, got %s", p.curTok.Literal)
+				}
+				p.nextToken() // consume ON
+
+				condition, err := p.parseBooleanExpression()
+				if err != nil {
+					return nil, err
+				}
+
+				tableRef = &ast.QualifiedJoin{
+					QualifiedJoinType:    joinType,
+					JoinHint:             joinHint,
+					FirstTableReference:  tableRef,
+					SecondTableReference: right,
+					SearchCondition:      condition,
+				}
+				continue
+			}
+
+			break
+		}
+
+		// Expect closing ) for outer paren
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) after parenthesized join expression, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+
+		return &ast.JoinParenthesisTableReference{
+			Join:    tableRef,
+			ForPath: false,
+		}, nil
 	}
+
 	p.nextToken() // consume )
 
 	ref := &ast.QueryDerivedTable{
