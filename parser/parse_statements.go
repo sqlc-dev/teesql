@@ -12836,11 +12836,23 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 		// Parse WITH clause
 		if p.curTok.Type == TokenWith {
 			p.nextToken() // consume WITH
+
+			// Handle optional parentheses: WITH (option, option) vs WITH option
+			hasParen := false
+			if p.curTok.Type == TokenLParen {
+				hasParen = true
+				p.nextToken() // consume (
+			}
+
 			noPopulation := false
 			for {
 				optLit := strings.ToUpper(p.curTok.Literal)
 				if optLit == "CHANGE_TRACKING" {
 					p.nextToken() // consume CHANGE_TRACKING
+					// Handle optional = sign
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
 					var trackingValue string
 					if strings.ToUpper(p.curTok.Literal) == "MANUAL" {
 						trackingValue = "Manual"
@@ -12862,6 +12874,10 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 					})
 				} else if optLit == "STOPLIST" {
 					p.nextToken() // consume STOPLIST
+					// Handle optional = sign
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
 					opt := &ast.StopListFullTextIndexOption{
 						OptionKind: "StopList",
 					}
@@ -12889,6 +12905,9 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 							}
 						}
 					}
+				} else if hasParen && p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+					break
 				} else {
 					break
 				}
@@ -12896,6 +12915,9 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 				if p.curTok.Type == TokenComma {
 					p.nextToken() // consume comma
 				} else if p.curTok.Type == TokenSemicolon || p.curTok.Type == TokenEOF {
+					break
+				} else if hasParen && p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
 					break
 				}
 			}

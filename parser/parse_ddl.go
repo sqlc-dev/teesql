@@ -8656,6 +8656,10 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 		} else if strings.ToUpper(p.curTok.Literal) == "STOPLIST" {
 			// Parse SET STOPLIST OFF | SYSTEM | name [WITH NO POPULATION]
 			p.nextToken() // consume STOPLIST
+			// Handle optional = sign
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
 			action := &ast.SetStopListAlterFullTextIndexAction{
 				StopListOption: &ast.StopListFullTextIndexOption{
 					OptionKind: "StopList",
