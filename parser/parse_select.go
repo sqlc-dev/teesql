@@ -2641,6 +2641,12 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 			break
 		}
 
+		// Check for LOCAL modifier (undocumented feature) and join hints
+		// Syntax: INNER LOCAL MERGE JOIN - LOCAL is just skipped
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "LOCAL" {
+			p.nextToken() // skip LOCAL
+		}
+
 		// Check for join hints (REMOTE, LOOP, HASH, MERGE, REDUCE, REPLICATE, REDISTRIBUTE)
 		joinHint := ""
 		if p.curTok.Type == TokenIdent {
@@ -2763,6 +2769,12 @@ func (p *Parser) parseJoinTypeAndHint() (joinType, joinHint string) {
 		joinType = "Inner"
 	default:
 		return "", ""
+	}
+
+	// Check for LOCAL modifier (undocumented feature) and join hints
+	// Syntax: INNER LOCAL MERGE JOIN - LOCAL is just skipped
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "LOCAL" {
+		p.nextToken() // skip LOCAL
 	}
 
 	// Check for join hints (REMOTE, LOOP, HASH, MERGE, REDUCE, REPLICATE, REDISTRIBUTE)
@@ -3813,27 +3825,77 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 		}
 	}
 
+	// Check for naked HOLDLOCK/NOWAIT before alias: table HOLDLOCK, table2
+	if p.curTok.Type == TokenHoldlock {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenNowait {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		p.nextToken()
+	}
+
 	// Parse optional alias (AS alias or just alias)
 	if p.curTok.Type == TokenAs {
 		p.nextToken()
-		if p.curTok.Type != TokenIdent {
+		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
+			ref.Alias = p.parseIdentifier()
+		} else {
 			return nil, fmt.Errorf("expected identifier after AS, got %s", p.curTok.Literal)
 		}
-		ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
-		p.nextToken()
-	} else if p.curTok.Type == TokenIdent {
+	} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 		// Could be an alias without AS, but need to be careful not to consume keywords
-		upper := strings.ToUpper(p.curTok.Literal)
-		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
-			ref.Alias = &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+		if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" && upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" && upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" && upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" && upper != "USING" && upper != "WHEN" && upper != "OUTPUT" && upper != "PIVOT" && upper != "UNPIVOT" {
+				ref.Alias = p.parseIdentifier()
+			}
+		} else {
+			ref.Alias = p.parseIdentifier()
+		}
+	}
+
+	// Check for old-style hints AFTER alias: table alias (1) or table alias (nolock)
+	// peekIsOldStyleIndexHint is safe to use here since we're after the alias
+	if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			hint, err := p.parseTableHint()
+			if err != nil {
+				return nil, err
+			}
+			if hint != nil {
+				ref.TableHints = append(ref.TableHints, hint)
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else if p.curTok.Type != TokenRParen {
+				if p.isTableHintToken() {
+					continue
+				}
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
 			p.nextToken()
 		}
+	}
+
+	// Check for naked HOLDLOCK/NOWAIT after alias: table alias HOLDLOCK
+	if p.curTok.Type == TokenHoldlock {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenNowait {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		p.nextToken()
 	}
 
 	// Check for new-style hints (with WITH keyword): alias WITH (hints)
 	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
-		if p.curTok.Type == TokenLParen && p.peekIsTableHint() {
+		// In WITH context, numbers are valid index hints: WITH (0)
+		if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
@@ -3915,6 +3977,16 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		}
 	}
 
+	// Check for naked HOLDLOCK/NOWAIT before alias: table HOLDLOCK, table2
+	if p.curTok.Type == TokenHoldlock {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenNowait {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		p.nextToken()
+	}
+
 	// Parse optional alias (AS alias or just alias)
 	if p.curTok.Type == TokenAs {
 		p.nextToken()
@@ -3932,6 +4004,42 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		} else {
 			ref.Alias = p.parseIdentifier()
 		}
+	}
+
+	// Check for old-style hints AFTER alias: table alias (1) or table alias (nolock)
+	// peekIsOldStyleIndexHint is safe to use here since we're after the alias
+	if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+		p.nextToken() // consume (
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			hint, err := p.parseTableHint()
+			if err != nil {
+				return nil, err
+			}
+			if hint != nil {
+				ref.TableHints = append(ref.TableHints, hint)
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else if p.curTok.Type != TokenRParen {
+				if p.isTableHintToken() {
+					continue
+				}
+				break
+			}
+		}
+		if p.curTok.Type == TokenRParen {
+			p.nextToken()
+		}
+	}
+
+	// Check for naked HOLDLOCK/NOWAIT after alias: table alias HOLDLOCK
+	if p.curTok.Type == TokenHoldlock {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		p.nextToken()
+	}
+	if p.curTok.Type == TokenNowait {
+		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		p.nextToken()
 	}
 
 	// Check for TABLESAMPLE after alias (supports syntax: t1 AS alias TABLESAMPLE (...))
@@ -3971,7 +4079,8 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 	// Check for new-style hints (with WITH keyword): alias WITH (hints)
 	if p.curTok.Type == TokenWith && p.peekTok.Type == TokenLParen {
 		p.nextToken() // consume WITH
-		if p.curTok.Type == TokenLParen && p.peekIsTableHint() {
+		// In WITH context, numbers are valid index hints: WITH (0)
+		if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
@@ -4435,6 +4544,49 @@ func (p *Parser) parseSimpleExpression() (ast.ScalarExpression, error) {
 
 // parseTableHint parses a single table hint
 func (p *Parser) parseTableHint() (ast.TableHintType, error) {
+	// Handle old-style numeric index hint (just a number like "0" or "1")
+	if p.curTok.Type == TokenNumber {
+		hint := &ast.IndexTableHint{
+			HintKind: "Index",
+			IndexValues: []*ast.IdentifierOrValueExpression{
+				{
+					Value: p.curTok.Literal,
+					ValueExpression: &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					},
+				},
+			},
+		}
+		p.nextToken()
+		// Check for additional comma-separated values
+		for p.curTok.Type == TokenComma {
+			p.nextToken()
+			if p.curTok.Type == TokenNumber {
+				hint.IndexValues = append(hint.IndexValues, &ast.IdentifierOrValueExpression{
+					Value: p.curTok.Literal,
+					ValueExpression: &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					},
+				})
+				p.nextToken()
+			} else if p.curTok.Type == TokenIdent {
+				hint.IndexValues = append(hint.IndexValues, &ast.IdentifierOrValueExpression{
+					Value: p.curTok.Literal,
+					Identifier: &ast.Identifier{
+						Value:     p.curTok.Literal,
+						QuoteType: "NotQuoted",
+					},
+				})
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+		return hint, nil
+	}
+
 	hintName := strings.ToUpper(p.curTok.Literal)
 	p.nextToken() // consume hint name
 
@@ -4684,6 +4836,12 @@ func (p *Parser) peekIsTableHint() bool {
 		}
 	}
 	return false
+}
+
+// peekIsOldStyleIndexHint checks if the peek token is a number (for old-style index hint like (0))
+// This is only valid after an alias or table name, not for function calls
+func (p *Parser) peekIsOldStyleIndexHint() bool {
+	return p.peekTok.Type == TokenNumber
 }
 
 func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
