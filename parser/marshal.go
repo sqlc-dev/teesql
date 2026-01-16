@@ -5410,6 +5410,59 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 					return stmt, nil
 				}
 				stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
+			} else if upperLit == "CONNECTION" {
+				// Parse unnamed CONNECTION constraint for graph edge tables
+				p.nextToken() // consume CONNECTION
+				constraint := &ast.GraphConnectionConstraintDefinition{}
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						conn := &ast.GraphConnectionBetweenNodes{}
+						// Parse FromNode
+						fromNode, err := p.parseSchemaObjectName()
+						if err != nil {
+							p.skipToEndOfStatement()
+							return stmt, nil
+						}
+						conn.FromNode = fromNode
+						// Expect TO
+						if strings.ToUpper(p.curTok.Literal) == "TO" {
+							p.nextToken() // consume TO
+						}
+						// Parse ToNode
+						toNode, err := p.parseSchemaObjectName()
+						if err != nil {
+							p.skipToEndOfStatement()
+							return stmt, nil
+						}
+						conn.ToNode = toNode
+						constraint.FromNodeToNodeList = append(constraint.FromNodeToNodeList, conn)
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+				// Check for ON DELETE CASCADE
+				if p.curTok.Type == TokenOn && strings.ToUpper(p.peekTok.Literal) == "DELETE" {
+					p.nextToken() // consume ON
+					p.nextToken() // consume DELETE
+					if strings.ToUpper(p.curTok.Literal) == "CASCADE" {
+						constraint.DeleteAction = "Cascade"
+						p.nextToken() // consume CASCADE
+					} else if strings.ToUpper(p.curTok.Literal) == "NO" {
+						p.nextToken() // consume NO
+						if strings.ToUpper(p.curTok.Literal) == "ACTION" {
+							constraint.DeleteAction = "NoAction"
+							p.nextToken() // consume ACTION
+						}
+					}
+				}
+				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 			} else {
 				// Parse column definition
 				colDef, err := p.parseColumnDefinition()
@@ -8165,6 +8218,22 @@ func (p *Parser) parseConnectionConstraint() (*ast.GraphConnectionConstraintDefi
 		}
 		if p.curTok.Type == TokenRParen {
 			p.nextToken() // consume )
+		}
+	}
+
+	// Check for ON DELETE CASCADE
+	if p.curTok.Type == TokenOn && strings.ToUpper(p.peekTok.Literal) == "DELETE" {
+		p.nextToken() // consume ON
+		p.nextToken() // consume DELETE
+		if strings.ToUpper(p.curTok.Literal) == "CASCADE" {
+			constraint.DeleteAction = "Cascade"
+			p.nextToken() // consume CASCADE
+		} else if strings.ToUpper(p.curTok.Literal) == "NO" {
+			p.nextToken() // consume NO
+			if strings.ToUpper(p.curTok.Literal) == "ACTION" {
+				constraint.DeleteAction = "NoAction"
+				p.nextToken() // consume ACTION
+			}
 		}
 	}
 

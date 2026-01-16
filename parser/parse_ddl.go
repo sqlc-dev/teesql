@@ -6384,6 +6384,21 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken() // consume )
 				}
 			}
+			// Check for ON DELETE CASCADE
+			if p.curTok.Type == TokenOn && strings.ToUpper(p.peekTok.Literal) == "DELETE" {
+				p.nextToken() // consume ON
+				p.nextToken() // consume DELETE
+				if strings.ToUpper(p.curTok.Literal) == "CASCADE" {
+					constraint.DeleteAction = "Cascade"
+					p.nextToken() // consume CASCADE
+				} else if strings.ToUpper(p.curTok.Literal) == "NO" {
+					p.nextToken() // consume NO
+					if strings.ToUpper(p.curTok.Literal) == "ACTION" {
+						constraint.DeleteAction = "NoAction"
+						p.nextToken() // consume ACTION
+					}
+				}
+			}
 			stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 
 		case "DEFAULT":
