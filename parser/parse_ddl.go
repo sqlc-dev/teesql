@@ -5073,7 +5073,7 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 			stmt.AlterTableAlterColumnOption = "AddHidden"
 			p.nextToken()
 		} else if nextLit == "MASKED" {
-			stmt.AlterTableAlterColumnOption = "AddMasked"
+			stmt.AlterTableAlterColumnOption = "AddMaskingFunction"
 			stmt.IsMasked = true
 			p.nextToken()
 			// Parse optional WITH (FUNCTION = '...')
@@ -5135,7 +5135,7 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 			stmt.AlterTableAlterColumnOption = "DropHidden"
 			p.nextToken()
 		} else if nextLit == "MASKED" {
-			stmt.AlterTableAlterColumnOption = "DropMasked"
+			stmt.AlterTableAlterColumnOption = "DropMaskingFunction"
 			p.nextToken()
 		} else if nextLit == "NOT" {
 			p.nextToken() // consume NOT
@@ -5245,6 +5245,35 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 				}
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
+				}
+			}
+		} else if upperLit == "GENERATED" {
+			p.nextToken() // consume GENERATED
+			if strings.ToUpper(p.curTok.Literal) == "ALWAYS" {
+				p.nextToken() // consume ALWAYS
+			}
+			if strings.ToUpper(p.curTok.Literal) == "AS" {
+				p.nextToken() // consume AS
+			}
+			// Parse the generated type: SUSER_SID, SUSER_SNAME, etc.
+			genType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			// Parse START or END
+			startEnd := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+			// Map to expected values
+			switch genType {
+			case "SUSER_SID":
+				if startEnd == "START" {
+					stmt.GeneratedAlways = "UserIdStart"
+				} else if startEnd == "END" {
+					stmt.GeneratedAlways = "UserIdEnd"
+				}
+			case "SUSER_SNAME":
+				if startEnd == "START" {
+					stmt.GeneratedAlways = "UserNameStart"
+				} else if startEnd == "END" {
+					stmt.GeneratedAlways = "UserNameEnd"
 				}
 			}
 		} else {

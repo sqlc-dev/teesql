@@ -976,6 +976,9 @@ func alterTableAlterColumnStatementToJSON(s *ast.AlterTableAlterColumnStatement)
 	if s.MaskingFunction != nil {
 		node["MaskingFunction"] = scalarExpressionToJSON(s.MaskingFunction)
 	}
+	if s.GeneratedAlways != "" {
+		node["GeneratedAlways"] = s.GeneratedAlways
+	}
 	if len(s.Options) > 0 {
 		opts := make([]jsonNode, len(s.Options))
 		for i, opt := range s.Options {
