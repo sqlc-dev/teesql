@@ -6604,10 +6604,27 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 								optState = "Off"
 							}
 							p.nextToken()
-							indexDef.IndexOptions = append(indexDef.IndexOptions, &ast.IgnoreDupKeyIndexOption{
+							opt := &ast.IgnoreDupKeyIndexOption{
 								OptionKind:  "IgnoreDupKey",
 								OptionState: optState,
-							})
+							}
+							// Check for optional (SUPPRESS_MESSAGES = ON/OFF)
+							if optState == "On" && p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								if strings.ToUpper(p.curTok.Literal) == "SUPPRESS_MESSAGES" {
+									p.nextToken() // consume SUPPRESS_MESSAGES
+									if p.curTok.Type == TokenEquals {
+										p.nextToken() // consume =
+									}
+									suppressVal := strings.ToUpper(p.curTok.Literal) == "ON"
+									opt.SuppressMessagesOption = &suppressVal
+									p.nextToken() // consume ON/OFF
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken() // consume )
+								}
+							}
+							indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 						} else if optionName == "FILLFACTOR" || optionName == "MAXDOP" {
 							// Integer expression options
 							optKind := "FillFactor"
@@ -11428,6 +11445,87 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 					}
 					stmt.IndexOptions = append(stmt.IndexOptions, opt)
 
+				case "ONLINE":
+					p.nextToken() // consume ONLINE
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					valueStr := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					onlineOpt := &ast.OnlineIndexOption{
+						OptionKind:  "Online",
+						OptionState: "On",
+					}
+					if valueStr == "OFF" {
+						onlineOpt.OptionState = "Off"
+					}
+					// Check for optional (WAIT_AT_LOW_PRIORITY (...))
+					if valueStr == "ON" && p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+						if strings.ToUpper(p.curTok.Literal) == "WAIT_AT_LOW_PRIORITY" {
+							p.nextToken() // consume WAIT_AT_LOW_PRIORITY
+							lowPriorityOpt := &ast.OnlineIndexLowPriorityLockWaitOption{}
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									subOptName := strings.ToUpper(p.curTok.Literal)
+									if subOptName == "MAX_DURATION" {
+										p.nextToken() // consume MAX_DURATION
+										if p.curTok.Type == TokenEquals {
+											p.nextToken() // consume =
+										}
+										durVal, _ := p.parsePrimaryExpression()
+										unit := ""
+										if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+											unit = "Minutes"
+											p.nextToken()
+										} else if strings.ToUpper(p.curTok.Literal) == "SECONDS" {
+											unit = "Seconds"
+											p.nextToken()
+										}
+										lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitMaxDurationOption{
+											MaxDuration: durVal,
+											Unit:        unit,
+											OptionKind:  "MaxDuration",
+										})
+									} else if subOptName == "ABORT_AFTER_WAIT" {
+										p.nextToken() // consume ABORT_AFTER_WAIT
+										if p.curTok.Type == TokenEquals {
+											p.nextToken() // consume =
+										}
+										abortType := "None"
+										switch strings.ToUpper(p.curTok.Literal) {
+										case "NONE":
+											abortType = "None"
+										case "SELF":
+											abortType = "Self"
+										case "BLOCKERS":
+											abortType = "Blockers"
+										}
+										p.nextToken()
+										lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+											AbortAfterWait: abortType,
+											OptionKind:     "AbortAfterWait",
+										})
+									} else {
+										break
+									}
+									if p.curTok.Type == TokenComma {
+										p.nextToken()
+									}
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken() // consume ) for WAIT_AT_LOW_PRIORITY options
+								}
+							}
+							onlineOpt.LowPriorityLockWaitOption = lowPriorityOpt
+						}
+						if p.curTok.Type == TokenRParen {
+							p.nextToken() // consume ) for ONLINE option
+						}
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, onlineOpt)
+
 				default:
 					// Skip unknown options
 					p.nextToken()
@@ -13853,6 +13951,16 @@ func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
 			node["PartitionRanges"] = ranges
 		}
 		return node
+	case *ast.OnlineIndexOption:
+		node := jsonNode{
+			"$type":       "OnlineIndexOption",
+			"OptionState": o.OptionState,
+			"OptionKind":  o.OptionKind,
+		}
+		if o.LowPriorityLockWaitOption != nil {
+			node["LowPriorityLockWaitOption"] = onlineIndexLowPriorityLockWaitOptionToJSON(o.LowPriorityLockWaitOption)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownIndexOption"}
 	}
@@ -14476,11 +14584,15 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 		}
 		return node
 	case *ast.IgnoreDupKeyIndexOption:
-		return jsonNode{
+		node := jsonNode{
 			"$type":       "IgnoreDupKeyIndexOption",
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
 		}
+		if o.SuppressMessagesOption != nil {
+			node["SuppressMessagesOption"] = *o.SuppressMessagesOption
+		}
+		return node
 	case *ast.OnlineIndexOption:
 		node := jsonNode{
 			"$type":       "OnlineIndexOption",

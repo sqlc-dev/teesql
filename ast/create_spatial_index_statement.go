@@ -80,8 +80,9 @@ func (d *DataCompressionOption) dropIndexOption() {}
 
 // IgnoreDupKeyIndexOption represents the IGNORE_DUP_KEY option
 type IgnoreDupKeyIndexOption struct {
-	OptionState string // "On", "Off"
-	OptionKind  string // "IgnoreDupKey"
+	OptionState               string // "On", "Off"
+	OptionKind                string // "IgnoreDupKey"
+	SuppressMessagesOption    *bool  // true/false when SUPPRESS_MESSAGES specified
 }
 
 func (i *IgnoreDupKeyIndexOption) node()        {}

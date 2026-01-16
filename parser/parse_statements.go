@@ -10853,10 +10853,27 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
 			})
 		case "IGNORE_DUP_KEY":
-			options = append(options, &ast.IgnoreDupKeyIndexOption{
+			opt := &ast.IgnoreDupKeyIndexOption{
 				OptionKind:  "IgnoreDupKey",
 				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
-			})
+			}
+			// Check for optional (SUPPRESS_MESSAGES = ON/OFF)
+			if valueStr == "ON" && p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				if strings.ToUpper(p.curTok.Literal) == "SUPPRESS_MESSAGES" {
+					p.nextToken() // consume SUPPRESS_MESSAGES
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					suppressVal := strings.ToUpper(p.curTok.Literal) == "ON"
+					opt.SuppressMessagesOption = &suppressVal
+					p.nextToken() // consume ON/OFF
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			options = append(options, opt)
 		case "DROP_EXISTING":
 			options = append(options, &ast.IndexStateOption{
 				OptionKind:  "DropExisting",
