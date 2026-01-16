@@ -3841,9 +3841,21 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 		}
 	default:
 		// Handle generic options (like DW_COMPATIBILITY_LEVEL)
+		// Handle bracketed and quoted identifiers properly
+		optionValue := optionNameOriginal
+		optionQuoteType := "NotQuoted"
+		if len(optionNameOriginal) >= 2 && optionNameOriginal[0] == '[' && optionNameOriginal[len(optionNameOriginal)-1] == ']' {
+			optionQuoteType = "SquareBracket"
+			optionValue = optionNameOriginal[1 : len(optionNameOriginal)-1]
+			optionValue = strings.ReplaceAll(optionValue, "]]", "]")
+		} else if len(optionNameOriginal) >= 2 && optionNameOriginal[0] == '"' && optionNameOriginal[len(optionNameOriginal)-1] == '"' {
+			optionQuoteType = "DoubleQuote"
+			optionValue = optionNameOriginal[1 : len(optionNameOriginal)-1]
+			optionValue = strings.ReplaceAll(optionValue, "\"\"", "\"")
+		}
 		optionKindIdent := &ast.Identifier{
-			Value:     optionNameOriginal, // use original case
-			QuoteType: "NotQuoted",
+			Value:     optionValue,
+			QuoteType: optionQuoteType,
 		}
 
 		var state *ast.IdentifierOrScalarExpression
