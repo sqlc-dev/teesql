@@ -1072,6 +1072,20 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			return &ast.UnaryExpression{UnaryExpressionType: "BitwiseNot", Expression: expr}, nil
 		}
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
+	case TokenLeft:
+		// LEFT can be a function name (string function)
+		if p.peekTok.Type == TokenLParen {
+			p.nextToken() // consume LEFT
+			return p.parseLeftFunctionCall()
+		}
+		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
+	case TokenRight:
+		// RIGHT can be a function name (string function)
+		if p.peekTok.Type == TokenLParen {
+			p.nextToken() // consume RIGHT
+			return p.parseRightFunctionCall()
+		}
+		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	case TokenIdent:
 		// Check if it's a global variable reference (starts with @@)
 		if strings.HasPrefix(p.curTok.Literal, "@@") {
@@ -5915,6 +5929,72 @@ func (p *Parser) parseIdentityFunctionCall() (ast.ScalarExpression, error) {
 	p.nextToken() // consume )
 
 	return identity, nil
+}
+
+// parseLeftFunctionCall parses LEFT(string, count)
+func (p *Parser) parseLeftFunctionCall() (ast.ScalarExpression, error) {
+	// Already consumed LEFT, now on (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after LEFT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	var params []ast.ScalarExpression
+
+	// Parse parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		params = append(params, param)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in LEFT function, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.LeftFunctionCall{Parameters: params}, nil
+}
+
+// parseRightFunctionCall parses RIGHT(string, count)
+func (p *Parser) parseRightFunctionCall() (ast.ScalarExpression, error) {
+	// Already consumed RIGHT, now on (
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after RIGHT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	var params []ast.ScalarExpression
+
+	// Parse parameters
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		param, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		params = append(params, param)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in RIGHT function, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.RightFunctionCall{Parameters: params}, nil
 }
 
 // parsePredictTableReference parses PREDICT(...) in FROM clause

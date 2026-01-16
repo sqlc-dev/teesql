@@ -2287,6 +2287,30 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Increment"] = scalarExpressionToJSON(e.Increment)
 		}
 		return node
+	case *ast.LeftFunctionCall:
+		node := jsonNode{
+			"$type": "LeftFunctionCall",
+		}
+		if len(e.Parameters) > 0 {
+			params := make([]jsonNode, len(e.Parameters))
+			for i, p := range e.Parameters {
+				params[i] = scalarExpressionToJSON(p)
+			}
+			node["Parameters"] = params
+		}
+		return node
+	case *ast.RightFunctionCall:
+		node := jsonNode{
+			"$type": "RightFunctionCall",
+		}
+		if len(e.Parameters) > 0 {
+			params := make([]jsonNode, len(e.Parameters))
+			for i, p := range e.Parameters {
+				params[i] = scalarExpressionToJSON(p)
+			}
+			node["Parameters"] = params
+		}
+		return node
 	case *ast.AtTimeZoneCall:
 		node := jsonNode{
 			"$type": "AtTimeZoneCall",
