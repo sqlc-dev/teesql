@@ -8350,10 +8350,29 @@ func (p *Parser) parseCreateExternalFileFormatStatement() (*ast.CreateExternalFi
 				}
 				stmt.ExternalFileFormatOptions = append(stmt.ExternalFileFormatOptions, opt)
 			} else {
-				// Skip other options for now
+				// Handle other options (SERDE_METHOD, DATA_COMPRESSION) as literal options
+				optionKind := p.externalFileFormatOptionKind(optName)
 				if p.curTok.Type == TokenEquals {
 					p.nextToken() // consume =
-					p.nextToken() // consume value
+					// Parse value (string literal or identifier like FALSE/TRUE)
+					if p.curTok.Type == TokenString {
+						val, _ := p.parseStringLiteral()
+						stmt.ExternalFileFormatOptions = append(stmt.ExternalFileFormatOptions, &ast.ExternalFileFormatLiteralOption{
+							OptionKind: optionKind,
+							Value:      val,
+						})
+					} else {
+						// Handle identifiers like FALSE, TRUE, etc.
+						val := &ast.StringLiteral{
+							LiteralType: "String",
+							Value:       p.curTok.Literal,
+						}
+						p.nextToken()
+						stmt.ExternalFileFormatOptions = append(stmt.ExternalFileFormatOptions, &ast.ExternalFileFormatLiteralOption{
+							OptionKind: optionKind,
+							Value:      val,
+						})
+					}
 				}
 			}
 			if p.curTok.Type == TokenComma {
@@ -8400,6 +8419,35 @@ func (p *Parser) parseExternalFileFormatSuboption() ast.ExternalFileFormatOption
 
 	if p.curTok.Type == TokenEquals {
 		p.nextToken() // consume =
+
+		// Special handling for USE_TYPE_DEFAULT which uses ExternalFileFormatUseDefaultTypeOption
+		if optName == "USE_TYPE_DEFAULT" {
+			// Value is TRUE or FALSE (as identifier, not string)
+			value := strings.ToUpper(p.curTok.Literal)
+			defaultType := "False"
+			if value == "TRUE" {
+				defaultType = "True"
+			}
+			p.nextToken()
+			return &ast.ExternalFileFormatUseDefaultTypeOption{
+				OptionKind:                       optionKind,
+				ExternalFileFormatUseDefaultType: defaultType,
+			}
+		}
+
+		// Handle integer values for FIRST_ROW
+		if optName == "FIRST_ROW" {
+			val := &ast.IntegerLiteral{
+				LiteralType: "Integer",
+				Value:       p.curTok.Literal,
+			}
+			p.nextToken()
+			return &ast.ExternalFileFormatLiteralOption{
+				OptionKind: optionKind,
+				Value:      val,
+			}
+		}
+
 		val, _ := p.parseStringLiteral()
 		return &ast.ExternalFileFormatLiteralOption{
 			OptionKind: optionKind,
@@ -8427,6 +8475,8 @@ func (p *Parser) externalFileFormatOptionKind(name string) string {
 		return "DataCompression"
 	case "FIRST_ROW":
 		return "FirstRow"
+	case "SERDE_METHOD":
+		return "SerDeMethod"
 	default:
 		return name
 	}

@@ -43,10 +43,18 @@ func (o *ExternalFileFormatContainerOption) externalFileFormatOption() {}
 // ExternalFileFormatLiteralOption represents a literal value option
 type ExternalFileFormatLiteralOption struct {
 	OptionKind string
-	Value      *StringLiteral
+	Value      ScalarExpression // Can be StringLiteral or IntegerLiteral
 }
 
 func (o *ExternalFileFormatLiteralOption) externalFileFormatOption() {}
+
+// ExternalFileFormatUseDefaultTypeOption represents USE_TYPE_DEFAULT option
+type ExternalFileFormatUseDefaultTypeOption struct {
+	OptionKind                       string
+	ExternalFileFormatUseDefaultType string // "True" or "False"
+}
+
+func (o *ExternalFileFormatUseDefaultTypeOption) externalFileFormatOption() {}
 
 // CreateExternalTableStatement represents CREATE EXTERNAL TABLE statement
 type CreateExternalTableStatement struct {

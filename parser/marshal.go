@@ -16647,9 +16647,15 @@ func externalFileFormatOptionToJSON(opt ast.ExternalFileFormatOption) jsonNode {
 			"OptionKind": o.OptionKind,
 		}
 		if o.Value != nil {
-			node["Value"] = stringLiteralToJSON(o.Value)
+			node["Value"] = scalarExpressionToJSON(o.Value)
 		}
 		return node
+	case *ast.ExternalFileFormatUseDefaultTypeOption:
+		return jsonNode{
+			"$type":                              "ExternalFileFormatUseDefaultTypeOption",
+			"ExternalFileFormatUseDefaultType":   o.ExternalFileFormatUseDefaultType,
+			"OptionKind":                         o.OptionKind,
+		}
 	default:
 		return jsonNode{"$type": "UnknownExternalFileFormatOption"}
 	}
