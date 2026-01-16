@@ -3847,8 +3847,8 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 		}
 
 		var state *ast.IdentifierOrScalarExpression
-		// Check if value is an identifier or a number
-		if p.curTok.Type == TokenNumber {
+		// Check if value is a number, string, negative number, or identifier
+		if p.curTok.Type == TokenNumber || p.curTok.Type == TokenString || p.curTok.Type == TokenMinus {
 			val, err := p.parseScalarExpression()
 			if err != nil {
 				return nil, err
