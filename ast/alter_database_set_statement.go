@@ -458,3 +458,94 @@ type TargetRecoveryTimeDatabaseOption struct {
 
 func (t *TargetRecoveryTimeDatabaseOption) node()           {}
 func (t *TargetRecoveryTimeDatabaseOption) databaseOption() {}
+
+// QueryStoreDatabaseOption represents QUERY_STORE database option
+type QueryStoreDatabaseOption struct {
+	OptionKind  string             // "QueryStore"
+	OptionState string             // "On", "Off", "NotSet"
+	Clear       bool               // QUERY_STORE CLEAR [ALL]
+	ClearAll    bool               // QUERY_STORE CLEAR ALL
+	Options     []QueryStoreOption // Sub-options
+}
+
+func (q *QueryStoreDatabaseOption) node()           {}
+func (q *QueryStoreDatabaseOption) databaseOption() {}
+
+// QueryStoreOption is an interface for query store sub-options
+type QueryStoreOption interface {
+	Node
+	queryStoreOption()
+}
+
+// QueryStoreDesiredStateOption represents DESIRED_STATE option
+type QueryStoreDesiredStateOption struct {
+	OptionKind             string // "Desired_State"
+	Value                  string // "ReadOnly", "ReadWrite", "Off"
+	OperationModeSpecified bool   // Whether OPERATION_MODE was explicitly specified
+}
+
+func (q *QueryStoreDesiredStateOption) node()             {}
+func (q *QueryStoreDesiredStateOption) queryStoreOption() {}
+
+// QueryStoreCapturePolicyOption represents QUERY_CAPTURE_MODE option
+type QueryStoreCapturePolicyOption struct {
+	OptionKind string // "Query_Capture_Mode"
+	Value      string // "ALL", "AUTO", "NONE", "CUSTOM"
+}
+
+func (q *QueryStoreCapturePolicyOption) node()             {}
+func (q *QueryStoreCapturePolicyOption) queryStoreOption() {}
+
+// QueryStoreSizeCleanupPolicyOption represents SIZE_BASED_CLEANUP_MODE option
+type QueryStoreSizeCleanupPolicyOption struct {
+	OptionKind string // "Size_Based_Cleanup_Mode"
+	Value      string // "OFF", "AUTO"
+}
+
+func (q *QueryStoreSizeCleanupPolicyOption) node()             {}
+func (q *QueryStoreSizeCleanupPolicyOption) queryStoreOption() {}
+
+// QueryStoreIntervalLengthOption represents INTERVAL_LENGTH_MINUTES option
+type QueryStoreIntervalLengthOption struct {
+	OptionKind          string           // "Interval_Length_Minutes"
+	StatsIntervalLength ScalarExpression // Integer literal
+}
+
+func (q *QueryStoreIntervalLengthOption) node()             {}
+func (q *QueryStoreIntervalLengthOption) queryStoreOption() {}
+
+// QueryStoreMaxStorageSizeOption represents MAX_STORAGE_SIZE_MB option
+type QueryStoreMaxStorageSizeOption struct {
+	OptionKind string           // "Current_Storage_Size_MB" (note: uses Current_Storage_Size_MB as OptionKind)
+	MaxQdsSize ScalarExpression // Integer literal
+}
+
+func (q *QueryStoreMaxStorageSizeOption) node()             {}
+func (q *QueryStoreMaxStorageSizeOption) queryStoreOption() {}
+
+// QueryStoreMaxPlansPerQueryOption represents MAX_PLANS_PER_QUERY option
+type QueryStoreMaxPlansPerQueryOption struct {
+	OptionKind       string           // "Max_Plans_Per_Query"
+	MaxPlansPerQuery ScalarExpression // Integer literal
+}
+
+func (q *QueryStoreMaxPlansPerQueryOption) node()             {}
+func (q *QueryStoreMaxPlansPerQueryOption) queryStoreOption() {}
+
+// QueryStoreTimeCleanupPolicyOption represents STALE_QUERY_THRESHOLD_DAYS option (in CLEANUP_POLICY)
+type QueryStoreTimeCleanupPolicyOption struct {
+	OptionKind          string           // "Stale_Query_Threshold_Days"
+	StaleQueryThreshold ScalarExpression // Integer literal
+}
+
+func (q *QueryStoreTimeCleanupPolicyOption) node()             {}
+func (q *QueryStoreTimeCleanupPolicyOption) queryStoreOption() {}
+
+// QueryStoreWaitStatsCaptureOption represents WAIT_STATS_CAPTURE_MODE option
+type QueryStoreWaitStatsCaptureOption struct {
+	OptionKind  string // "Wait_Stats_Capture_Mode"
+	OptionState string // "On", "Off"
+}
+
+func (q *QueryStoreWaitStatsCaptureOption) node()             {}
+func (q *QueryStoreWaitStatsCaptureOption) queryStoreOption() {}

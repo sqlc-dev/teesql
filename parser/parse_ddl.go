@@ -2871,6 +2871,12 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				Unit:         unit,
 			}
 			stmt.Options = append(stmt.Options, trtOpt)
+		case "QUERY_STORE":
+			qsOpt, err := p.parseQueryStoreOption()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = append(stmt.Options, qsOpt)
 		default:
 			// Handle generic options with = syntax (e.g., OPTIMIZED_LOCKING = ON)
 			if p.curTok.Type == TokenEquals {
@@ -3141,6 +3147,182 @@ func (p *Parser) parseChangeTrackingOption() (*ast.ChangeTrackingDatabaseOption,
 			return nil, fmt.Errorf("expected ) after CHANGE_TRACKING details, got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume )
+	}
+
+	return opt, nil
+}
+
+// parseQueryStoreOption parses QUERY_STORE database option
+// Forms:
+//   - QUERY_STORE = ON (options...)
+//   - QUERY_STORE = OFF
+//   - QUERY_STORE (options...)
+//   - QUERY_STORE CLEAR [ALL]
+func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) {
+	opt := &ast.QueryStoreDatabaseOption{
+		OptionKind:  "QueryStore",
+		OptionState: "NotSet",
+	}
+
+	// Check for = ON/OFF or CLEAR or just (
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+		stateVal := strings.ToUpper(p.curTok.Literal)
+		opt.OptionState = capitalizeFirst(stateVal)
+		p.nextToken() // consume ON/OFF
+	} else if strings.ToUpper(p.curTok.Literal) == "CLEAR" {
+		opt.Clear = true
+		p.nextToken() // consume CLEAR
+		if strings.ToUpper(p.curTok.Literal) == "ALL" {
+			opt.ClearAll = true
+			p.nextToken() // consume ALL
+		}
+		return opt, nil
+	}
+
+	// Parse options if we have (
+	if p.curTok.Type == TokenLParen {
+		p.nextToken() // consume (
+		for {
+			optName := strings.ToUpper(p.curTok.Literal)
+			p.nextToken() // consume option name
+
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+
+			switch optName {
+			case "DESIRED_STATE":
+				val := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				stateOpt := &ast.QueryStoreDesiredStateOption{
+					OptionKind: "Desired_State",
+				}
+				switch val {
+				case "READ_ONLY":
+					stateOpt.Value = "ReadOnly"
+				case "READ_WRITE":
+					stateOpt.Value = "ReadWrite"
+				case "OFF":
+					stateOpt.Value = "Off"
+				}
+				opt.Options = append(opt.Options, stateOpt)
+			case "OPERATION_MODE":
+				val := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				stateOpt := &ast.QueryStoreDesiredStateOption{
+					OptionKind:             "Desired_State",
+					OperationModeSpecified: true,
+				}
+				switch val {
+				case "READ_ONLY":
+					stateOpt.Value = "ReadOnly"
+				case "READ_WRITE":
+					stateOpt.Value = "ReadWrite"
+				case "OFF":
+					stateOpt.Value = "Off"
+				}
+				opt.Options = append(opt.Options, stateOpt)
+			case "QUERY_CAPTURE_MODE":
+				val := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				captureOpt := &ast.QueryStoreCapturePolicyOption{
+					OptionKind: "Query_Capture_Mode",
+					Value:      val,
+				}
+				opt.Options = append(opt.Options, captureOpt)
+			case "SIZE_BASED_CLEANUP_MODE":
+				val := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				cleanupOpt := &ast.QueryStoreSizeCleanupPolicyOption{
+					OptionKind: "Size_Based_Cleanup_Mode",
+					Value:      val,
+				}
+				opt.Options = append(opt.Options, cleanupOpt)
+			case "INTERVAL_LENGTH_MINUTES":
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				intervalOpt := &ast.QueryStoreIntervalLengthOption{
+					OptionKind:          "Interval_Length_Minutes",
+					StatsIntervalLength: val,
+				}
+				opt.Options = append(opt.Options, intervalOpt)
+			case "MAX_STORAGE_SIZE_MB":
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				storageOpt := &ast.QueryStoreMaxStorageSizeOption{
+					OptionKind: "Current_Storage_Size_MB",
+					MaxQdsSize: val,
+				}
+				opt.Options = append(opt.Options, storageOpt)
+			case "MAX_PLANS_PER_QUERY":
+				val, err := p.parseScalarExpression()
+				if err != nil {
+					return nil, err
+				}
+				plansOpt := &ast.QueryStoreMaxPlansPerQueryOption{
+					OptionKind:       "Max_Plans_Per_Query",
+					MaxPlansPerQuery: val,
+				}
+				opt.Options = append(opt.Options, plansOpt)
+			case "CLEANUP_POLICY":
+				// Expect (STALE_QUERY_THRESHOLD_DAYS = N)
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						subOptName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken() // consume sub-option name
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						if subOptName == "STALE_QUERY_THRESHOLD_DAYS" {
+							val, err := p.parseScalarExpression()
+							if err != nil {
+								return nil, err
+							}
+							thresholdOpt := &ast.QueryStoreTimeCleanupPolicyOption{
+								OptionKind:          "Stale_Query_Threshold_Days",
+								StaleQueryThreshold: val,
+							}
+							opt.Options = append(opt.Options, thresholdOpt)
+						}
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			case "WAIT_STATS_CAPTURE_MODE":
+				val := strings.ToUpper(p.curTok.Literal)
+				p.nextToken()
+				waitOpt := &ast.QueryStoreWaitStatsCaptureOption{
+					OptionKind:  "Wait_Stats_Capture_Mode",
+					OptionState: capitalizeFirst(val),
+				}
+				opt.Options = append(opt.Options, waitOpt)
+			default:
+				// Skip unknown option
+				if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
+					p.nextToken()
+				}
+			}
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
 	}
 
 	return opt, nil

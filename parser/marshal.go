@@ -1369,6 +1369,26 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			node["RecoveryTime"] = scalarExpressionToJSON(o.RecoveryTime)
 		}
 		return node
+	case *ast.QueryStoreDatabaseOption:
+		node := jsonNode{
+			"$type":    "QueryStoreDatabaseOption",
+			"Clear":    o.Clear,
+			"ClearAll": o.ClearAll,
+		}
+		if o.OptionState != "" {
+			node["OptionState"] = o.OptionState
+		} else {
+			node["OptionState"] = "NotSet"
+		}
+		if len(o.Options) > 0 {
+			opts := make([]jsonNode, len(o.Options))
+			for i, subOpt := range o.Options {
+				opts[i] = queryStoreOptionToJSON(subOpt)
+			}
+			node["Options"] = opts
+		}
+		node["OptionKind"] = o.OptionKind
+		return node
 	default:
 		return jsonNode{"$type": "UnknownDatabaseOption"}
 	}
@@ -1402,6 +1422,74 @@ func automaticTuningOptionToJSON(opt ast.AutomaticTuningOption) jsonNode {
 		}
 	default:
 		return jsonNode{"$type": "UnknownAutomaticTuningOption"}
+	}
+}
+
+func queryStoreOptionToJSON(opt ast.QueryStoreOption) jsonNode {
+	switch o := opt.(type) {
+	case *ast.QueryStoreDesiredStateOption:
+		return jsonNode{
+			"$type":                  "QueryStoreDesiredStateOption",
+			"Value":                  o.Value,
+			"OperationModeSpecified": o.OperationModeSpecified,
+			"OptionKind":             o.OptionKind,
+		}
+	case *ast.QueryStoreCapturePolicyOption:
+		return jsonNode{
+			"$type":      "QueryStoreCapturePolicyOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.QueryStoreSizeCleanupPolicyOption:
+		return jsonNode{
+			"$type":      "QueryStoreSizeCleanupPolicyOption",
+			"Value":      o.Value,
+			"OptionKind": o.OptionKind,
+		}
+	case *ast.QueryStoreIntervalLengthOption:
+		node := jsonNode{
+			"$type":      "QueryStoreIntervalLengthOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.StatsIntervalLength != nil {
+			node["StatsIntervalLength"] = scalarExpressionToJSON(o.StatsIntervalLength)
+		}
+		return node
+	case *ast.QueryStoreMaxStorageSizeOption:
+		node := jsonNode{
+			"$type":      "QueryStoreMaxStorageSizeOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.MaxQdsSize != nil {
+			node["MaxQdsSize"] = scalarExpressionToJSON(o.MaxQdsSize)
+		}
+		return node
+	case *ast.QueryStoreMaxPlansPerQueryOption:
+		node := jsonNode{
+			"$type":      "QueryStoreMaxPlansPerQueryOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.MaxPlansPerQuery != nil {
+			node["MaxPlansPerQuery"] = scalarExpressionToJSON(o.MaxPlansPerQuery)
+		}
+		return node
+	case *ast.QueryStoreTimeCleanupPolicyOption:
+		node := jsonNode{
+			"$type":      "QueryStoreTimeCleanupPolicyOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.StaleQueryThreshold != nil {
+			node["StaleQueryThreshold"] = scalarExpressionToJSON(o.StaleQueryThreshold)
+		}
+		return node
+	case *ast.QueryStoreWaitStatsCaptureOption:
+		return jsonNode{
+			"$type":       "QueryStoreWaitStatsCaptureOption",
+			"OptionState": o.OptionState,
+			"OptionKind":  o.OptionKind,
+		}
+	default:
+		return jsonNode{"$type": "UnknownQueryStoreOption"}
 	}
 }
 
@@ -3890,6 +3978,9 @@ func mergeStatementToJSON(s *ast.MergeStatement) jsonNode {
 	}
 	if s.MergeSpecification != nil {
 		node["MergeSpecification"] = mergeSpecificationToJSON(s.MergeSpecification)
+	}
+	if s.WithCtesAndXmlNamespaces != nil {
+		node["WithCtesAndXmlNamespaces"] = withCtesAndXmlNamespacesToJSON(s.WithCtesAndXmlNamespaces)
 	}
 	return node
 }
