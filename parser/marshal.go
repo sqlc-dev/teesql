@@ -12,6 +12,11 @@ import (
 // jsonNode represents a generic JSON node from the AST JSON format.
 type jsonNode map[string]any
 
+// boolPtr returns a pointer to a bool value.
+func boolPtr(b bool) *bool {
+	return &b
+}
+
 // MarshalScript marshals a Script to JSON in the expected format.
 func MarshalScript(s *ast.Script) ([]byte, error) {
 	node := scriptToJSON(s)
@@ -12038,6 +12043,26 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 								OptionKind:  "IgnoreDupKey",
 								OptionState: p.capitalizeFirst(strings.ToLower(valueUpper)),
 							}
+							// Check for (SUPPRESS_MESSAGES = ON/OFF)
+							if p.curTok.Type == TokenLParen {
+								p.nextToken() // consume (
+								if strings.ToUpper(p.curTok.Literal) == "SUPPRESS_MESSAGES" {
+									p.nextToken() // consume SUPPRESS_MESSAGES
+									if p.curTok.Type == TokenEquals {
+										p.nextToken() // consume =
+									}
+									suppressVal := strings.ToUpper(p.curTok.Literal)
+									if suppressVal == "ON" {
+										opt.SuppressMessagesOption = boolPtr(true)
+									} else if suppressVal == "OFF" {
+										opt.SuppressMessagesOption = boolPtr(false)
+									}
+									p.nextToken()
+								}
+								if p.curTok.Type == TokenRParen {
+									p.nextToken() // consume )
+								}
+							}
 							stmt.IndexOptions = append(stmt.IndexOptions, opt)
 						} else {
 							opt := &ast.IndexStateOption{
@@ -12109,13 +12134,80 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 				optionName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken()
 
-				if p.curTok.Type == TokenEquals {
+				// Handle WAIT_AT_LOW_PRIORITY (...) - no equals sign
+				if optionName == "WAIT_AT_LOW_PRIORITY" && p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					waitOpt := &ast.WaitAtLowPriorityOption{
+						OptionKind: "WaitAtLowPriority",
+					}
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						subOptName := strings.ToUpper(p.curTok.Literal)
+						if subOptName == "MAX_DURATION" {
+							p.nextToken() // consume MAX_DURATION
+							if p.curTok.Type == TokenEquals {
+								p.nextToken() // consume =
+							}
+							durVal, _ := p.parsePrimaryExpression()
+							unit := ""
+							if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+								unit = "Minutes"
+								p.nextToken()
+							}
+							waitOpt.Options = append(waitOpt.Options, &ast.LowPriorityLockWaitMaxDurationOption{
+								MaxDuration: durVal,
+								Unit:        unit,
+								OptionKind:  "MaxDuration",
+							})
+						} else if subOptName == "ABORT_AFTER_WAIT" {
+							p.nextToken() // consume ABORT_AFTER_WAIT
+							if p.curTok.Type == TokenEquals {
+								p.nextToken() // consume =
+							}
+							abortType := "None"
+							switch strings.ToUpper(p.curTok.Literal) {
+							case "NONE":
+								abortType = "None"
+							case "SELF":
+								abortType = "Self"
+							case "BLOCKERS":
+								abortType = "Blockers"
+							}
+							p.nextToken()
+							waitOpt.Options = append(waitOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+								AbortAfterWait: abortType,
+								OptionKind:     "AbortAfterWait",
+							})
+						} else {
+							break
+						}
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+					stmt.IndexOptions = append(stmt.IndexOptions, waitOpt)
+				} else if p.curTok.Type == TokenEquals {
 					p.nextToken()
 					valueStr := strings.ToUpper(p.curTok.Literal)
 					p.nextToken()
 
-					// Determine if it's a state option (ON/OFF) or expression option
-					if valueStr == "ON" || valueStr == "OFF" {
+					// Handle MAX_DURATION = value [MINUTES] as top-level option
+					if optionName == "MAX_DURATION" {
+						unit := ""
+						if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
+							unit = "Minutes"
+							p.nextToken()
+						}
+						opt := &ast.MaxDurationOption{
+							MaxDuration: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
+							Unit:        unit,
+							OptionKind:  "MaxDuration",
+						}
+						stmt.IndexOptions = append(stmt.IndexOptions, opt)
+					} else if valueStr == "ON" || valueStr == "OFF" {
+						// Determine if it's a state option (ON/OFF) or expression option
 						if optionName == "IGNORE_DUP_KEY" {
 							opt := &ast.IgnoreDupKeyIndexOption{
 								OptionKind:  "IgnoreDupKey",
@@ -14644,6 +14736,19 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 				ranges[i] = compressionPartitionRangeToJSON(r)
 			}
 			node["PartitionRanges"] = ranges
+		}
+		return node
+	case *ast.WaitAtLowPriorityOption:
+		node := jsonNode{
+			"$type":      "WaitAtLowPriorityOption",
+			"OptionKind": o.OptionKind,
+		}
+		if len(o.Options) > 0 {
+			options := make([]jsonNode, len(o.Options))
+			for i, opt := range o.Options {
+				options[i] = lowPriorityLockWaitOptionToJSON(opt)
+			}
+			node["Options"] = options
 		}
 		return node
 	default:
