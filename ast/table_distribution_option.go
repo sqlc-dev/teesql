@@ -34,3 +34,22 @@ type TableReplicateDistributionPolicy struct{}
 
 func (t *TableReplicateDistributionPolicy) node()                    {}
 func (t *TableReplicateDistributionPolicy) tableDistributionPolicy() {}
+
+// TablePartitionOption represents PARTITION option for Azure Synapse tables
+// PARTITION(column RANGE [LEFT|RIGHT] FOR VALUES (v1, v2, ...))
+type TablePartitionOption struct {
+	PartitionColumn     *Identifier
+	PartitionOptionSpecs *TablePartitionOptionSpecifications
+	OptionKind          string // "Partition"
+}
+
+func (t *TablePartitionOption) node()        {}
+func (t *TablePartitionOption) tableOption() {}
+
+// TablePartitionOptionSpecifications represents the partition specifications
+type TablePartitionOptionSpecifications struct {
+	Range          string            // "Left", "Right", "NotSpecified"
+	BoundaryValues []ScalarExpression // the values in the FOR VALUES clause
+}
+
+func (t *TablePartitionOptionSpecifications) node() {}

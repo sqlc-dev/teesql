@@ -5677,6 +5677,15 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 											},
 										},
 									}
+									// Parse optional ASC/DESC
+									sortUpper := strings.ToUpper(p.curTok.Literal)
+									if sortUpper == "ASC" {
+										col.SortOrder = ast.SortOrderAscending
+										p.nextToken()
+									} else if sortUpper == "DESC" {
+										col.SortOrder = ast.SortOrderDescending
+										p.nextToken()
+									}
 									indexType.Columns = append(indexType.Columns, col)
 									if p.curTok.Type == TokenComma {
 										p.nextToken()
@@ -5745,6 +5754,62 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						} else {
 							// Unknown distribution - skip for now
 							p.nextToken()
+						}
+					} else if optionName == "PARTITION" {
+						// Parse PARTITION(column RANGE [LEFT|RIGHT] FOR VALUES (v1, v2, ...))
+						if p.curTok.Type == TokenLParen {
+							p.nextToken() // consume (
+							partOpt := &ast.TablePartitionOption{
+								OptionKind:           "Partition",
+								PartitionOptionSpecs: &ast.TablePartitionOptionSpecifications{},
+							}
+							// Parse partition column
+							partOpt.PartitionColumn = p.parseIdentifier()
+							// Expect RANGE keyword
+							if strings.ToUpper(p.curTok.Literal) == "RANGE" {
+								p.nextToken() // consume RANGE
+								// Check for LEFT or RIGHT
+								rangeDir := strings.ToUpper(p.curTok.Literal)
+								if rangeDir == "LEFT" {
+									partOpt.PartitionOptionSpecs.Range = "Left"
+									p.nextToken()
+								} else if rangeDir == "RIGHT" {
+									partOpt.PartitionOptionSpecs.Range = "Right"
+									p.nextToken()
+								} else {
+									partOpt.PartitionOptionSpecs.Range = "NotSpecified"
+								}
+								// Expect FOR keyword
+								if strings.ToUpper(p.curTok.Literal) == "FOR" {
+									p.nextToken() // consume FOR
+								}
+								// Expect VALUES keyword
+								if strings.ToUpper(p.curTok.Literal) == "VALUES" {
+									p.nextToken() // consume VALUES
+								}
+								// Parse boundary values list
+								if p.curTok.Type == TokenLParen {
+									p.nextToken() // consume (
+									for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+										val, _ := p.parseScalarExpression()
+										if val != nil {
+											partOpt.PartitionOptionSpecs.BoundaryValues = append(partOpt.PartitionOptionSpecs.BoundaryValues, val)
+										}
+										if p.curTok.Type == TokenComma {
+											p.nextToken()
+										} else {
+											break
+										}
+									}
+									if p.curTok.Type == TokenRParen {
+										p.nextToken() // consume )
+									}
+								}
+							}
+							if p.curTok.Type == TokenRParen {
+								p.nextToken() // consume )
+							}
+							stmt.Options = append(stmt.Options, partOpt)
 						}
 					} else {
 						// Skip unknown option value
@@ -6064,6 +6129,15 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 												Count:       1,
 											},
 										},
+									}
+									// Parse optional ASC/DESC
+									sortUpper := strings.ToUpper(p.curTok.Literal)
+									if sortUpper == "ASC" {
+										col.SortOrder = ast.SortOrderAscending
+										p.nextToken()
+									} else if sortUpper == "DESC" {
+										col.SortOrder = ast.SortOrderDescending
+										p.nextToken()
 									}
 									indexType.Columns = append(indexType.Columns, col)
 									if p.curTok.Type == TokenComma {
@@ -7140,6 +7214,22 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
 				}
 			}
+			// Parse optional column list (column ASC, column DESC, ...)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colWithSort := p.parseColumnWithSortOrder()
+					constraint.Columns = append(constraint.Columns, colWithSort)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
 			// Parse WITH (index_options)
 			if strings.ToUpper(p.curTok.Literal) == "WITH" {
 				p.nextToken() // consume WITH
@@ -7150,6 +7240,13 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				p.nextToken() // consume ON
 				fg, _ := p.parseFileGroupOrPartitionScheme()
 				constraint.OnFileGroupOrPartitionScheme = fg
+			}
+			// Parse NOT ENFORCED (Azure Synapse) - but only if next token is ENFORCED
+			if p.curTok.Type == TokenNot && strings.ToUpper(p.peekTok.Literal) == "ENFORCED" {
+				p.nextToken() // consume NOT
+				p.nextToken() // consume ENFORCED
+				enforced := false
+				constraint.IsEnforced = &enforced
 			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "PRIMARY" {
@@ -7221,6 +7318,13 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				p.nextToken() // consume ON
 				fg, _ := p.parseFileGroupOrPartitionScheme()
 				constraint.OnFileGroupOrPartitionScheme = fg
+			}
+			// Parse NOT ENFORCED (Azure Synapse) - but only if next token is ENFORCED
+			if p.curTok.Type == TokenNot && strings.ToUpper(p.peekTok.Literal) == "ENFORCED" {
+				p.nextToken() // consume NOT
+				p.nextToken() // consume ENFORCED
+				enforced := false
+				constraint.IsEnforced = &enforced
 			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if p.curTok.Type == TokenDefault {
@@ -7620,6 +7724,15 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					}
 				}
 			}
+			// Parse optional WHERE clause for filtered index
+			if p.curTok.Type == TokenWhere {
+				p.nextToken() // consume WHERE
+				filterExpr, err := p.parseBooleanExpression()
+				if err != nil {
+					return nil, err
+				}
+				indexDef.FilterPredicate = filterExpr
+			}
 			col.Index = indexDef
 		} else if upperLit == "SPARSE" {
 			p.nextToken() // consume SPARSE
@@ -7864,6 +7977,14 @@ func (p *Parser) parsePrimaryKeyConstraint() (*ast.UniqueConstraintDefinition, e
 		constraint.OnFileGroupOrPartitionScheme = fg
 	}
 
+	// Parse NOT ENFORCED (Azure Synapse) - but only if next token is ENFORCED
+	if p.curTok.Type == TokenNot && strings.ToUpper(p.peekTok.Literal) == "ENFORCED" {
+		p.nextToken() // consume NOT
+		p.nextToken() // consume ENFORCED
+		enforced := false
+		constraint.IsEnforced = &enforced
+	}
+
 	return constraint, nil
 }
 
@@ -7916,6 +8037,14 @@ func (p *Parser) parseUniqueConstraint() (*ast.UniqueConstraintDefinition, error
 		p.nextToken() // consume ON
 		fg, _ := p.parseFileGroupOrPartitionScheme()
 		constraint.OnFileGroupOrPartitionScheme = fg
+	}
+
+	// Parse NOT ENFORCED (Azure Synapse) - but only if next token is ENFORCED
+	if p.curTok.Type == TokenNot && strings.ToUpper(p.peekTok.Literal) == "ENFORCED" {
+		p.nextToken() // consume NOT
+		p.nextToken() // consume ENFORCED
+		enforced := false
+		constraint.IsEnforced = &enforced
 	}
 
 	return constraint, nil
@@ -9265,6 +9394,18 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 			node["Value"] = tableDistributionPolicyToJSON(o.Value)
 		}
 		return node
+	case *ast.TablePartitionOption:
+		node := jsonNode{
+			"$type":      "TablePartitionOption",
+			"OptionKind": o.OptionKind,
+		}
+		if o.PartitionColumn != nil {
+			node["PartitionColumn"] = identifierToJSON(o.PartitionColumn)
+		}
+		if o.PartitionOptionSpecs != nil {
+			node["PartitionOptionSpecs"] = tablePartitionOptionSpecsToJSON(o.PartitionOptionSpecs)
+		}
+		return node
 	case *ast.SystemVersioningTableOption:
 		return systemVersioningTableOptionToJSON(o)
 	case *ast.MemoryOptimizedTableOption:
@@ -9415,6 +9556,21 @@ func tableDistributionPolicyToJSON(policy ast.TableDistributionPolicy) jsonNode 
 	default:
 		return jsonNode{"$type": "UnknownDistributionPolicy"}
 	}
+}
+
+func tablePartitionOptionSpecsToJSON(specs *ast.TablePartitionOptionSpecifications) jsonNode {
+	node := jsonNode{
+		"$type": "TablePartitionOptionSpecifications",
+		"Range": specs.Range,
+	}
+	if len(specs.BoundaryValues) > 0 {
+		vals := make([]jsonNode, len(specs.BoundaryValues))
+		for i, v := range specs.BoundaryValues {
+			vals[i] = scalarExpressionToJSON(v)
+		}
+		node["BoundaryValues"] = vals
+	}
+	return node
 }
 
 func tableIndexTypeToJSON(t ast.TableIndexType) jsonNode {
