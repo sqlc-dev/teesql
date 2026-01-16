@@ -16697,6 +16697,8 @@ func externalTableOptionItemToJSON(opt ast.ExternalTableOptionItem) jsonNode {
 		return externalTableLiteralOrIdentifierOptionToJSON(o)
 	case *ast.ExternalTableRejectTypeOption:
 		return externalTableRejectTypeOptionToJSON(o)
+	case *ast.ExternalTableDistributionOption:
+		return externalTableDistributionOptionToJSON(o)
 	default:
 		return jsonNode{}
 	}
@@ -16708,6 +16710,34 @@ func externalTableRejectTypeOptionToJSON(opt *ast.ExternalTableRejectTypeOption)
 		"Value":      opt.Value,
 		"OptionKind": opt.OptionKind,
 	}
+}
+
+func externalTableDistributionOptionToJSON(opt *ast.ExternalTableDistributionOption) jsonNode {
+	node := jsonNode{
+		"$type":      "ExternalTableDistributionOption",
+		"OptionKind": opt.OptionKind,
+	}
+	if opt.Value != nil {
+		switch v := opt.Value.(type) {
+		case *ast.ExternalTableShardedDistributionPolicy:
+			policyNode := jsonNode{
+				"$type": "ExternalTableShardedDistributionPolicy",
+			}
+			if v.ShardingColumn != nil {
+				policyNode["ShardingColumn"] = identifierToJSON(v.ShardingColumn)
+			}
+			node["Value"] = policyNode
+		case *ast.ExternalTableRoundRobinDistributionPolicy:
+			node["Value"] = jsonNode{
+				"$type": "ExternalTableRoundRobinDistributionPolicy",
+			}
+		case *ast.ExternalTableReplicatedDistributionPolicy:
+			node["Value"] = jsonNode{
+				"$type": "ExternalTableReplicatedDistributionPolicy",
+			}
+		}
+	}
+	return node
 }
 
 func externalTableColumnDefinitionToJSON(col *ast.ExternalTableColumnDefinition) jsonNode {

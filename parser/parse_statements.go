@@ -8567,6 +8567,30 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 						p.nextToken()
 					}
 					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
+				case "DISTRIBUTION":
+					// Parse DISTRIBUTION = SHARDED(col), ROUND_ROBIN, or REPLICATE
+					distVal := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					opt := &ast.ExternalTableDistributionOption{
+						OptionKind: "Distribution",
+					}
+					if distVal == "SHARDED" {
+						if p.curTok.Type == TokenLParen {
+							p.nextToken() // consume (
+							sharded := &ast.ExternalTableShardedDistributionPolicy{
+								ShardingColumn: p.parseIdentifier(),
+							}
+							if p.curTok.Type == TokenRParen {
+								p.nextToken() // consume )
+							}
+							opt.Value = sharded
+						}
+					} else if distVal == "ROUND_ROBIN" {
+						opt.Value = &ast.ExternalTableRoundRobinDistributionPolicy{}
+					} else if distVal == "REPLICATE" {
+						opt.Value = &ast.ExternalTableReplicatedDistributionPolicy{}
+					}
+					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
 				case "LOCATION", "FILE_FORMAT", "TABLE_OPTIONS":
 					opt := &ast.ExternalTableLiteralOrIdentifierOption{
 						Value: &ast.IdentifierOrValueExpression{},

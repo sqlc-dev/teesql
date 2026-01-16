@@ -95,6 +95,36 @@ type ExternalTableRejectTypeOption struct {
 
 func (o *ExternalTableRejectTypeOption) externalTableOptionItem() {}
 
+// ExternalTableDistributionPolicy is the interface for distribution policies
+type ExternalTableDistributionPolicy interface {
+	externalTableDistributionPolicy()
+}
+
+// ExternalTableDistributionOption represents a DISTRIBUTION option
+type ExternalTableDistributionOption struct {
+	OptionKind string
+	Value      ExternalTableDistributionPolicy
+}
+
+func (o *ExternalTableDistributionOption) externalTableOptionItem() {}
+
+// ExternalTableShardedDistributionPolicy represents SHARDED distribution
+type ExternalTableShardedDistributionPolicy struct {
+	ShardingColumn *Identifier
+}
+
+func (p *ExternalTableShardedDistributionPolicy) externalTableDistributionPolicy() {}
+
+// ExternalTableRoundRobinDistributionPolicy represents ROUND_ROBIN distribution
+type ExternalTableRoundRobinDistributionPolicy struct{}
+
+func (p *ExternalTableRoundRobinDistributionPolicy) externalTableDistributionPolicy() {}
+
+// ExternalTableReplicatedDistributionPolicy represents REPLICATE distribution
+type ExternalTableReplicatedDistributionPolicy struct{}
+
+func (p *ExternalTableReplicatedDistributionPolicy) externalTableDistributionPolicy() {}
+
 // ExternalTableOption represents a simple option for external table (legacy)
 type ExternalTableOption struct {
 	OptionKind string
