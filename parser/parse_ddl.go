@@ -5117,6 +5117,29 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 		case p.curTok.Type == TokenIndex:
 			currentElementType = "Index"
 			p.nextToken()
+		case strings.ToUpper(p.curTok.Literal) == "PERIOD":
+			// DROP PERIOD FOR SYSTEM_TIME
+			currentElementType = "Period"
+			p.nextToken() // consume PERIOD
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+			}
+			if strings.ToUpper(p.curTok.Literal) == "SYSTEM_TIME" {
+				p.nextToken() // consume SYSTEM_TIME
+			}
+			// Create the element with no name
+			element := &ast.AlterTableDropTableElement{
+				TableElementType: currentElementType,
+				IsIfExists:       false,
+			}
+			stmt.AlterTableDropTableElements = append(stmt.AlterTableDropTableElements, element)
+			// Reset and continue
+			currentElementType = "NotSpecified"
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume comma
+				continue
+			}
+			break
 		}
 
 		// Check for IF EXISTS
@@ -6578,6 +6601,32 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					}
 					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 				}
+			}
+		} else if strings.ToUpper(p.curTok.Literal) == "PERIOD" {
+			// Parse PERIOD FOR SYSTEM_TIME (start, end)
+			p.nextToken() // consume PERIOD
+			if strings.ToUpper(p.curTok.Literal) == "FOR" {
+				p.nextToken() // consume FOR
+			}
+			if strings.ToUpper(p.curTok.Literal) == "SYSTEM_TIME" {
+				p.nextToken() // consume SYSTEM_TIME
+			}
+			// Parse (start_column, end_column)
+			var startCol, endCol *ast.Identifier
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				startCol = p.parseIdentifier()
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume ,
+				}
+				endCol = p.parseIdentifier()
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+			stmt.Definition.SystemTimePeriod = &ast.SystemTimePeriodDefinition{
+				StartTimeColumn: startCol,
+				EndTimeColumn:   endCol,
 			}
 		} else {
 			// Parse column definition (column_name data_type ...)
