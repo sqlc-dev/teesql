@@ -3593,31 +3593,81 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 	}
 }
 
+// graphMatchContext tracks seen node pointers for $ref support
+type graphMatchContext struct {
+	seenNodes map[*ast.GraphMatchNodeExpression]bool
+}
+
+func newGraphMatchContext() *graphMatchContext {
+	return &graphMatchContext{
+		seenNodes: make(map[*ast.GraphMatchNodeExpression]bool),
+	}
+}
+
 func graphMatchExpressionToJSON(expr ast.GraphMatchExpression) jsonNode {
+	ctx := newGraphMatchContext()
+	return graphMatchExpressionToJSONWithContext(expr, ctx)
+}
+
+func graphMatchExpressionToJSONWithContext(expr ast.GraphMatchExpression, ctx *graphMatchContext) jsonNode {
 	switch e := expr.(type) {
 	case *ast.GraphMatchCompositeExpression:
 		node := jsonNode{
 			"$type": "GraphMatchCompositeExpression",
 		}
 		if e.LeftNode != nil {
-			node["LeftNode"] = graphMatchNodeExpressionToJSON(e.LeftNode)
+			node["LeftNode"] = graphMatchNodeExpressionToJSONWithContext(e.LeftNode, ctx)
 		}
 		if e.Edge != nil {
 			node["Edge"] = identifierToJSON(e.Edge)
 		}
 		if e.RightNode != nil {
-			node["RightNode"] = graphMatchNodeExpressionToJSON(e.RightNode)
+			node["RightNode"] = graphMatchNodeExpressionToJSONWithContext(e.RightNode, ctx)
 		}
 		node["ArrowOnRight"] = e.ArrowOnRight
 		return node
 	case *ast.GraphMatchNodeExpression:
-		return graphMatchNodeExpressionToJSON(e)
+		return graphMatchNodeExpressionToJSONWithContext(e, ctx)
 	case *ast.BooleanBinaryExpression:
 		// Chained patterns produce BooleanBinaryExpression with And
-		return booleanExpressionToJSON(e)
+		return booleanBinaryExpressionToJSONWithGraphContext(e, ctx)
 	default:
 		return jsonNode{"$type": "UnknownGraphMatchExpression"}
 	}
+}
+
+func booleanBinaryExpressionToJSONWithGraphContext(e *ast.BooleanBinaryExpression, ctx *graphMatchContext) jsonNode {
+	node := jsonNode{
+		"$type": "BooleanBinaryExpression",
+	}
+	if e.BinaryExpressionType != "" {
+		node["BinaryExpressionType"] = e.BinaryExpressionType
+	}
+	if e.FirstExpression != nil {
+		// Check if first expression is a graph match expression type
+		switch firstExpr := e.FirstExpression.(type) {
+		case *ast.GraphMatchCompositeExpression:
+			node["FirstExpression"] = graphMatchExpressionToJSONWithContext(firstExpr, ctx)
+		case *ast.BooleanBinaryExpression:
+			// Could be nested chained patterns - check if it contains graph match expressions
+			node["FirstExpression"] = booleanBinaryExpressionToJSONWithGraphContext(firstExpr, ctx)
+		default:
+			node["FirstExpression"] = booleanExpressionToJSON(e.FirstExpression)
+		}
+	}
+	if e.SecondExpression != nil {
+		// Check if second expression is a graph match expression type
+		switch secondExpr := e.SecondExpression.(type) {
+		case *ast.GraphMatchCompositeExpression:
+			node["SecondExpression"] = graphMatchExpressionToJSONWithContext(secondExpr, ctx)
+		case *ast.BooleanBinaryExpression:
+			// Could be nested chained patterns - check if it contains graph match expressions
+			node["SecondExpression"] = booleanBinaryExpressionToJSONWithGraphContext(secondExpr, ctx)
+		default:
+			node["SecondExpression"] = booleanExpressionToJSON(e.SecondExpression)
+		}
+	}
+	return node
 }
 
 func graphMatchNodeExpressionToJSON(expr *ast.GraphMatchNodeExpression) jsonNode {
@@ -3629,6 +3679,16 @@ func graphMatchNodeExpressionToJSON(expr *ast.GraphMatchNodeExpression) jsonNode
 	}
 	node["UsesLastNode"] = expr.UsesLastNode
 	return node
+}
+
+func graphMatchNodeExpressionToJSONWithContext(expr *ast.GraphMatchNodeExpression, ctx *graphMatchContext) jsonNode {
+	// Check if we've seen this exact pointer before
+	if ctx.seenNodes[expr] {
+		// This node pointer has been seen before, use $ref
+		return jsonNode{"$ref": "GraphMatchNodeExpression"}
+	}
+	ctx.seenNodes[expr] = true
+	return graphMatchNodeExpressionToJSON(expr)
 }
 
 func groupByClauseToJSON(gbc *ast.GroupByClause) jsonNode {

@@ -501,16 +501,46 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-			colIdent := p.parseIdentifier()
-			col := &ast.ColumnWithSortOrder{
-				Column: &ast.ColumnReferenceExpression{
-					ColumnType: "Regular",
-					MultiPartIdentifier: &ast.MultiPartIdentifier{
-						Count: 1,
-						Identifiers: []*ast.Identifier{colIdent},
+			// Check for graph pseudo columns
+			upperLit := strings.ToUpper(p.curTok.Literal)
+			var col *ast.ColumnWithSortOrder
+			switch upperLit {
+			case "$NODE_ID":
+				col = &ast.ColumnWithSortOrder{
+					Column:    &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphNodeId"},
+					SortOrder: ast.SortOrderNotSpecified,
+				}
+				p.nextToken()
+			case "$EDGE_ID":
+				col = &ast.ColumnWithSortOrder{
+					Column:    &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphEdgeId"},
+					SortOrder: ast.SortOrderNotSpecified,
+				}
+				p.nextToken()
+			case "$FROM_ID":
+				col = &ast.ColumnWithSortOrder{
+					Column:    &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphFromId"},
+					SortOrder: ast.SortOrderNotSpecified,
+				}
+				p.nextToken()
+			case "$TO_ID":
+				col = &ast.ColumnWithSortOrder{
+					Column:    &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphToId"},
+					SortOrder: ast.SortOrderNotSpecified,
+				}
+				p.nextToken()
+			default:
+				colIdent := p.parseIdentifier()
+				col = &ast.ColumnWithSortOrder{
+					Column: &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Count:       1,
+							Identifiers: []*ast.Identifier{colIdent},
+						},
 					},
-				},
-				SortOrder: ast.SortOrderNotSpecified,
+					SortOrder: ast.SortOrderNotSpecified,
+				}
 			}
 
 			// Parse optional ASC/DESC

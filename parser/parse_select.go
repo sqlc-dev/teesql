@@ -1131,6 +1131,22 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			p.nextToken()
 			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"}, nil
 		}
+		if upper == "$NODE_ID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphNodeId"}, nil
+		}
+		if upper == "$EDGE_ID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphEdgeId"}, nil
+		}
+		if upper == "$FROM_ID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphFromId"}, nil
+		}
+		if upper == "$TO_ID" {
+			p.nextToken()
+			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphToId"}, nil
+		}
 		// Check for NEXT VALUE FOR sequence expression
 		if upper == "NEXT" && strings.ToUpper(p.peekTok.Literal) == "VALUE" {
 			return p.parseNextValueForExpression()
@@ -1528,6 +1544,14 @@ func (p *Parser) isIdentifierToken() bool {
 }
 
 func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, error) {
+	// Check for graph pseudo columns at the start
+	upper := strings.ToUpper(p.curTok.Literal)
+	pseudoType := getPseudoColumnType(upper)
+	if pseudoType != "" && p.peekTok.Type != TokenDot {
+		p.nextToken()
+		return &ast.ColumnReferenceExpression{ColumnType: pseudoType}, nil
+	}
+
 	var identifiers []*ast.Identifier
 	colType := "Regular"
 
@@ -6247,6 +6271,14 @@ func getPseudoColumnType(value string) string {
 		return "PseudoColumnRowGuid"
 	case "$CUID":
 		return "PseudoColumnCuid"
+	case "$NODE_ID":
+		return "PseudoColumnGraphNodeId"
+	case "$EDGE_ID":
+		return "PseudoColumnGraphEdgeId"
+	case "$FROM_ID":
+		return "PseudoColumnGraphFromId"
+	case "$TO_ID":
+		return "PseudoColumnGraphToId"
 	default:
 		return ""
 	}
