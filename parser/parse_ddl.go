@@ -4168,7 +4168,7 @@ func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast
 		var value ast.ScalarExpression
 		sizeUnit := "Unspecified"
 		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-			value = &ast.DefaultLiteral{LiteralType: "Default", Value: "default"}
+			value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
 			p.nextToken()
 		} else {
 			value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
@@ -4192,7 +4192,7 @@ func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast
 		}
 		var value ast.ScalarExpression
 		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-			value = &ast.DefaultLiteral{LiteralType: "Default", Value: "default"}
+			value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
 			p.nextToken()
 		} else {
 			value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
@@ -4209,7 +4209,7 @@ func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast
 		}
 		var value ast.ScalarExpression
 		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-			value = &ast.DefaultLiteral{LiteralType: "Default", Value: "default"}
+			value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
 			p.nextToken()
 		} else if p.curTok.Type == TokenString {
 			strVal := p.curTok.Literal
@@ -4279,7 +4279,7 @@ func (p *Parser) parseAlterServerConfigurationSetFailoverClusterPropertyStatemen
 
 	var value ast.ScalarExpression
 	if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-		value = &ast.DefaultLiteral{LiteralType: "Default", Value: "default"}
+		value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
 		p.nextToken()
 	} else if p.curTok.Type == TokenNumber {
 		value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
