@@ -17467,9 +17467,43 @@ func endpointProtocolOptionToJSON(opt ast.EndpointProtocolOption) jsonNode {
 			node["Kind"] = o.Kind
 		}
 		return node
+	case *ast.ListenerIPEndpointProtocolOption:
+		node := jsonNode{
+			"$type": "ListenerIPEndpointProtocolOption",
+			"IsAll": o.IsAll,
+		}
+		if o.IPv4PartOne != nil {
+			node["IPv4PartOne"] = ipv4ToJSON(o.IPv4PartOne)
+		}
+		if o.IPv4PartTwo != nil {
+			node["IPv4PartTwo"] = ipv4ToJSON(o.IPv4PartTwo)
+		}
+		if o.Kind != "" {
+			node["Kind"] = o.Kind
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownProtocolOption"}
 	}
+}
+
+func ipv4ToJSON(ip *ast.IPv4) jsonNode {
+	node := jsonNode{
+		"$type": "IPv4",
+	}
+	if ip.OctetOne != nil {
+		node["OctetOne"] = scalarExpressionToJSON(ip.OctetOne)
+	}
+	if ip.OctetTwo != nil {
+		node["OctetTwo"] = scalarExpressionToJSON(ip.OctetTwo)
+	}
+	if ip.OctetThree != nil {
+		node["OctetThree"] = scalarExpressionToJSON(ip.OctetThree)
+	}
+	if ip.OctetFour != nil {
+		node["OctetFour"] = scalarExpressionToJSON(ip.OctetFour)
+	}
+	return node
 }
 
 func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
@@ -18764,6 +18798,32 @@ func createEndpointStatementToJSON(s *ast.CreateEndpointStatement) jsonNode {
 	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.State != "" {
+		node["State"] = s.State
+	}
+	if s.Affinity != nil {
+		node["Affinity"] = endpointAffinityToJSON(s.Affinity)
+	}
+	if s.Protocol != "" {
+		node["Protocol"] = s.Protocol
+	}
+	if len(s.ProtocolOptions) > 0 {
+		opts := make([]jsonNode, len(s.ProtocolOptions))
+		for i, opt := range s.ProtocolOptions {
+			opts[i] = endpointProtocolOptionToJSON(opt)
+		}
+		node["ProtocolOptions"] = opts
+	}
+	if s.EndpointType != "" {
+		node["EndpointType"] = s.EndpointType
+	}
+	if len(s.PayloadOptions) > 0 {
+		opts := make([]jsonNode, len(s.PayloadOptions))
+		for i, opt := range s.PayloadOptions {
+			opts[i] = payloadOptionToJSON(opt)
+		}
+		node["PayloadOptions"] = opts
 	}
 	return node
 }

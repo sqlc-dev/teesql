@@ -211,7 +211,13 @@ func (r *RouteOption) node() {}
 
 // CreateEndpointStatement represents a CREATE ENDPOINT statement.
 type CreateEndpointStatement struct {
-	Name *Identifier `json:"Name,omitempty"`
+	Name            *Identifier
+	State           string
+	Affinity        *EndpointAffinity
+	Protocol        string
+	ProtocolOptions []EndpointProtocolOption
+	EndpointType    string
+	PayloadOptions  []PayloadOption
 }
 
 func (s *CreateEndpointStatement) node()      {}

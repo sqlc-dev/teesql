@@ -12806,9 +12806,196 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 	stmt := &ast.CreateEndpointStatement{
 		Name: p.parseIdentifier(),
 	}
+	hasOptions := false
 
-	// Skip rest of statement
-	p.skipToEndOfStatement()
+	// Parse endpoint options (STATE, AFFINITY, AS, FOR)
+	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+		upper := strings.ToUpper(p.curTok.Literal)
+
+		switch upper {
+		case "STATE":
+			hasOptions = true
+			p.nextToken() // consume STATE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			stateUpper := strings.ToUpper(p.curTok.Literal)
+			switch stateUpper {
+			case "STARTED":
+				stmt.State = "Started"
+			case "STOPPED":
+				stmt.State = "Stopped"
+			case "DISABLED":
+				stmt.State = "Disabled"
+			}
+			p.nextToken()
+
+		case "AFFINITY":
+			hasOptions = true
+			p.nextToken() // consume AFFINITY
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			affinity := &ast.EndpointAffinity{}
+			affinityUpper := strings.ToUpper(p.curTok.Literal)
+			switch affinityUpper {
+			case "NONE":
+				affinity.Kind = "None"
+				p.nextToken()
+			case "ADMIN":
+				affinity.Kind = "Admin"
+				p.nextToken()
+			default:
+				affinity.Kind = "Integer"
+				if p.curTok.Type == TokenNumber {
+					affinity.Value = &ast.IntegerLiteral{
+						LiteralType: "Integer",
+						Value:       p.curTok.Literal,
+					}
+					p.nextToken()
+				}
+			}
+			stmt.Affinity = affinity
+
+		case "AS":
+			hasOptions = true
+			p.nextToken() // consume AS
+			protocolUpper := strings.ToUpper(p.curTok.Literal)
+			switch protocolUpper {
+			case "TCP":
+				stmt.Protocol = "Tcp"
+			case "HTTP":
+				stmt.Protocol = "Http"
+			}
+			p.nextToken()
+			// Parse protocol options
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optName := strings.ToUpper(p.curTok.Literal)
+					p.nextToken()
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					if optName == "LISTENER_IP" {
+						ipOpt := &ast.ListenerIPEndpointProtocolOption{
+							Kind: "TcpListenerIP",
+						}
+						if strings.ToUpper(p.curTok.Literal) == "ALL" {
+							ipOpt.IsAll = true
+							p.nextToken()
+						} else if p.curTok.Type == TokenLParen {
+							p.nextToken() // consume (
+							ipOpt.IPv4PartOne = p.parseIPv4Address()
+							if p.curTok.Type == TokenRParen {
+								p.nextToken() // consume )
+							}
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, ipOpt)
+					} else {
+						opt := &ast.LiteralEndpointProtocolOption{}
+						switch optName {
+						case "LISTENER_PORT":
+							opt.Kind = "TcpListenerPort"
+						default:
+							opt.Kind = optName
+						}
+						if p.curTok.Type == TokenNumber {
+							opt.Value = &ast.IntegerLiteral{
+								LiteralType: "Integer",
+								Value:       p.curTok.Literal,
+							}
+							p.nextToken()
+						} else if p.curTok.Type == TokenString {
+							opt.Value = &ast.StringLiteral{
+								LiteralType: "String",
+								Value:       p.curTok.Literal,
+							}
+							p.nextToken()
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+
+		case "FOR":
+			hasOptions = true
+			p.nextToken() // consume FOR
+			endpointTypeUpper := strings.ToUpper(p.curTok.Literal)
+			switch endpointTypeUpper {
+			case "SOAP":
+				stmt.EndpointType = "Soap"
+			case "SERVICE_BROKER":
+				stmt.EndpointType = "ServiceBroker"
+			case "DATABASE_MIRRORING":
+				stmt.EndpointType = "DatabaseMirroring"
+			case "TSQL":
+				stmt.EndpointType = "TSql"
+			default:
+				stmt.EndpointType = endpointTypeUpper
+			}
+			p.nextToken()
+			// Parse payload options
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				// Empty parentheses are ok
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+
+		case ",":
+			p.nextToken()
+
+		case "GO":
+			// End of statement
+			if hasOptions {
+				if stmt.State == "" {
+					stmt.State = "NotSpecified"
+				}
+				if stmt.Protocol == "" {
+					stmt.Protocol = "None"
+				}
+				if stmt.EndpointType == "" {
+					stmt.EndpointType = "NotSpecified"
+				}
+			}
+			return stmt, nil
+
+		default:
+			if hasOptions {
+				if stmt.State == "" {
+					stmt.State = "NotSpecified"
+				}
+				if stmt.Protocol == "" {
+					stmt.Protocol = "None"
+				}
+				if stmt.EndpointType == "" {
+					stmt.EndpointType = "NotSpecified"
+				}
+			}
+			return stmt, nil
+		}
+	}
+
+	if hasOptions {
+		if stmt.State == "" {
+			stmt.State = "NotSpecified"
+		}
+		if stmt.Protocol == "" {
+			stmt.Protocol = "None"
+		}
+		if stmt.EndpointType == "" {
+			stmt.EndpointType = "NotSpecified"
+		}
+	}
+
 	return stmt, nil
 }
 

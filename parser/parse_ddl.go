@@ -8070,29 +8070,46 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 					if p.curTok.Type == TokenEquals {
 						p.nextToken() // consume =
 					}
-					opt := &ast.LiteralEndpointProtocolOption{}
-					switch optName {
-					case "LISTENER_PORT":
-						opt.Kind = "TcpListenerPort"
-					case "LISTENER_IP":
-						opt.Kind = "TcpListenerIP"
-					default:
-						opt.Kind = optName
-					}
-					if p.curTok.Type == TokenNumber {
-						opt.Value = &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
+					if optName == "LISTENER_IP" {
+						// Parse IP address option specially
+						ipOpt := &ast.ListenerIPEndpointProtocolOption{
+							Kind: "TcpListenerIP",
 						}
-						p.nextToken()
-					} else if p.curTok.Type == TokenString {
-						opt.Value = &ast.StringLiteral{
-							LiteralType: "String",
-							Value:       p.curTok.Literal,
+						// Check for ALL or IP address in parentheses
+						if strings.ToUpper(p.curTok.Literal) == "ALL" {
+							ipOpt.IsAll = true
+							p.nextToken()
+						} else if p.curTok.Type == TokenLParen {
+							p.nextToken() // consume (
+							ipOpt.IPv4PartOne = p.parseIPv4Address()
+							if p.curTok.Type == TokenRParen {
+								p.nextToken() // consume )
+							}
 						}
-						p.nextToken()
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, ipOpt)
+					} else {
+						opt := &ast.LiteralEndpointProtocolOption{}
+						switch optName {
+						case "LISTENER_PORT":
+							opt.Kind = "TcpListenerPort"
+						default:
+							opt.Kind = optName
+						}
+						if p.curTok.Type == TokenNumber {
+							opt.Value = &ast.IntegerLiteral{
+								LiteralType: "Integer",
+								Value:       p.curTok.Literal,
+							}
+							p.nextToken()
+						} else if p.curTok.Type == TokenString {
+							opt.Value = &ast.StringLiteral{
+								LiteralType: "String",
+								Value:       p.curTok.Literal,
+							}
+							p.nextToken()
+						}
+						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
 					}
-					stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
 					if p.curTok.Type == TokenComma {
 						p.nextToken()
 					}
@@ -8248,6 +8265,66 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 	}
 
 	return stmt, nil
+}
+
+// parseIPv4Address parses an IPv4 address like "1.2.3.4" or "1 . 2 . 3 . 4"
+// The lexer may tokenize "1.2" as a single float token, so we need to handle that
+func (p *Parser) parseIPv4Address() *ast.IPv4 {
+	ipv4 := &ast.IPv4{}
+	var octets []string
+
+	// Collect all octets from tokens
+	for len(octets) < 4 {
+		if p.curTok.Type == TokenNumber {
+			// Check if this is a float-like number containing dots
+			literal := p.curTok.Literal
+			if strings.Contains(literal, ".") {
+				// Split by dots and add each part as an octet
+				parts := strings.Split(literal, ".")
+				for _, part := range parts {
+					if part != "" && len(octets) < 4 {
+						octets = append(octets, part)
+					}
+				}
+			} else {
+				octets = append(octets, literal)
+			}
+			p.nextToken()
+		} else if p.curTok.Type == TokenDot {
+			// Skip standalone dots
+			p.nextToken()
+		} else {
+			break
+		}
+	}
+
+	// Assign octets to the IPv4 struct
+	if len(octets) >= 1 {
+		ipv4.OctetOne = &ast.IntegerLiteral{
+			LiteralType: "Integer",
+			Value:       octets[0],
+		}
+	}
+	if len(octets) >= 2 {
+		ipv4.OctetTwo = &ast.IntegerLiteral{
+			LiteralType: "Integer",
+			Value:       octets[1],
+		}
+	}
+	if len(octets) >= 3 {
+		ipv4.OctetThree = &ast.IntegerLiteral{
+			LiteralType: "Integer",
+			Value:       octets[2],
+		}
+	}
+	if len(octets) >= 4 {
+		ipv4.OctetFour = &ast.IntegerLiteral{
+			LiteralType: "Integer",
+			Value:       octets[3],
+		}
+	}
+
+	return ipv4
 }
 
 func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {

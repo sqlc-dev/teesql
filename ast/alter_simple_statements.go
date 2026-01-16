@@ -133,6 +133,27 @@ type LiteralEndpointProtocolOption struct {
 func (l *LiteralEndpointProtocolOption) node()                   {}
 func (l *LiteralEndpointProtocolOption) endpointProtocolOption() {}
 
+// IPv4 represents an IPv4 address with four octets.
+type IPv4 struct {
+	OctetOne   *IntegerLiteral
+	OctetTwo   *IntegerLiteral
+	OctetThree *IntegerLiteral
+	OctetFour  *IntegerLiteral
+}
+
+func (i *IPv4) node() {}
+
+// ListenerIPEndpointProtocolOption represents an IP address endpoint protocol option.
+type ListenerIPEndpointProtocolOption struct {
+	IsAll       bool
+	IPv4PartOne *IPv4
+	IPv4PartTwo *IPv4
+	Kind        string // TcpListenerIP, HttpListenerIP, etc.
+}
+
+func (l *ListenerIPEndpointProtocolOption) node()                   {}
+func (l *ListenerIPEndpointProtocolOption) endpointProtocolOption() {}
+
 // PayloadOption is an interface for endpoint payload options.
 type PayloadOption interface {
 	Node
