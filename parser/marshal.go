@@ -20057,6 +20057,9 @@ func openRowsetColumnDefinitionToJSON(col *ast.OpenRowsetColumnDefinition) jsonN
 	node := jsonNode{
 		"$type": "OpenRowsetColumnDefinition",
 	}
+	if col.JsonPath != nil {
+		node["JsonPath"] = scalarExpressionToJSON(col.JsonPath)
+	}
 	if col.ColumnOrdinal != nil {
 		node["ColumnOrdinal"] = scalarExpressionToJSON(col.ColumnOrdinal)
 	}

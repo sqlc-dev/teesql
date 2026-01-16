@@ -46,6 +46,7 @@ func (o *OpenRowsetTableReference) tableReference() {}
 // OpenRowsetColumnDefinition represents a column definition in WITH clause.
 type OpenRowsetColumnDefinition struct {
 	ColumnOrdinal    ScalarExpression  `json:"ColumnOrdinal,omitempty"`
+	JsonPath         ScalarExpression  `json:"JsonPath,omitempty"`
 	ColumnIdentifier *Identifier       `json:"ColumnIdentifier,omitempty"`
 	DataType         DataTypeReference `json:"DataType,omitempty"`
 	Collation        *Identifier       `json:"Collation,omitempty"`

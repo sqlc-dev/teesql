@@ -843,7 +843,7 @@ func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
 					p.nextToken()
 				} else if p.curTok.Type == TokenString {
 					// JSON path specification like '$.stateName' or 'strict $.population'
-					colDef.ColumnOrdinal = &ast.StringLiteral{
+					colDef.JsonPath = &ast.StringLiteral{
 						LiteralType:   "String",
 						IsNational:    false,
 						IsLargeObject: false,
