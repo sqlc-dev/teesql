@@ -2345,6 +2345,11 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		return p.parseOpenRowset()
 	}
 
+	// Check for OPENDATASOURCE
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OPENDATASOURCE" {
+		return p.parseAdHocTableReference()
+	}
+
 	// Check for PREDICT
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PREDICT" {
 		return p.parsePredictTableReference()
@@ -2353,6 +2358,16 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 	// Check for CHANGETABLE
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "CHANGETABLE" {
 		return p.parseChangeTableReference()
+	}
+
+	// Check for OPENXML
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OPENXML" {
+		return p.parseOpenXmlTableReference()
+	}
+
+	// Check for OPENQUERY
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OPENQUERY" {
+		return p.parseOpenQueryTableReference()
 	}
 
 	// Check for full-text table functions (CONTAINSTABLE, FREETEXTTABLE)
@@ -6975,4 +6990,278 @@ func (p *Parser) parseBuiltInFunctionTableReference() (*ast.BuiltInFunctionTable
 	}
 
 	return ref, nil
+}
+
+// parseAdHocTableReference parses OPENDATASOURCE('provider', 'connstr').'object'
+func (p *Parser) parseAdHocTableReference() (*ast.AdHocTableReference, error) {
+	p.nextToken() // consume OPENDATASOURCE
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after OPENDATASOURCE")
+	}
+	p.nextToken() // consume (
+
+	// Parse provider name (should be a string literal)
+	providerNameExpr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	providerName, ok := providerNameExpr.(*ast.StringLiteral)
+	if !ok {
+		return nil, fmt.Errorf("expected string literal for provider name")
+	}
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after provider name")
+	}
+	p.nextToken() // consume ,
+
+	// Parse init string (connection string)
+	initStringExpr, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+	initString, ok := initStringExpr.(*ast.StringLiteral)
+	if !ok {
+		return nil, fmt.Errorf("expected string literal for init string")
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after init string")
+	}
+	p.nextToken() // consume )
+
+	dataSource := &ast.AdHocDataSource{
+		ProviderName: providerName,
+		InitString:   initString,
+	}
+
+	// Expect dot followed by object
+	if p.curTok.Type != TokenDot {
+		return nil, fmt.Errorf("expected . after OPENDATASOURCE(), got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume .
+
+	// Parse the object - could be a string or schema object name
+	var obj *ast.SchemaObjectNameOrValueExpression
+	if p.curTok.Type == TokenString {
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		obj = &ast.SchemaObjectNameOrValueExpression{
+			ValueExpression: expr,
+		}
+	} else {
+		son, err := p.parseSchemaObjectName()
+		if err != nil {
+			return nil, err
+		}
+		obj = &ast.SchemaObjectNameOrValueExpression{
+			SchemaObjectName: son,
+		}
+	}
+
+	result := &ast.AdHocTableReference{
+		DataSource: dataSource,
+		Object:     obj,
+		ForPath:    false,
+	}
+
+	// Parse optional alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		result.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" &&
+			upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+			upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+			upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
+}
+
+func (p *Parser) parseOpenXmlTableReference() (*ast.OpenXmlTableReference, error) {
+	p.nextToken() // consume OPENXML
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after OPENXML")
+	}
+	p.nextToken() // consume (
+
+	// Parse variable (e.g., @idoc)
+	variable, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after variable")
+	}
+	p.nextToken() // consume ,
+
+	// Parse row pattern (e.g., '/ROOT/Customer')
+	rowPattern, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	result := &ast.OpenXmlTableReference{
+		Variable:   variable,
+		RowPattern: rowPattern,
+		ForPath:    false,
+	}
+
+	// Optional flags parameter
+	if p.curTok.Type == TokenComma {
+		p.nextToken() // consume ,
+		flags, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		result.Flags = flags
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after OPENXML parameters")
+	}
+	p.nextToken() // consume )
+
+	// Optional WITH clause
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+
+		if p.curTok.Type == TokenLParen {
+			// WITH (schema declarations)
+			p.nextToken() // consume (
+
+			for {
+				// Parse column definition with optional mapping
+				item, err := p.parseSchemaDeclarationItem()
+				if err != nil {
+					return nil, err
+				}
+				result.SchemaDeclarationItems = append(result.SchemaDeclarationItems, item)
+
+				if p.curTok.Type != TokenComma {
+					break
+				}
+				p.nextToken() // consume ,
+			}
+
+			if p.curTok.Type != TokenRParen {
+				return nil, fmt.Errorf("expected ) after schema declarations")
+			}
+			p.nextToken() // consume )
+		} else {
+			// WITH table_name
+			tableName, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			result.TableName = tableName
+		}
+	}
+
+	// Optional AS alias or just alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		result.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" &&
+			upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+			upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+			upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
+}
+
+func (p *Parser) parseSchemaDeclarationItem() (*ast.SchemaDeclarationItem, error) {
+	// Parse column name
+	colName := p.parseIdentifier()
+
+	// Parse data type
+	dataType, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+
+	colDef := &ast.ColumnDefinitionBase{
+		ColumnIdentifier: colName,
+		DataType:         dataType,
+	}
+
+	item := &ast.SchemaDeclarationItem{
+		ColumnDefinition: colDef,
+	}
+
+	// Optional mapping (XPath expression as string literal)
+	// e.g., "CustomerID VARCHAR (10) '../@CustomerID'"
+	if p.curTok.Type == TokenString {
+		mapping, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		item.Mapping = mapping
+	}
+
+	return item, nil
+}
+
+func (p *Parser) parseOpenQueryTableReference() (*ast.OpenQueryTableReference, error) {
+	p.nextToken() // consume OPENQUERY
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after OPENQUERY")
+	}
+	p.nextToken() // consume (
+
+	// Parse linked server identifier
+	linkedServer := p.parseIdentifier()
+
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , after linked server")
+	}
+	p.nextToken() // consume ,
+
+	// Parse query (string literal)
+	query, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) after OPENQUERY parameters")
+	}
+	p.nextToken() // consume )
+
+	result := &ast.OpenQueryTableReference{
+		LinkedServer: linkedServer,
+		Query:        query,
+		ForPath:      false,
+	}
+
+	// Optional AS alias or just alias
+	if p.curTok.Type == TokenAs {
+		p.nextToken()
+		result.Alias = p.parseIdentifier()
+	} else if p.curTok.Type == TokenIdent {
+		upper := strings.ToUpper(p.curTok.Literal)
+		if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "ORDER" &&
+			upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+			upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+			upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+			result.Alias = p.parseIdentifier()
+		}
+	}
+
+	return result, nil
 }

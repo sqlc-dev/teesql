@@ -2943,6 +2943,18 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.ProviderString != nil {
 			node["ProviderString"] = scalarExpressionToJSON(r.ProviderString)
 		}
+		if r.DataSource != nil {
+			node["DataSource"] = scalarExpressionToJSON(r.DataSource)
+		}
+		if r.UserId != nil {
+			node["UserId"] = scalarExpressionToJSON(r.UserId)
+		}
+		if r.Password != nil {
+			node["Password"] = scalarExpressionToJSON(r.Password)
+		}
+		if r.Query != nil {
+			node["Query"] = scalarExpressionToJSON(r.Query)
+		}
 		if r.Object != nil {
 			node["Object"] = schemaObjectNameToJSON(r.Object)
 		}
@@ -2952,6 +2964,73 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 				cols[i] = openRowsetColumnDefinitionToJSON(c)
 			}
 			node["WithColumns"] = cols
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.AdHocTableReference:
+		node := jsonNode{
+			"$type": "AdHocTableReference",
+		}
+		if r.DataSource != nil {
+			node["DataSource"] = adHocDataSourceToJSON(r.DataSource)
+		}
+		if r.Object != nil {
+			objNode := jsonNode{
+				"$type": "SchemaObjectNameOrValueExpression",
+			}
+			if r.Object.SchemaObjectName != nil {
+				objNode["SchemaObjectName"] = schemaObjectNameToJSON(r.Object.SchemaObjectName)
+			}
+			if r.Object.ValueExpression != nil {
+				objNode["ValueExpression"] = scalarExpressionToJSON(r.Object.ValueExpression)
+			}
+			node["Object"] = objNode
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.OpenXmlTableReference:
+		node := jsonNode{
+			"$type": "OpenXmlTableReference",
+		}
+		if r.Variable != nil {
+			node["Variable"] = scalarExpressionToJSON(r.Variable)
+		}
+		if r.RowPattern != nil {
+			node["RowPattern"] = scalarExpressionToJSON(r.RowPattern)
+		}
+		if r.Flags != nil {
+			node["Flags"] = scalarExpressionToJSON(r.Flags)
+		}
+		if len(r.SchemaDeclarationItems) > 0 {
+			items := make([]jsonNode, len(r.SchemaDeclarationItems))
+			for i, item := range r.SchemaDeclarationItems {
+				items[i] = schemaDeclarationItemToJSON(item)
+			}
+			node["SchemaDeclarationItems"] = items
+		}
+		if r.TableName != nil {
+			node["TableName"] = schemaObjectNameToJSON(r.TableName)
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
+	case *ast.OpenQueryTableReference:
+		node := jsonNode{
+			"$type": "OpenQueryTableReference",
+		}
+		if r.LinkedServer != nil {
+			node["LinkedServer"] = identifierToJSON(r.LinkedServer)
+		}
+		if r.Query != nil {
+			node["Query"] = scalarExpressionToJSON(r.Query)
 		}
 		if r.Alias != nil {
 			node["Alias"] = identifierToJSON(r.Alias)
@@ -3091,6 +3170,9 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.PropertyName != nil {
 			node["PropertyName"] = scalarExpressionToJSON(r.PropertyName)
 		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
 		node["ForPath"] = r.ForPath
 		return node
 	case *ast.SemanticTableReference:
@@ -3135,6 +3217,9 @@ func schemaDeclarationItemToJSON(item *ast.SchemaDeclarationItem) jsonNode {
 	}
 	if item.ColumnDefinition != nil {
 		node["ColumnDefinition"] = columnDefinitionBaseToJSON(item.ColumnDefinition)
+	}
+	if item.Mapping != nil {
+		node["Mapping"] = scalarExpressionToJSON(item.Mapping)
 	}
 	return node
 }

@@ -642,24 +642,72 @@ func (p *Parser) parseOpenRowsetTableReference() (*ast.OpenRowsetTableReference,
 	}
 	p.nextToken() // consume ,
 
-	// Parse provider string (string literal)
-	providerString, err := p.parseScalarExpression()
+	// Parse the second argument - could be:
+	// - ProviderString (connection string) followed by comma and object
+	// - DataSource followed by semicolons for UserId and Password, then comma and Query
+	secondArg, err := p.parseScalarExpression()
 	if err != nil {
 		return nil, err
 	}
-	result.ProviderString = providerString
 
-	if p.curTok.Type != TokenComma {
-		return nil, fmt.Errorf("expected , after provider string, got %s", p.curTok.Literal)
-	}
-	p.nextToken() // consume ,
+	// Check if next token is semicolon (DataSource; UserId; Password format)
+	if p.curTok.Type == TokenSemicolon {
+		result.DataSource = secondArg
+		p.nextToken() // consume ;
 
-	// Parse object (schema object name or expression)
-	obj, err := p.parseSchemaObjectName()
-	if err != nil {
-		return nil, err
+		// Parse UserId
+		userId, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		result.UserId = userId
+
+		if p.curTok.Type != TokenSemicolon {
+			return nil, fmt.Errorf("expected ; after UserId, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ;
+
+		// Parse Password
+		password, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		result.Password = password
+
+		if p.curTok.Type != TokenComma {
+			return nil, fmt.Errorf("expected , after Password, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume ,
+
+		// Parse Query
+		query, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		result.Query = query
+	} else if p.curTok.Type == TokenComma {
+		// ProviderString, object format
+		result.ProviderString = secondArg
+		p.nextToken() // consume ,
+
+		// Parse object (schema object name or string expression)
+		if p.curTok.Type == TokenString {
+			// Could be a query string instead of object name
+			query, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+			result.Query = query
+		} else {
+			obj, err := p.parseSchemaObjectName()
+			if err != nil {
+				return nil, err
+			}
+			result.Object = obj
+		}
+	} else {
+		return nil, fmt.Errorf("expected , or ; after second argument, got %s", p.curTok.Literal)
 	}
-	result.Object = obj
 
 	if p.curTok.Type != TokenRParen {
 		return nil, fmt.Errorf("expected ) in OPENROWSET, got %s", p.curTok.Literal)
