@@ -250,6 +250,48 @@ func (p *Parser) parsePrimaryQueryExpression() (ast.QueryExpression, *ast.Schema
 	return p.parseQuerySpecificationWithInto()
 }
 
+// parseRestOfBinaryQueryExpression parses binary query operations (UNION/INTERSECT/EXCEPT)
+// starting with a left operand that's already been parsed.
+func (p *Parser) parseRestOfBinaryQueryExpression(left ast.QueryExpression) (ast.QueryExpression, error) {
+	// Check for binary operations (UNION, EXCEPT, INTERSECT)
+	for p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect {
+		var opType string
+		switch p.curTok.Type {
+		case TokenUnion:
+			opType = "Union"
+		case TokenExcept:
+			opType = "Except"
+		case TokenIntersect:
+			opType = "Intersect"
+		}
+		p.nextToken()
+
+		// Check for ALL
+		all := false
+		if p.curTok.Type == TokenAll {
+			all = true
+			p.nextToken()
+		}
+
+		// Parse the right side
+		right, _, _, err := p.parsePrimaryQueryExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		bqe := &ast.BinaryQueryExpression{
+			BinaryQueryExpressionType: opType,
+			All:                       all,
+			FirstQueryExpression:      left,
+			SecondQueryExpression:     right,
+		}
+
+		left = bqe
+	}
+
+	return left, nil
+}
+
 func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *ast.SchemaObjectName, *ast.Identifier, error) {
 	qs, err := p.parseQuerySpecificationCore()
 	if err != nil {
@@ -742,7 +784,82 @@ func (p *Parser) isKeywordAsIdentifier() bool {
 }
 
 func (p *Parser) parseScalarExpression() (ast.ScalarExpression, error) {
-	return p.parseShiftExpression()
+	return p.parseBitwiseXorExpression()
+}
+
+// In T-SQL, bitwise operator precedence from lowest to highest is: ^ (XOR), | (OR), & (AND)
+// This is different from C where it's: | (OR), ^ (XOR), & (AND)
+
+func (p *Parser) parseBitwiseXorExpression() (ast.ScalarExpression, error) {
+	left, err := p.parseBitwiseOrExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.curTok.Type == TokenCaret {
+		p.nextToken()
+
+		right, err := p.parseBitwiseOrExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BinaryExpression{
+			BinaryExpressionType: "BitwiseXor",
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
+}
+
+func (p *Parser) parseBitwiseOrExpression() (ast.ScalarExpression, error) {
+	left, err := p.parseBitwiseAndExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.curTok.Type == TokenPipe {
+		p.nextToken()
+
+		right, err := p.parseBitwiseAndExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BinaryExpression{
+			BinaryExpressionType: "BitwiseOr",
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
+}
+
+func (p *Parser) parseBitwiseAndExpression() (ast.ScalarExpression, error) {
+	left, err := p.parseShiftExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	for p.curTok.Type == TokenBitwiseAnd {
+		p.nextToken()
+
+		right, err := p.parseShiftExpression()
+		if err != nil {
+			return nil, err
+		}
+
+		left = &ast.BinaryExpression{
+			BinaryExpressionType: "BitwiseAnd",
+			FirstExpression:      left,
+			SecondExpression:     right,
+		}
+	}
+
+	return left, nil
 }
 
 func (p *Parser) parseShiftExpression() (ast.ScalarExpression, error) {
@@ -1118,6 +1235,12 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		if upper == "TRY_CONVERT" && p.peekTok.Type == TokenLParen {
 			return p.parseTryConvertCall()
 		}
+		if upper == "NULLIF" && p.peekTok.Type == TokenLParen {
+			return p.parseNullIfExpression()
+		}
+		if upper == "COALESCE" && p.peekTok.Type == TokenLParen {
+			return p.parseCoalesceExpression()
+		}
 		if upper == "IDENTITY" && p.peekTok.Type == TokenLParen {
 			return p.parseIdentityFunctionCall()
 		}
@@ -1177,6 +1300,11 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		if strings.Contains(val, ".") {
 			return &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, nil
 		}
+		// Large numbers beyond INT range should be NumericLiteral
+		// INT range is -2,147,483,648 to 2,147,483,647
+		if len(val) > 10 || (len(val) == 10 && val > "2147483647") {
+			return &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, nil
+		}
 		return &ast.IntegerLiteral{LiteralType: "Integer", Value: val}, nil
 	case TokenMoney:
 		val := p.curTok.Literal
@@ -1210,6 +1338,25 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		expr, err := p.parseScalarExpression()
 		if err != nil {
 			return nil, err
+		}
+		// Check if next token is UNION/INTERSECT/EXCEPT - if so, we're actually inside
+		// a query expression, not a scalar expression. This happens with nested parens
+		// like ((SELECT ...) UNION SELECT ...) where the inner parens create a ScalarSubquery
+		// but the outer expression is a binary query expression.
+		if p.curTok.Type == TokenUnion || p.curTok.Type == TokenIntersect || p.curTok.Type == TokenExcept {
+			// Convert the scalar subquery to a query parenthesis expression
+			if ss, ok := expr.(*ast.ScalarSubquery); ok {
+				qpe := &ast.QueryParenthesisExpression{QueryExpression: ss.QueryExpression}
+				qe, err := p.parseRestOfBinaryQueryExpression(qpe)
+				if err != nil {
+					return nil, err
+				}
+				if p.curTok.Type != TokenRParen {
+					return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
+				}
+				p.nextToken()
+				return &ast.ScalarSubquery{QueryExpression: qe}, nil
+			}
 		}
 		if p.curTok.Type != TokenRParen {
 			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
@@ -1376,13 +1523,32 @@ func (p *Parser) parseNextValueForExpression() (*ast.NextValueForExpression, err
 	return expr, nil
 }
 
-func (p *Parser) parseOdbcLiteral() (*ast.OdbcLiteral, error) {
+func (p *Parser) parseOdbcLiteral() (ast.ScalarExpression, error) {
 	// Consume {
 	p.nextToken()
 
-	// Expect "guid" identifier
-	if p.curTok.Type != TokenIdent || strings.ToLower(p.curTok.Literal) != "guid" {
-		return nil, fmt.Errorf("expected guid in ODBC literal, got %s", p.curTok.Literal)
+	// Check what type of ODBC escape this is
+	keyword := strings.ToUpper(p.curTok.Literal)
+
+	// { FN function_name(...) } - ODBC scalar function
+	if keyword == "FN" {
+		p.nextToken() // consume FN
+		return p.parseOdbcFunctionCall()
+	}
+
+	// Determine the ODBC literal type
+	var odbcType string
+	switch keyword {
+	case "GUID":
+		odbcType = "Guid"
+	case "T":
+		odbcType = "Time"
+	case "D":
+		odbcType = "Date"
+	case "TS":
+		odbcType = "Timestamp"
+	default:
+		return nil, fmt.Errorf("expected guid, fn, t, d, or ts in ODBC escape, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
 
@@ -1429,10 +1595,86 @@ func (p *Parser) parseOdbcLiteral() (*ast.OdbcLiteral, error) {
 
 	return &ast.OdbcLiteral{
 		LiteralType:     "Odbc",
-		OdbcLiteralType: "Guid",
+		OdbcLiteralType: odbcType,
 		IsNational:      isNational,
 		Value:           value,
 	}, nil
+}
+
+func (p *Parser) parseOdbcFunctionCall() (*ast.OdbcFunctionCall, error) {
+	// Parse function name
+	name := p.parseIdentifier()
+
+	call := &ast.OdbcFunctionCall{
+		Name: name,
+	}
+
+	// Check for parentheses (parameters)
+	if p.curTok.Type == TokenLParen {
+		call.ParametersUsed = true
+		p.nextToken() // consume (
+
+		// Handle special extract function: extract(element FROM expr)
+		if strings.ToLower(name.Value) == "extract" {
+			// Parse the extracted element (like "hour", "minute", etc.)
+			element := p.parseIdentifier()
+
+			// Expect FROM keyword
+			if p.curTok.Type != TokenFrom {
+				return nil, fmt.Errorf("expected FROM in ODBC extract function, got %s", p.curTok.Literal)
+			}
+			p.nextToken() // consume FROM
+
+			// Parse the expression to extract from
+			expr, err := p.parseScalarExpression()
+			if err != nil {
+				return nil, err
+			}
+
+			call.Parameters = append(call.Parameters, &ast.ExtractFromExpression{
+				ExtractedElement: element,
+				Expression:       expr,
+			})
+		} else {
+			// Parse parameters
+			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				// For ODBC convert function, the second parameter is a conversion specifier
+				// like sql_int, sql_varchar, etc.
+				if strings.ToLower(name.Value) == "convert" && len(call.Parameters) == 1 {
+					// Second parameter of convert is an OdbcConvertSpecification
+					spec := &ast.OdbcConvertSpecification{
+						Identifier: p.parseIdentifier(),
+					}
+					call.Parameters = append(call.Parameters, spec)
+				} else {
+					param, err := p.parseScalarExpression()
+					if err != nil {
+						return nil, err
+					}
+					call.Parameters = append(call.Parameters, param)
+				}
+
+				if p.curTok.Type == TokenComma {
+					p.nextToken()
+				} else {
+					break
+				}
+			}
+		}
+
+		if p.curTok.Type != TokenRParen {
+			return nil, fmt.Errorf("expected ) in ODBC function call, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume )
+	}
+
+	// Consume closing }
+	if p.curTok.Type != TokenRBrace {
+		return nil, fmt.Errorf("expected } in ODBC function call, got %s", p.curTok.Literal)
+	}
+	p.nextToken()
+
+	return call, nil
 }
 
 func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
@@ -5880,6 +6122,80 @@ func (p *Parser) parseTryConvertCall() (ast.ScalarExpression, error) {
 	}
 
 	return convert, nil
+}
+
+// parseNullIfExpression parses a NULLIF(expr1, expr2) expression
+func (p *Parser) parseNullIfExpression() (ast.ScalarExpression, error) {
+	p.nextToken() // consume NULLIF
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after NULLIF, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Parse first expression
+	first, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect comma
+	if p.curTok.Type != TokenComma {
+		return nil, fmt.Errorf("expected , in NULLIF, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume ,
+
+	// Parse second expression
+	second, err := p.parseScalarExpression()
+	if err != nil {
+		return nil, err
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in NULLIF, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.NullIfExpression{
+		FirstExpression:  first,
+		SecondExpression: second,
+	}, nil
+}
+
+// parseCoalesceExpression parses a COALESCE(expr1, expr2, ...) expression
+func (p *Parser) parseCoalesceExpression() (ast.ScalarExpression, error) {
+	p.nextToken() // consume COALESCE
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after COALESCE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	var expressions []ast.ScalarExpression
+
+	// Parse expressions
+	for {
+		expr, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		expressions = append(expressions, expr)
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken() // consume ,
+		} else {
+			break
+		}
+	}
+
+	// Expect )
+	if p.curTok.Type != TokenRParen {
+		return nil, fmt.Errorf("expected ) in COALESCE, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume )
+
+	return &ast.CoalesceExpression{
+		Expressions: expressions,
+	}, nil
 }
 
 // parseIdentityFunctionCall parses an IDENTITY function call: IDENTITY(data_type [, seed, increment])

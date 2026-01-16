@@ -10,3 +10,30 @@ type OdbcLiteral struct {
 
 func (*OdbcLiteral) node()             {}
 func (*OdbcLiteral) scalarExpression() {}
+
+// OdbcFunctionCall represents an ODBC scalar function call like {fn convert(...)}.
+type OdbcFunctionCall struct {
+	Name           *Identifier
+	ParametersUsed bool
+	Parameters     []ScalarExpression
+}
+
+func (*OdbcFunctionCall) node()             {}
+func (*OdbcFunctionCall) scalarExpression() {}
+
+// OdbcConvertSpecification represents the target type in an ODBC convert function.
+type OdbcConvertSpecification struct {
+	Identifier *Identifier
+}
+
+func (*OdbcConvertSpecification) node()             {}
+func (*OdbcConvertSpecification) scalarExpression() {}
+
+// ExtractFromExpression represents an EXTRACT(element FROM expression) construct.
+type ExtractFromExpression struct {
+	ExtractedElement *Identifier
+	Expression       ScalarExpression
+}
+
+func (*ExtractFromExpression) node()             {}
+func (*ExtractFromExpression) scalarExpression() {}

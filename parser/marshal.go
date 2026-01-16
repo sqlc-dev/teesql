@@ -2275,6 +2275,29 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
 		return node
+	case *ast.NullIfExpression:
+		node := jsonNode{
+			"$type": "NullIfExpression",
+		}
+		if e.FirstExpression != nil {
+			node["FirstExpression"] = scalarExpressionToJSON(e.FirstExpression)
+		}
+		if e.SecondExpression != nil {
+			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
+		}
+		return node
+	case *ast.CoalesceExpression:
+		node := jsonNode{
+			"$type": "CoalesceExpression",
+		}
+		if len(e.Expressions) > 0 {
+			exprs := make([]jsonNode, len(e.Expressions))
+			for i, expr := range e.Expressions {
+				exprs[i] = scalarExpressionToJSON(expr)
+			}
+			node["Expressions"] = exprs
+		}
+		return node
 	case *ast.IdentityFunctionCall:
 		node := jsonNode{
 			"$type": "IdentityFunctionCall",
@@ -2442,6 +2465,41 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		node["IsNational"] = e.IsNational
 		if e.Value != "" {
 			node["Value"] = e.Value
+		}
+		return node
+	case *ast.OdbcFunctionCall:
+		node := jsonNode{
+			"$type": "OdbcFunctionCall",
+		}
+		if e.Name != nil {
+			node["Name"] = identifierToJSON(e.Name)
+		}
+		node["ParametersUsed"] = e.ParametersUsed
+		if len(e.Parameters) > 0 {
+			params := make([]jsonNode, len(e.Parameters))
+			for i, param := range e.Parameters {
+				params[i] = scalarExpressionToJSON(param)
+			}
+			node["Parameters"] = params
+		}
+		return node
+	case *ast.OdbcConvertSpecification:
+		node := jsonNode{
+			"$type": "OdbcConvertSpecification",
+		}
+		if e.Identifier != nil {
+			node["Identifier"] = identifierToJSON(e.Identifier)
+		}
+		return node
+	case *ast.ExtractFromExpression:
+		node := jsonNode{
+			"$type": "ExtractFromExpression",
+		}
+		if e.Expression != nil {
+			node["Expression"] = scalarExpressionToJSON(e.Expression)
+		}
+		if e.ExtractedElement != nil {
+			node["ExtractedElement"] = identifierToJSON(e.ExtractedElement)
 		}
 		return node
 	case *ast.NullLiteral:
@@ -7538,6 +7596,51 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					}
 				}
 			}
+		} else if upperLit == "IDENTITY" && col.IdentityOptions == nil {
+			// IDENTITY can appear after DEFAULT or other constraints
+			p.nextToken() // consume IDENTITY
+			identityOpts := &ast.IdentityOptions{}
+
+			// Check for optional (seed, increment)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+
+				// Parse seed
+				seed, err := p.parseScalarExpression()
+				if err == nil {
+					identityOpts.IdentitySeed = seed
+				}
+
+				// Expect comma
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume ,
+
+					// Parse increment
+					increment, err := p.parseScalarExpression()
+					if err == nil {
+						identityOpts.IdentityIncrement = increment
+					}
+				}
+
+				// Expect closing paren
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+
+			// Check for NOT FOR REPLICATION
+			if p.curTok.Type == TokenNot {
+				p.nextToken() // consume NOT
+				if strings.ToUpper(p.curTok.Literal) == "FOR" {
+					p.nextToken() // consume FOR
+					if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+						p.nextToken() // consume REPLICATION
+						identityOpts.NotForReplication = true
+					}
+				}
+			}
+
+			col.IdentityOptions = identityOpts
 		} else {
 			break
 		}
