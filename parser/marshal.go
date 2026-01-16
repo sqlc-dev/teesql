@@ -6449,33 +6449,13 @@ func (p *Parser) parseGraphMatchPredicate() (*ast.GraphMatchPredicate, error) {
 }
 
 // parseGraphMatchAndExpression parses graph match expressions connected by AND
+// Note: AND inside chains is now handled by parseGraphMatchChainedExpression
 func (p *Parser) parseGraphMatchAndExpression() (ast.GraphMatchExpression, error) {
-	left, err := p.parseGraphMatchChainedExpression()
-	if err != nil {
-		return nil, err
-	}
-
-	// Check for AND
-	for p.curTok.Type == TokenAnd {
-		p.nextToken() // consume AND
-
-		right, err := p.parseGraphMatchChainedExpression()
-		if err != nil {
-			return nil, err
-		}
-
-		// Wrap in BooleanBinaryExpression
-		left = &ast.BooleanBinaryExpression{
-			BinaryExpressionType: "And",
-			FirstExpression:      left.(ast.BooleanExpression),
-			SecondExpression:     right.(ast.BooleanExpression),
-		}
-	}
-
-	return left, nil
+	return p.parseGraphMatchChainedExpression()
 }
 
 // parseGraphMatchChainedExpression parses a chain like A-(B)->C-(D)->E
+// Also handles AND which continues the chain but starts a fresh node
 func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, error) {
 	// Parse first composite pattern
 	first, rightNode, err := p.parseGraphMatchSingleComposite(nil)
@@ -6485,9 +6465,15 @@ func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, e
 
 	var result ast.GraphMatchExpression = first
 
-	// Check for continuation - if the right node is followed by - or <, it's a chain
-	for p.curTok.Type == TokenMinus || p.curTok.Type == TokenLessThan {
-		// The previous right node becomes the left node of the next composite
+	// Check for continuation - if the right node is followed by -, <, or AND, it's a chain
+	for p.curTok.Type == TokenMinus || p.curTok.Type == TokenLessThan || p.curTok.Type == TokenAnd {
+		// If AND, continue chain but start with fresh node (not chaining from previous)
+		if p.curTok.Type == TokenAnd {
+			p.nextToken() // consume AND
+			rightNode = nil
+		}
+
+		// The previous right node becomes the left node of the next composite (nil if after AND)
 		next, nextRightNode, err := p.parseGraphMatchSingleComposite(rightNode)
 		if err != nil {
 			return nil, err
