@@ -1288,6 +1288,20 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		if upper == "NEXT" && strings.ToUpper(p.peekTok.Literal) == "VALUE" {
 			return p.parseNextValueForExpression()
 		}
+		// Check for parameterless calls (USER, CURRENT_USER, etc.) without parentheses
+		if p.peekTok.Type != TokenLParen {
+			parameterlessType := getParameterlessCallType(upper)
+			if parameterlessType != "" {
+				p.nextToken()
+				call := &ast.ParameterlessCall{ParameterlessCallType: parameterlessType}
+				// Check for optional COLLATE clause
+				if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+					p.nextToken() // consume COLLATE
+					call.Collation = p.parseIdentifier()
+				}
+				return call, nil
+			}
+		}
 		return p.parseColumnReferenceOrFunctionCall()
 	case TokenNumber:
 		val := p.curTok.Literal
@@ -1333,7 +1347,13 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 			}
 			p.nextToken()
-			return &ast.ScalarSubquery{QueryExpression: qe}, nil
+			ss := &ast.ScalarSubquery{QueryExpression: qe}
+			// Check for optional COLLATE clause
+			if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+				p.nextToken() // consume COLLATE
+				ss.Collation = p.parseIdentifier()
+			}
+			return ss, nil
 		}
 		expr, err := p.parseScalarExpression()
 		if err != nil {
@@ -1355,7 +1375,13 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 					return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 				}
 				p.nextToken()
-				return &ast.ScalarSubquery{QueryExpression: qe}, nil
+				ss := &ast.ScalarSubquery{QueryExpression: qe}
+				// Check for optional COLLATE clause
+				if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+					p.nextToken() // consume COLLATE
+					ss.Collation = p.parseIdentifier()
+				}
+				return ss, nil
 			}
 		}
 		if p.curTok.Type != TokenRParen {
@@ -1374,8 +1400,21 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		// Multi-part identifier starting with empty parts (e.g., ..t1.c1)
 		return p.parseColumnReferenceWithLeadingDots()
 	case TokenMaster, TokenDatabase, TokenKey, TokenTable, TokenIndex,
-		TokenSchema, TokenUser, TokenView, TokenTime:
+		TokenSchema, TokenView, TokenTime:
 		// Keywords that can be used as identifiers in column/table references
+		return p.parseColumnReferenceOrFunctionCall()
+	case TokenUser:
+		// USER without parentheses is a ParameterlessCall
+		if p.peekTok.Type != TokenLParen && p.peekTok.Type != TokenDot {
+			p.nextToken()
+			call := &ast.ParameterlessCall{ParameterlessCallType: "User"}
+			// Check for optional COLLATE clause
+			if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+				p.nextToken() // consume COLLATE
+				call.Collation = p.parseIdentifier()
+			}
+			return call, nil
+		}
 		return p.parseColumnReferenceOrFunctionCall()
 	default:
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
@@ -1436,6 +1475,12 @@ func (p *Parser) parseSearchedCaseExpression() (*ast.SearchedCaseExpression, err
 	}
 	p.nextToken() // consume END
 
+	// Check for optional COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		expr.Collation = p.parseIdentifier()
+	}
+
 	return expr, nil
 }
 
@@ -1487,6 +1532,12 @@ func (p *Parser) parseSimpleCaseExpression() (*ast.SimpleCaseExpression, error) 
 		return nil, fmt.Errorf("expected END in CASE, got %s", p.curTok.Literal)
 	}
 	p.nextToken() // consume END
+
+	// Check for optional COLLATE clause
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		expr.Collation = p.parseIdentifier()
+	}
 
 	return expr, nil
 }
@@ -1840,6 +1891,12 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			} else {
 				colType = "RowGuidCol"
 			}
+			p.nextToken()
+			break
+		} else if pseudoType := getPseudoColumnType(upper); pseudoType != "" {
+			// Pseudo columns like $ROWGUID, $IDENTITY at end of multi-part identifier
+			// set column type and are not included in the identifier list
+			colType = pseudoType
 			p.nextToken()
 			break
 		}
@@ -6675,6 +6732,26 @@ func getPseudoColumnType(value string) string {
 		return "PseudoColumnGraphFromId"
 	case "$TO_ID":
 		return "PseudoColumnGraphToId"
+	default:
+		return ""
+	}
+}
+
+// getParameterlessCallType returns the ParameterlessCallType for keywords like USER, CURRENT_USER, etc.
+func getParameterlessCallType(value string) string {
+	switch value {
+	case "USER":
+		return "User"
+	case "CURRENT_USER":
+		return "CurrentUser"
+	case "SESSION_USER":
+		return "SessionUser"
+	case "SYSTEM_USER":
+		return "SystemUser"
+	case "CURRENT_TIMESTAMP":
+		return "CurrentTimestamp"
+	case "CURRENT_DATE":
+		return "CurrentDate"
 	default:
 		return ""
 	}

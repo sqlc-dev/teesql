@@ -4,6 +4,7 @@ package ast
 type SearchedCaseExpression struct {
 	WhenClauses    []*SearchedWhenClause
 	ElseExpression ScalarExpression
+	Collation      *Identifier
 }
 
 func (s *SearchedCaseExpression) node()             {}
@@ -20,6 +21,7 @@ type SimpleCaseExpression struct {
 	InputExpression ScalarExpression
 	WhenClauses     []*SimpleWhenClause
 	ElseExpression  ScalarExpression
+	Collation       *Identifier
 }
 
 func (s *SimpleCaseExpression) node()             {}

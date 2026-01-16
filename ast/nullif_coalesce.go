@@ -16,3 +16,12 @@ type CoalesceExpression struct {
 
 func (*CoalesceExpression) node()             {}
 func (*CoalesceExpression) scalarExpression() {}
+
+// ParameterlessCall represents a parameterless function call like USER, CURRENT_USER, etc.
+type ParameterlessCall struct {
+	ParameterlessCallType string
+	Collation             *Identifier
+}
+
+func (*ParameterlessCall) node()             {}
+func (*ParameterlessCall) scalarExpression() {}

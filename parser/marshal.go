@@ -2298,6 +2298,17 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			node["Expressions"] = exprs
 		}
 		return node
+	case *ast.ParameterlessCall:
+		node := jsonNode{
+			"$type": "ParameterlessCall",
+		}
+		if e.ParameterlessCallType != "" {
+			node["ParameterlessCallType"] = e.ParameterlessCallType
+		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
+		}
+		return node
 	case *ast.IdentityFunctionCall:
 		node := jsonNode{
 			"$type": "IdentityFunctionCall",
@@ -2550,6 +2561,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.QueryExpression != nil {
 			node["QueryExpression"] = queryExpressionToJSON(e.QueryExpression)
 		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
+		}
 		return node
 	case *ast.SearchedCaseExpression:
 		node := jsonNode{
@@ -2573,6 +2587,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		}
 		if e.ElseExpression != nil {
 			node["ElseExpression"] = scalarExpressionToJSON(e.ElseExpression)
+		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
 		}
 		return node
 	case *ast.SimpleCaseExpression:
@@ -2600,6 +2617,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		}
 		if e.ElseExpression != nil {
 			node["ElseExpression"] = scalarExpressionToJSON(e.ElseExpression)
+		}
+		if e.Collation != nil {
+			node["Collation"] = identifierToJSON(e.Collation)
 		}
 		return node
 	case *ast.SourceDeclaration:
