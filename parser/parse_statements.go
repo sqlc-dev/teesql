@@ -4565,6 +4565,15 @@ func (p *Parser) parseCreateProcedureStatement() (*ast.CreateProcedureStatement,
 		}
 	}
 
+	// Parse optional FOR REPLICATION
+	if strings.ToUpper(p.curTok.Literal) == "FOR" {
+		p.nextToken() // consume FOR
+		if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+			stmt.IsForReplication = true
+			p.nextToken() // consume REPLICATION
+		}
+	}
+
 	// Expect AS
 	if p.curTok.Type == TokenAs {
 		p.nextToken()
@@ -4662,6 +4671,12 @@ func (p *Parser) parseProcedureParameters() ([]*ast.ProcedureParameter, error) {
 				param.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
 				p.nextToken()
 			}
+		}
+
+		// Parse optional VARYING (for CURSOR type)
+		if strings.ToUpper(p.curTok.Literal) == "VARYING" {
+			param.IsVarying = true
+			p.nextToken()
 		}
 
 		// Parse optional default value
