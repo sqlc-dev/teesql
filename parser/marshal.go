@@ -3407,6 +3407,25 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			node["Expression"] = booleanExpressionToJSON(e.Expression)
 		}
 		return node
+	case *ast.UpdateCall:
+		node := jsonNode{
+			"$type": "UpdateCall",
+		}
+		if e.Identifier != nil {
+			node["Identifier"] = identifierToJSON(e.Identifier)
+		}
+		return node
+	case *ast.TSEqualCall:
+		node := jsonNode{
+			"$type": "TSEqualCall",
+		}
+		if e.FirstExpression != nil {
+			node["FirstExpression"] = scalarExpressionToJSON(e.FirstExpression)
+		}
+		if e.SecondExpression != nil {
+			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
+		}
+		return node
 	case *ast.BooleanIsNullExpression:
 		node := jsonNode{
 			"$type": "BooleanIsNullExpression",
@@ -3547,7 +3566,10 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			"$type": "ExistsPredicate",
 		}
 		if e.Subquery != nil {
-			node["Subquery"] = queryExpressionToJSON(e.Subquery)
+			node["Subquery"] = jsonNode{
+				"$type":           "ScalarSubquery",
+				"QueryExpression": queryExpressionToJSON(e.Subquery),
+			}
 		}
 		return node
 	case *ast.GraphMatchCompositeExpression:
@@ -7018,6 +7040,18 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			col.DefaultConstraint = defaultConstraint
 		} else if upperLit == "CHECK" {
 			p.nextToken() // consume CHECK
+			notForReplication := false
+			// Check for NOT FOR REPLICATION (comes before the condition)
+			if p.curTok.Type == TokenNot {
+				p.nextToken() // consume NOT
+				if strings.ToUpper(p.curTok.Literal) == "FOR" {
+					p.nextToken() // consume FOR
+					if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+						p.nextToken() // consume REPLICATION
+						notForReplication = true
+					}
+				}
+			}
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
 				cond, err := p.parseBooleanExpression()
@@ -7030,6 +7064,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				col.Constraints = append(col.Constraints, &ast.CheckConstraintDefinition{
 					CheckCondition:       cond,
 					ConstraintIdentifier: constraintName,
+					NotForReplication:    notForReplication,
 				})
 				constraintName = nil // clear for next constraint
 			}
@@ -7845,12 +7880,24 @@ func (p *Parser) parseForeignKeyAction() string {
 	}
 }
 
-// parseCheckConstraint parses CHECK (expression)
+// parseCheckConstraint parses CHECK (expression) or CHECK NOT FOR REPLICATION (expression)
 func (p *Parser) parseCheckConstraint() (*ast.CheckConstraintDefinition, error) {
 	// Consume CHECK
 	p.nextToken()
 
 	constraint := &ast.CheckConstraintDefinition{}
+
+	// Check for NOT FOR REPLICATION (comes before the condition)
+	if p.curTok.Type == TokenNot {
+		p.nextToken() // consume NOT
+		if strings.ToUpper(p.curTok.Literal) == "FOR" {
+			p.nextToken() // consume FOR
+			if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+				p.nextToken() // consume REPLICATION
+				constraint.NotForReplication = true
+			}
+		}
+	}
 
 	// Parse condition
 	if p.curTok.Type == TokenLParen {

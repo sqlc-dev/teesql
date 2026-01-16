@@ -204,6 +204,18 @@ func (p *Parser) parseCheckConstraintInTable() (*ast.CheckConstraintDefinition, 
 
 	constraint := &ast.CheckConstraintDefinition{}
 
+	// Check for NOT FOR REPLICATION (comes before the condition)
+	if p.curTok.Type == TokenNot {
+		p.nextToken() // consume NOT
+		if strings.ToUpper(p.curTok.Literal) == "FOR" {
+			p.nextToken() // consume FOR
+			if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+				p.nextToken() // consume REPLICATION
+				constraint.NotForReplication = true
+			}
+		}
+	}
+
 	// Expect (
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after CHECK, got %s", p.curTok.Literal)
