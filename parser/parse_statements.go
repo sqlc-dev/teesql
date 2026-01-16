@@ -8587,11 +8587,11 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 						}
 					} else if distVal == "ROUND_ROBIN" {
 						opt.Value = &ast.ExternalTableRoundRobinDistributionPolicy{}
-					} else if distVal == "REPLICATE" {
+					} else if distVal == "REPLICATE" || distVal == "REPLICATED" {
 						opt.Value = &ast.ExternalTableReplicatedDistributionPolicy{}
 					}
 					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
-				case "LOCATION", "FILE_FORMAT", "TABLE_OPTIONS":
+				case "LOCATION", "FILE_FORMAT", "TABLE_OPTIONS", "SCHEMA_NAME", "OBJECT_NAME", "REJECTED_ROW_LOCATION":
 					opt := &ast.ExternalTableLiteralOrIdentifierOption{
 						Value: &ast.IdentifierOrValueExpression{},
 					}
@@ -8602,6 +8602,12 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 						opt.OptionKind = "FileFormat"
 					case "TABLE_OPTIONS":
 						opt.OptionKind = "TableOptions"
+					case "SCHEMA_NAME":
+						opt.OptionKind = "SchemaName"
+					case "OBJECT_NAME":
+						opt.OptionKind = "ObjectName"
+					case "REJECTED_ROW_LOCATION":
+						opt.OptionKind = "RejectedRowLocation"
 					}
 
 					// Parse the value (can be identifier or string literal)
