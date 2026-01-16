@@ -2512,6 +2512,10 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 					ForPath:    false,
 				}, nil
 			}
+			// Handle OPENJSON specially
+			if upper == "OPENJSON" {
+				return p.parseOpenJsonTableReference(params, alias)
+			}
 		}
 
 		ref := &ast.SchemaObjectFunctionTableReference{
@@ -2526,6 +2530,113 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 
 	// It's a regular named table reference
 	return p.parseNamedTableReferenceWithName(son)
+}
+
+// parseOpenJsonTableReference parses OPENJSON function with optional WITH clause
+func (p *Parser) parseOpenJsonTableReference(params []ast.ScalarExpression, alias *ast.Identifier) (ast.TableReference, error) {
+	ref := &ast.OpenJsonTableReference{
+		ForPath: false,
+		Alias:   alias,
+	}
+
+	// First parameter is the Variable (JSON expression)
+	if len(params) > 0 {
+		ref.Variable = params[0]
+	}
+
+	// Second parameter is the RowPattern (optional path expression)
+	if len(params) > 1 {
+		ref.RowPattern = params[1]
+	}
+
+	// Check for WITH clause (schema declaration)
+	if p.curTok.Type == TokenWith {
+		p.nextToken() // consume WITH
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after OPENJSON WITH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume (
+
+		// Parse schema declaration items
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			item, err := p.parseSchemaDeclarationItemOpenjson()
+			if err != nil {
+				return nil, err
+			}
+			ref.SchemaDeclarationItems = append(ref.SchemaDeclarationItems, item)
+
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			} else {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+	}
+
+	// Parse optional alias after WITH clause
+	if ref.Alias == nil {
+		if p.curTok.Type == TokenAs {
+			p.nextToken()
+			ref.Alias = p.parseIdentifier()
+		} else if p.curTok.Type == TokenIdent {
+			upper := strings.ToUpper(p.curTok.Literal)
+			if upper != "WHERE" && upper != "GROUP" && upper != "HAVING" && upper != "WINDOW" && upper != "ORDER" &&
+				upper != "OPTION" && upper != "GO" && upper != "WITH" && upper != "ON" &&
+				upper != "JOIN" && upper != "INNER" && upper != "LEFT" && upper != "RIGHT" &&
+				upper != "FULL" && upper != "CROSS" && upper != "OUTER" && upper != "FOR" {
+				ref.Alias = p.parseIdentifier()
+			}
+		}
+	}
+
+	return ref, nil
+}
+
+// parseSchemaDeclarationItemOpenjson parses a column definition in OPENJSON WITH clause
+func (p *Parser) parseSchemaDeclarationItemOpenjson() (*ast.SchemaDeclarationItemOpenjson, error) {
+	item := &ast.SchemaDeclarationItemOpenjson{
+		ColumnDefinition: &ast.ColumnDefinitionBase{},
+	}
+
+	// Parse column name
+	item.ColumnDefinition.ColumnIdentifier = p.parseIdentifier()
+
+	// Parse data type
+	dataType, err := p.parseDataTypeReference()
+	if err != nil {
+		return nil, err
+	}
+	item.ColumnDefinition.DataType = dataType
+
+	// Parse optional COLLATE
+	if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
+		p.nextToken() // consume COLLATE
+		item.ColumnDefinition.Collation = p.parseIdentifier()
+	}
+
+	// Parse optional path mapping (string literal) or AS JSON
+	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
+		mapping, err := p.parseScalarExpression()
+		if err != nil {
+			return nil, err
+		}
+		item.Mapping = mapping
+	}
+
+	// Parse optional AS JSON
+	if p.curTok.Type == TokenAs {
+		p.nextToken() // consume AS
+		if strings.ToUpper(p.curTok.Literal) == "JSON" {
+			item.AsJson = true
+			p.nextToken() // consume JSON
+		}
+	}
+
+	return item, nil
 }
 
 // parseDerivedTableReference parses a derived table (parenthesized query) like (SELECT ...) AS alias

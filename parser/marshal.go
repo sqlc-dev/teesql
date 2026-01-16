@@ -2749,6 +2749,50 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		}
 		node["ForPath"] = r.ForPath
 		return node
+	case *ast.OpenJsonTableReference:
+		node := jsonNode{
+			"$type": "OpenJsonTableReference",
+		}
+		if r.Variable != nil {
+			node["Variable"] = scalarExpressionToJSON(r.Variable)
+		}
+		if r.RowPattern != nil {
+			node["RowPattern"] = scalarExpressionToJSON(r.RowPattern)
+		}
+		if len(r.SchemaDeclarationItems) > 0 {
+			items := make([]jsonNode, len(r.SchemaDeclarationItems))
+			for i, item := range r.SchemaDeclarationItems {
+				itemNode := jsonNode{
+					"$type": "SchemaDeclarationItemOpenjson",
+				}
+				itemNode["AsJson"] = item.AsJson
+				if item.ColumnDefinition != nil {
+					colDef := jsonNode{
+						"$type": "ColumnDefinitionBase",
+					}
+					if item.ColumnDefinition.ColumnIdentifier != nil {
+						colDef["ColumnIdentifier"] = identifierToJSON(item.ColumnDefinition.ColumnIdentifier)
+					}
+					if item.ColumnDefinition.DataType != nil {
+						colDef["DataType"] = dataTypeReferenceToJSON(item.ColumnDefinition.DataType)
+					}
+					if item.ColumnDefinition.Collation != nil {
+						colDef["Collation"] = identifierToJSON(item.ColumnDefinition.Collation)
+					}
+					itemNode["ColumnDefinition"] = colDef
+				}
+				if item.Mapping != nil {
+					itemNode["Mapping"] = scalarExpressionToJSON(item.Mapping)
+				}
+				items[i] = itemNode
+			}
+			node["SchemaDeclarationItems"] = items
+		}
+		if r.Alias != nil {
+			node["Alias"] = identifierToJSON(r.Alias)
+		}
+		node["ForPath"] = r.ForPath
+		return node
 	case *ast.BuiltInFunctionTableReference:
 		node := jsonNode{
 			"$type": "BuiltInFunctionTableReference",
