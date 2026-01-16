@@ -976,6 +976,13 @@ func alterTableAlterColumnStatementToJSON(s *ast.AlterTableAlterColumnStatement)
 	if s.MaskingFunction != nil {
 		node["MaskingFunction"] = scalarExpressionToJSON(s.MaskingFunction)
 	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = indexOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}

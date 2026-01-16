@@ -5072,6 +5072,30 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		} else if nextLit == "HIDDEN" {
 			stmt.AlterTableAlterColumnOption = "AddHidden"
 			p.nextToken()
+		} else if nextLit == "MASKED" {
+			stmt.AlterTableAlterColumnOption = "AddMasked"
+			stmt.IsMasked = true
+			p.nextToken()
+			// Parse optional WITH (FUNCTION = '...')
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					if strings.ToUpper(p.curTok.Literal) == "FUNCTION" {
+						p.nextToken() // consume FUNCTION
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						if p.curTok.Type == TokenString {
+							maskFunc, _ := p.parseStringLiteral()
+							stmt.MaskingFunction = maskFunc
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			}
 		} else if nextLit == "NOT" {
 			p.nextToken() // consume NOT
 			if strings.ToUpper(p.curTok.Literal) == "FOR" {
@@ -5081,6 +5105,14 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 				p.nextToken() // consume REPLICATION
 			}
 			stmt.AlterTableAlterColumnOption = "AddNotForReplication"
+		}
+		// Parse optional WITH clause for ONLINE option
+		if p.curTok.Type == TokenWith {
+			opts, err := p.parseAlterColumnWithOptions()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = opts
 		}
 		// Skip optional semicolon
 		if p.curTok.Type == TokenSemicolon {
@@ -5102,6 +5134,9 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		} else if nextLit == "HIDDEN" {
 			stmt.AlterTableAlterColumnOption = "DropHidden"
 			p.nextToken()
+		} else if nextLit == "MASKED" {
+			stmt.AlterTableAlterColumnOption = "DropMasked"
+			p.nextToken()
 		} else if nextLit == "NOT" {
 			p.nextToken() // consume NOT
 			if strings.ToUpper(p.curTok.Literal) == "FOR" {
@@ -5111,6 +5146,14 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 				p.nextToken() // consume REPLICATION
 			}
 			stmt.AlterTableAlterColumnOption = "DropNotForReplication"
+		}
+		// Parse optional WITH clause for ONLINE option
+		if p.curTok.Type == TokenWith {
+			opts, err := p.parseAlterColumnWithOptions()
+			if err != nil {
+				return nil, err
+			}
+			stmt.Options = opts
 		}
 		// Skip optional semicolon
 		if p.curTok.Type == TokenSemicolon {
@@ -5221,6 +5264,15 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		}
 	}
 
+	// Parse optional WITH clause for ONLINE option (for data type changes)
+	if p.curTok.Type == TokenWith {
+		opts, err := p.parseAlterColumnWithOptions()
+		if err != nil {
+			return nil, err
+		}
+		stmt.Options = opts
+	}
+
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
@@ -5286,6 +5338,53 @@ func (p *Parser) parseColumnEncryptionSpecification() (*ast.ColumnEncryptionDefi
 	}
 
 	return encDef, nil
+}
+
+func (p *Parser) parseAlterColumnWithOptions() ([]ast.IndexOption, error) {
+	var options []ast.IndexOption
+
+	p.nextToken() // consume WITH
+	if p.curTok.Type != TokenLParen {
+		return nil, nil
+	}
+	p.nextToken() // consume (
+
+	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optName := strings.ToUpper(p.curTok.Literal)
+		p.nextToken() // consume option name
+
+		if p.curTok.Type == TokenEquals {
+			p.nextToken() // consume =
+		}
+
+		switch optName {
+		case "ONLINE":
+			opt := &ast.OnlineIndexOption{
+				OptionKind: "Online",
+			}
+			val := strings.ToUpper(p.curTok.Literal)
+			if val == "ON" {
+				opt.OptionState = "On"
+			} else if val == "OFF" {
+				opt.OptionState = "Off"
+			}
+			p.nextToken()
+			options = append(options, opt)
+		default:
+			// Skip unknown option value
+			p.nextToken()
+		}
+
+		if p.curTok.Type == TokenComma {
+			p.nextToken()
+		}
+	}
+
+	if p.curTok.Type == TokenRParen {
+		p.nextToken() // consume )
+	}
+
+	return options, nil
 }
 
 func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableAddTableElementStatement, error) {

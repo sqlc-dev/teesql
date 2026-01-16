@@ -12,6 +12,7 @@ type AlterTableAlterColumnStatement struct {
 	IsMasked                    bool
 	Encryption                  *ColumnEncryptionDefinition
 	MaskingFunction             ScalarExpression
+	Options                     []IndexOption
 }
 
 func (a *AlterTableAlterColumnStatement) node()      {}
