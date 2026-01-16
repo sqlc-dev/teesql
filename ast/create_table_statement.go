@@ -69,6 +69,8 @@ type ColumnDefinition struct {
 	IsRowGuidCol             bool
 	IsHidden                 bool
 	IsMasked                 bool
+	MaskingFunction          ScalarExpression
+	Encryption               *ColumnEncryptionDefinition
 	Nullable                 *NullableConstraintDefinition
 	StorageOptions           *ColumnStorageOptions
 }

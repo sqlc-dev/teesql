@@ -5614,20 +5614,11 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						}
 						stmt.Options = append(stmt.Options, opt)
 					} else if optionName == "SYSTEM_VERSIONING" {
-						if p.curTok.Type == TokenEquals {
-							p.nextToken() // consume =
+						opt, err := p.parseSystemVersioningTableOption()
+						if err != nil {
+							return nil, err
 						}
-						stateUpper := strings.ToUpper(p.curTok.Literal)
-						state := "On"
-						if stateUpper == "OFF" {
-							state = "Off"
-						}
-						p.nextToken() // consume ON/OFF
-						stmt.Options = append(stmt.Options, &ast.SystemVersioningTableOption{
-							OptionKind:              "LockEscalation",
-							OptionState:             state,
-							ConsistencyCheckEnabled: "NotSet",
-						})
+						stmt.Options = append(stmt.Options, opt)
 					} else if optionName == "CLUSTERED" {
 						// Could be CLUSTERED INDEX or CLUSTERED COLUMNSTORE INDEX
 						if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
@@ -7664,20 +7655,38 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 		} else if upperLit == "MASKED" {
 			p.nextToken() // consume MASKED
 			col.IsMasked = true
-			// Skip optional WITH clause
+			// Parse optional WITH clause for masking function
 			if strings.ToUpper(p.curTok.Literal) == "WITH" {
-				p.nextToken()
+				p.nextToken() // consume WITH
 				if p.curTok.Type == TokenLParen {
-					depth := 1
-					p.nextToken()
-					for depth > 0 && p.curTok.Type != TokenEOF {
-						if p.curTok.Type == TokenLParen {
-							depth++
-						} else if p.curTok.Type == TokenRParen {
-							depth--
+					p.nextToken() // consume (
+					if strings.ToUpper(p.curTok.Literal) == "FUNCTION" {
+						p.nextToken() // consume FUNCTION
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
 						}
-						p.nextToken()
+						if p.curTok.Type == TokenString {
+							maskFunc, err := p.parseStringLiteral()
+							if err == nil {
+								col.MaskingFunction = maskFunc
+							}
+						}
 					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			}
+		} else if upperLit == "ENCRYPTED" {
+			p.nextToken() // consume ENCRYPTED
+			if strings.ToUpper(p.curTok.Literal) == "WITH" {
+				p.nextToken() // consume WITH
+			}
+			// Parse encryption specification: (COLUMN_ENCRYPTION_KEY = key1, ENCRYPTION_TYPE = ..., ALGORITHM = ...)
+			if p.curTok.Type == TokenLParen {
+				encSpec, err := p.parseColumnEncryptionSpecification()
+				if err == nil {
+					col.Encryption = encSpec
 				}
 			}
 		} else if upperLit == "IDENTITY" && col.IdentityOptions == nil {
@@ -7974,6 +7983,22 @@ func (p *Parser) parseConstraintIndexOptions() []ast.IndexOption {
 			opt := &ast.IgnoreDupKeyIndexOption{
 				OptionKind:  "IgnoreDupKey",
 				OptionState: p.capitalizeFirst(strings.ToLower(valueStr)),
+			}
+			// Check for optional (SUPPRESS_MESSAGES = ON/OFF)
+			if valueStr == "ON" && p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				if strings.ToUpper(p.curTok.Literal) == "SUPPRESS_MESSAGES" {
+					p.nextToken() // consume SUPPRESS_MESSAGES
+					if p.curTok.Type == TokenEquals {
+						p.nextToken() // consume =
+					}
+					suppressVal := strings.ToUpper(p.curTok.Literal) == "ON"
+					opt.SuppressMessagesOption = &suppressVal
+					p.nextToken() // consume ON/OFF
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
 			}
 			options = append(options, opt)
 		} else if valueStr == "ON" || valueStr == "OFF" {
@@ -9608,6 +9633,12 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 	}
 	if c.Index != nil {
 		node["Index"] = indexDefinitionToJSON(c.Index)
+	}
+	if c.Encryption != nil {
+		node["Encryption"] = columnEncryptionDefinitionToJSON(c.Encryption)
+	}
+	if c.MaskingFunction != nil {
+		node["MaskingFunction"] = scalarExpressionToJSON(c.MaskingFunction)
 	}
 	return node
 }

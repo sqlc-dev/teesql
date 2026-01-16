@@ -911,7 +911,9 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 		p.nextToken() // consume NATIONAL
 	}
 
-	if p.curTok.Type != TokenIdent {
+	// Accept both identifiers and keyword tokens that are also valid data types
+	// TIME is both a keyword (WAITFOR TIME, AT TIME ZONE) and a data type
+	if p.curTok.Type != TokenIdent && p.curTok.Type != TokenTime {
 		return nil, fmt.Errorf("expected data type, got %s", p.curTok.Literal)
 	}
 
@@ -1253,9 +1255,6 @@ func getSqlDataTypeOption(typeName string) (string, bool) {
 		"UNIQUEIDENTIFIER":  "UniqueIdentifier",
 		"XML":               "Xml",
 		"JSON":              "Json",
-		"GEOGRAPHY":         "Geography",
-		"GEOMETRY":          "Geometry",
-		"HIERARCHYID":       "HierarchyId",
 		"ROWVERSION":        "Rowversion",
 		"TIMESTAMP":         "Timestamp",
 		"CONNECTION":        "Connection",
