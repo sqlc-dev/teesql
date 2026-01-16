@@ -105,3 +105,35 @@ type GraphMatchNodeExpression struct {
 
 func (g *GraphMatchNodeExpression) node()                 {}
 func (g *GraphMatchNodeExpression) graphMatchExpression() {}
+
+// GraphMatchRecursivePredicate represents SHORTEST_PATH graph pattern
+type GraphMatchRecursivePredicate struct {
+	Function             string // "ShortestPath"
+	OuterNodeExpression  *GraphMatchNodeExpression
+	Expression           []*GraphMatchCompositeExpression
+	RecursiveQuantifier  *GraphRecursiveMatchQuantifier
+	AnchorOnLeft         bool
+}
+
+func (g *GraphMatchRecursivePredicate) node()                 {}
+func (g *GraphMatchRecursivePredicate) graphMatchExpression() {}
+func (g *GraphMatchRecursivePredicate) booleanExpression()    {}
+
+// GraphRecursiveMatchQuantifier represents the quantifier in SHORTEST_PATH (+ or {min,max})
+type GraphRecursiveMatchQuantifier struct {
+	IsPlusSign bool
+	LowerLimit ScalarExpression
+	UpperLimit ScalarExpression
+}
+
+func (g *GraphRecursiveMatchQuantifier) node() {}
+
+// GraphMatchLastNodePredicate represents LAST_NODE(x) = LAST_NODE(y)
+type GraphMatchLastNodePredicate struct {
+	LeftExpression  *GraphMatchNodeExpression
+	RightExpression *GraphMatchNodeExpression
+}
+
+func (g *GraphMatchLastNodePredicate) node()                 {}
+func (g *GraphMatchLastNodePredicate) graphMatchExpression() {}
+func (g *GraphMatchLastNodePredicate) booleanExpression()    {}

@@ -2435,12 +2435,17 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 			}
 			p.nextToken() // consume (
 
-			// Parse ORDER BY clause
+			// Parse ORDER BY clause or GRAPH PATH
 			withinGroup := &ast.WithinGroupClause{
 				HasGraphPath: false,
 			}
 
-			if p.curTok.Type == TokenOrder {
+			// Check for GRAPH PATH (case insensitive)
+			if strings.ToUpper(p.curTok.Literal) == "GRAPH" && strings.ToUpper(p.peekTok.Literal) == "PATH" {
+				withinGroup.HasGraphPath = true
+				p.nextToken() // consume GRAPH
+				p.nextToken() // consume PATH
+			} else if p.curTok.Type == TokenOrder {
 				orderBy, err := p.parseOrderByClause()
 				if err != nil {
 					return nil, err
@@ -3604,6 +3609,13 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 		ForPath:         false,
 	}
 
+	// Check for FOR PATH (graph path table reference)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "FOR" && strings.ToUpper(p.peekTok.Literal) == "PATH" {
+		p.nextToken() // consume FOR
+		p.nextToken() // consume PATH
+		ref.ForPath = true
+	}
+
 	// Parse optional alias (AS alias or just alias)
 	if p.curTok.Type == TokenAs {
 		p.nextToken()
@@ -3937,6 +3949,13 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 			return nil, err
 		}
 		ref.TemporalClause = temporal
+	}
+
+	// Parse FOR PATH clause (graph database path references)
+	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "FOR" && strings.ToUpper(p.peekTok.Literal) == "PATH" {
+		p.nextToken() // consume FOR
+		p.nextToken() // consume PATH
+		ref.ForPath = true
 	}
 
 	// Check for TABLESAMPLE before alias

@@ -3754,6 +3754,39 @@ func graphMatchExpressionToJSONWithContext(expr ast.GraphMatchExpression, ctx *g
 	case *ast.BooleanBinaryExpression:
 		// Chained patterns produce BooleanBinaryExpression with And
 		return booleanBinaryExpressionToJSONWithGraphContext(e, ctx)
+	case *ast.GraphMatchRecursivePredicate:
+		node := jsonNode{
+			"$type": "GraphMatchRecursivePredicate",
+		}
+		if e.Function != "" {
+			node["Function"] = e.Function
+		}
+		if e.OuterNodeExpression != nil {
+			node["OuterNodeExpression"] = graphMatchNodeExpressionToJSONWithContext(e.OuterNodeExpression, ctx)
+		}
+		if len(e.Expression) > 0 {
+			exprs := make([]jsonNode, len(e.Expression))
+			for i, expr := range e.Expression {
+				exprs[i] = graphMatchExpressionToJSONWithContext(expr, ctx)
+			}
+			node["Expression"] = exprs
+		}
+		if e.RecursiveQuantifier != nil {
+			node["RecursiveQuantifier"] = graphRecursiveMatchQuantifierToJSON(e.RecursiveQuantifier)
+		}
+		node["AnchorOnLeft"] = e.AnchorOnLeft
+		return node
+	case *ast.GraphMatchLastNodePredicate:
+		node := jsonNode{
+			"$type": "GraphMatchLastNodePredicate",
+		}
+		if e.LeftExpression != nil {
+			node["LeftExpression"] = graphMatchNodeExpressionToJSONWithContext(e.LeftExpression, ctx)
+		}
+		if e.RightExpression != nil {
+			node["RightExpression"] = graphMatchNodeExpressionToJSONWithContext(e.RightExpression, ctx)
+		}
+		return node
 	default:
 		return jsonNode{"$type": "UnknownGraphMatchExpression"}
 	}
@@ -3774,6 +3807,10 @@ func booleanBinaryExpressionToJSONWithGraphContext(e *ast.BooleanBinaryExpressio
 		case *ast.BooleanBinaryExpression:
 			// Could be nested chained patterns - check if it contains graph match expressions
 			node["FirstExpression"] = booleanBinaryExpressionToJSONWithGraphContext(firstExpr, ctx)
+		case *ast.GraphMatchRecursivePredicate:
+			node["FirstExpression"] = graphMatchExpressionToJSONWithContext(firstExpr, ctx)
+		case *ast.GraphMatchLastNodePredicate:
+			node["FirstExpression"] = graphMatchExpressionToJSONWithContext(firstExpr, ctx)
 		default:
 			node["FirstExpression"] = booleanExpressionToJSON(e.FirstExpression)
 		}
@@ -3786,6 +3823,10 @@ func booleanBinaryExpressionToJSONWithGraphContext(e *ast.BooleanBinaryExpressio
 		case *ast.BooleanBinaryExpression:
 			// Could be nested chained patterns - check if it contains graph match expressions
 			node["SecondExpression"] = booleanBinaryExpressionToJSONWithGraphContext(secondExpr, ctx)
+		case *ast.GraphMatchRecursivePredicate:
+			node["SecondExpression"] = graphMatchExpressionToJSONWithContext(secondExpr, ctx)
+		case *ast.GraphMatchLastNodePredicate:
+			node["SecondExpression"] = graphMatchExpressionToJSONWithContext(secondExpr, ctx)
 		default:
 			node["SecondExpression"] = booleanExpressionToJSON(e.SecondExpression)
 		}
@@ -3812,6 +3853,20 @@ func graphMatchNodeExpressionToJSONWithContext(expr *ast.GraphMatchNodeExpressio
 	}
 	ctx.seenNodes[expr] = true
 	return graphMatchNodeExpressionToJSON(expr)
+}
+
+func graphRecursiveMatchQuantifierToJSON(q *ast.GraphRecursiveMatchQuantifier) jsonNode {
+	node := jsonNode{
+		"$type": "GraphRecursiveMatchQuantifier",
+	}
+	node["IsPlusSign"] = q.IsPlusSign
+	if q.LowerLimit != nil {
+		node["LowerLimit"] = scalarExpressionToJSON(q.LowerLimit)
+	}
+	if q.UpperLimit != nil {
+		node["UpperLimit"] = scalarExpressionToJSON(q.UpperLimit)
+	}
+	return node
 }
 
 func groupByClauseToJSON(gbc *ast.GroupByClause) jsonNode {
@@ -6671,11 +6726,42 @@ func (p *Parser) parseGraphMatchAndExpression() (ast.GraphMatchExpression, error
 
 // parseGraphMatchChainedExpression parses a chain like A-(B)->C-(D)->E
 // Also handles AND which continues the chain but starts a fresh node
+// Also handles SHORTEST_PATH and LAST_NODE functions
 func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, error) {
-	// Parse first composite pattern
-	first, rightNode, err := p.parseGraphMatchSingleComposite(nil)
-	if err != nil {
-		return nil, err
+	// Check for SHORTEST_PATH or LAST_NODE at the start
+	var first ast.GraphMatchExpression
+	var rightNode *ast.GraphMatchNodeExpression
+	var err error
+
+	if strings.ToUpper(p.curTok.Literal) == "SHORTEST_PATH" {
+		first, err = p.parseGraphMatchShortestPath()
+		if err != nil {
+			return nil, err
+		}
+		rightNode = nil
+	} else if strings.ToUpper(p.curTok.Literal) == "LAST_NODE" {
+		// Check if this is LAST_NODE(x) = LAST_NODE(y) comparison
+		var leftNode *ast.GraphMatchNodeExpression
+		first, leftNode, err = p.parseGraphMatchLastNodeComparison()
+		if err != nil {
+			return nil, err
+		}
+		if first == nil {
+			// Not a comparison - LAST_NODE is part of a pattern
+			// Use the parsed node as the left node of a composite
+			first, rightNode, err = p.parseGraphMatchSingleComposite(leftNode)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			rightNode = nil
+		}
+	} else {
+		// Parse first composite pattern
+		first, rightNode, err = p.parseGraphMatchSingleComposite(nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var result ast.GraphMatchExpression = first
@@ -6686,6 +6772,38 @@ func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, e
 		if p.curTok.Type == TokenAnd {
 			p.nextToken() // consume AND
 			rightNode = nil
+
+			// Check for SHORTEST_PATH or LAST_NODE after AND
+			if strings.ToUpper(p.curTok.Literal) == "SHORTEST_PATH" {
+				next, err := p.parseGraphMatchShortestPath()
+				if err != nil {
+					return nil, err
+				}
+				result = &ast.BooleanBinaryExpression{
+					BinaryExpressionType: "And",
+					FirstExpression:      result.(ast.BooleanExpression),
+					SecondExpression:     next,
+				}
+				continue
+			} else if strings.ToUpper(p.curTok.Literal) == "LAST_NODE" {
+				next, leftNode, err := p.parseGraphMatchLastNodeComparison()
+				if err != nil {
+					return nil, err
+				}
+				if next == nil {
+					// LAST_NODE is part of a pattern, parse composite using leftNode
+					next, rightNode, err = p.parseGraphMatchSingleComposite(leftNode)
+					if err != nil {
+						return nil, err
+					}
+				}
+				result = &ast.BooleanBinaryExpression{
+					BinaryExpressionType: "And",
+					FirstExpression:      result.(ast.BooleanExpression),
+					SecondExpression:     next.(ast.BooleanExpression),
+				}
+				continue
+			}
 		}
 
 		// The previous right node becomes the left node of the next composite (nil if after AND)
@@ -6706,31 +6824,224 @@ func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, e
 	return result, nil
 }
 
+// parseGraphMatchShortestPath parses SHORTEST_PATH(pattern+) or SHORTEST_PATH(pattern{min,max})
+func (p *Parser) parseGraphMatchShortestPath() (*ast.GraphMatchRecursivePredicate, error) {
+	pred := &ast.GraphMatchRecursivePredicate{
+		Function: "ShortestPath",
+	}
+
+	p.nextToken() // consume SHORTEST_PATH
+
+	if p.curTok.Type != TokenLParen {
+		return nil, fmt.Errorf("expected ( after SHORTEST_PATH, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume (
+
+	// Determine if anchor is on left or right
+	// Pattern: N (-(E)->N2)+ means anchor N is on left
+	// Pattern: (N-(E)->)+N2 means anchor N2 is on right
+	// Check if we have ( immediately or an identifier first
+
+	if p.curTok.Type == TokenLParen {
+		// Anchor on right: (pattern)+ N2
+		pred.AnchorOnLeft = false
+		p.nextToken() // consume inner (
+
+		// Parse the recursive pattern(s)
+		pred.Expression = []*ast.GraphMatchCompositeExpression{}
+		var prevRightNode *ast.GraphMatchNodeExpression
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			comp, rightNode, err := p.parseGraphMatchSingleComposite(prevRightNode)
+			if err != nil {
+				return nil, err
+			}
+			// Store the right node for chaining to the next composite's left node
+			prevRightNode = rightNode
+			// For right anchor, the composite doesn't have a right node set explicitly
+			// Clear it as it's implicit (next iteration's left node or the terminal OuterNodeExpression)
+			comp.RightNode = nil
+			pred.Expression = append(pred.Expression, comp)
+
+			// Check for continuation within the recursive pattern
+			if p.curTok.Type != TokenMinus && p.curTok.Type != TokenLessThan {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+
+		// Parse quantifier: + or {min,max}
+		pred.RecursiveQuantifier = &ast.GraphRecursiveMatchQuantifier{}
+		if p.curTok.Type == TokenPlus {
+			pred.RecursiveQuantifier.IsPlusSign = true
+			p.nextToken() // consume +
+		} else if p.curTok.Type == TokenLBrace {
+			pred.RecursiveQuantifier.IsPlusSign = false
+			p.nextToken() // consume {
+			pred.RecursiveQuantifier.LowerLimit, _ = p.parseScalarExpression()
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				pred.RecursiveQuantifier.UpperLimit, _ = p.parseScalarExpression()
+			}
+			if p.curTok.Type == TokenRBrace {
+				p.nextToken() // consume }
+			}
+		}
+
+		// Parse outer node (anchor on right)
+		pred.OuterNodeExpression = p.parseGraphMatchNodeExpr()
+	} else {
+		// Anchor on left: N (pattern)+
+		pred.AnchorOnLeft = true
+
+		// Parse outer node (anchor)
+		pred.OuterNodeExpression = p.parseGraphMatchNodeExpr()
+
+		if p.curTok.Type != TokenLParen {
+			return nil, fmt.Errorf("expected ( after anchor node in SHORTEST_PATH, got %s", p.curTok.Literal)
+		}
+		p.nextToken() // consume inner (
+
+		// Parse the recursive pattern(s) - left node is nil (implied from anchor)
+		pred.Expression = []*ast.GraphMatchCompositeExpression{}
+		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			comp, _, err := p.parseGraphMatchSingleComposite(nil)
+			if err != nil {
+				return nil, err
+			}
+			// For left anchor, the first composite doesn't have a left node set explicitly
+			// Clear it as it's implied from the anchor
+			comp.LeftNode = nil
+			pred.Expression = append(pred.Expression, comp)
+
+			// Check for continuation within the recursive pattern
+			if p.curTok.Type != TokenMinus && p.curTok.Type != TokenLessThan {
+				break
+			}
+		}
+
+		if p.curTok.Type == TokenRParen {
+			p.nextToken() // consume )
+		}
+
+		// Parse quantifier: + or {min,max}
+		pred.RecursiveQuantifier = &ast.GraphRecursiveMatchQuantifier{}
+		if p.curTok.Type == TokenPlus {
+			pred.RecursiveQuantifier.IsPlusSign = true
+			p.nextToken() // consume +
+		} else if p.curTok.Type == TokenLBrace {
+			pred.RecursiveQuantifier.IsPlusSign = false
+			p.nextToken() // consume {
+			pred.RecursiveQuantifier.LowerLimit, _ = p.parseScalarExpression()
+			if p.curTok.Type == TokenComma {
+				p.nextToken() // consume ,
+				pred.RecursiveQuantifier.UpperLimit, _ = p.parseScalarExpression()
+			}
+			if p.curTok.Type == TokenRBrace {
+				p.nextToken() // consume }
+			}
+		}
+	}
+
+	// Consume closing ) of SHORTEST_PATH
+	if p.curTok.Type == TokenRParen {
+		p.nextToken()
+	}
+
+	return pred, nil
+}
+
+// parseGraphMatchNodeExpr parses a node expression which may be LAST_NODE(x) or just x
+func (p *Parser) parseGraphMatchNodeExpr() *ast.GraphMatchNodeExpression {
+	node := &ast.GraphMatchNodeExpression{}
+
+	if strings.ToUpper(p.curTok.Literal) == "LAST_NODE" {
+		node.UsesLastNode = true
+		p.nextToken() // consume LAST_NODE
+		if p.curTok.Type == TokenLParen {
+			p.nextToken() // consume (
+			node.Node = p.parseIdentifier()
+			if p.curTok.Type == TokenRParen {
+				p.nextToken() // consume )
+			}
+		}
+	} else {
+		node.Node = p.parseIdentifier()
+	}
+
+	return node
+}
+
+// parseGraphMatchLastNodeComparison parses LAST_NODE(x) = LAST_NODE(y) predicate
+// Returns (predicate, nil, nil) if it is a comparison
+// Returns (nil, leftNode, nil) if LAST_NODE is not followed by = (the leftNode can be used for composite)
+func (p *Parser) parseGraphMatchLastNodeComparison() (ast.GraphMatchExpression, *ast.GraphMatchNodeExpression, error) {
+	// Parse LAST_NODE(x)
+	left := p.parseGraphMatchNodeExpr()
+
+	// Check for = comparison
+	if p.curTok.Type == TokenEquals {
+		p.nextToken() // consume =
+		right := p.parseGraphMatchNodeExpr()
+
+		// Return a predicate expression
+		return &ast.GraphMatchLastNodePredicate{
+			LeftExpression:  left,
+			RightExpression: right,
+		}, nil, nil
+	}
+
+	// Not a comparison - this LAST_NODE is part of a pattern like LAST_NODE(N) - (E) -> N2
+	// Return the parsed node so it can be used as the left node of a composite
+	return nil, left, nil
+}
+
 // parseGraphMatchSingleComposite parses a single Node-(Edge)->Node pattern
 // leftNode is provided when chaining (the previous right node becomes the left node)
 // Returns the composite and the right node (for potential chaining)
 func (p *Parser) parseGraphMatchSingleComposite(leftNode *ast.GraphMatchNodeExpression) (*ast.GraphMatchCompositeExpression, *ast.GraphMatchNodeExpression, error) {
 	composite := &ast.GraphMatchCompositeExpression{}
 
-	// Parse left node (or use provided one from chaining)
-	if leftNode != nil {
-		composite.LeftNode = leftNode
-	} else {
-		composite.LeftNode = &ast.GraphMatchNodeExpression{
-			Node: p.parseIdentifier(),
-		}
-	}
-
-	// Check for arrow direction at the start: <- means arrow on left
+	// Check if pattern starts with arrow (no explicit left node)
+	// This happens in recursive patterns like -(E)->N inside SHORTEST_PATH
+	startsWithArrow := p.curTok.Type == TokenLessThan || p.curTok.Type == TokenMinus
 	arrowOnRight := true
-	if p.curTok.Type == TokenLessThan {
-		arrowOnRight = false
-		p.nextToken() // consume <
-		if p.curTok.Type == TokenMinus {
+
+	if startsWithArrow {
+		// Pattern starts with arrow - left node is implicit
+		if p.curTok.Type == TokenLessThan {
+			arrowOnRight = false
+			p.nextToken() // consume <
+			if p.curTok.Type == TokenMinus {
+				p.nextToken() // consume -
+			}
+		} else if p.curTok.Type == TokenMinus {
 			p.nextToken() // consume -
 		}
-	} else if p.curTok.Type == TokenMinus {
-		p.nextToken() // consume -
+		// Use provided leftNode if any, otherwise leave it nil
+		composite.LeftNode = leftNode
+	} else {
+		// Pattern starts with node identifier
+		if leftNode != nil {
+			composite.LeftNode = leftNode
+		} else {
+			composite.LeftNode = &ast.GraphMatchNodeExpression{
+				Node: p.parseIdentifier(),
+			}
+		}
+
+		// Now check for arrow direction at the start: <- or -
+		if p.curTok.Type == TokenLessThan {
+			arrowOnRight = false
+			p.nextToken() // consume <
+			if p.curTok.Type == TokenMinus {
+				p.nextToken() // consume -
+			}
+		} else if p.curTok.Type == TokenMinus {
+			p.nextToken() // consume -
+		}
 	}
 
 	// Parse edge - may be in parentheses
@@ -6754,11 +7065,25 @@ func (p *Parser) parseGraphMatchSingleComposite(leftNode *ast.GraphMatchNodeExpr
 	}
 	composite.ArrowOnRight = arrowOnRight
 
-	// Parse right node
-	rightNode := &ast.GraphMatchNodeExpression{
-		Node: p.parseIdentifier(),
+	// Parse right node (only if there's an identifier - in recursive patterns the right node may be implicit)
+	var rightNode *ast.GraphMatchNodeExpression
+	if p.curTok.Type == TokenIdent || strings.ToUpper(p.curTok.Literal) == "LAST_NODE" {
+		rightNode = &ast.GraphMatchNodeExpression{}
+		if strings.ToUpper(p.curTok.Literal) == "LAST_NODE" {
+			rightNode.UsesLastNode = true
+			p.nextToken() // consume LAST_NODE
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+				rightNode.Node = p.parseIdentifier()
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
+				}
+			}
+		} else {
+			rightNode.Node = p.parseIdentifier()
+		}
+		composite.RightNode = rightNode
 	}
-	composite.RightNode = rightNode
 
 	return composite, rightNode, nil
 }
