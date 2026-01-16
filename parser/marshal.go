@@ -599,6 +599,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return insertBulkStatementToJSON(s)
 	case *ast.BulkInsertStatement:
 		return bulkInsertStatementToJSON(s)
+	case *ast.CopyStatement:
+		return copyStatementToJSON(s)
 	case *ast.AlterUserStatement:
 		return alterUserStatementToJSON(s)
 	case *ast.AlterRouteStatement:
@@ -17678,6 +17680,121 @@ func bulkInsertStatementToJSON(s *ast.BulkInsertStatement) jsonNode {
 			options[i] = bulkInsertOptionToJSON(opt)
 		}
 		node["Options"] = options
+	}
+	return node
+}
+
+func copyStatementToJSON(s *ast.CopyStatement) jsonNode {
+	node := jsonNode{
+		"$type": "CopyStatement",
+	}
+	if len(s.From) > 0 {
+		from := make([]jsonNode, len(s.From))
+		for i, f := range s.From {
+			from[i] = scalarExpressionToJSON(f)
+		}
+		node["From"] = from
+	}
+	if s.Into != nil {
+		node["Into"] = schemaObjectNameToJSON(s.Into)
+	}
+	if len(s.Options) > 0 {
+		opts := make([]jsonNode, len(s.Options))
+		for i, opt := range s.Options {
+			opts[i] = copyOptionToJSON(opt)
+		}
+		node["Options"] = opts
+	}
+	return node
+}
+
+func copyOptionToJSON(o *ast.CopyOption) jsonNode {
+	node := jsonNode{
+		"$type": "CopyOption",
+		"Kind":  normalizeCopyOptionKind(o.Kind),
+	}
+	if o.Value != nil {
+		node["Value"] = copyOptionValueToJSON(o.Value)
+	}
+	return node
+}
+
+// normalizeCopyOptionKind converts option names to PascalCase
+func normalizeCopyOptionKind(kind string) string {
+	// Map common option names
+	optionMap := map[string]string{
+		"FILE_TYPE":            "File_Type",
+		"FIELDTERMINATOR":      "FieldTerminator",
+		"ROWTERMINATOR":        "RowTerminator",
+		"FIELDQUOTE":           "FieldQuote",
+		"DATEFORMAT":           "DateFormat",
+		"ENCODING":             "Encoding",
+		"MAXERRORS":            "MaxErrors",
+		"ERRORFILE":            "ErrorFile",
+		"FIRSTROW":             "FirstRow",
+		"CREDENTIAL":           "Credential",
+		"IDENTITY_INSERT":      "Identity_Insert",
+		"COMPRESSION":          "Compression",
+		"FILE_FORMAT":          "File_Format",
+		"ERRORFILE_CREDENTIAL": "ErrorFileCredential",
+		"COLUMNOPTIONS":        "ColumnOptions",
+	}
+	upper := strings.ToUpper(kind)
+	if mapped, ok := optionMap[upper]; ok {
+		return mapped
+	}
+	return kind
+}
+
+func copyOptionValueToJSON(v ast.CopyOptionValue) jsonNode {
+	switch val := v.(type) {
+	case *ast.SingleValueTypeCopyOption:
+		node := jsonNode{
+			"$type": "SingleValueTypeCopyOption",
+		}
+		if val.SingleValue != nil {
+			node["SingleValue"] = identifierOrValueExpressionToJSON(val.SingleValue)
+		}
+		return node
+	case *ast.CopyCredentialOption:
+		node := jsonNode{
+			"$type": "CopyCredentialOption",
+		}
+		if val.Identity != nil {
+			node["Identity"] = scalarExpressionToJSON(val.Identity)
+		}
+		if val.Secret != nil {
+			node["Secret"] = scalarExpressionToJSON(val.Secret)
+		}
+		return node
+	case *ast.ListTypeCopyOption:
+		node := jsonNode{
+			"$type": "ListTypeCopyOption",
+		}
+		if len(val.Options) > 0 {
+			opts := make([]jsonNode, len(val.Options))
+			for i, opt := range val.Options {
+				opts[i] = copyColumnOptionToJSON(opt)
+			}
+			node["Options"] = opts
+		}
+		return node
+	}
+	return nil
+}
+
+func copyColumnOptionToJSON(c *ast.CopyColumnOption) jsonNode {
+	node := jsonNode{
+		"$type": "CopyColumnOption",
+	}
+	if c.ColumnName != nil {
+		node["ColumnName"] = identifierToJSON(c.ColumnName)
+	}
+	if c.DefaultValue != nil {
+		node["DefaultValue"] = scalarExpressionToJSON(c.DefaultValue)
+	}
+	if c.FieldNumber != nil {
+		node["FieldNumber"] = scalarExpressionToJSON(c.FieldNumber)
 	}
 	return node
 }
