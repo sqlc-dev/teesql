@@ -3781,7 +3781,8 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 		Secondary: secondary,
 	}
 
-	optionName := strings.ToUpper(p.curTok.Literal)
+	optionNameOriginal := p.curTok.Literal // preserve original case for generic options
+	optionName := strings.ToUpper(optionNameOriginal)
 	p.nextToken() // consume option name
 
 	// Expect =
@@ -3830,7 +3831,7 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 	default:
 		// Handle generic options (like DW_COMPATIBILITY_LEVEL)
 		optionKindIdent := &ast.Identifier{
-			Value:     optionName,
+			Value:     optionNameOriginal, // use original case
 			QuoteType: "NotQuoted",
 		}
 
