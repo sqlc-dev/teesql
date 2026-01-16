@@ -9243,7 +9243,10 @@ func (p *Parser) parseAlterExternalDataSourceStatement() (*ast.AlterExternalData
 	}
 	p.nextToken()
 
-	stmt := &ast.AlterExternalDataSourceStatement{}
+	stmt := &ast.AlterExternalDataSourceStatement{
+		DataSourceType:         "HADOOP",
+		PreviousPushDownOption: "ON",
+	}
 
 	// Parse name
 	stmt.Name = p.parseIdentifier()
@@ -9268,6 +9271,20 @@ func (p *Parser) parseAlterExternalDataSourceStatement() (*ast.AlterExternalData
 		// Expect =
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
+		}
+
+		// Handle LOCATION as a separate field
+		if optName == "LOCATION" {
+			if p.curTok.Type == TokenString {
+				strLit, _ := p.parseStringLiteral()
+				stmt.Location = strLit
+			} else {
+				p.nextToken()
+			}
+			if p.curTok.Type == TokenComma {
+				p.nextToken()
+			}
+			continue
 		}
 
 		opt := &ast.ExternalDataSourceLiteralOrIdentifierOption{

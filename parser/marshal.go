@@ -19589,8 +19589,17 @@ func alterExternalDataSourceStatementToJSON(s *ast.AlterExternalDataSourceStatem
 	node := jsonNode{
 		"$type": "AlterExternalDataSourceStatement",
 	}
+	if s.PreviousPushDownOption != "" {
+		node["PreviousPushDownOption"] = s.PreviousPushDownOption
+	}
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.DataSourceType != "" {
+		node["DataSourceType"] = s.DataSourceType
+	}
+	if s.Location != nil {
+		node["Location"] = scalarExpressionToJSON(s.Location)
 	}
 	if len(s.ExternalDataSourceOptions) > 0 {
 		opts := make([]jsonNode, len(s.ExternalDataSourceOptions))

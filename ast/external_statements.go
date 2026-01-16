@@ -140,6 +140,9 @@ type ExternalLibraryOption struct {
 // AlterExternalDataSourceStatement represents ALTER EXTERNAL DATA SOURCE statement
 type AlterExternalDataSourceStatement struct {
 	Name                      *Identifier
+	Location                  ScalarExpression
+	DataSourceType            string // HADOOP, etc.
+	PreviousPushDownOption    string // ON, OFF
 	ExternalDataSourceOptions []*ExternalDataSourceLiteralOrIdentifierOption
 }
 
