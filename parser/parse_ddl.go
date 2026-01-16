@@ -2056,9 +2056,13 @@ func (p *Parser) parseDropServiceStatement() (*ast.DropServiceStatement, error) 
 	return stmt, nil
 }
 
-func (p *Parser) parseDropEventNotificationStatement() (*ast.DropEventNotificationStatement, error) {
+func (p *Parser) parseDropEventNotificationStatement() (ast.Statement, error) {
 	// Consume EVENT
 	p.nextToken()
+	// Check if this is DROP EVENT SESSION or DROP EVENT NOTIFICATION
+	if strings.ToUpper(p.curTok.Literal) == "SESSION" {
+		return p.parseDropEventSessionStatement()
+	}
 	// Consume NOTIFICATION
 	if strings.ToUpper(p.curTok.Literal) == "NOTIFICATION" {
 		p.nextToken()
@@ -2099,6 +2103,44 @@ func (p *Parser) parseDropEventNotificationStatement() (*ast.DropEventNotificati
 		scope.QueueName = queueName
 	}
 	stmt.Scope = scope
+
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+
+	return stmt, nil
+}
+
+func (p *Parser) parseDropEventSessionStatement() (*ast.DropEventSessionStatement, error) {
+	// Consume SESSION
+	p.nextToken()
+
+	stmt := &ast.DropEventSessionStatement{}
+
+	// Check for IF EXISTS
+	if strings.ToUpper(p.curTok.Literal) == "IF" {
+		p.nextToken()
+		if strings.ToUpper(p.curTok.Literal) == "EXISTS" {
+			stmt.IsIfExists = true
+			p.nextToken()
+		}
+	}
+
+	// Parse session name
+	stmt.Name = p.parseIdentifier()
+
+	// ON SERVER/DATABASE
+	if p.curTok.Type == TokenOn {
+		p.nextToken()
+		scopeUpper := strings.ToUpper(p.curTok.Literal)
+		if scopeUpper == "SERVER" {
+			stmt.SessionScope = "Server"
+			p.nextToken()
+		} else if scopeUpper == "DATABASE" {
+			stmt.SessionScope = "Database"
+			p.nextToken()
+		}
+	}
 
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
@@ -2204,6 +2246,8 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 			return p.parseAlterAvailabilityGroupStatement()
 		case "MATERIALIZED":
 			return p.parseAlterMaterializedViewStatement()
+		case "EVENT":
+			return p.parseAlterEventSessionStatement()
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -11574,4 +11618,129 @@ func (p *Parser) parseAvailabilityReplicasServerOnly() []*ast.AvailabilityReplic
 		p.nextToken() // consume comma
 	}
 	return replicas
+}
+
+func (p *Parser) parseAlterEventSessionStatement() (*ast.AlterEventSessionStatement, error) {
+	p.nextToken() // consume EVENT
+	if strings.ToUpper(p.curTok.Literal) != "SESSION" {
+		return nil, fmt.Errorf("expected SESSION after EVENT, got %s", p.curTok.Literal)
+	}
+	p.nextToken() // consume SESSION
+
+	stmt := &ast.AlterEventSessionStatement{
+		Name: p.parseIdentifier(),
+	}
+
+	// ON SERVER/DATABASE
+	if p.curTok.Type == TokenOn {
+		p.nextToken()
+		scopeUpper := strings.ToUpper(p.curTok.Literal)
+		if scopeUpper == "SERVER" {
+			stmt.SessionScope = "Server"
+			p.nextToken()
+		} else if scopeUpper == "DATABASE" {
+			stmt.SessionScope = "Database"
+			p.nextToken()
+		}
+	}
+
+	// Parse action: ADD/DROP EVENT/TARGET, WITH, STATE
+	// Note: Don't use isStatementTerminator here because DROP is a statement terminator
+	// but we need to handle DROP EVENT/TARGET inside ALTER EVENT SESSION
+	for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+		// Check for GO batch separator
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GO" {
+			break
+		}
+		// Check for other statement starters that would indicate end of this statement
+		switch p.curTok.Type {
+		case TokenSelect, TokenInsert, TokenUpdate, TokenDelete, TokenDeclare,
+			TokenIf, TokenWhile, TokenBegin, TokenEnd, TokenCreate, TokenAlter,
+			TokenExec, TokenExecute, TokenPrint, TokenThrow:
+			// These tokens indicate start of a new statement
+			goto done
+		}
+		upperLit := strings.ToUpper(p.curTok.Literal)
+
+		if upperLit == "ADD" || p.curTok.Type == TokenAdd {
+			p.nextToken()
+			addType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			if addType == "EVENT" {
+				if stmt.StatementType == "" {
+					stmt.StatementType = "AddEventDeclarationOptionalSessionOptions"
+				}
+				event := p.parseEventDeclaration()
+				stmt.EventDeclarations = append(stmt.EventDeclarations, event)
+			} else if addType == "TARGET" {
+				if stmt.StatementType == "" {
+					stmt.StatementType = "AddTargetDeclarationOptionalSessionOptions"
+				}
+				target := p.parseTargetDeclaration()
+				stmt.TargetDeclarations = append(stmt.TargetDeclarations, target)
+			}
+		} else if upperLit == "DROP" || p.curTok.Type == TokenDrop {
+			p.nextToken()
+			dropType := strings.ToUpper(p.curTok.Literal)
+			p.nextToken()
+
+			if dropType == "EVENT" {
+				if stmt.StatementType == "" {
+					stmt.StatementType = "DropEventSpecificationOptionalSessionOptions"
+				}
+				objName := p.parseEventSessionObjectName()
+				stmt.DropEventDeclarations = append(stmt.DropEventDeclarations, objName)
+			} else if dropType == "TARGET" {
+				if stmt.StatementType == "" {
+					stmt.StatementType = "DropTargetSpecificationOptionalSessionOptions"
+				}
+				objName := p.parseEventSessionObjectName()
+				stmt.DropTargetDeclarations = append(stmt.DropTargetDeclarations, objName)
+			}
+		} else if upperLit == "WITH" || p.curTok.Type == TokenWith {
+			p.nextToken()
+			if p.curTok.Type == TokenLParen {
+				p.nextToken()
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					opt := p.parseSessionOption()
+					if opt != nil {
+						stmt.SessionOptions = append(stmt.SessionOptions, opt)
+					}
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+				if p.curTok.Type == TokenRParen {
+					p.nextToken()
+				}
+			}
+			if stmt.StatementType == "" {
+				stmt.StatementType = "RequiredSessionOptions"
+			}
+		} else if upperLit == "STATE" {
+			p.nextToken() // consume STATE
+			if p.curTok.Type == TokenEquals {
+				p.nextToken() // consume =
+			}
+			stateVal := strings.ToUpper(p.curTok.Literal)
+			if stateVal == "START" {
+				stmt.StatementType = "AlterStateIsStart"
+			} else if stateVal == "STOP" {
+				stmt.StatementType = "AlterStateIsStop"
+			}
+			p.nextToken()
+		} else if p.curTok.Type == TokenComma {
+			p.nextToken()
+		} else {
+			p.nextToken()
+		}
+	}
+done:
+	if p.curTok.Type == TokenSemicolon {
+		p.nextToken()
+	}
+	return stmt, nil
 }

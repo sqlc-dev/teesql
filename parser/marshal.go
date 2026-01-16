@@ -573,6 +573,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return dropServiceStatementToJSON(s)
 	case *ast.DropEventNotificationStatement:
 		return dropEventNotificationStatementToJSON(s)
+	case *ast.DropEventSessionStatement:
+		return dropEventSessionStatementToJSON(s)
 	case *ast.AlterTableTriggerModificationStatement:
 		return alterTableTriggerModificationStatementToJSON(s)
 	case *ast.AlterTableFileTableNamespaceStatement:
@@ -601,6 +603,8 @@ func statementToJSON(stmt ast.Statement) jsonNode {
 		return alterAssemblyStatementToJSON(s)
 	case *ast.AlterEndpointStatement:
 		return alterEndpointStatementToJSON(s)
+	case *ast.AlterEventSessionStatement:
+		return alterEventSessionStatementToJSON(s)
 	case *ast.AlterServiceStatement:
 		return alterServiceStatementToJSON(s)
 	case *ast.AlterCertificateStatement:
@@ -3384,6 +3388,14 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 	case *ast.BooleanParenthesisExpression:
 		node := jsonNode{
 			"$type": "BooleanParenthesisExpression",
+		}
+		if e.Expression != nil {
+			node["Expression"] = booleanExpressionToJSON(e.Expression)
+		}
+		return node
+	case *ast.BooleanNotExpression:
+		node := jsonNode{
+			"$type": "BooleanNotExpression",
 		}
 		if e.Expression != nil {
 			node["Expression"] = booleanExpressionToJSON(e.Expression)
@@ -15909,6 +15921,20 @@ func dropEventNotificationStatementToJSON(s *ast.DropEventNotificationStatement)
 	return node
 }
 
+func dropEventSessionStatementToJSON(s *ast.DropEventSessionStatement) jsonNode {
+	node := jsonNode{
+		"$type":      "DropEventSessionStatement",
+		"IsIfExists": s.IsIfExists,
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.SessionScope != "" {
+		node["SessionScope"] = s.SessionScope
+	}
+	return node
+}
+
 func dropSecurityPolicyStatementToJSON(s *ast.DropSecurityPolicyStatement) jsonNode {
 	node := jsonNode{
 		"$type":      "DropSecurityPolicyStatement",
@@ -16894,12 +16920,72 @@ func createEventSessionStatementToJSON(s *ast.CreateEventSessionStatement) jsonN
 	return node
 }
 
+func alterEventSessionStatementToJSON(s *ast.AlterEventSessionStatement) jsonNode {
+	node := jsonNode{
+		"$type": "AlterEventSessionStatement",
+	}
+	if s.StatementType != "" {
+		node["StatementType"] = s.StatementType
+	}
+	// DropEventDeclarations comes before Name in JSON
+	if len(s.DropEventDeclarations) > 0 {
+		events := make([]jsonNode, len(s.DropEventDeclarations))
+		for i, e := range s.DropEventDeclarations {
+			events[i] = eventSessionObjectNameToJSON(e)
+		}
+		node["DropEventDeclarations"] = events
+	}
+	// DropTargetDeclarations comes before Name in JSON
+	if len(s.DropTargetDeclarations) > 0 {
+		targets := make([]jsonNode, len(s.DropTargetDeclarations))
+		for i, t := range s.DropTargetDeclarations {
+			targets[i] = eventSessionObjectNameToJSON(t)
+		}
+		node["DropTargetDeclarations"] = targets
+	}
+	if s.Name != nil {
+		node["Name"] = identifierToJSON(s.Name)
+	}
+	if s.SessionScope != "" {
+		node["SessionScope"] = s.SessionScope
+	}
+	if len(s.EventDeclarations) > 0 {
+		events := make([]jsonNode, len(s.EventDeclarations))
+		for i, e := range s.EventDeclarations {
+			events[i] = eventDeclarationToJSON(e)
+		}
+		node["EventDeclarations"] = events
+	}
+	if len(s.TargetDeclarations) > 0 {
+		targets := make([]jsonNode, len(s.TargetDeclarations))
+		for i, t := range s.TargetDeclarations {
+			targets[i] = targetDeclarationToJSON(t)
+		}
+		node["TargetDeclarations"] = targets
+	}
+	if len(s.SessionOptions) > 0 {
+		opts := make([]jsonNode, len(s.SessionOptions))
+		for i, o := range s.SessionOptions {
+			opts[i] = sessionOptionToJSON(o)
+		}
+		node["SessionOptions"] = opts
+	}
+	return node
+}
+
 func eventDeclarationToJSON(e *ast.EventDeclaration) jsonNode {
 	node := jsonNode{
 		"$type": "EventDeclaration",
 	}
 	if e.ObjectName != nil {
 		node["ObjectName"] = eventSessionObjectNameToJSON(e.ObjectName)
+	}
+	if len(e.EventDeclarationSetParameters) > 0 {
+		params := make([]jsonNode, len(e.EventDeclarationSetParameters))
+		for i, p := range e.EventDeclarationSetParameters {
+			params[i] = eventDeclarationSetParameterToJSON(p)
+		}
+		node["EventDeclarationSetParameters"] = params
 	}
 	if len(e.EventDeclarationActionParameters) > 0 {
 		actions := make([]jsonNode, len(e.EventDeclarationActionParameters))

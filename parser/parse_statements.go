@@ -9093,12 +9093,33 @@ func (p *Parser) parseEventDeclaration() *ast.EventDeclaration {
 	// Parse package.event_name
 	event.ObjectName = p.parseEventSessionObjectName()
 
-	// Parse optional ( ACTION(...) WHERE ... )
+	// Parse optional ( SET ... ACTION(...) WHERE ... )
 	if p.curTok.Type == TokenLParen {
 		p.nextToken()
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			upperLit := strings.ToUpper(p.curTok.Literal)
-			if upperLit == "ACTION" {
+			if upperLit == "SET" {
+				p.nextToken()
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					upperCheck := strings.ToUpper(p.curTok.Literal)
+					if upperCheck == "ACTION" || upperCheck == "WHERE" {
+						break
+					}
+					param := &ast.EventDeclarationSetParameter{
+						EventField: p.parseIdentifier(),
+					}
+					if p.curTok.Type == TokenEquals {
+						p.nextToken()
+						param.EventValue, _ = p.parseScalarExpression()
+					}
+					event.EventDeclarationSetParameters = append(event.EventDeclarationSetParameters, param)
+					if p.curTok.Type == TokenComma {
+						p.nextToken()
+					} else {
+						break
+					}
+				}
+			} else if upperLit == "ACTION" {
 				p.nextToken()
 				if p.curTok.Type == TokenLParen {
 					p.nextToken()
@@ -9224,6 +9245,13 @@ func (p *Parser) parseEventPredicateAnd() ast.BooleanExpression {
 }
 
 func (p *Parser) parseEventPredicatePrimary() ast.BooleanExpression {
+	// Handle NOT operator
+	if strings.ToUpper(p.curTok.Literal) == "NOT" {
+		p.nextToken()
+		inner := p.parseEventPredicatePrimary()
+		return &ast.BooleanNotExpression{Expression: inner}
+	}
+
 	// Handle parentheses
 	if p.curTok.Type == TokenLParen {
 		p.nextToken()
@@ -9285,6 +9313,56 @@ func (p *Parser) parseEventPredicatePrimary() ast.BooleanExpression {
 		}
 	}
 
+	// Handle comparison operators: =, !=, <>, <, >, <=, >=
+	var compType string
+	switch p.curTok.Type {
+	case TokenEquals:
+		compType = "Equals"
+		p.nextToken()
+	case TokenLessThan:
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+			compType = "LessThanOrEqualTo"
+		} else if p.curTok.Type == TokenGreaterThan {
+			p.nextToken()
+			compType = "NotEqualToBrackets"
+		} else {
+			compType = "LessThan"
+		}
+	case TokenGreaterThan:
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+			compType = "GreaterThanOrEqualTo"
+		} else {
+			compType = "GreaterThan"
+		}
+	}
+
+	if compType != "" {
+		rightExpr, _ := p.parseScalarExpression()
+		return &ast.BooleanComparisonExpression{
+			ComparisonType:   compType,
+			FirstExpression:  &ast.SourceDeclaration{Value: name},
+			SecondExpression: rightExpr,
+		}
+	}
+
+	// Check for != operator (exclamation equals)
+	if p.curTok.Literal == "!" {
+		p.nextToken()
+		if p.curTok.Type == TokenEquals {
+			p.nextToken()
+			rightExpr, _ := p.parseScalarExpression()
+			return &ast.BooleanComparisonExpression{
+				ComparisonType:   "NotEqualToExclamation",
+				FirstExpression:  &ast.SourceDeclaration{Value: name},
+				SecondExpression: rightExpr,
+			}
+		}
+	}
+
 	// Fallback: return source declaration wrapped in something
 	return &ast.SourceDeclaration{Value: name}
 }
@@ -9333,7 +9411,7 @@ func (p *Parser) parseSessionOption() ast.SessionOption {
 		p.nextToken()
 		return &ast.MemoryPartitionSessionOption{
 			OptionKind: "MemoryPartition",
-			Value:      p.capitalizeFirst(strings.ToLower(value)),
+			Value:      p.memoryPartitionValue(value),
 		}
 	case "TRACK_CAUSALITY", "STARTUP_STATE":
 		stateUpper := strings.ToUpper(p.curTok.Literal)
@@ -9376,6 +9454,19 @@ func (p *Parser) eventRetentionValue(value string) string {
 		return "AllowMultipleEventLoss"
 	case "NO_EVENT_LOSS":
 		return "NoEventLoss"
+	default:
+		return value
+	}
+}
+
+func (p *Parser) memoryPartitionValue(value string) string {
+	switch strings.ToUpper(value) {
+	case "NONE":
+		return "None"
+	case "PER_CPU":
+		return "PerCpu"
+	case "PER_NODE":
+		return "PerNode"
 	default:
 		return value
 	}
