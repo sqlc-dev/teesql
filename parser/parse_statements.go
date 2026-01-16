@@ -936,15 +936,20 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 	sqlOption, isKnownType := getSqlDataTypeOption(typeName)
 
 	// Check for multi-word types: CHAR VARYING -> VarChar, DOUBLE PRECISION -> Float
-	// Also handle BINARY VARYING -> VarBinary
-	if upper := strings.ToUpper(typeName); upper == "CHAR" || upper == "DOUBLE" || upper == "BINARY" {
+	// Also handle BINARY VARYING -> VarBinary, CHARACTER VARYING -> VarChar
+	// And NCHAR VARYING -> NVarChar, NCHARACTER VARYING -> NVarChar
+	if upper := strings.ToUpper(typeName); upper == "CHAR" || upper == "CHARACTER" || upper == "DOUBLE" || upper == "BINARY" || upper == "NCHAR" || upper == "NCHARACTER" {
 		nextUpper := strings.ToUpper(p.curTok.Literal)
-		if upper == "CHAR" && nextUpper == "VARYING" {
+		if (upper == "CHAR" || upper == "CHARACTER") && nextUpper == "VARYING" {
 			sqlOption = "VarChar"
 			isKnownType = true
 			p.nextToken() // consume VARYING
 		} else if upper == "BINARY" && nextUpper == "VARYING" {
 			sqlOption = "VarBinary"
+			isKnownType = true
+			p.nextToken() // consume VARYING
+		} else if (upper == "NCHAR" || upper == "NCHARACTER") && nextUpper == "VARYING" {
+			sqlOption = "NVarChar"
 			isKnownType = true
 			p.nextToken() // consume VARYING
 		} else if upper == "DOUBLE" && nextUpper == "PRECISION" {
@@ -997,14 +1002,18 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 			baseOption, baseIsKnown := getSqlDataTypeOption(baseTypeName)
 
 			// Handle multi-word types with schema prefix: sys.Char varying -> VarChar
-			if baseUpper := strings.ToUpper(baseTypeName); baseUpper == "CHAR" || baseUpper == "BINARY" {
+			if baseUpper := strings.ToUpper(baseTypeName); baseUpper == "CHAR" || baseUpper == "CHARACTER" || baseUpper == "BINARY" || baseUpper == "NCHAR" || baseUpper == "NCHARACTER" {
 				nextUpper := strings.ToUpper(p.curTok.Literal)
-				if baseUpper == "CHAR" && nextUpper == "VARYING" {
+				if (baseUpper == "CHAR" || baseUpper == "CHARACTER") && nextUpper == "VARYING" {
 					baseOption = "VarChar"
 					baseIsKnown = true
 					p.nextToken() // consume VARYING
 				} else if baseUpper == "BINARY" && nextUpper == "VARYING" {
 					baseOption = "VarBinary"
+					baseIsKnown = true
+					p.nextToken() // consume VARYING
+				} else if (baseUpper == "NCHAR" || baseUpper == "NCHARACTER") && nextUpper == "VARYING" {
+					baseOption = "NVarChar"
 					baseIsKnown = true
 					p.nextToken() // consume VARYING
 				}
@@ -1173,6 +1182,7 @@ func getSqlDataTypeOption(typeName string) (string, bool) {
 		"TINYINT":           "TinyInt",
 		"BIT":               "Bit",
 		"DECIMAL":           "Decimal",
+		"DEC":               "Decimal",
 		"NUMERIC":           "Numeric",
 		"MONEY":             "Money",
 		"SMALLMONEY":        "SmallMoney",
@@ -1185,9 +1195,11 @@ func getSqlDataTypeOption(typeName string) (string, bool) {
 		"DATE":              "Date",
 		"TIME":              "Time",
 		"CHAR":              "Char",
+		"CHARACTER":         "Char",
 		"VARCHAR":           "VarChar",
 		"TEXT":              "Text",
 		"NCHAR":             "NChar",
+		"NCHARACTER":        "NChar",
 		"NVARCHAR":          "NVarChar",
 		"NTEXT":             "NText",
 		"BINARY":            "Binary",
