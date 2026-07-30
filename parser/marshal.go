@@ -6518,6 +6518,10 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 	if ntr, ok := target.(*ast.NamedTableReference); ok && ntr.Alias != nil {
 		stmt.MergeSpecification.TableAlias = ntr.Alias
 		ntr.Alias = nil
+		// The target's span shrinks to the object name alone.
+		if ntr.SchemaObject != nil && ntr.SchemaObject.Frag().HasSpan() {
+			*ntr.Frag() = *ntr.SchemaObject.Frag()
+		}
 	}
 	stmt.MergeSpecification.Target = target
 
@@ -6571,6 +6575,11 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 		stmt.MergeSpecification.OutputClause = output
 	}
 
+	// The merge specification spans from MERGE through the OUTPUT clause,
+	// excluding any OPTION clause and trailing semicolon.
+	p.spanFrom(astStart, stmt.MergeSpecification)
+	p.trimTrailingSemicolon(stmt.MergeSpecification)
+
 	// Parse optional OPTION clause
 	if strings.ToUpper(p.curTok.Literal) == "OPTION" {
 		hints, err := p.parseOptionClause()
@@ -6611,6 +6620,10 @@ func (p *Parser) parseMergeSpecification() (*ast.MergeSpecification, error) {
 	if ntr, ok := target.(*ast.NamedTableReference); ok && ntr.Alias != nil {
 		spec.TableAlias = ntr.Alias
 		ntr.Alias = nil
+		// The target's span shrinks to the object name alone.
+		if ntr.SchemaObject != nil && ntr.SchemaObject.Frag().HasSpan() {
+			*ntr.Frag() = *ntr.SchemaObject.Frag()
+		}
 	}
 	spec.Target = target
 
@@ -7231,10 +7244,13 @@ func (p *Parser) parseMergeActionClause() (*ast.MergeActionClause, error) {
 	}
 
 	// Parse action: DELETE, UPDATE SET, INSERT
+	actionTok := p.curTok
 	actionWord := strings.ToUpper(p.curTok.Literal)
 	if actionWord == "DELETE" {
 		p.nextToken()
-		clause.Action = &ast.DeleteMergeAction{}
+		delAction := &ast.DeleteMergeAction{}
+		p.tokSpan(delAction, actionTok)
+		clause.Action = delAction
 	} else if actionWord == "UPDATE" {
 		p.nextToken() // consume UPDATE
 		if strings.ToUpper(p.curTok.Literal) == "SET" {
@@ -7261,11 +7277,14 @@ func (p *Parser) parseMergeActionClause() (*ast.MergeActionClause, error) {
 
 		// Check for DEFAULT VALUES first
 		if p.curTok.Type == TokenDefault {
+			defaultTok := p.curTok
 			p.nextToken() // consume DEFAULT
 			if strings.ToUpper(p.curTok.Literal) == "VALUES" {
 				p.nextToken() // consume VALUES
 			}
-			action.Source = &ast.ValuesInsertSource{IsDefaultValues: true}
+			vis := &ast.ValuesInsertSource{IsDefaultValues: true}
+			p.spanFrom(defaultTok, vis)
+			action.Source = vis
 			clause.Action = action
 		} else {
 			// Parse optional column list
@@ -7276,13 +7295,17 @@ func (p *Parser) parseMergeActionClause() (*ast.MergeActionClause, error) {
 					if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "$") {
 						pseudoCol := strings.ToUpper(p.curTok.Literal)
 						if pseudoCol == "$ACTION" {
-							action.Columns = append(action.Columns, &ast.ColumnReferenceExpression{
+							pc := &ast.ColumnReferenceExpression{
 								ColumnType: "PseudoColumnAction",
-							})
+							}
+							p.tokSpan(pc, p.curTok)
+							action.Columns = append(action.Columns, pc)
 						} else if pseudoCol == "$CUID" {
-							action.Columns = append(action.Columns, &ast.ColumnReferenceExpression{
+							pc := &ast.ColumnReferenceExpression{
 								ColumnType: "PseudoColumnCuid",
-							})
+							}
+							p.tokSpan(pc, p.curTok)
+							action.Columns = append(action.Columns, pc)
 						}
 						p.nextToken()
 					} else {
@@ -7307,9 +7330,11 @@ func (p *Parser) parseMergeActionClause() (*ast.MergeActionClause, error) {
 			}
 			// Parse VALUES
 			if strings.ToUpper(p.curTok.Literal) == "VALUES" {
+				valuesTok := p.curTok
 				p.nextToken()
 				source := &ast.ValuesInsertSource{IsDefaultValues: false}
 				if p.curTok.Type == TokenLParen {
+					rowTok := p.curTok
 					p.nextToken() // consume (
 					rowValue := &ast.RowValue{}
 					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
@@ -7327,15 +7352,33 @@ func (p *Parser) parseMergeActionClause() (*ast.MergeActionClause, error) {
 					if p.curTok.Type == TokenRParen {
 						p.nextToken()
 					}
+					p.spanFrom(rowTok, rowValue)
 					source.RowValues = append(source.RowValues, rowValue)
 				}
+				p.spanFrom(valuesTok, source)
 				action.Source = source
 			}
 			clause.Action = action
 		}
 	}
 
-	return spanned(p, clause, astStart), nil
+	// ScriptDom positions the merge action clause over its AND search
+	// condition (when present) and action tokens, excluding WHEN ... THEN.
+	if a, ok := clause.Action.(spannable); ok {
+		if !a.Frag().HasSpan() {
+			p.spanFrom(actionTok, a)
+		}
+		af := a.Frag()
+		if af.HasSpan() {
+			clause.SetSpan(af.StartOffset, af.FragmentLength, af.StartLine, af.StartColumn)
+			if sc, ok := clause.SearchCondition.(spannable); ok && sc.Frag().HasSpan() {
+				scf := sc.Frag()
+				clause.SetSpan(scf.StartOffset, af.EndOffset()-scf.StartOffset, scf.StartLine, scf.StartColumn)
+			}
+		}
+	}
+	_ = astStart
+	return clause, nil
 }
 
 func (p *Parser) parseDataCompressionOption() (*ast.DataCompressionOption, error) {
@@ -14586,14 +14629,16 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 
 // parseXmlNamespaces parses WITH XMLNAMESPACES clause
 func (p *Parser) parseXmlNamespaces() *ast.XmlNamespaces {
-	astStart := p.curTok
-
 	p.nextToken() // consume XMLNAMESPACES
 	xmlNs := &ast.XmlNamespaces{}
 
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
+		// ScriptDom spans XMLNAMESPACES from the first element through the
+		// closing paren.
+		firstElemTok := p.curTok
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			elemTok := p.curTok
 			elem := &ast.XmlNamespacesAliasElement{}
 			// Parse string literal (namespace URI)
 			strLit, _ := p.parseStringLiteral()
@@ -14605,6 +14650,7 @@ func (p *Parser) parseXmlNamespaces() *ast.XmlNamespaces {
 				elem.Identifier = p.parseIdentifier()
 			}
 
+			p.spanFrom(elemTok, elem)
 			xmlNs.XmlNamespacesElements = append(xmlNs.XmlNamespacesElements, elem)
 
 			if p.curTok.Type == TokenComma {
@@ -14614,9 +14660,10 @@ func (p *Parser) parseXmlNamespaces() *ast.XmlNamespaces {
 		if p.curTok.Type == TokenRParen {
 			p.nextToken() // consume )
 		}
+		p.spanFrom(firstElemTok, xmlNs)
 	}
 
-	return spanned(p, xmlNs, astStart)
+	return xmlNs
 }
 
 func (p *Parser) getIndexOptionKind(optionName string) string {
@@ -14752,12 +14799,17 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 
 	// Check if RETURNS @varName TABLE or RETURNS TABLE (table-valued function)
 	var tableVarName *ast.Identifier
+	var tvfStartTok Token
+	hasTvfStart := false
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		// Parse variable name for multi-statement table-valued function
+		tvfStartTok = p.curTok
+		hasTvfStart = true
 		tableVarName = &ast.Identifier{
 			Value:     p.curTok.Literal,
 			QuoteType: "NotQuoted",
 		}
+		p.tokSpan(tableVarName, p.curTok)
 		p.nextToken()
 	}
 
@@ -14767,6 +14819,12 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 		// Check for column definitions in parentheses
 		if p.curTok.Type == TokenLParen {
 			p.nextToken()
+			if !hasTvfStart {
+				// Inline form: the return type spans from the first column
+				// definition through the closing paren.
+				tvfStartTok = p.curTok
+				hasTvfStart = true
+			}
 			tableReturnType := &ast.TableValuedFunctionReturnType{
 				DeclareTableVariableBody: &ast.DeclareTableVariableBody{
 					VariableName: tableVarName,
@@ -14848,6 +14906,8 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 				p.nextToken()
 			}
 
+			p.spanFrom(tvfStartTok, tableReturnType)
+			p.spanFrom(tvfStartTok, tableReturnType.DeclareTableVariableBody)
 			stmt.ReturnType = tableReturnType
 		} else {
 			// Simple RETURNS TABLE without column definitions
@@ -15117,6 +15177,11 @@ func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
 					p.nextToken()
 				}
 			}
+			if execAsOpt.ExecuteAs.ExecuteAsOption == "String" {
+				// The string form spans through the literal.
+				p.spanFrom(execTok, execAsOpt)
+				p.spanFrom(execTok, execAsOpt.ExecuteAs)
+			}
 			stmt.Options = append(stmt.Options, execAsOpt)
 		default:
 			// Unknown option or end of options - break out
@@ -15333,6 +15398,11 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 						p.nextToken()
 					}
 				}
+				if execAsOpt.ExecuteAs.ExecuteAsOption == "String" {
+					// The string form spans through the literal.
+					p.spanFrom(execTok, execAsOpt)
+					p.spanFrom(execTok, execAsOpt.ExecuteAs)
+				}
 				stmt.Options = append(stmt.Options, execAsOpt)
 			default:
 				// Unknown option - skip it
@@ -15504,6 +15574,7 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			case "EXECUTE":
+				execTok := p.curTok
 				p.nextToken() // consume EXECUTE
 				if p.curTok.Type == TokenAs {
 					p.nextToken() // consume AS
@@ -15534,10 +15605,20 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 						p.nextToken()
 					}
 				}
-				stmt.Options = append(stmt.Options, &ast.ExecuteAsTriggerOption{
+				execTrigOpt := &ast.ExecuteAsTriggerOption{
 					OptionKind:      "ExecuteAsClause",
 					ExecuteAsClause: execAsClause,
-				})
+				}
+				// ScriptDom spans keyword forms on EXECUTE alone but the
+				// string form through the literal.
+				if execAsClause.ExecuteAsOption == "String" {
+					p.spanFrom(execTok, execTrigOpt)
+					p.spanFrom(execTok, execAsClause)
+				} else {
+					p.tokSpan(execTrigOpt, execTok)
+					p.tokSpan(execAsClause, execTok)
+				}
+				stmt.Options = append(stmt.Options, execTrigOpt)
 			default:
 				// Unknown option, skip it
 				p.nextToken()

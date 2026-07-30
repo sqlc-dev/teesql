@@ -23,12 +23,17 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 			xmlNs := &ast.XmlNamespaces{}
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
+				// ScriptDom spans XMLNAMESPACES from the first element
+				// through the closing paren.
+				firstElemTok := p.curTok
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					elemTok := p.curTok
 					// Check for DEFAULT element
 					if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
 						p.nextToken() // consume DEFAULT
 						strLit, _ := p.parseStringLiteral()
 						elem := &ast.XmlNamespacesDefaultElement{String: strLit}
+						p.spanFrom(elemTok, elem)
 						xmlNs.XmlNamespacesElements = append(xmlNs.XmlNamespacesElements, elem)
 					} else {
 						// Alias element: string AS identifier
@@ -38,6 +43,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 							p.nextToken() // consume AS
 							elem.Identifier = p.parseIdentifier()
 						}
+						p.spanFrom(elemTok, elem)
 						xmlNs.XmlNamespacesElements = append(xmlNs.XmlNamespacesElements, elem)
 					}
 					if p.curTok.Type == TokenComma {
@@ -49,6 +55,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
 				}
+				p.spanFrom(firstElemTok, xmlNs)
 			}
 			withClause.XmlNamespaces = xmlNs
 		} else if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING_CONTEXT" {
@@ -63,6 +70,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 			}
 		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			// Parse CTE: name (columns) AS (query)
+			cteTok := p.curTok
 			cte := &ast.CommonTableExpression{
 				ExpressionName: p.parseIdentifier(),
 			}
@@ -99,6 +107,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 				}
 			}
 
+			p.spanFrom(cteTok, cte)
 			withClause.CommonTableExpressions = append(withClause.CommonTableExpressions, cte)
 		} else {
 			break
@@ -111,6 +120,9 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 			break
 		}
 	}
+
+	// The WITH clause spans from the WITH keyword through the last CTE.
+	p.spanFrom(astStart, withClause)
 
 	// Now dispatch to the appropriate statement parser
 	switch p.curTok.Type {
