@@ -1,20 +1,44 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 40,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 40,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
-          "$type": "ThrowStatement"
+          "$type": "ThrowStatement",
+          "StartOffset": 0,
+          "FragmentLength": 5,
+          "StartLine": 1,
+          "StartColumn": 1
         },
         {
           "$type": "ThrowStatement",
+          "StartOffset": 6,
+          "FragmentLength": 18,
+          "StartLine": 2,
+          "StartColumn": 1,
           "ErrorNumber": {
             "$type": "VariableReference",
+            "StartOffset": 12,
+            "FragmentLength": 2,
+            "StartLine": 2,
+            "StartColumn": 7,
             "Name": "@v"
           },
           "Message": {
             "$type": "StringLiteral",
+            "StartOffset": 16,
+            "FragmentLength": 5,
+            "StartLine": 2,
+            "StartColumn": 11,
             "LiteralType": "String",
             "IsNational": false,
             "IsLargeObject": false,
@@ -22,23 +46,43 @@
           },
           "State": {
             "$type": "IntegerLiteral",
+            "StartOffset": 23,
+            "FragmentLength": 1,
+            "StartLine": 2,
+            "StartColumn": 18,
             "LiteralType": "Integer",
             "Value": "1"
           }
         },
         {
           "$type": "ThrowStatement",
+          "StartOffset": 25,
+          "FragmentLength": 15,
+          "StartLine": 3,
+          "StartColumn": 1,
           "ErrorNumber": {
             "$type": "IntegerLiteral",
+            "StartOffset": 31,
+            "FragmentLength": 1,
+            "StartLine": 3,
+            "StartColumn": 7,
             "LiteralType": "Integer",
             "Value": "1"
           },
           "Message": {
             "$type": "VariableReference",
+            "StartOffset": 34,
+            "FragmentLength": 2,
+            "StartLine": 3,
+            "StartColumn": 10,
             "Name": "@p"
           },
           "State": {
             "$type": "VariableReference",
+            "StartOffset": 38,
+            "FragmentLength": 2,
+            "StartLine": 3,
+            "StartColumn": 14,
             "Name": "@i"
           }
         }

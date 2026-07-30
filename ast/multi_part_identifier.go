@@ -2,6 +2,7 @@ package ast
 
 // MultiPartIdentifier represents a multi-part identifier (e.g., schema.table.column).
 type MultiPartIdentifier struct {
+	Fragment
 	Count       int           `json:"Count,omitempty"`
 	Identifiers []*Identifier `json:"Identifiers,omitempty"`
 }

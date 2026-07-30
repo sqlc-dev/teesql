@@ -2,12 +2,14 @@ package ast
 
 // FetchType represents the orientation for a FETCH statement.
 type FetchType struct {
+	Fragment
 	Orientation string           `json:"Orientation,omitempty"`
 	RowOffset   ScalarExpression `json:"RowOffset,omitempty"`
 }
 
 // DeclareCursorStatement represents DECLARE cursor_name CURSOR FOR SELECT.
 type DeclareCursorStatement struct {
+	Fragment
 	Name             *Identifier       `json:"Name,omitempty"`
 	CursorDefinition *CursorDefinition `json:"CursorDefinition,omitempty"`
 }
@@ -17,6 +19,7 @@ func (s *DeclareCursorStatement) statement() {}
 
 // OpenCursorStatement represents OPEN cursor_name.
 type OpenCursorStatement struct {
+	Fragment
 	Cursor *CursorId `json:"Cursor,omitempty"`
 }
 
@@ -25,6 +28,7 @@ func (s *OpenCursorStatement) statement() {}
 
 // CloseCursorStatement represents CLOSE cursor_name.
 type CloseCursorStatement struct {
+	Fragment
 	Cursor *CursorId `json:"Cursor,omitempty"`
 }
 
@@ -33,6 +37,7 @@ func (s *CloseCursorStatement) statement() {}
 
 // DeallocateCursorStatement represents DEALLOCATE cursor_name.
 type DeallocateCursorStatement struct {
+	Fragment
 	Cursor *CursorId `json:"Cursor,omitempty"`
 }
 
@@ -41,6 +46,7 @@ func (s *DeallocateCursorStatement) statement() {}
 
 // FetchCursorStatement represents FETCH cursor_name.
 type FetchCursorStatement struct {
+	Fragment
 	FetchType     *FetchType         `json:"FetchType,omitempty"`
 	Cursor        *CursorId          `json:"Cursor,omitempty"`
 	IntoVariables []ScalarExpression `json:"IntoVariables,omitempty"`

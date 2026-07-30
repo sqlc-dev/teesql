@@ -2,6 +2,7 @@ package ast
 
 // ReturnStatement represents a RETURN statement.
 type ReturnStatement struct {
+	Fragment
 	Expression ScalarExpression `json:"Expression,omitempty"`
 }
 

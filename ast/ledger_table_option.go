@@ -2,6 +2,7 @@ package ast
 
 // LedgerTableOption represents the LEDGER table option
 type LedgerTableOption struct {
+	Fragment
 	OptionState      string            // "On", "Off"
 	AppendOnly       string            // "On", "Off", "NotSet"
 	LedgerViewOption *LedgerViewOption // Optional view configuration
@@ -13,6 +14,7 @@ func (o *LedgerTableOption) node()        {}
 
 // LedgerViewOption represents the LEDGER_VIEW configuration
 type LedgerViewOption struct {
+	Fragment
 	ViewName                    *SchemaObjectName
 	TransactionIdColumnName     *Identifier
 	SequenceNumberColumnName    *Identifier

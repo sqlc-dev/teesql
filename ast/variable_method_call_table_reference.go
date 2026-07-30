@@ -3,6 +3,7 @@ package ast
 // VariableMethodCallTableReference represents a method call on a table variable
 // Syntax: @variable.method(parameters) [AS alias[(columns)]]
 type VariableMethodCallTableReference struct {
+	Fragment
 	Variable   *VariableReference   `json:"Variable,omitempty"`
 	MethodName *Identifier          `json:"MethodName,omitempty"`
 	Parameters []ScalarExpression   `json:"Parameters,omitempty"`

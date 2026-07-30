@@ -2,6 +2,7 @@ package ast
 
 // LiteralOptimizerHint represents an optimizer hint with a value.
 type LiteralOptimizerHint struct {
+	Fragment
 	HintKind string           `json:"HintKind,omitempty"`
 	Value    ScalarExpression `json:"Value,omitempty"`
 }

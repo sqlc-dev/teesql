@@ -2,6 +2,7 @@ package ast
 
 // WriteTextStatement represents WRITETEXT statement.
 type WriteTextStatement struct {
+	Fragment
 	Bulk            bool
 	Column          *ColumnReferenceExpression
 	TextId          ScalarExpression

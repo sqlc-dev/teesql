@@ -2,6 +2,7 @@ package ast
 
 // FullTextTableReference represents CONTAINSTABLE or FREETEXTTABLE in a FROM clause
 type FullTextTableReference struct {
+	Fragment
 	FullTextFunctionType string                      `json:"FullTextFunctionType,omitempty"` // Contains, FreeText
 	TableName            *SchemaObjectName           `json:"TableName,omitempty"`
 	Columns              []*ColumnReferenceExpression `json:"Columns,omitempty"`

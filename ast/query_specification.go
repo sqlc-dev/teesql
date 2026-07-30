@@ -2,6 +2,7 @@ package ast
 
 // QuerySpecification represents a query specification (SELECT ... FROM ...).
 type QuerySpecification struct {
+	Fragment
 	UniqueRowFilter string            `json:"UniqueRowFilter,omitempty"`
 	TopRowFilter    *TopRowFilter     `json:"TopRowFilter,omitempty"`
 	SelectElements  []SelectElement   `json:"SelectElements,omitempty"`
@@ -20,6 +21,7 @@ func (*QuerySpecification) queryExpression() {}
 
 // OffsetClause represents OFFSET ... ROWS FETCH NEXT/FIRST ... ROWS ONLY
 type OffsetClause struct {
+	Fragment
 	OffsetExpression ScalarExpression `json:"OffsetExpression,omitempty"`
 	FetchExpression  ScalarExpression `json:"FetchExpression,omitempty"`
 }

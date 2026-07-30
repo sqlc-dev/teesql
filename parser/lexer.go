@@ -88,19 +88,19 @@ const (
 	TokenRBrace
 	TokenLeftShift
 	TokenRightShift
-	TokenPipe           // |
-	TokenDoublePipe     // ||
-	TokenConcatEquals   // ||=
-	TokenBitwiseAnd     // &
-	TokenPlusEquals     // +=
-	TokenMinusEquals    // -=
-	TokenStarEquals     // *=
-	TokenSlashEquals    // /=
-	TokenModuloEquals   // %=
-	TokenAndEquals      // &=
-	TokenOrEquals       // |=
-	TokenXorEquals      // ^=
-	TokenCaret          // ^
+	TokenPipe         // |
+	TokenDoublePipe   // ||
+	TokenConcatEquals // ||=
+	TokenBitwiseAnd   // &
+	TokenPlusEquals   // +=
+	TokenMinusEquals  // -=
+	TokenStarEquals   // *=
+	TokenSlashEquals  // /=
+	TokenModuloEquals // %=
+	TokenAndEquals    // &=
+	TokenOrEquals     // |=
+	TokenXorEquals    // ^=
+	TokenCaret        // ^
 
 	// DML Keywords
 	TokenInsert

@@ -2,6 +2,7 @@ package ast
 
 // AlterTableSetStatement represents ALTER TABLE ... SET statement
 type AlterTableSetStatement struct {
+	Fragment
 	SchemaObjectName *SchemaObjectName
 	Options          []TableOption
 }
@@ -17,6 +18,7 @@ type TableOption interface {
 
 // SystemVersioningTableOption represents SYSTEM_VERSIONING option
 type SystemVersioningTableOption struct {
+	Fragment
 	OptionState             string // "On", "Off"
 	ConsistencyCheckEnabled string // "On", "Off", "NotSet"
 	HistoryTable            *SchemaObjectName
@@ -29,6 +31,7 @@ func (o *SystemVersioningTableOption) node()        {}
 
 // RetentionPeriodDefinition represents the history retention period
 type RetentionPeriodDefinition struct {
+	Fragment
 	Duration   ScalarExpression
 	Units      string // "Day", "Week", "Month", "Months", "Year"
 	IsInfinity bool
@@ -38,6 +41,7 @@ func (r *RetentionPeriodDefinition) node() {}
 
 // MemoryOptimizedTableOption represents MEMORY_OPTIMIZED option
 type MemoryOptimizedTableOption struct {
+	Fragment
 	OptionKind  string // "MemoryOptimized"
 	OptionState string // "On", "Off"
 }
@@ -47,6 +51,7 @@ func (o *MemoryOptimizedTableOption) node()        {}
 
 // DurabilityTableOption represents a DURABILITY table option
 type DurabilityTableOption struct {
+	Fragment
 	OptionKind                string // "Durability"
 	DurabilityTableOptionKind string // "SchemaOnly", "SchemaAndData"
 }
@@ -56,6 +61,7 @@ func (o *DurabilityTableOption) node()        {}
 
 // LockEscalationTableOption represents LOCK_ESCALATION option
 type LockEscalationTableOption struct {
+	Fragment
 	OptionKind string // "LockEscalation"
 	Value      string // "Auto", "Table", "Disable"
 }
@@ -65,6 +71,7 @@ func (o *LockEscalationTableOption) node()        {}
 
 // FileStreamOnTableOption represents FILESTREAM_ON option
 type FileStreamOnTableOption struct {
+	Fragment
 	OptionKind string // "FileStreamOn"
 	Value      *IdentifierOrValueExpression
 }

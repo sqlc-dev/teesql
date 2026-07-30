@@ -2,6 +2,7 @@ package ast
 
 // SelectStatement represents a SELECT statement.
 type SelectStatement struct {
+	Fragment
 	QueryExpression          QueryExpression          `json:"QueryExpression,omitempty"`
 	Into                     *SchemaObjectName        `json:"Into,omitempty"`
 	On                       *Identifier              `json:"On,omitempty"`

@@ -2,6 +2,7 @@ package ast
 
 // AddSignatureStatement represents an ADD SIGNATURE statement.
 type AddSignatureStatement struct {
+	Fragment
 	IsCounter   bool              `json:"IsCounter,omitempty"`
 	ElementKind string            `json:"ElementKind,omitempty"` // "NotSpecified", "Object", "Assembly", "Database"
 	Element     *SchemaObjectName `json:"Element,omitempty"`
@@ -13,6 +14,7 @@ func (*AddSignatureStatement) statement() {}
 
 // DropSignatureStatement represents a DROP SIGNATURE statement.
 type DropSignatureStatement struct {
+	Fragment
 	IsCounter   bool              `json:"IsCounter,omitempty"`
 	ElementKind string            `json:"ElementKind,omitempty"` // "NotSpecified", "Object", "Assembly", "Database"
 	Element     *SchemaObjectName `json:"Element,omitempty"`

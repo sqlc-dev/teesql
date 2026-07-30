@@ -2,6 +2,7 @@ package ast
 
 // InsertStatement represents an INSERT statement.
 type InsertStatement struct {
+	Fragment
 	InsertSpecification      *InsertSpecification      `json:"InsertSpecification,omitempty"`
 	WithCtesAndXmlNamespaces *WithCtesAndXmlNamespaces `json:"WithCtesAndXmlNamespaces,omitempty"`
 	OptimizerHints           []OptimizerHintBase       `json:"OptimizerHints,omitempty"`
@@ -12,6 +13,7 @@ func (i *InsertStatement) statement() {}
 
 // InsertSpecification contains the details of an INSERT.
 type InsertSpecification struct {
+	Fragment
 	InsertOption     string                       `json:"InsertOption,omitempty"`
 	InsertSource     InsertSource                 `json:"InsertSource,omitempty"`
 	Target           TableReference               `json:"Target,omitempty"`
@@ -26,11 +28,13 @@ func (i *InsertSpecification) dataModificationSpecification() {}
 
 // OutputClause represents an OUTPUT clause.
 type OutputClause struct {
+	Fragment
 	SelectColumns []SelectElement `json:"SelectColumns,omitempty"`
 }
 
 // OutputIntoClause represents an OUTPUT INTO clause.
 type OutputIntoClause struct {
+	Fragment
 	SelectColumns    []SelectElement              `json:"SelectColumns,omitempty"`
 	IntoTable        TableReference               `json:"IntoTable,omitempty"`
 	IntoTableColumns []*ColumnReferenceExpression `json:"IntoTableColumns,omitempty"`
@@ -43,6 +47,7 @@ type InsertSource interface {
 
 // ValuesInsertSource represents DEFAULT VALUES or VALUES (...).
 type ValuesInsertSource struct {
+	Fragment
 	IsDefaultValues bool        `json:"IsDefaultValues"`
 	RowValues       []*RowValue `json:"RowValues,omitempty"`
 }
@@ -51,11 +56,13 @@ func (v *ValuesInsertSource) insertSource() {}
 
 // RowValue represents a row of values.
 type RowValue struct {
+	Fragment
 	ColumnValues []ScalarExpression `json:"ColumnValues,omitempty"`
 }
 
 // SelectInsertSource represents INSERT ... SELECT.
 type SelectInsertSource struct {
+	Fragment
 	Select QueryExpression `json:"Select,omitempty"`
 }
 
@@ -63,6 +70,7 @@ func (s *SelectInsertSource) insertSource() {}
 
 // ExecuteInsertSource represents INSERT ... EXEC.
 type ExecuteInsertSource struct {
+	Fragment
 	Execute *ExecuteSpecification `json:"Execute,omitempty"`
 }
 

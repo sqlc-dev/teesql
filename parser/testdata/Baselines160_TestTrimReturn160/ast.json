@@ -1,15 +1,35 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 93,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 92,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterFunctionStatement",
+          "StartOffset": 0,
+          "FragmentLength": 92,
+          "StartLine": 1,
+          "StartColumn": 1,
           "Name": {
             "$type": "SchemaObjectName",
+            "StartOffset": 15,
+            "FragmentLength": 8,
+            "StartLine": 1,
+            "StartColumn": 16,
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 15,
+              "FragmentLength": 8,
+              "StartLine": 1,
+              "StartColumn": 16,
               "Value": "TestTrim",
               "QuoteType": "NotQuoted"
             },
@@ -22,20 +42,40 @@
           },
           "ReturnType": {
             "$type": "ScalarFunctionReturnType",
+            "StartOffset": 36,
+            "FragmentLength": 14,
+            "StartLine": 3,
+            "StartColumn": 9,
             "DataType": {
               "$type": "SqlDataTypeReference",
+              "StartOffset": 36,
+              "FragmentLength": 14,
+              "StartLine": 3,
+              "StartColumn": 9,
               "SqlDataTypeOption": "NVarChar",
               "Parameters": [
                 {
                   "$type": "MaxLiteral",
+                  "StartOffset": 46,
+                  "FragmentLength": 3,
+                  "StartLine": 3,
+                  "StartColumn": 19,
                   "LiteralType": "Max",
                   "Value": "MAX"
                 }
               ],
               "Name": {
                 "$type": "SchemaObjectName",
+                "StartOffset": 36,
+                "FragmentLength": 8,
+                "StartLine": 3,
+                "StartColumn": 9,
                 "BaseIdentifier": {
                   "$type": "Identifier",
+                  "StartOffset": 36,
+                  "FragmentLength": 8,
+                  "StartLine": 3,
+                  "StartColumn": 9,
                   "Value": "NVARCHAR",
                   "QuoteType": "NotQuoted"
                 },
@@ -50,26 +90,54 @@
           },
           "StatementList": {
             "$type": "StatementList",
+            "StartOffset": 54,
+            "FragmentLength": 38,
+            "StartLine": 5,
+            "StartColumn": 1,
             "Statements": [
               {
                 "$type": "BeginEndBlockStatement",
+                "StartOffset": 54,
+                "FragmentLength": 38,
+                "StartLine": 5,
+                "StartColumn": 1,
                 "StatementList": {
                   "$type": "StatementList",
                   "Statements": [
                     {
                       "$type": "ReturnStatement",
+                      "StartOffset": 64,
+                      "FragmentLength": 24,
+                      "StartLine": 6,
+                      "StartColumn": 5,
                       "Expression": {
                         "$type": "ParenthesisExpression",
+                        "StartOffset": 71,
+                        "FragmentLength": 16,
+                        "StartLine": 6,
+                        "StartColumn": 12,
                         "Expression": {
                           "$type": "FunctionCall",
+                          "StartOffset": 72,
+                          "FragmentLength": 14,
+                          "StartLine": 6,
+                          "StartColumn": 13,
                           "FunctionName": {
                             "$type": "Identifier",
+                            "StartOffset": 72,
+                            "FragmentLength": 4,
+                            "StartLine": 6,
+                            "StartColumn": 13,
                             "Value": "TRIM",
                             "QuoteType": "NotQuoted"
                           },
                           "Parameters": [
                             {
                               "$type": "StringLiteral",
+                              "StartOffset": 77,
+                              "FragmentLength": 8,
+                              "StartLine": 6,
+                              "StartColumn": 18,
                               "LiteralType": "String",
                               "IsNational": false,
                               "IsLargeObject": false,

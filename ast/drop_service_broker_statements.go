@@ -2,6 +2,7 @@ package ast
 
 // DropPartitionFunctionStatement represents a DROP PARTITION FUNCTION statement
 type DropPartitionFunctionStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -11,6 +12,7 @@ func (*DropPartitionFunctionStatement) node()      {}
 
 // DropPartitionSchemeStatement represents a DROP PARTITION SCHEME statement
 type DropPartitionSchemeStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -20,6 +22,7 @@ func (*DropPartitionSchemeStatement) node()      {}
 
 // DropApplicationRoleStatement represents a DROP APPLICATION ROLE statement
 type DropApplicationRoleStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -29,6 +32,7 @@ func (*DropApplicationRoleStatement) node()      {}
 
 // DropCertificateStatement represents a DROP CERTIFICATE statement
 type DropCertificateStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -44,6 +48,7 @@ func (*DropMasterKeyStatement) node()      {}
 
 // DropXmlSchemaCollectionStatement represents a DROP XML SCHEMA COLLECTION statement
 type DropXmlSchemaCollectionStatement struct {
+	Fragment
 	Name *SchemaObjectName `json:"Name,omitempty"`
 }
 
@@ -52,6 +57,7 @@ func (*DropXmlSchemaCollectionStatement) node()      {}
 
 // DropContractStatement represents a DROP CONTRACT statement
 type DropContractStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -61,6 +67,7 @@ func (*DropContractStatement) node()      {}
 
 // DropEndpointStatement represents a DROP ENDPOINT statement
 type DropEndpointStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -70,6 +77,7 @@ func (*DropEndpointStatement) node()      {}
 
 // DropMessageTypeStatement represents a DROP MESSAGE TYPE statement
 type DropMessageTypeStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -79,6 +87,7 @@ func (*DropMessageTypeStatement) node()      {}
 
 // DropQueueStatement represents a DROP QUEUE statement
 type DropQueueStatement struct {
+	Fragment
 	Name *SchemaObjectName `json:"Name,omitempty"`
 }
 
@@ -87,6 +96,7 @@ func (*DropQueueStatement) node()      {}
 
 // DropRemoteServiceBindingStatement represents a DROP REMOTE SERVICE BINDING statement
 type DropRemoteServiceBindingStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -96,6 +106,7 @@ func (*DropRemoteServiceBindingStatement) node()      {}
 
 // DropRouteStatement represents a DROP ROUTE statement
 type DropRouteStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -105,6 +116,7 @@ func (*DropRouteStatement) node()      {}
 
 // DropServiceStatement represents a DROP SERVICE statement
 type DropServiceStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -114,6 +126,7 @@ func (*DropServiceStatement) node()      {}
 
 // DropEventNotificationStatement represents a DROP EVENT NOTIFICATION statement
 type DropEventNotificationStatement struct {
+	Fragment
 	Notifications []*Identifier                 `json:"Notifications,omitempty"`
 	Scope         *EventNotificationObjectScope `json:"Scope,omitempty"`
 }

@@ -2,6 +2,7 @@ package ast
 
 // CreateSpatialIndexStatement represents a CREATE SPATIAL INDEX statement
 type CreateSpatialIndexStatement struct {
+	Fragment
 	Name                  *Identifier
 	Object                *SchemaObjectName
 	SpatialColumnName     *Identifier
@@ -21,6 +22,7 @@ type SpatialIndexOption interface {
 
 // SpatialIndexRegularOption wraps a regular IndexOption for spatial indexes
 type SpatialIndexRegularOption struct {
+	Fragment
 	Option IndexOption
 }
 
@@ -29,6 +31,7 @@ func (s *SpatialIndexRegularOption) spatialIndexOption() {}
 
 // BoundingBoxSpatialIndexOption represents a BOUNDING_BOX option
 type BoundingBoxSpatialIndexOption struct {
+	Fragment
 	BoundingBoxParameters []*BoundingBoxParameter
 }
 
@@ -37,6 +40,7 @@ func (b *BoundingBoxSpatialIndexOption) spatialIndexOption() {}
 
 // BoundingBoxParameter represents a bounding box parameter (XMIN, YMIN, XMAX, YMAX)
 type BoundingBoxParameter struct {
+	Fragment
 	Parameter string // "None", "XMin", "YMin", "XMax", "YMax"
 	Value     ScalarExpression
 }
@@ -45,6 +49,7 @@ func (b *BoundingBoxParameter) node() {}
 
 // GridsSpatialIndexOption represents a GRIDS option
 type GridsSpatialIndexOption struct {
+	Fragment
 	GridParameters []*GridParameter
 }
 
@@ -53,6 +58,7 @@ func (g *GridsSpatialIndexOption) spatialIndexOption() {}
 
 // GridParameter represents a grid parameter
 type GridParameter struct {
+	Fragment
 	Parameter string // "None", "Level1", "Level2", "Level3", "Level4"
 	Value     string // "Low", "Medium", "High"
 }
@@ -61,6 +67,7 @@ func (g *GridParameter) node() {}
 
 // CellsPerObjectSpatialIndexOption represents a CELLS_PER_OBJECT option
 type CellsPerObjectSpatialIndexOption struct {
+	Fragment
 	Value ScalarExpression
 }
 
@@ -69,6 +76,7 @@ func (c *CellsPerObjectSpatialIndexOption) spatialIndexOption() {}
 
 // DataCompressionOption represents a DATA_COMPRESSION option for indexes
 type DataCompressionOption struct {
+	Fragment
 	CompressionLevel string // "None", "Row", "Page", "ColumnStore", "ColumnStoreArchive"
 	OptionKind       string // "DataCompression"
 	PartitionRanges  []*CompressionPartitionRange
@@ -80,6 +88,7 @@ func (d *DataCompressionOption) dropIndexOption() {}
 
 // IgnoreDupKeyIndexOption represents the IGNORE_DUP_KEY option
 type IgnoreDupKeyIndexOption struct {
+	Fragment
 	OptionState               string // "On", "Off"
 	OptionKind                string // "IgnoreDupKey"
 	SuppressMessagesOption    *bool  // true/false when SUPPRESS_MESSAGES specified

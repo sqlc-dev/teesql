@@ -2,6 +2,7 @@ package ast
 
 // UpdateStatement represents an UPDATE statement.
 type UpdateStatement struct {
+	Fragment
 	UpdateSpecification      *UpdateSpecification      `json:"UpdateSpecification,omitempty"`
 	WithCtesAndXmlNamespaces *WithCtesAndXmlNamespaces `json:"WithCtesAndXmlNamespaces,omitempty"`
 	OptimizerHints           []OptimizerHintBase       `json:"OptimizerHints,omitempty"`
@@ -12,6 +13,7 @@ func (u *UpdateStatement) statement() {}
 
 // UpdateSpecification contains the details of an UPDATE.
 type UpdateSpecification struct {
+	Fragment
 	SetClauses       []SetClause       `json:"SetClauses,omitempty"`
 	Target           TableReference    `json:"Target,omitempty"`
 	TopRowFilter     *TopRowFilter     `json:"TopRowFilter,omitempty"`
@@ -31,6 +33,7 @@ type SetClause interface {
 
 // AssignmentSetClause represents column = value in UPDATE.
 type AssignmentSetClause struct {
+	Fragment
 	Variable       *VariableReference        `json:"Variable,omitempty"`
 	Column         *ColumnReferenceExpression `json:"Column,omitempty"`
 	NewValue       ScalarExpression          `json:"NewValue,omitempty"`
@@ -41,6 +44,7 @@ func (a *AssignmentSetClause) setClause() {}
 
 // FunctionCallSetClause represents a mutator function call in UPDATE SET.
 type FunctionCallSetClause struct {
+	Fragment
 	MutatorFunction *FunctionCall `json:"MutatorFunction,omitempty"`
 }
 

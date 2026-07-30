@@ -2,6 +2,7 @@ package ast
 
 // AlterRouteStatement represents an ALTER ROUTE statement.
 type AlterRouteStatement struct {
+	Fragment
 	Name         *Identifier    `json:"Name,omitempty"`
 	RouteOptions []*RouteOption `json:"RouteOptions,omitempty"`
 }
@@ -11,6 +12,7 @@ func (s *AlterRouteStatement) statement() {}
 
 // AlterAssemblyStatement represents an ALTER ASSEMBLY statement.
 type AlterAssemblyStatement struct {
+	Fragment
 	Name       *Identifier         `json:"Name,omitempty"`
 	Parameters []ScalarExpression  `json:"Parameters,omitempty"` // FROM 'path' parameters
 	Options    []AssemblyOptionBase `json:"Options,omitempty"`
@@ -24,6 +26,7 @@ func (s *AlterAssemblyStatement) statement() {}
 
 // AddFileSpec represents an ADD FILE specification.
 type AddFileSpec struct {
+	Fragment
 	File     ScalarExpression `json:"File,omitempty"`     // The file path or binary literal
 	FileName *StringLiteral   `json:"FileName,omitempty"` // Optional AS 'filename'
 }
@@ -38,6 +41,7 @@ type AssemblyOptionBase interface {
 
 // AssemblyOption represents a basic assembly option.
 type AssemblyOption struct {
+	Fragment
 	OptionKind string `json:"OptionKind,omitempty"` // "UncheckedData"
 }
 
@@ -46,6 +50,7 @@ func (o *AssemblyOption) assemblyOption() {}
 
 // OnOffAssemblyOption represents a VISIBILITY = ON|OFF option.
 type OnOffAssemblyOption struct {
+	Fragment
 	OptionKind  string `json:"OptionKind,omitempty"`  // "Visibility"
 	OptionState string `json:"OptionState,omitempty"` // "On", "Off"
 }
@@ -55,6 +60,7 @@ func (o *OnOffAssemblyOption) assemblyOption() {}
 
 // PermissionSetAssemblyOption represents a PERMISSION_SET option.
 type PermissionSetAssemblyOption struct {
+	Fragment
 	OptionKind          string `json:"OptionKind,omitempty"`          // "PermissionSet"
 	PermissionSetOption string `json:"PermissionSetOption,omitempty"` // "Safe", "ExternalAccess", "Unsafe"
 }
@@ -64,6 +70,7 @@ func (o *PermissionSetAssemblyOption) assemblyOption() {}
 
 // AlterSearchPropertyListStatement represents an ALTER SEARCH PROPERTY LIST statement.
 type AlterSearchPropertyListStatement struct {
+	Fragment
 	Name   *Identifier                  `json:"Name,omitempty"`
 	Action SearchPropertyListAction     `json:"Action,omitempty"`
 }
@@ -79,6 +86,7 @@ type SearchPropertyListAction interface {
 
 // AddSearchPropertyListAction represents an ADD action in ALTER SEARCH PROPERTY LIST.
 type AddSearchPropertyListAction struct {
+	Fragment
 	PropertyName *StringLiteral `json:"PropertyName,omitempty"`
 	Guid         *StringLiteral `json:"Guid,omitempty"`
 	Id           *IntegerLiteral `json:"Id,omitempty"`
@@ -90,6 +98,7 @@ func (a *AddSearchPropertyListAction) searchPropertyListAction() {}
 
 // DropSearchPropertyListAction represents a DROP action in ALTER SEARCH PROPERTY LIST.
 type DropSearchPropertyListAction struct {
+	Fragment
 	PropertyName *StringLiteral `json:"PropertyName,omitempty"`
 }
 
@@ -98,6 +107,7 @@ func (a *DropSearchPropertyListAction) searchPropertyListAction() {}
 
 // AlterEndpointStatement represents an ALTER ENDPOINT statement.
 type AlterEndpointStatement struct {
+	Fragment
 	Name            *Identifier             `json:"Name,omitempty"`
 	State           string                  `json:"State,omitempty"`           // Started, Disabled, NotSpecified
 	Affinity        *EndpointAffinity       `json:"Affinity,omitempty"`
@@ -112,6 +122,7 @@ func (s *AlterEndpointStatement) statement() {}
 
 // EndpointAffinity represents the affinity setting for an endpoint.
 type EndpointAffinity struct {
+	Fragment
 	Kind  string           `json:"Kind,omitempty"` // None, Admin, Integer
 	Value *IntegerLiteral  `json:"Value,omitempty"`
 }
@@ -126,6 +137,7 @@ type EndpointProtocolOption interface {
 
 // LiteralEndpointProtocolOption represents a literal endpoint protocol option.
 type LiteralEndpointProtocolOption struct {
+	Fragment
 	Value ScalarExpression `json:"Value,omitempty"`
 	Kind  string           `json:"Kind,omitempty"` // TcpListenerPort, HttpListenerPort, etc.
 }
@@ -145,6 +157,7 @@ func (i *IPv4) node() {}
 
 // ListenerIPEndpointProtocolOption represents an IP address endpoint protocol option.
 type ListenerIPEndpointProtocolOption struct {
+	Fragment
 	IsAll       bool
 	IPv4PartOne *IPv4
 	IPv4PartTwo *IPv4
@@ -157,6 +170,7 @@ func (l *ListenerIPEndpointProtocolOption) endpointProtocolOption() {}
 
 // AuthenticationEndpointProtocolOption represents HTTP authentication option.
 type AuthenticationEndpointProtocolOption struct {
+	Fragment
 	AuthenticationTypes string `json:"AuthenticationTypes,omitempty"` // Comma-separated list: Basic, Digest, Integrated, Ntlm, Kerberos
 	Kind                string `json:"Kind,omitempty"`                // HttpAuthentication
 }
@@ -166,6 +180,7 @@ func (a *AuthenticationEndpointProtocolOption) endpointProtocolOption() {}
 
 // PortsEndpointProtocolOption represents HTTP ports option.
 type PortsEndpointProtocolOption struct {
+	Fragment
 	PortTypes string `json:"PortTypes,omitempty"` // Comma-separated list: Clear, Ssl
 	Kind      string `json:"Kind,omitempty"`      // HttpPorts
 }
@@ -175,6 +190,7 @@ func (p *PortsEndpointProtocolOption) endpointProtocolOption() {}
 
 // CompressionEndpointProtocolOption represents HTTP compression option.
 type CompressionEndpointProtocolOption struct {
+	Fragment
 	IsEnabled bool   `json:"IsEnabled"`
 	Kind      string `json:"Kind,omitempty"` // HttpCompression
 }
@@ -190,6 +206,7 @@ type PayloadOption interface {
 
 // SoapMethod represents a SOAP web method option.
 type SoapMethod struct {
+	Fragment
 	Alias     *StringLiteral `json:"Alias,omitempty"`
 	Namespace *StringLiteral `json:"Namespace,omitempty"`
 	Action    string         `json:"Action,omitempty"` // None, Add, Alter, Drop
@@ -204,6 +221,7 @@ func (s *SoapMethod) payloadOption() {}
 
 // EnabledDisabledPayloadOption represents an enabled/disabled payload option like BATCHES, SESSIONS.
 type EnabledDisabledPayloadOption struct {
+	Fragment
 	IsEnabled bool   `json:"IsEnabled"`
 	Kind      string `json:"Kind,omitempty"` // Batches, Sessions, MessageForwarding, etc.
 }
@@ -213,6 +231,7 @@ func (e *EnabledDisabledPayloadOption) payloadOption() {}
 
 // AuthenticationPayloadOption represents an authentication option for service_broker/database_mirroring.
 type AuthenticationPayloadOption struct {
+	Fragment
 	Protocol            string      `json:"Protocol,omitempty"` // Windows, WindowsNtlm, WindowsKerberos, WindowsNegotiate, Certificate
 	Certificate         *Identifier `json:"Certificate,omitempty"`
 	TryCertificateFirst bool        `json:"TryCertificateFirst"`
@@ -224,6 +243,7 @@ func (a *AuthenticationPayloadOption) payloadOption() {}
 
 // EncryptionPayloadOption represents an encryption option for service_broker/database_mirroring.
 type EncryptionPayloadOption struct {
+	Fragment
 	EncryptionSupport string `json:"EncryptionSupport,omitempty"` // Disabled, Supported, Required, NotSpecified
 	AlgorithmPartOne  string `json:"AlgorithmPartOne,omitempty"`  // NotSpecified, Rc4, Aes
 	AlgorithmPartTwo  string `json:"AlgorithmPartTwo,omitempty"`  // NotSpecified, Rc4, Aes
@@ -235,6 +255,7 @@ func (e *EncryptionPayloadOption) payloadOption() {}
 
 // RolePayloadOption represents a role option for database_mirroring.
 type RolePayloadOption struct {
+	Fragment
 	Role string `json:"Role,omitempty"` // NotSpecified, All, Partner, Witness
 	Kind string `json:"Kind,omitempty"` // Role
 }
@@ -244,6 +265,7 @@ func (r *RolePayloadOption) payloadOption() {}
 
 // LiteralPayloadOption represents a literal value payload option.
 type LiteralPayloadOption struct {
+	Fragment
 	Value ScalarExpression `json:"Value,omitempty"`
 	Kind  string           `json:"Kind,omitempty"`
 }
@@ -253,6 +275,7 @@ func (l *LiteralPayloadOption) payloadOption() {}
 
 // SchemaPayloadOption represents a SCHEMA payload option for SOAP.
 type SchemaPayloadOption struct {
+	Fragment
 	IsStandard bool   `json:"IsStandard"`
 	Kind       string `json:"Kind,omitempty"` // Schema
 }
@@ -262,6 +285,7 @@ func (s *SchemaPayloadOption) payloadOption() {}
 
 // CharacterSetPayloadOption represents a CHARACTER_SET payload option for SOAP.
 type CharacterSetPayloadOption struct {
+	Fragment
 	IsSql bool   `json:"IsSql"`
 	Kind  string `json:"Kind,omitempty"` // CharacterSet
 }
@@ -271,6 +295,7 @@ func (c *CharacterSetPayloadOption) payloadOption() {}
 
 // SessionTimeoutPayloadOption represents a SESSION_TIMEOUT payload option for SOAP.
 type SessionTimeoutPayloadOption struct {
+	Fragment
 	Timeout *IntegerLiteral `json:"Timeout,omitempty"`
 	IsNever bool            `json:"IsNever"`
 	Kind    string          `json:"Kind,omitempty"` // SessionTimeout
@@ -281,6 +306,7 @@ func (s *SessionTimeoutPayloadOption) payloadOption() {}
 
 // WsdlPayloadOption represents a WSDL payload option for SOAP.
 type WsdlPayloadOption struct {
+	Fragment
 	Value   ScalarExpression `json:"Value,omitempty"`
 	IsNone  bool             `json:"IsNone"`
 	Kind    string           `json:"Kind,omitempty"` // Wsdl
@@ -291,6 +317,7 @@ func (w *WsdlPayloadOption) payloadOption() {}
 
 // LoginTypePayloadOption represents a LOGIN_TYPE payload option for SOAP.
 type LoginTypePayloadOption struct {
+	Fragment
 	IsWindows bool   `json:"IsWindows"`
 	Kind      string `json:"Kind,omitempty"` // LoginType
 }
@@ -300,6 +327,7 @@ func (l *LoginTypePayloadOption) payloadOption() {}
 
 // AlterServiceStatement represents an ALTER SERVICE statement.
 type AlterServiceStatement struct {
+	Fragment
 	Name             *Identifier        `json:"Name,omitempty"`
 	QueueName        *SchemaObjectName  `json:"QueueName,omitempty"`
 	ServiceContracts []*ServiceContract `json:"ServiceContracts,omitempty"`
@@ -310,6 +338,7 @@ func (s *AlterServiceStatement) statement() {}
 
 // AlterCertificateStatement represents an ALTER CERTIFICATE statement.
 type AlterCertificateStatement struct {
+	Fragment
 	Name               *Identifier    `json:"Name,omitempty"`
 	Kind               string         `json:"Kind,omitempty"` // RemovePrivateKey, WithActiveForBeginDialog, WithPrivateKey, RemoveAttestedOption, AttestedBy
 	ActiveForBeginDialog string       `json:"ActiveForBeginDialog,omitempty"` // NotSet, On, Off
@@ -324,6 +353,7 @@ func (s *AlterCertificateStatement) statement() {}
 
 // AlterApplicationRoleStatement represents an ALTER APPLICATION ROLE statement.
 type AlterApplicationRoleStatement struct {
+	Fragment
 	Name                   *Identifier              `json:"Name,omitempty"`
 	ApplicationRoleOptions []*ApplicationRoleOption `json:"ApplicationRoleOptions,omitempty"`
 }
@@ -333,6 +363,7 @@ func (s *AlterApplicationRoleStatement) statement() {}
 
 // AlterAsymmetricKeyStatement represents an ALTER ASYMMETRIC KEY statement.
 type AlterAsymmetricKeyStatement struct {
+	Fragment
 	Name               *Identifier      `json:"Name,omitempty"`
 	Kind               string           `json:"Kind,omitempty"`
 	AttestedBy         ScalarExpression `json:"AttestedBy,omitempty"`
@@ -345,6 +376,7 @@ func (s *AlterAsymmetricKeyStatement) statement() {}
 
 // AlterQueueStatement represents an ALTER QUEUE statement.
 type AlterQueueStatement struct {
+	Fragment
 	Name         *SchemaObjectName `json:"Name,omitempty"`
 	QueueOptions []QueueOption     `json:"QueueOptions,omitempty"`
 }
@@ -354,6 +386,7 @@ func (s *AlterQueueStatement) statement() {}
 
 // AlterPartitionSchemeStatement represents an ALTER PARTITION SCHEME statement.
 type AlterPartitionSchemeStatement struct {
+	Fragment
 	Name      *Identifier                  `json:"Name,omitempty"`
 	FileGroup *IdentifierOrValueExpression `json:"FileGroup,omitempty"`
 }
@@ -363,6 +396,7 @@ func (s *AlterPartitionSchemeStatement) statement() {}
 
 // AlterPartitionFunctionStatement represents an ALTER PARTITION FUNCTION statement.
 type AlterPartitionFunctionStatement struct {
+	Fragment
 	Name      *Identifier      `json:"Name,omitempty"`
 	HasAction bool             `json:"-"` // Internal: true if SPLIT or MERGE was specified
 	IsSplit   bool             `json:"IsSplit,omitempty"`
@@ -374,6 +408,7 @@ func (s *AlterPartitionFunctionStatement) statement() {}
 
 // CreateFullTextCatalogStatement represents a CREATE FULLTEXT CATALOG statement.
 type CreateFullTextCatalogStatement struct {
+	Fragment
 	Name      *Identifier                   `json:"Name,omitempty"`
 	FileGroup *Identifier                   `json:"FileGroup,omitempty"`
 	Path      ScalarExpression              `json:"Path,omitempty"`
@@ -387,6 +422,7 @@ func (s *CreateFullTextCatalogStatement) statement() {}
 
 // AlterFulltextCatalogStatement represents an ALTER FULLTEXT CATALOG statement.
 type AlterFulltextCatalogStatement struct {
+	Fragment
 	Name    *Identifier                   `json:"Name,omitempty"`
 	Action  string                        `json:"Action,omitempty"` // Rebuild, Reorganize, AsDefault
 	Options []*OnOffFullTextCatalogOption `json:"Options,omitempty"`
@@ -397,12 +433,14 @@ func (s *AlterFulltextCatalogStatement) statement() {}
 
 // OnOffFullTextCatalogOption represents an option for ALTER FULLTEXT CATALOG
 type OnOffFullTextCatalogOption struct {
+	Fragment
 	OptionKind  string `json:"OptionKind,omitempty"`  // AccentSensitivity
 	OptionState string `json:"OptionState,omitempty"` // On, Off
 }
 
 // AlterFulltextIndexStatement represents an ALTER FULLTEXT INDEX statement.
 type AlterFulltextIndexStatement struct {
+	Fragment
 	OnName *SchemaObjectName              `json:"OnName,omitempty"`
 	Action AlterFullTextIndexActionOption `json:"Action,omitempty"`
 }
@@ -417,6 +455,7 @@ type AlterFullTextIndexActionOption interface {
 
 // SimpleAlterFullTextIndexAction represents simple actions like ENABLE, DISABLE, etc.
 type SimpleAlterFullTextIndexAction struct {
+	Fragment
 	ActionKind string `json:"ActionKind,omitempty"`
 }
 
@@ -425,6 +464,7 @@ func (*SimpleAlterFullTextIndexAction) alterFullTextIndexAction() {}
 
 // AddAlterFullTextIndexAction represents an ADD action for fulltext index
 type AddAlterFullTextIndexAction struct {
+	Fragment
 	Columns          []*FullTextIndexColumn `json:"Columns,omitempty"`
 	WithNoPopulation bool                   `json:"WithNoPopulation"`
 }
@@ -434,6 +474,7 @@ func (*AddAlterFullTextIndexAction) alterFullTextIndexAction() {}
 
 // DropAlterFullTextIndexAction represents a DROP action for fulltext index
 type DropAlterFullTextIndexAction struct {
+	Fragment
 	Columns          []*Identifier `json:"Columns,omitempty"`
 	WithNoPopulation bool          `json:"WithNoPopulation"`
 }
@@ -443,6 +484,7 @@ func (*DropAlterFullTextIndexAction) alterFullTextIndexAction() {}
 
 // AlterColumnAlterFullTextIndexAction represents an ALTER COLUMN action for fulltext index
 type AlterColumnAlterFullTextIndexAction struct {
+	Fragment
 	Column           *FullTextIndexColumn `json:"Column,omitempty"`
 	WithNoPopulation bool                 `json:"WithNoPopulation"`
 }
@@ -452,6 +494,7 @@ func (*AlterColumnAlterFullTextIndexAction) alterFullTextIndexAction() {}
 
 // FullTextIndexColumn represents a column in a fulltext index
 type FullTextIndexColumn struct {
+	Fragment
 	Name                 *Identifier              `json:"Name,omitempty"`
 	TypeColumn           *Identifier              `json:"TypeColumn,omitempty"`
 	LanguageTerm         *IdentifierOrValueExpression `json:"LanguageTerm,omitempty"`
@@ -462,6 +505,7 @@ func (*FullTextIndexColumn) node() {}
 
 // SetStopListAlterFullTextIndexAction represents a SET STOPLIST action for fulltext index
 type SetStopListAlterFullTextIndexAction struct {
+	Fragment
 	StopListOption   *StopListFullTextIndexOption `json:"StopListOption,omitempty"`
 	WithNoPopulation bool                         `json:"WithNoPopulation"`
 }
@@ -476,6 +520,7 @@ type FullTextIndexOption interface {
 
 // StopListFullTextIndexOption represents a STOPLIST option for fulltext index
 type StopListFullTextIndexOption struct {
+	Fragment
 	IsOff        bool        `json:"IsOff"`
 	StopListName *Identifier `json:"StopListName,omitempty"`
 	OptionKind   string      `json:"OptionKind,omitempty"` // "StopList"
@@ -486,6 +531,7 @@ func (*StopListFullTextIndexOption) fullTextIndexOption() {}
 
 // ChangeTrackingFullTextIndexOption represents a CHANGE_TRACKING option for fulltext index
 type ChangeTrackingFullTextIndexOption struct {
+	Fragment
 	Value      string `json:"Value,omitempty"` // "Auto", "Manual", "Off", "OffNoPopulation"
 	OptionKind string `json:"OptionKind,omitempty"` // "ChangeTracking"
 }
@@ -495,6 +541,7 @@ func (*ChangeTrackingFullTextIndexOption) fullTextIndexOption() {}
 
 // SearchPropertyListFullTextIndexOption represents a SEARCH PROPERTY LIST option for fulltext index
 type SearchPropertyListFullTextIndexOption struct {
+	Fragment
 	IsOff            bool        `json:"IsOff"`
 	PropertyListName *Identifier `json:"PropertyListName,omitempty"`
 	OptionKind       string      `json:"OptionKind,omitempty"` // "SearchPropertyList"
@@ -505,6 +552,7 @@ func (*SearchPropertyListFullTextIndexOption) fullTextIndexOption() {}
 
 // SetSearchPropertyListAlterFullTextIndexAction represents a SET SEARCH PROPERTY LIST action for fulltext index
 type SetSearchPropertyListAlterFullTextIndexAction struct {
+	Fragment
 	SearchPropertyListOption *SearchPropertyListFullTextIndexOption `json:"SearchPropertyListOption,omitempty"`
 	WithNoPopulation         bool                                   `json:"WithNoPopulation"`
 }
@@ -514,6 +562,7 @@ func (*SetSearchPropertyListAlterFullTextIndexAction) alterFullTextIndexAction()
 
 // FullTextCatalogAndFileGroup represents catalog and filegroup for fulltext index
 type FullTextCatalogAndFileGroup struct {
+	Fragment
 	CatalogName      *Identifier `json:"CatalogName,omitempty"`
 	FileGroupName    *Identifier `json:"FileGroupName,omitempty"`
 	FileGroupIsFirst bool        `json:"FileGroupIsFirst"`
@@ -523,6 +572,7 @@ func (*FullTextCatalogAndFileGroup) node() {}
 
 // AlterSymmetricKeyStatement represents an ALTER SYMMETRIC KEY statement.
 type AlterSymmetricKeyStatement struct {
+	Fragment
 	Name                 *Identifier        `json:"Name,omitempty"`
 	IsAdd                bool               `json:"IsAdd"`
 	EncryptingMechanisms []*CryptoMechanism `json:"EncryptingMechanisms,omitempty"`
@@ -533,6 +583,7 @@ func (s *AlterSymmetricKeyStatement) statement() {}
 
 // AlterServiceMasterKeyStatement represents an ALTER SERVICE MASTER KEY statement.
 type AlterServiceMasterKeyStatement struct {
+	Fragment
 	Kind     string         `json:"Kind,omitempty"`
 	Account  *StringLiteral `json:"Account,omitempty"`
 	Password *StringLiteral `json:"Password,omitempty"`
@@ -543,6 +594,7 @@ func (s *AlterServiceMasterKeyStatement) statement() {}
 
 // RenameEntityStatement represents a RENAME statement (Azure SQL DW/Synapse).
 type RenameEntityStatement struct {
+	Fragment
 	RenameEntityType string            `json:"RenameEntityType,omitempty"` // Object, Database
 	SeparatorType    string            `json:"SeparatorType,omitempty"`    // DoubleColon (only when :: is used)
 	OldName          *SchemaObjectName `json:"OldName,omitempty"`
@@ -554,6 +606,7 @@ func (s *RenameEntityStatement) statement() {}
 
 // AlterDatabaseEncryptionKeyStatement represents an ALTER DATABASE ENCRYPTION KEY statement.
 type AlterDatabaseEncryptionKeyStatement struct {
+	Fragment
 	Regenerate bool             `json:"Regenerate"`
 	Algorithm  string           `json:"Algorithm,omitempty"`
 	Encryptor  *CryptoMechanism `json:"Encryptor,omitempty"`

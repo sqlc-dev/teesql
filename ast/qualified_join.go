@@ -2,6 +2,7 @@ package ast
 
 // QualifiedJoin represents a qualified join.
 type QualifiedJoin struct {
+	Fragment
 	SearchCondition      BooleanExpression `json:"SearchCondition,omitempty"`
 	QualifiedJoinType    string            `json:"QualifiedJoinType,omitempty"`
 	JoinHint             string            `json:"JoinHint,omitempty"`

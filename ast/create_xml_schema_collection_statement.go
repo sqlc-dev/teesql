@@ -2,6 +2,7 @@ package ast
 
 // CreateXmlSchemaCollectionStatement represents CREATE XML SCHEMA COLLECTION.
 type CreateXmlSchemaCollectionStatement struct {
+	Fragment
 	Name       *SchemaObjectName
 	Expression ScalarExpression
 }

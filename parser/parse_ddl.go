@@ -9,6 +9,8 @@ import (
 )
 
 func (p *Parser) parseRevertStatement() (*ast.RevertStatement, error) {
+	astStart := p.curTok
+
 	// Consume REVERT
 	p.nextToken()
 
@@ -40,139 +42,194 @@ func (p *Parser) parseRevertStatement() (*ast.RevertStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume DROP
 	p.nextToken()
 
 	// Check what type of DROP statement this is
 	if p.curTok.Type == TokenDatabase {
-		return p.parseDropDatabaseStatement()
+		spanV94, spanErr94 := p.parseDropDatabaseStatement()
+		return spanned(p, spanV94, astStart), spanErr94
 	}
 
 	if p.curTok.Type == TokenExternal {
-		return p.parseDropExternalStatement()
+		spanV95, spanErr95 := p.parseDropExternalStatement()
+		return spanned(p, spanV95, astStart), spanErr95
 	}
 
 	if p.curTok.Type == TokenTable {
-		return p.parseDropTableStatement()
+		spanV96, spanErr96 := p.parseDropTableStatement()
+		return spanned(p, spanV96, astStart), spanErr96
 	}
 
 	if p.curTok.Type == TokenIndex {
-		return p.parseDropIndexStatement()
+		spanV97, spanErr97 := p.parseDropIndexStatement()
+		return spanned(p, spanV97, astStart), spanErr97
 	}
 
 	// Handle keyword-based DROP statements
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "SEQUENCE":
-		return p.parseDropSequenceStatement()
+		spanV98, spanErr98 := p.parseDropSequenceStatement()
+		return spanned(p, spanV98, astStart), spanErr98
 	case "SEARCH":
-		return p.parseDropSearchPropertyListStatement()
+		spanV99, spanErr99 := p.parseDropSearchPropertyListStatement()
+		return spanned(p, spanV99, astStart), spanErr99
 	case "SERVER":
-		return p.parseDropServerRoleStatement()
+		spanV100, spanErr100 := p.parseDropServerRoleStatement()
+		return spanned(p, spanV100, astStart), spanErr100
 	case "AVAILABILITY":
-		return p.parseDropAvailabilityGroupStatement()
+		spanV101, spanErr101 := p.parseDropAvailabilityGroupStatement()
+		return spanned(p, spanV101, astStart), spanErr101
 	case "FEDERATION":
-		return p.parseDropFederationStatement()
+		spanV102, spanErr102 := p.parseDropFederationStatement()
+		return spanned(p, spanV102, astStart), spanErr102
 	case "VIEW":
-		return p.parseDropViewStatement()
+		spanV103, spanErr103 := p.parseDropViewStatement()
+		return spanned(p, spanV103, astStart), spanErr103
 	case "PROCEDURE", "PROC":
-		return p.parseDropProcedureStatement()
+		spanV104, spanErr104 := p.parseDropProcedureStatement()
+		return spanned(p, spanV104, astStart), spanErr104
 	case "FUNCTION":
-		return p.parseDropFunctionStatement()
+		spanV105, spanErr105 := p.parseDropFunctionStatement()
+		return spanned(p, spanV105, astStart), spanErr105
 	case "TRIGGER":
-		return p.parseDropTriggerStatement()
+		spanV106, spanErr106 := p.parseDropTriggerStatement()
+		return spanned(p, spanV106, astStart), spanErr106
 	case "STATISTICS":
-		return p.parseDropStatisticsStatement()
+		spanV107, spanErr107 := p.parseDropStatisticsStatement()
+		return spanned(p, spanV107, astStart), spanErr107
 	case "DEFAULT":
-		return p.parseDropDefaultStatement()
+		spanV108, spanErr108 := p.parseDropDefaultStatement()
+		return spanned(p, spanV108, astStart), spanErr108
 	case "RULE":
-		return p.parseDropRuleStatement()
+		spanV109, spanErr109 := p.parseDropRuleStatement()
+		return spanned(p, spanV109, astStart), spanErr109
 	case "SCHEMA":
-		return p.parseDropSchemaStatement()
+		spanV110, spanErr110 := p.parseDropSchemaStatement()
+		return spanned(p, spanV110, astStart), spanErr110
 	case "SECURITY":
-		return p.parseDropSecurityPolicyStatement()
+		spanV111, spanErr111 := p.parseDropSecurityPolicyStatement()
+		return spanned(p, spanV111, astStart), spanErr111
 	case "WORKLOAD":
-		return p.parseDropWorkloadStatement()
+		spanV112, spanErr112 := p.parseDropWorkloadStatement()
+		return spanned(p, spanV112, astStart), spanErr112
 	case "TYPE":
-		return p.parseDropTypeStatement()
+		spanV113, spanErr113 := p.parseDropTypeStatement()
+		return spanned(p, spanV113, astStart), spanErr113
 	case "AGGREGATE":
-		return p.parseDropAggregateStatement()
+		spanV114, spanErr114 := p.parseDropAggregateStatement()
+		return spanned(p, spanV114, astStart), spanErr114
 	case "SYNONYM":
-		return p.parseDropSynonymStatement()
+		spanV115, spanErr115 := p.parseDropSynonymStatement()
+		return spanned(p, spanV115, astStart), spanErr115
 	case "USER":
-		return p.parseDropUserStatement()
+		spanV116, spanErr116 := p.parseDropUserStatement()
+		return spanned(p, spanV116, astStart), spanErr116
 	case "ROLE":
-		return p.parseDropRoleStatement()
+		spanV117, spanErr117 := p.parseDropRoleStatement()
+		return spanned(p, spanV117, astStart), spanErr117
 	case "ASSEMBLY":
-		return p.parseDropAssemblyStatement()
+		spanV118, spanErr118 := p.parseDropAssemblyStatement()
+		return spanned(p, spanV118, astStart), spanErr118
 	case "CRYPTOGRAPHIC":
-		return p.parseDropCryptographicProviderStatement()
+		spanV119, spanErr119 := p.parseDropCryptographicProviderStatement()
+		return spanned(p, spanV119, astStart), spanErr119
 	case "ASYMMETRIC":
-		return p.parseDropAsymmetricKeyStatement()
+		spanV120, spanErr120 := p.parseDropAsymmetricKeyStatement()
+		return spanned(p, spanV120, astStart), spanErr120
 	case "SYMMETRIC":
-		return p.parseDropSymmetricKeyStatement()
+		spanV121, spanErr121 := p.parseDropSymmetricKeyStatement()
+		return spanned(p, spanV121, astStart), spanErr121
 	case "SIGNATURE":
-		return p.parseDropSignatureStatement(false)
+		spanV122, spanErr122 := p.parseDropSignatureStatement(false)
+		return spanned(p, spanV122, astStart), spanErr122
 	case "COUNTER":
 		p.nextToken() // consume COUNTER
 		if strings.ToUpper(p.curTok.Literal) != "SIGNATURE" {
 			return nil, fmt.Errorf("expected SIGNATURE after COUNTER, got %s", p.curTok.Literal)
 		}
-		return p.parseDropSignatureStatement(true)
+		spanV123, spanErr123 := p.parseDropSignatureStatement(true)
+		return spanned(p, spanV123, astStart), spanErr123
 	case "SENSITIVITY":
-		return p.parseDropSensitivityClassificationStatement()
+		spanV124, spanErr124 := p.parseDropSensitivityClassificationStatement()
+		return spanned(p, spanV124, astStart), spanErr124
 	case "FULLTEXT":
-		return p.parseDropFulltextStatement()
+		spanV125, spanErr125 := p.parseDropFulltextStatement()
+		return spanned(p, spanV125, astStart), spanErr125
 	case "BROKER":
-		return p.parseDropBrokerPriorityStatement()
+		spanV126, spanErr126 := p.parseDropBrokerPriorityStatement()
+		return spanned(p, spanV126, astStart), spanErr126
 	case "RESOURCE":
-		return p.parseDropResourcePoolStatement()
+		spanV127, spanErr127 := p.parseDropResourcePoolStatement()
+		return spanned(p, spanV127, astStart), spanErr127
 	case "LOGIN":
-		return p.parseDropLoginStatement()
+		spanV128, spanErr128 := p.parseDropLoginStatement()
+		return spanned(p, spanV128, astStart), spanErr128
 	case "PARTITION":
-		return p.parseDropPartitionStatement()
+		spanV129, spanErr129 := p.parseDropPartitionStatement()
+		return spanned(p, spanV129, astStart), spanErr129
 	case "APPLICATION":
-		return p.parseDropApplicationRoleStatement()
+		spanV130, spanErr130 := p.parseDropApplicationRoleStatement()
+		return spanned(p, spanV130, astStart), spanErr130
 	case "CERTIFICATE":
-		return p.parseDropCertificateStatement()
+		spanV131, spanErr131 := p.parseDropCertificateStatement()
+		return spanned(p, spanV131, astStart), spanErr131
 	case "CREDENTIAL":
-		return p.parseDropCredentialStatement(false)
+		spanV132, spanErr132 := p.parseDropCredentialStatement(false)
+		return spanned(p, spanV132, astStart), spanErr132
 	case "MASTER":
-		return p.parseDropMasterKeyStatement()
+		spanV133, spanErr133 := p.parseDropMasterKeyStatement()
+		return spanned(p, spanV133, astStart), spanErr133
 	case "XML":
-		return p.parseDropXmlSchemaCollectionStatement()
+		spanV134, spanErr134 := p.parseDropXmlSchemaCollectionStatement()
+		return spanned(p, spanV134, astStart), spanErr134
 	case "CONTRACT":
-		return p.parseDropContractStatement()
+		spanV135, spanErr135 := p.parseDropContractStatement()
+		return spanned(p, spanV135, astStart), spanErr135
 	case "ENDPOINT":
-		return p.parseDropEndpointStatement()
+		spanV136, spanErr136 := p.parseDropEndpointStatement()
+		return spanned(p, spanV136, astStart), spanErr136
 	case "MESSAGE":
-		return p.parseDropMessageTypeStatement()
+		spanV137, spanErr137 := p.parseDropMessageTypeStatement()
+		return spanned(p, spanV137, astStart), spanErr137
 	case "QUEUE":
-		return p.parseDropQueueStatement()
+		spanV138, spanErr138 := p.parseDropQueueStatement()
+		return spanned(p, spanV138, astStart), spanErr138
 	case "REMOTE":
-		return p.parseDropRemoteServiceBindingStatement()
+		spanV139, spanErr139 := p.parseDropRemoteServiceBindingStatement()
+		return spanned(p, spanV139, astStart), spanErr139
 	case "ROUTE":
-		return p.parseDropRouteStatement()
+		spanV140, spanErr140 := p.parseDropRouteStatement()
+		return spanned(p, spanV140, astStart), spanErr140
 	case "SERVICE":
-		return p.parseDropServiceStatement()
+		spanV141, spanErr141 := p.parseDropServiceStatement()
+		return spanned(p, spanV141, astStart), spanErr141
 	case "EVENT":
-		return p.parseDropEventNotificationStatement()
+		spanV142, spanErr142 := p.parseDropEventNotificationStatement()
+		return spanned(p, spanV142, astStart), spanErr142
 	case "COLUMN":
-		return p.parseDropColumnStatement()
+		spanV143, spanErr143 := p.parseDropColumnStatement()
+		return spanned(p, spanV143, astStart), spanErr143
 	}
 
 	// Handle LOGIN token explicitly
 	if p.curTok.Type == TokenLogin {
-		return p.parseDropLoginStatement()
+		spanV144, spanErr144 := p.parseDropLoginStatement()
+		return spanned(p, spanV144, astStart), spanErr144
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP: %s", p.curTok.Literal)
 }
 
 func (p *Parser) parseDropFulltextStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume FULLTEXT
 	p.nextToken()
 
@@ -189,7 +246,7 @@ func (p *Parser) parseDropFulltextStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case "CATALOG":
 		stmt := &ast.DropFullTextCatalogStatement{
 			Name: p.parseIdentifier(),
@@ -198,7 +255,7 @@ func (p *Parser) parseDropFulltextStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case "INDEX":
 		// DROP FULLTEXT INDEX ON table
 		if p.curTok.Type == TokenOn {
@@ -212,39 +269,50 @@ func (p *Parser) parseDropFulltextStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP FULLTEXT: %s", keyword)
 }
 
 func (p *Parser) parseDropExternalStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume EXTERNAL
 	p.nextToken()
 
 	if p.curTok.Type == TokenLanguage {
-		return p.parseDropExternalLanguageStatement()
+		spanV145, spanErr145 := p.parseDropExternalLanguageStatement()
+		return spanned(p, spanV145, astStart), spanErr145
 	}
 
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "LIBRARY":
-		return p.parseDropExternalLibraryStatement()
+		spanV146, spanErr146 := p.parseDropExternalLibraryStatement()
+		return spanned(p, spanV146, astStart), spanErr146
 	case "DATA":
-		return p.parseDropExternalDataSourceStatement()
+		spanV147, spanErr147 := p.parseDropExternalDataSourceStatement()
+		return spanned(p, spanV147, astStart), spanErr147
 	case "FILE":
-		return p.parseDropExternalFileFormatStatement()
+		spanV148, spanErr148 := p.parseDropExternalFileFormatStatement()
+		return spanned(p, spanV148, astStart), spanErr148
 	case "TABLE":
-		return p.parseDropExternalTableStatement()
+		spanV149, spanErr149 := p.parseDropExternalTableStatement()
+		return spanned(p, spanV149, astStart), spanErr149
 	case "RESOURCE":
-		return p.parseDropExternalResourcePoolStatement()
+		spanV150, spanErr150 := p.parseDropExternalResourcePoolStatement()
+		return spanned(p, spanV150, astStart), spanErr150
 	case "MODEL":
-		return p.parseDropExternalModelStatement()
+		spanV151, spanErr151 := p.parseDropExternalModelStatement()
+		return spanned(p, spanV151, astStart), spanErr151
 	}
 
 	return nil, fmt.Errorf("unexpected token after EXTERNAL: %s", p.curTok.Literal)
 }
 
 func (p *Parser) parseDropExternalModelStatement() (*ast.DropExternalModelStatement, error) {
+	astStart := p.curTok
+
 	// Consume MODEL
 	p.nextToken()
 
@@ -258,10 +326,12 @@ func (p *Parser) parseDropExternalModelStatement() (*ast.DropExternalModelStatem
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropExternalLanguageStatement() (*ast.DropExternalLanguageStatement, error) {
+	astStart := p.curTok
+
 	// Consume LANGUAGE
 	p.nextToken()
 
@@ -281,10 +351,12 @@ func (p *Parser) parseDropExternalLanguageStatement() (*ast.DropExternalLanguage
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropExternalLibraryStatement() (*ast.DropExternalLibraryStatement, error) {
+	astStart := p.curTok
+
 	// Consume LIBRARY
 	p.nextToken()
 
@@ -304,10 +376,12 @@ func (p *Parser) parseDropExternalLibraryStatement() (*ast.DropExternalLibrarySt
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropExternalDataSourceStatement() (*ast.DropExternalDataSourceStatement, error) {
+	astStart := p.curTok
+
 	// Consume DATA
 	p.nextToken()
 
@@ -337,10 +411,12 @@ func (p *Parser) parseDropExternalDataSourceStatement() (*ast.DropExternalDataSo
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropExternalFileFormatStatement() (*ast.DropExternalFileFormatStatement, error) {
+	astStart := p.curTok
+
 	// Consume FILE
 	p.nextToken()
 
@@ -370,10 +446,12 @@ func (p *Parser) parseDropExternalFileFormatStatement() (*ast.DropExternalFileFo
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropExternalTableStatement() (*ast.DropExternalTableStatement, error) {
+	astStart := p.curTok
+
 	// Consume TABLE
 	p.nextToken()
 
@@ -408,10 +486,12 @@ func (p *Parser) parseDropExternalTableStatement() (*ast.DropExternalTableStatem
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropExternalResourcePoolStatement() (*ast.DropExternalResourcePoolStatement, error) {
+	astStart := p.curTok
+
 	// Consume RESOURCE
 	p.nextToken()
 
@@ -441,10 +521,12 @@ func (p *Parser) parseDropExternalResourcePoolStatement() (*ast.DropExternalReso
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropResourcePoolStatement() (*ast.DropResourcePoolStatement, error) {
+	astStart := p.curTok
+
 	// Consume RESOURCE
 	p.nextToken()
 
@@ -474,10 +556,12 @@ func (p *Parser) parseDropResourcePoolStatement() (*ast.DropResourcePoolStatemen
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropSecurityPolicyStatement() (*ast.DropSecurityPolicyStatement, error) {
+	astStart := p.curTok
+
 	// Consume SECURITY
 	p.nextToken()
 
@@ -518,10 +602,12 @@ func (p *Parser) parseDropSecurityPolicyStatement() (*ast.DropSecurityPolicyStat
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseCreateSecurityPolicyStatement() (*ast.CreateSecurityPolicyStatement, error) {
+	astStart := p.curTok
+
 	// Consume SECURITY
 	p.nextToken()
 
@@ -550,7 +636,7 @@ func (p *Parser) parseCreateSecurityPolicyStatement() (*ast.CreateSecurityPolicy
 			action, err := p.parseSecurityPredicateAction("Create")
 			if err != nil {
 				p.skipToEndOfStatement()
-				return stmt, nil
+				return spanned(p, stmt, astStart), nil
 			}
 			stmt.SecurityPredicateActions = append(stmt.SecurityPredicateActions, action)
 
@@ -597,12 +683,14 @@ func (p *Parser) parseCreateSecurityPolicyStatement() (*ast.CreateSecurityPolicy
 			if p.curTok.Type == TokenSemicolon {
 				p.nextToken()
 			}
-			return stmt, nil
+			return spanned(p, stmt, astStart), nil
 		}
 	}
 }
 
 func (p *Parser) parseAlterSecurityPolicyStatement() (*ast.AlterSecurityPolicyStatement, error) {
+	astStart := p.curTok
+
 	// Consume SECURITY
 	p.nextToken()
 
@@ -644,7 +732,7 @@ func (p *Parser) parseAlterSecurityPolicyStatement() (*ast.AlterSecurityPolicySt
 				action, err := p.parseSecurityPredicateAction("Create")
 				if err != nil {
 					p.skipToEndOfStatement()
-					return stmt, nil
+					return spanned(p, stmt, astStart), nil
 				}
 				stmt.SecurityPredicateActions = append(stmt.SecurityPredicateActions, action)
 			}
@@ -666,7 +754,7 @@ func (p *Parser) parseAlterSecurityPolicyStatement() (*ast.AlterSecurityPolicySt
 				action, err := p.parseSecurityPredicateAction("Drop")
 				if err != nil {
 					p.skipToEndOfStatement()
-					return stmt, nil
+					return spanned(p, stmt, astStart), nil
 				}
 				stmt.SecurityPredicateActions = append(stmt.SecurityPredicateActions, action)
 			}
@@ -676,12 +764,12 @@ func (p *Parser) parseAlterSecurityPolicyStatement() (*ast.AlterSecurityPolicySt
 			peekUpper := strings.ToUpper(p.peekTok.Literal)
 			if peekUpper != "FILTER" && peekUpper != "BLOCK" {
 				// This is a new statement, not a predicate action
-				return stmt, nil
+				return spanned(p, stmt, astStart), nil
 			}
 			action, err := p.parseSecurityPredicateAction("Alter")
 			if err != nil {
 				p.skipToEndOfStatement()
-				return stmt, nil
+				return spanned(p, stmt, astStart), nil
 			}
 			stmt.SecurityPredicateActions = append(stmt.SecurityPredicateActions, action)
 
@@ -718,12 +806,14 @@ func (p *Parser) parseAlterSecurityPolicyStatement() (*ast.AlterSecurityPolicySt
 			if p.curTok.Type == TokenSemicolon {
 				p.nextToken()
 			}
-			return stmt, nil
+			return spanned(p, stmt, astStart), nil
 		}
 	}
 }
 
 func (p *Parser) parseSecurityPolicyOption() *ast.SecurityPolicyOption {
+	astStart := p.curTok
+
 	opt := &ast.SecurityPolicyOption{}
 
 	// Parse option kind (STATE or SCHEMABINDING)
@@ -756,10 +846,12 @@ func (p *Parser) parseSecurityPolicyOption() *ast.SecurityPolicyOption {
 	}
 	p.nextToken()
 
-	return opt
+	return spanned(p, opt, astStart)
 }
 
 func (p *Parser) parseSecurityPredicateAction(actionType string) (*ast.SecurityPredicateAction, error) {
+	astStart := p.curTok
+
 	action := &ast.SecurityPredicateAction{
 		ActionType: actionType,
 	}
@@ -827,10 +919,12 @@ func (p *Parser) parseSecurityPredicateAction(actionType string) (*ast.SecurityP
 		p.nextToken()
 	}
 
-	return action, nil
+	return spanned(p, action, astStart), nil
 }
 
 func (p *Parser) parseFunctionCallForPredicate() (*ast.FunctionCall, error) {
+	astStart := p.curTok
+
 	fc := &ast.FunctionCall{
 		UniqueRowFilter:  "NotSpecified",
 		WithArrayWrapper: false,
@@ -865,7 +959,7 @@ func (p *Parser) parseFunctionCallForPredicate() (*ast.FunctionCall, error) {
 
 	// Expect (
 	if p.curTok.Type != TokenLParen {
-		return fc, nil
+		return spanned(p, fc, astStart), nil
 	}
 	p.nextToken()
 
@@ -887,24 +981,30 @@ func (p *Parser) parseFunctionCallForPredicate() (*ast.FunctionCall, error) {
 		p.nextToken()
 	}
 
-	return fc, nil
+	return spanned(p, fc, astStart), nil
 }
 
 func (p *Parser) parseDropWorkloadStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume WORKLOAD
 	p.nextToken()
 
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "GROUP":
-		return p.parseDropWorkloadGroupStatement()
+		spanV152, spanErr152 := p.parseDropWorkloadGroupStatement()
+		return spanned(p, spanV152, astStart), spanErr152
 	case "CLASSIFIER":
-		return p.parseDropWorkloadClassifierStatement()
+		spanV153, spanErr153 := p.parseDropWorkloadClassifierStatement()
+		return spanned(p, spanV153, astStart), spanErr153
 	}
 
 	return nil, fmt.Errorf("expected GROUP or CLASSIFIER after WORKLOAD, got %s", p.curTok.Literal)
 }
 
 func (p *Parser) parseDropWorkloadGroupStatement() (*ast.DropWorkloadGroupStatement, error) {
+	astStart := p.curTok
+
 	// Consume GROUP
 	p.nextToken()
 
@@ -928,10 +1028,12 @@ func (p *Parser) parseDropWorkloadGroupStatement() (*ast.DropWorkloadGroupStatem
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropWorkloadClassifierStatement() (*ast.DropWorkloadClassifierStatement, error) {
+	astStart := p.curTok
+
 	// Consume CLASSIFIER
 	p.nextToken()
 
@@ -955,10 +1057,12 @@ func (p *Parser) parseDropWorkloadClassifierStatement() (*ast.DropWorkloadClassi
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropTypeStatement() (*ast.DropTypeStatement, error) {
+	astStart := p.curTok
+
 	// Consume TYPE
 	p.nextToken()
 
@@ -986,10 +1090,12 @@ func (p *Parser) parseDropTypeStatement() (*ast.DropTypeStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropAggregateStatement() (*ast.DropAggregateStatement, error) {
+	astStart := p.curTok
+
 	// Consume AGGREGATE
 	p.nextToken()
 
@@ -1024,10 +1130,12 @@ func (p *Parser) parseDropAggregateStatement() (*ast.DropAggregateStatement, err
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropSynonymStatement() (*ast.DropSynonymStatement, error) {
+	astStart := p.curTok
+
 	// Consume SYNONYM
 	p.nextToken()
 
@@ -1062,10 +1170,12 @@ func (p *Parser) parseDropSynonymStatement() (*ast.DropSynonymStatement, error) 
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropLoginStatement() (*ast.DropLoginStatement, error) {
+	astStart := p.curTok
+
 	// Consume LOGIN
 	p.nextToken()
 
@@ -1078,10 +1188,12 @@ func (p *Parser) parseDropLoginStatement() (*ast.DropLoginStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropUserStatement() (*ast.DropUserStatement, error) {
+	astStart := p.curTok
+
 	// Consume USER
 	p.nextToken()
 
@@ -1105,10 +1217,12 @@ func (p *Parser) parseDropUserStatement() (*ast.DropUserStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropRoleStatement() (*ast.DropRoleStatement, error) {
+	astStart := p.curTok
+
 	// Consume ROLE
 	p.nextToken()
 
@@ -1132,10 +1246,12 @@ func (p *Parser) parseDropRoleStatement() (*ast.DropRoleStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropAssemblyStatement() (*ast.DropAssemblyStatement, error) {
+	astStart := p.curTok
+
 	// Consume ASSEMBLY
 	p.nextToken()
 
@@ -1182,10 +1298,12 @@ func (p *Parser) parseDropAssemblyStatement() (*ast.DropAssemblyStatement, error
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropAsymmetricKeyStatement() (*ast.DropAsymmetricKeyStatement, error) {
+	astStart := p.curTok
+
 	// Consume ASYMMETRIC
 	p.nextToken()
 
@@ -1226,10 +1344,12 @@ func (p *Parser) parseDropAsymmetricKeyStatement() (*ast.DropAsymmetricKeyStatem
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropSymmetricKeyStatement() (*ast.DropSymmetricKeyStatement, error) {
+	astStart := p.curTok
+
 	// Consume SYMMETRIC
 	p.nextToken()
 
@@ -1270,10 +1390,12 @@ func (p *Parser) parseDropSymmetricKeyStatement() (*ast.DropSymmetricKeyStatemen
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume DATABASE
 	p.nextToken()
 
@@ -1293,7 +1415,7 @@ func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
 			}
 		}
 		stmt.Name = p.parseIdentifier()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	// Check for DATABASE ENCRYPTION KEY
@@ -1306,13 +1428,14 @@ func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return &ast.DropDatabaseEncryptionKeyStatement{}, nil
+		return spanned(p, &ast.DropDatabaseEncryptionKeyStatement{}, astStart), nil
 	}
 
 	// Check for DATABASE SCOPED CREDENTIAL (look ahead to confirm)
 	if p.curTok.Type == TokenScoped && p.peekTok.Type == TokenCredential {
 		p.nextToken() // consume SCOPED
-		return p.parseDropCredentialStatement(true)
+		spanV154, spanErr154 := p.parseDropCredentialStatement(true)
+		return spanned(p, spanV154, astStart), spanErr154
 	}
 
 	// Plain DROP DATABASE statement
@@ -1343,10 +1466,12 @@ func (p *Parser) parseDropDatabaseStatement() (ast.Statement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropCredentialStatement(isDatabaseScoped bool) (*ast.DropCredentialStatement, error) {
+	astStart := p.curTok
+
 	// Consume CREDENTIAL
 	p.nextToken()
 
@@ -1360,10 +1485,7 @@ func (p *Parser) parseDropCredentialStatement(isDatabaseScoped bool) (*ast.DropC
 		return nil, fmt.Errorf("expected identifier, got %s", p.curTok.Literal)
 	}
 
-	stmt.Name = &ast.Identifier{
-		Value:     p.curTok.Literal,
-		QuoteType: "NotQuoted",
-	}
+	stmt.Name = p.spanIdent(p.curTok.Literal, "NotQuoted")
 	p.nextToken()
 
 	// Skip optional semicolon
@@ -1371,10 +1493,12 @@ func (p *Parser) parseDropCredentialStatement(isDatabaseScoped bool) (*ast.DropC
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropSequenceStatement() (*ast.DropSequenceStatement, error) {
+	astStart := p.curTok
+
 	// Consume SEQUENCE
 	p.nextToken()
 
@@ -1410,10 +1534,12 @@ func (p *Parser) parseDropSequenceStatement() (*ast.DropSequenceStatement, error
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropSearchPropertyListStatement() (*ast.DropSearchPropertyListStatement, error) {
+	astStart := p.curTok
+
 	// Consume SEARCH
 	p.nextToken()
 
@@ -1437,10 +1563,12 @@ func (p *Parser) parseDropSearchPropertyListStatement() (*ast.DropSearchProperty
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropServerRoleStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume SERVER
 	p.nextToken()
 
@@ -1454,7 +1582,7 @@ func (p *Parser) parseDropServerRoleStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case "AUDIT":
 		p.nextToken()
 		// Check if next token is SPECIFICATION
@@ -1466,7 +1594,7 @@ func (p *Parser) parseDropServerRoleStatement() (ast.Statement, error) {
 			if p.curTok.Type == TokenSemicolon {
 				p.nextToken()
 			}
-			return stmt, nil
+			return spanned(p, stmt, astStart), nil
 		}
 		stmt := &ast.DropServerAuditStatement{}
 		stmt.Name = p.parseIdentifier()
@@ -1474,13 +1602,15 @@ func (p *Parser) parseDropServerRoleStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	default:
 		return nil, fmt.Errorf("expected ROLE or AUDIT after SERVER, got %s", p.curTok.Literal)
 	}
 }
 
 func (p *Parser) parseDropAvailabilityGroupStatement() (*ast.DropAvailabilityGroupStatement, error) {
+	astStart := p.curTok
+
 	// Consume AVAILABILITY
 	p.nextToken()
 
@@ -1498,10 +1628,12 @@ func (p *Parser) parseDropAvailabilityGroupStatement() (*ast.DropAvailabilityGro
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropFederationStatement() (*ast.DropFederationStatement, error) {
+	astStart := p.curTok
+
 	// Consume FEDERATION
 	p.nextToken()
 
@@ -1513,10 +1645,12 @@ func (p *Parser) parseDropFederationStatement() (*ast.DropFederationStatement, e
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropTableStatement() (*ast.DropTableStatement, error) {
+	astStart := p.curTok
+
 	// Consume TABLE
 	p.nextToken()
 
@@ -1551,10 +1685,12 @@ func (p *Parser) parseDropTableStatement() (*ast.DropTableStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropViewStatement() (*ast.DropViewStatement, error) {
+	astStart := p.curTok
+
 	// Consume VIEW
 	p.nextToken()
 
@@ -1589,10 +1725,12 @@ func (p *Parser) parseDropViewStatement() (*ast.DropViewStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropProcedureStatement() (*ast.DropProcedureStatement, error) {
+	astStart := p.curTok
+
 	// Consume PROCEDURE or PROC
 	p.nextToken()
 
@@ -1627,10 +1765,12 @@ func (p *Parser) parseDropProcedureStatement() (*ast.DropProcedureStatement, err
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropFunctionStatement() (*ast.DropFunctionStatement, error) {
+	astStart := p.curTok
+
 	// Consume FUNCTION
 	p.nextToken()
 
@@ -1665,10 +1805,12 @@ func (p *Parser) parseDropFunctionStatement() (*ast.DropFunctionStatement, error
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropTriggerStatement() (*ast.DropTriggerStatement, error) {
+	astStart := p.curTok
+
 	// Consume TRIGGER
 	p.nextToken()
 
@@ -1720,10 +1862,12 @@ func (p *Parser) parseDropTriggerStatement() (*ast.DropTriggerStatement, error) 
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
+	astStart := p.curTok
+
 	// Consume INDEX
 	p.nextToken()
 
@@ -1797,7 +1941,7 @@ func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
@@ -2051,6 +2195,8 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 }
 
 func (p *Parser) parseDropStatisticsStatement() (*ast.DropStatisticsStatement, error) {
+	astStart := p.curTok
+
 	// Consume STATISTICS
 	p.nextToken()
 
@@ -2075,10 +2221,12 @@ func (p *Parser) parseDropStatisticsStatement() (*ast.DropStatisticsStatement, e
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropDefaultStatement() (*ast.DropDefaultStatement, error) {
+	astStart := p.curTok
+
 	// Consume DEFAULT
 	p.nextToken()
 
@@ -2113,10 +2261,12 @@ func (p *Parser) parseDropDefaultStatement() (*ast.DropDefaultStatement, error) 
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropRuleStatement() (*ast.DropRuleStatement, error) {
+	astStart := p.curTok
+
 	// Consume RULE
 	p.nextToken()
 
@@ -2151,10 +2301,12 @@ func (p *Parser) parseDropRuleStatement() (*ast.DropRuleStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropSchemaStatement() (*ast.DropSchemaStatement, error) {
+	astStart := p.curTok
+
 	// Consume SCHEMA
 	p.nextToken()
 
@@ -2194,10 +2346,12 @@ func (p *Parser) parseDropSchemaStatement() (*ast.DropSchemaStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropPartitionStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume PARTITION
 	p.nextToken()
 
@@ -2212,7 +2366,7 @@ func (p *Parser) parseDropPartitionStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case "SCHEME":
 		stmt := &ast.DropPartitionSchemeStatement{
 			Name: p.parseIdentifier(),
@@ -2220,13 +2374,15 @@ func (p *Parser) parseDropPartitionStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	return nil, fmt.Errorf("expected FUNCTION or SCHEME after PARTITION, got %s", keyword)
 }
 
 func (p *Parser) parseDropApplicationRoleStatement() (*ast.DropApplicationRoleStatement, error) {
+	astStart := p.curTok
+
 	// Consume APPLICATION
 	p.nextToken()
 	// Consume ROLE
@@ -2242,10 +2398,12 @@ func (p *Parser) parseDropApplicationRoleStatement() (*ast.DropApplicationRoleSt
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropCertificateStatement() (*ast.DropCertificateStatement, error) {
+	astStart := p.curTok
+
 	// Consume CERTIFICATE
 	p.nextToken()
 
@@ -2257,10 +2415,12 @@ func (p *Parser) parseDropCertificateStatement() (*ast.DropCertificateStatement,
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropMasterKeyStatement() (*ast.DropMasterKeyStatement, error) {
+	astStart := p.curTok
+
 	// Consume MASTER
 	p.nextToken()
 	// Consume KEY
@@ -2274,10 +2434,12 @@ func (p *Parser) parseDropMasterKeyStatement() (*ast.DropMasterKeyStatement, err
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropColumnStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume COLUMN
 	p.nextToken()
 
@@ -2295,7 +2457,7 @@ func (p *Parser) parseDropColumnStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	} else if keyword == "ENCRYPTION" {
 		// DROP COLUMN ENCRYPTION KEY
 		if strings.ToUpper(p.curTok.Literal) == "KEY" {
@@ -2307,13 +2469,15 @@ func (p *Parser) parseDropColumnStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	return nil, fmt.Errorf("unexpected token after DROP COLUMN: expected MASTER or ENCRYPTION, got %s", keyword)
 }
 
 func (p *Parser) parseDropXmlSchemaCollectionStatement() (*ast.DropXmlSchemaCollectionStatement, error) {
+	astStart := p.curTok
+
 	// Consume XML
 	p.nextToken()
 	// Consume SCHEMA
@@ -2338,10 +2502,12 @@ func (p *Parser) parseDropXmlSchemaCollectionStatement() (*ast.DropXmlSchemaColl
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropContractStatement() (*ast.DropContractStatement, error) {
+	astStart := p.curTok
+
 	// Consume CONTRACT
 	p.nextToken()
 
@@ -2353,10 +2519,12 @@ func (p *Parser) parseDropContractStatement() (*ast.DropContractStatement, error
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropEndpointStatement() (*ast.DropEndpointStatement, error) {
+	astStart := p.curTok
+
 	// Consume ENDPOINT
 	p.nextToken()
 
@@ -2368,10 +2536,12 @@ func (p *Parser) parseDropEndpointStatement() (*ast.DropEndpointStatement, error
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropMessageTypeStatement() (*ast.DropMessageTypeStatement, error) {
+	astStart := p.curTok
+
 	// Consume MESSAGE
 	p.nextToken()
 	// Consume TYPE
@@ -2387,10 +2557,12 @@ func (p *Parser) parseDropMessageTypeStatement() (*ast.DropMessageTypeStatement,
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropQueueStatement() (*ast.DropQueueStatement, error) {
+	astStart := p.curTok
+
 	// Consume QUEUE
 	p.nextToken()
 
@@ -2407,10 +2579,12 @@ func (p *Parser) parseDropQueueStatement() (*ast.DropQueueStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropRemoteServiceBindingStatement() (*ast.DropRemoteServiceBindingStatement, error) {
+	astStart := p.curTok
+
 	// Consume REMOTE
 	p.nextToken()
 	// Consume SERVICE
@@ -2430,10 +2604,12 @@ func (p *Parser) parseDropRemoteServiceBindingStatement() (*ast.DropRemoteServic
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropRouteStatement() (*ast.DropRouteStatement, error) {
+	astStart := p.curTok
+
 	// Consume ROUTE
 	p.nextToken()
 
@@ -2445,10 +2621,12 @@ func (p *Parser) parseDropRouteStatement() (*ast.DropRouteStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropServiceStatement() (*ast.DropServiceStatement, error) {
+	astStart := p.curTok
+
 	// Consume SERVICE
 	p.nextToken()
 
@@ -2460,15 +2638,18 @@ func (p *Parser) parseDropServiceStatement() (*ast.DropServiceStatement, error) 
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropEventNotificationStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume EVENT
 	p.nextToken()
 	// Check if this is DROP EVENT SESSION or DROP EVENT NOTIFICATION
 	if strings.ToUpper(p.curTok.Literal) == "SESSION" {
-		return p.parseDropEventSessionStatement()
+		spanV155, spanErr155 := p.parseDropEventSessionStatement()
+		return spanned(p, spanV155, astStart), spanErr155
 	}
 	// Consume NOTIFICATION
 	if strings.ToUpper(p.curTok.Literal) == "NOTIFICATION" {
@@ -2515,10 +2696,12 @@ func (p *Parser) parseDropEventNotificationStatement() (ast.Statement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropEventSessionStatement() (*ast.DropEventSessionStatement, error) {
+	astStart := p.curTok
+
 	// Consume SESSION
 	p.nextToken()
 
@@ -2553,27 +2736,35 @@ func (p *Parser) parseDropEventSessionStatement() (*ast.DropEventSessionStatemen
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume ALTER
 	p.nextToken()
 
 	// Check what type of ALTER statement this is
 	switch p.curTok.Type {
 	case TokenTable:
-		return p.parseAlterTableStatement()
+		spanV156, spanErr156 := p.parseAlterTableStatement()
+		return spanned(p, spanV156, astStart), spanErr156
 	case TokenMaster:
-		return p.parseAlterMasterKeyStatement()
+		spanV157, spanErr157 := p.parseAlterMasterKeyStatement()
+		return spanned(p, spanV157, astStart), spanErr157
 	case TokenSchema:
-		return p.parseAlterSchemaStatement()
+		spanV158, spanErr158 := p.parseAlterSchemaStatement()
+		return spanned(p, spanV158, astStart), spanErr158
 	case TokenLogin:
-		return p.parseAlterLoginStatement()
+		spanV159, spanErr159 := p.parseAlterLoginStatement()
+		return spanned(p, spanV159, astStart), spanErr159
 	case TokenMessage:
-		return p.parseAlterMessageTypeStatement()
+		spanV160, spanErr160 := p.parseAlterMessageTypeStatement()
+		return spanned(p, spanV160, astStart), spanErr160
 	case TokenDatabase:
-		return p.parseAlterDatabaseStatement()
+		spanV161, spanErr161 := p.parseAlterDatabaseStatement()
+		return spanned(p, spanV161, astStart), spanErr161
 	case TokenFunction:
 		return p.parseAlterFunctionStatement()
 	case TokenTrigger:
@@ -2581,86 +2772,125 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 	case TokenIndex:
 		return p.parseAlterIndexStatement()
 	case TokenProcedure:
-		return p.parseAlterProcedureStatement()
+		spanV162, spanErr162 := p.parseAlterProcedureStatement()
+		return spanned(p, spanV162, astStart), spanErr162
 	case TokenUser:
-		return p.parseAlterUserStatement()
+		spanV163, spanErr163 := p.parseAlterUserStatement()
+		return spanned(p, spanV163, astStart), spanErr163
 	case TokenAsymmetric:
-		return p.parseAlterAsymmetricKeyStatement()
+		spanV164, spanErr164 := p.parseAlterAsymmetricKeyStatement()
+		return spanned(p, spanV164, astStart), spanErr164
 	case TokenSymmetric:
-		return p.parseAlterSymmetricKeyStatement()
+		spanV165, spanErr165 := p.parseAlterSymmetricKeyStatement()
+		return spanned(p, spanV165, astStart), spanErr165
 	case TokenCertificate:
-		return p.parseAlterCertificateStatement()
+		spanV166, spanErr166 := p.parseAlterCertificateStatement()
+		return spanned(p, spanV166, astStart), spanErr166
 	case TokenCredential:
-		return p.parseAlterCredentialStatement()
+		spanV167, spanErr167 := p.parseAlterCredentialStatement()
+		return spanned(p, spanV167, astStart), spanErr167
 	case TokenExternal:
-		return p.parseAlterExternalStatement()
+		spanV168, spanErr168 := p.parseAlterExternalStatement()
+		return spanned(p, spanV168, astStart), spanErr168
 	case TokenView:
-		return p.parseAlterViewStatement()
+		spanV169, spanErr169 := p.parseAlterViewStatement()
+		return spanned(p, spanV169, astStart), spanErr169
 	case TokenAuthorization:
-		return p.parseAlterAuthorizationStatement()
+		spanV170, spanErr170 := p.parseAlterAuthorizationStatement()
+		return spanned(p, spanV170, astStart), spanErr170
 	case TokenIdent:
 		// Handle keywords that are not reserved tokens
 		switch strings.ToUpper(p.curTok.Literal) {
 		case "ROLE":
-			return p.parseAlterRoleStatement()
+			spanV171, spanErr171 := p.parseAlterRoleStatement()
+			return spanned(p, spanV171, astStart), spanErr171
 		case "SERVER":
-			return p.parseAlterServerConfigurationStatement()
+			spanV172, spanErr172 := p.parseAlterServerConfigurationStatement()
+			return spanned(p, spanV172, astStart), spanErr172
 		case "REMOTE":
-			return p.parseAlterRemoteServiceBindingStatement()
+			spanV173, spanErr173 := p.parseAlterRemoteServiceBindingStatement()
+			return spanned(p, spanV173, astStart), spanErr173
 		case "XML":
-			return p.parseAlterXmlSchemaCollectionStatement()
+			spanV174, spanErr174 := p.parseAlterXmlSchemaCollectionStatement()
+			return spanned(p, spanV174, astStart), spanErr174
 		case "ROUTE":
-			return p.parseAlterRouteStatement()
+			spanV175, spanErr175 := p.parseAlterRouteStatement()
+			return spanned(p, spanV175, astStart), spanErr175
 		case "ASSEMBLY":
-			return p.parseAlterAssemblyStatement()
+			spanV176, spanErr176 := p.parseAlterAssemblyStatement()
+			return spanned(p, spanV176, astStart), spanErr176
 		case "ENDPOINT":
-			return p.parseAlterEndpointStatement()
+			spanV177, spanErr177 := p.parseAlterEndpointStatement()
+			return spanned(p, spanV177, astStart), spanErr177
 		case "SERVICE":
-			return p.parseAlterServiceStatement()
+			spanV178, spanErr178 := p.parseAlterServiceStatement()
+			return spanned(p, spanV178, astStart), spanErr178
 		case "CERTIFICATE":
-			return p.parseAlterCertificateStatement()
+			spanV179, spanErr179 := p.parseAlterCertificateStatement()
+			return spanned(p, spanV179, astStart), spanErr179
 		case "APPLICATION":
-			return p.parseAlterApplicationRoleStatement()
+			spanV180, spanErr180 := p.parseAlterApplicationRoleStatement()
+			return spanned(p, spanV180, astStart), spanErr180
 		case "ASYMMETRIC":
-			return p.parseAlterAsymmetricKeyStatement()
+			spanV181, spanErr181 := p.parseAlterAsymmetricKeyStatement()
+			return spanned(p, spanV181, astStart), spanErr181
 		case "QUEUE":
-			return p.parseAlterQueueStatement()
+			spanV182, spanErr182 := p.parseAlterQueueStatement()
+			return spanned(p, spanV182, astStart), spanErr182
 		case "PARTITION":
-			return p.parseAlterPartitionStatement()
+			spanV183, spanErr183 := p.parseAlterPartitionStatement()
+			return spanned(p, spanV183, astStart), spanErr183
 		case "FULLTEXT":
-			return p.parseAlterFulltextStatement()
+			spanV184, spanErr184 := p.parseAlterFulltextStatement()
+			return spanned(p, spanV184, astStart), spanErr184
 		case "SYMMETRIC":
-			return p.parseAlterSymmetricKeyStatement()
+			spanV185, spanErr185 := p.parseAlterSymmetricKeyStatement()
+			return spanned(p, spanV185, astStart), spanErr185
 		case "CREDENTIAL":
-			return p.parseAlterCredentialStatement()
+			spanV186, spanErr186 := p.parseAlterCredentialStatement()
+			return spanned(p, spanV186, astStart), spanErr186
 		case "SERVICE_MASTER_KEY":
-			return p.parseAlterServiceMasterKeyStatement()
+			spanV187, spanErr187 := p.parseAlterServiceMasterKeyStatement()
+			return spanned(p, spanV187, astStart), spanErr187
 		case "EXTERNAL":
-			return p.parseAlterExternalStatement()
+			spanV188, spanErr188 := p.parseAlterExternalStatement()
+			return spanned(p, spanV188, astStart), spanErr188
 		case "RESOURCE":
-			return p.parseAlterResourceGovernorStatement()
+			spanV189, spanErr189 := p.parseAlterResourceGovernorStatement()
+			return spanned(p, spanV189, astStart), spanErr189
 		case "CRYPTOGRAPHIC":
-			return p.parseAlterCryptographicProviderStatement()
+			spanV190, spanErr190 := p.parseAlterCryptographicProviderStatement()
+			return spanned(p, spanV190, astStart), spanErr190
 		case "BROKER":
-			return p.parseAlterBrokerPriorityStatement()
+			spanV191, spanErr191 := p.parseAlterBrokerPriorityStatement()
+			return spanned(p, spanV191, astStart), spanErr191
 		case "FEDERATION":
-			return p.parseAlterFederationStatement()
+			spanV192, spanErr192 := p.parseAlterFederationStatement()
+			return spanned(p, spanV192, astStart), spanErr192
 		case "WORKLOAD":
-			return p.parseAlterWorkloadGroupStatement()
+			spanV193, spanErr193 := p.parseAlterWorkloadGroupStatement()
+			return spanned(p, spanV193, astStart), spanErr193
 		case "SEQUENCE":
-			return p.parseAlterSequenceStatement()
+			spanV194, spanErr194 := p.parseAlterSequenceStatement()
+			return spanned(p, spanV194, astStart), spanErr194
 		case "SEARCH":
-			return p.parseAlterSearchPropertyListStatement()
+			spanV195, spanErr195 := p.parseAlterSearchPropertyListStatement()
+			return spanned(p, spanV195, astStart), spanErr195
 		case "AVAILABILITY":
-			return p.parseAlterAvailabilityGroupStatement()
+			spanV196, spanErr196 := p.parseAlterAvailabilityGroupStatement()
+			return spanned(p, spanV196, astStart), spanErr196
 		case "MATERIALIZED":
-			return p.parseAlterMaterializedViewStatement()
+			spanV197, spanErr197 := p.parseAlterMaterializedViewStatement()
+			return spanned(p, spanV197, astStart), spanErr197
 		case "EVENT":
-			return p.parseAlterEventSessionStatement()
+			spanV198, spanErr198 := p.parseAlterEventSessionStatement()
+			return spanned(p, spanV198, astStart), spanErr198
 		case "SECURITY":
-			return p.parseAlterSecurityPolicyStatement()
+			spanV199, spanErr199 := p.parseAlterSecurityPolicyStatement()
+			return spanned(p, spanV199, astStart), spanErr199
 		case "COLUMN":
-			return p.parseAlterColumnEncryptionKeyStatement()
+			spanV200, spanErr200 := p.parseAlterColumnEncryptionKeyStatement()
+			return spanned(p, spanV200, astStart), spanErr200
 		}
 		return nil, fmt.Errorf("unexpected token after ALTER: %s", p.curTok.Literal)
 	default:
@@ -2669,12 +2899,15 @@ func (p *Parser) parseAlterStatement() (ast.Statement, error) {
 }
 
 func (p *Parser) parseAlterResourceGovernorStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume RESOURCE
 	p.nextToken()
 
 	// Check if this is RESOURCE POOL or RESOURCE GOVERNOR
 	if strings.ToUpper(p.curTok.Literal) == "POOL" {
-		return p.parseAlterResourcePoolStatement()
+		spanV201, spanErr201 := p.parseAlterResourcePoolStatement()
+		return spanned(p, spanV201, astStart), spanErr201
 	}
 
 	// Consume GOVERNOR
@@ -2723,10 +2956,12 @@ func (p *Parser) parseAlterResourceGovernorStatement() (ast.Statement, error) {
 	}
 
 	p.skipToEndOfStatement()
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume DATABASE
 	p.nextToken()
 
@@ -2735,27 +2970,31 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 		p.nextToken() // consume AUDIT
 		if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
 			p.nextToken() // consume SPECIFICATION
-			return p.parseAlterDatabaseAuditSpecificationStatement()
+			spanV202, spanErr202 := p.parseAlterDatabaseAuditSpecificationStatement()
+			return spanned(p, spanV202, astStart), spanErr202
 		}
 	}
 
 	// Check for DATABASE ENCRYPTION KEY
 	if strings.ToUpper(p.curTok.Literal) == "ENCRYPTION" {
-		return p.parseAlterDatabaseEncryptionKeyStatement()
+		spanV203, spanErr203 := p.parseAlterDatabaseEncryptionKeyStatement()
+		return spanned(p, spanV203, astStart), spanErr203
 	}
 
 	// Check for SCOPED CREDENTIAL or SCOPED CONFIGURATION
 	if p.curTok.Type == TokenScoped {
 		p.nextToken() // consume SCOPED
 		if p.curTok.Type == TokenCredential {
-			return p.parseAlterDatabaseScopedCredentialStatement()
+			spanV204, spanErr204 := p.parseAlterDatabaseScopedCredentialStatement()
+			return spanned(p, spanV204, astStart), spanErr204
 		}
 		// Check for CONFIGURATION
 		if strings.ToUpper(p.curTok.Literal) == "CONFIGURATION" {
-			return p.parseAlterDatabaseScopedConfigurationStatement()
+			spanV205, spanErr205 := p.parseAlterDatabaseScopedConfigurationStatement()
+			return spanned(p, spanV205, astStart), spanErr205
 		}
 		// SCOPED is actually a database name, treat it as such
-		dbName := &ast.Identifier{Value: "SCOPED", QuoteType: "NotQuoted"}
+		dbName := p.spanIdent("SCOPED", "NotQuoted")
 		// Check for COLLATE
 		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
 			p.nextToken() // consume COLLATE
@@ -2764,11 +3003,11 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 				Collation:    p.parseIdentifier(),
 			}
 			p.skipToEndOfStatement()
-			return stmt, nil
+			return spanned(p, stmt, astStart), nil
 		}
 		// Fall through to skip rest
 		p.skipToEndOfStatement()
-		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
+		return spanned(p, &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, astStart), nil
 	}
 
 	// Parse database name followed by various commands
@@ -2777,19 +3016,24 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 
 		switch p.curTok.Type {
 		case TokenSet:
-			return p.parseAlterDatabaseSetStatement(dbName)
+			spanV206, spanErr206 := p.parseAlterDatabaseSetStatement(dbName)
+			return spanned(p, spanV206, astStart), spanErr206
 		case TokenAdd:
-			return p.parseAlterDatabaseAddStatement(dbName)
+			spanV207, spanErr207 := p.parseAlterDatabaseAddStatement(dbName)
+			return spanned(p, spanV207, astStart), spanErr207
 		default:
 			// Check for MODIFY or REMOVE
 			if strings.ToUpper(p.curTok.Literal) == "MODIFY" {
-				return p.parseAlterDatabaseModifyStatement(dbName)
+				spanV208, spanErr208 := p.parseAlterDatabaseModifyStatement(dbName)
+				return spanned(p, spanV208, astStart), spanErr208
 			}
 			if strings.ToUpper(p.curTok.Literal) == "REMOVE" {
-				return p.parseAlterDatabaseRemoveStatement(dbName)
+				spanV209, spanErr209 := p.parseAlterDatabaseRemoveStatement(dbName)
+				return spanned(p, spanV209, astStart), spanErr209
 			}
 			if strings.ToUpper(p.curTok.Literal) == "REBUILD" {
-				return p.parseAlterDatabaseRebuildLogStatement(dbName)
+				spanV210, spanErr210 := p.parseAlterDatabaseRebuildLogStatement(dbName)
+				return spanned(p, spanV210, astStart), spanErr210
 			}
 			if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
 				p.nextToken() // consume COLLATE
@@ -2798,20 +3042,22 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 					Collation:    p.parseIdentifier(),
 				}
 				p.skipToEndOfStatement()
-				return stmt, nil
+				return spanned(p, stmt, astStart), nil
 			}
 		}
 		// Lenient - skip rest of statement
 		p.skipToEndOfStatement()
-		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
+		return spanned(p, &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, astStart), nil
 	}
 
 	// Lenient: skip unknown database names (like $(tempdb) SQLCMD variables)
 	p.skipToEndOfStatement()
-	return &ast.AlterDatabaseSetStatement{}, nil
+	return spanned(p, &ast.AlterDatabaseSetStatement{}, astStart), nil
 }
 
 func (p *Parser) parseAlterDatabaseEncryptionKeyStatement() (*ast.AlterDatabaseEncryptionKeyStatement, error) {
+	astStart := p.curTok
+
 	// curTok is ENCRYPTION
 	p.nextToken() // consume ENCRYPTION
 
@@ -2876,10 +3122,12 @@ func (p *Parser) parseAlterDatabaseEncryptionKeyStatement() (*ast.AlterDatabaseE
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.AlterDatabaseSetStatement, error) {
+	astStart := p.curTok
+
 	// Consume SET
 	p.nextToken()
 
@@ -3356,7 +3604,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				// Handle parenthesized sub-options
 				if p.curTok.Type == TokenLParen {
 					p.skipToEndOfStatement()
-					return stmt, nil
+					return spanned(p, stmt, astStart), nil
 				}
 				opt := &ast.OnOffDatabaseOption{
 					OptionKind:  convertOptionKind(optionName),
@@ -3376,7 +3624,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 			} else {
 				// Skip unknown option syntax
 				p.skipToEndOfStatement()
-				return stmt, nil
+				return spanned(p, stmt, astStart), nil
 			}
 		}
 
@@ -3423,12 +3671,14 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseAlterDatabaseTermination parses the termination clause for ALTER DATABASE statements
 // Forms: WITH NO_WAIT | WITH ROLLBACK AFTER N [SECONDS] | WITH ROLLBACK IMMEDIATE
 func (p *Parser) parseAlterDatabaseTermination() *ast.AlterDatabaseTermination {
+	astStart := p.curTok
+
 	if p.curTok.Type != TokenWith && strings.ToUpper(p.curTok.Literal) != "WITH" {
 		return nil
 	}
@@ -3455,7 +3705,7 @@ func (p *Parser) parseAlterDatabaseTermination() *ast.AlterDatabaseTermination {
 			p.nextToken()
 		}
 	}
-	return term
+	return spanned(p, term, astStart)
 }
 
 // parseRemoteDataArchiveOption parses REMOTE_DATA_ARCHIVE option
@@ -3464,6 +3714,8 @@ func (p *Parser) parseAlterDatabaseTermination() *ast.AlterDatabaseTermination {
 //   - REMOTE_DATA_ARCHIVE = OFF
 //   - REMOTE_DATA_ARCHIVE (options...) -- OptionState is "NotSet"
 func (p *Parser) parseRemoteDataArchiveOption() (*ast.RemoteDataArchiveDatabaseOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.RemoteDataArchiveDatabaseOption{
 		OptionKind:  "RemoteDataArchive",
 		OptionState: "NotSet",
@@ -3535,7 +3787,7 @@ func (p *Parser) parseRemoteDataArchiveOption() (*ast.RemoteDataArchiveDatabaseO
 		p.nextToken() // consume )
 	}
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 // parseChangeTrackingOption parses CHANGE_TRACKING option
@@ -3544,6 +3796,8 @@ func (p *Parser) parseRemoteDataArchiveOption() (*ast.RemoteDataArchiveDatabaseO
 //   - CHANGE_TRACKING = OFF
 //   - CHANGE_TRACKING (options...) -- OptionState is "NotSet"
 func (p *Parser) parseChangeTrackingOption() (*ast.ChangeTrackingDatabaseOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.ChangeTrackingDatabaseOption{
 		OptionKind:  "ChangeTracking",
 		OptionState: "NotSet",
@@ -3619,7 +3873,7 @@ func (p *Parser) parseChangeTrackingOption() (*ast.ChangeTrackingDatabaseOption,
 		p.nextToken() // consume )
 	}
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 // parseQueryStoreOption parses QUERY_STORE database option
@@ -3629,6 +3883,8 @@ func (p *Parser) parseChangeTrackingOption() (*ast.ChangeTrackingDatabaseOption,
 //   - QUERY_STORE (options...)
 //   - QUERY_STORE CLEAR [ALL]
 func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.QueryStoreDatabaseOption{
 		OptionKind:  "QueryStore",
 		OptionState: "NotSet",
@@ -3648,7 +3904,7 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 		} else {
 			opt.Clear = true
 		}
-		return opt, nil
+		return spanned(p, opt, astStart), nil
 	}
 
 	// Parse options if we have (
@@ -3806,11 +4062,13 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 		}
 	}
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 // parsePartnerDatabaseOption parses PARTNER database mirroring option
 func (p *Parser) parsePartnerDatabaseOption() (*ast.PartnerDatabaseOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.PartnerDatabaseOption{
 		OptionKind: "Partner",
 	}
@@ -3824,7 +4082,7 @@ func (p *Parser) parsePartnerDatabaseOption() (*ast.PartnerDatabaseOption, error
 		}
 		opt.PartnerServer = server
 		opt.PartnerOption = "PartnerServer"
-		return opt, nil
+		return spanned(p, opt, astStart), nil
 	}
 
 	// Otherwise, parse partner action
@@ -3861,11 +4119,13 @@ func (p *Parser) parsePartnerDatabaseOption() (*ast.PartnerDatabaseOption, error
 		opt.PartnerOption = capitalizeFirst(strings.ToLower(action))
 	}
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 // parseWitnessDatabaseOption parses WITNESS database mirroring option
 func (p *Parser) parseWitnessDatabaseOption() (*ast.WitnessDatabaseOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.WitnessDatabaseOption{
 		OptionKind: "Witness",
 	}
@@ -3878,7 +4138,7 @@ func (p *Parser) parseWitnessDatabaseOption() (*ast.WitnessDatabaseOption, error
 			return nil, err
 		}
 		opt.WitnessServer = server
-		return opt, nil
+		return spanned(p, opt, astStart), nil
 	}
 
 	// Check for WITNESS OFF
@@ -3887,10 +4147,12 @@ func (p *Parser) parseWitnessDatabaseOption() (*ast.WitnessDatabaseOption, error
 		p.nextToken()
 	}
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume ADD
 	p.nextToken()
 
@@ -3916,7 +4178,7 @@ func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Sta
 			stmt.FileGroup = p.parseIdentifier()
 		}
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case "LOG":
 		p.nextToken() // consume LOG
 		if strings.ToUpper(p.curTok.Literal) == "FILE" {
@@ -3941,7 +4203,7 @@ func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Sta
 			stmt.FileGroup = p.parseIdentifier()
 		}
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case "FILEGROUP":
 		p.nextToken() // consume FILEGROUP
 		stmt := &ast.AlterDatabaseAddFileGroupStatement{
@@ -3961,14 +4223,16 @@ func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Sta
 			}
 		}
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	default:
 		p.skipToEndOfStatement()
-		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
+		return spanned(p, &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, astStart), nil
 	}
 }
 
 func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume MODIFY
 	p.nextToken()
 
@@ -3992,7 +4256,7 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 			Options:      opts,
 		}
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	switch strings.ToUpper(p.curTok.Literal) {
@@ -4010,7 +4274,7 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 			stmt.FileDeclaration = decls[0]
 		}
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case "FILEGROUP":
 		p.nextToken() // consume FILEGROUP
 		stmt := &ast.AlterDatabaseModifyFileGroupStatement{
@@ -4057,7 +4321,7 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 			stmt.Termination = p.parseAlterDatabaseTermination()
 		}
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case "NAME":
 		p.nextToken() // consume NAME
 		if p.curTok.Type == TokenEquals {
@@ -4068,14 +4332,16 @@ func (p *Parser) parseAlterDatabaseModifyStatement(dbName *ast.Identifier) (ast.
 			NewName:      p.parseIdentifier(),
 		}
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	default:
 		p.skipToEndOfStatement()
-		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
+		return spanned(p, &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, astStart), nil
 	}
 }
 
 func (p *Parser) parseAlterDatabaseRemoveStatement(dbName *ast.Identifier) (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume REMOVE
 	p.nextToken()
 
@@ -4087,7 +4353,7 @@ func (p *Parser) parseAlterDatabaseRemoveStatement(dbName *ast.Identifier) (ast.
 			FileName:     p.parseIdentifier(),
 		}
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case "FILEGROUP":
 		p.nextToken() // consume FILEGROUP
 		stmt := &ast.AlterDatabaseRemoveFileGroupStatement{
@@ -4095,14 +4361,16 @@ func (p *Parser) parseAlterDatabaseRemoveStatement(dbName *ast.Identifier) (ast.
 			FileGroupName: p.parseIdentifier(),
 		}
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	default:
 		p.skipToEndOfStatement()
-		return &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, nil
+		return spanned(p, &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, astStart), nil
 	}
 }
 
 func (p *Parser) parseAlterDatabaseRebuildLogStatement(dbName *ast.Identifier) (*ast.AlterDatabaseRebuildLogStatement, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume REBUILD
 
 	stmt := &ast.AlterDatabaseRebuildLogStatement{
@@ -4124,10 +4392,12 @@ func (p *Parser) parseAlterDatabaseRebuildLogStatement(dbName *ast.Identifier) (
 	}
 
 	p.skipToEndOfStatement()
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterDatabaseScopedCredentialStatement() (*ast.AlterCredentialStatement, error) {
+	astStart := p.curTok
+
 	// Consume CREDENTIAL
 	p.nextToken()
 
@@ -4141,7 +4411,7 @@ func (p *Parser) parseAlterDatabaseScopedCredentialStatement() (*ast.AlterCreden
 	// Check for WITH (optional for lenient parsing)
 	if p.curTok.Type != TokenWith {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	p.nextToken()
 
@@ -4180,10 +4450,12 @@ func (p *Parser) parseAlterDatabaseScopedCredentialStatement() (*ast.AlterCreden
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterDatabaseScopedConfigurationStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume CONFIGURATION
 	p.nextToken()
 
@@ -4200,17 +4472,21 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationStatement() (ast.Statement
 	// Check for CLEAR or SET
 	action := strings.ToUpper(p.curTok.Literal)
 	if action == "CLEAR" {
-		return p.parseAlterDatabaseScopedConfigurationClearStatement(secondary)
+		spanV211, spanErr211 := p.parseAlterDatabaseScopedConfigurationClearStatement(secondary)
+		return spanned(p, spanV211, astStart), spanErr211
 	} else if action == "SET" || p.curTok.Type == TokenSet {
-		return p.parseAlterDatabaseScopedConfigurationSetStatement(secondary)
+		spanV212, spanErr212 := p.parseAlterDatabaseScopedConfigurationSetStatement(secondary)
+		return spanned(p, spanV212, astStart), spanErr212
 	}
 
 	// Unknown action, skip to end
 	p.skipToEndOfStatement()
-	return &ast.AlterDatabaseScopedConfigurationClearStatement{Secondary: secondary}, nil
+	return spanned(p, &ast.AlterDatabaseScopedConfigurationClearStatement{Secondary: secondary}, astStart), nil
 }
 
 func (p *Parser) parseAlterDatabaseScopedConfigurationClearStatement(secondary bool) (ast.Statement, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume CLEAR
 
 	stmt := &ast.AlterDatabaseScopedConfigurationClearStatement{
@@ -4239,10 +4515,12 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationClearStatement(secondary b
 
 	stmt.Option = option
 	p.skipToEndOfStatement()
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary bool) (ast.Statement, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume SET
 
 	stmt := &ast.AlterDatabaseScopedConfigurationSetStatement{
@@ -4310,10 +4588,7 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 			optionValue = optionNameOriginal[1 : len(optionNameOriginal)-1]
 			optionValue = strings.ReplaceAll(optionValue, "\"\"", "\"")
 		}
-		optionKindIdent := &ast.Identifier{
-			Value:     optionValue,
-			QuoteType: optionQuoteType,
-		}
+		optionKindIdent := p.spanIdent(optionValue, optionQuoteType)
 
 		var state *ast.IdentifierOrScalarExpression
 		// Check if value is a number, string, negative number, or identifier
@@ -4340,7 +4615,7 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 	}
 
 	p.skipToEndOfStatement()
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseOnOffPrimaryState() string {
@@ -4359,15 +4634,19 @@ func (p *Parser) parseOnOffPrimaryState() string {
 }
 
 func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume SERVER
 	p.nextToken()
 
 	// Check if it's ALTER SERVER ROLE, ALTER SERVER AUDIT, or ALTER SERVER CONFIGURATION
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "ROLE":
-		return p.parseAlterServerRoleStatement()
+		spanV213, spanErr213 := p.parseAlterServerRoleStatement()
+		return spanned(p, spanV213, astStart), spanErr213
 	case "AUDIT":
-		return p.parseAlterServerAuditStatement()
+		spanV214, spanErr214 := p.parseAlterServerAuditStatement()
+		return spanned(p, spanV214, astStart), spanErr214
 	}
 
 	// Expect CONFIGURATION
@@ -4385,25 +4664,34 @@ func (p *Parser) parseAlterServerConfigurationStatement() (ast.Statement, error)
 	// Check what type of SET it is
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "SOFTNUMA":
-		return p.parseAlterServerConfigurationSetSoftNumaStatement()
+		spanV215, spanErr215 := p.parseAlterServerConfigurationSetSoftNumaStatement()
+		return spanned(p, spanV215, astStart), spanErr215
 	case "PROCESS":
-		return p.parseAlterServerConfigurationSetProcessAffinityStatement()
+		spanV216, spanErr216 := p.parseAlterServerConfigurationSetProcessAffinityStatement()
+		return spanned(p, spanV216, astStart), spanErr216
 	case "EXTERNAL":
-		return p.parseAlterServerConfigurationSetExternalAuthenticationStatement()
+		spanV217, spanErr217 := p.parseAlterServerConfigurationSetExternalAuthenticationStatement()
+		return spanned(p, spanV217, astStart), spanErr217
 	case "DIAGNOSTICS":
-		return p.parseAlterServerConfigurationSetDiagnosticsLogStatement()
+		spanV218, spanErr218 := p.parseAlterServerConfigurationSetDiagnosticsLogStatement()
+		return spanned(p, spanV218, astStart), spanErr218
 	case "FAILOVER":
-		return p.parseAlterServerConfigurationSetFailoverClusterPropertyStatement()
+		spanV219, spanErr219 := p.parseAlterServerConfigurationSetFailoverClusterPropertyStatement()
+		return spanned(p, spanV219, astStart), spanErr219
 	case "BUFFER":
-		return p.parseAlterServerConfigurationSetBufferPoolExtensionStatement()
+		spanV220, spanErr220 := p.parseAlterServerConfigurationSetBufferPoolExtensionStatement()
+		return spanned(p, spanV220, astStart), spanErr220
 	case "HADR":
-		return p.parseAlterServerConfigurationSetHadrClusterStatement()
+		spanV221, spanErr221 := p.parseAlterServerConfigurationSetHadrClusterStatement()
+		return spanned(p, spanV221, astStart), spanErr221
 	default:
 		return nil, fmt.Errorf("unexpected token after SET: %s", p.curTok.Literal)
 	}
 }
 
 func (p *Parser) parseAlterServerConfigurationSetSoftNumaStatement() (*ast.AlterServerConfigurationSetSoftNumaStatement, error) {
+	astStart := p.curTok
+
 	// Consume SOFTNUMA
 	p.nextToken()
 
@@ -4429,10 +4717,12 @@ func (p *Parser) parseAlterServerConfigurationSetSoftNumaStatement() (*ast.Alter
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterServerConfigurationSetExternalAuthenticationStatement() (*ast.AlterServerConfigurationSetExternalAuthenticationStatement, error) {
+	astStart := p.curTok
+
 	// Consume EXTERNAL
 	p.nextToken()
 
@@ -4518,10 +4808,12 @@ func (p *Parser) parseAlterServerConfigurationSetExternalAuthenticationStatement
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterServerConfigurationSetProcessAffinityStatement() (*ast.AlterServerConfigurationStatement, error) {
+	astStart := p.curTok
+
 	// Consume PROCESS
 	p.nextToken()
 
@@ -4574,7 +4866,7 @@ func (p *Parser) parseAlterServerConfigurationSetProcessAffinityStatement() (*as
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseProcessAffinityRanges() ([]*ast.ProcessAffinityRange, error) {
@@ -4613,6 +4905,8 @@ func (p *Parser) parseProcessAffinityRanges() ([]*ast.ProcessAffinityRange, erro
 }
 
 func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast.AlterServerConfigurationSetDiagnosticsLogStatement, error) {
+	astStart := p.curTok
+
 	// Consume DIAGNOSTICS
 	p.nextToken()
 
@@ -4710,10 +5004,12 @@ func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterServerConfigurationSetFailoverClusterPropertyStatement() (*ast.AlterServerConfigurationSetFailoverClusterPropertyStatement, error) {
+	astStart := p.curTok
+
 	// Consume FAILOVER
 	p.nextToken()
 
@@ -4786,10 +5082,12 @@ func (p *Parser) parseAlterServerConfigurationSetFailoverClusterPropertyStatemen
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterServerConfigurationSetBufferPoolExtensionStatement() (*ast.AlterServerConfigurationSetBufferPoolExtensionStatement, error) {
+	astStart := p.curTok
+
 	// Consume BUFFER
 	p.nextToken()
 
@@ -4876,10 +5174,12 @@ func (p *Parser) parseAlterServerConfigurationSetBufferPoolExtensionStatement() 
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterServerConfigurationSetHadrClusterStatement() (*ast.AlterServerConfigurationSetHadrClusterStatement, error) {
+	astStart := p.curTok
+
 	// Consume HADR
 	p.nextToken()
 
@@ -4924,7 +5224,7 @@ func (p *Parser) parseAlterServerConfigurationSetHadrClusterStatement() (*ast.Al
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func capitalizeFirst(s string) string {
@@ -4935,6 +5235,8 @@ func capitalizeFirst(s string) string {
 }
 
 func (p *Parser) parseAlterMessageTypeStatement() (*ast.AlterMessageTypeStatement, error) {
+	astStart := p.curTok
+
 	// Consume MESSAGE
 	p.nextToken()
 
@@ -4952,7 +5254,7 @@ func (p *Parser) parseAlterMessageTypeStatement() (*ast.AlterMessageTypeStatemen
 	// Check for VALIDATION (optional for lenient parsing)
 	if strings.ToUpper(p.curTok.Literal) != "VALIDATION" {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	p.nextToken()
 
@@ -5001,10 +5303,12 @@ func (p *Parser) parseAlterMessageTypeStatement() (*ast.AlterMessageTypeStatemen
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume TABLE
 	p.nextToken()
 
@@ -5016,40 +5320,48 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 
 	// Check what kind of ALTER TABLE statement this is
 	if p.curTok.Type == TokenDrop {
-		return p.parseAlterTableDropStatement(tableName)
+		spanV222, spanErr222 := p.parseAlterTableDropStatement(tableName)
+		return spanned(p, spanV222, astStart), spanErr222
 	}
 
 	// Check for ALTER INDEX
 	if p.curTok.Type == TokenAlter && p.peekTok.Type == TokenIndex {
-		return p.parseAlterTableAlterIndexStatement(tableName)
+		spanV223, spanErr223 := p.parseAlterTableAlterIndexStatement(tableName)
+		return spanned(p, spanV223, astStart), spanErr223
 	}
 
 	// Check for ALTER COLUMN
 	if p.curTok.Type == TokenAlter && strings.ToUpper(p.peekTok.Literal) == "COLUMN" {
-		return p.parseAlterTableAlterColumnStatement(tableName)
+		spanV224, spanErr224 := p.parseAlterTableAlterColumnStatement(tableName)
+		return spanned(p, spanV224, astStart), spanErr224
 	}
 
 	// Check for ADD
 	if strings.ToUpper(p.curTok.Literal) == "ADD" {
-		return p.parseAlterTableAddStatement(tableName)
+		spanV225, spanErr225 := p.parseAlterTableAddStatement(tableName)
+		return spanned(p, spanV225, astStart), spanErr225
 	}
 
 	// Check for ENABLE/DISABLE TRIGGER, FILETABLE_NAMESPACE, or CHANGE_TRACKING
 	if strings.ToUpper(p.curTok.Literal) == "ENABLE" || strings.ToUpper(p.curTok.Literal) == "DISABLE" {
 		// Check if it's FILETABLE_NAMESPACE
 		if strings.ToUpper(p.peekTok.Literal) == "FILETABLE_NAMESPACE" {
-			return p.parseAlterTableFileTableNamespaceStatement(tableName)
+			spanV226, spanErr226 := p.parseAlterTableFileTableNamespaceStatement(tableName)
+			return spanned(p, spanV226, astStart), spanErr226
 		}
 		// Check if it's CHANGE_TRACKING
 		if strings.ToUpper(p.peekTok.Literal) == "CHANGE_TRACKING" {
-			return p.parseAlterTableChangeTrackingStatement(tableName)
+			spanV227, spanErr227 := p.parseAlterTableChangeTrackingStatement(tableName)
+			return spanned(p, spanV227, astStart), spanErr227
 		}
-		return p.parseAlterTableTriggerModificationStatement(tableName)
+		spanV228, spanErr228 := p.parseAlterTableTriggerModificationStatement(tableName)
+		return spanned(p, spanV228, astStart), spanErr228
 	}
 
 	// Check for SWITCH
 	if strings.ToUpper(p.curTok.Literal) == "SWITCH" {
-		return p.parseAlterTableSwitchStatement(tableName)
+		spanV229, spanErr229 := p.parseAlterTableSwitchStatement(tableName)
+		return spanned(p, spanV229, astStart), spanErr229
 	}
 
 	// Check for WITH CHECK/NOCHECK ADD - this is an add with enforcement option
@@ -5067,38 +5379,45 @@ func (p *Parser) parseAlterTableStatement() (ast.Statement, error) {
 					return nil, err
 				}
 				stmt.ExistingRowsCheckEnforcement = enforcement
-				return stmt, nil
+				return spanned(p, stmt, astStart), nil
 			}
 			// It's a constraint modification statement (WITH CHECK/NOCHECK CONSTRAINT ...)
-			return p.parseAlterTableConstraintModificationStatementAfterWith(tableName, enforcement)
+			spanV230, spanErr230 := p.parseAlterTableConstraintModificationStatementAfterWith(tableName, enforcement)
+			return spanned(p, spanV230, astStart), spanErr230
 		}
 	}
 
 	// Check for CHECK/NOCHECK CONSTRAINT
 	if strings.ToUpper(p.curTok.Literal) == "CHECK" || strings.ToUpper(p.curTok.Literal) == "NOCHECK" {
-		return p.parseAlterTableConstraintModificationStatement(tableName)
+		spanV231, spanErr231 := p.parseAlterTableConstraintModificationStatement(tableName)
+		return spanned(p, spanV231, astStart), spanErr231
 	}
 
 	// Check for SET
 	if strings.ToUpper(p.curTok.Literal) == "SET" {
-		return p.parseAlterTableSetStatement(tableName)
+		spanV232, spanErr232 := p.parseAlterTableSetStatement(tableName)
+		return spanned(p, spanV232, astStart), spanErr232
 	}
 
 	// Check for REBUILD
 	if strings.ToUpper(p.curTok.Literal) == "REBUILD" {
-		return p.parseAlterTableRebuildStatement(tableName)
+		spanV233, spanErr233 := p.parseAlterTableRebuildStatement(tableName)
+		return spanned(p, spanV233, astStart), spanErr233
 	}
 
 	// Check for SPLIT RANGE / MERGE RANGE (partition operations)
 	upperLit := strings.ToUpper(p.curTok.Literal)
 	if upperLit == "SPLIT" || upperLit == "MERGE" {
-		return p.parseAlterTableAlterPartitionStatement(tableName, upperLit == "SPLIT")
+		spanV234, spanErr234 := p.parseAlterTableAlterPartitionStatement(tableName, upperLit == "SPLIT")
+		return spanned(p, spanV234, astStart), spanErr234
 	}
 
 	return nil, fmt.Errorf("unexpected token in ALTER TABLE: %s", p.curTok.Literal)
 }
 
 func (p *Parser) parseAlterTableAlterPartitionStatement(tableName *ast.SchemaObjectName, isSplit bool) (*ast.AlterTableAlterPartitionStatement, error) {
+	astStart := p.curTok
+
 	// Consume SPLIT or MERGE
 	p.nextToken()
 
@@ -5126,14 +5445,16 @@ func (p *Parser) parseAlterTableAlterPartitionStatement(tableName *ast.SchemaObj
 	}
 	p.nextToken()
 
-	return &ast.AlterTableAlterPartitionStatement{
+	return spanned(p, &ast.AlterTableAlterPartitionStatement{
 		SchemaObjectName: tableName,
 		BoundaryValue:    value,
 		IsSplit:          isSplit,
-	}, nil
+	}, astStart), nil
 }
 
 func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableDropTableElementStatement, error) {
+	astStart := p.curTok
+
 	// Consume DROP
 	p.nextToken()
 
@@ -5235,7 +5556,7 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropClusteredConstraintOptions() ([]ast.DropClusteredConstraintOption, error) {
@@ -5334,6 +5655,8 @@ func (p *Parser) parseDropClusteredConstraintOptions() ([]ast.DropClusteredConst
 }
 
 func (p *Parser) parseWaitAtLowPriorityOption() (*ast.DropClusteredConstraintWaitAtLowPriorityLockOption, error) {
+	astStart := p.curTok
+
 	// Consume WAIT_AT_LOW_PRIORITY
 	p.nextToken()
 
@@ -5422,10 +5745,12 @@ func (p *Parser) parseWaitAtLowPriorityOption() (*ast.DropClusteredConstraintWai
 	}
 	p.nextToken() // consume )
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 func (p *Parser) parseFileGroupOrPartitionScheme() (*ast.FileGroupOrPartitionScheme, error) {
+	astStart := p.curTok
+
 	fg := &ast.FileGroupOrPartitionScheme{}
 
 	// Parse filegroup/partition scheme name (can be identifier or string literal)
@@ -5454,10 +5779,12 @@ func (p *Parser) parseFileGroupOrPartitionScheme() (*ast.FileGroupOrPartitionSch
 		p.nextToken() // consume )
 	}
 
-	return fg, nil
+	return spanned(p, fg, astStart), nil
 }
 
 func (p *Parser) parseAlterTableAlterIndexStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableAlterIndexStatement, error) {
+	astStart := p.curTok
+
 	// Consume ALTER
 	p.nextToken()
 
@@ -5535,25 +5862,25 @@ func (p *Parser) parseAlterTableAlterIndexStatement(tableName *ast.SchemaObjectN
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func convertIndexOptionKind(name string) string {
 	optionMap := map[string]string{
-		"BUCKET_COUNT":                 "BucketCount",
-		"PAD_INDEX":                    "PadIndex",
-		"FILLFACTOR":                   "FillFactor",
-		"SORT_IN_TEMPDB":               "SortInTempDB",
-		"IGNORE_DUP_KEY":               "IgnoreDupKey",
-		"STATISTICS_NORECOMPUTE":       "StatisticsNoRecompute",
-		"DROP_EXISTING":                "DropExisting",
-		"ONLINE":                       "Online",
-		"ALLOW_ROW_LOCKS":              "AllowRowLocks",
-		"ALLOW_PAGE_LOCKS":             "AllowPageLocks",
-		"MAXDOP":                       "MaxDop",
-		"DATA_COMPRESSION":             "DataCompression",
-		"COMPRESS_ALL_ROW_GROUPS":      "CompressAllRowGroups",
-		"COMPRESSION_DELAY":            "CompressionDelay",
+		"BUCKET_COUNT":                "BucketCount",
+		"PAD_INDEX":                   "PadIndex",
+		"FILLFACTOR":                  "FillFactor",
+		"SORT_IN_TEMPDB":              "SortInTempDB",
+		"IGNORE_DUP_KEY":              "IgnoreDupKey",
+		"STATISTICS_NORECOMPUTE":      "StatisticsNoRecompute",
+		"DROP_EXISTING":               "DropExisting",
+		"ONLINE":                      "Online",
+		"ALLOW_ROW_LOCKS":             "AllowRowLocks",
+		"ALLOW_PAGE_LOCKS":            "AllowPageLocks",
+		"MAXDOP":                      "MaxDop",
+		"DATA_COMPRESSION":            "DataCompression",
+		"COMPRESS_ALL_ROW_GROUPS":     "CompressAllRowGroups",
+		"COMPRESSION_DELAY":           "CompressionDelay",
 		"OPTIMIZE_FOR_SEQUENTIAL_KEY": "OptimizeForSequentialKey",
 	}
 	if mapped, ok := optionMap[name]; ok {
@@ -5563,6 +5890,8 @@ func convertIndexOptionKind(name string) string {
 }
 
 func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableAlterColumnStatement, error) {
+	astStart := p.curTok
+
 	// Consume ALTER
 	p.nextToken()
 	// Consume COLUMN
@@ -5639,7 +5968,7 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	} else if upperLit == "DROP" {
 		p.nextToken() // consume DROP
 		nextLit := strings.ToUpper(p.curTok.Literal)
@@ -5680,7 +6009,7 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	// Parse data type - be lenient if no data type is provided
@@ -5689,7 +6018,7 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 	if err != nil {
 		// Lenient: return statement without data type
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	stmt.DataType = dataType
 
@@ -5828,10 +6157,12 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseColumnEncryptionSpecification() (*ast.ColumnEncryptionDefinition, error) {
+	astStart := p.curTok
+
 	// curTok should be (
 	p.nextToken() // consume (
 
@@ -5887,7 +6218,7 @@ func (p *Parser) parseColumnEncryptionSpecification() (*ast.ColumnEncryptionDefi
 		p.nextToken() // consume )
 	}
 
-	return encDef, nil
+	return spanned(p, encDef, astStart), nil
 }
 
 func (p *Parser) parseAlterColumnWithOptions() ([]ast.IndexOption, error) {
@@ -5938,6 +6269,8 @@ func (p *Parser) parseAlterColumnWithOptions() ([]ast.IndexOption, error) {
 }
 
 func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableAddTableElementStatement, error) {
+	astStart := p.curTok
+
 	// Consume ADD
 	p.nextToken()
 
@@ -5951,371 +6284,346 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 	for {
 		// Check if this is ADD CONSTRAINT
 		if strings.ToUpper(p.curTok.Literal) == "CONSTRAINT" {
-		p.nextToken() // consume CONSTRAINT
-		// Parse constraint name
-		constraintName := p.parseIdentifier()
+			p.nextToken() // consume CONSTRAINT
+			// Parse constraint name
+			constraintName := p.parseIdentifier()
 
-		// Check what type of constraint follows
-		upperLit := strings.ToUpper(p.curTok.Literal)
+			// Check what type of constraint follows
+			upperLit := strings.ToUpper(p.curTok.Literal)
 
-		switch upperLit {
-		case "PRIMARY":
-			p.nextToken() // consume PRIMARY
-			if p.curTok.Type == TokenKey {
-				p.nextToken() // consume KEY
-			}
-			constraint := &ast.UniqueConstraintDefinition{
-				ConstraintIdentifier: constraintName,
-				IsPrimaryKey:         true,
-			}
-			// Parse optional CLUSTERED/NONCLUSTERED/HASH
-			for {
-				upperOpt := strings.ToUpper(p.curTok.Literal)
-				if upperOpt == "CLUSTERED" {
-					constraint.Clustered = true
-					constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
-					p.nextToken()
-				} else if upperOpt == "NONCLUSTERED" {
-					constraint.Clustered = false
-					p.nextToken()
-					// Check for HASH suffix
-					if strings.ToUpper(p.curTok.Literal) == "HASH" {
+			switch upperLit {
+			case "PRIMARY":
+				p.nextToken() // consume PRIMARY
+				if p.curTok.Type == TokenKey {
+					p.nextToken() // consume KEY
+				}
+				constraint := &ast.UniqueConstraintDefinition{
+					ConstraintIdentifier: constraintName,
+					IsPrimaryKey:         true,
+				}
+				// Parse optional CLUSTERED/NONCLUSTERED/HASH
+				for {
+					upperOpt := strings.ToUpper(p.curTok.Literal)
+					if upperOpt == "CLUSTERED" {
+						constraint.Clustered = true
+						constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+						p.nextToken()
+					} else if upperOpt == "NONCLUSTERED" {
+						constraint.Clustered = false
+						p.nextToken()
+						// Check for HASH suffix
+						if strings.ToUpper(p.curTok.Literal) == "HASH" {
+							constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+							p.nextToken()
+						} else {
+							constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+						}
+					} else if upperOpt == "HASH" {
+						// HASH without NONCLUSTERED
 						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
 						p.nextToken()
 					} else {
-						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
-					}
-				} else if upperOpt == "HASH" {
-					// HASH without NONCLUSTERED
-					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
-					p.nextToken()
-				} else {
-					break
-				}
-			}
-		// Parse column list - only add constraint if we have a column list
-			hasColumnsPK := false
-			if p.curTok.Type == TokenLParen {
-				hasColumnsPK = true
-				p.nextToken() // consume (
-				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-					colRef := &ast.ColumnReferenceExpression{
-						ColumnType: "Regular",
-					}
-					colName := p.parseIdentifier()
-					colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
-						Identifiers: []*ast.Identifier{colName},
-						Count:       1,
-					}
-					sortOrder := ast.SortOrderNotSpecified
-					upperSort := strings.ToUpper(p.curTok.Literal)
-					if upperSort == "ASC" {
-						sortOrder = ast.SortOrderAscending
-						p.nextToken()
-					} else if upperSort == "DESC" {
-						sortOrder = ast.SortOrderDescending
-						p.nextToken()
-					}
-					constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
-						Column:    colRef,
-						SortOrder: sortOrder,
-					})
-					if p.curTok.Type == TokenComma {
-						p.nextToken()
-					} else {
 						break
 					}
 				}
-				if p.curTok.Type == TokenRParen {
-					p.nextToken()
-				}
-			}
-			// Parse WITH (index_options) or WITH option = value (no parentheses)
-			if p.curTok.Type == TokenWith {
-				p.nextToken() // consume WITH
-				hasParen := p.curTok.Type == TokenLParen
-				if hasParen {
+				// Parse column list - only add constraint if we have a column list
+				hasColumnsPK := false
+				if p.curTok.Type == TokenLParen {
+					hasColumnsPK = true
 					p.nextToken() // consume (
-				}
-				for {
-					// Check for end conditions
-					if hasParen && p.curTok.Type == TokenRParen {
-						break
-					}
-					if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
-						break
-					}
-					// Check for ON (filegroup) which means we're done with options
-					if p.curTok.Type == TokenOn {
-						break
-					}
-					// Check for keywords that start new constraints
-					upperLiteral := strings.ToUpper(p.curTok.Literal)
-					if upperLiteral == "CONSTRAINT" || upperLiteral == "PRIMARY" || upperLiteral == "UNIQUE" ||
-						upperLiteral == "FOREIGN" || upperLiteral == "CHECK" || upperLiteral == "DEFAULT" ||
-						upperLiteral == "INDEX" {
-						break
-					}
-
-					optionName := upperLiteral
-					p.nextToken()
-					if p.curTok.Type == TokenEquals {
-						p.nextToken() // consume =
-					}
-					// Check for ON/OFF state options
-					valueUpper := strings.ToUpper(p.curTok.Literal)
-					if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
-						state := "On"
-						if valueUpper == "OFF" {
-							state = "Off"
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						colRef := &ast.ColumnReferenceExpression{
+							ColumnType: "Regular",
 						}
-						p.nextToken() // consume ON/OFF
-						option := &ast.IndexStateOption{
-							OptionKind:  convertIndexOptionKind(optionName),
-							OptionState: state,
+						colName := p.parseIdentifier()
+						colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+							Identifiers: []*ast.Identifier{colName},
+							Count:       1,
 						}
-						constraint.IndexOptions = append(constraint.IndexOptions, option)
-					} else {
-						expr, _ := p.parseScalarExpression()
-						option := &ast.IndexExpressionOption{
-							OptionKind: convertIndexOptionKind(optionName),
-							Expression: expr,
+						sortOrder := ast.SortOrderNotSpecified
+						upperSort := strings.ToUpper(p.curTok.Literal)
+						if upperSort == "ASC" {
+							sortOrder = ast.SortOrderAscending
+							p.nextToken()
+						} else if upperSort == "DESC" {
+							sortOrder = ast.SortOrderDescending
+							p.nextToken()
 						}
-						constraint.IndexOptions = append(constraint.IndexOptions, option)
+						constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+							Column:    colRef,
+							SortOrder: sortOrder,
+						})
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
 					}
-					if p.curTok.Type == TokenComma {
+					if p.curTok.Type == TokenRParen {
 						p.nextToken()
-					} else {
-						break
 					}
 				}
-				if hasParen && p.curTok.Type == TokenRParen {
-					p.nextToken()
-				}
-			}
-			// Parse ON filegroup
-			if p.curTok.Type == TokenOn {
-				p.nextToken() // consume ON
-				fgIdent := p.parseIdentifier()
-				fg := &ast.FileGroupOrPartitionScheme{
-					Name: &ast.IdentifierOrValueExpression{
-						Identifier: fgIdent,
-						Value:      fgIdent.Value,
-					},
-				}
-				constraint.OnFileGroupOrPartitionScheme = fg
-			}
-			// Parse NOT ENFORCED
-			if strings.ToUpper(p.curTok.Literal) == "NOT" {
-				p.nextToken()
-				if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
-					p.nextToken()
-					f := false
-					constraint.IsEnforced = &f
-				}
-			}
-			// Only add constraint if we successfully parsed a column list
-			if hasColumnsPK {
-				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
-			}
+				// Parse WITH (index_options) or WITH option = value (no parentheses)
+				if p.curTok.Type == TokenWith {
+					p.nextToken() // consume WITH
+					hasParen := p.curTok.Type == TokenLParen
+					if hasParen {
+						p.nextToken() // consume (
+					}
+					for {
+						// Check for end conditions
+						if hasParen && p.curTok.Type == TokenRParen {
+							break
+						}
+						if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
+							break
+						}
+						// Check for ON (filegroup) which means we're done with options
+						if p.curTok.Type == TokenOn {
+							break
+						}
+						// Check for keywords that start new constraints
+						upperLiteral := strings.ToUpper(p.curTok.Literal)
+						if upperLiteral == "CONSTRAINT" || upperLiteral == "PRIMARY" || upperLiteral == "UNIQUE" ||
+							upperLiteral == "FOREIGN" || upperLiteral == "CHECK" || upperLiteral == "DEFAULT" ||
+							upperLiteral == "INDEX" {
+							break
+						}
 
-		case "UNIQUE":
-			p.nextToken() // consume UNIQUE
-			constraint := &ast.UniqueConstraintDefinition{
-				ConstraintIdentifier: constraintName,
-				IsPrimaryKey:         false,
-			}
-			// Parse optional CLUSTERED/NONCLUSTERED/HASH
-			for {
-				upperOpt := strings.ToUpper(p.curTok.Literal)
-				if upperOpt == "CLUSTERED" {
-					constraint.Clustered = true
-					constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+						optionName := upperLiteral
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						// Check for ON/OFF state options
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
+							state := "On"
+							if valueUpper == "OFF" {
+								state = "Off"
+							}
+							p.nextToken() // consume ON/OFF
+							option := &ast.IndexStateOption{
+								OptionKind:  convertIndexOptionKind(optionName),
+								OptionState: state,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
+						} else {
+							expr, _ := p.parseScalarExpression()
+							option := &ast.IndexExpressionOption{
+								OptionKind: convertIndexOptionKind(optionName),
+								Expression: expr,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
+						}
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if hasParen && p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
+				}
+				// Parse ON filegroup
+				if p.curTok.Type == TokenOn {
+					p.nextToken() // consume ON
+					fgIdent := p.parseIdentifier()
+					fg := &ast.FileGroupOrPartitionScheme{
+						Name: &ast.IdentifierOrValueExpression{
+							Identifier: fgIdent,
+							Value:      fgIdent.Value,
+						},
+					}
+					constraint.OnFileGroupOrPartitionScheme = fg
+				}
+				// Parse NOT ENFORCED
+				if strings.ToUpper(p.curTok.Literal) == "NOT" {
 					p.nextToken()
-				} else if upperOpt == "NONCLUSTERED" {
-					constraint.Clustered = false
-					p.nextToken()
-					// Check for HASH suffix
-					if strings.ToUpper(p.curTok.Literal) == "HASH" {
+					if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
+						p.nextToken()
+						f := false
+						constraint.IsEnforced = &f
+					}
+				}
+				// Only add constraint if we successfully parsed a column list
+				if hasColumnsPK {
+					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+				}
+
+			case "UNIQUE":
+				p.nextToken() // consume UNIQUE
+				constraint := &ast.UniqueConstraintDefinition{
+					ConstraintIdentifier: constraintName,
+					IsPrimaryKey:         false,
+				}
+				// Parse optional CLUSTERED/NONCLUSTERED/HASH
+				for {
+					upperOpt := strings.ToUpper(p.curTok.Literal)
+					if upperOpt == "CLUSTERED" {
+						constraint.Clustered = true
+						constraint.IndexType = &ast.IndexType{IndexTypeKind: "Clustered"}
+						p.nextToken()
+					} else if upperOpt == "NONCLUSTERED" {
+						constraint.Clustered = false
+						p.nextToken()
+						// Check for HASH suffix
+						if strings.ToUpper(p.curTok.Literal) == "HASH" {
+							constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+							p.nextToken()
+						} else {
+							constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
+						}
+					} else if upperOpt == "HASH" {
+						// HASH without NONCLUSTERED
 						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
 						p.nextToken()
 					} else {
-						constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClustered"}
-					}
-				} else if upperOpt == "HASH" {
-					// HASH without NONCLUSTERED
-					constraint.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
-					p.nextToken()
-				} else {
-					break
-				}
-			}
-			// Parse column list - only add constraint if we have a column list
-			hasColumnsUQ := false
-			if p.curTok.Type == TokenLParen {
-				hasColumnsUQ = true
-				p.nextToken() // consume (
-				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-					colRef := &ast.ColumnReferenceExpression{
-						ColumnType: "Regular",
-					}
-					colName := p.parseIdentifier()
-					colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
-						Identifiers: []*ast.Identifier{colName},
-						Count:       1,
-					}
-					sortOrder := ast.SortOrderNotSpecified
-					upperSort := strings.ToUpper(p.curTok.Literal)
-					if upperSort == "ASC" {
-						sortOrder = ast.SortOrderAscending
-						p.nextToken()
-					} else if upperSort == "DESC" {
-						sortOrder = ast.SortOrderDescending
-						p.nextToken()
-					}
-					constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
-						Column:    colRef,
-						SortOrder: sortOrder,
-					})
-					if p.curTok.Type == TokenComma {
-						p.nextToken()
-					} else {
 						break
 					}
 				}
-				if p.curTok.Type == TokenRParen {
-					p.nextToken()
-				}
-			}
-			// Parse WITH (index_options) or WITH option = value (no parentheses)
-			if p.curTok.Type == TokenWith {
-				p.nextToken() // consume WITH
-				hasParen := p.curTok.Type == TokenLParen
-				if hasParen {
+				// Parse column list - only add constraint if we have a column list
+				hasColumnsUQ := false
+				if p.curTok.Type == TokenLParen {
+					hasColumnsUQ = true
 					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						colRef := &ast.ColumnReferenceExpression{
+							ColumnType: "Regular",
+						}
+						colName := p.parseIdentifier()
+						colRef.MultiPartIdentifier = &ast.MultiPartIdentifier{
+							Identifiers: []*ast.Identifier{colName},
+							Count:       1,
+						}
+						sortOrder := ast.SortOrderNotSpecified
+						upperSort := strings.ToUpper(p.curTok.Literal)
+						if upperSort == "ASC" {
+							sortOrder = ast.SortOrderAscending
+							p.nextToken()
+						} else if upperSort == "DESC" {
+							sortOrder = ast.SortOrderDescending
+							p.nextToken()
+						}
+						constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+							Column:    colRef,
+							SortOrder: sortOrder,
+						})
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
 				}
-				for {
-					// Check for end conditions
+				// Parse WITH (index_options) or WITH option = value (no parentheses)
+				if p.curTok.Type == TokenWith {
+					p.nextToken() // consume WITH
+					hasParen := p.curTok.Type == TokenLParen
+					if hasParen {
+						p.nextToken() // consume (
+					}
+					for {
+						// Check for end conditions
+						if hasParen && p.curTok.Type == TokenRParen {
+							break
+						}
+						if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
+							break
+						}
+						// Check for ON (filegroup) which means we're done with options
+						if p.curTok.Type == TokenOn {
+							break
+						}
+						// Check for keywords that start new constraints
+						upperLiteral := strings.ToUpper(p.curTok.Literal)
+						if upperLiteral == "CONSTRAINT" || upperLiteral == "PRIMARY" || upperLiteral == "UNIQUE" ||
+							upperLiteral == "FOREIGN" || upperLiteral == "CHECK" || upperLiteral == "DEFAULT" ||
+							upperLiteral == "INDEX" {
+							break
+						}
+
+						optionName := upperLiteral
+						p.nextToken()
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+						// Check for ON/OFF state options
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
+							state := "On"
+							if valueUpper == "OFF" {
+								state = "Off"
+							}
+							p.nextToken() // consume ON/OFF
+							option := &ast.IndexStateOption{
+								OptionKind:  convertIndexOptionKind(optionName),
+								OptionState: state,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
+						} else {
+							expr, _ := p.parseScalarExpression()
+							option := &ast.IndexExpressionOption{
+								OptionKind: convertIndexOptionKind(optionName),
+								Expression: expr,
+							}
+							constraint.IndexOptions = append(constraint.IndexOptions, option)
+						}
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
 					if hasParen && p.curTok.Type == TokenRParen {
-						break
-					}
-					if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon {
-						break
-					}
-					// Check for ON (filegroup) which means we're done with options
-					if p.curTok.Type == TokenOn {
-						break
-					}
-					// Check for keywords that start new constraints
-					upperLiteral := strings.ToUpper(p.curTok.Literal)
-					if upperLiteral == "CONSTRAINT" || upperLiteral == "PRIMARY" || upperLiteral == "UNIQUE" ||
-						upperLiteral == "FOREIGN" || upperLiteral == "CHECK" || upperLiteral == "DEFAULT" ||
-						upperLiteral == "INDEX" {
-						break
-					}
-
-					optionName := upperLiteral
-					p.nextToken()
-					if p.curTok.Type == TokenEquals {
-						p.nextToken() // consume =
-					}
-					// Check for ON/OFF state options
-					valueUpper := strings.ToUpper(p.curTok.Literal)
-					if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
-						state := "On"
-						if valueUpper == "OFF" {
-							state = "Off"
-						}
-						p.nextToken() // consume ON/OFF
-						option := &ast.IndexStateOption{
-							OptionKind:  convertIndexOptionKind(optionName),
-							OptionState: state,
-						}
-						constraint.IndexOptions = append(constraint.IndexOptions, option)
-					} else {
-						expr, _ := p.parseScalarExpression()
-						option := &ast.IndexExpressionOption{
-							OptionKind: convertIndexOptionKind(optionName),
-							Expression: expr,
-						}
-						constraint.IndexOptions = append(constraint.IndexOptions, option)
-					}
-					if p.curTok.Type == TokenComma {
 						p.nextToken()
-					} else {
-						break
 					}
 				}
-				if hasParen && p.curTok.Type == TokenRParen {
+				// Parse ON filegroup
+				if p.curTok.Type == TokenOn {
+					p.nextToken() // consume ON
+					fgIdent := p.parseIdentifier()
+					fg := &ast.FileGroupOrPartitionScheme{
+						Name: &ast.IdentifierOrValueExpression{
+							Identifier: fgIdent,
+							Value:      fgIdent.Value,
+						},
+					}
+					constraint.OnFileGroupOrPartitionScheme = fg
+				}
+				// Parse NOT ENFORCED
+				if strings.ToUpper(p.curTok.Literal) == "NOT" {
 					p.nextToken()
-				}
-			}
-			// Parse ON filegroup
-			if p.curTok.Type == TokenOn {
-				p.nextToken() // consume ON
-				fgIdent := p.parseIdentifier()
-				fg := &ast.FileGroupOrPartitionScheme{
-					Name: &ast.IdentifierOrValueExpression{
-						Identifier: fgIdent,
-						Value:      fgIdent.Value,
-					},
-				}
-				constraint.OnFileGroupOrPartitionScheme = fg
-			}
-			// Parse NOT ENFORCED
-			if strings.ToUpper(p.curTok.Literal) == "NOT" {
-				p.nextToken()
-				if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
-					p.nextToken()
-					f := false
-					constraint.IsEnforced = &f
-				}
-			}
-			// Only add constraint if we successfully parsed a column list
-			if hasColumnsUQ {
-				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
-			}
-
-		case "FOREIGN":
-			p.nextToken() // consume FOREIGN
-			if p.curTok.Type == TokenKey {
-				p.nextToken() // consume KEY
-			}
-			constraint := &ast.ForeignKeyConstraintDefinition{
-				ConstraintIdentifier: constraintName,
-			}
-			// Parse optional column list
-			hasReferences := false
-			if p.curTok.Type == TokenLParen {
-				p.nextToken() // consume (
-				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-					ident := p.parseIdentifier()
-					constraint.Columns = append(constraint.Columns, ident)
-					if p.curTok.Type == TokenComma {
+					if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
 						p.nextToken()
-					} else {
-						break
+						f := false
+						constraint.IsEnforced = &f
 					}
 				}
-				if p.curTok.Type == TokenRParen {
-					p.nextToken() // consume )
+				// Only add constraint if we successfully parsed a column list
+				if hasColumnsUQ {
+					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 				}
-			}
-			// Parse REFERENCES
-			if strings.ToUpper(p.curTok.Literal) == "REFERENCES" {
-				hasReferences = true
-				p.nextToken()
-				refName, err := p.parseSchemaObjectName()
-				if err != nil {
-					return nil, err
+
+			case "FOREIGN":
+				p.nextToken() // consume FOREIGN
+				if p.curTok.Type == TokenKey {
+					p.nextToken() // consume KEY
 				}
-				constraint.ReferenceTableName = refName
-				// Parse referenced column list
+				constraint := &ast.ForeignKeyConstraintDefinition{
+					ConstraintIdentifier: constraintName,
+				}
+				// Parse optional column list
+				hasReferences := false
 				if p.curTok.Type == TokenLParen {
 					p.nextToken() // consume (
 					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 						ident := p.parseIdentifier()
-						constraint.ReferencedColumns = append(constraint.ReferencedColumns, ident)
+						constraint.Columns = append(constraint.Columns, ident)
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
 						} else {
@@ -6326,304 +6634,271 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 						p.nextToken() // consume )
 					}
 				}
-			}
-			// Parse ON DELETE/ON UPDATE actions
-			for p.curTok.Type == TokenOn {
-				p.nextToken() // consume ON
-				actionType := strings.ToUpper(p.curTok.Literal)
-				if actionType == "DELETE" || actionType == "UPDATE" {
-					p.nextToken() // consume DELETE/UPDATE
-					action := ""
-					upperAction := strings.ToUpper(p.curTok.Literal)
-					if upperAction == "CASCADE" {
-						action = "Cascade"
-						p.nextToken()
-					} else if upperAction == "SET" {
-						p.nextToken()
-						if strings.ToUpper(p.curTok.Literal) == "NULL" {
-							action = "SetNull"
-							p.nextToken()
-						} else if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-							action = "SetDefault"
-							p.nextToken()
-						}
-					} else if upperAction == "NO" {
-						p.nextToken()
-						if strings.ToUpper(p.curTok.Literal) == "ACTION" {
-							action = "NoAction"
-							p.nextToken()
-						}
-					}
-					if actionType == "DELETE" {
-						constraint.DeleteAction = action
-					} else {
-						constraint.UpdateAction = action
-					}
-				} else {
-					break
-				}
-			}
-			// Parse NOT FOR REPLICATION
-			if strings.ToUpper(p.curTok.Literal) == "NOT" &&
-				strings.ToUpper(p.peekTok.Literal) == "FOR" {
-				p.nextToken() // consume NOT
-				p.nextToken() // consume FOR
-				if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
-					constraint.NotForReplication = true
+				// Parse REFERENCES
+				if strings.ToUpper(p.curTok.Literal) == "REFERENCES" {
+					hasReferences = true
 					p.nextToken()
-				}
-			}
-			// Parse NOT ENFORCED
-			if strings.ToUpper(p.curTok.Literal) == "NOT" {
-				p.nextToken()
-				if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
-					p.nextToken()
-					f := false
-					constraint.IsEnforced = &f
-				}
-			}
-			// Only add constraint if we have references (columns are optional)
-			if hasReferences {
-				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
-			}
-
-		case "CONNECTION":
-			// Parse CONNECTION (node1 TO node2, ...)
-			p.nextToken() // consume CONNECTION
-			constraint := &ast.GraphConnectionConstraintDefinition{
-				ConstraintIdentifier: constraintName,
-			}
-			if p.curTok.Type == TokenLParen {
-				p.nextToken() // consume (
-				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-					conn := &ast.GraphConnectionBetweenNodes{}
-					// Parse FromNode
-					fromNode, err := p.parseSchemaObjectName()
+					refName, err := p.parseSchemaObjectName()
 					if err != nil {
 						return nil, err
 					}
-					conn.FromNode = fromNode
-					// Expect TO
-					if strings.ToUpper(p.curTok.Literal) == "TO" {
-						p.nextToken() // consume TO
-					}
-					// Parse ToNode
-					toNode, err := p.parseSchemaObjectName()
-					if err != nil {
-						return nil, err
-					}
-					conn.ToNode = toNode
-					constraint.FromNodeToNodeList = append(constraint.FromNodeToNodeList, conn)
-					if p.curTok.Type == TokenComma {
-						p.nextToken()
-					} else {
-						break
-					}
-				}
-				if p.curTok.Type == TokenRParen {
-					p.nextToken() // consume )
-				}
-			}
-			// Check for ON DELETE CASCADE
-			if p.curTok.Type == TokenOn && strings.ToUpper(p.peekTok.Literal) == "DELETE" {
-				p.nextToken() // consume ON
-				p.nextToken() // consume DELETE
-				if strings.ToUpper(p.curTok.Literal) == "CASCADE" {
-					constraint.DeleteAction = "Cascade"
-					p.nextToken() // consume CASCADE
-				} else if strings.ToUpper(p.curTok.Literal) == "NO" {
-					p.nextToken() // consume NO
-					if strings.ToUpper(p.curTok.Literal) == "ACTION" {
-						constraint.DeleteAction = "NoAction"
-						p.nextToken() // consume ACTION
-					}
-				}
-			}
-			stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
-
-		case "DEFAULT":
-			// CONSTRAINT name DEFAULT value FOR column [WITH VALUES]
-			p.nextToken() // consume DEFAULT
-			constraint := &ast.DefaultConstraintDefinition{
-				ConstraintIdentifier: constraintName,
-			}
-			expr, err := p.parseScalarExpression()
-			if err != nil {
-				// Invalid/incomplete DEFAULT constraint - skip it
-				break
-			}
-			constraint.Expression = expr
-			// Check for FOR column
-			if strings.ToUpper(p.curTok.Literal) == "FOR" {
-				p.nextToken() // consume FOR
-				constraint.Column = p.parseIdentifier()
-			}
-			// Check for WITH VALUES
-			if p.curTok.Type == TokenWith && strings.ToUpper(p.peekTok.Literal) == "VALUES" {
-				p.nextToken() // consume WITH
-				p.nextToken() // consume VALUES
-				constraint.WithValues = true
-			}
-			stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
-
-		case "CHECK":
-			// CONSTRAINT name CHECK (condition)
-			p.nextToken() // consume CHECK
-			if p.curTok.Type == TokenLParen {
-				p.nextToken() // consume (
-				expr, err := p.parseBooleanExpression()
-				if err != nil {
-					return nil, err
-				}
-				if p.curTok.Type == TokenRParen {
-					p.nextToken()
-				}
-				constraint := &ast.CheckConstraintDefinition{
-					ConstraintIdentifier: constraintName,
-					CheckCondition:       expr,
-				}
-				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
-			}
-
-		default:
-			// Unknown constraint type - skip to end of statement
-			p.skipToEndOfStatement()
-		}
-		// Continue to check for comma (don't return here - allow multiple constraints)
-	} else if p.curTok.Type == TokenIndex {
-		// ADD INDEX
-		p.nextToken() // consume INDEX
-
-		indexDef := &ast.IndexDefinition{}
-
-		// Parse index name
-		indexDef.Name = p.parseIdentifier()
-
-		// Parse optional UNIQUE, CLUSTERED, NONCLUSTERED, HASH keywords
-		var indexTypeKind string
-		for {
-			switch strings.ToUpper(p.curTok.Literal) {
-			case "UNIQUE":
-				indexDef.Unique = true
-				p.nextToken()
-				continue
-			case "CLUSTERED":
-				indexTypeKind = "Clustered"
-				p.nextToken()
-				continue
-			case "NONCLUSTERED":
-				// Check for HASH suffix
-				p.nextToken()
-				if strings.ToUpper(p.curTok.Literal) == "HASH" {
-					indexTypeKind = "NonClusteredHash"
-					p.nextToken()
-				} else {
-					indexTypeKind = "NonClustered"
-				}
-				continue
-			case "HASH":
-				if indexTypeKind == "" {
-					indexTypeKind = "NonClusteredHash"
-				}
-				p.nextToken()
-				continue
-			}
-			break
-		}
-
-		if indexTypeKind != "" {
-			indexDef.IndexType = &ast.IndexType{
-				IndexTypeKind: indexTypeKind,
-			}
-		}
-
-		// Parse column list (c1, c2, ...)
-		if p.curTok.Type == TokenLParen {
-			p.nextToken() // consume (
-
-			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-				colRef := &ast.ColumnReferenceExpression{
-					ColumnType: "Regular",
-					MultiPartIdentifier: &ast.MultiPartIdentifier{
-						Identifiers: []*ast.Identifier{p.parseIdentifier()},
-					},
-				}
-				colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
-
-				col := &ast.ColumnWithSortOrder{
-					Column:    colRef,
-					SortOrder: ast.SortOrderNotSpecified,
-				}
-
-				// Check for ASC/DESC
-				switch strings.ToUpper(p.curTok.Literal) {
-				case "ASC":
-					col.SortOrder = ast.SortOrderAscending
-					p.nextToken()
-				case "DESC":
-					col.SortOrder = ast.SortOrderDescending
-					p.nextToken()
-				}
-
-				indexDef.Columns = append(indexDef.Columns, col)
-
-				if p.curTok.Type == TokenComma {
-					p.nextToken()
-				} else {
-					break
-				}
-			}
-
-			if p.curTok.Type == TokenRParen {
-				p.nextToken() // consume )
-			}
-		}
-
-		// Parse optional WITH clause
-		if p.curTok.Type == TokenWith {
-			p.nextToken() // consume WITH
-
-			if p.curTok.Type == TokenLParen {
-				p.nextToken() // consume (
-
-				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
-					// Parse option name
-					optionName := strings.ToUpper(p.curTok.Literal)
-					p.nextToken()
-
-					if p.curTok.Type == TokenEquals {
-						p.nextToken() // consume =
-					}
-
-					// Check for ON/OFF state options
-					valueUpper := strings.ToUpper(p.curTok.Literal)
-					if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
-						state := "On"
-						if valueUpper == "OFF" {
-							state = "Off"
-						}
-						p.nextToken() // consume ON/OFF
-						option := &ast.IndexStateOption{
-							OptionKind:  convertIndexOptionKind(optionName),
-							OptionState: state,
-						}
-						indexDef.IndexOptions = append(indexDef.IndexOptions, option)
-					} else {
-						// Parse expression option value
-						expr, err := p.parseScalarExpression()
-						if err != nil {
-							// Skip on error
+					constraint.ReferenceTableName = refName
+					// Parse referenced column list
+					if p.curTok.Type == TokenLParen {
+						p.nextToken() // consume (
+						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							ident := p.parseIdentifier()
+							constraint.ReferencedColumns = append(constraint.ReferencedColumns, ident)
 							if p.curTok.Type == TokenComma {
 								p.nextToken()
+							} else {
+								break
 							}
-							continue
 						}
-						option := &ast.IndexExpressionOption{
-							OptionKind: convertIndexOptionKind(optionName),
-							Expression: expr,
+						if p.curTok.Type == TokenRParen {
+							p.nextToken() // consume )
 						}
-						indexDef.IndexOptions = append(indexDef.IndexOptions, option)
 					}
+				}
+				// Parse ON DELETE/ON UPDATE actions
+				for p.curTok.Type == TokenOn {
+					p.nextToken() // consume ON
+					actionType := strings.ToUpper(p.curTok.Literal)
+					if actionType == "DELETE" || actionType == "UPDATE" {
+						p.nextToken() // consume DELETE/UPDATE
+						action := ""
+						upperAction := strings.ToUpper(p.curTok.Literal)
+						if upperAction == "CASCADE" {
+							action = "Cascade"
+							p.nextToken()
+						} else if upperAction == "SET" {
+							p.nextToken()
+							if strings.ToUpper(p.curTok.Literal) == "NULL" {
+								action = "SetNull"
+								p.nextToken()
+							} else if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
+								action = "SetDefault"
+								p.nextToken()
+							}
+						} else if upperAction == "NO" {
+							p.nextToken()
+							if strings.ToUpper(p.curTok.Literal) == "ACTION" {
+								action = "NoAction"
+								p.nextToken()
+							}
+						}
+						if actionType == "DELETE" {
+							constraint.DeleteAction = action
+						} else {
+							constraint.UpdateAction = action
+						}
+					} else {
+						break
+					}
+				}
+				// Parse NOT FOR REPLICATION
+				if strings.ToUpper(p.curTok.Literal) == "NOT" &&
+					strings.ToUpper(p.peekTok.Literal) == "FOR" {
+					p.nextToken() // consume NOT
+					p.nextToken() // consume FOR
+					if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+						constraint.NotForReplication = true
+						p.nextToken()
+					}
+				}
+				// Parse NOT ENFORCED
+				if strings.ToUpper(p.curTok.Literal) == "NOT" {
+					p.nextToken()
+					if strings.ToUpper(p.curTok.Literal) == "ENFORCED" {
+						p.nextToken()
+						f := false
+						constraint.IsEnforced = &f
+					}
+				}
+				// Only add constraint if we have references (columns are optional)
+				if hasReferences {
+					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+				}
+
+			case "CONNECTION":
+				// Parse CONNECTION (node1 TO node2, ...)
+				p.nextToken() // consume CONNECTION
+				constraint := &ast.GraphConnectionConstraintDefinition{
+					ConstraintIdentifier: constraintName,
+				}
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						conn := &ast.GraphConnectionBetweenNodes{}
+						// Parse FromNode
+						fromNode, err := p.parseSchemaObjectName()
+						if err != nil {
+							return nil, err
+						}
+						conn.FromNode = fromNode
+						// Expect TO
+						if strings.ToUpper(p.curTok.Literal) == "TO" {
+							p.nextToken() // consume TO
+						}
+						// Parse ToNode
+						toNode, err := p.parseSchemaObjectName()
+						if err != nil {
+							return nil, err
+						}
+						conn.ToNode = toNode
+						constraint.FromNodeToNodeList = append(constraint.FromNodeToNodeList, conn)
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+				// Check for ON DELETE CASCADE
+				if p.curTok.Type == TokenOn && strings.ToUpper(p.peekTok.Literal) == "DELETE" {
+					p.nextToken() // consume ON
+					p.nextToken() // consume DELETE
+					if strings.ToUpper(p.curTok.Literal) == "CASCADE" {
+						constraint.DeleteAction = "Cascade"
+						p.nextToken() // consume CASCADE
+					} else if strings.ToUpper(p.curTok.Literal) == "NO" {
+						p.nextToken() // consume NO
+						if strings.ToUpper(p.curTok.Literal) == "ACTION" {
+							constraint.DeleteAction = "NoAction"
+							p.nextToken() // consume ACTION
+						}
+					}
+				}
+				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+
+			case "DEFAULT":
+				// CONSTRAINT name DEFAULT value FOR column [WITH VALUES]
+				p.nextToken() // consume DEFAULT
+				constraint := &ast.DefaultConstraintDefinition{
+					ConstraintIdentifier: constraintName,
+				}
+				expr, err := p.parseScalarExpression()
+				if err != nil {
+					// Invalid/incomplete DEFAULT constraint - skip it
+					break
+				}
+				constraint.Expression = expr
+				// Check for FOR column
+				if strings.ToUpper(p.curTok.Literal) == "FOR" {
+					p.nextToken() // consume FOR
+					constraint.Column = p.parseIdentifier()
+				}
+				// Check for WITH VALUES
+				if p.curTok.Type == TokenWith && strings.ToUpper(p.peekTok.Literal) == "VALUES" {
+					p.nextToken() // consume WITH
+					p.nextToken() // consume VALUES
+					constraint.WithValues = true
+				}
+				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+
+			case "CHECK":
+				// CONSTRAINT name CHECK (condition)
+				p.nextToken() // consume CHECK
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+					expr, err := p.parseBooleanExpression()
+					if err != nil {
+						return nil, err
+					}
+					if p.curTok.Type == TokenRParen {
+						p.nextToken()
+					}
+					constraint := &ast.CheckConstraintDefinition{
+						ConstraintIdentifier: constraintName,
+						CheckCondition:       expr,
+					}
+					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
+				}
+
+			default:
+				// Unknown constraint type - skip to end of statement
+				p.skipToEndOfStatement()
+			}
+			// Continue to check for comma (don't return here - allow multiple constraints)
+		} else if p.curTok.Type == TokenIndex {
+			// ADD INDEX
+			p.nextToken() // consume INDEX
+
+			indexDef := &ast.IndexDefinition{}
+
+			// Parse index name
+			indexDef.Name = p.parseIdentifier()
+
+			// Parse optional UNIQUE, CLUSTERED, NONCLUSTERED, HASH keywords
+			var indexTypeKind string
+			for {
+				switch strings.ToUpper(p.curTok.Literal) {
+				case "UNIQUE":
+					indexDef.Unique = true
+					p.nextToken()
+					continue
+				case "CLUSTERED":
+					indexTypeKind = "Clustered"
+					p.nextToken()
+					continue
+				case "NONCLUSTERED":
+					// Check for HASH suffix
+					p.nextToken()
+					if strings.ToUpper(p.curTok.Literal) == "HASH" {
+						indexTypeKind = "NonClusteredHash"
+						p.nextToken()
+					} else {
+						indexTypeKind = "NonClustered"
+					}
+					continue
+				case "HASH":
+					if indexTypeKind == "" {
+						indexTypeKind = "NonClusteredHash"
+					}
+					p.nextToken()
+					continue
+				}
+				break
+			}
+
+			if indexTypeKind != "" {
+				indexDef.IndexType = &ast.IndexType{
+					IndexTypeKind: indexTypeKind,
+				}
+			}
+
+			// Parse column list (c1, c2, ...)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
+
+				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colRef := &ast.ColumnReferenceExpression{
+						ColumnType: "Regular",
+						MultiPartIdentifier: &ast.MultiPartIdentifier{
+							Identifiers: []*ast.Identifier{p.parseIdentifier()},
+						},
+					}
+					colRef.MultiPartIdentifier.Count = len(colRef.MultiPartIdentifier.Identifiers)
+
+					col := &ast.ColumnWithSortOrder{
+						Column:    colRef,
+						SortOrder: ast.SortOrderNotSpecified,
+					}
+
+					// Check for ASC/DESC
+					switch strings.ToUpper(p.curTok.Literal) {
+					case "ASC":
+						col.SortOrder = ast.SortOrderAscending
+						p.nextToken()
+					case "DESC":
+						col.SortOrder = ast.SortOrderDescending
+						p.nextToken()
+					}
+
+					indexDef.Columns = append(indexDef.Columns, col)
 
 					if p.curTok.Type == TokenComma {
 						p.nextToken()
@@ -6636,9 +6911,67 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken() // consume )
 				}
 			}
-		}
 
-		stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
+			// Parse optional WITH clause
+			if p.curTok.Type == TokenWith {
+				p.nextToken() // consume WITH
+
+				if p.curTok.Type == TokenLParen {
+					p.nextToken() // consume (
+
+					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						// Parse option name
+						optionName := strings.ToUpper(p.curTok.Literal)
+						p.nextToken()
+
+						if p.curTok.Type == TokenEquals {
+							p.nextToken() // consume =
+						}
+
+						// Check for ON/OFF state options
+						valueUpper := strings.ToUpper(p.curTok.Literal)
+						if valueUpper == "ON" || valueUpper == "OFF" || p.curTok.Type == TokenOn {
+							state := "On"
+							if valueUpper == "OFF" {
+								state = "Off"
+							}
+							p.nextToken() // consume ON/OFF
+							option := &ast.IndexStateOption{
+								OptionKind:  convertIndexOptionKind(optionName),
+								OptionState: state,
+							}
+							indexDef.IndexOptions = append(indexDef.IndexOptions, option)
+						} else {
+							// Parse expression option value
+							expr, err := p.parseScalarExpression()
+							if err != nil {
+								// Skip on error
+								if p.curTok.Type == TokenComma {
+									p.nextToken()
+								}
+								continue
+							}
+							option := &ast.IndexExpressionOption{
+								OptionKind: convertIndexOptionKind(optionName),
+								Expression: expr,
+							}
+							indexDef.IndexOptions = append(indexDef.IndexOptions, option)
+						}
+
+						if p.curTok.Type == TokenComma {
+							p.nextToken()
+						} else {
+							break
+						}
+					}
+
+					if p.curTok.Type == TokenRParen {
+						p.nextToken() // consume )
+					}
+				}
+			}
+
+			stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
 		} else if strings.ToUpper(p.curTok.Literal) == "CHECK" {
 			// Table-level CHECK constraint without CONSTRAINT keyword
 			p.nextToken() // consume CHECK
@@ -6704,10 +7037,12 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterTableConstraintModificationStatementAfterWith(tableName *ast.SchemaObjectName, existingEnforcement string) (*ast.AlterTableConstraintModificationStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterTableConstraintModificationStatement{
 		SchemaObjectName:             tableName,
 		ExistingRowsCheckEnforcement: existingEnforcement,
@@ -6751,10 +7086,12 @@ func (p *Parser) parseAlterTableConstraintModificationStatementAfterWith(tableNa
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterTableTriggerModificationStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableTriggerModificationStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterTableTriggerModificationStatement{
 		SchemaObjectName: tableName,
 	}
@@ -6795,10 +7132,12 @@ func (p *Parser) parseAlterTableTriggerModificationStatement(tableName *ast.Sche
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterTableFileTableNamespaceStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableFileTableNamespaceStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterTableFileTableNamespaceStatement{
 		SchemaObjectName: tableName,
 	}
@@ -6822,10 +7161,12 @@ func (p *Parser) parseAlterTableFileTableNamespaceStatement(tableName *ast.Schem
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableSwitchStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterTableSwitchStatement{
 		SchemaObjectName: tableName,
 	}
@@ -6971,10 +7312,12 @@ func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName)
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterTableConstraintModificationStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableConstraintModificationStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterTableConstraintModificationStatement{
 		SchemaObjectName:             tableName,
 		ExistingRowsCheckEnforcement: "NotSpecified",
@@ -7030,10 +7373,12 @@ func (p *Parser) parseAlterTableConstraintModificationStatement(tableName *ast.S
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableSetStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterTableSetStatement{
 		SchemaObjectName: tableName,
 	}
@@ -7136,11 +7481,8 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 			} else {
 				value := p.curTok.Literal
 				opt.Value = &ast.IdentifierOrValueExpression{
-					Value: value,
-					Identifier: &ast.Identifier{
-						Value:     value,
-						QuoteType: "NotQuoted",
-					},
+					Value:      value,
+					Identifier: p.spanIdent(value, "NotQuoted"),
 				}
 				p.nextToken()
 			}
@@ -7174,10 +7516,12 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseSystemVersioningTableOption() (*ast.SystemVersioningTableOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.SystemVersioningTableOption{
 		OptionKind:              "LockEscalation",
 		ConsistencyCheckEnabled: "NotSet",
@@ -7248,10 +7592,12 @@ func (p *Parser) parseSystemVersioningTableOption() (*ast.SystemVersioningTableO
 		}
 	}
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 func (p *Parser) parseLedgerTableOption() (*ast.LedgerTableOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.LedgerTableOption{
 		AppendOnly:       "NotSet",
 		OptionKind:       "LockEscalation",
@@ -7348,10 +7694,12 @@ func (p *Parser) parseLedgerTableOption() (*ast.LedgerTableOption, error) {
 		}
 	}
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 func (p *Parser) parseRetentionPeriodDefinition() (*ast.RetentionPeriodDefinition, error) {
+	astStart := p.curTok
+
 	ret := &ast.RetentionPeriodDefinition{}
 
 	// Check for INFINITE
@@ -7359,7 +7707,7 @@ func (p *Parser) parseRetentionPeriodDefinition() (*ast.RetentionPeriodDefinitio
 		ret.IsInfinity = true
 		ret.Units = "Day" // Default unit for INFINITE
 		p.nextToken()
-		return ret, nil
+		return spanned(p, ret, astStart), nil
 	}
 
 	// Parse numeric duration
@@ -7401,10 +7749,12 @@ func (p *Parser) parseRetentionPeriodDefinition() (*ast.RetentionPeriodDefinitio
 	}
 	p.nextToken()
 
-	return ret, nil
+	return spanned(p, ret, astStart), nil
 }
 
 func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
+	astStart := p.curTok
+
 	// Consume ROLE
 	p.nextToken()
 
@@ -7452,7 +7802,7 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 	default:
 		// Handle incomplete statement
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	// Skip optional semicolon
@@ -7460,10 +7810,12 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterViewStatement() (*ast.AlterViewStatement, error) {
+	astStart := p.curTok
+
 	// Consume VIEW
 	p.nextToken()
 
@@ -7519,7 +7871,7 @@ func (p *Parser) parseAlterViewStatement() (*ast.AlterViewStatement, error) {
 	// Expect AS
 	if p.curTok.Type != TokenAs {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	p.nextToken()
 
@@ -7527,9 +7879,12 @@ func (p *Parser) parseAlterViewStatement() (*ast.AlterViewStatement, error) {
 	selStmt, err := p.parseSelectStatement()
 	if err != nil {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	stmt.SelectStatement = selStmt
+	// ScriptDom attributes a trailing semicolon to the enclosing statement,
+	// not to the view body SELECT.
+	p.trimTrailingSemicolon(selStmt)
 
 	// Check for WITH CHECK OPTION
 	if p.curTok.Type == TokenWith {
@@ -7543,10 +7898,12 @@ func (p *Parser) parseAlterViewStatement() (*ast.AlterViewStatement, error) {
 		}
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement, error) {
+	astStart := p.curTok
+
 	// Consume ROLE
 	p.nextToken()
 
@@ -7594,7 +7951,7 @@ func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement,
 	default:
 		// Handle incomplete statement
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	// Skip optional semicolon
@@ -7602,16 +7959,19 @@ func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement,
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterServerAuditStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// AUDIT keyword should be current token, consume it
 	p.nextToken()
 
 	// Check if this is ALTER SERVER AUDIT SPECIFICATION
 	if strings.ToUpper(p.curTok.Literal) == "SPECIFICATION" {
-		return p.parseAlterServerAuditSpecificationStatement()
+		spanV235, spanErr235 := p.parseAlterServerAuditSpecificationStatement()
+		return spanned(p, spanV235, astStart), spanErr235
 	}
 
 	stmt := &ast.AlterServerAuditStatement{}
@@ -7632,7 +7992,7 @@ func (p *Parser) parseAlterServerAuditStatement() (ast.Statement, error) {
 			if p.curTok.Type == TokenSemicolon {
 				p.nextToken()
 			}
-			return stmt, nil
+			return spanned(p, stmt, astStart), nil
 		}
 		return nil, fmt.Errorf("expected NAME after MODIFY, got %s", p.curTok.Literal)
 	}
@@ -7647,7 +8007,7 @@ func (p *Parser) parseAlterServerAuditStatement() (ast.Statement, error) {
 			if p.curTok.Type == TokenSemicolon {
 				p.nextToken()
 			}
-			return stmt, nil
+			return spanned(p, stmt, astStart), nil
 		}
 		return nil, fmt.Errorf("expected WHERE after REMOVE, got %s", p.curTok.Literal)
 	}
@@ -7700,10 +8060,12 @@ func (p *Parser) parseAlterServerAuditStatement() (ast.Statement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterRemoteServiceBindingStatement() (*ast.AlterRemoteServiceBindingStatement, error) {
+	astStart := p.curTok
+
 	// Consume REMOTE
 	p.nextToken()
 
@@ -7727,7 +8089,7 @@ func (p *Parser) parseAlterRemoteServiceBindingStatement() (*ast.AlterRemoteServ
 	// Check for WITH (optional for lenient parsing)
 	if p.curTok.Type != TokenWith {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	p.nextToken()
 
@@ -7777,10 +8139,12 @@ func (p *Parser) parseAlterRemoteServiceBindingStatement() (*ast.AlterRemoteServ
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterXmlSchemaCollectionStatement() (*ast.AlterXmlSchemaCollectionStatement, error) {
+	astStart := p.curTok
+
 	// Consume XML
 	p.nextToken()
 
@@ -7805,7 +8169,7 @@ func (p *Parser) parseAlterXmlSchemaCollectionStatement() (*ast.AlterXmlSchemaCo
 	// Check for ADD (optional for lenient parsing)
 	if strings.ToUpper(p.curTok.Literal) != "ADD" {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	p.nextToken()
 
@@ -7813,7 +8177,7 @@ func (p *Parser) parseAlterXmlSchemaCollectionStatement() (*ast.AlterXmlSchemaCo
 	expr, err := p.parseScalarExpression()
 	if err != nil {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	stmt.Expression = expr
 
@@ -7822,10 +8186,12 @@ func (p *Parser) parseAlterXmlSchemaCollectionStatement() (*ast.AlterXmlSchemaCo
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseCreateXmlSchemaCollectionStatement() (*ast.CreateXmlSchemaCollectionStatement, error) {
+	astStart := p.curTok
+
 	// Consume XML
 	p.nextToken()
 
@@ -7868,10 +8234,12 @@ func (p *Parser) parseCreateXmlSchemaCollectionStatement() (*ast.CreateXmlSchema
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseCreateSearchPropertyListStatement() (*ast.CreateSearchPropertyListStatement, error) {
+	astStart := p.curTok
+
 	// Consume SEARCH
 	p.nextToken()
 
@@ -7921,10 +8289,12 @@ func (p *Parser) parseCreateSearchPropertyListStatement() (*ast.CreateSearchProp
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterMasterKeyStatement() (*ast.AlterMasterKeyStatement, error) {
+	astStart := p.curTok
+
 	// Consume MASTER
 	p.nextToken()
 
@@ -8046,10 +8416,12 @@ func (p *Parser) parseAlterMasterKeyStatement() (*ast.AlterMasterKeyStatement, e
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterSchemaStatement() (*ast.AlterSchemaStatement, error) {
+	astStart := p.curTok
+
 	// Consume SCHEMA
 	p.nextToken()
 
@@ -8103,10 +8475,12 @@ func (p *Parser) parseAlterSchemaStatement() (*ast.AlterSchemaStatement, error) 
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterLoginStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume LOGIN
 	p.nextToken()
 
@@ -8117,16 +8491,16 @@ func (p *Parser) parseAlterLoginStatement() (ast.Statement, error) {
 	upper := strings.ToUpper(p.curTok.Literal)
 	if upper == "ENABLE" {
 		p.nextToken()
-		return &ast.AlterLoginEnableDisableStatement{
+		return spanned(p, &ast.AlterLoginEnableDisableStatement{
 			Name:     name,
 			IsEnable: true,
-		}, nil
+		}, astStart), nil
 	} else if upper == "DISABLE" {
 		p.nextToken()
-		return &ast.AlterLoginEnableDisableStatement{
+		return spanned(p, &ast.AlterLoginEnableDisableStatement{
 			Name:     name,
 			IsEnable: false,
-		}, nil
+		}, astStart), nil
 	}
 
 	// Check for ADD or DROP CREDENTIAL
@@ -8146,7 +8520,7 @@ func (p *Parser) parseAlterLoginStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	// Handle WITH options
@@ -8157,19 +8531,22 @@ func (p *Parser) parseAlterLoginStatement() (ast.Statement, error) {
 		upper := strings.ToUpper(p.curTok.Literal)
 		if upper == "PASSWORD" || upper == "NO" || upper == "NAME" || upper == "DEFAULT_DATABASE" ||
 			upper == "DEFAULT_LANGUAGE" || upper == "CHECK_POLICY" || upper == "CHECK_EXPIRATION" || upper == "CREDENTIAL" {
-			return p.parseAlterLoginOptions(name)
+			spanV236, spanErr236 := p.parseAlterLoginOptions(name)
+			return spanned(p, spanV236, astStart), spanErr236
 		}
 		// For incomplete statements like "alter login l1 with", fall back to old behavior
 		p.skipToEndOfStatement()
-		return &ast.AlterLoginAddDropCredentialStatement{Name: name, IsAdd: false}, nil
+		return spanned(p, &ast.AlterLoginAddDropCredentialStatement{Name: name, IsAdd: false}, astStart), nil
 	}
 
 	// Skip to end if we don't recognize the syntax
 	p.skipToEndOfStatement()
-	return &ast.AlterLoginAddDropCredentialStatement{Name: name, IsAdd: false}, nil
+	return spanned(p, &ast.AlterLoginAddDropCredentialStatement{Name: name, IsAdd: false}, astStart), nil
 }
 
 func (p *Parser) parseAlterLoginOptions(name *ast.Identifier) (*ast.AlterLoginOptionsStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterLoginOptionsStatement{
 		Name: name,
 	}
@@ -8327,10 +8704,12 @@ func (p *Parser) parseAlterLoginOptions(name *ast.Identifier) (*ast.AlterLoginOp
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterUserStatement() (*ast.AlterUserStatement, error) {
+	astStart := p.curTok
+
 	// Consume USER
 	p.nextToken()
 
@@ -8405,10 +8784,12 @@ func (p *Parser) parseAlterUserStatement() (*ast.AlterUserStatement, error) {
 		}
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterRouteStatement() (*ast.AlterRouteStatement, error) {
+	astStart := p.curTok
+
 	// Consume ROUTE
 	p.nextToken()
 
@@ -8428,10 +8809,12 @@ func (p *Parser) parseAlterRouteStatement() (*ast.AlterRouteStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, error) {
+	astStart := p.curTok
+
 	// Consume ASSEMBLY
 	p.nextToken()
 
@@ -8614,10 +8997,12 @@ done:
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, error) {
+	astStart := p.curTok
+
 	// Consume ENDPOINT
 	p.nextToken()
 
@@ -8844,7 +9229,7 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 					stmt.EndpointType = "NotSpecified"
 				}
 			}
-			return stmt, nil
+			return spanned(p, stmt, astStart), nil
 		}
 	}
 
@@ -8861,12 +9246,14 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 		}
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseIPv4Address parses an IPv4 address like "1.2.3.4" or "1 . 2 . 3 . 4"
 // The lexer may tokenize "1.2" as a single float token, so we need to handle that
 func (p *Parser) parseIPv4Address() *ast.IPv4 {
+	astStart := p.curTok
+
 	ipv4 := &ast.IPv4{}
 	var octets []string
 
@@ -8921,12 +9308,14 @@ func (p *Parser) parseIPv4Address() *ast.IPv4 {
 		}
 	}
 
-	return ipv4
+	return spanned(p, ipv4, astStart)
 }
 
 // parseSoapWebMethod parses a SOAP WEBMETHOD option.
 // actionUpper is "Add", "Alter", "Drop", or empty string (for CREATE ENDPOINT without action).
 func (p *Parser) parseSoapWebMethod(actionUpper string) *ast.SoapMethod {
+	astStart := p.curTok
+
 	p.nextToken() // consume WEBMETHOD
 	method := &ast.SoapMethod{
 		Format: "NotSpecified",
@@ -9016,12 +9405,14 @@ func (p *Parser) parseSoapWebMethod(actionUpper string) *ast.SoapMethod {
 		}
 	}
 
-	return method
+	return spanned(p, method, astStart)
 }
 
 // parseAuthenticationPayloadOption parses AUTHENTICATION option for service_broker/database_mirroring.
 // Syntax: AUTHENTICATION = {WINDOWS [{NTLM | KERBEROS | NEGOTIATE}] | CERTIFICATE cert_name [WINDOWS [{NTLM | KERBEROS | NEGOTIATE}]]}
 func (p *Parser) parseAuthenticationPayloadOption() *ast.AuthenticationPayloadOption {
+	astStart := p.curTok
+
 	opt := &ast.AuthenticationPayloadOption{
 		Kind: "Authentication",
 	}
@@ -9076,12 +9467,14 @@ func (p *Parser) parseAuthenticationPayloadOption() *ast.AuthenticationPayloadOp
 		}
 	}
 
-	return opt
+	return spanned(p, opt, astStart)
 }
 
 // parseEncryptionPayloadOption parses ENCRYPTION option for service_broker/database_mirroring.
 // Syntax: ENCRYPTION = {DISABLED | SUPPORTED | REQUIRED} [ALGORITHM {RC4 | AES | AES RC4 | RC4 AES}]
 func (p *Parser) parseEncryptionPayloadOption() *ast.EncryptionPayloadOption {
+	astStart := p.curTok
+
 	opt := &ast.EncryptionPayloadOption{
 		Kind:             "Encryption",
 		AlgorithmPartOne: "NotSpecified",
@@ -9127,10 +9520,12 @@ func (p *Parser) parseEncryptionPayloadOption() *ast.EncryptionPayloadOption {
 		}
 	}
 
-	return opt
+	return spanned(p, opt, astStart)
 }
 
 func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume SERVICE
 	p.nextToken()
 
@@ -9145,15 +9540,16 @@ func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {
 
 		nextKeyword := strings.ToUpper(p.curTok.Literal)
 		if nextKeyword == "REGENERATE" || nextKeyword == "FORCE" || nextKeyword == "WITH" {
-			return p.parseAlterServiceMasterKeyStatementBody()
+			spanV237, spanErr237 := p.parseAlterServiceMasterKeyStatementBody()
+			return spanned(p, spanV237, astStart), spanErr237
 		}
 
 		// Not a valid SERVICE MASTER KEY statement - treat "master" as service name
 		// KEY and following tokens will be skipped by skipToEndOfStatement
 		stmt := &ast.AlterServiceStatement{}
-		stmt.Name = &ast.Identifier{QuoteType: "NotQuoted", Value: curLit}
+		stmt.Name = p.spanIdent(curLit, "NotQuoted")
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	stmt := &ast.AlterServiceStatement{}
@@ -9207,10 +9603,12 @@ func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterCertificateStatement() (*ast.AlterCertificateStatement, error) {
+	astStart := p.curTok
+
 	// Consume CERTIFICATE
 	p.nextToken()
 
@@ -9339,10 +9737,12 @@ func (p *Parser) parseAlterCertificateStatement() (*ast.AlterCertificateStatemen
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterApplicationRoleStatement() (*ast.AlterApplicationRoleStatement, error) {
+	astStart := p.curTok
+
 	// Consume APPLICATION
 	p.nextToken()
 	// Consume ROLE
@@ -9370,10 +9770,12 @@ func (p *Parser) parseAlterApplicationRoleStatement() (*ast.AlterApplicationRole
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterAsymmetricKeyStatement() (*ast.AlterAsymmetricKeyStatement, error) {
+	astStart := p.curTok
+
 	// Consume ASYMMETRIC
 	p.nextToken()
 	// Consume KEY
@@ -9470,10 +9872,12 @@ func (p *Parser) parseAlterAsymmetricKeyStatement() (*ast.AlterAsymmetricKeyStat
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterQueueStatement() (*ast.AlterQueueStatement, error) {
+	astStart := p.curTok
+
 	// Consume QUEUE
 	p.nextToken()
 
@@ -9499,10 +9903,12 @@ func (p *Parser) parseAlterQueueStatement() (*ast.AlterQueueStatement, error) {
 	// Skip rest of statement
 	p.skipToEndOfStatement()
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterPartitionStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume PARTITION
 	p.nextToken()
 
@@ -9536,7 +9942,7 @@ func (p *Parser) parseAlterPartitionStatement() (ast.Statement, error) {
 			}
 		}
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	stmt := &ast.AlterPartitionFunctionStatement{}
@@ -9574,10 +9980,12 @@ func (p *Parser) parseAlterPartitionStatement() (ast.Statement, error) {
 		}
 	}
 	p.skipToEndOfStatement()
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume FULLTEXT
 	p.nextToken()
 
@@ -9586,7 +9994,8 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 	p.nextToken()
 
 	if keyword == "STOPLIST" {
-		return p.parseAlterFulltextStopListStatement()
+		spanV238, spanErr238 := p.parseAlterFulltextStopListStatement()
+		return spanned(p, spanV238, astStart), spanErr238
 	}
 
 	if keyword == "CATALOG" {
@@ -9634,7 +10043,7 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	stmt := &ast.AlterFulltextIndexStatement{}
@@ -9656,10 +10065,12 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterFulltextStopListStatement() (*ast.AlterFullTextStopListStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterFullTextStopListStatement{
 		Name: p.parseIdentifier(),
 	}
@@ -9699,19 +10110,21 @@ func (p *Parser) parseAlterFulltextStopListStatement() (*ast.AlterFullTextStopLi
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexActionOption {
+	astStart := p.curTok
+
 	actionLit := strings.ToUpper(p.curTok.Literal)
 
 	switch actionLit {
 	case "ENABLE":
 		p.nextToken()
-		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "Enable"}
+		return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "Enable"}, astStart)
 	case "DISABLE":
 		p.nextToken()
-		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "Disable"}
+		return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "Disable"}, astStart)
 	case "SET":
 		p.nextToken() // consume SET
 		if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING" {
@@ -9724,11 +10137,11 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 			p.nextToken()
 			switch trackingLit {
 			case "MANUAL":
-				return &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingManual"}
+				return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingManual"}, astStart)
 			case "AUTO":
-				return &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingAuto"}
+				return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingAuto"}, astStart)
 			case "OFF":
-				return &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingOff"}
+				return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingOff"}, astStart)
 			}
 		} else if strings.ToUpper(p.curTok.Literal) == "STOPLIST" {
 			// Parse SET STOPLIST OFF | SYSTEM | name [WITH NO POPULATION]
@@ -9760,7 +10173,7 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 					}
 				}
 			}
-			return action
+			return spanned(p, action, astStart)
 		} else if strings.ToUpper(p.curTok.Literal) == "SEARCH" {
 			// Parse SET SEARCH PROPERTY LIST OFF | name [WITH NO POPULATION]
 			p.nextToken() // consume SEARCH
@@ -9797,7 +10210,7 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 					}
 				}
 			}
-			return action
+			return spanned(p, action, astStart)
 		}
 		return nil
 	case "START":
@@ -9809,11 +10222,11 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 		}
 		switch popType {
 		case "FULL":
-			return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartFullPopulation"}
+			return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartFullPopulation"}, astStart)
 		case "INCREMENTAL":
-			return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartIncrementalPopulation"}
+			return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartIncrementalPopulation"}, astStart)
 		case "UPDATE":
-			return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartUpdatePopulation"}
+			return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartUpdatePopulation"}, astStart)
 		}
 		return nil
 	case "STOP":
@@ -9821,28 +10234,28 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
 			p.nextToken()
 		}
-		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "StopPopulation"}
+		return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "StopPopulation"}, astStart)
 	case "PAUSE":
 		p.nextToken() // consume PAUSE
 		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
 			p.nextToken()
 		}
-		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "PausePopulation"}
+		return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "PausePopulation"}, astStart)
 	case "RESUME":
 		p.nextToken() // consume RESUME
 		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
 			p.nextToken()
 		}
-		return &ast.SimpleAlterFullTextIndexAction{ActionKind: "ResumePopulation"}
+		return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "ResumePopulation"}, astStart)
 	case "ADD":
 		action, _ := p.parseAddAlterFullTextIndexAction()
-		return action
+		return spanned(p, action, astStart)
 	case "DROP":
 		action, _ := p.parseDropAlterFullTextIndexAction()
-		return action
+		return spanned(p, action, astStart)
 	case "ALTER":
 		action, _ := p.parseAlterColumnAlterFullTextIndexAction()
-		return action
+		return spanned(p, action, astStart)
 	}
 
 	// No action found
@@ -9850,6 +10263,8 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 }
 
 func (p *Parser) parseAlterColumnAlterFullTextIndexAction() (*ast.AlterColumnAlterFullTextIndexAction, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume ALTER
 
 	if strings.ToUpper(p.curTok.Literal) != "COLUMN" {
@@ -9890,10 +10305,12 @@ func (p *Parser) parseAlterColumnAlterFullTextIndexAction() (*ast.AlterColumnAlt
 		}
 	}
 
-	return action, nil
+	return spanned(p, action, astStart), nil
 }
 
 func (p *Parser) parseAddAlterFullTextIndexAction() (*ast.AddAlterFullTextIndexAction, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume ADD
 
 	action := &ast.AddAlterFullTextIndexAction{}
@@ -9967,10 +10384,12 @@ func (p *Parser) parseAddAlterFullTextIndexAction() (*ast.AddAlterFullTextIndexA
 		}
 	}
 
-	return action, nil
+	return spanned(p, action, astStart), nil
 }
 
 func (p *Parser) parseDropAlterFullTextIndexAction() (*ast.DropAlterFullTextIndexAction, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume DROP
 
 	action := &ast.DropAlterFullTextIndexAction{}
@@ -10006,10 +10425,12 @@ func (p *Parser) parseDropAlterFullTextIndexAction() (*ast.DropAlterFullTextInde
 		}
 	}
 
-	return action, nil
+	return spanned(p, action, astStart), nil
 }
 
 func (p *Parser) parseAlterSymmetricKeyStatement() (*ast.AlterSymmetricKeyStatement, error) {
+	astStart := p.curTok
+
 	// Consume SYMMETRIC
 	p.nextToken()
 	// Consume KEY
@@ -10110,10 +10531,12 @@ func (p *Parser) parseAlterSymmetricKeyStatement() (*ast.AlterSymmetricKeyStatem
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterCredentialStatement() (*ast.AlterCredentialStatement, error) {
+	astStart := p.curTok
+
 	// CREDENTIAL was already consumed, but it's handled differently here
 	// This gets called from the TokenIdent case
 	p.nextToken() // consume CREDENTIAL
@@ -10160,16 +10583,21 @@ func (p *Parser) parseAlterCredentialStatement() (*ast.AlterCredentialStatement,
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterServiceMasterKeyStatement() (*ast.AlterServiceMasterKeyStatement, error) {
+	astStart := p.curTok
+
 	// SERVICE_MASTER_KEY was matched as an identifier
 	p.nextToken() // consume SERVICE_MASTER_KEY
-	return p.parseAlterServiceMasterKeyStatementBody()
+	spanV239, spanErr239 := p.parseAlterServiceMasterKeyStatementBody()
+	return spanned(p, spanV239, astStart), spanErr239
 }
 
 func (p *Parser) parseAlterServiceMasterKeyStatementBody() (*ast.AlterServiceMasterKeyStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterServiceMasterKeyStatement{}
 
 	// Parse the kind: REGENERATE, FORCE REGENERATE, WITH OLD_ACCOUNT/NEW_ACCOUNT
@@ -10226,7 +10654,7 @@ func (p *Parser) parseAlterServiceMasterKeyStatementBody() (*ast.AlterServiceMas
 	// Skip to end of statement
 	p.skipToEndOfStatement()
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // skipToEndOfStatement skips tokens until end of statement (semicolon, EOF, or next statement keyword)
@@ -10258,6 +10686,8 @@ func (p *Parser) isStatementKeyword(t TokenType) bool {
 }
 
 func (p *Parser) parseAlterProcedureStatement() (*ast.AlterProcedureStatement, error) {
+	astStart := p.curTok
+
 	// Consume PROCEDURE/PROC
 	p.nextToken()
 
@@ -10359,12 +10789,15 @@ func (p *Parser) parseAlterProcedureStatement() (*ast.AlterProcedureStatement, e
 	if err != nil {
 		return nil, err
 	}
+	spanStatementList(stmts)
 	stmt.StatementList = stmts
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterExternalStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume EXTERNAL
 	p.nextToken()
 
@@ -10372,28 +10805,34 @@ func (p *Parser) parseAlterExternalStatement() (ast.Statement, error) {
 	upper := strings.ToUpper(p.curTok.Literal)
 	switch upper {
 	case "DATA":
-		return p.parseAlterExternalDataSourceStatement()
+		spanV240, spanErr240 := p.parseAlterExternalDataSourceStatement()
+		return spanned(p, spanV240, astStart), spanErr240
 	case "LANGUAGE":
-		return p.parseAlterExternalLanguageStatement()
+		spanV241, spanErr241 := p.parseAlterExternalLanguageStatement()
+		return spanned(p, spanV241, astStart), spanErr241
 	case "LIBRARY":
-		return p.parseAlterExternalLibraryStatement()
+		spanV242, spanErr242 := p.parseAlterExternalLibraryStatement()
+		return spanned(p, spanV242, astStart), spanErr242
 	case "RESOURCE":
-		return p.parseAlterExternalResourcePoolStatement()
+		spanV243, spanErr243 := p.parseAlterExternalResourcePoolStatement()
+		return spanned(p, spanV243, astStart), spanErr243
 	default:
 		// Skip to end of statement for unsupported external statements
 		p.skipToEndOfStatement()
-		return &ast.AlterExternalDataSourceStatement{}, nil
+		return spanned(p, &ast.AlterExternalDataSourceStatement{}, astStart), nil
 	}
 }
 
 func (p *Parser) parseAlterExternalDataSourceStatement() (*ast.AlterExternalDataSourceStatement, error) {
+	astStart := p.curTok
+
 	// Consume DATA
 	p.nextToken()
 
 	// Expect SOURCE
 	if strings.ToUpper(p.curTok.Literal) != "SOURCE" {
 		p.skipToEndOfStatement()
-		return &ast.AlterExternalDataSourceStatement{}, nil
+		return spanned(p, &ast.AlterExternalDataSourceStatement{}, astStart), nil
 	}
 	p.nextToken()
 
@@ -10473,10 +10912,12 @@ func (p *Parser) parseAlterExternalDataSourceStatement() (*ast.AlterExternalData
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterExternalLanguageStatement() (*ast.AlterExternalLanguageStatement, error) {
+	astStart := p.curTok
+
 	// Consume LANGUAGE
 	p.nextToken()
 
@@ -10494,7 +10935,7 @@ func (p *Parser) parseAlterExternalLanguageStatement() (*ast.AlterExternalLangua
 	// Parse operation (SET, ADD, REMOVE)
 	upperLit := strings.ToUpper(p.curTok.Literal)
 	if upperLit == "SET" || upperLit == "ADD" || upperLit == "REMOVE" {
-		stmt.Operation = p.parseIdentifier()
+		stmt.Operation = unspan(p.parseIdentifier())
 
 		if upperLit == "REMOVE" {
 			// REMOVE PLATFORM <platform>
@@ -10563,10 +11004,12 @@ func (p *Parser) parseAlterExternalLanguageStatement() (*ast.AlterExternalLangua
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibraryStatement, error) {
+	astStart := p.curTok
+
 	// Consume LIBRARY
 	p.nextToken()
 
@@ -10652,10 +11095,12 @@ func (p *Parser) parseAlterExternalLibraryStatement() (*ast.AlterExternalLibrary
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterExternalResourcePoolStatement() (*ast.AlterExternalResourcePoolStatement, error) {
+	astStart := p.curTok
+
 	// Consume RESOURCE
 	p.nextToken()
 
@@ -10800,7 +11245,7 @@ func (p *Parser) parseAlterExternalResourcePoolStatement() (*ast.AlterExternalRe
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // convertOptionKind converts a SQL option name (e.g., "OPTIMIZED_LOCKING") to its OptionKind form (e.g., "OptimizedLocking")
@@ -10839,6 +11284,8 @@ func convertOptionKind(optionName string) string {
 
 // parseAlterWorkloadGroupStatement parses ALTER WORKLOAD GROUP statement.
 func (p *Parser) parseAlterWorkloadGroupStatement() (*ast.AlterWorkloadGroupStatement, error) {
+	astStart := p.curTok
+
 	// Consume WORKLOAD
 	p.nextToken()
 
@@ -10912,11 +11359,13 @@ func (p *Parser) parseAlterWorkloadGroupStatement() (*ast.AlterWorkloadGroupStat
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseAlterSequenceStatement parses ALTER SEQUENCE statement.
 func (p *Parser) parseAlterSequenceStatement() (*ast.AlterSequenceStatement, error) {
+	astStart := p.curTok
+
 	// Consume SEQUENCE
 	p.nextToken()
 
@@ -10946,11 +11395,13 @@ func (p *Parser) parseAlterSequenceStatement() (*ast.AlterSequenceStatement, err
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseCreateSequenceStatement parses CREATE SEQUENCE statement.
 func (p *Parser) parseCreateSequenceStatement() (*ast.CreateSequenceStatement, error) {
+	astStart := p.curTok
+
 	// Consume SEQUENCE
 	p.nextToken()
 
@@ -10980,7 +11431,7 @@ func (p *Parser) parseCreateSequenceStatement() (*ast.CreateSequenceStatement, e
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseSequenceOption parses a single sequence option.
@@ -11104,27 +11555,34 @@ func (p *Parser) parseSequenceOption() (interface{}, error) {
 }
 
 func (p *Parser) parseAddStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume ADD
 	p.nextToken()
 
 	upper := strings.ToUpper(p.curTok.Literal)
 	switch upper {
 	case "SIGNATURE":
-		return p.parseAddSignatureStatement(false)
+		spanV244, spanErr244 := p.parseAddSignatureStatement(false)
+		return spanned(p, spanV244, astStart), spanErr244
 	case "COUNTER":
 		p.nextToken() // consume COUNTER
 		if strings.ToUpper(p.curTok.Literal) != "SIGNATURE" {
 			return nil, fmt.Errorf("expected SIGNATURE after COUNTER, got %s", p.curTok.Literal)
 		}
-		return p.parseAddSignatureStatement(true)
+		spanV245, spanErr245 := p.parseAddSignatureStatement(true)
+		return spanned(p, spanV245, astStart), spanErr245
 	case "SENSITIVITY":
-		return p.parseAddSensitivityClassificationStatement()
+		spanV246, spanErr246 := p.parseAddSensitivityClassificationStatement()
+		return spanned(p, spanV246, astStart), spanErr246
 	}
 
 	return nil, fmt.Errorf("unexpected token after ADD: %s", p.curTok.Literal)
 }
 
 func (p *Parser) parseAddSignatureStatement(isCounter bool) (*ast.AddSignatureStatement, error) {
+	astStart := p.curTok
+
 	// Consume SIGNATURE
 	p.nextToken()
 
@@ -11160,10 +11618,12 @@ func (p *Parser) parseAddSignatureStatement(isCounter bool) (*ast.AddSignatureSt
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropSignatureStatement(isCounter bool) (*ast.DropSignatureStatement, error) {
+	astStart := p.curTok
+
 	// Consume SIGNATURE
 	p.nextToken()
 
@@ -11199,10 +11659,12 @@ func (p *Parser) parseDropSignatureStatement(isCounter bool) (*ast.DropSignature
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAddSensitivityClassificationStatement() (*ast.AddSensitivityClassificationStatement, error) {
+	astStart := p.curTok
+
 	// Consume SENSITIVITY
 	p.nextToken()
 
@@ -11302,10 +11764,12 @@ func (p *Parser) parseAddSensitivityClassificationStatement() (*ast.AddSensitivi
 		}
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropSensitivityClassificationStatement() (*ast.DropSensitivityClassificationStatement, error) {
+	astStart := p.curTok
+
 	// Consume SENSITIVITY
 	p.nextToken()
 
@@ -11333,10 +11797,12 @@ func (p *Parser) parseDropSensitivityClassificationStatement() (*ast.DropSensiti
 		}
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseColumnReferenceForSensitivity() *ast.ColumnReferenceExpression {
+	astStart := p.curTok
+
 	colRef := &ast.ColumnReferenceExpression{
 		ColumnType: "Regular",
 	}
@@ -11358,7 +11824,7 @@ func (p *Parser) parseColumnReferenceForSensitivity() *ast.ColumnReferenceExpres
 		Identifiers: identifiers,
 	}
 
-	return colRef
+	return spanned(p, colRef, astStart)
 }
 
 func (p *Parser) parseSignatureElement() (string, *ast.SchemaObjectName) {
@@ -11412,6 +11878,8 @@ func (p *Parser) parseSignatureCryptoMechanisms() ([]*ast.CryptoMechanism, error
 }
 
 func (p *Parser) parseSignatureCryptoMechanism() (*ast.CryptoMechanism, error) {
+	astStart := p.curTok
+
 	crypto := &ast.CryptoMechanism{}
 
 	upper := strings.ToUpper(p.curTok.Literal)
@@ -11461,10 +11929,12 @@ func (p *Parser) parseSignatureCryptoMechanism() (*ast.CryptoMechanism, error) {
 		}
 	}
 
-	return crypto, nil
+	return spanned(p, crypto, astStart), nil
 }
 
 func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchPropertyListStatement, error) {
+	astStart := p.curTok
+
 	// Consume SEARCH
 	p.nextToken()
 	// Consume PROPERTY
@@ -11597,11 +12067,13 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseCreateResourcePoolStatement parses CREATE RESOURCE POOL statement
 func (p *Parser) parseCreateResourcePoolStatement() (*ast.CreateResourcePoolStatement, error) {
+	astStart := p.curTok
+
 	// We've already consumed CREATE RESOURCE
 	// Consume POOL
 	if strings.ToUpper(p.curTok.Literal) == "POOL" {
@@ -11623,11 +12095,13 @@ func (p *Parser) parseCreateResourcePoolStatement() (*ast.CreateResourcePoolStat
 		stmt.ResourcePoolParameters = params
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseAlterResourcePoolStatement parses ALTER RESOURCE POOL statement
 func (p *Parser) parseAlterResourcePoolStatement() (*ast.AlterResourcePoolStatement, error) {
+	astStart := p.curTok
+
 	// Consume POOL (we've already consumed ALTER RESOURCE)
 	p.nextToken()
 
@@ -11646,7 +12120,7 @@ func (p *Parser) parseAlterResourcePoolStatement() (*ast.AlterResourcePoolStatem
 		stmt.ResourcePoolParameters = params
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseResourcePoolParameters parses resource pool parameters within WITH (...)
@@ -11682,6 +12156,8 @@ func (p *Parser) parseResourcePoolParameters() ([]*ast.ResourcePoolParameter, er
 
 // parseResourcePoolParameter parses a single resource pool parameter
 func (p *Parser) parseResourcePoolParameter() (*ast.ResourcePoolParameter, error) {
+	astStart := p.curTok
+
 	paramName := strings.ToUpper(p.curTok.Literal)
 	p.nextToken() // consume parameter name
 
@@ -11777,11 +12253,13 @@ func (p *Parser) parseResourcePoolParameter() (*ast.ResourcePoolParameter, error
 		return nil, nil
 	}
 
-	return param, nil
+	return spanned(p, param, astStart), nil
 }
 
 // parseResourcePoolAffinitySpecification parses AFFINITY SCHEDULER/NUMANODE specification
 func (p *Parser) parseResourcePoolAffinitySpecification() (*ast.ResourcePoolAffinitySpecification, error) {
+	astStart := p.curTok
+
 	spec := &ast.ResourcePoolAffinitySpecification{}
 
 	// Parse SCHEDULER or NUMANODE
@@ -11837,10 +12315,12 @@ func (p *Parser) parseResourcePoolAffinitySpecification() (*ast.ResourcePoolAffi
 		}
 	}
 
-	return spec, nil
+	return spanned(p, spec, astStart), nil
 }
 
 func (p *Parser) parseAlterBrokerPriorityStatement() (*ast.AlterBrokerPriorityStatement, error) {
+	astStart := p.curTok
+
 	// Consume BROKER
 	p.nextToken()
 
@@ -11875,10 +12355,12 @@ func (p *Parser) parseAlterBrokerPriorityStatement() (*ast.AlterBrokerPrioritySt
 	}
 
 	p.skipToEndOfStatement()
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDropBrokerPriorityStatement() (*ast.DropBrokerPriorityStatement, error) {
+	astStart := p.curTok
+
 	// Consume BROKER
 	p.nextToken()
 
@@ -11902,10 +12384,12 @@ func (p *Parser) parseDropBrokerPriorityStatement() (*ast.DropBrokerPriorityStat
 	stmt.Name = p.parseIdentifier()
 
 	p.skipToEndOfStatement()
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableRebuildStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterTableRebuildStatement{
 		SchemaObjectName: tableName,
 	}
@@ -12129,10 +12613,12 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 		}
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterTableChangeTrackingStatement(tableName *ast.SchemaObjectName) (*ast.AlterTableChangeTrackingModificationStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.AlterTableChangeTrackingModificationStatement{
 		SchemaObjectName:    tableName,
 		TrackColumnsUpdated: "NotSet",
@@ -12179,10 +12665,12 @@ func (p *Parser) parseAlterTableChangeTrackingStatement(tableName *ast.SchemaObj
 		}
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterAvailabilityGroupStatement() (*ast.AlterAvailabilityGroupStatement, error) {
+	astStart := p.curTok
+
 	// Consume AVAILABILITY
 	p.nextToken()
 
@@ -12332,7 +12820,7 @@ func (p *Parser) parseAlterAvailabilityGroupStatement() (*ast.AlterAvailabilityG
 	}
 
 	p.skipToEndOfStatement()
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseIdentifierList parses a comma-separated list of identifiers
@@ -12544,6 +13032,8 @@ func (p *Parser) parseAvailabilityReplicasServerOnly() []*ast.AvailabilityReplic
 }
 
 func (p *Parser) parseAlterEventSessionStatement() (*ast.AlterEventSessionStatement, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume EVENT
 	if strings.ToUpper(p.curTok.Literal) != "SESSION" {
 		return nil, fmt.Errorf("expected SESSION after EVENT, got %s", p.curTok.Literal)
@@ -12665,10 +13155,12 @@ done:
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterAuthorizationStatement() (*ast.AlterAuthorizationStatement, error) {
+	astStart := p.curTok
+
 	// Consume AUTHORIZATION
 	p.nextToken()
 
@@ -12809,10 +13301,7 @@ func (p *Parser) parseAlterAuthorizationStatement() (*ast.AlterAuthorizationStat
 		multiPart := &ast.MultiPartIdentifier{}
 		for {
 			if p.curTok.Type == TokenDot {
-				multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
-					Value:     "",
-					QuoteType: "NotQuoted",
-				})
+				multiPart.Identifiers = append(multiPart.Identifiers, p.spanIdent("", "NotQuoted"))
 			} else {
 				id := p.parseIdentifier()
 				multiPart.Identifiers = append(multiPart.Identifiers, id)
@@ -12848,10 +13337,12 @@ func (p *Parser) parseAlterAuthorizationStatement() (*ast.AlterAuthorizationStat
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterColumnEncryptionKeyStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// ALTER COLUMN ENCRYPTION KEY name ADD|DROP VALUE (...)
 	// Currently on COLUMN
 	p.nextToken() // consume COLUMN
@@ -12942,5 +13433,5 @@ func (p *Parser) parseAlterColumnEncryptionKeyStatement() (ast.Statement, error)
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }

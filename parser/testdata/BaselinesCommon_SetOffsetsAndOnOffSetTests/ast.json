@@ -1,21 +1,45 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 376,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 38,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "SetRowCountStatement",
+          "StartOffset": 0,
+          "FragmentLength": 16,
+          "StartLine": 1,
+          "StartColumn": 1,
           "NumberRows": {
             "$type": "IntegerLiteral",
+            "StartOffset": 13,
+            "FragmentLength": 2,
+            "StartLine": 1,
+            "StartColumn": 14,
             "LiteralType": "Integer",
             "Value": "10"
           }
         },
         {
           "$type": "SetRowCountStatement",
+          "StartOffset": 18,
+          "FragmentLength": 20,
+          "StartLine": 3,
+          "StartColumn": 1,
           "NumberRows": {
             "$type": "VariableReference",
+            "StartOffset": 31,
+            "FragmentLength": 6,
+            "StartLine": 3,
+            "StartColumn": 14,
             "Name": "@myVar"
           }
         }
@@ -23,24 +47,44 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 44,
+      "FragmentLength": 184,
+      "StartLine": 7,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "PredicateSetStatement",
+          "StartOffset": 44,
+          "FragmentLength": 55,
+          "StartLine": 7,
+          "StartColumn": 1,
           "Options": "ConcatNullYieldsNull, CursorCloseOnCommit",
           "IsOn": true
         },
         {
           "$type": "PredicateSetStatement",
+          "StartOffset": 101,
+          "FragmentLength": 54,
+          "StartLine": 9,
+          "StartColumn": 1,
           "Options": "ArithAbort, NumericRoundAbort, AnsiDefaults",
           "IsOn": false
         },
         {
           "$type": "SetStatisticsStatement",
+          "StartOffset": 157,
+          "FragmentLength": 36,
+          "StartLine": 11,
+          "StartColumn": 1,
           "Options": "IO, Profile, Time",
           "IsOn": true
         },
         {
           "$type": "SetStatisticsStatement",
+          "StartOffset": 195,
+          "FragmentLength": 33,
+          "StartLine": 13,
+          "StartColumn": 1,
           "Options": "Profile, Time",
           "IsOn": false
         }
@@ -48,19 +92,35 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 234,
+      "FragmentLength": 142,
+      "StartLine": 17,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "SetOffsetsStatement",
+          "StartOffset": 234,
+          "FragmentLength": 89,
+          "StartLine": 17,
+          "StartColumn": 1,
           "Options": "Select, From, Order, Compute, Table, Procedure, Execute, Statement, Param",
           "IsOn": true
         },
         {
           "$type": "SetOffsetsStatement",
+          "StartOffset": 325,
+          "FragmentLength": 28,
+          "StartLine": 19,
+          "StartColumn": 1,
           "Options": "From, Order",
           "IsOn": false
         },
         {
           "$type": "SetOffsetsStatement",
+          "StartOffset": 355,
+          "FragmentLength": 21,
+          "StartLine": 21,
+          "StartColumn": 1,
           "Options": "Param",
           "IsOn": true
         }

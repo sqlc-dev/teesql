@@ -2,6 +2,7 @@ package ast
 
 // BooleanInExpression represents an IN expression.
 type BooleanInExpression struct {
+	Fragment
 	Expression ScalarExpression
 	NotDefined bool
 	Values     []ScalarExpression

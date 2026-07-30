@@ -2,6 +2,7 @@ package ast
 
 // WhileStatement represents a WHILE statement.
 type WhileStatement struct {
+	Fragment
 	Predicate BooleanExpression `json:"Predicate,omitempty"`
 	Statement Statement         `json:"Statement,omitempty"`
 }

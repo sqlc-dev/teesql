@@ -2,6 +2,7 @@ package ast
 
 // AlterIndexStatement represents ALTER INDEX statement
 type AlterIndexStatement struct {
+	Fragment
 	Name           *Identifier
 	All            bool
 	OnName         *SchemaObjectName
@@ -17,6 +18,7 @@ func (s *AlterIndexStatement) node()      {}
 
 // SelectiveXmlIndexPromotedPath represents a path in a selective XML index
 type SelectiveXmlIndexPromotedPath struct {
+	Fragment
 	Name           *Identifier
 	Path           *StringLiteral
 	XQueryDataType *StringLiteral
@@ -29,6 +31,7 @@ func (s *SelectiveXmlIndexPromotedPath) node() {}
 
 // CreateSelectiveXmlIndexStatement represents CREATE SELECTIVE XML INDEX statement
 type CreateSelectiveXmlIndexStatement struct {
+	Fragment
 	Name              *Identifier
 	OnName            *SchemaObjectName
 	XmlColumn         *Identifier
@@ -45,6 +48,7 @@ func (s *CreateSelectiveXmlIndexStatement) node()      {}
 
 // XmlNamespaces represents a WITH XMLNAMESPACES clause
 type XmlNamespaces struct {
+	Fragment
 	XmlNamespacesElements []XmlNamespacesElement
 }
 
@@ -57,6 +61,7 @@ type XmlNamespacesElement interface {
 
 // XmlNamespacesAliasElement represents an alias element in XMLNAMESPACES
 type XmlNamespacesAliasElement struct {
+	Fragment
 	Identifier *Identifier
 	String     *StringLiteral
 }
@@ -66,6 +71,7 @@ func (x *XmlNamespacesAliasElement) xmlNamespacesElement() {}
 
 // XmlNamespacesDefaultElement represents a default element in XMLNAMESPACES
 type XmlNamespacesDefaultElement struct {
+	Fragment
 	String *StringLiteral
 }
 
@@ -74,6 +80,7 @@ func (x *XmlNamespacesDefaultElement) xmlNamespacesElement() {}
 
 // PartitionSpecifier represents a partition specifier
 type PartitionSpecifier struct {
+	Fragment
 	All     bool
 	Number  ScalarExpression
 	Numbers []ScalarExpression

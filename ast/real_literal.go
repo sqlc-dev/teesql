@@ -2,6 +2,7 @@ package ast
 
 // RealLiteral represents a real (scientific notation) literal.
 type RealLiteral struct {
+	Fragment
 	LiteralType string `json:"LiteralType,omitempty"`
 	Value       string `json:"Value,omitempty"`
 }

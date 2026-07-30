@@ -2,6 +2,7 @@ package ast
 
 // BinaryLiteral represents a binary literal like 0xABCD.
 type BinaryLiteral struct {
+	Fragment
 	LiteralType   string
 	Value         string
 	IsLargeObject bool

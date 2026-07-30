@@ -3,6 +3,7 @@ package ast
 // BuiltInFunctionTableReference represents a built-in function used as a table source
 // Syntax: ::function_name(parameters)
 type BuiltInFunctionTableReference struct {
+	Fragment
 	Name       *Identifier        `json:"Name,omitempty"`
 	Parameters []ScalarExpression `json:"Parameters,omitempty"`
 	Alias      *Identifier        `json:"Alias,omitempty"`

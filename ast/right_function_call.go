@@ -2,6 +2,7 @@ package ast
 
 // RightFunctionCall represents the RIGHT(string, count) function
 type RightFunctionCall struct {
+	Fragment
 	Parameters []ScalarExpression
 }
 

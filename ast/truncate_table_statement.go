@@ -1,6 +1,7 @@
 package ast
 
 type TruncateTableStatement struct {
+	Fragment
 	TableName       *SchemaObjectName           `json:"TableName,omitempty"`
 	PartitionRanges []*CompressionPartitionRange `json:"PartitionRanges,omitempty"`
 }
@@ -9,6 +10,7 @@ func (t *TruncateTableStatement) node()      {}
 func (t *TruncateTableStatement) statement() {}
 
 type CompressionPartitionRange struct {
+	Fragment
 	From ScalarExpression `json:"From,omitempty"`
 	To   ScalarExpression `json:"To,omitempty"`
 }

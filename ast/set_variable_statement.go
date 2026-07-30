@@ -2,6 +2,7 @@ package ast
 
 // SetVariableStatement represents a SET @var = value statement.
 type SetVariableStatement struct {
+	Fragment
 	Variable           *VariableReference `json:"Variable,omitempty"`
 	Expression         ScalarExpression   `json:"Expression,omitempty"`
 	CursorDefinition   *CursorDefinition  `json:"CursorDefinition,omitempty"`
@@ -17,12 +18,14 @@ func (s *SetVariableStatement) statement() {}
 
 // CursorDefinition represents a cursor definition.
 type CursorDefinition struct {
+	Fragment
 	Options []*CursorOption  `json:"Options,omitempty"`
 	Select  *SelectStatement `json:"Select,omitempty"`
 }
 
 // CursorOption represents a cursor option like SCROLL or DYNAMIC.
 type CursorOption struct {
+	Fragment
 	OptionKind string `json:"OptionKind,omitempty"`
 }
 

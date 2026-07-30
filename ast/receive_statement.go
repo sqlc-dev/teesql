@@ -2,6 +2,7 @@ package ast
 
 // ReceiveStatement represents a RECEIVE ... FROM queue statement.
 type ReceiveStatement struct {
+	Fragment
 	Top                        ScalarExpression
 	SelectElements             []SelectElement
 	Queue                      *SchemaObjectName

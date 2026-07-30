@@ -1,6 +1,7 @@
 package ast
 
 type AlterResourceGovernorStatement struct {
+	Fragment
 	Command            string
 	ClassifierFunction *SchemaObjectName
 }

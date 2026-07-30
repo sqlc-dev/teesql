@@ -2,6 +2,7 @@ package ast
 
 // ScalarSubquery represents a scalar subquery expression.
 type ScalarSubquery struct {
+	Fragment
 	QueryExpression QueryExpression
 	Collation       *Identifier
 }

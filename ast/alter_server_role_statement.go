@@ -2,6 +2,7 @@ package ast
 
 // AlterServerRoleStatement represents an ALTER SERVER ROLE statement
 type AlterServerRoleStatement struct {
+	Fragment
 	Name   *Identifier
 	Action AlterRoleAction // Reuses the same action types as AlterRoleStatement
 }

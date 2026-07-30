@@ -1,28 +1,64 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 118,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 116,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
-          "$type": "RollbackTransactionStatement"
-        },
-        {
-          "$type": "RollbackTransactionStatement"
-        },
-        {
-          "$type": "RollbackTransactionStatement"
-        },
-        {
-          "$type": "RollbackTransactionStatement"
+          "$type": "RollbackTransactionStatement",
+          "StartOffset": 0,
+          "FragmentLength": 9,
+          "StartLine": 1,
+          "StartColumn": 1
         },
         {
           "$type": "RollbackTransactionStatement",
+          "StartOffset": 11,
+          "FragmentLength": 9,
+          "StartLine": 3,
+          "StartColumn": 1
+        },
+        {
+          "$type": "RollbackTransactionStatement",
+          "StartOffset": 22,
+          "FragmentLength": 9,
+          "StartLine": 5,
+          "StartColumn": 1
+        },
+        {
+          "$type": "RollbackTransactionStatement",
+          "StartOffset": 33,
+          "FragmentLength": 9,
+          "StartLine": 7,
+          "StartColumn": 1
+        },
+        {
+          "$type": "RollbackTransactionStatement",
+          "StartOffset": 44,
+          "FragmentLength": 35,
+          "StartLine": 9,
+          "StartColumn": 1,
           "Name": {
             "$type": "IdentifierOrValueExpression",
+            "StartOffset": 65,
+            "FragmentLength": 13,
+            "StartLine": 9,
+            "StartColumn": 22,
             "Value": "myTransaction",
             "Identifier": {
               "$type": "Identifier",
+              "StartOffset": 65,
+              "FragmentLength": 13,
+              "StartLine": 9,
+              "StartColumn": 22,
               "Value": "myTransaction",
               "QuoteType": "NotQuoted"
             }
@@ -30,11 +66,23 @@
         },
         {
           "$type": "RollbackTransactionStatement",
+          "StartOffset": 81,
+          "FragmentLength": 35,
+          "StartLine": 11,
+          "StartColumn": 1,
           "Name": {
             "$type": "IdentifierOrValueExpression",
+            "StartOffset": 102,
+            "FragmentLength": 13,
+            "StartLine": 11,
+            "StartColumn": 22,
             "Value": "@tranVariable",
             "ValueExpression": {
               "$type": "VariableReference",
+              "StartOffset": 102,
+              "FragmentLength": 13,
+              "StartLine": 11,
+              "StartColumn": 22,
               "Name": "@tranVariable"
             }
           }

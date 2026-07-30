@@ -2,6 +2,7 @@ package ast
 
 // AtTimeZoneCall represents an AT TIME ZONE expression
 type AtTimeZoneCall struct {
+	Fragment
 	DateValue ScalarExpression
 	TimeZone  ScalarExpression
 }

@@ -1,15 +1,35 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 244,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 72,
+      "FragmentLength": 87,
+      "StartLine": 3,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "CreateQueueStatement",
+          "StartOffset": 72,
+          "FragmentLength": 87,
+          "StartLine": 3,
+          "StartColumn": 1,
           "Name": {
             "$type": "SchemaObjectName",
+            "StartOffset": 85,
+            "FragmentLength": 2,
+            "StartLine": 3,
+            "StartColumn": 14,
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 85,
+              "FragmentLength": 2,
+              "StartLine": 3,
+              "StartColumn": 14,
               "Value": "q1",
               "QuoteType": "NotQuoted"
             },
@@ -23,16 +43,28 @@
           "QueueOptions": [
             {
               "$type": "QueueStateOption",
+              "StartOffset": 102,
+              "FragmentLength": 2,
+              "StartLine": 3,
+              "StartColumn": 31,
               "OptionState": "On",
               "OptionKind": "Status"
             },
             {
               "$type": "QueueStateOption",
+              "StartOffset": 106,
+              "FragmentLength": 36,
+              "StartLine": 3,
+              "StartColumn": 35,
               "OptionState": "On",
               "OptionKind": "PoisonMessageHandlingStatus"
             },
             {
               "$type": "QueueStateOption",
+              "StartOffset": 156,
+              "FragmentLength": 3,
+              "StartLine": 3,
+              "StartColumn": 85,
               "OptionState": "Off",
               "OptionKind": "Retention"
             }
@@ -42,18 +74,38 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 165,
+      "FragmentLength": 79,
+      "StartLine": 7,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterQueueStatement",
+          "StartOffset": 165,
+          "FragmentLength": 79,
+          "StartLine": 7,
+          "StartColumn": 1,
           "Name": {
             "$type": "SchemaObjectName",
+            "StartOffset": 177,
+            "FragmentLength": 6,
+            "StartLine": 7,
+            "StartColumn": 13,
             "SchemaIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 177,
+              "FragmentLength": 3,
+              "StartLine": 7,
+              "StartColumn": 13,
               "Value": "dbo",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 181,
+              "FragmentLength": 2,
+              "StartLine": 7,
+              "StartColumn": 17,
               "Value": "q1",
               "QuoteType": "NotQuoted"
             },
@@ -70,11 +122,19 @@
           "QueueOptions": [
             {
               "$type": "QueueStateOption",
+              "StartOffset": 189,
+              "FragmentLength": 37,
+              "StartLine": 7,
+              "StartColumn": 25,
               "OptionState": "Off",
               "OptionKind": "PoisonMessageHandlingStatus"
             },
             {
               "$type": "QueueOption",
+              "StartOffset": 239,
+              "FragmentLength": 4,
+              "StartLine": 7,
+              "StartColumn": 75,
               "OptionKind": "ActivationDrop"
             }
           ]

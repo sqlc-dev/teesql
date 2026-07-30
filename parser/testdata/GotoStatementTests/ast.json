@@ -1,19 +1,43 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 192,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 48,
+      "FragmentLength": 83,
+      "StartLine": 4,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "LabelStatement",
+          "StartOffset": 48,
+          "FragmentLength": 6,
+          "StartLine": 4,
+          "StartColumn": 1,
           "Value": "start:"
         },
         {
           "$type": "CreateTableStatement",
+          "StartOffset": 55,
+          "FragmentLength": 24,
+          "StartLine": 5,
+          "StartColumn": 1,
           "SchemaObjectName": {
             "$type": "SchemaObjectName",
+            "StartOffset": 68,
+            "FragmentLength": 2,
+            "StartLine": 5,
+            "StartColumn": 14,
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 68,
+              "FragmentLength": 2,
+              "StartLine": 5,
+              "StartColumn": 14,
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -29,25 +53,49 @@
           "AsNode": false,
           "Definition": {
             "$type": "TableDefinition",
+            "StartOffset": 72,
+            "FragmentLength": 6,
+            "StartLine": 5,
+            "StartColumn": 18,
             "ColumnDefinitions": [
               {
                 "$type": "ColumnDefinition",
+                "StartOffset": 72,
+                "FragmentLength": 6,
+                "StartLine": 5,
+                "StartColumn": 18,
                 "IsPersisted": false,
                 "IsRowGuidCol": false,
                 "IsHidden": false,
                 "IsMasked": false,
                 "ColumnIdentifier": {
                   "$type": "Identifier",
+                  "StartOffset": 72,
+                  "FragmentLength": 2,
+                  "StartLine": 5,
+                  "StartColumn": 18,
                   "Value": "c1",
                   "QuoteType": "NotQuoted"
                 },
                 "DataType": {
                   "$type": "SqlDataTypeReference",
+                  "StartOffset": 75,
+                  "FragmentLength": 3,
+                  "StartLine": 5,
+                  "StartColumn": 21,
                   "SqlDataTypeOption": "Int",
                   "Name": {
                     "$type": "SchemaObjectName",
+                    "StartOffset": 75,
+                    "FragmentLength": 3,
+                    "StartLine": 5,
+                    "StartColumn": 21,
                     "BaseIdentifier": {
                       "$type": "Identifier",
+                      "StartOffset": 75,
+                      "FragmentLength": 3,
+                      "StartLine": 5,
+                      "StartColumn": 21,
                       "Value": "int",
                       "QuoteType": "NotQuoted"
                     },
@@ -65,31 +113,63 @@
         },
         {
           "$type": "IfStatement",
+          "StartOffset": 81,
+          "FragmentLength": 40,
+          "StartLine": 7,
+          "StartColumn": 1,
           "Predicate": {
             "$type": "BooleanComparisonExpression",
+            "StartOffset": 84,
+            "FragmentLength": 6,
+            "StartLine": 7,
+            "StartColumn": 4,
             "ComparisonType": "GreaterThan",
             "FirstExpression": {
               "$type": "VariableReference",
+              "StartOffset": 84,
+              "FragmentLength": 2,
+              "StartLine": 7,
+              "StartColumn": 4,
               "Name": "@a"
             },
             "SecondExpression": {
               "$type": "IntegerLiteral",
+              "StartOffset": 89,
+              "FragmentLength": 1,
+              "StartLine": 7,
+              "StartColumn": 9,
               "LiteralType": "Integer",
               "Value": "3"
             }
           },
           "ThenStatement": {
             "$type": "GoToStatement",
+            "StartOffset": 92,
+            "FragmentLength": 10,
+            "StartLine": 8,
+            "StartColumn": 2,
             "LabelName": {
               "$type": "Identifier",
+              "StartOffset": 97,
+              "FragmentLength": 5,
+              "StartLine": 8,
+              "StartColumn": 7,
               "Value": "start",
               "QuoteType": "NotQuoted"
             }
           },
           "ElseStatement": {
             "$type": "GoToStatement",
+            "StartOffset": 110,
+            "FragmentLength": 11,
+            "StartLine": 10,
+            "StartColumn": 2,
             "LabelName": {
               "$type": "Identifier",
+              "StartOffset": 115,
+              "FragmentLength": 6,
+              "StartLine": 10,
+              "StartColumn": 7,
               "Value": "finish",
               "QuoteType": "NotQuoted"
             }
@@ -97,21 +177,45 @@
         },
         {
           "$type": "LabelStatement",
+          "StartOffset": 124,
+          "FragmentLength": 7,
+          "StartLine": 12,
+          "StartColumn": 1,
           "Value": "finish:"
         }
       ]
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 137,
+      "FragmentLength": 54,
+      "StartLine": 16,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "CreateProcedureStatement",
+          "StartOffset": 137,
+          "FragmentLength": 54,
+          "StartLine": 16,
+          "StartColumn": 1,
           "ProcedureReference": {
             "$type": "ProcedureReference",
+            "StartOffset": 154,
+            "FragmentLength": 6,
+            "StartLine": 16,
+            "StartColumn": 18,
             "Name": {
               "$type": "SchemaObjectName",
+              "StartOffset": 154,
+              "FragmentLength": 6,
+              "StartLine": 16,
+              "StartColumn": 18,
               "BaseIdentifier": {
                 "$type": "Identifier",
+                "StartOffset": 154,
+                "FragmentLength": 6,
+                "StartLine": 16,
+                "StartColumn": 18,
                 "Value": "__Test",
                 "QuoteType": "NotQuoted"
               },
@@ -126,18 +230,34 @@
           "IsForReplication": false,
           "StatementList": {
             "$type": "StatementList",
+            "StartOffset": 164,
+            "FragmentLength": 27,
+            "StartLine": 18,
+            "StartColumn": 1,
             "Statements": [
               {
                 "$type": "PredicateSetStatement",
+                "StartOffset": 164,
+                "FragmentLength": 14,
+                "StartLine": 18,
+                "StartColumn": 1,
                 "Options": "NoCount",
                 "IsOn": true
               },
               {
                 "$type": "LabelStatement",
+                "StartOffset": 179,
+                "FragmentLength": 5,
+                "StartLine": 19,
+                "StartColumn": 1,
                 "Value": "gogo:"
               },
               {
-                "$type": "ReturnStatement"
+                "$type": "ReturnStatement",
+                "StartOffset": 185,
+                "FragmentLength": 6,
+                "StartLine": 20,
+                "StartColumn": 1
               }
             ]
           }

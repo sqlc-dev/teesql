@@ -2,6 +2,7 @@ package ast
 
 // FileGroupDefinition represents a FILEGROUP definition in CREATE DATABASE
 type FileGroupDefinition struct {
+	Fragment
 	Name                        *Identifier
 	FileDeclarations            []*FileDeclaration
 	IsDefault                   bool
@@ -13,6 +14,7 @@ func (f *FileGroupDefinition) node() {}
 
 // FileDeclaration represents a file declaration within a filegroup
 type FileDeclaration struct {
+	Fragment
 	Options   []FileDeclarationOption
 	IsPrimary bool
 }
@@ -27,6 +29,7 @@ type FileDeclarationOption interface {
 
 // SimpleFileDeclarationOption represents a simple file option like OFFLINE
 type SimpleFileDeclarationOption struct {
+	Fragment
 	OptionKind string // "Offline"
 }
 
@@ -35,6 +38,7 @@ func (s *SimpleFileDeclarationOption) fileDeclarationOption() {}
 
 // NameFileDeclarationOption represents the NAME option for a file
 type NameFileDeclarationOption struct {
+	Fragment
 	LogicalFileName *IdentifierOrValueExpression
 	IsNewName       bool
 	OptionKind      string // "Name" or "NewName"
@@ -45,6 +49,7 @@ func (n *NameFileDeclarationOption) fileDeclarationOption() {}
 
 // FileNameFileDeclarationOption represents the FILENAME option for a file
 type FileNameFileDeclarationOption struct {
+	Fragment
 	OSFileName *StringLiteral
 	OptionKind string // "FileName"
 }
@@ -54,6 +59,7 @@ func (f *FileNameFileDeclarationOption) fileDeclarationOption() {}
 
 // SizeFileDeclarationOption represents the SIZE option for a file
 type SizeFileDeclarationOption struct {
+	Fragment
 	Size       ScalarExpression
 	Units      string // "KB", "MB", "GB", "TB", "Unspecified"
 	OptionKind string // "Size"
@@ -64,6 +70,7 @@ func (s *SizeFileDeclarationOption) fileDeclarationOption() {}
 
 // MaxSizeFileDeclarationOption represents the MAXSIZE option for a file
 type MaxSizeFileDeclarationOption struct {
+	Fragment
 	MaxSize    ScalarExpression
 	Units      string // "KB", "MB", "GB", "TB", "Unspecified"
 	Unlimited  bool
@@ -75,6 +82,7 @@ func (m *MaxSizeFileDeclarationOption) fileDeclarationOption() {}
 
 // FileGrowthFileDeclarationOption represents the FILEGROWTH option for a file
 type FileGrowthFileDeclarationOption struct {
+	Fragment
 	GrowthIncrement ScalarExpression
 	Units           string // "KB", "MB", "GB", "TB", "Percent", "Unspecified"
 	OptionKind      string // "FileGrowth"

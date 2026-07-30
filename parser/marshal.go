@@ -34,7 +34,7 @@ func scriptToJSON(s *ast.Script) jsonNode {
 		}
 		node["Batches"] = batches
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func batchToJSON(b *ast.Batch) jsonNode {
@@ -48,635 +48,635 @@ func batchToJSON(b *ast.Batch) jsonNode {
 		}
 		node["Statements"] = stmts
 	}
-	return node
+	return addSpan(node, frag(b))
 }
 
 func statementToJSON(stmt ast.Statement) jsonNode {
 	switch s := stmt.(type) {
 	case *ast.SelectStatement:
-		return selectStatementToJSON(s)
+		return addSpan(selectStatementToJSON(s), frag(stmt))
 	case *ast.InsertStatement:
-		return insertStatementToJSON(s)
+		return addSpan(insertStatementToJSON(s), frag(stmt))
 	case *ast.UpdateStatement:
-		return updateStatementToJSON(s)
+		return addSpan(updateStatementToJSON(s), frag(stmt))
 	case *ast.UpdateStatisticsStatement:
-		return updateStatisticsStatementToJSON(s)
+		return addSpan(updateStatisticsStatementToJSON(s), frag(stmt))
 	case *ast.DeleteStatement:
-		return deleteStatementToJSON(s)
+		return addSpan(deleteStatementToJSON(s), frag(stmt))
 	case *ast.MergeStatement:
-		return mergeStatementToJSON(s)
+		return addSpan(mergeStatementToJSON(s), frag(stmt))
 	case *ast.DeclareVariableStatement:
-		return declareVariableStatementToJSON(s)
+		return addSpan(declareVariableStatementToJSON(s), frag(stmt))
 	case *ast.DeclareTableVariableStatement:
-		return declareTableVariableStatementToJSON(s)
+		return addSpan(declareTableVariableStatementToJSON(s), frag(stmt))
 	case *ast.SetVariableStatement:
-		return setVariableStatementToJSON(s)
+		return addSpan(setVariableStatementToJSON(s), frag(stmt))
 	case *ast.IfStatement:
-		return ifStatementToJSON(s)
+		return addSpan(ifStatementToJSON(s), frag(stmt))
 	case *ast.WhileStatement:
-		return whileStatementToJSON(s)
+		return addSpan(whileStatementToJSON(s), frag(stmt))
 	case *ast.BeginEndBlockStatement:
-		return beginEndBlockStatementToJSON(s)
+		return addSpan(beginEndBlockStatementToJSON(s), frag(stmt))
 	case *ast.BeginEndAtomicBlockStatement:
-		return beginEndAtomicBlockStatementToJSON(s)
+		return addSpan(beginEndAtomicBlockStatementToJSON(s), frag(stmt))
 	case *ast.BeginDialogStatement:
-		return beginDialogStatementToJSON(s)
+		return addSpan(beginDialogStatementToJSON(s), frag(stmt))
 	case *ast.BeginConversationTimerStatement:
-		return beginConversationTimerStatementToJSON(s)
+		return addSpan(beginConversationTimerStatementToJSON(s), frag(stmt))
 	case *ast.CreateViewStatement:
-		return createViewStatementToJSON(s)
+		return addSpan(createViewStatementToJSON(s), frag(stmt))
 	case *ast.CreateOrAlterViewStatement:
-		return createOrAlterViewStatementToJSON(s)
+		return addSpan(createOrAlterViewStatementToJSON(s), frag(stmt))
 	case *ast.AlterViewStatement:
-		return alterViewStatementToJSON(s)
+		return addSpan(alterViewStatementToJSON(s), frag(stmt))
 	case *ast.CreateSchemaStatement:
-		return createSchemaStatementToJSON(s)
+		return addSpan(createSchemaStatementToJSON(s), frag(stmt))
 	case *ast.CreateProcedureStatement:
-		return createProcedureStatementToJSON(s)
+		return addSpan(createProcedureStatementToJSON(s), frag(stmt))
 	case *ast.CreateOrAlterProcedureStatement:
-		return createOrAlterProcedureStatementToJSON(s)
+		return addSpan(createOrAlterProcedureStatementToJSON(s), frag(stmt))
 	case *ast.AlterProcedureStatement:
-		return alterProcedureStatementToJSON(s)
+		return addSpan(alterProcedureStatementToJSON(s), frag(stmt))
 	case *ast.CreateRoleStatement:
-		return createRoleStatementToJSON(s)
+		return addSpan(createRoleStatementToJSON(s), frag(stmt))
 	case *ast.ExecuteStatement:
-		return executeStatementToJSON(s)
+		return addSpan(executeStatementToJSON(s), frag(stmt))
 	case *ast.ExecuteAsStatement:
-		return executeAsStatementToJSON(s)
+		return addSpan(executeAsStatementToJSON(s), frag(stmt))
 	case *ast.ReturnStatement:
-		return returnStatementToJSON(s)
+		return addSpan(returnStatementToJSON(s), frag(stmt))
 	case *ast.BreakStatement:
-		return breakStatementToJSON()
+		return addSpan(breakStatementToJSON(), frag(stmt))
 	case *ast.ContinueStatement:
-		return continueStatementToJSON()
+		return addSpan(continueStatementToJSON(), frag(stmt))
 	case *ast.PrintStatement:
-		return printStatementToJSON(s)
+		return addSpan(printStatementToJSON(s), frag(stmt))
 	case *ast.ThrowStatement:
-		return throwStatementToJSON(s)
+		return addSpan(throwStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableDropTableElementStatement:
-		return alterTableDropTableElementStatementToJSON(s)
+		return addSpan(alterTableDropTableElementStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableAlterIndexStatement:
-		return alterTableAlterIndexStatementToJSON(s)
+		return addSpan(alterTableAlterIndexStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableAddTableElementStatement:
-		return alterTableAddTableElementStatementToJSON(s)
+		return addSpan(alterTableAddTableElementStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableAlterColumnStatement:
-		return alterTableAlterColumnStatementToJSON(s)
+		return addSpan(alterTableAlterColumnStatementToJSON(s), frag(stmt))
 	case *ast.AlterMessageTypeStatement:
-		return alterMessageTypeStatementToJSON(s)
+		return addSpan(alterMessageTypeStatementToJSON(s), frag(stmt))
 	case *ast.CreateContractStatement:
-		return createContractStatementToJSON(s)
+		return addSpan(createContractStatementToJSON(s), frag(stmt))
 	case *ast.CreatePartitionSchemeStatement:
-		return createPartitionSchemeStatementToJSON(s)
+		return addSpan(createPartitionSchemeStatementToJSON(s), frag(stmt))
 	case *ast.CreateRuleStatement:
-		return createRuleStatementToJSON(s)
+		return addSpan(createRuleStatementToJSON(s), frag(stmt))
 	case *ast.CreateSynonymStatement:
-		return createSynonymStatementToJSON(s)
+		return addSpan(createSynonymStatementToJSON(s), frag(stmt))
 	case *ast.AlterCredentialStatement:
-		return alterCredentialStatementToJSON(s)
+		return addSpan(alterCredentialStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseSetStatement:
-		return alterDatabaseSetStatementToJSON(s)
+		return addSpan(alterDatabaseSetStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseAddFileStatement:
-		return alterDatabaseAddFileStatementToJSON(s)
+		return addSpan(alterDatabaseAddFileStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseAddFileGroupStatement:
-		return alterDatabaseAddFileGroupStatementToJSON(s)
+		return addSpan(alterDatabaseAddFileGroupStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseModifyFileStatement:
-		return alterDatabaseModifyFileStatementToJSON(s)
+		return addSpan(alterDatabaseModifyFileStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseModifyFileGroupStatement:
-		return alterDatabaseModifyFileGroupStatementToJSON(s)
+		return addSpan(alterDatabaseModifyFileGroupStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseModifyNameStatement:
-		return alterDatabaseModifyNameStatementToJSON(s)
+		return addSpan(alterDatabaseModifyNameStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseRemoveFileStatement:
-		return alterDatabaseRemoveFileStatementToJSON(s)
+		return addSpan(alterDatabaseRemoveFileStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseRemoveFileGroupStatement:
-		return alterDatabaseRemoveFileGroupStatementToJSON(s)
+		return addSpan(alterDatabaseRemoveFileGroupStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseCollateStatement:
-		return alterDatabaseCollateStatementToJSON(s)
+		return addSpan(alterDatabaseCollateStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseRebuildLogStatement:
-		return alterDatabaseRebuildLogStatementToJSON(s)
+		return addSpan(alterDatabaseRebuildLogStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseScopedConfigurationClearStatement:
-		return alterDatabaseScopedConfigurationClearStatementToJSON(s)
+		return addSpan(alterDatabaseScopedConfigurationClearStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseScopedConfigurationSetStatement:
-		return alterDatabaseScopedConfigurationSetStatementToJSON(s)
+		return addSpan(alterDatabaseScopedConfigurationSetStatementToJSON(s), frag(stmt))
 	case *ast.AlterResourceGovernorStatement:
-		return alterResourceGovernorStatementToJSON(s)
+		return addSpan(alterResourceGovernorStatementToJSON(s), frag(stmt))
 	case *ast.CreateResourcePoolStatement:
-		return createResourcePoolStatementToJSON(s)
+		return addSpan(createResourcePoolStatementToJSON(s), frag(stmt))
 	case *ast.AlterResourcePoolStatement:
-		return alterResourcePoolStatementToJSON(s)
+		return addSpan(alterResourcePoolStatementToJSON(s), frag(stmt))
 	case *ast.DropResourcePoolStatement:
-		return dropResourcePoolStatementToJSON(s)
+		return addSpan(dropResourcePoolStatementToJSON(s), frag(stmt))
 	case *ast.AlterExternalResourcePoolStatement:
-		return alterExternalResourcePoolStatementToJSON(s)
+		return addSpan(alterExternalResourcePoolStatementToJSON(s), frag(stmt))
 	case *ast.CreateExternalResourcePoolStatement:
-		return createExternalResourcePoolStatementToJSON(s)
+		return addSpan(createExternalResourcePoolStatementToJSON(s), frag(stmt))
 	case *ast.CreateCryptographicProviderStatement:
-		return createCryptographicProviderStatementToJSON(s)
+		return addSpan(createCryptographicProviderStatementToJSON(s), frag(stmt))
 	case *ast.CreateColumnMasterKeyStatement:
-		return createColumnMasterKeyStatementToJSON(s)
+		return addSpan(createColumnMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.DropColumnMasterKeyStatement:
-		return dropColumnMasterKeyStatementToJSON(s)
+		return addSpan(dropColumnMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.CreateColumnEncryptionKeyStatement:
-		return createColumnEncryptionKeyStatementToJSON(s)
+		return addSpan(createColumnEncryptionKeyStatementToJSON(s), frag(stmt))
 	case *ast.AlterColumnEncryptionKeyStatement:
-		return alterColumnEncryptionKeyStatementToJSON(s)
+		return addSpan(alterColumnEncryptionKeyStatementToJSON(s), frag(stmt))
 	case *ast.DropColumnEncryptionKeyStatement:
-		return dropColumnEncryptionKeyStatementToJSON(s)
+		return addSpan(dropColumnEncryptionKeyStatementToJSON(s), frag(stmt))
 	case *ast.AlterCryptographicProviderStatement:
-		return alterCryptographicProviderStatementToJSON(s)
+		return addSpan(alterCryptographicProviderStatementToJSON(s), frag(stmt))
 	case *ast.DropCryptographicProviderStatement:
-		return dropCryptographicProviderStatementToJSON(s)
+		return addSpan(dropCryptographicProviderStatementToJSON(s), frag(stmt))
 	case *ast.CreateBrokerPriorityStatement:
-		return createBrokerPriorityStatementToJSON(s)
+		return addSpan(createBrokerPriorityStatementToJSON(s), frag(stmt))
 	case *ast.AlterBrokerPriorityStatement:
-		return alterBrokerPriorityStatementToJSON(s)
+		return addSpan(alterBrokerPriorityStatementToJSON(s), frag(stmt))
 	case *ast.DropBrokerPriorityStatement:
-		return dropBrokerPriorityStatementToJSON(s)
+		return addSpan(dropBrokerPriorityStatementToJSON(s), frag(stmt))
 	case *ast.UseFederationStatement:
-		return useFederationStatementToJSON(s)
+		return addSpan(useFederationStatementToJSON(s), frag(stmt))
 	case *ast.CreateFederationStatement:
-		return createFederationStatementToJSON(s)
+		return addSpan(createFederationStatementToJSON(s), frag(stmt))
 	case *ast.AlterFederationStatement:
-		return alterFederationStatementToJSON(s)
+		return addSpan(alterFederationStatementToJSON(s), frag(stmt))
 	case *ast.RevertStatement:
-		return revertStatementToJSON(s)
+		return addSpan(revertStatementToJSON(s), frag(stmt))
 	case *ast.DropCredentialStatement:
-		return dropCredentialStatementToJSON(s)
+		return addSpan(dropCredentialStatementToJSON(s), frag(stmt))
 	case *ast.DropExternalLanguageStatement:
-		return dropExternalLanguageStatementToJSON(s)
+		return addSpan(dropExternalLanguageStatementToJSON(s), frag(stmt))
 	case *ast.DropExternalLibraryStatement:
-		return dropExternalLibraryStatementToJSON(s)
+		return addSpan(dropExternalLibraryStatementToJSON(s), frag(stmt))
 	case *ast.DropSequenceStatement:
-		return dropSequenceStatementToJSON(s)
+		return addSpan(dropSequenceStatementToJSON(s), frag(stmt))
 	case *ast.DropSearchPropertyListStatement:
-		return dropSearchPropertyListStatementToJSON(s)
+		return addSpan(dropSearchPropertyListStatementToJSON(s), frag(stmt))
 	case *ast.DropServerRoleStatement:
-		return dropServerRoleStatementToJSON(s)
+		return addSpan(dropServerRoleStatementToJSON(s), frag(stmt))
 	case *ast.DropServerAuditStatement:
-		return dropServerAuditStatementToJSON(s)
+		return addSpan(dropServerAuditStatementToJSON(s), frag(stmt))
 	case *ast.DropServerAuditSpecificationStatement:
-		return dropServerAuditSpecificationStatementToJSON(s)
+		return addSpan(dropServerAuditSpecificationStatementToJSON(s), frag(stmt))
 	case *ast.DropDatabaseAuditSpecificationStatement:
-		return dropDatabaseAuditSpecificationStatementToJSON(s)
+		return addSpan(dropDatabaseAuditSpecificationStatementToJSON(s), frag(stmt))
 	case *ast.DropAvailabilityGroupStatement:
-		return dropAvailabilityGroupStatementToJSON(s)
+		return addSpan(dropAvailabilityGroupStatementToJSON(s), frag(stmt))
 	case *ast.DropFederationStatement:
-		return dropFederationStatementToJSON(s)
+		return addSpan(dropFederationStatementToJSON(s), frag(stmt))
 	case *ast.DropSecurityPolicyStatement:
-		return dropSecurityPolicyStatementToJSON(s)
+		return addSpan(dropSecurityPolicyStatementToJSON(s), frag(stmt))
 	case *ast.DropExternalDataSourceStatement:
-		return dropExternalDataSourceStatementToJSON(s)
+		return addSpan(dropExternalDataSourceStatementToJSON(s), frag(stmt))
 	case *ast.AlterExternalDataSourceStatement:
-		return alterExternalDataSourceStatementToJSON(s)
+		return addSpan(alterExternalDataSourceStatementToJSON(s), frag(stmt))
 	case *ast.AlterExternalLanguageStatement:
-		return alterExternalLanguageStatementToJSON(s)
+		return addSpan(alterExternalLanguageStatementToJSON(s), frag(stmt))
 	case *ast.AlterExternalLibraryStatement:
-		return alterExternalLibraryStatementToJSON(s)
+		return addSpan(alterExternalLibraryStatementToJSON(s), frag(stmt))
 	case *ast.DropExternalFileFormatStatement:
-		return dropExternalFileFormatStatementToJSON(s)
+		return addSpan(dropExternalFileFormatStatementToJSON(s), frag(stmt))
 	case *ast.DropExternalTableStatement:
-		return dropExternalTableStatementToJSON(s)
+		return addSpan(dropExternalTableStatementToJSON(s), frag(stmt))
 	case *ast.DropExternalResourcePoolStatement:
-		return dropExternalResourcePoolStatementToJSON(s)
+		return addSpan(dropExternalResourcePoolStatementToJSON(s), frag(stmt))
 	case *ast.DropExternalModelStatement:
-		return dropExternalModelStatementToJSON(s)
+		return addSpan(dropExternalModelStatementToJSON(s), frag(stmt))
 	case *ast.DropWorkloadGroupStatement:
-		return dropWorkloadGroupStatementToJSON(s)
+		return addSpan(dropWorkloadGroupStatementToJSON(s), frag(stmt))
 	case *ast.DropWorkloadClassifierStatement:
-		return dropWorkloadClassifierStatementToJSON(s)
+		return addSpan(dropWorkloadClassifierStatementToJSON(s), frag(stmt))
 	case *ast.CreateWorkloadGroupStatement:
-		return createWorkloadGroupStatementToJSON(s)
+		return addSpan(createWorkloadGroupStatementToJSON(s), frag(stmt))
 	case *ast.CreateWorkloadClassifierStatement:
-		return createWorkloadClassifierStatementToJSON(s)
+		return addSpan(createWorkloadClassifierStatementToJSON(s), frag(stmt))
 	case *ast.AlterWorkloadGroupStatement:
-		return alterWorkloadGroupStatementToJSON(s)
+		return addSpan(alterWorkloadGroupStatementToJSON(s), frag(stmt))
 	case *ast.AlterSequenceStatement:
-		return alterSequenceStatementToJSON(s)
+		return addSpan(alterSequenceStatementToJSON(s), frag(stmt))
 	case *ast.CreateSequenceStatement:
-		return createSequenceStatementToJSON(s)
+		return addSpan(createSequenceStatementToJSON(s), frag(stmt))
 	case *ast.DbccStatement:
-		return dbccStatementToJSON(s)
+		return addSpan(dbccStatementToJSON(s), frag(stmt))
 	case *ast.DropTypeStatement:
-		return dropTypeStatementToJSON(s)
+		return addSpan(dropTypeStatementToJSON(s), frag(stmt))
 	case *ast.DropAggregateStatement:
-		return dropAggregateStatementToJSON(s)
+		return addSpan(dropAggregateStatementToJSON(s), frag(stmt))
 	case *ast.DropSynonymStatement:
-		return dropSynonymStatementToJSON(s)
+		return addSpan(dropSynonymStatementToJSON(s), frag(stmt))
 	case *ast.DropUserStatement:
-		return dropUserStatementToJSON(s)
+		return addSpan(dropUserStatementToJSON(s), frag(stmt))
 	case *ast.DropRoleStatement:
-		return dropRoleStatementToJSON(s)
+		return addSpan(dropRoleStatementToJSON(s), frag(stmt))
 	case *ast.DropAssemblyStatement:
-		return dropAssemblyStatementToJSON(s)
+		return addSpan(dropAssemblyStatementToJSON(s), frag(stmt))
 	case *ast.DropAsymmetricKeyStatement:
-		return dropAsymmetricKeyStatementToJSON(s)
+		return addSpan(dropAsymmetricKeyStatementToJSON(s), frag(stmt))
 	case *ast.DropSymmetricKeyStatement:
-		return dropSymmetricKeyStatementToJSON(s)
+		return addSpan(dropSymmetricKeyStatementToJSON(s), frag(stmt))
 	case *ast.CreateTableStatement:
-		return createTableStatementToJSON(s)
+		return addSpan(createTableStatementToJSON(s), frag(stmt))
 	case *ast.GrantStatement:
-		return grantStatementToJSON(s)
+		return addSpan(grantStatementToJSON(s), frag(stmt))
 	case *ast.RevokeStatement:
-		return revokeStatementToJSON(s)
+		return addSpan(revokeStatementToJSON(s), frag(stmt))
 	case *ast.DenyStatement:
-		return denyStatementToJSON(s)
+		return addSpan(denyStatementToJSON(s), frag(stmt))
 	case *ast.PredicateSetStatement:
-		return predicateSetStatementToJSON(s)
+		return addSpan(predicateSetStatementToJSON(s), frag(stmt))
 	case *ast.SetStatisticsStatement:
-		return setStatisticsStatementToJSON(s)
+		return addSpan(setStatisticsStatementToJSON(s), frag(stmt))
 	case *ast.SetRowCountStatement:
-		return setRowCountStatementToJSON(s)
+		return addSpan(setRowCountStatementToJSON(s), frag(stmt))
 	case *ast.SetOffsetsStatement:
-		return setOffsetsStatementToJSON(s)
+		return addSpan(setOffsetsStatementToJSON(s), frag(stmt))
 	case *ast.SetCommandStatement:
-		return setCommandStatementToJSON(s)
+		return addSpan(setCommandStatementToJSON(s), frag(stmt))
 	case *ast.SetTransactionIsolationLevelStatement:
-		return setTransactionIsolationLevelStatementToJSON(s)
+		return addSpan(setTransactionIsolationLevelStatementToJSON(s), frag(stmt))
 	case *ast.SetTextSizeStatement:
-		return setTextSizeStatementToJSON(s)
+		return addSpan(setTextSizeStatementToJSON(s), frag(stmt))
 	case *ast.SetIdentityInsertStatement:
-		return setIdentityInsertStatementToJSON(s)
+		return addSpan(setIdentityInsertStatementToJSON(s), frag(stmt))
 	case *ast.SetErrorLevelStatement:
-		return setErrorLevelStatementToJSON(s)
+		return addSpan(setErrorLevelStatementToJSON(s), frag(stmt))
 	case *ast.CommitTransactionStatement:
-		return commitTransactionStatementToJSON(s)
+		return addSpan(commitTransactionStatementToJSON(s), frag(stmt))
 	case *ast.RollbackTransactionStatement:
-		return rollbackTransactionStatementToJSON(s)
+		return addSpan(rollbackTransactionStatementToJSON(s), frag(stmt))
 	case *ast.SaveTransactionStatement:
-		return saveTransactionStatementToJSON(s)
+		return addSpan(saveTransactionStatementToJSON(s), frag(stmt))
 	case *ast.BeginTransactionStatement:
-		return beginTransactionStatementToJSON(s)
+		return addSpan(beginTransactionStatementToJSON(s), frag(stmt))
 	case *ast.WaitForStatement:
-		return waitForStatementToJSON(s)
+		return addSpan(waitForStatementToJSON(s), frag(stmt))
 	case *ast.MoveConversationStatement:
-		return moveConversationStatementToJSON(s)
+		return addSpan(moveConversationStatementToJSON(s), frag(stmt))
 	case *ast.GetConversationGroupStatement:
-		return getConversationGroupStatementToJSON(s)
+		return addSpan(getConversationGroupStatementToJSON(s), frag(stmt))
 	case *ast.TruncateTableStatement:
-		return truncateTableStatementToJSON(s)
+		return addSpan(truncateTableStatementToJSON(s), frag(stmt))
 	case *ast.UseStatement:
-		return useStatementToJSON(s)
+		return addSpan(useStatementToJSON(s), frag(stmt))
 	case *ast.KillStatement:
-		return killStatementToJSON(s)
+		return addSpan(killStatementToJSON(s), frag(stmt))
 	case *ast.KillStatsJobStatement:
-		return killStatsJobStatementToJSON(s)
+		return addSpan(killStatsJobStatementToJSON(s), frag(stmt))
 	case *ast.KillQueryNotificationSubscriptionStatement:
-		return killQueryNotificationSubscriptionStatementToJSON(s)
+		return addSpan(killQueryNotificationSubscriptionStatementToJSON(s), frag(stmt))
 	case *ast.CloseSymmetricKeyStatement:
-		return closeSymmetricKeyStatementToJSON(s)
+		return addSpan(closeSymmetricKeyStatementToJSON(s), frag(stmt))
 	case *ast.CloseMasterKeyStatement:
-		return closeMasterKeyStatementToJSON(s)
+		return addSpan(closeMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.OpenMasterKeyStatement:
-		return openMasterKeyStatementToJSON(s)
+		return addSpan(openMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.OpenSymmetricKeyStatement:
-		return openSymmetricKeyStatementToJSON(s)
+		return addSpan(openSymmetricKeyStatementToJSON(s), frag(stmt))
 	case *ast.CheckpointStatement:
-		return checkpointStatementToJSON(s)
+		return addSpan(checkpointStatementToJSON(s), frag(stmt))
 	case *ast.ReconfigureStatement:
-		return reconfigureStatementToJSON(s)
+		return addSpan(reconfigureStatementToJSON(s), frag(stmt))
 	case *ast.ShutdownStatement:
-		return shutdownStatementToJSON(s)
+		return addSpan(shutdownStatementToJSON(s), frag(stmt))
 	case *ast.SetUserStatement:
-		return setUserStatementToJSON(s)
+		return addSpan(setUserStatementToJSON(s), frag(stmt))
 	case *ast.LineNoStatement:
-		return lineNoStatementToJSON(s)
+		return addSpan(lineNoStatementToJSON(s), frag(stmt))
 	case *ast.RaiseErrorStatement:
-		return raiseErrorStatementToJSON(s)
+		return addSpan(raiseErrorStatementToJSON(s), frag(stmt))
 	case *ast.ReadTextStatement:
-		return readTextStatementToJSON(s)
+		return addSpan(readTextStatementToJSON(s), frag(stmt))
 	case *ast.WriteTextStatement:
-		return writeTextStatementToJSON(s)
+		return addSpan(writeTextStatementToJSON(s), frag(stmt))
 	case *ast.UpdateTextStatement:
-		return updateTextStatementToJSON(s)
+		return addSpan(updateTextStatementToJSON(s), frag(stmt))
 	case *ast.GoToStatement:
-		return goToStatementToJSON(s)
+		return addSpan(goToStatementToJSON(s), frag(stmt))
 	case *ast.LabelStatement:
-		return labelStatementToJSON(s)
+		return addSpan(labelStatementToJSON(s), frag(stmt))
 	case *ast.CreateDefaultStatement:
-		return createDefaultStatementToJSON(s)
+		return addSpan(createDefaultStatementToJSON(s), frag(stmt))
 	case *ast.CreateMasterKeyStatement:
-		return createMasterKeyStatementToJSON(s)
+		return addSpan(createMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.AlterMasterKeyStatement:
-		return alterMasterKeyStatementToJSON(s)
+		return addSpan(alterMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.AlterSchemaStatement:
-		return alterSchemaStatementToJSON(s)
+		return addSpan(alterSchemaStatementToJSON(s), frag(stmt))
 	case *ast.AlterRoleStatement:
-		return alterRoleStatementToJSON(s)
+		return addSpan(alterRoleStatementToJSON(s), frag(stmt))
 	case *ast.CreateServerRoleStatement:
-		return createServerRoleStatementToJSON(s)
+		return addSpan(createServerRoleStatementToJSON(s), frag(stmt))
 	case *ast.AlterServerRoleStatement:
-		return alterServerRoleStatementToJSON(s)
+		return addSpan(alterServerRoleStatementToJSON(s), frag(stmt))
 	case *ast.CreateAvailabilityGroupStatement:
-		return createAvailabilityGroupStatementToJSON(s)
+		return addSpan(createAvailabilityGroupStatementToJSON(s), frag(stmt))
 	case *ast.AlterAvailabilityGroupStatement:
-		return alterAvailabilityGroupStatementToJSON(s)
+		return addSpan(alterAvailabilityGroupStatementToJSON(s), frag(stmt))
 	case *ast.CreateServerAuditStatement:
-		return createServerAuditStatementToJSON(s)
+		return addSpan(createServerAuditStatementToJSON(s), frag(stmt))
 	case *ast.AlterServerAuditStatement:
-		return alterServerAuditStatementToJSON(s)
+		return addSpan(alterServerAuditStatementToJSON(s), frag(stmt))
 	case *ast.CreateServerAuditSpecificationStatement:
-		return createServerAuditSpecificationStatementToJSON(s)
+		return addSpan(createServerAuditSpecificationStatementToJSON(s), frag(stmt))
 	case *ast.AlterServerAuditSpecificationStatement:
-		return alterServerAuditSpecificationStatementToJSON(s)
+		return addSpan(alterServerAuditSpecificationStatementToJSON(s), frag(stmt))
 	case *ast.CreateDatabaseAuditSpecificationStatement:
-		return createDatabaseAuditSpecificationStatementToJSON(s)
+		return addSpan(createDatabaseAuditSpecificationStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseAuditSpecificationStatement:
-		return alterDatabaseAuditSpecificationStatementToJSON(s)
+		return addSpan(alterDatabaseAuditSpecificationStatementToJSON(s), frag(stmt))
 	case *ast.AlterRemoteServiceBindingStatement:
-		return alterRemoteServiceBindingStatementToJSON(s)
+		return addSpan(alterRemoteServiceBindingStatementToJSON(s), frag(stmt))
 	case *ast.AlterXmlSchemaCollectionStatement:
-		return alterXmlSchemaCollectionStatementToJSON(s)
+		return addSpan(alterXmlSchemaCollectionStatementToJSON(s), frag(stmt))
 	case *ast.AlterServerConfigurationSetSoftNumaStatement:
-		return alterServerConfigurationSetSoftNumaStatementToJSON(s)
+		return addSpan(alterServerConfigurationSetSoftNumaStatementToJSON(s), frag(stmt))
 	case *ast.AlterServerConfigurationSetExternalAuthenticationStatement:
-		return alterServerConfigurationSetExternalAuthenticationStatementToJSON(s)
+		return addSpan(alterServerConfigurationSetExternalAuthenticationStatementToJSON(s), frag(stmt))
 	case *ast.AlterServerConfigurationSetDiagnosticsLogStatement:
-		return alterServerConfigurationSetDiagnosticsLogStatementToJSON(s)
+		return addSpan(alterServerConfigurationSetDiagnosticsLogStatementToJSON(s), frag(stmt))
 	case *ast.AlterServerConfigurationSetFailoverClusterPropertyStatement:
-		return alterServerConfigurationSetFailoverClusterPropertyStatementToJSON(s)
+		return addSpan(alterServerConfigurationSetFailoverClusterPropertyStatementToJSON(s), frag(stmt))
 	case *ast.AlterServerConfigurationSetBufferPoolExtensionStatement:
-		return alterServerConfigurationSetBufferPoolExtensionStatementToJSON(s)
+		return addSpan(alterServerConfigurationSetBufferPoolExtensionStatementToJSON(s), frag(stmt))
 	case *ast.AlterServerConfigurationSetHadrClusterStatement:
-		return alterServerConfigurationSetHadrClusterStatementToJSON(s)
+		return addSpan(alterServerConfigurationSetHadrClusterStatementToJSON(s), frag(stmt))
 	case *ast.AlterServerConfigurationStatement:
-		return alterServerConfigurationStatementToJSON(s)
+		return addSpan(alterServerConfigurationStatementToJSON(s), frag(stmt))
 	case *ast.AlterLoginAddDropCredentialStatement:
-		return alterLoginAddDropCredentialStatementToJSON(s)
+		return addSpan(alterLoginAddDropCredentialStatementToJSON(s), frag(stmt))
 	case *ast.TryCatchStatement:
-		return tryCatchStatementToJSON(s)
+		return addSpan(tryCatchStatementToJSON(s), frag(stmt))
 	case *ast.SendStatement:
-		return sendStatementToJSON(s)
+		return addSpan(sendStatementToJSON(s), frag(stmt))
 	case *ast.ReceiveStatement:
-		return receiveStatementToJSON(s)
+		return addSpan(receiveStatementToJSON(s), frag(stmt))
 	case *ast.CreateCredentialStatement:
-		return createCredentialStatementToJSON(s)
+		return addSpan(createCredentialStatementToJSON(s), frag(stmt))
 	case *ast.CreateXmlSchemaCollectionStatement:
-		return createXmlSchemaCollectionStatementToJSON(s)
+		return addSpan(createXmlSchemaCollectionStatementToJSON(s), frag(stmt))
 	case *ast.CreateSearchPropertyListStatement:
-		return createSearchPropertyListStatementToJSON(s)
+		return addSpan(createSearchPropertyListStatementToJSON(s), frag(stmt))
 	case *ast.CreateExternalDataSourceStatement:
-		return createExternalDataSourceStatementToJSON(s)
+		return addSpan(createExternalDataSourceStatementToJSON(s), frag(stmt))
 	case *ast.CreateExternalFileFormatStatement:
-		return createExternalFileFormatStatementToJSON(s)
+		return addSpan(createExternalFileFormatStatementToJSON(s), frag(stmt))
 	case *ast.CreateExternalTableStatement:
-		return createExternalTableStatementToJSON(s)
+		return addSpan(createExternalTableStatementToJSON(s), frag(stmt))
 	case *ast.CreateExternalLanguageStatement:
-		return createExternalLanguageStatementToJSON(s)
+		return addSpan(createExternalLanguageStatementToJSON(s), frag(stmt))
 	case *ast.CreateExternalLibraryStatement:
-		return createExternalLibraryStatementToJSON(s)
+		return addSpan(createExternalLibraryStatementToJSON(s), frag(stmt))
 	case *ast.CreateEventSessionStatement:
-		return createEventSessionStatementToJSON(s)
+		return addSpan(createEventSessionStatementToJSON(s), frag(stmt))
 	case *ast.RestoreStatement:
-		return restoreStatementToJSON(s)
+		return addSpan(restoreStatementToJSON(s), frag(stmt))
 	case *ast.BackupDatabaseStatement:
-		return backupDatabaseStatementToJSON(s)
+		return addSpan(backupDatabaseStatementToJSON(s), frag(stmt))
 	case *ast.BackupTransactionLogStatement:
-		return backupTransactionLogStatementToJSON(s)
+		return addSpan(backupTransactionLogStatementToJSON(s), frag(stmt))
 	case *ast.BackupCertificateStatement:
-		return backupCertificateStatementToJSON(s)
+		return addSpan(backupCertificateStatementToJSON(s), frag(stmt))
 	case *ast.BackupServiceMasterKeyStatement:
-		return backupServiceMasterKeyStatementToJSON(s)
+		return addSpan(backupServiceMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.BackupMasterKeyStatement:
-		return backupMasterKeyStatementToJSON(s)
+		return addSpan(backupMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.RestoreServiceMasterKeyStatement:
-		return restoreServiceMasterKeyStatementToJSON(s)
+		return addSpan(restoreServiceMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.RestoreMasterKeyStatement:
-		return restoreMasterKeyStatementToJSON(s)
+		return addSpan(restoreMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.CreateUserStatement:
-		return createUserStatementToJSON(s)
+		return addSpan(createUserStatementToJSON(s), frag(stmt))
 	case *ast.CreateAggregateStatement:
-		return createAggregateStatementToJSON(s)
+		return addSpan(createAggregateStatementToJSON(s), frag(stmt))
 	case *ast.CreateColumnStoreIndexStatement:
-		return createColumnStoreIndexStatementToJSON(s)
+		return addSpan(createColumnStoreIndexStatementToJSON(s), frag(stmt))
 	case *ast.AlterFunctionStatement:
-		return alterFunctionStatementToJSON(s)
+		return addSpan(alterFunctionStatementToJSON(s), frag(stmt))
 	case *ast.CreateFunctionStatement:
-		return createFunctionStatementToJSON(s)
+		return addSpan(createFunctionStatementToJSON(s), frag(stmt))
 	case *ast.CreateOrAlterFunctionStatement:
-		return createOrAlterFunctionStatementToJSON(s)
+		return addSpan(createOrAlterFunctionStatementToJSON(s), frag(stmt))
 	case *ast.AlterTriggerStatement:
-		return alterTriggerStatementToJSON(s)
+		return addSpan(alterTriggerStatementToJSON(s), frag(stmt))
 	case *ast.CreateTriggerStatement:
-		return createTriggerStatementToJSON(s)
+		return addSpan(createTriggerStatementToJSON(s), frag(stmt))
 	case *ast.CreateOrAlterTriggerStatement:
-		return createOrAlterTriggerStatementToJSON(s)
+		return addSpan(createOrAlterTriggerStatementToJSON(s), frag(stmt))
 	case *ast.EnableDisableTriggerStatement:
-		return enableDisableTriggerStatementToJSON(s)
+		return addSpan(enableDisableTriggerStatementToJSON(s), frag(stmt))
 	case *ast.EndConversationStatement:
-		return endConversationStatementToJSON(s)
+		return addSpan(endConversationStatementToJSON(s), frag(stmt))
 	case *ast.CreateDatabaseStatement:
-		return createDatabaseStatementToJSON(s)
+		return addSpan(createDatabaseStatementToJSON(s), frag(stmt))
 	case *ast.CreateDatabaseEncryptionKeyStatement:
-		return createDatabaseEncryptionKeyStatementToJSON(s)
+		return addSpan(createDatabaseEncryptionKeyStatementToJSON(s), frag(stmt))
 	case *ast.AlterDatabaseEncryptionKeyStatement:
-		return alterDatabaseEncryptionKeyStatementToJSON(s)
+		return addSpan(alterDatabaseEncryptionKeyStatementToJSON(s), frag(stmt))
 	case *ast.DropDatabaseEncryptionKeyStatement:
-		return dropDatabaseEncryptionKeyStatementToJSON(s)
+		return addSpan(dropDatabaseEncryptionKeyStatementToJSON(s), frag(stmt))
 	case *ast.CreateLoginStatement:
-		return createLoginStatementToJSON(s)
+		return addSpan(createLoginStatementToJSON(s), frag(stmt))
 	case *ast.AlterLoginEnableDisableStatement:
-		return alterLoginEnableDisableStatementToJSON(s)
+		return addSpan(alterLoginEnableDisableStatementToJSON(s), frag(stmt))
 	case *ast.AlterLoginOptionsStatement:
-		return alterLoginOptionsStatementToJSON(s)
+		return addSpan(alterLoginOptionsStatementToJSON(s), frag(stmt))
 	case *ast.DropLoginStatement:
-		return dropLoginStatementToJSON(s)
+		return addSpan(dropLoginStatementToJSON(s), frag(stmt))
 	case *ast.CreateIndexStatement:
-		return createIndexStatementToJSON(s)
+		return addSpan(createIndexStatementToJSON(s), frag(stmt))
 	case *ast.CreateSpatialIndexStatement:
-		return createSpatialIndexStatementToJSON(s)
+		return addSpan(createSpatialIndexStatementToJSON(s), frag(stmt))
 	case *ast.CreateAsymmetricKeyStatement:
-		return createAsymmetricKeyStatementToJSON(s)
+		return addSpan(createAsymmetricKeyStatementToJSON(s), frag(stmt))
 	case *ast.CreateSymmetricKeyStatement:
-		return createSymmetricKeyStatementToJSON(s)
+		return addSpan(createSymmetricKeyStatementToJSON(s), frag(stmt))
 	case *ast.CreateCertificateStatement:
-		return createCertificateStatementToJSON(s)
+		return addSpan(createCertificateStatementToJSON(s), frag(stmt))
 	case *ast.CreateMessageTypeStatement:
-		return createMessageTypeStatementToJSON(s)
+		return addSpan(createMessageTypeStatementToJSON(s), frag(stmt))
 	case *ast.CreateServiceStatement:
-		return createServiceStatementToJSON(s)
+		return addSpan(createServiceStatementToJSON(s), frag(stmt))
 	case *ast.CreateQueueStatement:
-		return createQueueStatementToJSON(s)
+		return addSpan(createQueueStatementToJSON(s), frag(stmt))
 	case *ast.CreateRouteStatement:
-		return createRouteStatementToJSON(s)
+		return addSpan(createRouteStatementToJSON(s), frag(stmt))
 	case *ast.CreateEndpointStatement:
-		return createEndpointStatementToJSON(s)
+		return addSpan(createEndpointStatementToJSON(s), frag(stmt))
 	case *ast.CreateAssemblyStatement:
-		return createAssemblyStatementToJSON(s)
+		return addSpan(createAssemblyStatementToJSON(s), frag(stmt))
 	case *ast.CreateApplicationRoleStatement:
-		return createApplicationRoleStatementToJSON(s)
+		return addSpan(createApplicationRoleStatementToJSON(s), frag(stmt))
 	case *ast.CreateFulltextCatalogStatement:
-		return createFulltextCatalogStatementToJSON(s)
+		return addSpan(createFulltextCatalogStatementToJSON(s), frag(stmt))
 	case *ast.CreateFulltextIndexStatement:
-		return createFulltextIndexStatementToJSON(s)
+		return addSpan(createFulltextIndexStatementToJSON(s), frag(stmt))
 	case *ast.CreateRemoteServiceBindingStatement:
-		return createRemoteServiceBindingStatementToJSON(s)
+		return addSpan(createRemoteServiceBindingStatementToJSON(s), frag(stmt))
 	case *ast.CreateStatisticsStatement:
-		return createStatisticsStatementToJSON(s)
+		return addSpan(createStatisticsStatementToJSON(s), frag(stmt))
 	case *ast.CreateTypeStatement:
-		return createTypeStatementToJSON(s)
+		return addSpan(createTypeStatementToJSON(s), frag(stmt))
 	case *ast.CreateTypeUddtStatement:
-		return createTypeUddtStatementToJSON(s)
+		return addSpan(createTypeUddtStatementToJSON(s), frag(stmt))
 	case *ast.CreateTypeUdtStatement:
-		return createTypeUdtStatementToJSON(s)
+		return addSpan(createTypeUdtStatementToJSON(s), frag(stmt))
 	case *ast.CreateTypeTableStatement:
-		return createTypeTableStatementToJSON(s)
+		return addSpan(createTypeTableStatementToJSON(s), frag(stmt))
 	case *ast.CreateXmlIndexStatement:
-		return createXmlIndexStatementToJSON(s)
+		return addSpan(createXmlIndexStatementToJSON(s), frag(stmt))
 	case *ast.CreateSelectiveXmlIndexStatement:
-		return createSelectiveXmlIndexStatementToJSON(s)
+		return addSpan(createSelectiveXmlIndexStatementToJSON(s), frag(stmt))
 	case *ast.CreatePartitionFunctionStatement:
-		return createPartitionFunctionStatementToJSON(s)
+		return addSpan(createPartitionFunctionStatementToJSON(s), frag(stmt))
 	case *ast.CreateEventNotificationStatement:
-		return createEventNotificationStatementToJSON(s)
+		return addSpan(createEventNotificationStatementToJSON(s), frag(stmt))
 	case *ast.CreateSecurityPolicyStatement:
-		return createSecurityPolicyStatementToJSON(s)
+		return addSpan(createSecurityPolicyStatementToJSON(s), frag(stmt))
 	case *ast.AlterSecurityPolicyStatement:
-		return alterSecurityPolicyStatementToJSON(s)
+		return addSpan(alterSecurityPolicyStatementToJSON(s), frag(stmt))
 	case *ast.AlterIndexStatement:
-		return alterIndexStatementToJSON(s)
+		return addSpan(alterIndexStatementToJSON(s), frag(stmt))
 	case *ast.DropDatabaseStatement:
-		return dropDatabaseStatementToJSON(s)
+		return addSpan(dropDatabaseStatementToJSON(s), frag(stmt))
 	case *ast.DropTableStatement:
-		return dropTableStatementToJSON(s)
+		return addSpan(dropTableStatementToJSON(s), frag(stmt))
 	case *ast.DropViewStatement:
-		return dropViewStatementToJSON(s)
+		return addSpan(dropViewStatementToJSON(s), frag(stmt))
 	case *ast.DropProcedureStatement:
-		return dropProcedureStatementToJSON(s)
+		return addSpan(dropProcedureStatementToJSON(s), frag(stmt))
 	case *ast.DropFunctionStatement:
-		return dropFunctionStatementToJSON(s)
+		return addSpan(dropFunctionStatementToJSON(s), frag(stmt))
 	case *ast.DropTriggerStatement:
-		return dropTriggerStatementToJSON(s)
+		return addSpan(dropTriggerStatementToJSON(s), frag(stmt))
 	case *ast.DropIndexStatement:
-		return dropIndexStatementToJSON(s)
+		return addSpan(dropIndexStatementToJSON(s), frag(stmt))
 	case *ast.DropStatisticsStatement:
-		return dropStatisticsStatementToJSON(s)
+		return addSpan(dropStatisticsStatementToJSON(s), frag(stmt))
 	case *ast.DropDefaultStatement:
-		return dropDefaultStatementToJSON(s)
+		return addSpan(dropDefaultStatementToJSON(s), frag(stmt))
 	case *ast.DropRuleStatement:
-		return dropRuleStatementToJSON(s)
+		return addSpan(dropRuleStatementToJSON(s), frag(stmt))
 	case *ast.DropSchemaStatement:
-		return dropSchemaStatementToJSON(s)
+		return addSpan(dropSchemaStatementToJSON(s), frag(stmt))
 	case *ast.DropPartitionFunctionStatement:
-		return dropPartitionFunctionStatementToJSON(s)
+		return addSpan(dropPartitionFunctionStatementToJSON(s), frag(stmt))
 	case *ast.DropPartitionSchemeStatement:
-		return dropPartitionSchemeStatementToJSON(s)
+		return addSpan(dropPartitionSchemeStatementToJSON(s), frag(stmt))
 	case *ast.DropApplicationRoleStatement:
-		return dropApplicationRoleStatementToJSON(s)
+		return addSpan(dropApplicationRoleStatementToJSON(s), frag(stmt))
 	case *ast.DropCertificateStatement:
-		return dropCertificateStatementToJSON(s)
+		return addSpan(dropCertificateStatementToJSON(s), frag(stmt))
 	case *ast.DropMasterKeyStatement:
-		return dropMasterKeyStatementToJSON(s)
+		return addSpan(dropMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.DropXmlSchemaCollectionStatement:
-		return dropXmlSchemaCollectionStatementToJSON(s)
+		return addSpan(dropXmlSchemaCollectionStatementToJSON(s), frag(stmt))
 	case *ast.DropContractStatement:
-		return dropContractStatementToJSON(s)
+		return addSpan(dropContractStatementToJSON(s), frag(stmt))
 	case *ast.DropEndpointStatement:
-		return dropEndpointStatementToJSON(s)
+		return addSpan(dropEndpointStatementToJSON(s), frag(stmt))
 	case *ast.DropMessageTypeStatement:
-		return dropMessageTypeStatementToJSON(s)
+		return addSpan(dropMessageTypeStatementToJSON(s), frag(stmt))
 	case *ast.DropQueueStatement:
-		return dropQueueStatementToJSON(s)
+		return addSpan(dropQueueStatementToJSON(s), frag(stmt))
 	case *ast.DropRemoteServiceBindingStatement:
-		return dropRemoteServiceBindingStatementToJSON(s)
+		return addSpan(dropRemoteServiceBindingStatementToJSON(s), frag(stmt))
 	case *ast.DropRouteStatement:
-		return dropRouteStatementToJSON(s)
+		return addSpan(dropRouteStatementToJSON(s), frag(stmt))
 	case *ast.DropServiceStatement:
-		return dropServiceStatementToJSON(s)
+		return addSpan(dropServiceStatementToJSON(s), frag(stmt))
 	case *ast.DropEventNotificationStatement:
-		return dropEventNotificationStatementToJSON(s)
+		return addSpan(dropEventNotificationStatementToJSON(s), frag(stmt))
 	case *ast.DropEventSessionStatement:
-		return dropEventSessionStatementToJSON(s)
+		return addSpan(dropEventSessionStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableTriggerModificationStatement:
-		return alterTableTriggerModificationStatementToJSON(s)
+		return addSpan(alterTableTriggerModificationStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableFileTableNamespaceStatement:
-		return alterTableFileTableNamespaceStatementToJSON(s)
+		return addSpan(alterTableFileTableNamespaceStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableSwitchStatement:
-		return alterTableSwitchStatementToJSON(s)
+		return addSpan(alterTableSwitchStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableConstraintModificationStatement:
-		return alterTableConstraintModificationStatementToJSON(s)
+		return addSpan(alterTableConstraintModificationStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableSetStatement:
-		return alterTableSetStatementToJSON(s)
+		return addSpan(alterTableSetStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableRebuildStatement:
-		return alterTableRebuildStatementToJSON(s)
+		return addSpan(alterTableRebuildStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableAlterPartitionStatement:
-		return alterTableAlterPartitionStatementToJSON(s)
+		return addSpan(alterTableAlterPartitionStatementToJSON(s), frag(stmt))
 	case *ast.AlterTableChangeTrackingModificationStatement:
-		return alterTableChangeTrackingStatementToJSON(s)
+		return addSpan(alterTableChangeTrackingStatementToJSON(s), frag(stmt))
 	case *ast.InsertBulkStatement:
-		return insertBulkStatementToJSON(s)
+		return addSpan(insertBulkStatementToJSON(s), frag(stmt))
 	case *ast.BulkInsertStatement:
-		return bulkInsertStatementToJSON(s)
+		return addSpan(bulkInsertStatementToJSON(s), frag(stmt))
 	case *ast.CopyStatement:
-		return copyStatementToJSON(s)
+		return addSpan(copyStatementToJSON(s), frag(stmt))
 	case *ast.AlterUserStatement:
-		return alterUserStatementToJSON(s)
+		return addSpan(alterUserStatementToJSON(s), frag(stmt))
 	case *ast.AlterRouteStatement:
-		return alterRouteStatementToJSON(s)
+		return addSpan(alterRouteStatementToJSON(s), frag(stmt))
 	case *ast.AlterSearchPropertyListStatement:
-		return alterSearchPropertyListStatementToJSON(s)
+		return addSpan(alterSearchPropertyListStatementToJSON(s), frag(stmt))
 	case *ast.AlterAssemblyStatement:
-		return alterAssemblyStatementToJSON(s)
+		return addSpan(alterAssemblyStatementToJSON(s), frag(stmt))
 	case *ast.AlterEndpointStatement:
-		return alterEndpointStatementToJSON(s)
+		return addSpan(alterEndpointStatementToJSON(s), frag(stmt))
 	case *ast.AlterEventSessionStatement:
-		return alterEventSessionStatementToJSON(s)
+		return addSpan(alterEventSessionStatementToJSON(s), frag(stmt))
 	case *ast.AlterAuthorizationStatement:
-		return alterAuthorizationStatementToJSON(s)
+		return addSpan(alterAuthorizationStatementToJSON(s), frag(stmt))
 	case *ast.AlterServiceStatement:
-		return alterServiceStatementToJSON(s)
+		return addSpan(alterServiceStatementToJSON(s), frag(stmt))
 	case *ast.AlterCertificateStatement:
-		return alterCertificateStatementToJSON(s)
+		return addSpan(alterCertificateStatementToJSON(s), frag(stmt))
 	case *ast.AlterApplicationRoleStatement:
-		return alterApplicationRoleStatementToJSON(s)
+		return addSpan(alterApplicationRoleStatementToJSON(s), frag(stmt))
 	case *ast.AlterAsymmetricKeyStatement:
-		return alterAsymmetricKeyStatementToJSON(s)
+		return addSpan(alterAsymmetricKeyStatementToJSON(s), frag(stmt))
 	case *ast.AlterQueueStatement:
-		return alterQueueStatementToJSON(s)
+		return addSpan(alterQueueStatementToJSON(s), frag(stmt))
 	case *ast.AlterPartitionSchemeStatement:
-		return alterPartitionSchemeStatementToJSON(s)
+		return addSpan(alterPartitionSchemeStatementToJSON(s), frag(stmt))
 	case *ast.AlterPartitionFunctionStatement:
-		return alterPartitionFunctionStatementToJSON(s)
+		return addSpan(alterPartitionFunctionStatementToJSON(s), frag(stmt))
 	case *ast.AlterFulltextCatalogStatement:
-		return alterFulltextCatalogStatementToJSON(s)
+		return addSpan(alterFulltextCatalogStatementToJSON(s), frag(stmt))
 	case *ast.CreateFullTextCatalogStatement:
-		return createFullTextCatalogStatementToJSON(s)
+		return addSpan(createFullTextCatalogStatementToJSON(s), frag(stmt))
 	case *ast.AlterFulltextIndexStatement:
-		return alterFulltextIndexStatementToJSON(s)
+		return addSpan(alterFulltextIndexStatementToJSON(s), frag(stmt))
 	case *ast.CreateFullTextStopListStatement:
-		return createFullTextStopListStatementToJSON(s)
+		return addSpan(createFullTextStopListStatementToJSON(s), frag(stmt))
 	case *ast.AlterFullTextStopListStatement:
-		return alterFullTextStopListStatementToJSON(s)
+		return addSpan(alterFullTextStopListStatementToJSON(s), frag(stmt))
 	case *ast.DropFullTextStopListStatement:
-		return dropFullTextStopListStatementToJSON(s)
+		return addSpan(dropFullTextStopListStatementToJSON(s), frag(stmt))
 	case *ast.DropFullTextCatalogStatement:
-		return dropFullTextCatalogStatementToJSON(s)
+		return addSpan(dropFullTextCatalogStatementToJSON(s), frag(stmt))
 	case *ast.DropFulltextIndexStatement:
-		return dropFulltextIndexStatementToJSON(s)
+		return addSpan(dropFulltextIndexStatementToJSON(s), frag(stmt))
 	case *ast.AlterSymmetricKeyStatement:
-		return alterSymmetricKeyStatementToJSON(s)
+		return addSpan(alterSymmetricKeyStatementToJSON(s), frag(stmt))
 	case *ast.AlterServiceMasterKeyStatement:
-		return alterServiceMasterKeyStatementToJSON(s)
+		return addSpan(alterServiceMasterKeyStatementToJSON(s), frag(stmt))
 	case *ast.RenameEntityStatement:
-		return renameEntityStatementToJSON(s)
+		return addSpan(renameEntityStatementToJSON(s), frag(stmt))
 	case *ast.OpenCursorStatement:
-		return openCursorStatementToJSON(s)
+		return addSpan(openCursorStatementToJSON(s), frag(stmt))
 	case *ast.CloseCursorStatement:
-		return closeCursorStatementToJSON(s)
+		return addSpan(closeCursorStatementToJSON(s), frag(stmt))
 	case *ast.DeallocateCursorStatement:
-		return deallocateCursorStatementToJSON(s)
+		return addSpan(deallocateCursorStatementToJSON(s), frag(stmt))
 	case *ast.FetchCursorStatement:
-		return fetchCursorStatementToJSON(s)
+		return addSpan(fetchCursorStatementToJSON(s), frag(stmt))
 	case *ast.DeclareCursorStatement:
-		return declareCursorStatementToJSON(s)
+		return addSpan(declareCursorStatementToJSON(s), frag(stmt))
 	case *ast.AddSignatureStatement:
-		return addSignatureStatementToJSON(s)
+		return addSpan(addSignatureStatementToJSON(s), frag(stmt))
 	case *ast.DropSignatureStatement:
-		return dropSignatureStatementToJSON(s)
+		return addSpan(dropSignatureStatementToJSON(s), frag(stmt))
 	case *ast.AddSensitivityClassificationStatement:
-		return addSensitivityClassificationStatementToJSON(s)
+		return addSpan(addSensitivityClassificationStatementToJSON(s), frag(stmt))
 	case *ast.DropSensitivityClassificationStatement:
-		return dropSensitivityClassificationStatementToJSON(s)
+		return addSpan(dropSensitivityClassificationStatementToJSON(s), frag(stmt))
 	default:
-		return jsonNode{"$type": "UnknownStatement"}
+		return addSpan(jsonNode{"$type": "UnknownStatement"}, frag(stmt))
 	}
 }
 
@@ -687,7 +687,7 @@ func revertStatementToJSON(s *ast.RevertStatement) jsonNode {
 	if s.Cookie != nil {
 		node["Cookie"] = scalarExpressionToJSON(s.Cookie)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropCredentialStatementToJSON(s *ast.DropCredentialStatement) jsonNode {
@@ -699,7 +699,7 @@ func dropCredentialStatementToJSON(s *ast.DropCredentialStatement) jsonNode {
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropExternalLanguageStatementToJSON(s *ast.DropExternalLanguageStatement) jsonNode {
@@ -712,7 +712,7 @@ func dropExternalLanguageStatementToJSON(s *ast.DropExternalLanguageStatement) j
 	if s.Authorization != nil {
 		node["Owner"] = identifierToJSON(s.Authorization)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropExternalLibraryStatementToJSON(s *ast.DropExternalLibraryStatement) jsonNode {
@@ -725,7 +725,7 @@ func dropExternalLibraryStatementToJSON(s *ast.DropExternalLibraryStatement) jso
 	if s.Owner != nil {
 		node["Owner"] = identifierToJSON(s.Owner)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropSequenceStatementToJSON(s *ast.DropSequenceStatement) jsonNode {
@@ -740,7 +740,7 @@ func dropSequenceStatementToJSON(s *ast.DropSequenceStatement) jsonNode {
 		node["Objects"] = objects
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropSearchPropertyListStatementToJSON(s *ast.DropSearchPropertyListStatement) jsonNode {
@@ -751,7 +751,7 @@ func dropSearchPropertyListStatementToJSON(s *ast.DropSearchPropertyListStatemen
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropServerRoleStatementToJSON(s *ast.DropServerRoleStatement) jsonNode {
@@ -762,7 +762,7 @@ func dropServerRoleStatementToJSON(s *ast.DropServerRoleStatement) jsonNode {
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropAvailabilityGroupStatementToJSON(s *ast.DropAvailabilityGroupStatement) jsonNode {
@@ -773,7 +773,7 @@ func dropAvailabilityGroupStatementToJSON(s *ast.DropAvailabilityGroupStatement)
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropFederationStatementToJSON(s *ast.DropFederationStatement) jsonNode {
@@ -784,7 +784,7 @@ func dropFederationStatementToJSON(s *ast.DropFederationStatement) jsonNode {
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterTableDropTableElementStatementToJSON(s *ast.AlterTableDropTableElementStatement) jsonNode {
@@ -801,7 +801,7 @@ func alterTableDropTableElementStatementToJSON(s *ast.AlterTableDropTableElement
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterTableDropTableElementToJSON(e *ast.AlterTableDropTableElement) jsonNode {
@@ -822,17 +822,17 @@ func alterTableDropTableElementToJSON(e *ast.AlterTableDropTableElement) jsonNod
 		node["DropClusteredConstraintOptions"] = options
 	}
 	node["IsIfExists"] = e.IsIfExists
-	return node
+	return addSpan(node, frag(e))
 }
 
 func dropClusteredConstraintOptionToJSON(o ast.DropClusteredConstraintOption) jsonNode {
 	switch opt := o.(type) {
 	case *ast.DropClusteredConstraintStateOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "DropClusteredConstraintStateOption",
 			"OptionState": opt.OptionState,
 			"OptionKind":  opt.OptionKind,
-		}
+		}, frag(o))
 	case *ast.DropClusteredConstraintMoveOption:
 		node := jsonNode{
 			"$type":      "DropClusteredConstraintMoveOption",
@@ -841,7 +841,7 @@ func dropClusteredConstraintOptionToJSON(o ast.DropClusteredConstraintOption) js
 		if opt.OptionValue != nil {
 			node["OptionValue"] = fileGroupOrPartitionSchemeToJSON(opt.OptionValue)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.DropClusteredConstraintValueOption:
 		node := jsonNode{
 			"$type":      "DropClusteredConstraintValueOption",
@@ -850,7 +850,7 @@ func dropClusteredConstraintOptionToJSON(o ast.DropClusteredConstraintOption) js
 		if opt.OptionValue != nil {
 			node["OptionValue"] = scalarExpressionToJSON(opt.OptionValue)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.DropClusteredConstraintWaitAtLowPriorityLockOption:
 		node := jsonNode{
 			"$type":      "DropClusteredConstraintWaitAtLowPriorityLockOption",
@@ -863,9 +863,9 @@ func dropClusteredConstraintOptionToJSON(o ast.DropClusteredConstraintOption) js
 			}
 			node["Options"] = options
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownDropClusteredConstraintOption"}
+		return addSpan(jsonNode{"$type": "UnknownDropClusteredConstraintOption"}, frag(o))
 	}
 }
 
@@ -882,15 +882,15 @@ func lowPriorityLockWaitOptionToJSON(o ast.LowPriorityLockWaitOption) jsonNode {
 		if opt.Unit != "" {
 			node["Unit"] = opt.Unit
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.LowPriorityLockWaitAbortAfterWaitOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":          "LowPriorityLockWaitAbortAfterWaitOption",
 			"OptionKind":     opt.OptionKind,
 			"AbortAfterWait": opt.AbortAfterWait,
-		}
+		}, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownLowPriorityLockWaitOption"}
+		return addSpan(jsonNode{"$type": "UnknownLowPriorityLockWaitOption"}, frag(o))
 	}
 }
 
@@ -905,7 +905,7 @@ func onlineIndexLowPriorityLockWaitOptionToJSON(o *ast.OnlineIndexLowPriorityLoc
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func fileGroupOrPartitionSchemeToJSON(fg *ast.FileGroupOrPartitionScheme) jsonNode {
@@ -922,7 +922,7 @@ func fileGroupOrPartitionSchemeToJSON(fg *ast.FileGroupOrPartitionScheme) jsonNo
 		}
 		node["PartitionSchemeColumns"] = cols
 	}
-	return node
+	return addSpan(node, frag(fg))
 }
 
 func alterTableAlterIndexStatementToJSON(s *ast.AlterTableAlterIndexStatement) jsonNode {
@@ -943,7 +943,7 @@ func alterTableAlterIndexStatementToJSON(s *ast.AlterTableAlterIndexStatement) j
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func indexExpressionOptionToJSON(o *ast.IndexExpressionOption) jsonNode {
@@ -954,7 +954,7 @@ func indexExpressionOptionToJSON(o *ast.IndexExpressionOption) jsonNode {
 	if o.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(o.Expression)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func alterTableAddTableElementStatementToJSON(s *ast.AlterTableAddTableElementStatement) jsonNode {
@@ -968,7 +968,7 @@ func alterTableAddTableElementStatementToJSON(s *ast.AlterTableAddTableElementSt
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterTableAlterColumnStatementToJSON(s *ast.AlterTableAlterColumnStatement) jsonNode {
@@ -1009,7 +1009,7 @@ func alterTableAlterColumnStatementToJSON(s *ast.AlterTableAlterColumnStatement)
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func columnEncryptionDefinitionToJSON(e *ast.ColumnEncryptionDefinition) jsonNode {
@@ -1023,7 +1023,7 @@ func columnEncryptionDefinitionToJSON(e *ast.ColumnEncryptionDefinition) jsonNod
 		}
 		node["Parameters"] = params
 	}
-	return node
+	return addSpan(node, frag(e))
 }
 
 func columnEncryptionParameterToJSON(p ast.ColumnEncryptionParameter) jsonNode {
@@ -1036,13 +1036,13 @@ func columnEncryptionParameterToJSON(p ast.ColumnEncryptionParameter) jsonNode {
 		if param.Name != nil {
 			node["Name"] = identifierToJSON(param.Name)
 		}
-		return node
+		return addSpan(node, frag(p))
 	case *ast.ColumnEncryptionTypeParameter:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":          "ColumnEncryptionTypeParameter",
 			"EncryptionType": param.EncryptionType,
 			"ParameterKind":  param.ParameterKind,
-		}
+		}, frag(p))
 	case *ast.ColumnEncryptionAlgorithmParameter:
 		node := jsonNode{
 			"$type":         "ColumnEncryptionAlgorithmParameter",
@@ -1051,9 +1051,9 @@ func columnEncryptionParameterToJSON(p ast.ColumnEncryptionParameter) jsonNode {
 		if param.EncryptionAlgorithm != nil {
 			node["EncryptionAlgorithm"] = scalarExpressionToJSON(param.EncryptionAlgorithm)
 		}
-		return node
+		return addSpan(node, frag(p))
 	default:
-		return jsonNode{"$type": "Unknown"}
+		return addSpan(jsonNode{"$type": "Unknown"}, frag(p))
 	}
 }
 
@@ -1068,7 +1068,7 @@ func alterMessageTypeStatementToJSON(s *ast.AlterMessageTypeStatement) jsonNode 
 	if s.XmlSchemaCollectionName != nil {
 		node["XmlSchemaCollectionName"] = schemaObjectNameToJSON(s.XmlSchemaCollectionName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createContractStatementToJSON(s *ast.CreateContractStatement) jsonNode {
@@ -1085,7 +1085,7 @@ func createContractStatementToJSON(s *ast.CreateContractStatement) jsonNode {
 		}
 		node["Messages"] = msgs
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func contractMessageToJSON(m *ast.ContractMessage) jsonNode {
@@ -1096,7 +1096,7 @@ func contractMessageToJSON(m *ast.ContractMessage) jsonNode {
 	if m.Name != nil {
 		node["Name"] = identifierToJSON(m.Name)
 	}
-	return node
+	return addSpan(node, frag(m))
 }
 
 func createPartitionSchemeStatementToJSON(s *ast.CreatePartitionSchemeStatement) jsonNode {
@@ -1117,7 +1117,7 @@ func createPartitionSchemeStatementToJSON(s *ast.CreatePartitionSchemeStatement)
 		}
 		node["FileGroups"] = fgs
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createRuleStatementToJSON(s *ast.CreateRuleStatement) jsonNode {
@@ -1130,7 +1130,7 @@ func createRuleStatementToJSON(s *ast.CreateRuleStatement) jsonNode {
 	if s.Expression != nil {
 		node["Expression"] = booleanExpressionToJSON(s.Expression)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createSynonymStatementToJSON(s *ast.CreateSynonymStatement) jsonNode {
@@ -1143,7 +1143,7 @@ func createSynonymStatementToJSON(s *ast.CreateSynonymStatement) jsonNode {
 	if s.ForName != nil {
 		node["ForName"] = schemaObjectNameToJSON(s.ForName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterCredentialStatementToJSON(s *ast.AlterCredentialStatement) jsonNode {
@@ -1160,7 +1160,7 @@ func alterCredentialStatementToJSON(s *ast.AlterCredentialStatement) jsonNode {
 	if s.Secret != nil {
 		node["Secret"] = scalarExpressionToJSON(s.Secret)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseSetStatementToJSON(s *ast.AlterDatabaseSetStatement) jsonNode {
@@ -1190,26 +1190,26 @@ func alterDatabaseSetStatementToJSON(s *ast.AlterDatabaseSetStatement) jsonNode 
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = s.UseCurrent
-	return node
+	return addSpan(node, frag(s))
 }
 
 func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.AcceleratedDatabaseRecoveryDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "AcceleratedDatabaseRecoveryDatabaseOption",
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
-		}
+		}, frag(opt))
 	case *ast.OnOffDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "OnOffDatabaseOption",
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
-		}
+		}, frag(opt))
 	case *ast.AutomaticTuningDatabaseOption:
 		node := jsonNode{
-			"$type":      "AutomaticTuningDatabaseOption",
+			"$type": "AutomaticTuningDatabaseOption",
 		}
 		if o.AutomaticTuningState != "" {
 			node["AutomaticTuningState"] = o.AutomaticTuningState
@@ -1222,13 +1222,13 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			node["Options"] = opts
 		}
 		node["OptionKind"] = o.OptionKind
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.DelayedDurabilityDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "DelayedDurabilityDatabaseOption",
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.AutoCreateStatisticsDatabaseOption:
 		node := jsonNode{
 			"$type":          "AutoCreateStatisticsDatabaseOption",
@@ -1241,7 +1241,7 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		}
 		node["OptionState"] = o.OptionState
 		node["OptionKind"] = o.OptionKind
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.MaxSizeDatabaseOption:
 		node := jsonNode{
 			"$type": "MaxSizeDatabaseOption",
@@ -1255,7 +1255,7 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		if o.OptionKind != "" {
 			node["OptionKind"] = o.OptionKind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.LiteralDatabaseOption:
 		node := jsonNode{
 			"$type": "LiteralDatabaseOption",
@@ -1266,7 +1266,7 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		if o.OptionKind != "" {
 			node["OptionKind"] = o.OptionKind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ElasticPoolSpecification:
 		node := jsonNode{
 			"$type": "ElasticPoolSpecification",
@@ -1277,7 +1277,7 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		if o.OptionKind != "" {
 			node["OptionKind"] = o.OptionKind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.RemoteDataArchiveDatabaseOption:
 		node := jsonNode{
 			"$type":       "RemoteDataArchiveDatabaseOption",
@@ -1291,7 +1291,7 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			}
 			node["Settings"] = settings
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ChangeTrackingDatabaseOption:
 		node := jsonNode{
 			"$type":       "ChangeTrackingDatabaseOption",
@@ -1305,35 +1305,35 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			}
 			node["Details"] = details
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.RecoveryDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "RecoveryDatabaseOption",
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.CursorDefaultDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "CursorDefaultDatabaseOption",
 			"IsLocal":    o.IsLocal,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.SimpleDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "DatabaseOption",
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.GenericDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "DatabaseOption",
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.PageVerifyDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "PageVerifyDatabaseOption",
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.PartnerDatabaseOption:
 		node := jsonNode{
 			"$type":         "PartnerDatabaseOption",
@@ -1346,7 +1346,7 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		if o.Timeout != nil {
 			node["Timeout"] = scalarExpressionToJSON(o.Timeout)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.WitnessDatabaseOption:
 		node := jsonNode{
 			"$type":      "WitnessDatabaseOption",
@@ -1356,19 +1356,19 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		if o.WitnessServer != nil {
 			node["WitnessServer"] = scalarExpressionToJSON(o.WitnessServer)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ParameterizationDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "ParameterizationDatabaseOption",
 			"IsSimple":   o.IsSimple,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.ContainmentDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "ContainmentDatabaseOption",
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.IdentifierDatabaseOption:
 		node := jsonNode{
 			"$type":      "IdentifierDatabaseOption",
@@ -1377,13 +1377,13 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = identifierToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.HadrDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "HadrDatabaseOption",
 			"HadrOption": o.HadrOption,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.HadrAvailabilityGroupDatabaseOption:
 		node := jsonNode{
 			"$type":      "HadrAvailabilityGroupDatabaseOption",
@@ -1393,7 +1393,7 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		if o.GroupName != nil {
 			node["GroupName"] = identifierToJSON(o.GroupName)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.FileStreamDatabaseOption:
 		node := jsonNode{
 			"$type":      "FileStreamDatabaseOption",
@@ -1405,7 +1405,7 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		if o.DirectoryName != nil {
 			node["DirectoryName"] = scalarExpressionToJSON(o.DirectoryName)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.TargetRecoveryTimeDatabaseOption:
 		node := jsonNode{
 			"$type":      "TargetRecoveryTimeDatabaseOption",
@@ -1415,7 +1415,7 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 		if o.RecoveryTime != nil {
 			node["RecoveryTime"] = scalarExpressionToJSON(o.RecoveryTime)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.QueryStoreDatabaseOption:
 		node := jsonNode{
 			"$type":    "QueryStoreDatabaseOption",
@@ -1435,64 +1435,64 @@ func databaseOptionToJSON(opt ast.DatabaseOption) jsonNode {
 			node["Options"] = opts
 		}
 		node["OptionKind"] = o.OptionKind
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownDatabaseOption"}
+		return addSpan(jsonNode{"$type": "UnknownDatabaseOption"}, frag(opt))
 	}
 }
 
 func automaticTuningOptionToJSON(opt ast.AutomaticTuningOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.AutomaticTuningCreateIndexOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "AutomaticTuningCreateIndexOption",
 			"OptionKind": o.OptionKind,
 			"Value":      o.Value,
-		}
+		}, frag(opt))
 	case *ast.AutomaticTuningDropIndexOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "AutomaticTuningDropIndexOption",
 			"OptionKind": o.OptionKind,
 			"Value":      o.Value,
-		}
+		}, frag(opt))
 	case *ast.AutomaticTuningForceLastGoodPlanOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "AutomaticTuningForceLastGoodPlanOption",
 			"OptionKind": o.OptionKind,
 			"Value":      o.Value,
-		}
+		}, frag(opt))
 	case *ast.AutomaticTuningMaintainIndexOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "AutomaticTuningMaintainIndexOption",
 			"OptionKind": o.OptionKind,
 			"Value":      o.Value,
-		}
+		}, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownAutomaticTuningOption"}
+		return addSpan(jsonNode{"$type": "UnknownAutomaticTuningOption"}, frag(opt))
 	}
 }
 
 func queryStoreOptionToJSON(opt ast.QueryStoreOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.QueryStoreDesiredStateOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":                  "QueryStoreDesiredStateOption",
 			"Value":                  o.Value,
 			"OperationModeSpecified": o.OperationModeSpecified,
 			"OptionKind":             o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.QueryStoreCapturePolicyOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "QueryStoreCapturePolicyOption",
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.QueryStoreSizeCleanupPolicyOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "QueryStoreSizeCleanupPolicyOption",
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.QueryStoreIntervalLengthOption:
 		node := jsonNode{
 			"$type":      "QueryStoreIntervalLengthOption",
@@ -1501,7 +1501,7 @@ func queryStoreOptionToJSON(opt ast.QueryStoreOption) jsonNode {
 		if o.StatsIntervalLength != nil {
 			node["StatsIntervalLength"] = scalarExpressionToJSON(o.StatsIntervalLength)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.QueryStoreMaxStorageSizeOption:
 		node := jsonNode{
 			"$type":      "QueryStoreMaxStorageSizeOption",
@@ -1510,7 +1510,7 @@ func queryStoreOptionToJSON(opt ast.QueryStoreOption) jsonNode {
 		if o.MaxQdsSize != nil {
 			node["MaxQdsSize"] = scalarExpressionToJSON(o.MaxQdsSize)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.QueryStoreMaxPlansPerQueryOption:
 		node := jsonNode{
 			"$type":      "QueryStoreMaxPlansPerQueryOption",
@@ -1519,7 +1519,7 @@ func queryStoreOptionToJSON(opt ast.QueryStoreOption) jsonNode {
 		if o.MaxPlansPerQuery != nil {
 			node["MaxPlansPerQuery"] = scalarExpressionToJSON(o.MaxPlansPerQuery)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.QueryStoreTimeCleanupPolicyOption:
 		node := jsonNode{
 			"$type":      "QueryStoreTimeCleanupPolicyOption",
@@ -1528,13 +1528,13 @@ func queryStoreOptionToJSON(opt ast.QueryStoreOption) jsonNode {
 		if o.StaleQueryThreshold != nil {
 			node["StaleQueryThreshold"] = scalarExpressionToJSON(o.StaleQueryThreshold)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.QueryStoreWaitStatsCaptureOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "QueryStoreWaitStatsCaptureOption",
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.QueryStoreDataFlushIntervalOption:
 		node := jsonNode{
 			"$type":      "QueryStoreDataFlushIntervalOption",
@@ -1543,9 +1543,9 @@ func queryStoreOptionToJSON(opt ast.QueryStoreOption) jsonNode {
 		if o.FlushInterval != nil {
 			node["FlushInterval"] = scalarExpressionToJSON(o.FlushInterval)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownQueryStoreOption"}
+		return addSpan(jsonNode{"$type": "UnknownQueryStoreOption"}, frag(opt))
 	}
 }
 
@@ -1559,7 +1559,7 @@ func remoteDataArchiveDbSettingToJSON(setting ast.RemoteDataArchiveDbSetting) js
 		if s.Server != nil {
 			node["Server"] = scalarExpressionToJSON(s.Server)
 		}
-		return node
+		return addSpan(node, frag(setting))
 	case *ast.RemoteDataArchiveDbCredentialSetting:
 		node := jsonNode{
 			"$type":       "RemoteDataArchiveDbCredentialSetting",
@@ -1568,25 +1568,25 @@ func remoteDataArchiveDbSettingToJSON(setting ast.RemoteDataArchiveDbSetting) js
 		if s.Credential != nil {
 			node["Credential"] = identifierToJSON(s.Credential)
 		}
-		return node
+		return addSpan(node, frag(setting))
 	case *ast.RemoteDataArchiveDbFederatedServiceAccountSetting:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "RemoteDataArchiveDbFederatedServiceAccountSetting",
 			"IsOn":        s.IsOn,
 			"SettingKind": s.SettingKind,
-		}
+		}, frag(setting))
 	default:
-		return jsonNode{"$type": "UnknownRemoteDataArchiveDbSetting"}
+		return addSpan(jsonNode{"$type": "UnknownRemoteDataArchiveDbSetting"}, frag(setting))
 	}
 }
 
 func changeTrackingOptionDetailToJSON(detail ast.ChangeTrackingOptionDetail) jsonNode {
 	switch d := detail.(type) {
 	case *ast.AutoCleanupChangeTrackingOptionDetail:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type": "AutoCleanupChangeTrackingOptionDetail",
 			"IsOn":  d.IsOn,
-		}
+		}, frag(detail))
 	case *ast.ChangeRetentionChangeTrackingOptionDetail:
 		node := jsonNode{
 			"$type": "ChangeRetentionChangeTrackingOptionDetail",
@@ -1595,9 +1595,9 @@ func changeTrackingOptionDetailToJSON(detail ast.ChangeTrackingOptionDetail) jso
 		if d.RetentionPeriod != nil {
 			node["RetentionPeriod"] = scalarExpressionToJSON(d.RetentionPeriod)
 		}
-		return node
+		return addSpan(node, frag(detail))
 	default:
-		return jsonNode{"$type": "UnknownChangeTrackingOptionDetail"}
+		return addSpan(jsonNode{"$type": "UnknownChangeTrackingOptionDetail"}, frag(detail))
 	}
 }
 
@@ -1642,7 +1642,7 @@ func indexDefinitionToJSON(idx *ast.IndexDefinition) jsonNode {
 	if idx.FileStreamOn != nil {
 		node["FileStreamOn"] = identifierOrValueExpressionToJSON(idx.FileStreamOn)
 	}
-	return node
+	return addSpan(node, frag(idx))
 }
 
 func indexTypeToJSON(t *ast.IndexType) jsonNode {
@@ -1652,7 +1652,7 @@ func indexTypeToJSON(t *ast.IndexType) jsonNode {
 	if t.IndexTypeKind != "" {
 		node["IndexTypeKind"] = t.IndexTypeKind
 	}
-	return node
+	return addSpan(node, frag(t))
 }
 
 func columnWithSortOrderToJSON(c *ast.ColumnWithSortOrder) jsonNode {
@@ -1670,7 +1670,7 @@ func columnWithSortOrderToJSON(c *ast.ColumnWithSortOrder) jsonNode {
 		sortOrder = "Descending"
 	}
 	node["SortOrder"] = sortOrder
-	return node
+	return addSpan(node, frag(c))
 }
 
 func printStatementToJSON(s *ast.PrintStatement) jsonNode {
@@ -1680,7 +1680,7 @@ func printStatementToJSON(s *ast.PrintStatement) jsonNode {
 	if s.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(s.Expression)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func throwStatementToJSON(s *ast.ThrowStatement) jsonNode {
@@ -1696,7 +1696,7 @@ func throwStatementToJSON(s *ast.ThrowStatement) jsonNode {
 	if s.State != nil {
 		node["State"] = scalarExpressionToJSON(s.State)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func selectStatementToJSON(s *ast.SelectStatement) jsonNode {
@@ -1722,7 +1722,7 @@ func selectStatementToJSON(s *ast.SelectStatement) jsonNode {
 	if s.WithCtesAndXmlNamespaces != nil {
 		node["WithCtesAndXmlNamespaces"] = withCtesAndXmlNamespacesToJSON(s.WithCtesAndXmlNamespaces)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func optimizerHintToJSON(h ast.OptimizerHintBase) jsonNode {
@@ -1734,7 +1734,7 @@ func optimizerHintToJSON(h ast.OptimizerHintBase) jsonNode {
 		if hint.HintKind != "" {
 			node["HintKind"] = hint.HintKind
 		}
-		return node
+		return addSpan(node, frag(h))
 	case *ast.LiteralOptimizerHint:
 		node := jsonNode{
 			"$type": "LiteralOptimizerHint",
@@ -1745,7 +1745,7 @@ func optimizerHintToJSON(h ast.OptimizerHintBase) jsonNode {
 		if hint.HintKind != "" {
 			node["HintKind"] = hint.HintKind
 		}
-		return node
+		return addSpan(node, frag(h))
 	case *ast.OptimizeForOptimizerHint:
 		node := jsonNode{
 			"$type": "OptimizeForOptimizerHint",
@@ -1761,7 +1761,7 @@ func optimizerHintToJSON(h ast.OptimizerHintBase) jsonNode {
 		if hint.HintKind != "" {
 			node["HintKind"] = hint.HintKind
 		}
-		return node
+		return addSpan(node, frag(h))
 	case *ast.TableHintsOptimizerHint:
 		node := jsonNode{
 			"$type": "TableHintsOptimizerHint",
@@ -1779,7 +1779,7 @@ func optimizerHintToJSON(h ast.OptimizerHintBase) jsonNode {
 		if hint.HintKind != "" {
 			node["HintKind"] = hint.HintKind
 		}
-		return node
+		return addSpan(node, frag(h))
 	case *ast.UseHintList:
 		node := jsonNode{
 			"$type": "UseHintList",
@@ -1794,9 +1794,9 @@ func optimizerHintToJSON(h ast.OptimizerHintBase) jsonNode {
 		if hint.HintKind != "" {
 			node["HintKind"] = hint.HintKind
 		}
-		return node
+		return addSpan(node, frag(h))
 	default:
-		return jsonNode{"$type": "UnknownOptimizerHint"}
+		return addSpan(jsonNode{"$type": "UnknownOptimizerHint"}, frag(h))
 	}
 }
 
@@ -1811,19 +1811,19 @@ func variableValuePairToJSON(p *ast.VariableValuePair) jsonNode {
 		node["Value"] = scalarExpressionToJSON(p.Value)
 	}
 	node["IsForUnknown"] = p.IsForUnknown
-	return node
+	return addSpan(node, frag(p))
 }
 
 func queryExpressionToJSON(qe ast.QueryExpression) jsonNode {
 	switch q := qe.(type) {
 	case *ast.QuerySpecification:
-		return querySpecificationToJSON(q)
+		return addSpan(querySpecificationToJSON(q), frag(qe))
 	case *ast.QueryParenthesisExpression:
-		return queryParenthesisExpressionToJSON(q)
+		return addSpan(queryParenthesisExpressionToJSON(q), frag(qe))
 	case *ast.BinaryQueryExpression:
-		return binaryQueryExpressionToJSON(q)
+		return addSpan(binaryQueryExpressionToJSON(q), frag(qe))
 	default:
-		return jsonNode{"$type": "UnknownQueryExpression"}
+		return addSpan(jsonNode{"$type": "UnknownQueryExpression"}, frag(qe))
 	}
 }
 
@@ -1834,7 +1834,7 @@ func queryParenthesisExpressionToJSON(q *ast.QueryParenthesisExpression) jsonNod
 	if q.QueryExpression != nil {
 		node["QueryExpression"] = queryExpressionToJSON(q.QueryExpression)
 	}
-	return node
+	return addSpan(node, frag(q))
 }
 
 func binaryQueryExpressionToJSON(q *ast.BinaryQueryExpression) jsonNode {
@@ -1854,7 +1854,7 @@ func binaryQueryExpressionToJSON(q *ast.BinaryQueryExpression) jsonNode {
 	if q.OrderByClause != nil {
 		node["OrderByClause"] = orderByClauseToJSON(q.OrderByClause)
 	}
-	return node
+	return addSpan(node, frag(q))
 }
 
 func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
@@ -1900,7 +1900,7 @@ func querySpecificationToJSON(q *ast.QuerySpecification) jsonNode {
 	if q.ForClause != nil {
 		node["ForClause"] = forClauseToJSON(q.ForClause)
 	}
-	return node
+	return addSpan(node, frag(q))
 }
 
 func offsetClauseToJSON(oc *ast.OffsetClause) jsonNode {
@@ -1913,15 +1913,15 @@ func offsetClauseToJSON(oc *ast.OffsetClause) jsonNode {
 	if oc.FetchExpression != nil {
 		node["FetchExpression"] = scalarExpressionToJSON(oc.FetchExpression)
 	}
-	return node
+	return addSpan(node, frag(oc))
 }
 
 func forClauseToJSON(fc ast.ForClause) jsonNode {
 	switch f := fc.(type) {
 	case *ast.BrowseForClause:
-		return jsonNode{"$type": "BrowseForClause"}
+		return addSpan(jsonNode{"$type": "BrowseForClause"}, frag(fc))
 	case *ast.ReadOnlyForClause:
-		return jsonNode{"$type": "ReadOnlyForClause"}
+		return addSpan(jsonNode{"$type": "ReadOnlyForClause"}, frag(fc))
 	case *ast.UpdateForClause:
 		node := jsonNode{"$type": "UpdateForClause"}
 		if len(f.Columns) > 0 {
@@ -1931,7 +1931,7 @@ func forClauseToJSON(fc ast.ForClause) jsonNode {
 			}
 			node["Columns"] = cols
 		}
-		return node
+		return addSpan(node, frag(fc))
 	case *ast.XmlForClause:
 		node := jsonNode{"$type": "XmlForClause"}
 		if len(f.Options) > 0 {
@@ -1941,7 +1941,7 @@ func forClauseToJSON(fc ast.ForClause) jsonNode {
 			}
 			node["Options"] = opts
 		}
-		return node
+		return addSpan(node, frag(fc))
 	case *ast.JsonForClause:
 		node := jsonNode{"$type": "JsonForClause"}
 		if len(f.Options) > 0 {
@@ -1951,9 +1951,9 @@ func forClauseToJSON(fc ast.ForClause) jsonNode {
 			}
 			node["Options"] = opts
 		}
-		return node
+		return addSpan(node, frag(fc))
 	default:
-		return jsonNode{"$type": "UnknownForClause"}
+		return addSpan(jsonNode{"$type": "UnknownForClause"}, frag(fc))
 	}
 }
 
@@ -1965,7 +1965,7 @@ func xmlForClauseOptionToJSON(opt *ast.XmlForClauseOption) jsonNode {
 	if opt.Value != nil {
 		node["Value"] = stringLiteralToJSON(opt.Value)
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func jsonForClauseOptionToJSON(opt *ast.JsonForClauseOption) jsonNode {
@@ -1976,7 +1976,7 @@ func jsonForClauseOptionToJSON(opt *ast.JsonForClauseOption) jsonNode {
 	if opt.Value != nil {
 		node["Value"] = stringLiteralToJSON(opt.Value)
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func topRowFilterToJSON(t *ast.TopRowFilter) jsonNode {
@@ -1988,7 +1988,7 @@ func topRowFilterToJSON(t *ast.TopRowFilter) jsonNode {
 	}
 	node["Percent"] = t.Percent
 	node["WithTies"] = t.WithTies
-	return node
+	return addSpan(node, frag(t))
 }
 
 func selectElementToJSON(elem ast.SelectElement) jsonNode {
@@ -2003,7 +2003,7 @@ func selectElementToJSON(elem ast.SelectElement) jsonNode {
 		if e.ColumnName != nil {
 			node["ColumnName"] = identifierOrValueExpressionToJSON(e.ColumnName)
 		}
-		return node
+		return addSpan(node, frag(elem))
 	case *ast.SelectStarExpression:
 		node := jsonNode{
 			"$type": "SelectStarExpression",
@@ -2011,7 +2011,7 @@ func selectElementToJSON(elem ast.SelectElement) jsonNode {
 		if e.Qualifier != nil {
 			node["Qualifier"] = multiPartIdentifierToJSON(e.Qualifier)
 		}
-		return node
+		return addSpan(node, frag(elem))
 	case *ast.SelectSetVariable:
 		node := jsonNode{
 			"$type": "SelectSetVariable",
@@ -2031,9 +2031,9 @@ func selectElementToJSON(elem ast.SelectElement) jsonNode {
 		if e.AssignmentKind != "" {
 			node["AssignmentKind"] = e.AssignmentKind
 		}
-		return node
+		return addSpan(node, frag(elem))
 	default:
-		return jsonNode{"$type": "UnknownSelectElement"}
+		return addSpan(jsonNode{"$type": "UnknownSelectElement"}, frag(elem))
 	}
 }
 
@@ -2052,7 +2052,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.IntegerLiteral:
 		node := jsonNode{
 			"$type": "IntegerLiteral",
@@ -2063,7 +2063,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.RealLiteral:
 		node := jsonNode{
 			"$type": "RealLiteral",
@@ -2074,7 +2074,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.MoneyLiteral:
 		node := jsonNode{
 			"$type": "MoneyLiteral",
@@ -2085,7 +2085,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.StringLiteral:
 		node := jsonNode{
 			"$type": "StringLiteral",
@@ -2098,7 +2098,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		node["IsLargeObject"] = e.IsLargeObject
 		// Always include Value for StringLiteral, even if empty
 		node["Value"] = e.Value
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.BinaryLiteral:
 		node := jsonNode{
 			"$type": "BinaryLiteral",
@@ -2110,7 +2110,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.IdentifierLiteral:
 		node := jsonNode{
 			"$type": "IdentifierLiteral",
@@ -2124,7 +2124,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.FunctionCall:
 		node := jsonNode{
 			"$type": "FunctionCall",
@@ -2183,7 +2183,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			}
 			node["AbsentOrNullOnNull"] = idents
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.PartitionFunctionCall:
 		node := jsonNode{
 			"$type": "PartitionFunctionCall",
@@ -2204,7 +2204,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			}
 			node["Parameters"] = params
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.UserDefinedTypePropertyAccess:
 		node := jsonNode{
 			"$type": "UserDefinedTypePropertyAccess",
@@ -2218,7 +2218,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.CastCall:
 		node := jsonNode{
 			"$type": "CastCall",
@@ -2232,7 +2232,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.ConvertCall:
 		node := jsonNode{
 			"$type": "ConvertCall",
@@ -2249,7 +2249,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.TryCastCall:
 		node := jsonNode{
 			"$type": "TryCastCall",
@@ -2263,7 +2263,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.TryConvertCall:
 		node := jsonNode{
 			"$type": "TryConvertCall",
@@ -2280,7 +2280,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.NullIfExpression:
 		node := jsonNode{
 			"$type": "NullIfExpression",
@@ -2291,7 +2291,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.SecondExpression != nil {
 			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.CoalesceExpression:
 		node := jsonNode{
 			"$type": "CoalesceExpression",
@@ -2303,7 +2303,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			}
 			node["Expressions"] = exprs
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.ParameterlessCall:
 		node := jsonNode{
 			"$type": "ParameterlessCall",
@@ -2314,7 +2314,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.IdentityFunctionCall:
 		node := jsonNode{
 			"$type": "IdentityFunctionCall",
@@ -2328,7 +2328,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Increment != nil {
 			node["Increment"] = scalarExpressionToJSON(e.Increment)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.LeftFunctionCall:
 		node := jsonNode{
 			"$type": "LeftFunctionCall",
@@ -2340,7 +2340,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			}
 			node["Parameters"] = params
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.RightFunctionCall:
 		node := jsonNode{
 			"$type": "RightFunctionCall",
@@ -2352,7 +2352,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			}
 			node["Parameters"] = params
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.AtTimeZoneCall:
 		node := jsonNode{
 			"$type": "AtTimeZoneCall",
@@ -2363,7 +2363,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.TimeZone != nil {
 			node["TimeZone"] = scalarExpressionToJSON(e.TimeZone)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.BinaryExpression:
 		node := jsonNode{
 			"$type": "BinaryExpression",
@@ -2377,7 +2377,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.SecondExpression != nil {
 			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.NextValueForExpression:
 		node := jsonNode{
 			"$type": "NextValueForExpression",
@@ -2388,7 +2388,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.OverClause != nil {
 			node["OverClause"] = overClauseToJSON(e.OverClause)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.IIfCall:
 		node := jsonNode{
 			"$type": "IIfCall",
@@ -2402,7 +2402,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.ElseExpression != nil {
 			node["ElseExpression"] = scalarExpressionToJSON(e.ElseExpression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.ParseCall:
 		node := jsonNode{
 			"$type": "ParseCall",
@@ -2416,7 +2416,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Culture != nil {
 			node["Culture"] = scalarExpressionToJSON(e.Culture)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.TryParseCall:
 		node := jsonNode{
 			"$type": "TryParseCall",
@@ -2430,7 +2430,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Culture != nil {
 			node["Culture"] = scalarExpressionToJSON(e.Culture)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.VariableReference:
 		node := jsonNode{
 			"$type": "VariableReference",
@@ -2438,7 +2438,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Name != "" {
 			node["Name"] = e.Name
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.GlobalVariableExpression:
 		node := jsonNode{
 			"$type": "GlobalVariableExpression",
@@ -2446,7 +2446,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Name != "" {
 			node["Name"] = e.Name
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.NumericLiteral:
 		node := jsonNode{
 			"$type": "NumericLiteral",
@@ -2457,7 +2457,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.MaxLiteral:
 		node := jsonNode{
 			"$type": "MaxLiteral",
@@ -2468,7 +2468,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.OdbcLiteral:
 		node := jsonNode{
 			"$type": "OdbcLiteral",
@@ -2483,7 +2483,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.OdbcFunctionCall:
 		node := jsonNode{
 			"$type": "OdbcFunctionCall",
@@ -2499,7 +2499,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 			}
 			node["Parameters"] = params
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.OdbcConvertSpecification:
 		node := jsonNode{
 			"$type": "OdbcConvertSpecification",
@@ -2507,7 +2507,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Identifier != nil {
 			node["Identifier"] = identifierToJSON(e.Identifier)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.ExtractFromExpression:
 		node := jsonNode{
 			"$type": "ExtractFromExpression",
@@ -2518,7 +2518,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.ExtractedElement != nil {
 			node["ExtractedElement"] = identifierToJSON(e.ExtractedElement)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.NullLiteral:
 		node := jsonNode{
 			"$type": "NullLiteral",
@@ -2529,7 +2529,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.DefaultLiteral:
 		node := jsonNode{
 			"$type": "DefaultLiteral",
@@ -2540,7 +2540,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != "" {
 			node["Value"] = e.Value
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.UnaryExpression:
 		node := jsonNode{
 			"$type": "UnaryExpression",
@@ -2551,7 +2551,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(e.Expression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.ParenthesisExpression:
 		node := jsonNode{
 			"$type": "ParenthesisExpression",
@@ -2559,7 +2559,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(e.Expression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.ScalarSubquery:
 		node := jsonNode{
 			"$type": "ScalarSubquery",
@@ -2570,7 +2570,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.SearchedCaseExpression:
 		node := jsonNode{
 			"$type": "SearchedCaseExpression",
@@ -2597,7 +2597,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.SimpleCaseExpression:
 		node := jsonNode{
 			"$type": "SimpleCaseExpression",
@@ -2627,7 +2627,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Collation != nil {
 			node["Collation"] = identifierToJSON(e.Collation)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.SourceDeclaration:
 		node := jsonNode{
 			"$type": "SourceDeclaration",
@@ -2635,9 +2635,9 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if e.Value != nil {
 			node["Value"] = eventSessionObjectNameToJSON(e.Value)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	default:
-		return jsonNode{"$type": "UnknownScalarExpression"}
+		return addSpan(jsonNode{"$type": "UnknownScalarExpression"}, frag(expr))
 	}
 }
 
@@ -2650,7 +2650,7 @@ func identifierToJSON(id *ast.Identifier) jsonNode {
 	if id.QuoteType != "" {
 		node["QuoteType"] = id.QuoteType
 	}
-	return node
+	return addSpan(node, frag(id))
 }
 
 func multiPartIdentifierToJSON(mpi *ast.MultiPartIdentifier) jsonNode {
@@ -2667,7 +2667,7 @@ func multiPartIdentifierToJSON(mpi *ast.MultiPartIdentifier) jsonNode {
 		}
 		node["Identifiers"] = ids
 	}
-	return node
+	return addSpan(node, frag(mpi))
 }
 
 func eventSessionObjectNameToJSON(e *ast.EventSessionObjectName) jsonNode {
@@ -2677,7 +2677,7 @@ func eventSessionObjectNameToJSON(e *ast.EventSessionObjectName) jsonNode {
 	if e.MultiPartIdentifier != nil {
 		node["MultiPartIdentifier"] = multiPartIdentifierToJSON(e.MultiPartIdentifier)
 	}
-	return node
+	return addSpan(node, frag(e))
 }
 
 func sourceDeclarationToJSON(s *ast.SourceDeclaration) jsonNode {
@@ -2687,7 +2687,7 @@ func sourceDeclarationToJSON(s *ast.SourceDeclaration) jsonNode {
 	if s.Value != nil {
 		node["Value"] = eventSessionObjectNameToJSON(s.Value)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func identifierOrValueExpressionToJSON(iove *ast.IdentifierOrValueExpression) jsonNode {
@@ -2703,7 +2703,7 @@ func identifierOrValueExpressionToJSON(iove *ast.IdentifierOrValueExpression) js
 	if iove.ValueExpression != nil {
 		node["ValueExpression"] = scalarExpressionToJSON(iove.ValueExpression)
 	}
-	return node
+	return addSpan(node, frag(iove))
 }
 
 func fromClauseToJSON(fc *ast.FromClause) jsonNode {
@@ -2717,7 +2717,7 @@ func fromClauseToJSON(fc *ast.FromClause) jsonNode {
 		}
 		node["TableReferences"] = refs
 	}
-	return node
+	return addSpan(node, frag(fc))
 }
 
 func tableReferenceToJSON(ref ast.TableReference) jsonNode {
@@ -2746,7 +2746,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.QualifiedJoin:
 		node := jsonNode{
 			"$type": "QualifiedJoin",
@@ -2768,7 +2768,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.SecondTableReference != nil {
 			node["SecondTableReference"] = tableReferenceToJSON(r.SecondTableReference)
 		}
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.UnqualifiedJoin:
 		node := jsonNode{
 			"$type": "UnqualifiedJoin",
@@ -2782,7 +2782,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.SecondTableReference != nil {
 			node["SecondTableReference"] = tableReferenceToJSON(r.SecondTableReference)
 		}
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.JoinParenthesisTableReference:
 		node := jsonNode{
 			"$type": "JoinParenthesisTableReference",
@@ -2790,7 +2790,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.Join != nil {
 			node["Join"] = tableReferenceToJSON(r.Join)
 		}
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.OdbcQualifiedJoinTableReference:
 		node := jsonNode{
 			"$type": "OdbcQualifiedJoinTableReference",
@@ -2798,7 +2798,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if r.TableReference != nil {
 			node["TableReference"] = tableReferenceToJSON(r.TableReference)
 		}
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.VariableTableReference:
 		node := jsonNode{
 			"$type": "VariableTableReference",
@@ -2810,7 +2810,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.VariableMethodCallTableReference:
 		node := jsonNode{
 			"$type": "VariableMethodCallTableReference",
@@ -2839,7 +2839,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.SchemaObjectFunctionTableReference:
 		node := jsonNode{
 			"$type": "SchemaObjectFunctionTableReference",
@@ -2865,7 +2865,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Columns"] = cols
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.GlobalFunctionTableReference:
 		node := jsonNode{
 			"$type": "GlobalFunctionTableReference",
@@ -2891,7 +2891,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Columns"] = cols
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.OpenJsonTableReference:
 		node := jsonNode{
 			"$type": "OpenJsonTableReference",
@@ -2935,7 +2935,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.BuiltInFunctionTableReference:
 		node := jsonNode{
 			"$type": "BuiltInFunctionTableReference",
@@ -2961,7 +2961,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Columns"] = cols
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.InlineDerivedTable:
 		node := jsonNode{
 			"$type": "InlineDerivedTable",
@@ -2994,7 +2994,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.DataModificationTableReference:
 		node := jsonNode{
 			"$type": "DataModificationTableReference",
@@ -3013,7 +3013,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.ChangeTableChangesTableReference:
 		node := jsonNode{
 			"$type": "ChangeTableChangesTableReference",
@@ -3036,7 +3036,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.ChangeTableVersionTableReference:
 		node := jsonNode{
 			"$type": "ChangeTableVersionTableReference",
@@ -3070,7 +3070,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.InternalOpenRowset:
 		node := jsonNode{
 			"$type": "InternalOpenRowset",
@@ -3086,7 +3086,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["VarArgs"] = args
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.BulkOpenRowset:
 		node := jsonNode{
 			"$type": "BulkOpenRowset",
@@ -3123,7 +3123,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.OpenRowsetCosmos:
 		node := jsonNode{
 			"$type": "OpenRowsetCosmos",
@@ -3146,7 +3146,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.OpenRowsetTableReference:
 		node := jsonNode{
 			"$type": "OpenRowsetTableReference",
@@ -3183,7 +3183,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.AdHocTableReference:
 		node := jsonNode{
 			"$type": "AdHocTableReference",
@@ -3207,7 +3207,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.OpenXmlTableReference:
 		node := jsonNode{
 			"$type": "OpenXmlTableReference",
@@ -3235,7 +3235,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.OpenQueryTableReference:
 		node := jsonNode{
 			"$type": "OpenQueryTableReference",
@@ -3250,7 +3250,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.PredictTableReference:
 		node := jsonNode{
 			"$type": "PredictTableReference",
@@ -3275,7 +3275,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.PivotedTableReference:
 		node := jsonNode{
 			"$type": "PivotedTableReference",
@@ -3307,7 +3307,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.UnpivotedTableReference:
 		node := jsonNode{
 			"$type": "UnpivotedTableReference",
@@ -3335,7 +3335,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.QueryDerivedTable:
 		node := jsonNode{
 			"$type": "QueryDerivedTable",
@@ -3354,7 +3354,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.FullTextTableReference:
 		node := jsonNode{
 			"$type": "FullTextTableReference",
@@ -3388,7 +3388,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	case *ast.SemanticTableReference:
 		node := jsonNode{
 			"$type": "SemanticTableReference",
@@ -3419,9 +3419,9 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			node["Alias"] = identifierToJSON(r.Alias)
 		}
 		node["ForPath"] = r.ForPath
-		return node
+		return addSpan(node, frag(ref))
 	default:
-		return jsonNode{"$type": "UnknownTableReference"}
+		return addSpan(jsonNode{"$type": "UnknownTableReference"}, frag(ref))
 	}
 }
 
@@ -3435,7 +3435,7 @@ func schemaDeclarationItemToJSON(item *ast.SchemaDeclarationItem) jsonNode {
 	if item.Mapping != nil {
 		node["Mapping"] = scalarExpressionToJSON(item.Mapping)
 	}
-	return node
+	return addSpan(node, frag(item))
 }
 
 func schemaObjectNameToJSON(son *ast.SchemaObjectName) jsonNode {
@@ -3481,7 +3481,7 @@ func schemaObjectNameToJSON(son *ast.SchemaObjectName) jsonNode {
 		}
 		node["Identifiers"] = ids
 	}
-	return node
+	return addSpan(node, frag(son))
 }
 
 func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
@@ -3499,7 +3499,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.SecondExpression != nil {
 			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.BooleanBinaryExpression:
 		node := jsonNode{
 			"$type": "BooleanBinaryExpression",
@@ -3513,7 +3513,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.SecondExpression != nil {
 			node["SecondExpression"] = booleanExpressionToJSON(e.SecondExpression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.BooleanParenthesisExpression:
 		node := jsonNode{
 			"$type": "BooleanParenthesisExpression",
@@ -3521,7 +3521,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.Expression != nil {
 			node["Expression"] = booleanExpressionToJSON(e.Expression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.BooleanNotExpression:
 		node := jsonNode{
 			"$type": "BooleanNotExpression",
@@ -3529,7 +3529,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.Expression != nil {
 			node["Expression"] = booleanExpressionToJSON(e.Expression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.UpdateCall:
 		node := jsonNode{
 			"$type": "UpdateCall",
@@ -3537,7 +3537,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.Identifier != nil {
 			node["Identifier"] = identifierToJSON(e.Identifier)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.TSEqualCall:
 		node := jsonNode{
 			"$type": "TSEqualCall",
@@ -3548,7 +3548,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.SecondExpression != nil {
 			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.BooleanIsNullExpression:
 		node := jsonNode{
 			"$type": "BooleanIsNullExpression",
@@ -3557,7 +3557,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(e.Expression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.DistinctPredicate:
 		node := jsonNode{
 			"$type": "DistinctPredicate",
@@ -3569,11 +3569,11 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			node["SecondExpression"] = scalarExpressionToJSON(e.SecondExpression)
 		}
 		node["IsNot"] = e.IsNot
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.SubqueryComparisonPredicate:
 		node := jsonNode{
-			"$type":                          "SubqueryComparisonPredicate",
-			"ComparisonType":                 e.ComparisonType,
+			"$type":                           "SubqueryComparisonPredicate",
+			"ComparisonType":                  e.ComparisonType,
 			"SubqueryComparisonPredicateType": e.SubqueryComparisonPredicateType,
 		}
 		if e.Expression != nil {
@@ -3582,7 +3582,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.Subquery != nil {
 			node["Subquery"] = scalarExpressionToJSON(e.Subquery)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.BooleanInExpression:
 		node := jsonNode{
 			"$type": "InPredicate",
@@ -3604,7 +3604,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 				"QueryExpression": queryExpressionToJSON(e.Subquery),
 			}
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.BooleanLikeExpression:
 		node := jsonNode{
 			"$type": "LikePredicate",
@@ -3620,7 +3620,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		}
 		node["NotDefined"] = e.NotDefined
 		node["OdbcEscape"] = e.OdbcEscape
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.BooleanTernaryExpression:
 		node := jsonNode{
 			"$type":                 "BooleanTernaryExpression",
@@ -3635,7 +3635,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.ThirdExpression != nil {
 			node["ThirdExpression"] = scalarExpressionToJSON(e.ThirdExpression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.EventDeclarationCompareFunctionParameter:
 		node := jsonNode{
 			"$type": "EventDeclarationCompareFunctionParameter",
@@ -3649,9 +3649,9 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.EventValue != nil {
 			node["EventValue"] = scalarExpressionToJSON(e.EventValue)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.SourceDeclaration:
-		return sourceDeclarationToJSON(e)
+		return addSpan(sourceDeclarationToJSON(e), frag(expr))
 	case *ast.GraphMatchPredicate:
 		node := jsonNode{
 			"$type": "GraphMatchPredicate",
@@ -3659,7 +3659,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.Expression != nil {
 			node["Expression"] = graphMatchExpressionToJSON(e.Expression)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.FullTextPredicate:
 		node := jsonNode{
 			"$type": "FullTextPredicate",
@@ -3683,7 +3683,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 		if e.LanguageTerm != nil {
 			node["LanguageTerm"] = scalarExpressionToJSON(e.LanguageTerm)
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.ExistsPredicate:
 		node := jsonNode{
 			"$type": "ExistsPredicate",
@@ -3694,7 +3694,7 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 				"QueryExpression": queryExpressionToJSON(e.Subquery),
 			}
 		}
-		return node
+		return addSpan(node, frag(expr))
 	case *ast.GraphMatchCompositeExpression:
 		// GraphMatchCompositeExpression can appear as a BooleanExpression in chained patterns
 		node := jsonNode{
@@ -3710,9 +3710,9 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			node["RightNode"] = graphMatchNodeExpressionToJSON(e.RightNode)
 		}
 		node["ArrowOnRight"] = e.ArrowOnRight
-		return node
+		return addSpan(node, frag(expr))
 	default:
-		return jsonNode{"$type": "UnknownBooleanExpression"}
+		return addSpan(jsonNode{"$type": "UnknownBooleanExpression"}, frag(expr))
 	}
 }
 
@@ -3729,7 +3729,7 @@ func newGraphMatchContext() *graphMatchContext {
 
 func graphMatchExpressionToJSON(expr ast.GraphMatchExpression) jsonNode {
 	ctx := newGraphMatchContext()
-	return graphMatchExpressionToJSONWithContext(expr, ctx)
+	return addSpan(graphMatchExpressionToJSONWithContext(expr, ctx), frag(expr))
 }
 
 func graphMatchExpressionToJSONWithContext(expr ast.GraphMatchExpression, ctx *graphMatchContext) jsonNode {
@@ -3842,7 +3842,7 @@ func graphMatchNodeExpressionToJSON(expr *ast.GraphMatchNodeExpression) jsonNode
 		node["Node"] = identifierToJSON(expr.Node)
 	}
 	node["UsesLastNode"] = expr.UsesLastNode
-	return node
+	return addSpan(node, frag(expr))
 }
 
 func graphMatchNodeExpressionToJSONWithContext(expr *ast.GraphMatchNodeExpression, ctx *graphMatchContext) jsonNode {
@@ -3866,7 +3866,7 @@ func graphRecursiveMatchQuantifierToJSON(q *ast.GraphRecursiveMatchQuantifier) j
 	if q.UpperLimit != nil {
 		node["UpperLimit"] = scalarExpressionToJSON(q.UpperLimit)
 	}
-	return node
+	return addSpan(node, frag(q))
 }
 
 func groupByClauseToJSON(gbc *ast.GroupByClause) jsonNode {
@@ -3885,7 +3885,7 @@ func groupByClauseToJSON(gbc *ast.GroupByClause) jsonNode {
 		}
 		node["GroupingSpecifications"] = specs
 	}
-	return node
+	return addSpan(node, frag(gbc))
 }
 
 func groupingSpecificationToJSON(spec ast.GroupingSpecification) jsonNode {
@@ -3899,7 +3899,7 @@ func groupingSpecificationToJSON(spec ast.GroupingSpecification) jsonNode {
 		if s.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(s.Expression)
 		}
-		return node
+		return addSpan(node, frag(spec))
 	case *ast.RollupGroupingSpecification:
 		node := jsonNode{
 			"$type": "RollupGroupingSpecification",
@@ -3911,7 +3911,7 @@ func groupingSpecificationToJSON(spec ast.GroupingSpecification) jsonNode {
 			}
 			node["Arguments"] = args
 		}
-		return node
+		return addSpan(node, frag(spec))
 	case *ast.CubeGroupingSpecification:
 		node := jsonNode{
 			"$type": "CubeGroupingSpecification",
@@ -3923,7 +3923,7 @@ func groupingSpecificationToJSON(spec ast.GroupingSpecification) jsonNode {
 			}
 			node["Arguments"] = args
 		}
-		return node
+		return addSpan(node, frag(spec))
 	case *ast.CompositeGroupingSpecification:
 		node := jsonNode{
 			"$type": "CompositeGroupingSpecification",
@@ -3935,11 +3935,11 @@ func groupingSpecificationToJSON(spec ast.GroupingSpecification) jsonNode {
 			}
 			node["Items"] = items
 		}
-		return node
+		return addSpan(node, frag(spec))
 	case *ast.GrandTotalGroupingSpecification:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type": "GrandTotalGroupingSpecification",
-		}
+		}, frag(spec))
 	case *ast.GroupingSetsGroupingSpecification:
 		node := jsonNode{
 			"$type": "GroupingSetsGroupingSpecification",
@@ -3951,9 +3951,9 @@ func groupingSpecificationToJSON(spec ast.GroupingSpecification) jsonNode {
 			}
 			node["Sets"] = args
 		}
-		return node
+		return addSpan(node, frag(spec))
 	default:
-		return jsonNode{"$type": "UnknownGroupingSpecification"}
+		return addSpan(jsonNode{"$type": "UnknownGroupingSpecification"}, frag(spec))
 	}
 }
 
@@ -3964,7 +3964,7 @@ func havingClauseToJSON(hc *ast.HavingClause) jsonNode {
 	if hc.SearchCondition != nil {
 		node["SearchCondition"] = booleanExpressionToJSON(hc.SearchCondition)
 	}
-	return node
+	return addSpan(node, frag(hc))
 }
 
 func windowClauseToJSON(wc *ast.WindowClause) jsonNode {
@@ -3978,7 +3978,7 @@ func windowClauseToJSON(wc *ast.WindowClause) jsonNode {
 		}
 		node["WindowDefinition"] = defs
 	}
-	return node
+	return addSpan(node, frag(wc))
 }
 
 func windowDefinitionToJSON(wd *ast.WindowDefinition) jsonNode {
@@ -4001,7 +4001,7 @@ func windowDefinitionToJSON(wd *ast.WindowDefinition) jsonNode {
 	if wd.OrderByClause != nil {
 		node["OrderByClause"] = orderByClauseToJSON(wd.OrderByClause)
 	}
-	return node
+	return addSpan(node, frag(wd))
 }
 
 func orderByClauseToJSON(obc *ast.OrderByClause) jsonNode {
@@ -4015,7 +4015,7 @@ func orderByClauseToJSON(obc *ast.OrderByClause) jsonNode {
 		}
 		node["OrderByElements"] = elems
 	}
-	return node
+	return addSpan(node, frag(obc))
 }
 
 func expressionWithSortOrderToJSON(ewso *ast.ExpressionWithSortOrder) jsonNode {
@@ -4028,7 +4028,7 @@ func expressionWithSortOrderToJSON(ewso *ast.ExpressionWithSortOrder) jsonNode {
 	if ewso.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(ewso.Expression)
 	}
-	return node
+	return addSpan(node, frag(ewso))
 }
 
 func withinGroupClauseToJSON(wg *ast.WithinGroupClause) jsonNode {
@@ -4039,7 +4039,7 @@ func withinGroupClauseToJSON(wg *ast.WithinGroupClause) jsonNode {
 		node["OrderByClause"] = orderByClauseToJSON(wg.OrderByClause)
 	}
 	node["HasGraphPath"] = wg.HasGraphPath
-	return node
+	return addSpan(node, frag(wg))
 }
 
 func overClauseToJSON(oc *ast.OverClause) jsonNode {
@@ -4062,7 +4062,7 @@ func overClauseToJSON(oc *ast.OverClause) jsonNode {
 	if oc.WindowFrameClause != nil {
 		node["WindowFrameClause"] = windowFrameClauseToJSON(oc.WindowFrameClause)
 	}
-	return node
+	return addSpan(node, frag(oc))
 }
 
 func windowFrameClauseToJSON(wfc *ast.WindowFrameClause) jsonNode {
@@ -4076,7 +4076,7 @@ func windowFrameClauseToJSON(wfc *ast.WindowFrameClause) jsonNode {
 	if wfc.Bottom != nil {
 		node["Bottom"] = windowDelimiterToJSON(wfc.Bottom)
 	}
-	return node
+	return addSpan(node, frag(wfc))
 }
 
 func windowDelimiterToJSON(wd *ast.WindowDelimiter) jsonNode {
@@ -4087,7 +4087,7 @@ func windowDelimiterToJSON(wd *ast.WindowDelimiter) jsonNode {
 	if wd.OffsetValue != nil {
 		node["OffsetValue"] = scalarExpressionToJSON(wd.OffsetValue)
 	}
-	return node
+	return addSpan(node, frag(wd))
 }
 
 // ======================= New Statement JSON Functions =======================
@@ -4104,7 +4104,7 @@ func tableSampleClauseToJSON(tsc *ast.TableSampleClause) jsonNode {
 	if tsc.RepeatSeed != nil {
 		node["RepeatSeed"] = scalarExpressionToJSON(tsc.RepeatSeed)
 	}
-	return node
+	return addSpan(node, frag(tsc))
 }
 
 func temporalClauseToJSON(tc *ast.TemporalClause) jsonNode {
@@ -4120,7 +4120,7 @@ func temporalClauseToJSON(tc *ast.TemporalClause) jsonNode {
 	if tc.EndTime != nil {
 		node["EndTime"] = scalarExpressionToJSON(tc.EndTime)
 	}
-	return node
+	return addSpan(node, frag(tc))
 }
 
 func tableHintToJSON(h ast.TableHintType) jsonNode {
@@ -4132,7 +4132,7 @@ func tableHintToJSON(h ast.TableHintType) jsonNode {
 		if th.HintKind != "" {
 			node["HintKind"] = th.HintKind
 		}
-		return node
+		return addSpan(node, frag(h))
 	case *ast.IndexTableHint:
 		node := jsonNode{
 			"$type": "IndexTableHint",
@@ -4147,7 +4147,7 @@ func tableHintToJSON(h ast.TableHintType) jsonNode {
 		if th.HintKind != "" {
 			node["HintKind"] = th.HintKind
 		}
-		return node
+		return addSpan(node, frag(h))
 	case *ast.LiteralTableHint:
 		node := jsonNode{
 			"$type": "LiteralTableHint",
@@ -4158,7 +4158,7 @@ func tableHintToJSON(h ast.TableHintType) jsonNode {
 		if th.HintKind != "" {
 			node["HintKind"] = th.HintKind
 		}
-		return node
+		return addSpan(node, frag(h))
 	case *ast.ForceSeekTableHint:
 		node := jsonNode{
 			"$type": "ForceSeekTableHint",
@@ -4176,9 +4176,9 @@ func tableHintToJSON(h ast.TableHintType) jsonNode {
 		if th.HintKind != "" {
 			node["HintKind"] = th.HintKind
 		}
-		return node
+		return addSpan(node, frag(h))
 	default:
-		return jsonNode{"$type": "TableHint"}
+		return addSpan(jsonNode{"$type": "TableHint"}, frag(h))
 	}
 }
 
@@ -4199,21 +4199,21 @@ func insertStatementToJSON(s *ast.InsertStatement) jsonNode {
 		}
 		node["OptimizerHints"] = hints
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dataModificationSpecificationToJSON(spec ast.DataModificationSpecification) jsonNode {
 	switch s := spec.(type) {
 	case *ast.InsertSpecification:
-		return insertSpecificationToJSON(s)
+		return addSpan(insertSpecificationToJSON(s), frag(spec))
 	case *ast.UpdateSpecification:
-		return updateSpecificationToJSON(s)
+		return addSpan(updateSpecificationToJSON(s), frag(spec))
 	case *ast.DeleteSpecification:
-		return deleteSpecificationToJSON(s)
+		return addSpan(deleteSpecificationToJSON(s), frag(spec))
 	case *ast.MergeSpecification:
-		return mergeSpecificationToJSON(s)
+		return addSpan(mergeSpecificationToJSON(s), frag(spec))
 	default:
-		return jsonNode{"$type": "UnknownDataModificationSpecification"}
+		return addSpan(jsonNode{"$type": "UnknownDataModificationSpecification"}, frag(spec))
 	}
 }
 
@@ -4247,7 +4247,7 @@ func insertSpecificationToJSON(spec *ast.InsertSpecification) jsonNode {
 		}
 		node["Columns"] = cols
 	}
-	return node
+	return addSpan(node, frag(spec))
 }
 
 func outputClauseToJSON(oc *ast.OutputClause) jsonNode {
@@ -4261,7 +4261,7 @@ func outputClauseToJSON(oc *ast.OutputClause) jsonNode {
 		}
 		node["SelectColumns"] = cols
 	}
-	return node
+	return addSpan(node, frag(oc))
 }
 
 func outputIntoClauseToJSON(oic *ast.OutputIntoClause) jsonNode {
@@ -4285,7 +4285,7 @@ func outputIntoClauseToJSON(oic *ast.OutputIntoClause) jsonNode {
 		}
 		node["IntoTableColumns"] = cols
 	}
-	return node
+	return addSpan(node, frag(oic))
 }
 
 func insertSourceToJSON(src ast.InsertSource) jsonNode {
@@ -4302,7 +4302,7 @@ func insertSourceToJSON(src ast.InsertSource) jsonNode {
 			}
 			node["RowValues"] = rows
 		}
-		return node
+		return addSpan(node, frag(src))
 	case *ast.SelectInsertSource:
 		node := jsonNode{
 			"$type": "SelectInsertSource",
@@ -4310,7 +4310,7 @@ func insertSourceToJSON(src ast.InsertSource) jsonNode {
 		if s.Select != nil {
 			node["Select"] = queryExpressionToJSON(s.Select)
 		}
-		return node
+		return addSpan(node, frag(src))
 	case *ast.ExecuteInsertSource:
 		node := jsonNode{
 			"$type": "ExecuteInsertSource",
@@ -4318,9 +4318,9 @@ func insertSourceToJSON(src ast.InsertSource) jsonNode {
 		if s.Execute != nil {
 			node["Execute"] = executeSpecificationToJSON(s.Execute)
 		}
-		return node
+		return addSpan(node, frag(src))
 	default:
-		return jsonNode{"$type": "UnknownInsertSource"}
+		return addSpan(jsonNode{"$type": "UnknownInsertSource"}, frag(src))
 	}
 }
 
@@ -4335,7 +4335,7 @@ func rowValueToJSON(rv *ast.RowValue) jsonNode {
 		}
 		node["ColumnValues"] = vals
 	}
-	return node
+	return addSpan(node, frag(rv))
 }
 
 func executeSpecificationToJSON(spec *ast.ExecuteSpecification) jsonNode {
@@ -4354,7 +4354,7 @@ func executeSpecificationToJSON(spec *ast.ExecuteSpecification) jsonNode {
 	if spec.ExecutableEntity != nil {
 		node["ExecutableEntity"] = executableEntityToJSON(spec.ExecutableEntity)
 	}
-	return node
+	return addSpan(node, frag(spec))
 }
 
 func executableEntityToJSON(entity ast.ExecutableEntity) jsonNode {
@@ -4376,7 +4376,7 @@ func executableEntityToJSON(entity ast.ExecutableEntity) jsonNode {
 		if e.AdHocDataSource != nil {
 			node["AdHocDataSource"] = adHocDataSourceToJSON(e.AdHocDataSource)
 		}
-		return node
+		return addSpan(node, frag(entity))
 	case *ast.ExecutableStringList:
 		node := jsonNode{
 			"$type": "ExecutableStringList",
@@ -4395,9 +4395,9 @@ func executableEntityToJSON(entity ast.ExecutableEntity) jsonNode {
 			}
 			node["Parameters"] = params
 		}
-		return node
+		return addSpan(node, frag(entity))
 	default:
-		return jsonNode{"$type": "UnknownExecutableEntity"}
+		return addSpan(jsonNode{"$type": "UnknownExecutableEntity"}, frag(entity))
 	}
 }
 
@@ -4411,7 +4411,7 @@ func procedureReferenceNameToJSON(prn *ast.ProcedureReferenceName) jsonNode {
 	if prn.ProcedureReference != nil {
 		node["ProcedureReference"] = procedureReferenceToJSON(prn.ProcedureReference)
 	}
-	return node
+	return addSpan(node, frag(prn))
 }
 
 func procedureReferenceToJSON(pr *ast.ProcedureReference) jsonNode {
@@ -4424,7 +4424,7 @@ func procedureReferenceToJSON(pr *ast.ProcedureReference) jsonNode {
 	if pr.Number != nil {
 		node["Number"] = scalarExpressionToJSON(pr.Number)
 	}
-	return node
+	return addSpan(node, frag(pr))
 }
 
 func executeParameterToJSON(ep *ast.ExecuteParameter) jsonNode {
@@ -4438,7 +4438,7 @@ func executeParameterToJSON(ep *ast.ExecuteParameter) jsonNode {
 		node["Variable"] = scalarExpressionToJSON(ep.Variable)
 	}
 	node["IsOutput"] = ep.IsOutput
-	return node
+	return addSpan(node, frag(ep))
 }
 
 func adHocDataSourceToJSON(ds *ast.AdHocDataSource) jsonNode {
@@ -4451,7 +4451,7 @@ func adHocDataSourceToJSON(ds *ast.AdHocDataSource) jsonNode {
 	if ds.InitString != nil {
 		node["InitString"] = scalarExpressionToJSON(ds.InitString)
 	}
-	return node
+	return addSpan(node, frag(ds))
 }
 
 func updateStatementToJSON(s *ast.UpdateStatement) jsonNode {
@@ -4471,7 +4471,7 @@ func updateStatementToJSON(s *ast.UpdateStatement) jsonNode {
 		}
 		node["OptimizerHints"] = hints
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func updateSpecificationToJSON(spec *ast.UpdateSpecification) jsonNode {
@@ -4503,7 +4503,7 @@ func updateSpecificationToJSON(spec *ast.UpdateSpecification) jsonNode {
 	if spec.OutputIntoClause != nil {
 		node["OutputIntoClause"] = outputIntoClauseToJSON(spec.OutputIntoClause)
 	}
-	return node
+	return addSpan(node, frag(spec))
 }
 
 func setClauseToJSON(sc ast.SetClause) jsonNode {
@@ -4524,7 +4524,7 @@ func setClauseToJSON(sc ast.SetClause) jsonNode {
 		if c.AssignmentKind != "" {
 			node["AssignmentKind"] = c.AssignmentKind
 		}
-		return node
+		return addSpan(node, frag(sc))
 	case *ast.FunctionCallSetClause:
 		node := jsonNode{
 			"$type": "FunctionCallSetClause",
@@ -4532,9 +4532,9 @@ func setClauseToJSON(sc ast.SetClause) jsonNode {
 		if c.MutatorFunction != nil {
 			node["MutatorFunction"] = scalarExpressionToJSON(c.MutatorFunction)
 		}
-		return node
+		return addSpan(node, frag(sc))
 	default:
-		return jsonNode{"$type": "UnknownSetClause"}
+		return addSpan(jsonNode{"$type": "UnknownSetClause"}, frag(sc))
 	}
 }
 
@@ -4555,7 +4555,7 @@ func deleteStatementToJSON(s *ast.DeleteStatement) jsonNode {
 		}
 		node["OptimizerHints"] = hints
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func mergeStatementToJSON(s *ast.MergeStatement) jsonNode {
@@ -4575,7 +4575,7 @@ func mergeStatementToJSON(s *ast.MergeStatement) jsonNode {
 		}
 		node["OptimizerHints"] = hints
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func mergeSpecificationToJSON(spec *ast.MergeSpecification) jsonNode {
@@ -4607,7 +4607,7 @@ func mergeSpecificationToJSON(spec *ast.MergeSpecification) jsonNode {
 	if spec.TopRowFilter != nil {
 		node["TopRowFilter"] = topRowFilterToJSON(spec.TopRowFilter)
 	}
-	return node
+	return addSpan(node, frag(spec))
 }
 
 func mergeActionClauseToJSON(c *ast.MergeActionClause) jsonNode {
@@ -4621,13 +4621,13 @@ func mergeActionClauseToJSON(c *ast.MergeActionClause) jsonNode {
 	if c.Action != nil {
 		node["Action"] = mergeActionToJSON(c.Action)
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 func mergeActionToJSON(a ast.MergeAction) jsonNode {
 	switch action := a.(type) {
 	case *ast.DeleteMergeAction:
-		return jsonNode{"$type": "DeleteMergeAction"}
+		return addSpan(jsonNode{"$type": "DeleteMergeAction"}, frag(a))
 	case *ast.UpdateMergeAction:
 		node := jsonNode{"$type": "UpdateMergeAction"}
 		if len(action.SetClauses) > 0 {
@@ -4637,7 +4637,7 @@ func mergeActionToJSON(a ast.MergeAction) jsonNode {
 			}
 			node["SetClauses"] = clauses
 		}
-		return node
+		return addSpan(node, frag(a))
 	case *ast.InsertMergeAction:
 		node := jsonNode{"$type": "InsertMergeAction"}
 		if len(action.Columns) > 0 {
@@ -4650,9 +4650,9 @@ func mergeActionToJSON(a ast.MergeAction) jsonNode {
 		if action.Source != nil {
 			node["Source"] = insertSourceToJSON(action.Source)
 		}
-		return node
+		return addSpan(node, frag(a))
 	default:
-		return jsonNode{"$type": "UnknownMergeAction"}
+		return addSpan(jsonNode{"$type": "UnknownMergeAction"}, frag(a))
 	}
 }
 
@@ -4673,7 +4673,7 @@ func withCtesAndXmlNamespacesToJSON(w *ast.WithCtesAndXmlNamespaces) jsonNode {
 	if w.ChangeTrackingContext != nil {
 		node["ChangeTrackingContext"] = scalarExpressionToJSON(w.ChangeTrackingContext)
 	}
-	return node
+	return addSpan(node, frag(w))
 }
 
 func commonTableExpressionToJSON(cte *ast.CommonTableExpression) jsonNode {
@@ -4693,7 +4693,7 @@ func commonTableExpressionToJSON(cte *ast.CommonTableExpression) jsonNode {
 	if cte.QueryExpression != nil {
 		node["QueryExpression"] = queryExpressionToJSON(cte.QueryExpression)
 	}
-	return node
+	return addSpan(node, frag(cte))
 }
 
 func deleteSpecificationToJSON(spec *ast.DeleteSpecification) jsonNode {
@@ -4718,7 +4718,7 @@ func deleteSpecificationToJSON(spec *ast.DeleteSpecification) jsonNode {
 	if spec.OutputIntoClause != nil {
 		node["OutputIntoClause"] = outputIntoClauseToJSON(spec.OutputIntoClause)
 	}
-	return node
+	return addSpan(node, frag(spec))
 }
 
 func whereClauseToJSON(wc *ast.WhereClause) jsonNode {
@@ -4731,7 +4731,7 @@ func whereClauseToJSON(wc *ast.WhereClause) jsonNode {
 	if wc.SearchCondition != nil {
 		node["SearchCondition"] = booleanExpressionToJSON(wc.SearchCondition)
 	}
-	return node
+	return addSpan(node, frag(wc))
 }
 
 func cursorIdToJSON(cid *ast.CursorId) jsonNode {
@@ -4742,7 +4742,7 @@ func cursorIdToJSON(cid *ast.CursorId) jsonNode {
 	if cid.Name != nil {
 		node["Name"] = identifierOrValueExpressionToJSON(cid.Name)
 	}
-	return node
+	return addSpan(node, frag(cid))
 }
 
 func declareVariableStatementToJSON(s *ast.DeclareVariableStatement) jsonNode {
@@ -4756,7 +4756,7 @@ func declareVariableStatementToJSON(s *ast.DeclareVariableStatement) jsonNode {
 		}
 		node["Declarations"] = decls
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func declareVariableElementToJSON(elem *ast.DeclareVariableElement) jsonNode {
@@ -4775,7 +4775,7 @@ func declareVariableElementToJSON(elem *ast.DeclareVariableElement) jsonNode {
 	if elem.Value != nil {
 		node["Value"] = scalarExpressionToJSON(elem.Value)
 	}
-	return node
+	return addSpan(node, frag(elem))
 }
 
 func declareTableVariableStatementToJSON(s *ast.DeclareTableVariableStatement) jsonNode {
@@ -4785,7 +4785,7 @@ func declareTableVariableStatementToJSON(s *ast.DeclareTableVariableStatement) j
 	if s.Body != nil {
 		node["Body"] = declareTableVariableBodyToJSON(s.Body)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func declareTableVariableBodyToJSON(body *ast.DeclareTableVariableBody) jsonNode {
@@ -4799,7 +4799,7 @@ func declareTableVariableBodyToJSON(body *ast.DeclareTableVariableBody) jsonNode
 	if body.Definition != nil {
 		node["Definition"] = tableDefinitionToJSON(body.Definition)
 	}
-	return node
+	return addSpan(node, frag(body))
 }
 
 func sqlDataTypeReferenceToJSON(dt *ast.SqlDataTypeReference) jsonNode {
@@ -4819,7 +4819,7 @@ func sqlDataTypeReferenceToJSON(dt *ast.SqlDataTypeReference) jsonNode {
 	if dt.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(dt.Name)
 	}
-	return node
+	return addSpan(node, frag(dt))
 }
 
 func setVariableStatementToJSON(s *ast.SetVariableStatement) jsonNode {
@@ -4854,7 +4854,7 @@ func setVariableStatementToJSON(s *ast.SetVariableStatement) jsonNode {
 	if s.AssignmentKind != "" {
 		node["AssignmentKind"] = s.AssignmentKind
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func cursorDefinitionToJSON(cd *ast.CursorDefinition) jsonNode {
@@ -4874,7 +4874,7 @@ func cursorDefinitionToJSON(cd *ast.CursorDefinition) jsonNode {
 	if cd.Select != nil {
 		node["Select"] = selectStatementToJSON(cd.Select)
 	}
-	return node
+	return addSpan(node, frag(cd))
 }
 
 func ifStatementToJSON(s *ast.IfStatement) jsonNode {
@@ -4890,7 +4890,7 @@ func ifStatementToJSON(s *ast.IfStatement) jsonNode {
 	if s.ElseStatement != nil {
 		node["ElseStatement"] = statementToJSON(s.ElseStatement)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func whileStatementToJSON(s *ast.WhileStatement) jsonNode {
@@ -4903,7 +4903,7 @@ func whileStatementToJSON(s *ast.WhileStatement) jsonNode {
 	if s.Statement != nil {
 		node["Statement"] = statementToJSON(s.Statement)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func beginEndBlockStatementToJSON(s *ast.BeginEndBlockStatement) jsonNode {
@@ -4913,7 +4913,7 @@ func beginEndBlockStatementToJSON(s *ast.BeginEndBlockStatement) jsonNode {
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func beginEndAtomicBlockStatementToJSON(s *ast.BeginEndAtomicBlockStatement) jsonNode {
@@ -4930,7 +4930,7 @@ func beginEndAtomicBlockStatementToJSON(s *ast.BeginEndAtomicBlockStatement) jso
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func atomicBlockOptionToJSON(o ast.AtomicBlockOption) jsonNode {
@@ -4943,7 +4943,7 @@ func atomicBlockOptionToJSON(o ast.AtomicBlockOption) jsonNode {
 		if opt.Value != nil {
 			node["Value"] = identifierToJSON(opt.Value)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.LiteralAtomicBlockOption:
 		node := jsonNode{
 			"$type":      "LiteralAtomicBlockOption",
@@ -4952,15 +4952,15 @@ func atomicBlockOptionToJSON(o ast.AtomicBlockOption) jsonNode {
 		if opt.Value != nil {
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.OnOffAtomicBlockOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "OnOffAtomicBlockOption",
 			"OptionState": opt.OptionState,
 			"OptionKind":  opt.OptionKind,
-		}
+		}, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownAtomicBlockOption"}
+		return addSpan(jsonNode{"$type": "UnknownAtomicBlockOption"}, frag(o))
 	}
 }
 
@@ -4975,7 +4975,7 @@ func statementListToJSON(sl *ast.StatementList) jsonNode {
 		}
 		node["Statements"] = stmts
 	}
-	return node
+	return addSpan(node, frag(sl))
 }
 
 func beginDialogStatementToJSON(s *ast.BeginDialogStatement) jsonNode {
@@ -5005,7 +5005,7 @@ func beginDialogStatementToJSON(s *ast.BeginDialogStatement) jsonNode {
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dialogOptionToJSON(o ast.DialogOption) jsonNode {
@@ -5018,15 +5018,15 @@ func dialogOptionToJSON(o ast.DialogOption) jsonNode {
 		if opt.Value != nil {
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.OnOffDialogOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "OnOffDialogOption",
 			"OptionState": opt.OptionState,
 			"OptionKind":  opt.OptionKind,
-		}
+		}, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownDialogOption"}
+		return addSpan(jsonNode{"$type": "UnknownDialogOption"}, frag(o))
 	}
 }
 
@@ -5040,7 +5040,7 @@ func beginConversationTimerStatementToJSON(s *ast.BeginConversationTimerStatemen
 	if s.Timeout != nil {
 		node["Timeout"] = scalarExpressionToJSON(s.Timeout)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createViewStatementToJSON(s *ast.CreateViewStatement) jsonNode {
@@ -5069,7 +5069,7 @@ func createViewStatementToJSON(s *ast.CreateViewStatement) jsonNode {
 	}
 	node["WithCheckOption"] = s.WithCheckOption
 	node["IsMaterialized"] = s.IsMaterialized
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createOrAlterViewStatementToJSON(s *ast.CreateOrAlterViewStatement) jsonNode {
@@ -5098,7 +5098,7 @@ func createOrAlterViewStatementToJSON(s *ast.CreateOrAlterViewStatement) jsonNod
 	}
 	node["WithCheckOption"] = s.WithCheckOption
 	node["IsMaterialized"] = s.IsMaterialized
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterViewStatementToJSON(s *ast.AlterViewStatement) jsonNode {
@@ -5129,16 +5129,16 @@ func alterViewStatementToJSON(s *ast.AlterViewStatement) jsonNode {
 	}
 	node["WithCheckOption"] = s.WithCheckOption
 	node["IsMaterialized"] = s.IsMaterialized
-	return node
+	return addSpan(node, frag(s))
 }
 
 func viewOptionToJSON(opt ast.ViewOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.ViewStatementOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "ViewOption",
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.ViewDistributionOption:
 		node := jsonNode{
 			"$type":      "ViewDistributionOption",
@@ -5172,14 +5172,14 @@ func viewOptionToJSON(opt ast.ViewOption) jsonNode {
 				}
 			}
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ViewForAppendOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "ViewForAppendOption",
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownViewOption"}
+		return addSpan(jsonNode{"$type": "UnknownViewOption"}, frag(opt))
 	}
 }
 
@@ -5196,7 +5196,7 @@ func createSchemaStatementToJSON(s *ast.CreateSchemaStatement) jsonNode {
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func executeStatementToJSON(s *ast.ExecuteStatement) jsonNode {
@@ -5213,16 +5213,16 @@ func executeStatementToJSON(s *ast.ExecuteStatement) jsonNode {
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func executeOptionToJSON(opt ast.ExecuteOptionType) jsonNode {
 	switch o := opt.(type) {
 	case *ast.ExecuteOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "ExecuteOption",
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.ResultSetsExecuteOption:
 		node := jsonNode{
 			"$type":                "ResultSetsExecuteOption",
@@ -5236,19 +5236,19 @@ func executeOptionToJSON(opt ast.ExecuteOptionType) jsonNode {
 			}
 			node["Definitions"] = defs
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{}
+		return addSpan(jsonNode{}, frag(opt))
 	}
 }
 
 func resultSetDefinitionToJSON(def ast.ResultSetDefinitionType) jsonNode {
 	switch d := def.(type) {
 	case *ast.ResultSetDefinition:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":         "ResultSetDefinition",
 			"ResultSetType": d.ResultSetType,
-		}
+		}, frag(def))
 	case *ast.InlineResultSetDefinition:
 		node := jsonNode{
 			"$type":         "InlineResultSetDefinition",
@@ -5261,7 +5261,7 @@ func resultSetDefinitionToJSON(def ast.ResultSetDefinitionType) jsonNode {
 			}
 			node["ResultColumnDefinitions"] = cols
 		}
-		return node
+		return addSpan(node, frag(def))
 	case *ast.SchemaObjectResultSetDefinition:
 		node := jsonNode{
 			"$type":         "SchemaObjectResultSetDefinition",
@@ -5270,9 +5270,9 @@ func resultSetDefinitionToJSON(def ast.ResultSetDefinitionType) jsonNode {
 		if d.Name != nil {
 			node["Name"] = schemaObjectNameToJSON(d.Name)
 		}
-		return node
+		return addSpan(node, frag(def))
 	default:
-		return jsonNode{}
+		return addSpan(jsonNode{}, frag(def))
 	}
 }
 
@@ -5298,7 +5298,7 @@ func resultColumnDefinitionToJSON(col *ast.ResultColumnDefinition) jsonNode {
 			"Nullable": col.Nullable.Nullable,
 		}
 	}
-	return node
+	return addSpan(node, frag(col))
 }
 
 func executeAsStatementToJSON(s *ast.ExecuteAsStatement) jsonNode {
@@ -5312,7 +5312,7 @@ func executeAsStatementToJSON(s *ast.ExecuteAsStatement) jsonNode {
 	if s.Cookie != nil {
 		node["Cookie"] = scalarExpressionToJSON(s.Cookie)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func executeContextToJSON(c *ast.ExecuteContext) jsonNode {
@@ -5323,7 +5323,7 @@ func executeContextToJSON(c *ast.ExecuteContext) jsonNode {
 	if c.Principal != nil {
 		node["Principal"] = scalarExpressionToJSON(c.Principal)
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 func returnStatementToJSON(s *ast.ReturnStatement) jsonNode {
@@ -5333,7 +5333,7 @@ func returnStatementToJSON(s *ast.ReturnStatement) jsonNode {
 	if s.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(s.Expression)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func breakStatementToJSON() jsonNode {
@@ -5349,6 +5349,8 @@ func continueStatementToJSON() jsonNode {
 }
 
 func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) {
+	astStart := p.curTok
+
 	// Consume TABLE
 	p.nextToken()
 
@@ -5378,7 +5380,8 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 
 	// Check for ON, TEXTIMAGE_ON, FILESTREAM_ON, WITH clauses (for AS FILETABLE)
 	if p.curTok.Type != TokenLParen {
-		return p.parseCreateTableOptions(stmt)
+		spanV1, spanErr1 := p.parseCreateTableOptions(stmt)
+		return spanned(p, spanV1, astStart), spanErr1
 	}
 	p.nextToken()
 
@@ -5420,7 +5423,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 				constraint, err := p.parseNamedTableConstraint()
 				if err != nil {
 					p.skipToEndOfStatement()
-					return stmt, nil
+					return spanned(p, stmt, astStart), nil
 				}
 				if constraint != nil {
 					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
@@ -5429,7 +5432,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 				constraint, err := p.parseUnnamedTableConstraint()
 				if err != nil {
 					p.skipToEndOfStatement()
-					return stmt, nil
+					return spanned(p, stmt, astStart), nil
 				}
 				if constraint != nil {
 					stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
@@ -5468,7 +5471,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 				indexDef, err := p.parseInlineIndexDefinition()
 				if err != nil {
 					p.skipToEndOfStatement()
-					return stmt, nil
+					return spanned(p, stmt, astStart), nil
 				}
 				stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
 			} else if upperLit == "CONNECTION" {
@@ -5483,7 +5486,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						fromNode, err := p.parseSchemaObjectName()
 						if err != nil {
 							p.skipToEndOfStatement()
-							return stmt, nil
+							return spanned(p, stmt, astStart), nil
 						}
 						conn.FromNode = fromNode
 						// Expect TO
@@ -5494,7 +5497,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						toNode, err := p.parseSchemaObjectName()
 						if err != nil {
 							p.skipToEndOfStatement()
-							return stmt, nil
+							return spanned(p, stmt, astStart), nil
 						}
 						conn.ToNode = toNode
 						constraint.FromNodeToNodeList = append(constraint.FromNodeToNodeList, conn)
@@ -5529,7 +5532,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 				colDef, err := p.parseColumnDefinition()
 				if err != nil {
 					p.skipToEndOfStatement()
-					return stmt, nil
+					return spanned(p, stmt, astStart), nil
 				}
 				stmt.Definition.ColumnDefinitions = append(stmt.Definition.ColumnDefinitions, colDef)
 			}
@@ -5946,11 +5949,13 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseCreateTableOptions parses table options (ON, TEXTIMAGE_ON, FILESTREAM_ON, WITH) for tables without column definitions (like AS FILETABLE)
 func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.CreateTableStatement, error) {
+	astStart := p.curTok
+
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 		if p.curTok.Type == TokenOn {
@@ -6319,12 +6324,14 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseRemoteDataArchiveTableOption parses REMOTE_DATA_ARCHIVE = ON/OFF (options...) for tables
 // isAlterTable indicates if this is for ALTER TABLE SET (which uses RemoteDataArchiveAlterTableOption)
 func (p *Parser) parseRemoteDataArchiveTableOption(isAlterTable bool) (ast.TableOption, error) {
+	astStart := p.curTok
+
 	// curTok should be = or (
 	if p.curTok.Type == TokenEquals {
 		p.nextToken() // consume =
@@ -6399,26 +6406,28 @@ func (p *Parser) parseRemoteDataArchiveTableOption(isAlterTable bool) (ast.Table
 	}
 
 	if isAlterTable {
-		return &ast.RemoteDataArchiveAlterTableOption{
+		return spanned(p, &ast.RemoteDataArchiveAlterTableOption{
 			RdaTableOption:             rdaOption,
 			MigrationState:             migrationState,
 			IsMigrationStateSpecified:  isMigrationStateSpecified,
 			FilterPredicate:            filterPredicate,
 			IsFilterPredicateSpecified: isFilterPredicateSpecified,
 			OptionKind:                 "RemoteDataArchive",
-		}, nil
+		}, astStart), nil
 	}
 
-	return &ast.RemoteDataArchiveTableOption{
+	return spanned(p, &ast.RemoteDataArchiveTableOption{
 		RdaTableOption:  rdaOption,
 		MigrationState:  migrationState,
 		FilterPredicate: filterPredicate,
 		OptionKind:      "RemoteDataArchive",
-	}, nil
+	}, astStart), nil
 }
 
 // parseMergeStatement parses a MERGE statement
 func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
+	astStart := p.curTok
+
 	// Consume MERGE
 	p.nextToken()
 
@@ -6516,11 +6525,13 @@ func (p *Parser) parseMergeStatement() (*ast.MergeStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseMergeSpecification parses a MERGE specification (used in DataModificationTableReference)
 func (p *Parser) parseMergeSpecification() (*ast.MergeSpecification, error) {
+	astStart := p.curTok
+
 	// Consume MERGE
 	p.nextToken()
 
@@ -6593,17 +6604,20 @@ func (p *Parser) parseMergeSpecification() (*ast.MergeSpecification, error) {
 		spec.OutputClause = output
 	}
 
-	return spec, nil
+	return spanned(p, spec, astStart), nil
 }
 
 // parseMergeSourceTableReference parses the source table reference in a MERGE statement
 func (p *Parser) parseMergeSourceTableReference() (ast.TableReference, error) {
+	astStart := p.curTok
+
 	// Check for parenthesized expression
 	if p.curTok.Type == TokenLParen {
 		// Check if this is a derived table (subquery) or a join
 		if p.peekTok.Type == TokenSelect {
 			// This is a derived table like (SELECT ...) AS alias
-			return p.parseDerivedTableReference()
+			spanV2, spanErr2 := p.parseDerivedTableReference()
+			return spanned(p, spanV2, astStart), spanErr2
 		}
 		p.nextToken() // consume (
 		// Parse the inner join expression
@@ -6614,13 +6628,16 @@ func (p *Parser) parseMergeSourceTableReference() (ast.TableReference, error) {
 		if p.curTok.Type == TokenRParen {
 			p.nextToken() // consume )
 		}
-		return &ast.JoinParenthesisTableReference{Join: inner}, nil
+		return spanned(p, &ast.JoinParenthesisTableReference{Join: inner}, astStart), nil
 	}
-	return p.parseSingleTableReference()
+	spanV3, spanErr3 := p.parseSingleTableReference()
+	return spanned(p, spanV3, astStart), spanErr3
 }
 
 // parseMergeJoinTableReference parses a table reference which may include joins
 func (p *Parser) parseMergeJoinTableReference() (ast.TableReference, error) {
+	astStart := p.curTok
+
 	left, err := p.parseSingleTableReference()
 	if err != nil {
 		return nil, err
@@ -6693,11 +6710,13 @@ func (p *Parser) parseMergeJoinTableReference() (ast.TableReference, error) {
 		}
 	}
 
-	return left, nil
+	return spanned(p, left, astStart), nil
 }
 
 // parseGraphMatchPredicate parses MATCH (node-edge->node) graph pattern
 func (p *Parser) parseGraphMatchPredicate() (*ast.GraphMatchPredicate, error) {
+	astStart := p.curTok
+
 	// Consume MATCH
 	p.nextToken()
 
@@ -6721,19 +6740,24 @@ func (p *Parser) parseGraphMatchPredicate() (*ast.GraphMatchPredicate, error) {
 		p.nextToken()
 	}
 
-	return pred, nil
+	return spanned(p, pred, astStart), nil
 }
 
 // parseGraphMatchAndExpression parses graph match expressions connected by AND
 // Note: AND inside chains is now handled by parseGraphMatchChainedExpression
 func (p *Parser) parseGraphMatchAndExpression() (ast.GraphMatchExpression, error) {
-	return p.parseGraphMatchChainedExpression()
+	astStart := p.curTok
+
+	spanV4, spanErr4 := p.parseGraphMatchChainedExpression()
+	return spanned(p, spanV4, astStart), spanErr4
 }
 
 // parseGraphMatchChainedExpression parses a chain like A-(B)->C-(D)->E
 // Also handles AND which continues the chain but starts a fresh node
 // Also handles SHORTEST_PATH and LAST_NODE functions
 func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, error) {
+	astStart := p.curTok
+
 	// Check for SHORTEST_PATH or LAST_NODE at the start
 	var first ast.GraphMatchExpression
 	var rightNode *ast.GraphMatchNodeExpression
@@ -6827,11 +6851,13 @@ func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, e
 		rightNode = nextRightNode
 	}
 
-	return result, nil
+	return spanned(p, result, astStart), nil
 }
 
 // parseGraphMatchShortestPath parses SHORTEST_PATH(pattern+) or SHORTEST_PATH(pattern{min,max})
 func (p *Parser) parseGraphMatchShortestPath() (*ast.GraphMatchRecursivePredicate, error) {
+	astStart := p.curTok
+
 	pred := &ast.GraphMatchRecursivePredicate{
 		Function: "ShortestPath",
 	}
@@ -6956,11 +6982,13 @@ func (p *Parser) parseGraphMatchShortestPath() (*ast.GraphMatchRecursivePredicat
 		p.nextToken()
 	}
 
-	return pred, nil
+	return spanned(p, pred, astStart), nil
 }
 
 // parseGraphMatchNodeExpr parses a node expression which may be LAST_NODE(x) or just x
 func (p *Parser) parseGraphMatchNodeExpr() *ast.GraphMatchNodeExpression {
+	astStart := p.curTok
+
 	node := &ast.GraphMatchNodeExpression{}
 
 	if strings.ToUpper(p.curTok.Literal) == "LAST_NODE" {
@@ -6977,7 +7005,7 @@ func (p *Parser) parseGraphMatchNodeExpr() *ast.GraphMatchNodeExpression {
 		node.Node = p.parseIdentifier()
 	}
 
-	return node
+	return spanned(p, node, astStart)
 }
 
 // parseGraphMatchLastNodeComparison parses LAST_NODE(x) = LAST_NODE(y) predicate
@@ -7096,6 +7124,8 @@ func (p *Parser) parseGraphMatchSingleComposite(leftNode *ast.GraphMatchNodeExpr
 
 // parseMergeActionClause parses a WHEN clause in a MERGE statement
 func (p *Parser) parseMergeActionClause() (*ast.MergeActionClause, error) {
+	astStart := p.curTok
+
 	// Consume WHEN
 	p.nextToken()
 
@@ -7245,10 +7275,12 @@ func (p *Parser) parseMergeActionClause() (*ast.MergeActionClause, error) {
 		}
 	}
 
-	return clause, nil
+	return spanned(p, clause, astStart), nil
 }
 
 func (p *Parser) parseDataCompressionOption() (*ast.DataCompressionOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.DataCompressionOption{
 		OptionKind: "DataCompression",
 	}
@@ -7318,10 +7350,12 @@ func (p *Parser) parseDataCompressionOption() (*ast.DataCompressionOption, error
 		}
 	}
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 func (p *Parser) parseXmlCompressionOption() (*ast.XmlCompressionOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.XmlCompressionOption{
 		OptionKind: "XmlCompression",
 	}
@@ -7382,10 +7416,12 @@ func (p *Parser) parseXmlCompressionOption() (*ast.XmlCompressionOption, error) 
 		}
 	}
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
+	astStart := p.curTok
+
 	col := &ast.ColumnDefinition{}
 
 	// Parse column name (parseIdentifier already calls nextToken)
@@ -7420,60 +7456,63 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			dataType, err := p.parseDataTypeReference()
 			if err != nil {
 				// Lenient: return column definition without data type
-				return col, nil
+				return spanned(p, col, astStart), nil
 			}
 			col.DataType = dataType
 		}
 
-	// Parse optional IDENTITY specification
-	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "IDENTITY" {
-		p.nextToken() // consume IDENTITY
-		identityOpts := &ast.IdentityOptions{}
+		// Parse optional IDENTITY specification
+		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "IDENTITY" {
+			p.nextToken() // consume IDENTITY
+			identityOpts := &ast.IdentityOptions{}
 
-		// Check for optional (seed, increment)
-		if p.curTok.Type == TokenLParen {
-			p.nextToken() // consume (
+			// Check for optional (seed, increment)
+			if p.curTok.Type == TokenLParen {
+				p.nextToken() // consume (
 
-			// Parse seed - use parseScalarExpression to handle +/- signs and various literals
-			seed, err := p.parseScalarExpression()
-			if err == nil {
-				identityOpts.IdentitySeed = seed
-			}
-
-			// Expect comma
-			if p.curTok.Type == TokenComma {
-				p.nextToken() // consume ,
-
-				// Parse increment
-				increment, err := p.parseScalarExpression()
+				// Parse seed - use parseScalarExpression to handle +/- signs and various literals
+				seed, err := p.parseScalarExpression()
 				if err == nil {
-					identityOpts.IdentityIncrement = increment
+					identityOpts.IdentitySeed = seed
+				}
+
+				// Expect comma
+				if p.curTok.Type == TokenComma {
+					p.nextToken() // consume ,
+
+					// Parse increment
+					increment, err := p.parseScalarExpression()
+					if err == nil {
+						identityOpts.IdentityIncrement = increment
+					}
+				}
+
+				// Expect closing paren
+				if p.curTok.Type == TokenRParen {
+					p.nextToken() // consume )
 				}
 			}
 
-			// Expect closing paren
-			if p.curTok.Type == TokenRParen {
-				p.nextToken() // consume )
-			}
-		}
-
-		// Check for NOT FOR REPLICATION
-		if p.curTok.Type == TokenNot {
-			p.nextToken() // consume NOT
-			if strings.ToUpper(p.curTok.Literal) == "FOR" {
-				p.nextToken() // consume FOR
-				if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
-					p.nextToken() // consume REPLICATION
-					identityOpts.NotForReplication = true
+			// Check for NOT FOR REPLICATION
+			if p.curTok.Type == TokenNot {
+				notTok2 := p.curTok
+				p.nextToken() // consume NOT
+				if strings.ToUpper(p.curTok.Literal) == "FOR" {
+					p.nextToken() // consume FOR
+					if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
+						p.nextToken() // consume REPLICATION
+						identityOpts.NotForReplication = true
+					}
+				} else if p.curTok.Type == TokenNull {
+					// NOT NULL after IDENTITY - handle it here since NOT was already consumed
+					nc := &ast.NullableConstraintDefinition{Nullable: false}
+					p.spanTokens(nc, notTok2, p.curTok)
+					p.nextToken() // consume NULL
+					col.Constraints = append(col.Constraints, nc)
 				}
-			} else if p.curTok.Type == TokenNull {
-				// NOT NULL after IDENTITY - handle it here since NOT was already consumed
-				p.nextToken() // consume NULL
-				col.Constraints = append(col.Constraints, &ast.NullableConstraintDefinition{Nullable: false})
 			}
-		}
 
-		col.IdentityOptions = identityOpts
+			col.IdentityOptions = identityOpts
 		}
 	} // end of else block for non-computed columns
 
@@ -7536,15 +7575,21 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				}
 			}
 		} else if p.curTok.Type == TokenNot {
+			notTok := p.curTok
 			p.nextToken() // consume NOT
 			if p.curTok.Type == TokenNull {
+				nc := &ast.NullableConstraintDefinition{Nullable: false}
+				p.spanTokens(nc, notTok, p.curTok)
 				p.nextToken() // consume NULL
-				col.Constraints = append(col.Constraints, &ast.NullableConstraintDefinition{Nullable: false})
+				col.Constraints = append(col.Constraints, nc)
 			}
 		} else if p.curTok.Type == TokenNull {
+			nc := &ast.NullableConstraintDefinition{Nullable: true}
+			p.tokSpan(nc, p.curTok)
 			p.nextToken() // consume NULL
-			col.Constraints = append(col.Constraints, &ast.NullableConstraintDefinition{Nullable: true})
+			col.Constraints = append(col.Constraints, nc)
 		} else if upperLit == "UNIQUE" {
+			uqTok := p.curTok
 			p.nextToken() // consume UNIQUE
 			constraint := &ast.UniqueConstraintDefinition{
 				IsPrimaryKey:         false,
@@ -7601,8 +7646,10 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				enforced := false
 				constraint.IsEnforced = &enforced
 			}
+			p.spanFrom(uqTok, constraint)
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "PRIMARY" {
+			uqTok := p.curTok
 			p.nextToken() // consume PRIMARY
 			if p.curTok.Type == TokenKey {
 				p.nextToken() // consume KEY
@@ -7679,6 +7726,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				enforced := false
 				constraint.IsEnforced = &enforced
 			}
+			p.spanFrom(uqTok, constraint)
 			col.Constraints = append(col.Constraints, constraint)
 		} else if p.curTok.Type == TokenDefault {
 			p.nextToken() // consume DEFAULT
@@ -8205,11 +8253,13 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 		}
 	}
 
-	return col, nil
+	return spanned(p, col, astStart), nil
 }
 
 // parseNamedTableConstraint parses a CONSTRAINT name ... table constraint
 func (p *Parser) parseNamedTableConstraint() (ast.TableConstraint, error) {
+	astStart := p.curTok
+
 	// Consume CONSTRAINT
 	p.nextToken()
 
@@ -8225,35 +8275,35 @@ func (p *Parser) parseNamedTableConstraint() (ast.TableConstraint, error) {
 			return nil, err
 		}
 		constraint.ConstraintIdentifier = constraintName
-		return constraint, nil
+		return spanned(p, constraint, astStart), nil
 	} else if upperLit == "UNIQUE" {
 		constraint, err := p.parseUniqueConstraint()
 		if err != nil {
 			return nil, err
 		}
 		constraint.ConstraintIdentifier = constraintName
-		return constraint, nil
+		return spanned(p, constraint, astStart), nil
 	} else if upperLit == "FOREIGN" {
 		constraint, err := p.parseForeignKeyConstraint()
 		if err != nil {
 			return nil, err
 		}
 		constraint.ConstraintIdentifier = constraintName
-		return constraint, nil
+		return spanned(p, constraint, astStart), nil
 	} else if upperLit == "CHECK" {
 		constraint, err := p.parseCheckConstraint()
 		if err != nil {
 			return nil, err
 		}
 		constraint.ConstraintIdentifier = constraintName
-		return constraint, nil
+		return spanned(p, constraint, astStart), nil
 	} else if upperLit == "CONNECTION" {
 		constraint, err := p.parseConnectionConstraint()
 		if err != nil {
 			return nil, err
 		}
 		constraint.ConstraintIdentifier = constraintName
-		return constraint, nil
+		return spanned(p, constraint, astStart), nil
 	}
 
 	return nil, nil
@@ -8261,16 +8311,22 @@ func (p *Parser) parseNamedTableConstraint() (ast.TableConstraint, error) {
 
 // parseUnnamedTableConstraint parses an unnamed table constraint (PRIMARY KEY, UNIQUE, FOREIGN KEY, CHECK)
 func (p *Parser) parseUnnamedTableConstraint() (ast.TableConstraint, error) {
+	astStart := p.curTok
+
 	upperLit := strings.ToUpper(p.curTok.Literal)
 
 	if upperLit == "PRIMARY" {
-		return p.parsePrimaryKeyConstraint()
+		spanV5, spanErr5 := p.parsePrimaryKeyConstraint()
+		return spanned(p, spanV5, astStart), spanErr5
 	} else if upperLit == "UNIQUE" {
-		return p.parseUniqueConstraint()
+		spanV6, spanErr6 := p.parseUniqueConstraint()
+		return spanned(p, spanV6, astStart), spanErr6
 	} else if upperLit == "FOREIGN" {
-		return p.parseForeignKeyConstraint()
+		spanV7, spanErr7 := p.parseForeignKeyConstraint()
+		return spanned(p, spanV7, astStart), spanErr7
 	} else if upperLit == "CHECK" {
-		return p.parseCheckConstraint()
+		spanV8, spanErr8 := p.parseCheckConstraint()
+		return spanned(p, spanV8, astStart), spanErr8
 	}
 
 	return nil, nil
@@ -8278,6 +8334,8 @@ func (p *Parser) parseUnnamedTableConstraint() (ast.TableConstraint, error) {
 
 // parsePrimaryKeyConstraint parses PRIMARY KEY CLUSTERED/NONCLUSTERED (columns)
 func (p *Parser) parsePrimaryKeyConstraint() (*ast.UniqueConstraintDefinition, error) {
+	astStart := p.curTok
+
 	// Consume PRIMARY
 	p.nextToken()
 	if p.curTok.Type == TokenKey {
@@ -8338,11 +8396,13 @@ func (p *Parser) parsePrimaryKeyConstraint() (*ast.UniqueConstraintDefinition, e
 		constraint.IsEnforced = &enforced
 	}
 
-	return constraint, nil
+	return spanned(p, constraint, astStart), nil
 }
 
 // parseUniqueConstraint parses UNIQUE CLUSTERED/NONCLUSTERED (columns)
 func (p *Parser) parseUniqueConstraint() (*ast.UniqueConstraintDefinition, error) {
+	astStart := p.curTok
+
 	// Consume UNIQUE
 	p.nextToken()
 
@@ -8400,7 +8460,7 @@ func (p *Parser) parseUniqueConstraint() (*ast.UniqueConstraintDefinition, error
 		constraint.IsEnforced = &enforced
 	}
 
-	return constraint, nil
+	return spanned(p, constraint, astStart), nil
 }
 
 // parseConstraintIndexOptions parses index options for constraints
@@ -8529,6 +8589,8 @@ func (p *Parser) parseConstraintIndexOptions() []ast.IndexOption {
 
 // parseForeignKeyConstraint parses FOREIGN KEY (columns) REFERENCES table (columns)
 func (p *Parser) parseForeignKeyConstraint() (*ast.ForeignKeyConstraintDefinition, error) {
+	astStart := p.curTok
+
 	// Consume FOREIGN
 	p.nextToken()
 	if p.curTok.Type == TokenKey {
@@ -8616,7 +8678,7 @@ func (p *Parser) parseForeignKeyConstraint() (*ast.ForeignKeyConstraintDefinitio
 		}
 	}
 
-	return constraint, nil
+	return spanned(p, constraint, astStart), nil
 }
 
 // parseForeignKeyAction parses CASCADE, NO ACTION, SET NULL, SET DEFAULT
@@ -8650,6 +8712,8 @@ func (p *Parser) parseForeignKeyAction() string {
 
 // parseCheckConstraint parses CHECK (expression) or CHECK NOT FOR REPLICATION (expression)
 func (p *Parser) parseCheckConstraint() (*ast.CheckConstraintDefinition, error) {
+	astStart := p.curTok
+
 	// Consume CHECK
 	p.nextToken()
 
@@ -8680,11 +8744,13 @@ func (p *Parser) parseCheckConstraint() (*ast.CheckConstraintDefinition, error) 
 		}
 	}
 
-	return constraint, nil
+	return spanned(p, constraint, astStart), nil
 }
 
 // parseConnectionConstraint parses CONNECTION (node1 TO node2, ...)
 func (p *Parser) parseConnectionConstraint() (*ast.GraphConnectionConstraintDefinition, error) {
+	astStart := p.curTok
+
 	// Consume CONNECTION
 	p.nextToken()
 
@@ -8744,11 +8810,13 @@ func (p *Parser) parseConnectionConstraint() (*ast.GraphConnectionConstraintDefi
 		}
 	}
 
-	return constraint, nil
+	return spanned(p, constraint, astStart), nil
 }
 
 // parseColumnWithSortOrder parses a column name with optional ASC/DESC sort order
 func (p *Parser) parseColumnWithSortOrder() *ast.ColumnWithSortOrder {
+	astStart := p.curTok
+
 	col := &ast.ColumnWithSortOrder{
 		SortOrder: ast.SortOrderNotSpecified,
 	}
@@ -8797,10 +8865,12 @@ func (p *Parser) parseColumnWithSortOrder() *ast.ColumnWithSortOrder {
 		p.nextToken()
 	}
 
-	return col
+	return spanned(p, col, astStart)
 }
 
 func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
+	astStart := p.curTok
+
 	// Consume GRANT
 	p.nextToken()
 
@@ -8994,10 +9064,7 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			for {
 				// Handle double dots (e.g., ..t1) by adding empty identifier
 				if p.curTok.Type == TokenDot {
-					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
-						Value:     "",
-						QuoteType: "NotQuoted",
-					})
+					multiPart.Identifiers = append(multiPart.Identifiers, p.spanIdent("", "NotQuoted"))
 				} else {
 					id := p.parseIdentifier()
 					multiPart.Identifiers = append(multiPart.Identifiers, id)
@@ -9083,10 +9150,12 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
+	astStart := p.curTok
+
 	// Consume REVOKE
 	p.nextToken()
 
@@ -9290,10 +9359,7 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			for {
 				// Handle double dots (e.g., ..t1) by adding empty identifier
 				if p.curTok.Type == TokenDot {
-					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
-						Value:     "",
-						QuoteType: "NotQuoted",
-					})
+					multiPart.Identifiers = append(multiPart.Identifiers, p.spanIdent("", "NotQuoted"))
 				} else {
 					id := p.parseIdentifier()
 					multiPart.Identifiers = append(multiPart.Identifiers, id)
@@ -9372,10 +9438,12 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
+	astStart := p.curTok
+
 	// Consume DENY
 	p.nextToken()
 
@@ -9568,10 +9636,7 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			for {
 				// Handle double dots (e.g., ..t1) by adding empty identifier
 				if p.curTok.Type == TokenDot {
-					multiPart.Identifiers = append(multiPart.Identifiers, &ast.Identifier{
-						Value:     "",
-						QuoteType: "NotQuoted",
-					})
+					multiPart.Identifiers = append(multiPart.Identifiers, p.spanIdent("", "NotQuoted"))
 				} else {
 					id := p.parseIdentifier()
 					multiPart.Identifiers = append(multiPart.Identifiers, id)
@@ -9650,7 +9715,7 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func createTableStatementToJSON(s *ast.CreateTableStatement) jsonNode {
@@ -9695,7 +9760,7 @@ func createTableStatementToJSON(s *ast.CreateTableStatement) jsonNode {
 		}
 		node["CtasColumns"] = cols
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func federationSchemeToJSON(fs *ast.FederationScheme) jsonNode {
@@ -9708,7 +9773,7 @@ func federationSchemeToJSON(fs *ast.FederationScheme) jsonNode {
 	if fs.ColumnName != nil {
 		node["ColumnName"] = identifierToJSON(fs.ColumnName)
 	}
-	return node
+	return addSpan(node, frag(fs))
 }
 
 func tableOptionToJSON(opt ast.TableOption) jsonNode {
@@ -9721,7 +9786,7 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.DataCompressionOption != nil {
 			node["DataCompressionOption"] = dataCompressionOptionToJSON(o.DataCompressionOption)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.TableXmlCompressionOption:
 		node := jsonNode{
 			"$type":      "TableXmlCompressionOption",
@@ -9730,7 +9795,7 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.XmlCompressionOption != nil {
 			node["XmlCompressionOption"] = xmlCompressionOptionToJSON(o.XmlCompressionOption)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.TableIndexOption:
 		node := jsonNode{
 			"$type":      "TableIndexOption",
@@ -9739,7 +9804,7 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = tableIndexTypeToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.TableDistributionOption:
 		node := jsonNode{
 			"$type":      "TableDistributionOption",
@@ -9748,7 +9813,7 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = tableDistributionPolicyToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.TablePartitionOption:
 		node := jsonNode{
 			"$type":      "TablePartitionOption",
@@ -9760,23 +9825,23 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.PartitionOptionSpecs != nil {
 			node["PartitionOptionSpecs"] = tablePartitionOptionSpecsToJSON(o.PartitionOptionSpecs)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.SystemVersioningTableOption:
-		return systemVersioningTableOptionToJSON(o)
+		return addSpan(systemVersioningTableOptionToJSON(o), frag(opt))
 	case *ast.LedgerTableOption:
-		return ledgerTableOptionToJSON(o)
+		return addSpan(ledgerTableOptionToJSON(o), frag(opt))
 	case *ast.MemoryOptimizedTableOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "MemoryOptimizedTableOption",
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
-		}
+		}, frag(opt))
 	case *ast.DurabilityTableOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":                     "DurabilityTableOption",
 			"OptionKind":                o.OptionKind,
 			"DurabilityTableOptionKind": o.DurabilityTableOptionKind,
-		}
+		}, frag(opt))
 	case *ast.FileTableDirectoryTableOption:
 		node := jsonNode{
 			"$type":      "FileTableDirectoryTableOption",
@@ -9785,7 +9850,7 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = scalarExpressionToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.FileTableCollateFileNameTableOption:
 		node := jsonNode{
 			"$type":      "FileTableCollateFileNameTableOption",
@@ -9794,7 +9859,7 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = identifierToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.FileTableConstraintNameTableOption:
 		node := jsonNode{
 			"$type":      "FileTableConstraintNameTableOption",
@@ -9803,13 +9868,13 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = identifierToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.LockEscalationTableOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "LockEscalationTableOption",
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.FileStreamOnTableOption:
 		node := jsonNode{
 			"$type":      "FileStreamOnTableOption",
@@ -9818,7 +9883,7 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = identifierOrValueExpressionToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.RemoteDataArchiveTableOption:
 		node := jsonNode{
 			"$type":          "RemoteDataArchiveTableOption",
@@ -9829,7 +9894,7 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.FilterPredicate != nil {
 			node["FilterPredicate"] = scalarExpressionToJSON(o.FilterPredicate)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.RemoteDataArchiveAlterTableOption:
 		node := jsonNode{
 			"$type":                      "RemoteDataArchiveAlterTableOption",
@@ -9842,9 +9907,9 @@ func tableOptionToJSON(opt ast.TableOption) jsonNode {
 		if o.FilterPredicate != nil {
 			node["FilterPredicate"] = scalarExpressionToJSON(o.FilterPredicate)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownTableOption"}
+		return addSpan(jsonNode{"$type": "UnknownTableOption"}, frag(opt))
 	}
 }
 
@@ -9861,7 +9926,7 @@ func dataCompressionOptionToJSON(opt *ast.DataCompressionOption) jsonNode {
 		}
 		node["PartitionRanges"] = ranges
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func xmlCompressionOptionToJSON(opt *ast.XmlCompressionOption) jsonNode {
@@ -9877,7 +9942,7 @@ func xmlCompressionOptionToJSON(opt *ast.XmlCompressionOption) jsonNode {
 		}
 		node["PartitionRanges"] = ranges
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func tableDistributionPolicyToJSON(policy ast.TableDistributionPolicy) jsonNode {
@@ -9901,17 +9966,17 @@ func tableDistributionPolicyToJSON(policy ast.TableDistributionPolicy) jsonNode 
 			}
 			node["DistributionColumns"] = cols
 		}
-		return node
+		return addSpan(node, frag(policy))
 	case *ast.TableRoundRobinDistributionPolicy:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type": "TableRoundRobinDistributionPolicy",
-		}
+		}, frag(policy))
 	case *ast.TableReplicateDistributionPolicy:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type": "TableReplicateDistributionPolicy",
-		}
+		}, frag(policy))
 	default:
-		return jsonNode{"$type": "UnknownDistributionPolicy"}
+		return addSpan(jsonNode{"$type": "UnknownDistributionPolicy"}, frag(policy))
 	}
 }
 
@@ -9927,7 +9992,7 @@ func tablePartitionOptionSpecsToJSON(specs *ast.TablePartitionOptionSpecificatio
 		}
 		node["BoundaryValues"] = vals
 	}
-	return node
+	return addSpan(node, frag(specs))
 }
 
 func tableIndexTypeToJSON(t ast.TableIndexType) jsonNode {
@@ -9951,13 +10016,13 @@ func tableIndexTypeToJSON(t ast.TableIndexType) jsonNode {
 			}
 			node["OrderedColumns"] = cols
 		}
-		return node
+		return addSpan(node, frag(t))
 	case *ast.TableNonClusteredIndexType:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type": "TableNonClusteredIndexType",
-		}
+		}, frag(t))
 	default:
-		return jsonNode{"$type": "UnknownTableIndexType"}
+		return addSpan(jsonNode{"$type": "UnknownTableIndexType"}, frag(t))
 	}
 }
 
@@ -9971,7 +10036,7 @@ func compressionPartitionRangeToJSON(pr *ast.CompressionPartitionRange) jsonNode
 	if pr.To != nil {
 		node["To"] = scalarExpressionToJSON(pr.To)
 	}
-	return node
+	return addSpan(node, frag(pr))
 }
 
 func tableDefinitionToJSON(t *ast.TableDefinition) jsonNode {
@@ -10005,31 +10070,31 @@ func tableDefinitionToJSON(t *ast.TableDefinition) jsonNode {
 	if t.SystemTimePeriod != nil {
 		node["SystemTimePeriod"] = systemTimePeriodDefinitionToJSON(t.SystemTimePeriod)
 	}
-	return node
+	return addSpan(node, frag(t))
 }
 
 func systemTimePeriodDefinitionToJSON(s *ast.SystemTimePeriodDefinition) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":           "SystemTimePeriodDefinition",
 		"StartTimeColumn": identifierToJSON(s.StartTimeColumn),
 		"EndTimeColumn":   identifierToJSON(s.EndTimeColumn),
-	}
+	}, frag(s))
 }
 
 func tableConstraintToJSON(c ast.TableConstraint) jsonNode {
 	switch constraint := c.(type) {
 	case *ast.UniqueConstraintDefinition:
-		return uniqueConstraintToJSON(constraint)
+		return addSpan(uniqueConstraintToJSON(constraint), frag(c))
 	case *ast.CheckConstraintDefinition:
-		return checkConstraintToJSON(constraint)
+		return addSpan(checkConstraintToJSON(constraint), frag(c))
 	case *ast.ForeignKeyConstraintDefinition:
-		return foreignKeyConstraintToJSON(constraint)
+		return addSpan(foreignKeyConstraintToJSON(constraint), frag(c))
 	case *ast.GraphConnectionConstraintDefinition:
-		return graphConnectionConstraintToJSON(constraint)
+		return addSpan(graphConnectionConstraintToJSON(constraint), frag(c))
 	case *ast.DefaultConstraintDefinition:
-		return defaultConstraintToJSON(constraint)
+		return addSpan(defaultConstraintToJSON(constraint), frag(c))
 	default:
-		return jsonNode{"$type": "UnknownTableConstraint"}
+		return addSpan(jsonNode{"$type": "UnknownTableConstraint"}, frag(c))
 	}
 }
 
@@ -10061,7 +10126,7 @@ func graphConnectionConstraintToJSON(c *ast.GraphConnectionConstraintDefinition)
 	if c.ConstraintIdentifier != nil {
 		node["ConstraintIdentifier"] = identifierToJSON(c.ConstraintIdentifier)
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 func foreignKeyConstraintToJSON(c *ast.ForeignKeyConstraintDefinition) jsonNode {
@@ -10104,7 +10169,7 @@ func foreignKeyConstraintToJSON(c *ast.ForeignKeyConstraintDefinition) jsonNode 
 	if c.IsEnforced != nil {
 		node["IsEnforced"] = *c.IsEnforced
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
@@ -10153,7 +10218,7 @@ func columnDefinitionToJSON(c *ast.ColumnDefinition) jsonNode {
 	if c.MaskingFunction != nil {
 		node["MaskingFunction"] = scalarExpressionToJSON(c.MaskingFunction)
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 func columnStorageOptionsToJSON(o *ast.ColumnStorageOptions) jsonNode {
@@ -10161,11 +10226,11 @@ func columnStorageOptionsToJSON(o *ast.ColumnStorageOptions) jsonNode {
 	if sparseOption == "" {
 		sparseOption = "None"
 	}
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":        "ColumnStorageOptions",
 		"IsFileStream": o.IsFileStream,
 		"SparseOption": sparseOption,
-	}
+	}, frag(o))
 }
 
 func defaultConstraintToJSON(d *ast.DefaultConstraintDefinition) jsonNode {
@@ -10182,7 +10247,7 @@ func defaultConstraintToJSON(d *ast.DefaultConstraintDefinition) jsonNode {
 	if d.Column != nil {
 		node["Column"] = identifierToJSON(d.Column)
 	}
-	return node
+	return addSpan(node, frag(d))
 }
 
 func identityOptionsToJSON(i *ast.IdentityOptions) jsonNode {
@@ -10196,24 +10261,24 @@ func identityOptionsToJSON(i *ast.IdentityOptions) jsonNode {
 	if i.IdentityIncrement != nil {
 		node["IdentityIncrement"] = scalarExpressionToJSON(i.IdentityIncrement)
 	}
-	return node
+	return addSpan(node, frag(i))
 }
 
 func constraintDefinitionToJSON(c ast.ConstraintDefinition) jsonNode {
 	switch constraint := c.(type) {
 	case *ast.NullableConstraintDefinition:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":    "NullableConstraintDefinition",
 			"Nullable": constraint.Nullable,
-		}
+		}, frag(c))
 	case *ast.UniqueConstraintDefinition:
-		return uniqueConstraintToJSON(constraint)
+		return addSpan(uniqueConstraintToJSON(constraint), frag(c))
 	case *ast.CheckConstraintDefinition:
-		return checkConstraintToJSON(constraint)
+		return addSpan(checkConstraintToJSON(constraint), frag(c))
 	case *ast.ForeignKeyConstraintDefinition:
-		return foreignKeyConstraintToJSON(constraint)
+		return addSpan(foreignKeyConstraintToJSON(constraint), frag(c))
 	default:
-		return jsonNode{"$type": "UnknownConstraint"}
+		return addSpan(jsonNode{"$type": "UnknownConstraint"}, frag(c))
 	}
 }
 
@@ -10255,7 +10320,7 @@ func uniqueConstraintToJSON(c *ast.UniqueConstraintDefinition) jsonNode {
 	if c.ConstraintIdentifier != nil {
 		node["ConstraintIdentifier"] = identifierToJSON(c.ConstraintIdentifier)
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 func checkConstraintToJSON(c *ast.CheckConstraintDefinition) jsonNode {
@@ -10269,19 +10334,19 @@ func checkConstraintToJSON(c *ast.CheckConstraintDefinition) jsonNode {
 	if c.CheckCondition != nil {
 		node["CheckCondition"] = booleanExpressionToJSON(c.CheckCondition)
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 func dataTypeReferenceToJSON(d ast.DataTypeReference) jsonNode {
 	switch dt := d.(type) {
 	case *ast.SqlDataTypeReference:
-		return sqlDataTypeReferenceToJSON(dt)
+		return addSpan(sqlDataTypeReferenceToJSON(dt), frag(d))
 	case *ast.XmlDataTypeReference:
-		return xmlDataTypeReferenceToJSON(dt)
+		return addSpan(xmlDataTypeReferenceToJSON(dt), frag(d))
 	case *ast.UserDataTypeReference:
-		return userDataTypeReferenceToJSON(dt)
+		return addSpan(userDataTypeReferenceToJSON(dt), frag(d))
 	default:
-		return jsonNode{"$type": "UnknownDataType"}
+		return addSpan(jsonNode{"$type": "UnknownDataType"}, frag(d))
 	}
 }
 
@@ -10299,7 +10364,7 @@ func userDataTypeReferenceToJSON(dt *ast.UserDataTypeReference) jsonNode {
 	if dt.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(dt.Name)
 	}
-	return node
+	return addSpan(node, frag(dt))
 }
 
 func xmlDataTypeReferenceToJSON(dt *ast.XmlDataTypeReference) jsonNode {
@@ -10315,7 +10380,7 @@ func xmlDataTypeReferenceToJSON(dt *ast.XmlDataTypeReference) jsonNode {
 	if dt.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(dt.Name)
 	}
-	return node
+	return addSpan(node, frag(dt))
 }
 
 func grantStatementToJSON(s *ast.GrantStatement) jsonNode {
@@ -10343,7 +10408,7 @@ func grantStatementToJSON(s *ast.GrantStatement) jsonNode {
 	if s.AsClause != nil {
 		node["AsClause"] = identifierToJSON(s.AsClause)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func revokeStatementToJSON(s *ast.RevokeStatement) jsonNode {
@@ -10372,7 +10437,7 @@ func revokeStatementToJSON(s *ast.RevokeStatement) jsonNode {
 	if s.AsClause != nil {
 		node["AsClause"] = identifierToJSON(s.AsClause)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func denyStatementToJSON(s *ast.DenyStatement) jsonNode {
@@ -10400,7 +10465,7 @@ func denyStatementToJSON(s *ast.DenyStatement) jsonNode {
 	if s.AsClause != nil {
 		node["AsClause"] = identifierToJSON(s.AsClause)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func securityTargetObjectToJSON(s *ast.SecurityTargetObject) jsonNode {
@@ -10418,7 +10483,7 @@ func securityTargetObjectToJSON(s *ast.SecurityTargetObject) jsonNode {
 		}
 		node["Columns"] = cols
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func securityTargetObjectNameToJSON(s *ast.SecurityTargetObjectName) jsonNode {
@@ -10428,7 +10493,7 @@ func securityTargetObjectNameToJSON(s *ast.SecurityTargetObjectName) jsonNode {
 	if s.MultiPartIdentifier != nil {
 		node["MultiPartIdentifier"] = multiPartIdentifierToJSON(s.MultiPartIdentifier)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func permissionToJSON(p *ast.Permission) jsonNode {
@@ -10449,7 +10514,7 @@ func permissionToJSON(p *ast.Permission) jsonNode {
 		}
 		node["Columns"] = cols
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func securityPrincipalToJSON(p *ast.SecurityPrincipal) jsonNode {
@@ -10460,23 +10525,23 @@ func securityPrincipalToJSON(p *ast.SecurityPrincipal) jsonNode {
 	if p.Identifier != nil {
 		node["Identifier"] = identifierToJSON(p.Identifier)
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func predicateSetStatementToJSON(s *ast.PredicateSetStatement) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":   "PredicateSetStatement",
 		"Options": s.Options,
 		"IsOn":    s.IsOn,
-	}
+	}, frag(s))
 }
 
 func setStatisticsStatementToJSON(s *ast.SetStatisticsStatement) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":   "SetStatisticsStatement",
 		"Options": s.Options,
 		"IsOn":    s.IsOn,
-	}
+	}, frag(s))
 }
 
 func setRowCountStatementToJSON(s *ast.SetRowCountStatement) jsonNode {
@@ -10486,15 +10551,15 @@ func setRowCountStatementToJSON(s *ast.SetRowCountStatement) jsonNode {
 	if s.NumberRows != nil {
 		node["NumberRows"] = scalarExpressionToJSON(s.NumberRows)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func setOffsetsStatementToJSON(s *ast.SetOffsetsStatement) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":   "SetOffsetsStatement",
 		"Options": s.Options,
 		"IsOn":    s.IsOn,
-	}
+	}, frag(s))
 }
 
 func setCommandStatementToJSON(s *ast.SetCommandStatement) jsonNode {
@@ -10508,16 +10573,16 @@ func setCommandStatementToJSON(s *ast.SetCommandStatement) jsonNode {
 		}
 		node["Commands"] = cmds
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func setCommandToJSON(cmd ast.SetCommand) jsonNode {
 	switch c := cmd.(type) {
 	case *ast.SetFipsFlaggerCommand:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":           "SetFipsFlaggerCommand",
 			"ComplianceLevel": c.ComplianceLevel,
-		}
+		}, frag(cmd))
 	case *ast.GeneralSetCommand:
 		node := jsonNode{
 			"$type":       "GeneralSetCommand",
@@ -10526,17 +10591,17 @@ func setCommandToJSON(cmd ast.SetCommand) jsonNode {
 		if c.Parameter != nil {
 			node["Parameter"] = scalarExpressionToJSON(c.Parameter)
 		}
-		return node
+		return addSpan(node, frag(cmd))
 	default:
-		return jsonNode{"$type": "UnknownSetCommand"}
+		return addSpan(jsonNode{"$type": "UnknownSetCommand"}, frag(cmd))
 	}
 }
 
 func setTransactionIsolationLevelStatementToJSON(s *ast.SetTransactionIsolationLevelStatement) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type": "SetTransactionIsolationLevelStatement",
 		"Level": s.Level,
-	}
+	}, frag(s))
 }
 
 func setTextSizeStatementToJSON(s *ast.SetTextSizeStatement) jsonNode {
@@ -10546,7 +10611,7 @@ func setTextSizeStatementToJSON(s *ast.SetTextSizeStatement) jsonNode {
 	if s.TextSize != nil {
 		node["TextSize"] = scalarExpressionToJSON(s.TextSize)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func setIdentityInsertStatementToJSON(s *ast.SetIdentityInsertStatement) jsonNode {
@@ -10557,7 +10622,7 @@ func setIdentityInsertStatementToJSON(s *ast.SetIdentityInsertStatement) jsonNod
 	if s.Table != nil {
 		node["Table"] = schemaObjectNameToJSON(s.Table)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func setErrorLevelStatementToJSON(s *ast.SetErrorLevelStatement) jsonNode {
@@ -10567,7 +10632,7 @@ func setErrorLevelStatementToJSON(s *ast.SetErrorLevelStatement) jsonNode {
 	if s.Level != nil {
 		node["Level"] = scalarExpressionToJSON(s.Level)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func commitTransactionStatementToJSON(s *ast.CommitTransactionStatement) jsonNode {
@@ -10578,7 +10643,7 @@ func commitTransactionStatementToJSON(s *ast.CommitTransactionStatement) jsonNod
 	if s.Name != nil {
 		node["Name"] = identifierOrValueExpressionToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func rollbackTransactionStatementToJSON(s *ast.RollbackTransactionStatement) jsonNode {
@@ -10588,7 +10653,7 @@ func rollbackTransactionStatementToJSON(s *ast.RollbackTransactionStatement) jso
 	if s.Name != nil {
 		node["Name"] = identifierOrValueExpressionToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func saveTransactionStatementToJSON(s *ast.SaveTransactionStatement) jsonNode {
@@ -10598,7 +10663,7 @@ func saveTransactionStatementToJSON(s *ast.SaveTransactionStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierOrValueExpressionToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func beginTransactionStatementToJSON(s *ast.BeginTransactionStatement) jsonNode {
@@ -10613,7 +10678,7 @@ func beginTransactionStatementToJSON(s *ast.BeginTransactionStatement) jsonNode 
 	if s.MarkDescription != nil {
 		node["MarkDescription"] = scalarExpressionToJSON(s.MarkDescription)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func waitForStatementToJSON(s *ast.WaitForStatement) jsonNode {
@@ -10630,7 +10695,7 @@ func waitForStatementToJSON(s *ast.WaitForStatement) jsonNode {
 	if s.Statement != nil {
 		node["Statement"] = statementToJSON(s.Statement)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func moveConversationStatementToJSON(s *ast.MoveConversationStatement) jsonNode {
@@ -10643,7 +10708,7 @@ func moveConversationStatementToJSON(s *ast.MoveConversationStatement) jsonNode 
 	if s.Group != nil {
 		node["Group"] = scalarExpressionToJSON(s.Group)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func getConversationGroupStatementToJSON(s *ast.GetConversationGroupStatement) jsonNode {
@@ -10656,7 +10721,7 @@ func getConversationGroupStatementToJSON(s *ast.GetConversationGroupStatement) j
 	if s.Queue != nil {
 		node["Queue"] = schemaObjectNameToJSON(s.Queue)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func truncateTableStatementToJSON(s *ast.TruncateTableStatement) jsonNode {
@@ -10673,7 +10738,7 @@ func truncateTableStatementToJSON(s *ast.TruncateTableStatement) jsonNode {
 		}
 		node["PartitionRanges"] = ranges
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func useStatementToJSON(s *ast.UseStatement) jsonNode {
@@ -10683,7 +10748,7 @@ func useStatementToJSON(s *ast.UseStatement) jsonNode {
 	if s.DatabaseName != nil {
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func killStatementToJSON(s *ast.KillStatement) jsonNode {
@@ -10694,7 +10759,7 @@ func killStatementToJSON(s *ast.KillStatement) jsonNode {
 	if s.Parameter != nil {
 		node["Parameter"] = scalarExpressionToJSON(s.Parameter)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func killStatsJobStatementToJSON(s *ast.KillStatsJobStatement) jsonNode {
@@ -10704,7 +10769,7 @@ func killStatsJobStatementToJSON(s *ast.KillStatsJobStatement) jsonNode {
 	if s.JobId != nil {
 		node["JobId"] = scalarExpressionToJSON(s.JobId)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func killQueryNotificationSubscriptionStatementToJSON(s *ast.KillQueryNotificationSubscriptionStatement) jsonNode {
@@ -10715,7 +10780,7 @@ func killQueryNotificationSubscriptionStatementToJSON(s *ast.KillQueryNotificati
 	if s.SubscriptionId != nil {
 		node["SubscriptionId"] = scalarExpressionToJSON(s.SubscriptionId)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func closeSymmetricKeyStatementToJSON(s *ast.CloseSymmetricKeyStatement) jsonNode {
@@ -10726,13 +10791,13 @@ func closeSymmetricKeyStatementToJSON(s *ast.CloseSymmetricKeyStatement) jsonNod
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func closeMasterKeyStatementToJSON(s *ast.CloseMasterKeyStatement) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type": "CloseMasterKeyStatement",
-	}
+	}, frag(s))
 }
 
 func openMasterKeyStatementToJSON(s *ast.OpenMasterKeyStatement) jsonNode {
@@ -10742,7 +10807,7 @@ func openMasterKeyStatementToJSON(s *ast.OpenMasterKeyStatement) jsonNode {
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func openSymmetricKeyStatementToJSON(s *ast.OpenSymmetricKeyStatement) jsonNode {
@@ -10755,7 +10820,7 @@ func openSymmetricKeyStatementToJSON(s *ast.OpenSymmetricKeyStatement) jsonNode 
 	if s.DecryptionMechanism != nil {
 		node["DecryptionMechanism"] = cryptoMechanismToJSON(s.DecryptionMechanism)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func checkpointStatementToJSON(s *ast.CheckpointStatement) jsonNode {
@@ -10765,21 +10830,21 @@ func checkpointStatementToJSON(s *ast.CheckpointStatement) jsonNode {
 	if s.Duration != nil {
 		node["Duration"] = scalarExpressionToJSON(s.Duration)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func reconfigureStatementToJSON(s *ast.ReconfigureStatement) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":        "ReconfigureStatement",
 		"WithOverride": s.WithOverride,
-	}
+	}, frag(s))
 }
 
 func shutdownStatementToJSON(s *ast.ShutdownStatement) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":      "ShutdownStatement",
 		"WithNoWait": s.WithNoWait,
-	}
+	}, frag(s))
 }
 
 func setUserStatementToJSON(s *ast.SetUserStatement) jsonNode {
@@ -10790,7 +10855,7 @@ func setUserStatementToJSON(s *ast.SetUserStatement) jsonNode {
 	if s.UserName != nil {
 		node["UserName"] = scalarExpressionToJSON(s.UserName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func lineNoStatementToJSON(s *ast.LineNoStatement) jsonNode {
@@ -10800,7 +10865,7 @@ func lineNoStatementToJSON(s *ast.LineNoStatement) jsonNode {
 	if s.LineNo != nil {
 		node["LineNo"] = scalarExpressionToJSON(s.LineNo)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func raiseErrorStatementToJSON(s *ast.RaiseErrorStatement) jsonNode {
@@ -10826,7 +10891,7 @@ func raiseErrorStatementToJSON(s *ast.RaiseErrorStatement) jsonNode {
 	if s.RaiseErrorOptions != "" {
 		node["RaiseErrorOptions"] = s.RaiseErrorOptions
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func readTextStatementToJSON(s *ast.ReadTextStatement) jsonNode {
@@ -10846,7 +10911,7 @@ func readTextStatementToJSON(s *ast.ReadTextStatement) jsonNode {
 	if s.Size != nil {
 		node["Size"] = scalarExpressionToJSON(s.Size)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func writeTextStatementToJSON(s *ast.WriteTextStatement) jsonNode {
@@ -10864,7 +10929,7 @@ func writeTextStatementToJSON(s *ast.WriteTextStatement) jsonNode {
 	if s.TextId != nil {
 		node["TextId"] = scalarExpressionToJSON(s.TextId)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func updateTextStatementToJSON(s *ast.UpdateTextStatement) jsonNode {
@@ -10894,7 +10959,7 @@ func updateTextStatementToJSON(s *ast.UpdateTextStatement) jsonNode {
 	if s.Timestamp != nil {
 		node["Timestamp"] = scalarExpressionToJSON(s.Timestamp)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func columnReferenceExpressionToJSON(c *ast.ColumnReferenceExpression) jsonNode {
@@ -10910,7 +10975,7 @@ func columnReferenceExpressionToJSON(c *ast.ColumnReferenceExpression) jsonNode 
 	if c.Collation != nil {
 		node["Collation"] = identifierToJSON(c.Collation)
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 func goToStatementToJSON(s *ast.GoToStatement) jsonNode {
@@ -10920,14 +10985,14 @@ func goToStatementToJSON(s *ast.GoToStatement) jsonNode {
 	if s.LabelName != nil {
 		node["LabelName"] = identifierToJSON(s.LabelName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func labelStatementToJSON(s *ast.LabelStatement) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type": "LabelStatement",
 		"Value": s.Value,
-	}
+	}, frag(s))
 }
 
 func createDefaultStatementToJSON(s *ast.CreateDefaultStatement) jsonNode {
@@ -10940,7 +11005,7 @@ func createDefaultStatementToJSON(s *ast.CreateDefaultStatement) jsonNode {
 	if s.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(s.Expression)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createMasterKeyStatementToJSON(s *ast.CreateMasterKeyStatement) jsonNode {
@@ -10950,7 +11015,7 @@ func createMasterKeyStatementToJSON(s *ast.CreateMasterKeyStatement) jsonNode {
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func tryCatchStatementToJSON(s *ast.TryCatchStatement) jsonNode {
@@ -10963,7 +11028,7 @@ func tryCatchStatementToJSON(s *ast.TryCatchStatement) jsonNode {
 	if s.CatchStatements != nil {
 		node["CatchStatements"] = statementListToJSON(s.CatchStatements)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func sendStatementToJSON(s *ast.SendStatement) jsonNode {
@@ -10983,7 +11048,7 @@ func sendStatementToJSON(s *ast.SendStatement) jsonNode {
 	if s.MessageBody != nil {
 		node["MessageBody"] = scalarExpressionToJSON(s.MessageBody)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func receiveStatementToJSON(s *ast.ReceiveStatement) jsonNode {
@@ -11010,7 +11075,7 @@ func receiveStatementToJSON(s *ast.ReceiveStatement) jsonNode {
 		node["Where"] = scalarExpressionToJSON(s.Where)
 	}
 	node["IsConversationGroupIdWhere"] = s.IsConversationGroupIdWhere
-	return node
+	return addSpan(node, frag(s))
 }
 
 func variableTableReferenceToJSON(v *ast.VariableTableReference) jsonNode {
@@ -11030,7 +11095,7 @@ func variableTableReferenceToJSON(v *ast.VariableTableReference) jsonNode {
 		node["Alias"] = identifierToJSON(v.Alias)
 	}
 	node["ForPath"] = v.ForPath
-	return node
+	return addSpan(node, frag(v))
 }
 
 func createCredentialStatementToJSON(s *ast.CreateCredentialStatement) jsonNode {
@@ -11050,7 +11115,7 @@ func createCredentialStatementToJSON(s *ast.CreateCredentialStatement) jsonNode 
 		node["Secret"] = scalarExpressionToJSON(s.Secret)
 	}
 	node["IsDatabaseScoped"] = s.IsDatabaseScoped
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterMasterKeyStatementToJSON(s *ast.AlterMasterKeyStatement) jsonNode {
@@ -11061,7 +11126,7 @@ func alterMasterKeyStatementToJSON(s *ast.AlterMasterKeyStatement) jsonNode {
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterSchemaStatementToJSON(s *ast.AlterSchemaStatement) jsonNode {
@@ -11075,7 +11140,7 @@ func alterSchemaStatementToJSON(s *ast.AlterSchemaStatement) jsonNode {
 		node["ObjectName"] = schemaObjectNameToJSON(s.ObjectName)
 	}
 	node["ObjectKind"] = s.ObjectKind
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterRoleStatementToJSON(s *ast.AlterRoleStatement) jsonNode {
@@ -11088,7 +11153,7 @@ func alterRoleStatementToJSON(s *ast.AlterRoleStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterRoleActionToJSON(a ast.AlterRoleAction) jsonNode {
@@ -11100,7 +11165,7 @@ func alterRoleActionToJSON(a ast.AlterRoleAction) jsonNode {
 		if action.Member != nil {
 			node["Member"] = identifierToJSON(action.Member)
 		}
-		return node
+		return addSpan(node, frag(a))
 	case *ast.DropMemberAlterRoleAction:
 		node := jsonNode{
 			"$type": "DropMemberAlterRoleAction",
@@ -11108,7 +11173,7 @@ func alterRoleActionToJSON(a ast.AlterRoleAction) jsonNode {
 		if action.Member != nil {
 			node["Member"] = identifierToJSON(action.Member)
 		}
-		return node
+		return addSpan(node, frag(a))
 	case *ast.RenameAlterRoleAction:
 		node := jsonNode{
 			"$type": "RenameAlterRoleAction",
@@ -11116,9 +11181,9 @@ func alterRoleActionToJSON(a ast.AlterRoleAction) jsonNode {
 		if action.NewName != nil {
 			node["NewName"] = identifierToJSON(action.NewName)
 		}
-		return node
+		return addSpan(node, frag(a))
 	default:
-		return jsonNode{"$type": "UnknownAlterRoleAction"}
+		return addSpan(jsonNode{"$type": "UnknownAlterRoleAction"}, frag(a))
 	}
 }
 
@@ -11132,7 +11197,7 @@ func createServerRoleStatementToJSON(s *ast.CreateServerRoleStatement) jsonNode 
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServerRoleStatementToJSON(s *ast.AlterServerRoleStatement) jsonNode {
@@ -11145,7 +11210,7 @@ func alterServerRoleStatementToJSON(s *ast.AlterServerRoleStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createAvailabilityGroupStatementToJSON(s *ast.CreateAvailabilityGroupStatement) jsonNode {
@@ -11176,7 +11241,7 @@ func createAvailabilityGroupStatementToJSON(s *ast.CreateAvailabilityGroupStatem
 		}
 		node["Replicas"] = reps
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func availabilityGroupOptionToJSON(opt ast.AvailabilityGroupOption) jsonNode {
@@ -11189,9 +11254,9 @@ func availabilityGroupOptionToJSON(opt ast.AvailabilityGroupOption) jsonNode {
 			node["Value"] = scalarExpressionToJSON(o.Value)
 		}
 		node["OptionKind"] = o.OptionKind
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownAvailabilityGroupOption"}
+		return addSpan(jsonNode{"$type": "UnknownAvailabilityGroupOption"}, frag(opt))
 	}
 }
 
@@ -11229,16 +11294,16 @@ func alterAvailabilityGroupStatementToJSON(s *ast.AlterAvailabilityGroupStatemen
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func availabilityGroupActionToJSON(action ast.AvailabilityGroupAction) jsonNode {
 	switch a := action.(type) {
 	case *ast.AlterAvailabilityGroupAction:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "AlterAvailabilityGroupAction",
 			"ActionType": a.ActionType,
-		}
+		}, frag(action))
 	case *ast.AlterAvailabilityGroupFailoverAction:
 		node := jsonNode{
 			"$type":      "AlterAvailabilityGroupFailoverAction",
@@ -11258,9 +11323,9 @@ func availabilityGroupActionToJSON(action ast.AvailabilityGroupAction) jsonNode 
 			}
 			node["Options"] = opts
 		}
-		return node
+		return addSpan(node, frag(action))
 	default:
-		return jsonNode{"$type": "UnknownAvailabilityGroupAction"}
+		return addSpan(jsonNode{"$type": "UnknownAvailabilityGroupAction"}, frag(action))
 	}
 }
 
@@ -11278,23 +11343,23 @@ func availabilityReplicaToJSON(rep *ast.AvailabilityReplica) jsonNode {
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(rep))
 }
 
 func availabilityReplicaOptionToJSON(opt ast.AvailabilityReplicaOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.AvailabilityModeReplicaOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "AvailabilityModeReplicaOption",
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.FailoverModeReplicaOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "FailoverModeReplicaOption",
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.LiteralReplicaOption:
 		node := jsonNode{
 			"$type": "LiteralReplicaOption",
@@ -11303,21 +11368,21 @@ func availabilityReplicaOptionToJSON(opt ast.AvailabilityReplicaOption) jsonNode
 			node["Value"] = scalarExpressionToJSON(o.Value)
 		}
 		node["OptionKind"] = o.OptionKind
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.PrimaryRoleReplicaOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":            "PrimaryRoleReplicaOption",
 			"AllowConnections": o.AllowConnections,
 			"OptionKind":       o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.SecondaryRoleReplicaOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":            "SecondaryRoleReplicaOption",
 			"AllowConnections": o.AllowConnections,
 			"OptionKind":       o.OptionKind,
-		}
+		}, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownReplicaOption"}
+		return addSpan(jsonNode{"$type": "UnknownReplicaOption"}, frag(opt))
 	}
 }
 
@@ -11341,7 +11406,7 @@ func createServerAuditStatementToJSON(s *ast.CreateServerAuditStatement) jsonNod
 	if s.PredicateExpression != nil {
 		node["PredicateExpression"] = booleanExpressionToJSON(s.PredicateExpression)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServerAuditStatementToJSON(s *ast.AlterServerAuditStatement) jsonNode {
@@ -11368,7 +11433,7 @@ func alterServerAuditStatementToJSON(s *ast.AlterServerAuditStatement) jsonNode 
 	if s.PredicateExpression != nil {
 		node["PredicateExpression"] = booleanExpressionToJSON(s.PredicateExpression)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createServerAuditSpecificationStatementToJSON(s *ast.CreateServerAuditSpecificationStatement) jsonNode {
@@ -11389,7 +11454,7 @@ func createServerAuditSpecificationStatementToJSON(s *ast.CreateServerAuditSpeci
 	if s.AuditName != nil {
 		node["AuditName"] = identifierToJSON(s.AuditName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServerAuditSpecificationStatementToJSON(s *ast.AlterServerAuditSpecificationStatement) jsonNode {
@@ -11410,7 +11475,7 @@ func alterServerAuditSpecificationStatementToJSON(s *ast.AlterServerAuditSpecifi
 	if s.AuditName != nil {
 		node["AuditName"] = identifierToJSON(s.AuditName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createDatabaseAuditSpecificationStatementToJSON(s *ast.CreateDatabaseAuditSpecificationStatement) jsonNode {
@@ -11431,7 +11496,7 @@ func createDatabaseAuditSpecificationStatementToJSON(s *ast.CreateDatabaseAuditS
 	if s.AuditName != nil {
 		node["AuditName"] = identifierToJSON(s.AuditName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseAuditSpecificationStatementToJSON(s *ast.AlterDatabaseAuditSpecificationStatement) jsonNode {
@@ -11452,7 +11517,7 @@ func alterDatabaseAuditSpecificationStatementToJSON(s *ast.AlterDatabaseAuditSpe
 	if s.AuditName != nil {
 		node["AuditName"] = identifierToJSON(s.AuditName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func auditSpecificationPartToJSON(p *ast.AuditSpecificationPart) jsonNode {
@@ -11463,16 +11528,16 @@ func auditSpecificationPartToJSON(p *ast.AuditSpecificationPart) jsonNode {
 	if p.Details != nil {
 		node["Details"] = auditSpecificationDetailToJSON(p.Details)
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func auditSpecificationDetailToJSON(d ast.AuditSpecificationDetail) jsonNode {
 	switch detail := d.(type) {
 	case *ast.AuditActionGroupReference:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type": "AuditActionGroupReference",
 			"Group": detail.Group,
-		}
+		}, frag(d))
 	case *ast.AuditActionSpecification:
 		node := jsonNode{
 			"$type": "AuditActionSpecification",
@@ -11504,9 +11569,9 @@ func auditSpecificationDetailToJSON(d ast.AuditSpecificationDetail) jsonNode {
 		if detail.TargetObject != nil {
 			node["TargetObject"] = securityTargetObjectToJSON(detail.TargetObject)
 		}
-		return node
+		return addSpan(node, frag(d))
 	default:
-		return jsonNode{}
+		return addSpan(jsonNode{}, frag(d))
 	}
 }
 
@@ -11518,7 +11583,7 @@ func dropServerAuditStatementToJSON(s *ast.DropServerAuditStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropServerAuditSpecificationStatementToJSON(s *ast.DropServerAuditSpecificationStatement) jsonNode {
@@ -11529,7 +11594,7 @@ func dropServerAuditSpecificationStatementToJSON(s *ast.DropServerAuditSpecifica
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropDatabaseAuditSpecificationStatementToJSON(s *ast.DropDatabaseAuditSpecificationStatement) jsonNode {
@@ -11540,7 +11605,7 @@ func dropDatabaseAuditSpecificationStatementToJSON(s *ast.DropDatabaseAuditSpeci
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func auditTargetToJSON(t *ast.AuditTarget) jsonNode {
@@ -11555,7 +11620,7 @@ func auditTargetToJSON(t *ast.AuditTarget) jsonNode {
 		}
 		node["TargetOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(t))
 }
 
 func auditTargetOptionToJSON(o ast.AuditTargetOption) jsonNode {
@@ -11568,7 +11633,7 @@ func auditTargetOptionToJSON(o ast.AuditTargetOption) jsonNode {
 		if opt.Value != nil {
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.MaxSizeAuditTargetOption:
 		node := jsonNode{
 			"$type":       "MaxSizeAuditTargetOption",
@@ -11579,7 +11644,7 @@ func auditTargetOptionToJSON(o ast.AuditTargetOption) jsonNode {
 		if opt.Size != nil {
 			node["Size"] = scalarExpressionToJSON(opt.Size)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.MaxRolloverFilesAuditTargetOption:
 		node := jsonNode{
 			"$type":       "MaxRolloverFilesAuditTargetOption",
@@ -11589,13 +11654,13 @@ func auditTargetOptionToJSON(o ast.AuditTargetOption) jsonNode {
 		if opt.Value != nil {
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.OnOffAuditTargetOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "OnOffAuditTargetOption",
 			"Value":      opt.Value,
 			"OptionKind": opt.OptionKind,
-		}
+		}, frag(o))
 	case *ast.RetentionDaysAuditTargetOption:
 		node := jsonNode{
 			"$type":      "RetentionDaysAuditTargetOption",
@@ -11604,20 +11669,20 @@ func auditTargetOptionToJSON(o ast.AuditTargetOption) jsonNode {
 		if opt.Days != nil {
 			node["Days"] = scalarExpressionToJSON(opt.Days)
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownAuditTargetOption"}
+		return addSpan(jsonNode{"$type": "UnknownAuditTargetOption"}, frag(o))
 	}
 }
 
 func auditOptionToJSON(o ast.AuditOption) jsonNode {
 	switch opt := o.(type) {
 	case *ast.OnFailureAuditOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":           "OnFailureAuditOption",
 			"OnFailureAction": opt.OnFailureAction,
 			"OptionKind":      opt.OptionKind,
-		}
+		}, frag(o))
 	case *ast.QueueDelayAuditOption:
 		node := jsonNode{
 			"$type":      "QueueDelayAuditOption",
@@ -11626,13 +11691,13 @@ func auditOptionToJSON(o ast.AuditOption) jsonNode {
 		if opt.Delay != nil {
 			node["Delay"] = scalarExpressionToJSON(opt.Delay)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.StateAuditOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "StateAuditOption",
 			"Value":      opt.Value,
 			"OptionKind": opt.OptionKind,
-		}
+		}, frag(o))
 	case *ast.AuditGuidAuditOption:
 		node := jsonNode{
 			"$type":      "AuditGuidAuditOption",
@@ -11641,9 +11706,9 @@ func auditOptionToJSON(o ast.AuditOption) jsonNode {
 		if opt.Guid != nil {
 			node["Guid"] = scalarExpressionToJSON(opt.Guid)
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownAuditOption"}
+		return addSpan(jsonNode{"$type": "UnknownAuditOption"}, frag(o))
 	}
 }
 
@@ -11661,7 +11726,7 @@ func alterRemoteServiceBindingStatementToJSON(s *ast.AlterRemoteServiceBindingSt
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func remoteServiceBindingOptionToJSON(o ast.RemoteServiceBindingOption) jsonNode {
@@ -11674,15 +11739,15 @@ func remoteServiceBindingOptionToJSON(o ast.RemoteServiceBindingOption) jsonNode
 		if opt.User != nil {
 			node["User"] = identifierToJSON(opt.User)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.OnOffRemoteServiceBindingOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "OnOffRemoteServiceBindingOption",
 			"OptionState": opt.OptionState,
 			"OptionKind":  opt.OptionKind,
-		}
+		}, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownRemoteServiceBindingOption"}
+		return addSpan(jsonNode{"$type": "UnknownRemoteServiceBindingOption"}, frag(o))
 	}
 }
 
@@ -11696,7 +11761,7 @@ func alterXmlSchemaCollectionStatementToJSON(s *ast.AlterXmlSchemaCollectionStat
 	if s.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(s.Expression)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createXmlSchemaCollectionStatementToJSON(s *ast.CreateXmlSchemaCollectionStatement) jsonNode {
@@ -11709,7 +11774,7 @@ func createXmlSchemaCollectionStatementToJSON(s *ast.CreateXmlSchemaCollectionSt
 	if s.Expression != nil {
 		node["Expression"] = scalarExpressionToJSON(s.Expression)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createSearchPropertyListStatementToJSON(s *ast.CreateSearchPropertyListStatement) jsonNode {
@@ -11725,7 +11790,7 @@ func createSearchPropertyListStatementToJSON(s *ast.CreateSearchPropertyListStat
 	if s.Owner != nil {
 		node["Owner"] = identifierToJSON(s.Owner)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServerConfigurationSetSoftNumaStatementToJSON(s *ast.AlterServerConfigurationSetSoftNumaStatement) jsonNode {
@@ -11739,7 +11804,7 @@ func alterServerConfigurationSetSoftNumaStatementToJSON(s *ast.AlterServerConfig
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServerConfigurationSoftNumaOptionToJSON(o *ast.AlterServerConfigurationSoftNumaOption) jsonNode {
@@ -11750,14 +11815,14 @@ func alterServerConfigurationSoftNumaOptionToJSON(o *ast.AlterServerConfiguratio
 	if o.OptionValue != nil {
 		node["OptionValue"] = onOffOptionValueToJSON(o.OptionValue)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func onOffOptionValueToJSON(o *ast.OnOffOptionValue) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":       "OnOffOptionValue",
 		"OptionState": o.OptionState,
-	}
+	}, frag(o))
 }
 
 func alterServerConfigurationSetExternalAuthenticationStatementToJSON(s *ast.AlterServerConfigurationSetExternalAuthenticationStatement) jsonNode {
@@ -11771,7 +11836,7 @@ func alterServerConfigurationSetExternalAuthenticationStatementToJSON(s *ast.Alt
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServerConfigurationExternalAuthenticationContainerOptionToJSON(o *ast.AlterServerConfigurationExternalAuthenticationContainerOption) jsonNode {
@@ -11789,7 +11854,7 @@ func alterServerConfigurationExternalAuthenticationContainerOptionToJSON(o *ast.
 	if o.OptionValue != nil {
 		node["OptionValue"] = onOffOptionValueToJSON(o.OptionValue)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func alterServerConfigurationExternalAuthenticationOptionToJSON(o *ast.AlterServerConfigurationExternalAuthenticationOption) jsonNode {
@@ -11800,7 +11865,7 @@ func alterServerConfigurationExternalAuthenticationOptionToJSON(o *ast.AlterServ
 	if o.OptionValue != nil {
 		node["OptionValue"] = literalOptionValueToJSON(o.OptionValue)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func literalOptionValueToJSON(o *ast.LiteralOptionValue) jsonNode {
@@ -11810,7 +11875,7 @@ func literalOptionValueToJSON(o *ast.LiteralOptionValue) jsonNode {
 	if o.Value != nil {
 		node["Value"] = scalarExpressionToJSON(o.Value)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func alterServerConfigurationSetDiagnosticsLogStatementToJSON(s *ast.AlterServerConfigurationSetDiagnosticsLogStatement) jsonNode {
@@ -11849,7 +11914,7 @@ func alterServerConfigurationSetDiagnosticsLogStatementToJSON(s *ast.AlterServer
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServerConfigurationSetFailoverClusterPropertyStatementToJSON(s *ast.AlterServerConfigurationSetFailoverClusterPropertyStatement) jsonNode {
@@ -11870,7 +11935,7 @@ func alterServerConfigurationSetFailoverClusterPropertyStatementToJSON(s *ast.Al
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServerConfigurationSetBufferPoolExtensionStatementToJSON(s *ast.AlterServerConfigurationSetBufferPoolExtensionStatement) jsonNode {
@@ -11918,7 +11983,7 @@ func alterServerConfigurationSetBufferPoolExtensionStatementToJSON(s *ast.AlterS
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServerConfigurationSetHadrClusterStatementToJSON(s *ast.AlterServerConfigurationSetHadrClusterStatement) jsonNode {
@@ -11940,7 +12005,7 @@ func alterServerConfigurationSetHadrClusterStatementToJSON(s *ast.AlterServerCon
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServerConfigurationStatementToJSON(s *ast.AlterServerConfigurationStatement) jsonNode {
@@ -11957,7 +12022,7 @@ func alterServerConfigurationStatementToJSON(s *ast.AlterServerConfigurationStat
 		}
 		node["ProcessAffinityRanges"] = ranges
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func processAffinityRangeToJSON(r *ast.ProcessAffinityRange) jsonNode {
@@ -11970,7 +12035,7 @@ func processAffinityRangeToJSON(r *ast.ProcessAffinityRange) jsonNode {
 	if r.To != nil {
 		node["To"] = scalarExpressionToJSON(r.To)
 	}
-	return node
+	return addSpan(node, frag(r))
 }
 
 func alterLoginAddDropCredentialStatementToJSON(s *ast.AlterLoginAddDropCredentialStatement) jsonNode {
@@ -11984,7 +12049,7 @@ func alterLoginAddDropCredentialStatementToJSON(s *ast.AlterLoginAddDropCredenti
 	if s.CredentialName != nil {
 		node["CredentialName"] = identifierToJSON(s.CredentialName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createProcedureStatementToJSON(s *ast.CreateProcedureStatement) jsonNode {
@@ -12015,7 +12080,7 @@ func createProcedureStatementToJSON(s *ast.CreateProcedureStatement) jsonNode {
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createOrAlterProcedureStatementToJSON(s *ast.CreateOrAlterProcedureStatement) jsonNode {
@@ -12046,16 +12111,16 @@ func createOrAlterProcedureStatementToJSON(s *ast.CreateOrAlterProcedureStatemen
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func procedureOptionToJSON(opt ast.ProcedureOptionBase) jsonNode {
 	switch o := opt.(type) {
 	case *ast.ProcedureOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "ProcedureOption",
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.ExecuteAsProcedureOption:
 		node := jsonNode{
 			"$type":      "ExecuteAsProcedureOption",
@@ -12064,9 +12129,9 @@ func procedureOptionToJSON(opt ast.ProcedureOptionBase) jsonNode {
 		if o.ExecuteAs != nil {
 			node["ExecuteAs"] = executeAsClauseToJSON(o.ExecuteAs)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	}
-	return jsonNode{}
+	return addSpan(jsonNode{}, frag(opt))
 }
 
 func executeAsClauseToJSON(e *ast.ExecuteAsClause) jsonNode {
@@ -12077,7 +12142,7 @@ func executeAsClauseToJSON(e *ast.ExecuteAsClause) jsonNode {
 	if e.Literal != nil {
 		node["Literal"] = stringLiteralToJSON(e.Literal)
 	}
-	return node
+	return addSpan(node, frag(e))
 }
 
 func methodSpecifierToJSON(m *ast.MethodSpecifier) jsonNode {
@@ -12093,7 +12158,7 @@ func methodSpecifierToJSON(m *ast.MethodSpecifier) jsonNode {
 	if m.MethodName != nil {
 		node["MethodName"] = identifierToJSON(m.MethodName)
 	}
-	return node
+	return addSpan(node, frag(m))
 }
 
 func createRoleStatementToJSON(s *ast.CreateRoleStatement) jsonNode {
@@ -12106,7 +12171,7 @@ func createRoleStatementToJSON(s *ast.CreateRoleStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func procedureParameterToJSON(p *ast.ProcedureParameter) jsonNode {
@@ -12127,29 +12192,33 @@ func procedureParameterToJSON(p *ast.ProcedureParameter) jsonNode {
 	if p.Nullable != nil {
 		node["Nullable"] = nullableConstraintToJSON(p.Nullable)
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func nullableConstraintToJSON(n *ast.NullableConstraintDefinition) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":    "NullableConstraintDefinition",
 		"Nullable": n.Nullable,
-	}
+	}, frag(n))
 }
 
 // parseRestoreStatement parses a RESTORE statement
 func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume RESTORE
 	p.nextToken()
 
 	// Check for SERVICE MASTER KEY
 	if strings.ToUpper(p.curTok.Literal) == "SERVICE" {
-		return p.parseRestoreServiceMasterKeyStatement()
+		spanV9, spanErr9 := p.parseRestoreServiceMasterKeyStatement()
+		return spanned(p, spanV9, astStart), spanErr9
 	}
 
 	// Check for MASTER KEY
 	if strings.ToUpper(p.curTok.Literal) == "MASTER" {
-		return p.parseRestoreMasterKeyStatement()
+		spanV10, spanErr10 := p.parseRestoreMasterKeyStatement()
+		return spanned(p, spanV10, astStart), spanErr10
 	}
 
 	stmt := &ast.RestoreStatement{}
@@ -12262,7 +12331,7 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	p.nextToken()
 
@@ -12591,10 +12660,12 @@ parseWithClause:
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseRestoreServiceMasterKeyStatement() (*ast.RestoreServiceMasterKeyStatement, error) {
+	astStart := p.curTok
+
 	// Consume SERVICE
 	p.nextToken()
 
@@ -12667,10 +12738,12 @@ func (p *Parser) parseRestoreServiceMasterKeyStatement() (*ast.RestoreServiceMas
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseRestoreMasterKeyStatement() (*ast.RestoreMasterKeyStatement, error) {
+	astStart := p.curTok
+
 	// Consume MASTER
 	p.nextToken()
 
@@ -12756,11 +12829,13 @@ func (p *Parser) parseRestoreMasterKeyStatement() (*ast.RestoreMasterKeyStatemen
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseCreateUserStatement parses a CREATE USER statement
 func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
+	astStart := p.curTok
+
 	// Consume USER
 	p.nextToken()
 
@@ -12856,11 +12931,13 @@ func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseCreateAggregateStatement parses a CREATE AGGREGATE statement
 func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement, error) {
+	astStart := p.curTok
+
 	// Consume AGGREGATE
 	p.nextToken()
 
@@ -12873,7 +12950,7 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 	// Check for ( (optional for lenient parsing)
 	if p.curTok.Type != TokenLParen {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	p.nextToken()
 
@@ -12968,11 +13045,13 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseCreateColumnStoreIndexStatement parses a CREATE COLUMNSTORE INDEX statement
 func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreIndexStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.CreateColumnStoreIndexStatement{}
 
 	// Parse CLUSTERED or NONCLUSTERED
@@ -13385,11 +13464,13 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseAlterFunctionStatement parses an ALTER FUNCTION statement
 func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, error) {
+	astStart := p.curTok
+
 	// Consume FUNCTION
 	p.nextToken()
 
@@ -13591,6 +13672,7 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 		if err != nil {
 			return nil, err
 		}
+		spanStatementList(stmtList)
 		stmt.StatementList = stmtList
 	}
 
@@ -13599,11 +13681,13 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseFunctionStatementList parses the body of a function
 func (p *Parser) parseFunctionStatementList() (*ast.StatementList, error) {
+	astStart := p.curTok
+
 	stmtList := &ast.StatementList{}
 
 	for p.curTok.Type != TokenEOF {
@@ -13624,11 +13708,13 @@ func (p *Parser) parseFunctionStatementList() (*ast.StatementList, error) {
 		break
 	}
 
-	return stmtList, nil
+	return spanned(p, stmtList, astStart), nil
 }
 
 // parseAlterTriggerStatement parses an ALTER TRIGGER statement
 func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error) {
+	astStart := p.curTok
+
 	// Consume TRIGGER
 	p.nextToken()
 
@@ -13755,6 +13841,7 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 		// For simple triggers, stop after parsing one statement
 		break
 	}
+	spanStatementList(stmtList)
 	stmt.StatementList = stmtList
 
 	// Skip optional semicolon
@@ -13762,10 +13849,12 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
+	astStart := p.curTok
+
 	// Consume INDEX
 	p.nextToken()
 
@@ -14236,11 +14325,13 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseXmlNamespaces parses WITH XMLNAMESPACES clause
 func (p *Parser) parseXmlNamespaces() *ast.XmlNamespaces {
+	astStart := p.curTok
+
 	p.nextToken() // consume XMLNAMESPACES
 	xmlNs := &ast.XmlNamespaces{}
 
@@ -14269,7 +14360,7 @@ func (p *Parser) parseXmlNamespaces() *ast.XmlNamespaces {
 		}
 	}
 
-	return xmlNs
+	return spanned(p, xmlNs, astStart)
 }
 
 func (p *Parser) getIndexOptionKind(optionName string) string {
@@ -14310,6 +14401,8 @@ func (p *Parser) capitalizeFirst(s string) string {
 
 // parseCreateFunctionStatement parses a CREATE FUNCTION statement
 func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, error) {
+	astStart := p.curTok
+
 	// Consume FUNCTION
 	p.nextToken()
 
@@ -14398,7 +14491,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 	// Expect RETURNS - if not present, be lenient and skip
 	if p.curTok.Type != TokenReturns {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	p.nextToken()
 
@@ -14602,8 +14695,9 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 			stmtList, err := p.parseFunctionStatementList()
 			if err != nil {
 				p.skipToEndOfStatement()
-				return stmt, nil
+				return spanned(p, stmt, astStart), nil
 			}
+			spanStatementList(stmtList)
 			stmt.StatementList = stmtList
 		}
 	} else {
@@ -14611,7 +14705,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 		returnDataType, err := p.parseDataTypeReference()
 		if err != nil {
 			p.skipToEndOfStatement()
-			return stmt, nil
+			return spanned(p, stmt, astStart), nil
 		}
 		stmt.ReturnType = &ast.ScalarFunctionReturnType{
 			DataType: returnDataType,
@@ -14651,8 +14745,9 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 			stmtList, err := p.parseFunctionStatementList()
 			if err != nil {
 				p.skipToEndOfStatement()
-				return stmt, nil
+				return spanned(p, stmt, astStart), nil
 			}
+			spanStatementList(stmtList)
 			stmt.StatementList = stmtList
 		}
 	}
@@ -14662,7 +14757,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseFunctionOptions parses function WITH options
@@ -14775,6 +14870,8 @@ func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
 
 // parseCreateOrAlterFunctionStatement parses a CREATE OR ALTER FUNCTION statement
 func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFunctionStatement, error) {
+	astStart := p.curTok
+
 	// Consume FUNCTION
 	p.nextToken()
 
@@ -14863,7 +14960,7 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 	// Expect RETURNS - if not present, be lenient and skip
 	if p.curTok.Type != TokenReturns {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	p.nextToken()
 
@@ -14871,7 +14968,7 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 	returnDataType, err := p.parseDataTypeReference()
 	if err != nil {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 	stmt.ReturnType = &ast.ScalarFunctionReturnType{
 		DataType: returnDataType,
@@ -14992,8 +15089,9 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 	stmtList, err := p.parseFunctionStatementList()
 	if err != nil {
 		p.skipToEndOfStatement()
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
+	spanStatementList(stmtList)
 	stmt.StatementList = stmtList
 
 	// Skip optional semicolon
@@ -15001,51 +15099,57 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseCreateOrAlterProcedureStatement parses a CREATE OR ALTER PROCEDURE statement
 func (p *Parser) parseCreateOrAlterProcedureStatement() (*ast.CreateOrAlterProcedureStatement, error) {
+	astStart := p.curTok
+
 	// Parse as regular CREATE PROCEDURE, then convert to CreateOrAlter type
 	stmt, err := p.parseCreateProcedureStatement()
 	if err != nil {
 		return nil, err
 	}
-	return &ast.CreateOrAlterProcedureStatement{
+	return spanned(p, &ast.CreateOrAlterProcedureStatement{
 		ProcedureReference: stmt.ProcedureReference,
 		Parameters:         stmt.Parameters,
 		StatementList:      stmt.StatementList,
 		IsForReplication:   stmt.IsForReplication,
 		Options:            stmt.Options,
 		MethodSpecifier:    stmt.MethodSpecifier,
-	}, nil
+	}, astStart), nil
 }
 
 // parseCreateOrAlterViewStatement parses a CREATE OR ALTER VIEW statement
 func (p *Parser) parseCreateOrAlterViewStatement() (*ast.CreateOrAlterViewStatement, error) {
+	astStart := p.curTok
+
 	// Parse as regular CREATE VIEW, then convert to CreateOrAlter type
 	stmt, err := p.parseCreateViewStatement()
 	if err != nil {
 		return nil, err
 	}
-	return &ast.CreateOrAlterViewStatement{
-		SchemaObjectName:  stmt.SchemaObjectName,
-		Columns:           stmt.Columns,
-		SelectStatement:   stmt.SelectStatement,
-		WithCheckOption:   stmt.WithCheckOption,
-		ViewOptions:       stmt.ViewOptions,
-		IsMaterialized:    stmt.IsMaterialized,
-	}, nil
+	return spanned(p, &ast.CreateOrAlterViewStatement{
+		SchemaObjectName: stmt.SchemaObjectName,
+		Columns:          stmt.Columns,
+		SelectStatement:  stmt.SelectStatement,
+		WithCheckOption:  stmt.WithCheckOption,
+		ViewOptions:      stmt.ViewOptions,
+		IsMaterialized:   stmt.IsMaterialized,
+	}, astStart), nil
 }
 
 // parseCreateOrAlterTriggerStatement parses a CREATE OR ALTER TRIGGER statement
 func (p *Parser) parseCreateOrAlterTriggerStatement() (*ast.CreateOrAlterTriggerStatement, error) {
+	astStart := p.curTok
+
 	// Parse as regular CREATE TRIGGER, then convert to CreateOrAlter type
 	stmt, err := p.parseCreateTriggerStatement()
 	if err != nil {
 		return nil, err
 	}
-	return &ast.CreateOrAlterTriggerStatement{
+	return spanned(p, &ast.CreateOrAlterTriggerStatement{
 		Name:                stmt.Name,
 		TriggerObject:       stmt.TriggerObject,
 		TriggerType:         stmt.TriggerType,
@@ -15055,11 +15159,13 @@ func (p *Parser) parseCreateOrAlterTriggerStatement() (*ast.CreateOrAlterTrigger
 		IsNotForReplication: stmt.IsNotForReplication,
 		MethodSpecifier:     stmt.MethodSpecifier,
 		StatementList:       stmt.StatementList,
-	}, nil
+	}, astStart), nil
 }
 
 // parseCreateTriggerStatement parses a CREATE TRIGGER statement
 func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, error) {
+	astStart := p.curTok
+
 	// Consume TRIGGER
 	p.nextToken()
 
@@ -15272,7 +15378,7 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 		for p.curTok.Type == TokenSemicolon {
 			p.nextToken()
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	// Parse statement list (all statements until GO/EOF)
@@ -15297,6 +15403,7 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 			stmtList.Statements = append(stmtList.Statements, innerStmt)
 		}
 	}
+	spanStatementList(stmtList)
 	stmt.StatementList = stmtList
 
 	// Skip optional semicolon
@@ -15304,7 +15411,7 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // convertEventTypeCase converts an event type like "DENY_DATABASE" to "DenyDatabase"
@@ -15349,7 +15456,7 @@ func restoreStatementToJSON(s *ast.RestoreStatement) jsonNode {
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func backupRestoreFileInfoToJSON(f *ast.BackupRestoreFileInfo) jsonNode {
@@ -15364,7 +15471,7 @@ func backupRestoreFileInfoToJSON(f *ast.BackupRestoreFileInfo) jsonNode {
 		}
 		node["Items"] = items
 	}
-	return node
+	return addSpan(node, frag(f))
 }
 
 func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
@@ -15402,7 +15509,7 @@ func backupDatabaseStatementToJSON(s *ast.BackupDatabaseStatement) jsonNode {
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func mirrorToClauseToJSON(c *ast.MirrorToClause) jsonNode {
@@ -15416,7 +15523,7 @@ func mirrorToClauseToJSON(c *ast.MirrorToClause) jsonNode {
 		}
 		node["Devices"] = devices
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 func backupTransactionLogStatementToJSON(s *ast.BackupTransactionLogStatement) jsonNode {
@@ -15440,7 +15547,7 @@ func backupTransactionLogStatementToJSON(s *ast.BackupTransactionLogStatement) j
 		}
 		node["Devices"] = devices
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func backupCertificateStatementToJSON(s *ast.BackupCertificateStatement) jsonNode {
@@ -15463,7 +15570,7 @@ func backupCertificateStatementToJSON(s *ast.BackupCertificateStatement) jsonNod
 	if s.DecryptionPassword != nil {
 		node["DecryptionPassword"] = scalarExpressionToJSON(s.DecryptionPassword)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func backupServiceMasterKeyStatementToJSON(s *ast.BackupServiceMasterKeyStatement) jsonNode {
@@ -15476,7 +15583,7 @@ func backupServiceMasterKeyStatementToJSON(s *ast.BackupServiceMasterKeyStatemen
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func backupMasterKeyStatementToJSON(s *ast.BackupMasterKeyStatement) jsonNode {
@@ -15489,7 +15596,7 @@ func backupMasterKeyStatementToJSON(s *ast.BackupMasterKeyStatement) jsonNode {
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func restoreServiceMasterKeyStatementToJSON(s *ast.RestoreServiceMasterKeyStatement) jsonNode {
@@ -15503,7 +15610,7 @@ func restoreServiceMasterKeyStatementToJSON(s *ast.RestoreServiceMasterKeyStatem
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func restoreMasterKeyStatementToJSON(s *ast.RestoreMasterKeyStatement) jsonNode {
@@ -15520,17 +15627,17 @@ func restoreMasterKeyStatementToJSON(s *ast.RestoreMasterKeyStatement) jsonNode 
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func backupOptionBaseToJSON(o ast.BackupOptionBase) jsonNode {
 	switch opt := o.(type) {
 	case *ast.BackupOption:
-		return backupOptionToJSON(opt)
+		return addSpan(backupOptionToJSON(opt), frag(o))
 	case *ast.BackupEncryptionOption:
-		return backupEncryptionOptionToJSON(opt)
+		return addSpan(backupEncryptionOptionToJSON(opt), frag(o))
 	default:
-		return jsonNode{"$type": "Unknown"}
+		return addSpan(jsonNode{"$type": "Unknown"}, frag(o))
 	}
 }
 
@@ -15542,7 +15649,7 @@ func backupOptionToJSON(o *ast.BackupOption) jsonNode {
 	if o.Value != nil {
 		node["Value"] = scalarExpressionToJSON(o.Value)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func backupEncryptionOptionToJSON(o *ast.BackupEncryptionOption) jsonNode {
@@ -15554,7 +15661,7 @@ func backupEncryptionOptionToJSON(o *ast.BackupEncryptionOption) jsonNode {
 	if o.Encryptor != nil {
 		node["Encryptor"] = cryptoMechanismToJSON(o.Encryptor)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func deviceInfoToJSON(d *ast.DeviceInfo) jsonNode {
@@ -15568,7 +15675,7 @@ func deviceInfoToJSON(d *ast.DeviceInfo) jsonNode {
 	if d.PhysicalDevice != nil {
 		node["PhysicalDevice"] = scalarExpressionToJSON(d.PhysicalDevice)
 	}
-	return node
+	return addSpan(node, frag(d))
 }
 
 func restoreOptionToJSON(o ast.RestoreOption) jsonNode {
@@ -15581,7 +15688,7 @@ func restoreOptionToJSON(o ast.RestoreOption) jsonNode {
 		if opt.FileStreamOption != nil {
 			node["FileStreamOption"] = fileStreamDatabaseOptionToJSON(opt.FileStreamOption)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.GeneralSetCommandRestoreOption:
 		node := jsonNode{
 			"$type":      "GeneralSetCommandRestoreOption",
@@ -15590,12 +15697,12 @@ func restoreOptionToJSON(o ast.RestoreOption) jsonNode {
 		if opt.OptionValue != nil {
 			node["OptionValue"] = scalarExpressionToJSON(opt.OptionValue)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.SimpleRestoreOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "RestoreOption",
 			"OptionKind": opt.OptionKind,
-		}
+		}, frag(o))
 	case *ast.StopRestoreOption:
 		node := jsonNode{
 			"$type":      "StopRestoreOption",
@@ -15608,7 +15715,7 @@ func restoreOptionToJSON(o ast.RestoreOption) jsonNode {
 		if opt.After != nil {
 			node["After"] = scalarExpressionToJSON(opt.After)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.ScalarExpressionRestoreOption:
 		node := jsonNode{
 			"$type":      "ScalarExpressionRestoreOption",
@@ -15617,7 +15724,7 @@ func restoreOptionToJSON(o ast.RestoreOption) jsonNode {
 		if opt.Value != nil {
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.MoveRestoreOption:
 		node := jsonNode{
 			"$type":      "MoveRestoreOption",
@@ -15629,9 +15736,9 @@ func restoreOptionToJSON(o ast.RestoreOption) jsonNode {
 		if opt.OSFileName != nil {
 			node["OSFileName"] = scalarExpressionToJSON(opt.OSFileName)
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownRestoreOption"}
+		return addSpan(jsonNode{"$type": "UnknownRestoreOption"}, frag(o))
 	}
 }
 
@@ -15643,7 +15750,7 @@ func fileStreamDatabaseOptionToJSON(f *ast.FileStreamDatabaseOption) jsonNode {
 	if f.DirectoryName != nil {
 		node["DirectoryName"] = scalarExpressionToJSON(f.DirectoryName)
 	}
-	return node
+	return addSpan(node, frag(f))
 }
 
 func createUserStatementToJSON(s *ast.CreateUserStatement) jsonNode {
@@ -15663,7 +15770,7 @@ func createUserStatementToJSON(s *ast.CreateUserStatement) jsonNode {
 		}
 		node["UserOptions"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func userLoginOptionToJSON(u *ast.UserLoginOption) jsonNode {
@@ -15674,7 +15781,7 @@ func userLoginOptionToJSON(u *ast.UserLoginOption) jsonNode {
 	if u.Identifier != nil {
 		node["Identifier"] = identifierToJSON(u.Identifier)
 	}
-	return node
+	return addSpan(node, frag(u))
 }
 
 func userOptionToJSON(o ast.UserOption) jsonNode {
@@ -15687,7 +15794,7 @@ func userOptionToJSON(o ast.UserOption) jsonNode {
 		if opt.Value != nil {
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.IdentifierPrincipalOption:
 		node := jsonNode{
 			"$type":      "IdentifierPrincipalOption",
@@ -15696,7 +15803,7 @@ func userOptionToJSON(o ast.UserOption) jsonNode {
 		if opt.Identifier != nil {
 			node["Identifier"] = identifierToJSON(opt.Identifier)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.PasswordAlterPrincipalOption:
 		node := jsonNode{
 			"$type":      "PasswordAlterPrincipalOption",
@@ -15711,9 +15818,9 @@ func userOptionToJSON(o ast.UserOption) jsonNode {
 		if opt.OldPassword != nil {
 			node["OldPassword"] = stringLiteralToJSON(opt.OldPassword)
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownUserOption"}
+		return addSpan(jsonNode{"$type": "UnknownUserOption"}, frag(o))
 	}
 }
 
@@ -15737,7 +15844,7 @@ func createAggregateStatementToJSON(s *ast.CreateAggregateStatement) jsonNode {
 	if s.ReturnType != nil {
 		node["ReturnType"] = dataTypeReferenceToJSON(s.ReturnType)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func assemblyNameToJSON(a *ast.AssemblyName) jsonNode {
@@ -15750,7 +15857,7 @@ func assemblyNameToJSON(a *ast.AssemblyName) jsonNode {
 	if a.ClassName != nil {
 		node["ClassName"] = identifierToJSON(a.ClassName)
 	}
-	return node
+	return addSpan(node, frag(a))
 }
 
 func createColumnStoreIndexStatementToJSON(s *ast.CreateColumnStoreIndexStatement) jsonNode {
@@ -15793,7 +15900,7 @@ func createColumnStoreIndexStatementToJSON(s *ast.CreateColumnStoreIndexStatemen
 	if s.OnFileGroupOrPartitionScheme != nil {
 		node["OnFileGroupOrPartitionScheme"] = fileGroupOrPartitionSchemeToJSON(s.OnFileGroupOrPartitionScheme)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
@@ -15807,7 +15914,7 @@ func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
 		if o.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(o.Expression)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.OrderIndexOption:
 		node := jsonNode{
 			"$type":      "OrderIndexOption",
@@ -15820,13 +15927,13 @@ func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
 			}
 			node["Columns"] = cols
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.IndexStateOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "IndexStateOption",
 			"OptionKind":  o.OptionKind,
 			"OptionState": o.OptionState,
-		}
+		}, frag(opt))
 	case *ast.IndexExpressionOption:
 		node := jsonNode{
 			"$type":      "IndexExpressionOption",
@@ -15835,7 +15942,7 @@ func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
 		if o.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(o.Expression)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.DataCompressionOption:
 		node := jsonNode{
 			"$type":            "DataCompressionOption",
@@ -15849,7 +15956,7 @@ func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
 			}
 			node["PartitionRanges"] = ranges
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.OnlineIndexOption:
 		node := jsonNode{
 			"$type":       "OnlineIndexOption",
@@ -15859,9 +15966,9 @@ func columnStoreIndexOptionToJSON(opt ast.IndexOption) jsonNode {
 		if o.LowPriorityLockWaitOption != nil {
 			node["LowPriorityLockWaitOption"] = onlineIndexLowPriorityLockWaitOptionToJSON(o.LowPriorityLockWaitOption)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownIndexOption"}
+		return addSpan(jsonNode{"$type": "UnknownIndexOption"}, frag(opt))
 	}
 }
 
@@ -15891,7 +15998,7 @@ func createSpatialIndexStatementToJSON(s *ast.CreateSpatialIndexStatement) jsonN
 		}
 		node["SpatialIndexOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func spatialIndexOptionToJSON(opt ast.SpatialIndexOption) jsonNode {
@@ -15903,7 +16010,7 @@ func spatialIndexOptionToJSON(opt ast.SpatialIndexOption) jsonNode {
 		if o.Option != nil {
 			node["Option"] = indexOptionToJSON(o.Option)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.BoundingBoxSpatialIndexOption:
 		node := jsonNode{
 			"$type": "BoundingBoxSpatialIndexOption",
@@ -15915,7 +16022,7 @@ func spatialIndexOptionToJSON(opt ast.SpatialIndexOption) jsonNode {
 			}
 			node["BoundingBoxParameters"] = params
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.GridsSpatialIndexOption:
 		node := jsonNode{
 			"$type": "GridsSpatialIndexOption",
@@ -15927,7 +16034,7 @@ func spatialIndexOptionToJSON(opt ast.SpatialIndexOption) jsonNode {
 			}
 			node["GridParameters"] = params
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.CellsPerObjectSpatialIndexOption:
 		node := jsonNode{
 			"$type": "CellsPerObjectSpatialIndexOption",
@@ -15935,9 +16042,9 @@ func spatialIndexOptionToJSON(opt ast.SpatialIndexOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = scalarExpressionToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownSpatialIndexOption"}
+		return addSpan(jsonNode{"$type": "UnknownSpatialIndexOption"}, frag(opt))
 	}
 }
 
@@ -15951,7 +16058,7 @@ func boundingBoxParameterToJSON(p *ast.BoundingBoxParameter) jsonNode {
 	if p.Value != nil {
 		node["Value"] = scalarExpressionToJSON(p.Value)
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func gridParameterToJSON(p *ast.GridParameter) jsonNode {
@@ -15964,7 +16071,7 @@ func gridParameterToJSON(p *ast.GridParameter) jsonNode {
 	if p.Value != "" {
 		node["Value"] = p.Value
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func alterFunctionStatementToJSON(s *ast.AlterFunctionStatement) jsonNode {
@@ -15994,34 +16101,34 @@ func alterFunctionStatementToJSON(s *ast.AlterFunctionStatement) jsonNode {
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func functionOptionToJSON(o *ast.FunctionOption) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":      "FunctionOption",
 		"OptionKind": o.OptionKind,
-	}
+	}, frag(o))
 }
 
 func inlineFunctionOptionToJSON(o *ast.InlineFunctionOption) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":       "InlineFunctionOption",
 		"OptionState": o.OptionState,
 		"OptionKind":  o.OptionKind,
-	}
+	}, frag(o))
 }
 
 func functionOptionBaseToJSON(o ast.FunctionOptionBase) jsonNode {
 	switch opt := o.(type) {
 	case *ast.FunctionOption:
-		return functionOptionToJSON(opt)
+		return addSpan(functionOptionToJSON(opt), frag(o))
 	case *ast.InlineFunctionOption:
-		return inlineFunctionOptionToJSON(opt)
+		return addSpan(inlineFunctionOptionToJSON(opt), frag(o))
 	case *ast.ExecuteAsFunctionOption:
-		return executeAsFunctionOptionToJSON(opt)
+		return addSpan(executeAsFunctionOptionToJSON(opt), frag(o))
 	default:
-		return jsonNode{"$type": "UnknownFunctionOption"}
+		return addSpan(jsonNode{"$type": "UnknownFunctionOption"}, frag(o))
 	}
 }
 
@@ -16033,7 +16140,7 @@ func executeAsFunctionOptionToJSON(o *ast.ExecuteAsFunctionOption) jsonNode {
 	if o.ExecuteAs != nil {
 		node["ExecuteAs"] = executeAsClauseToJSON(o.ExecuteAs)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func orderBulkInsertOptionToJSON(o *ast.OrderBulkInsertOption) jsonNode {
@@ -16049,7 +16156,7 @@ func orderBulkInsertOptionToJSON(o *ast.OrderBulkInsertOption) jsonNode {
 		}
 		node["Columns"] = cols
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func createFunctionStatementToJSON(s *ast.CreateFunctionStatement) jsonNode {
@@ -16085,7 +16192,7 @@ func createFunctionStatementToJSON(s *ast.CreateFunctionStatement) jsonNode {
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createOrAlterFunctionStatementToJSON(s *ast.CreateOrAlterFunctionStatement) jsonNode {
@@ -16115,7 +16222,7 @@ func createOrAlterFunctionStatementToJSON(s *ast.CreateOrAlterFunctionStatement)
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func functionReturnTypeToJSON(r ast.FunctionReturnType) jsonNode {
@@ -16127,7 +16234,7 @@ func functionReturnTypeToJSON(r ast.FunctionReturnType) jsonNode {
 		if rt.DataType != nil {
 			node["DataType"] = dataTypeReferenceToJSON(rt.DataType)
 		}
-		return node
+		return addSpan(node, frag(r))
 	case *ast.SelectFunctionReturnType:
 		node := jsonNode{
 			"$type": "SelectFunctionReturnType",
@@ -16135,7 +16242,7 @@ func functionReturnTypeToJSON(r ast.FunctionReturnType) jsonNode {
 		if rt.SelectStatement != nil {
 			node["SelectStatement"] = selectStatementToJSON(rt.SelectStatement)
 		}
-		return node
+		return addSpan(node, frag(r))
 	case *ast.TableValuedFunctionReturnType:
 		node := jsonNode{
 			"$type": "TableValuedFunctionReturnType",
@@ -16143,9 +16250,9 @@ func functionReturnTypeToJSON(r ast.FunctionReturnType) jsonNode {
 		if rt.DeclareTableVariableBody != nil {
 			node["DeclareTableVariableBody"] = declareTableVariableBodyToJSON(rt.DeclareTableVariableBody)
 		}
-		return node
+		return addSpan(node, frag(r))
 	default:
-		return jsonNode{"$type": "UnknownFunctionReturnType"}
+		return addSpan(jsonNode{"$type": "UnknownFunctionReturnType"}, frag(r))
 	}
 }
 
@@ -16172,7 +16279,7 @@ func alterTriggerStatementToJSON(s *ast.AlterTriggerStatement) jsonNode {
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createTriggerStatementToJSON(s *ast.CreateTriggerStatement) jsonNode {
@@ -16208,7 +16315,7 @@ func createTriggerStatementToJSON(s *ast.CreateTriggerStatement) jsonNode {
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createOrAlterTriggerStatementToJSON(s *ast.CreateOrAlterTriggerStatement) jsonNode {
@@ -16241,7 +16348,7 @@ func createOrAlterTriggerStatementToJSON(s *ast.CreateOrAlterTriggerStatement) j
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func triggerOptionTypeToJSON(o ast.TriggerOptionType) jsonNode {
@@ -16254,7 +16361,7 @@ func triggerOptionTypeToJSON(o ast.TriggerOptionType) jsonNode {
 		if opt.OptionState != "" {
 			node["OptionState"] = opt.OptionState
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.ExecuteAsTriggerOption:
 		node := jsonNode{
 			"$type":      "ExecuteAsTriggerOption",
@@ -16270,9 +16377,9 @@ func triggerOptionTypeToJSON(o ast.TriggerOptionType) jsonNode {
 			}
 			node["ExecuteAsClause"] = execClause
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownTriggerOption"}
+		return addSpan(jsonNode{"$type": "UnknownTriggerOption"}, frag(o))
 	}
 }
 
@@ -16284,7 +16391,7 @@ func triggerObjectToJSON(t *ast.TriggerObject) jsonNode {
 	if t.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(t.Name)
 	}
-	return node
+	return addSpan(node, frag(t))
 }
 
 func triggerActionToJSON(a *ast.TriggerAction) jsonNode {
@@ -16298,7 +16405,7 @@ func triggerActionToJSON(a *ast.TriggerAction) jsonNode {
 			"EventType": a.EventTypeGroup.EventType,
 		}
 	}
-	return node
+	return addSpan(node, frag(a))
 }
 
 func enableDisableTriggerStatementToJSON(s *ast.EnableDisableTriggerStatement) jsonNode {
@@ -16317,7 +16424,7 @@ func enableDisableTriggerStatementToJSON(s *ast.EnableDisableTriggerStatement) j
 	if s.TriggerObject != nil {
 		node["TriggerObject"] = triggerObjectToJSON(s.TriggerObject)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func endConversationStatementToJSON(s *ast.EndConversationStatement) jsonNode {
@@ -16334,7 +16441,7 @@ func endConversationStatementToJSON(s *ast.EndConversationStatement) jsonNode {
 	if s.ErrorDescription != nil {
 		node["ErrorDescription"] = scalarExpressionToJSON(s.ErrorDescription)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterIndexStatementToJSON(s *ast.AlterIndexStatement) jsonNode {
@@ -16369,7 +16476,7 @@ func alterIndexStatementToJSON(s *ast.AlterIndexStatement) jsonNode {
 		}
 		node["IndexOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func selectiveXmlIndexPromotedPathToJSON(p *ast.SelectiveXmlIndexPromotedPath) jsonNode {
@@ -16392,7 +16499,7 @@ func selectiveXmlIndexPromotedPathToJSON(p *ast.SelectiveXmlIndexPromotedPath) j
 		node["MaxLength"] = scalarExpressionToJSON(p.MaxLength)
 	}
 	node["IsSingleton"] = p.IsSingleton
-	return node
+	return addSpan(node, frag(p))
 }
 
 func xmlNamespacesToJSON(x *ast.XmlNamespaces) jsonNode {
@@ -16406,17 +16513,17 @@ func xmlNamespacesToJSON(x *ast.XmlNamespaces) jsonNode {
 		}
 		node["XmlNamespacesElements"] = elems
 	}
-	return node
+	return addSpan(node, frag(x))
 }
 
 func xmlNamespacesElementToJSON(e ast.XmlNamespacesElement) jsonNode {
 	switch elem := e.(type) {
 	case *ast.XmlNamespacesAliasElement:
-		return xmlNamespacesAliasElementToJSON(elem)
+		return addSpan(xmlNamespacesAliasElementToJSON(elem), frag(e))
 	case *ast.XmlNamespacesDefaultElement:
-		return xmlNamespacesDefaultElementToJSON(elem)
+		return addSpan(xmlNamespacesDefaultElementToJSON(elem), frag(e))
 	default:
-		return jsonNode{}
+		return addSpan(jsonNode{}, frag(e))
 	}
 }
 
@@ -16430,7 +16537,7 @@ func xmlNamespacesAliasElementToJSON(e *ast.XmlNamespacesAliasElement) jsonNode 
 	if e.String != nil {
 		node["String"] = stringLiteralToJSON(e.String)
 	}
-	return node
+	return addSpan(node, frag(e))
 }
 
 func xmlNamespacesDefaultElementToJSON(e *ast.XmlNamespacesDefaultElement) jsonNode {
@@ -16440,7 +16547,7 @@ func xmlNamespacesDefaultElementToJSON(e *ast.XmlNamespacesDefaultElement) jsonN
 	if e.String != nil {
 		node["String"] = stringLiteralToJSON(e.String)
 	}
-	return node
+	return addSpan(node, frag(e))
 }
 
 func partitionSpecifierToJSON(p *ast.PartitionSpecifier) jsonNode {
@@ -16451,23 +16558,23 @@ func partitionSpecifierToJSON(p *ast.PartitionSpecifier) jsonNode {
 	if p.Number != nil {
 		node["Number"] = scalarExpressionToJSON(p.Number)
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.IndexStateOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "IndexStateOption",
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.IndexExpressionOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "IndexExpressionOption",
 			"OptionKind": o.OptionKind,
 			"Expression": scalarExpressionToJSON(o.Expression),
-		}
+		}, frag(opt))
 	case *ast.DataCompressionOption:
 		node := jsonNode{
 			"$type":            "DataCompressionOption",
@@ -16481,7 +16588,7 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 			}
 			node["PartitionRanges"] = ranges
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.IgnoreDupKeyIndexOption:
 		node := jsonNode{
 			"$type":       "IgnoreDupKeyIndexOption",
@@ -16491,7 +16598,7 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 		if o.SuppressMessagesOption != nil {
 			node["SuppressMessagesOption"] = *o.SuppressMessagesOption
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.OnlineIndexOption:
 		node := jsonNode{
 			"$type":       "OnlineIndexOption",
@@ -16501,7 +16608,7 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 		if o.LowPriorityLockWaitOption != nil {
 			node["LowPriorityLockWaitOption"] = onlineIndexLowPriorityLockWaitOptionToJSON(o.LowPriorityLockWaitOption)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.CompressionDelayIndexOption:
 		node := jsonNode{
 			"$type":      "CompressionDelayIndexOption",
@@ -16511,7 +16618,7 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 		if o.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(o.Expression)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.MaxDurationOption:
 		node := jsonNode{
 			"$type":      "MaxDurationOption",
@@ -16523,7 +16630,7 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 		if o.Unit != "" {
 			node["Unit"] = o.Unit
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.XmlCompressionOption:
 		node := jsonNode{
 			"$type":        "XmlCompressionOption",
@@ -16537,7 +16644,7 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 			}
 			node["PartitionRanges"] = ranges
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.WaitAtLowPriorityOption:
 		node := jsonNode{
 			"$type":      "WaitAtLowPriorityOption",
@@ -16550,9 +16657,9 @@ func indexOptionToJSON(opt ast.IndexOption) jsonNode {
 			}
 			node["Options"] = options
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownIndexOption"}
+		return addSpan(jsonNode{"$type": "UnknownIndexOption"}, frag(opt))
 	}
 }
 
@@ -16587,7 +16694,7 @@ func dropDatabaseStatementToJSON(s *ast.DropDatabaseStatement) jsonNode {
 		}
 		node["Databases"] = dbs
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropTableStatementToJSON(s *ast.DropTableStatement) jsonNode {
@@ -16602,7 +16709,7 @@ func dropTableStatementToJSON(s *ast.DropTableStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropViewStatementToJSON(s *ast.DropViewStatement) jsonNode {
@@ -16617,7 +16724,7 @@ func dropViewStatementToJSON(s *ast.DropViewStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropProcedureStatementToJSON(s *ast.DropProcedureStatement) jsonNode {
@@ -16632,7 +16739,7 @@ func dropProcedureStatementToJSON(s *ast.DropProcedureStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropFunctionStatementToJSON(s *ast.DropFunctionStatement) jsonNode {
@@ -16647,7 +16754,7 @@ func dropFunctionStatementToJSON(s *ast.DropFunctionStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropTriggerStatementToJSON(s *ast.DropTriggerStatement) jsonNode {
@@ -16665,7 +16772,7 @@ func dropTriggerStatementToJSON(s *ast.DropTriggerStatement) jsonNode {
 	if s.TriggerScope != "" {
 		node["TriggerScope"] = s.TriggerScope
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropIndexStatementToJSON(s *ast.DropIndexStatement) jsonNode {
@@ -16680,7 +16787,7 @@ func dropIndexStatementToJSON(s *ast.DropIndexStatement) jsonNode {
 		}
 		node["DropIndexClauses"] = clauses
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropIndexClauseToJSON(c *ast.DropIndexClause) jsonNode {
@@ -16700,7 +16807,7 @@ func dropIndexClauseToJSON(c *ast.DropIndexClause) jsonNode {
 			}
 			node["Options"] = options
 		}
-		return node
+		return addSpan(node, frag(c))
 	}
 
 	// Otherwise use BackwardsCompatibleDropIndexClause for backwards-compatible syntax
@@ -16713,7 +16820,7 @@ func dropIndexClauseToJSON(c *ast.DropIndexClause) jsonNode {
 		// Just index name without object - use identifier
 		node["Index"] = identifierToJSON(c.Index)
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 // childObjectNameToJSON converts a SchemaObjectName to a ChildObjectName JSON format
@@ -16758,7 +16865,7 @@ func childObjectNameToJSON(s *ast.SchemaObjectName) jsonNode {
 		node["Identifiers"] = idents
 	}
 
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
@@ -16772,7 +16879,7 @@ func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
 		if o.LowPriorityLockWaitOption != nil {
 			node["LowPriorityLockWaitOption"] = onlineIndexLowPriorityLockWaitOptionToJSON(o.LowPriorityLockWaitOption)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.MoveToDropIndexOption:
 		node := jsonNode{
 			"$type":      "MoveToDropIndexOption",
@@ -16781,7 +16888,7 @@ func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
 		if o.MoveTo != nil {
 			node["MoveTo"] = fileGroupOrPartitionSchemeToJSON(o.MoveTo)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.FileStreamOnDropIndexOption:
 		node := jsonNode{
 			"$type":      "FileStreamOnDropIndexOption",
@@ -16790,13 +16897,13 @@ func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
 		if o.FileStreamOn != nil {
 			node["FileStreamOn"] = identifierOrValueExpressionToJSON(o.FileStreamOn)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.DataCompressionOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":            "DataCompressionOption",
 			"CompressionLevel": o.CompressionLevel,
 			"OptionKind":       o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.WaitAtLowPriorityOption:
 		node := jsonNode{
 			"$type":      "WaitAtLowPriorityOption",
@@ -16809,7 +16916,7 @@ func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
 			}
 			node["Options"] = options
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.IndexExpressionOption:
 		node := jsonNode{
 			"$type":      "IndexExpressionOption",
@@ -16818,9 +16925,9 @@ func dropIndexOptionToJSON(opt ast.DropIndexOption) jsonNode {
 		if o.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(o.Expression)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	}
-	return jsonNode{}
+	return addSpan(jsonNode{}, frag(opt))
 }
 
 func dropStatisticsStatementToJSON(s *ast.DropStatisticsStatement) jsonNode {
@@ -16834,7 +16941,7 @@ func dropStatisticsStatementToJSON(s *ast.DropStatisticsStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropDefaultStatementToJSON(s *ast.DropDefaultStatement) jsonNode {
@@ -16849,7 +16956,7 @@ func dropDefaultStatementToJSON(s *ast.DropDefaultStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropRuleStatementToJSON(s *ast.DropRuleStatement) jsonNode {
@@ -16864,7 +16971,7 @@ func dropRuleStatementToJSON(s *ast.DropRuleStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropSchemaStatementToJSON(s *ast.DropSchemaStatement) jsonNode {
@@ -16881,7 +16988,7 @@ func dropSchemaStatementToJSON(s *ast.DropSchemaStatement) jsonNode {
 		behavior = "None"
 	}
 	node["DropBehavior"] = behavior
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropPartitionFunctionStatementToJSON(s *ast.DropPartitionFunctionStatement) jsonNode {
@@ -16892,7 +16999,7 @@ func dropPartitionFunctionStatementToJSON(s *ast.DropPartitionFunctionStatement)
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropPartitionSchemeStatementToJSON(s *ast.DropPartitionSchemeStatement) jsonNode {
@@ -16903,7 +17010,7 @@ func dropPartitionSchemeStatementToJSON(s *ast.DropPartitionSchemeStatement) jso
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropApplicationRoleStatementToJSON(s *ast.DropApplicationRoleStatement) jsonNode {
@@ -16914,7 +17021,7 @@ func dropApplicationRoleStatementToJSON(s *ast.DropApplicationRoleStatement) jso
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropCertificateStatementToJSON(s *ast.DropCertificateStatement) jsonNode {
@@ -16925,13 +17032,13 @@ func dropCertificateStatementToJSON(s *ast.DropCertificateStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropMasterKeyStatementToJSON(s *ast.DropMasterKeyStatement) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type": "DropMasterKeyStatement",
-	}
+	}, frag(s))
 }
 
 func dropXmlSchemaCollectionStatementToJSON(s *ast.DropXmlSchemaCollectionStatement) jsonNode {
@@ -16941,7 +17048,7 @@ func dropXmlSchemaCollectionStatementToJSON(s *ast.DropXmlSchemaCollectionStatem
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropContractStatementToJSON(s *ast.DropContractStatement) jsonNode {
@@ -16952,7 +17059,7 @@ func dropContractStatementToJSON(s *ast.DropContractStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropEndpointStatementToJSON(s *ast.DropEndpointStatement) jsonNode {
@@ -16963,7 +17070,7 @@ func dropEndpointStatementToJSON(s *ast.DropEndpointStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropMessageTypeStatementToJSON(s *ast.DropMessageTypeStatement) jsonNode {
@@ -16974,7 +17081,7 @@ func dropMessageTypeStatementToJSON(s *ast.DropMessageTypeStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropQueueStatementToJSON(s *ast.DropQueueStatement) jsonNode {
@@ -16984,7 +17091,7 @@ func dropQueueStatementToJSON(s *ast.DropQueueStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropRemoteServiceBindingStatementToJSON(s *ast.DropRemoteServiceBindingStatement) jsonNode {
@@ -16995,7 +17102,7 @@ func dropRemoteServiceBindingStatementToJSON(s *ast.DropRemoteServiceBindingStat
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropRouteStatementToJSON(s *ast.DropRouteStatement) jsonNode {
@@ -17006,7 +17113,7 @@ func dropRouteStatementToJSON(s *ast.DropRouteStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropServiceStatementToJSON(s *ast.DropServiceStatement) jsonNode {
@@ -17017,7 +17124,7 @@ func dropServiceStatementToJSON(s *ast.DropServiceStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropEventNotificationStatementToJSON(s *ast.DropEventNotificationStatement) jsonNode {
@@ -17041,7 +17148,7 @@ func dropEventNotificationStatementToJSON(s *ast.DropEventNotificationStatement)
 		}
 		node["Scope"] = scope
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropEventSessionStatementToJSON(s *ast.DropEventSessionStatement) jsonNode {
@@ -17055,7 +17162,7 @@ func dropEventSessionStatementToJSON(s *ast.DropEventSessionStatement) jsonNode 
 	if s.SessionScope != "" {
 		node["SessionScope"] = s.SessionScope
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropSecurityPolicyStatementToJSON(s *ast.DropSecurityPolicyStatement) jsonNode {
@@ -17070,7 +17177,7 @@ func dropSecurityPolicyStatementToJSON(s *ast.DropSecurityPolicyStatement) jsonN
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropExternalDataSourceStatementToJSON(s *ast.DropExternalDataSourceStatement) jsonNode {
@@ -17081,7 +17188,7 @@ func dropExternalDataSourceStatementToJSON(s *ast.DropExternalDataSourceStatemen
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropExternalFileFormatStatementToJSON(s *ast.DropExternalFileFormatStatement) jsonNode {
@@ -17092,7 +17199,7 @@ func dropExternalFileFormatStatementToJSON(s *ast.DropExternalFileFormatStatemen
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropExternalTableStatementToJSON(s *ast.DropExternalTableStatement) jsonNode {
@@ -17107,7 +17214,7 @@ func dropExternalTableStatementToJSON(s *ast.DropExternalTableStatement) jsonNod
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropExternalResourcePoolStatementToJSON(s *ast.DropExternalResourcePoolStatement) jsonNode {
@@ -17118,7 +17225,7 @@ func dropExternalResourcePoolStatementToJSON(s *ast.DropExternalResourcePoolStat
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropExternalModelStatementToJSON(s *ast.DropExternalModelStatement) jsonNode {
@@ -17129,7 +17236,7 @@ func dropExternalModelStatementToJSON(s *ast.DropExternalModelStatement) jsonNod
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropWorkloadGroupStatementToJSON(s *ast.DropWorkloadGroupStatement) jsonNode {
@@ -17140,7 +17247,7 @@ func dropWorkloadGroupStatementToJSON(s *ast.DropWorkloadGroupStatement) jsonNod
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropWorkloadClassifierStatementToJSON(s *ast.DropWorkloadClassifierStatement) jsonNode {
@@ -17151,7 +17258,7 @@ func dropWorkloadClassifierStatementToJSON(s *ast.DropWorkloadClassifierStatemen
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createWorkloadGroupStatementToJSON(s *ast.CreateWorkloadGroupStatement) jsonNode {
@@ -17174,7 +17281,7 @@ func createWorkloadGroupStatementToJSON(s *ast.CreateWorkloadGroupStatement) jso
 	if s.ExternalPoolName != nil {
 		node["ExternalPoolName"] = identifierToJSON(s.ExternalPoolName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterWorkloadGroupStatementToJSON(s *ast.AlterWorkloadGroupStatement) jsonNode {
@@ -17197,7 +17304,7 @@ func alterWorkloadGroupStatementToJSON(s *ast.AlterWorkloadGroupStatement) jsonN
 	if s.ExternalPoolName != nil {
 		node["ExternalPoolName"] = identifierToJSON(s.ExternalPoolName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createWorkloadClassifierStatementToJSON(s *ast.CreateWorkloadClassifierStatement) jsonNode {
@@ -17214,7 +17321,7 @@ func createWorkloadClassifierStatementToJSON(s *ast.CreateWorkloadClassifierStat
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func stringLiteralToJSON(s *ast.StringLiteral) jsonNode {
@@ -17230,7 +17337,7 @@ func stringLiteralToJSON(s *ast.StringLiteral) jsonNode {
 	node["IsLargeObject"] = s.IsLargeObject
 	// Always include Value for StringLiteral, even if empty
 	node["Value"] = s.Value
-	return node
+	return addSpan(node, frag(s))
 }
 
 func workloadClassifierOptionToJSON(opt ast.WorkloadClassifierOption) jsonNode {
@@ -17243,7 +17350,7 @@ func workloadClassifierOptionToJSON(opt ast.WorkloadClassifierOption) jsonNode {
 		if o.WorkloadGroupName != nil {
 			node["WorkloadGroupName"] = stringLiteralToJSON(o.WorkloadGroupName)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ClassifierMemberNameOption:
 		node := jsonNode{
 			"$type":      "ClassifierMemberNameOption",
@@ -17252,7 +17359,7 @@ func workloadClassifierOptionToJSON(opt ast.WorkloadClassifierOption) jsonNode {
 		if o.MemberName != nil {
 			node["MemberName"] = stringLiteralToJSON(o.MemberName)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ClassifierWlmContextOption:
 		node := jsonNode{
 			"$type":      "ClassifierWlmContextOption",
@@ -17261,7 +17368,7 @@ func workloadClassifierOptionToJSON(opt ast.WorkloadClassifierOption) jsonNode {
 		if o.WlmContext != nil {
 			node["WlmContext"] = stringLiteralToJSON(o.WlmContext)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ClassifierStartTimeOption:
 		node := jsonNode{
 			"$type":      "ClassifierStartTimeOption",
@@ -17270,7 +17377,7 @@ func workloadClassifierOptionToJSON(opt ast.WorkloadClassifierOption) jsonNode {
 		if o.Time != nil {
 			node["Time"] = wlmTimeLiteralToJSON(o.Time)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ClassifierEndTimeOption:
 		node := jsonNode{
 			"$type":      "ClassifierEndTimeOption",
@@ -17279,7 +17386,7 @@ func workloadClassifierOptionToJSON(opt ast.WorkloadClassifierOption) jsonNode {
 		if o.Time != nil {
 			node["Time"] = wlmTimeLiteralToJSON(o.Time)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ClassifierWlmLabelOption:
 		node := jsonNode{
 			"$type":      "ClassifierWlmLabelOption",
@@ -17288,15 +17395,15 @@ func workloadClassifierOptionToJSON(opt ast.WorkloadClassifierOption) jsonNode {
 		if o.WlmLabel != nil {
 			node["WlmLabel"] = stringLiteralToJSON(o.WlmLabel)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ClassifierImportanceOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "ClassifierImportanceOption",
 			"Importance": o.Importance,
 			"OptionType": o.OptionType,
-		}
+		}, frag(opt))
 	default:
-		return jsonNode{}
+		return addSpan(jsonNode{}, frag(opt))
 	}
 }
 
@@ -17307,7 +17414,7 @@ func wlmTimeLiteralToJSON(t *ast.WlmTimeLiteral) jsonNode {
 	if t.TimeString != nil {
 		node["TimeString"] = stringLiteralToJSON(t.TimeString)
 	}
-	return node
+	return addSpan(node, frag(t))
 }
 
 func workloadGroupParameterToJSON(p interface{}) jsonNode {
@@ -17346,7 +17453,7 @@ func alterSequenceStatementToJSON(s *ast.AlterSequenceStatement) jsonNode {
 		}
 		node["SequenceOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createSequenceStatementToJSON(s *ast.CreateSequenceStatement) jsonNode {
@@ -17363,7 +17470,7 @@ func createSequenceStatementToJSON(s *ast.CreateSequenceStatement) jsonNode {
 		}
 		node["SequenceOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func sequenceOptionToJSON(opt interface{}) jsonNode {
@@ -17423,7 +17530,7 @@ func dbccStatementToJSON(s *ast.DbccStatement) jsonNode {
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dbccNamedLiteralToJSON(l *ast.DbccNamedLiteral) jsonNode {
@@ -17436,14 +17543,14 @@ func dbccNamedLiteralToJSON(l *ast.DbccNamedLiteral) jsonNode {
 	if l.Value != nil {
 		node["Value"] = scalarExpressionToJSON(l.Value)
 	}
-	return node
+	return addSpan(node, frag(l))
 }
 
 func dbccOptionToJSON(o *ast.DbccOption) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":      "DbccOption",
 		"OptionKind": o.OptionKind,
-	}
+	}, frag(o))
 }
 
 func dropTypeStatementToJSON(s *ast.DropTypeStatement) jsonNode {
@@ -17454,7 +17561,7 @@ func dropTypeStatementToJSON(s *ast.DropTypeStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropAggregateStatementToJSON(s *ast.DropAggregateStatement) jsonNode {
@@ -17469,7 +17576,7 @@ func dropAggregateStatementToJSON(s *ast.DropAggregateStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropSynonymStatementToJSON(s *ast.DropSynonymStatement) jsonNode {
@@ -17484,7 +17591,7 @@ func dropSynonymStatementToJSON(s *ast.DropSynonymStatement) jsonNode {
 		}
 		node["Objects"] = objects
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropUserStatementToJSON(s *ast.DropUserStatement) jsonNode {
@@ -17495,7 +17602,7 @@ func dropUserStatementToJSON(s *ast.DropUserStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropRoleStatementToJSON(s *ast.DropRoleStatement) jsonNode {
@@ -17506,7 +17613,7 @@ func dropRoleStatementToJSON(s *ast.DropRoleStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropAssemblyStatementToJSON(s *ast.DropAssemblyStatement) jsonNode {
@@ -17522,7 +17629,7 @@ func dropAssemblyStatementToJSON(s *ast.DropAssemblyStatement) jsonNode {
 		node["Objects"] = objects
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropAsymmetricKeyStatementToJSON(s *ast.DropAsymmetricKeyStatement) jsonNode {
@@ -17534,7 +17641,7 @@ func dropAsymmetricKeyStatementToJSON(s *ast.DropAsymmetricKeyStatement) jsonNod
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropSymmetricKeyStatementToJSON(s *ast.DropSymmetricKeyStatement) jsonNode {
@@ -17546,7 +17653,7 @@ func dropSymmetricKeyStatementToJSON(s *ast.DropSymmetricKeyStatement) jsonNode 
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterTableTriggerModificationStatementToJSON(s *ast.AlterTableTriggerModificationStatement) jsonNode {
@@ -17565,7 +17672,7 @@ func alterTableTriggerModificationStatementToJSON(s *ast.AlterTableTriggerModifi
 		}
 		node["TriggerNames"] = names
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterTableFileTableNamespaceStatementToJSON(s *ast.AlterTableFileTableNamespaceStatement) jsonNode {
@@ -17576,7 +17683,7 @@ func alterTableFileTableNamespaceStatementToJSON(s *ast.AlterTableFileTableNames
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterTableSwitchStatementToJSON(s *ast.AlterTableSwitchStatement) jsonNode {
@@ -17602,17 +17709,17 @@ func alterTableSwitchStatementToJSON(s *ast.AlterTableSwitchStatement) jsonNode 
 	if s.TargetPartition != nil {
 		node["TargetPartitionNumber"] = scalarExpressionToJSON(s.TargetPartition)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func tableSwitchOptionToJSON(opt ast.TableSwitchOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.TruncateTargetTableSwitchOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":          "TruncateTargetTableSwitchOption",
 			"TruncateTarget": o.TruncateTarget,
 			"OptionKind":     o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.LowPriorityLockWaitTableSwitchOption:
 		node := jsonNode{
 			"$type":      "LowPriorityLockWaitTableSwitchOption",
@@ -17625,9 +17732,9 @@ func tableSwitchOptionToJSON(opt ast.TableSwitchOption) jsonNode {
 			}
 			node["Options"] = opts
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownSwitchOption"}
+		return addSpan(jsonNode{"$type": "UnknownSwitchOption"}, frag(opt))
 	}
 }
 
@@ -17648,7 +17755,7 @@ func alterTableConstraintModificationStatementToJSON(s *ast.AlterTableConstraint
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterTableSetStatementToJSON(s *ast.AlterTableSetStatement) jsonNode {
@@ -17665,7 +17772,7 @@ func alterTableSetStatementToJSON(s *ast.AlterTableSetStatement) jsonNode {
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterTableRebuildStatementToJSON(s *ast.AlterTableRebuildStatement) jsonNode {
@@ -17692,7 +17799,7 @@ func alterTableRebuildStatementToJSON(s *ast.AlterTableRebuildStatement) jsonNod
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterTableAlterPartitionStatementToJSON(s *ast.AlterTableAlterPartitionStatement) jsonNode {
@@ -17706,7 +17813,7 @@ func alterTableAlterPartitionStatementToJSON(s *ast.AlterTableAlterPartitionStat
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterTableChangeTrackingStatementToJSON(s *ast.AlterTableChangeTrackingModificationStatement) jsonNode {
@@ -17718,7 +17825,7 @@ func alterTableChangeTrackingStatementToJSON(s *ast.AlterTableChangeTrackingModi
 	if s.SchemaObjectName != nil {
 		node["SchemaObjectName"] = schemaObjectNameToJSON(s.SchemaObjectName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func systemVersioningTableOptionToJSON(o *ast.SystemVersioningTableOption) jsonNode {
@@ -17734,7 +17841,7 @@ func systemVersioningTableOptionToJSON(o *ast.SystemVersioningTableOption) jsonN
 		node["RetentionPeriod"] = retentionPeriodDefinitionToJSON(o.RetentionPeriod)
 	}
 	node["OptionKind"] = o.OptionKind
-	return node
+	return addSpan(node, frag(o))
 }
 
 func retentionPeriodDefinitionToJSON(r *ast.RetentionPeriodDefinition) jsonNode {
@@ -17746,7 +17853,7 @@ func retentionPeriodDefinitionToJSON(r *ast.RetentionPeriodDefinition) jsonNode 
 	}
 	node["Units"] = r.Units
 	node["IsInfinity"] = r.IsInfinity
-	return node
+	return addSpan(node, frag(r))
 }
 
 func ledgerTableOptionToJSON(o *ast.LedgerTableOption) jsonNode {
@@ -17759,7 +17866,7 @@ func ledgerTableOptionToJSON(o *ast.LedgerTableOption) jsonNode {
 		node["LedgerViewOption"] = ledgerViewOptionToJSON(o.LedgerViewOption)
 	}
 	node["OptionKind"] = o.OptionKind
-	return node
+	return addSpan(node, frag(o))
 }
 
 func ledgerViewOptionToJSON(o *ast.LedgerViewOption) jsonNode {
@@ -17782,7 +17889,7 @@ func ledgerViewOptionToJSON(o *ast.LedgerViewOption) jsonNode {
 		node["OperationTypeDescColumnName"] = identifierToJSON(o.OperationTypeDescColumnName)
 	}
 	node["OptionKind"] = o.OptionKind
-	return node
+	return addSpan(node, frag(o))
 }
 
 func createExternalDataSourceStatementToJSON(s *ast.CreateExternalDataSourceStatement) jsonNode {
@@ -17805,7 +17912,7 @@ func createExternalDataSourceStatementToJSON(s *ast.CreateExternalDataSourceStat
 		}
 		node["ExternalDataSourceOptions"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func externalDataSourceOptionToJSON(opt *ast.ExternalDataSourceLiteralOrIdentifierOption) jsonNode {
@@ -17818,7 +17925,7 @@ func externalDataSourceOptionToJSON(opt *ast.ExternalDataSourceLiteralOrIdentifi
 	if opt.OptionKind != "" {
 		node["OptionKind"] = opt.OptionKind
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func createExternalFileFormatStatementToJSON(s *ast.CreateExternalFileFormatStatement) jsonNode {
@@ -17838,7 +17945,7 @@ func createExternalFileFormatStatementToJSON(s *ast.CreateExternalFileFormatStat
 		}
 		node["ExternalFileFormatOptions"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func externalFileFormatOptionToJSON(opt ast.ExternalFileFormatOption) jsonNode {
@@ -17855,7 +17962,7 @@ func externalFileFormatOptionToJSON(opt ast.ExternalFileFormatOption) jsonNode {
 			}
 			node["Suboptions"] = subs
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ExternalFileFormatLiteralOption:
 		node := jsonNode{
 			"$type":      "ExternalFileFormatLiteralOption",
@@ -17864,15 +17971,15 @@ func externalFileFormatOptionToJSON(opt ast.ExternalFileFormatOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = scalarExpressionToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ExternalFileFormatUseDefaultTypeOption:
-		return jsonNode{
-			"$type":                              "ExternalFileFormatUseDefaultTypeOption",
-			"ExternalFileFormatUseDefaultType":   o.ExternalFileFormatUseDefaultType,
-			"OptionKind":                         o.OptionKind,
-		}
+		return addSpan(jsonNode{
+			"$type":                            "ExternalFileFormatUseDefaultTypeOption",
+			"ExternalFileFormatUseDefaultType": o.ExternalFileFormatUseDefaultType,
+			"OptionKind":                       o.OptionKind,
+		}, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownExternalFileFormatOption"}
+		return addSpan(jsonNode{"$type": "UnknownExternalFileFormatOption"}, frag(opt))
 	}
 }
 
@@ -17903,28 +18010,28 @@ func createExternalTableStatementToJSON(s *ast.CreateExternalTableStatement) jso
 	if s.SelectStatement != nil {
 		node["SelectStatement"] = selectStatementToJSON(s.SelectStatement)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func externalTableOptionItemToJSON(opt ast.ExternalTableOptionItem) jsonNode {
 	switch o := opt.(type) {
 	case *ast.ExternalTableLiteralOrIdentifierOption:
-		return externalTableLiteralOrIdentifierOptionToJSON(o)
+		return addSpan(externalTableLiteralOrIdentifierOptionToJSON(o), frag(opt))
 	case *ast.ExternalTableRejectTypeOption:
-		return externalTableRejectTypeOptionToJSON(o)
+		return addSpan(externalTableRejectTypeOptionToJSON(o), frag(opt))
 	case *ast.ExternalTableDistributionOption:
-		return externalTableDistributionOptionToJSON(o)
+		return addSpan(externalTableDistributionOptionToJSON(o), frag(opt))
 	default:
-		return jsonNode{}
+		return addSpan(jsonNode{}, frag(opt))
 	}
 }
 
 func externalTableRejectTypeOptionToJSON(opt *ast.ExternalTableRejectTypeOption) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":      "ExternalTableRejectTypeOption",
 		"Value":      opt.Value,
 		"OptionKind": opt.OptionKind,
-	}
+	}, frag(opt))
 }
 
 func externalTableDistributionOptionToJSON(opt *ast.ExternalTableDistributionOption) jsonNode {
@@ -17952,7 +18059,7 @@ func externalTableDistributionOptionToJSON(opt *ast.ExternalTableDistributionOpt
 			}
 		}
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func externalTableColumnDefinitionToJSON(col *ast.ExternalTableColumnDefinition) jsonNode {
@@ -17965,7 +18072,7 @@ func externalTableColumnDefinitionToJSON(col *ast.ExternalTableColumnDefinition)
 	if col.NullableConstraint != nil {
 		node["NullableConstraint"] = nullableConstraintToJSON(col.NullableConstraint)
 	}
-	return node
+	return addSpan(node, frag(col))
 }
 
 func externalTableLiteralOrIdentifierOptionToJSON(opt *ast.ExternalTableLiteralOrIdentifierOption) jsonNode {
@@ -17978,7 +18085,7 @@ func externalTableLiteralOrIdentifierOptionToJSON(opt *ast.ExternalTableLiteralO
 	if opt.OptionKind != "" {
 		node["OptionKind"] = opt.OptionKind
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func createExternalLanguageStatementToJSON(s *ast.CreateExternalLanguageStatement) jsonNode {
@@ -17998,7 +18105,7 @@ func createExternalLanguageStatementToJSON(s *ast.CreateExternalLanguageStatemen
 		}
 		node["ExternalLanguageFiles"] = files
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func externalLanguageFileOptionToJSON(f *ast.ExternalLanguageFileOption) jsonNode {
@@ -18020,7 +18127,7 @@ func externalLanguageFileOptionToJSON(f *ast.ExternalLanguageFileOption) jsonNod
 	if f.EnvironmentVariables != nil {
 		node["EnvironmentVariables"] = scalarExpressionToJSON(f.EnvironmentVariables)
 	}
-	return node
+	return addSpan(node, frag(f))
 }
 
 func createExternalLibraryStatementToJSON(s *ast.CreateExternalLibraryStatement) jsonNode {
@@ -18043,7 +18150,7 @@ func createExternalLibraryStatementToJSON(s *ast.CreateExternalLibraryStatement)
 		}
 		node["ExternalLibraryFiles"] = files
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func externalLibraryFileOptionToJSON(f *ast.ExternalLibraryFileOption) jsonNode {
@@ -18056,7 +18163,7 @@ func externalLibraryFileOptionToJSON(f *ast.ExternalLibraryFileOption) jsonNode 
 	if f.Platform != nil {
 		node["Platform"] = identifierToJSON(f.Platform)
 	}
-	return node
+	return addSpan(node, frag(f))
 }
 
 func createEventSessionStatementToJSON(s *ast.CreateEventSessionStatement) jsonNode {
@@ -18090,7 +18197,7 @@ func createEventSessionStatementToJSON(s *ast.CreateEventSessionStatement) jsonN
 		}
 		node["SessionOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterEventSessionStatementToJSON(s *ast.AlterEventSessionStatement) jsonNode {
@@ -18143,7 +18250,7 @@ func alterEventSessionStatementToJSON(s *ast.AlterEventSessionStatement) jsonNod
 		}
 		node["SessionOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterAuthorizationStatementToJSON(s *ast.AlterAuthorizationStatement) jsonNode {
@@ -18157,7 +18264,7 @@ func alterAuthorizationStatementToJSON(s *ast.AlterAuthorizationStatement) jsonN
 	if s.PrincipalName != nil {
 		node["PrincipalName"] = identifierToJSON(s.PrincipalName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func eventDeclarationToJSON(e *ast.EventDeclaration) jsonNode {
@@ -18184,7 +18291,7 @@ func eventDeclarationToJSON(e *ast.EventDeclaration) jsonNode {
 	if e.EventDeclarationPredicateParameter != nil {
 		node["EventDeclarationPredicateParameter"] = booleanExpressionToJSON(e.EventDeclarationPredicateParameter)
 	}
-	return node
+	return addSpan(node, frag(e))
 }
 
 func targetDeclarationToJSON(t *ast.TargetDeclaration) jsonNode {
@@ -18201,7 +18308,7 @@ func targetDeclarationToJSON(t *ast.TargetDeclaration) jsonNode {
 		}
 		node["TargetDeclarationParameters"] = params
 	}
-	return node
+	return addSpan(node, frag(t))
 }
 
 func eventDeclarationSetParameterToJSON(p *ast.EventDeclarationSetParameter) jsonNode {
@@ -18214,7 +18321,7 @@ func eventDeclarationSetParameterToJSON(p *ast.EventDeclarationSetParameter) jso
 	if p.EventValue != nil {
 		node["EventValue"] = scalarExpressionToJSON(p.EventValue)
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func sessionOptionToJSON(o ast.SessionOption) jsonNode {
@@ -18232,7 +18339,7 @@ func sessionOptionToJSON(o ast.SessionOption) jsonNode {
 		if opt.OptionKind != "" {
 			node["OptionKind"] = opt.OptionKind
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.OnOffSessionOption:
 		node := jsonNode{
 			"$type": "OnOffSessionOption",
@@ -18243,7 +18350,7 @@ func sessionOptionToJSON(o ast.SessionOption) jsonNode {
 		if opt.OptionKind != "" {
 			node["OptionKind"] = opt.OptionKind
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.EventRetentionSessionOption:
 		node := jsonNode{
 			"$type": "EventRetentionSessionOption",
@@ -18254,7 +18361,7 @@ func sessionOptionToJSON(o ast.SessionOption) jsonNode {
 		if opt.OptionKind != "" {
 			node["OptionKind"] = opt.OptionKind
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.MaxDispatchLatencySessionOption:
 		node := jsonNode{
 			"$type":      "MaxDispatchLatencySessionOption",
@@ -18266,7 +18373,7 @@ func sessionOptionToJSON(o ast.SessionOption) jsonNode {
 		if opt.OptionKind != "" {
 			node["OptionKind"] = opt.OptionKind
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.MemoryPartitionSessionOption:
 		node := jsonNode{
 			"$type": "MemoryPartitionSessionOption",
@@ -18277,9 +18384,9 @@ func sessionOptionToJSON(o ast.SessionOption) jsonNode {
 		if opt.OptionKind != "" {
 			node["OptionKind"] = opt.OptionKind
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownSessionOption"}
+		return addSpan(jsonNode{"$type": "UnknownSessionOption"}, frag(o))
 	}
 }
 
@@ -18304,7 +18411,7 @@ func insertBulkStatementToJSON(s *ast.InsertBulkStatement) jsonNode {
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func insertBulkColumnDefinitionToJSON(c *ast.InsertBulkColumnDefinition) jsonNode {
@@ -18320,7 +18427,7 @@ func insertBulkColumnDefinitionToJSON(c *ast.InsertBulkColumnDefinition) jsonNod
 		nullNotNull = "NotSpecified"
 	}
 	node["NullNotNull"] = nullNotNull
-	return node
+	return addSpan(node, frag(c))
 }
 
 func columnDefinitionBaseToJSON(c *ast.ColumnDefinitionBase) jsonNode {
@@ -18336,7 +18443,7 @@ func columnDefinitionBaseToJSON(c *ast.ColumnDefinitionBase) jsonNode {
 	if c.Collation != nil {
 		node["Collation"] = identifierToJSON(c.Collation)
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 // normalizeRowsetOptionsJSON normalizes a JSON string for ROWSET_OPTIONS
@@ -18399,10 +18506,10 @@ func normalizeJSONArray(data []interface{}) []interface{} {
 func bulkInsertOptionToJSON(opt ast.BulkInsertOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.BulkInsertOptionBase:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "BulkInsertOption",
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.LiteralBulkInsertOption:
 		node := jsonNode{
 			"$type":      "LiteralBulkInsertOption",
@@ -18427,7 +18534,7 @@ func bulkInsertOptionToJSON(opt ast.BulkInsertOption) jsonNode {
 				node["Value"] = scalarExpressionToJSON(o.Value)
 			}
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.OrderBulkInsertOption:
 		node := jsonNode{
 			"$type":      "OrderBulkInsertOption",
@@ -18441,9 +18548,9 @@ func bulkInsertOptionToJSON(opt ast.BulkInsertOption) jsonNode {
 			}
 			node["Columns"] = cols
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownBulkInsertOption"}
+		return addSpan(jsonNode{"$type": "UnknownBulkInsertOption"}, frag(opt))
 	}
 }
 
@@ -18464,7 +18571,7 @@ func bulkInsertStatementToJSON(s *ast.BulkInsertStatement) jsonNode {
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func copyStatementToJSON(s *ast.CopyStatement) jsonNode {
@@ -18488,7 +18595,7 @@ func copyStatementToJSON(s *ast.CopyStatement) jsonNode {
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func copyOptionToJSON(o *ast.CopyOption) jsonNode {
@@ -18499,7 +18606,7 @@ func copyOptionToJSON(o *ast.CopyOption) jsonNode {
 	if o.Value != nil {
 		node["Value"] = copyOptionValueToJSON(o.Value)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 // normalizeCopyOptionKind converts option names to PascalCase
@@ -18538,7 +18645,7 @@ func copyOptionValueToJSON(v ast.CopyOptionValue) jsonNode {
 		if val.SingleValue != nil {
 			node["SingleValue"] = identifierOrValueExpressionToJSON(val.SingleValue)
 		}
-		return node
+		return addSpan(node, frag(v))
 	case *ast.CopyCredentialOption:
 		node := jsonNode{
 			"$type": "CopyCredentialOption",
@@ -18549,7 +18656,7 @@ func copyOptionValueToJSON(v ast.CopyOptionValue) jsonNode {
 		if val.Secret != nil {
 			node["Secret"] = scalarExpressionToJSON(val.Secret)
 		}
-		return node
+		return addSpan(node, frag(v))
 	case *ast.ListTypeCopyOption:
 		node := jsonNode{
 			"$type": "ListTypeCopyOption",
@@ -18561,7 +18668,7 @@ func copyOptionValueToJSON(v ast.CopyOptionValue) jsonNode {
 			}
 			node["Options"] = opts
 		}
-		return node
+		return addSpan(node, frag(v))
 	}
 	return nil
 }
@@ -18579,7 +18686,7 @@ func copyColumnOptionToJSON(c *ast.CopyColumnOption) jsonNode {
 	if c.FieldNumber != nil {
 		node["FieldNumber"] = scalarExpressionToJSON(c.FieldNumber)
 	}
-	return node
+	return addSpan(node, frag(c))
 }
 
 func alterUserStatementToJSON(s *ast.AlterUserStatement) jsonNode {
@@ -18596,7 +18703,7 @@ func alterUserStatementToJSON(s *ast.AlterUserStatement) jsonNode {
 		}
 		node["UserOptions"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterRouteStatementToJSON(s *ast.AlterRouteStatement) jsonNode {
@@ -18613,7 +18720,7 @@ func alterRouteStatementToJSON(s *ast.AlterRouteStatement) jsonNode {
 		}
 		node["RouteOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterSearchPropertyListStatementToJSON(s *ast.AlterSearchPropertyListStatement) jsonNode {
@@ -18626,7 +18733,7 @@ func alterSearchPropertyListStatementToJSON(s *ast.AlterSearchPropertyListStatem
 	if s.Action != nil {
 		node["Action"] = searchPropertyListActionToJSON(s.Action)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func searchPropertyListActionToJSON(a ast.SearchPropertyListAction) jsonNode {
@@ -18647,7 +18754,7 @@ func searchPropertyListActionToJSON(a ast.SearchPropertyListAction) jsonNode {
 		if action.Description != nil {
 			node["Description"] = stringLiteralToJSON(action.Description)
 		}
-		return node
+		return addSpan(node, frag(a))
 	case *ast.DropSearchPropertyListAction:
 		node := jsonNode{
 			"$type": "DropSearchPropertyListAction",
@@ -18655,9 +18762,9 @@ func searchPropertyListActionToJSON(a ast.SearchPropertyListAction) jsonNode {
 		if action.PropertyName != nil {
 			node["PropertyName"] = stringLiteralToJSON(action.PropertyName)
 		}
-		return node
+		return addSpan(node, frag(a))
 	default:
-		return jsonNode{"$type": "UnknownSearchPropertyListAction"}
+		return addSpan(jsonNode{"$type": "UnknownSearchPropertyListAction"}, frag(a))
 	}
 }
 
@@ -18700,30 +18807,30 @@ func alterAssemblyStatementToJSON(s *ast.AlterAssemblyStatement) jsonNode {
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func assemblyOptionToJSON(o ast.AssemblyOptionBase) jsonNode {
 	switch opt := o.(type) {
 	case *ast.AssemblyOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "AssemblyOption",
 			"OptionKind": opt.OptionKind,
-		}
+		}, frag(o))
 	case *ast.OnOffAssemblyOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "OnOffAssemblyOption",
 			"OptionKind":  opt.OptionKind,
 			"OptionState": opt.OptionState,
-		}
+		}, frag(o))
 	case *ast.PermissionSetAssemblyOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":               "PermissionSetAssemblyOption",
 			"OptionKind":          opt.OptionKind,
 			"PermissionSetOption": opt.PermissionSetOption,
-		}
+		}, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownAssemblyOption"}
+		return addSpan(jsonNode{"$type": "UnknownAssemblyOption"}, frag(o))
 	}
 }
 
@@ -18737,7 +18844,7 @@ func addFileSpecToJSON(f *ast.AddFileSpec) jsonNode {
 	if f.FileName != nil {
 		node["FileName"] = stringLiteralToJSON(f.FileName)
 	}
-	return node
+	return addSpan(node, frag(f))
 }
 
 func alterEndpointStatementToJSON(s *ast.AlterEndpointStatement) jsonNode {
@@ -18773,7 +18880,7 @@ func alterEndpointStatementToJSON(s *ast.AlterEndpointStatement) jsonNode {
 		}
 		node["PayloadOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func endpointAffinityToJSON(a *ast.EndpointAffinity) jsonNode {
@@ -18786,7 +18893,7 @@ func endpointAffinityToJSON(a *ast.EndpointAffinity) jsonNode {
 	if a.Value != nil {
 		node["Value"] = scalarExpressionToJSON(a.Value)
 	}
-	return node
+	return addSpan(node, frag(a))
 }
 
 func endpointProtocolOptionToJSON(opt ast.EndpointProtocolOption) jsonNode {
@@ -18801,7 +18908,7 @@ func endpointProtocolOptionToJSON(opt ast.EndpointProtocolOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ListenerIPEndpointProtocolOption:
 		node := jsonNode{
 			"$type": "ListenerIPEndpointProtocolOption",
@@ -18819,7 +18926,7 @@ func endpointProtocolOptionToJSON(opt ast.EndpointProtocolOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.AuthenticationEndpointProtocolOption:
 		node := jsonNode{
 			"$type":               "AuthenticationEndpointProtocolOption",
@@ -18828,7 +18935,7 @@ func endpointProtocolOptionToJSON(opt ast.EndpointProtocolOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.PortsEndpointProtocolOption:
 		node := jsonNode{
 			"$type":     "PortsEndpointProtocolOption",
@@ -18837,7 +18944,7 @@ func endpointProtocolOptionToJSON(opt ast.EndpointProtocolOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.CompressionEndpointProtocolOption:
 		node := jsonNode{
 			"$type":     "CompressionEndpointProtocolOption",
@@ -18846,9 +18953,9 @@ func endpointProtocolOptionToJSON(opt ast.EndpointProtocolOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownProtocolOption"}
+		return addSpan(jsonNode{"$type": "UnknownProtocolOption"}, frag(opt))
 	}
 }
 
@@ -18868,7 +18975,7 @@ func ipv4ToJSON(ip *ast.IPv4) jsonNode {
 	if ip.OctetFour != nil {
 		node["OctetFour"] = scalarExpressionToJSON(ip.OctetFour)
 	}
-	return node
+	return addSpan(node, frag(ip))
 }
 
 func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
@@ -18898,7 +19005,7 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.EnabledDisabledPayloadOption:
 		node := jsonNode{
 			"$type":     "EnabledDisabledPayloadOption",
@@ -18907,11 +19014,11 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.AuthenticationPayloadOption:
 		node := jsonNode{
-			"$type":              "AuthenticationPayloadOption",
-			"Protocol":           o.Protocol,
+			"$type":               "AuthenticationPayloadOption",
+			"Protocol":            o.Protocol,
 			"TryCertificateFirst": o.TryCertificateFirst,
 		}
 		if o.Certificate != nil {
@@ -18920,7 +19027,7 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.EncryptionPayloadOption:
 		node := jsonNode{
 			"$type":             "EncryptionPayloadOption",
@@ -18931,7 +19038,7 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.RolePayloadOption:
 		node := jsonNode{
 			"$type": "RolePayloadOption",
@@ -18940,7 +19047,7 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.LiteralPayloadOption:
 		node := jsonNode{
 			"$type": "LiteralPayloadOption",
@@ -18951,7 +19058,7 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.SchemaPayloadOption:
 		node := jsonNode{
 			"$type":      "SchemaPayloadOption",
@@ -18960,7 +19067,7 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.CharacterSetPayloadOption:
 		node := jsonNode{
 			"$type": "CharacterSetPayloadOption",
@@ -18969,7 +19076,7 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.SessionTimeoutPayloadOption:
 		node := jsonNode{
 			"$type":   "SessionTimeoutPayloadOption",
@@ -18981,7 +19088,7 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.WsdlPayloadOption:
 		node := jsonNode{
 			"$type":  "WsdlPayloadOption",
@@ -18993,7 +19100,7 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.LoginTypePayloadOption:
 		node := jsonNode{
 			"$type":     "LoginTypePayloadOption",
@@ -19002,9 +19109,9 @@ func payloadOptionToJSON(opt ast.PayloadOption) jsonNode {
 		if o.Kind != "" {
 			node["Kind"] = o.Kind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownPayloadOption"}
+		return addSpan(jsonNode{"$type": "UnknownPayloadOption"}, frag(opt))
 	}
 }
 
@@ -19025,7 +19132,7 @@ func alterServiceStatementToJSON(s *ast.AlterServiceStatement) jsonNode {
 		}
 		node["ServiceContracts"] = contracts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterCertificateStatementToJSON(s *ast.AlterCertificateStatement) jsonNode {
@@ -19053,7 +19160,7 @@ func alterCertificateStatementToJSON(s *ast.AlterCertificateStatement) jsonNode 
 	if s.AttestedBy != nil {
 		node["AttestedBy"] = scalarExpressionToJSON(s.AttestedBy)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterApplicationRoleStatementToJSON(s *ast.AlterApplicationRoleStatement) jsonNode {
@@ -19070,7 +19177,7 @@ func alterApplicationRoleStatementToJSON(s *ast.AlterApplicationRoleStatement) j
 		}
 		node["ApplicationRoleOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterAsymmetricKeyStatementToJSON(s *ast.AlterAsymmetricKeyStatement) jsonNode {
@@ -19092,7 +19199,7 @@ func alterAsymmetricKeyStatementToJSON(s *ast.AlterAsymmetricKeyStatement) jsonN
 	if s.DecryptionPassword != nil {
 		node["DecryptionPassword"] = scalarExpressionToJSON(s.DecryptionPassword)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterQueueStatementToJSON(s *ast.AlterQueueStatement) jsonNode {
@@ -19109,7 +19216,7 @@ func alterQueueStatementToJSON(s *ast.AlterQueueStatement) jsonNode {
 		}
 		node["QueueOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterPartitionSchemeStatementToJSON(s *ast.AlterPartitionSchemeStatement) jsonNode {
@@ -19122,7 +19229,7 @@ func alterPartitionSchemeStatementToJSON(s *ast.AlterPartitionSchemeStatement) j
 	if s.FileGroup != nil {
 		node["FileGroup"] = identifierOrValueExpressionToJSON(s.FileGroup)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterPartitionFunctionStatementToJSON(s *ast.AlterPartitionFunctionStatement) jsonNode {
@@ -19139,7 +19246,7 @@ func alterPartitionFunctionStatementToJSON(s *ast.AlterPartitionFunctionStatemen
 	if s.Boundary != nil {
 		node["Boundary"] = scalarExpressionToJSON(s.Boundary)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterFulltextCatalogStatementToJSON(s *ast.AlterFulltextCatalogStatement) jsonNode {
@@ -19168,7 +19275,7 @@ func alterFulltextCatalogStatementToJSON(s *ast.AlterFulltextCatalogStatement) j
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createFullTextCatalogStatementToJSON(s *ast.CreateFullTextCatalogStatement) jsonNode {
@@ -19204,7 +19311,7 @@ func createFullTextCatalogStatementToJSON(s *ast.CreateFullTextCatalogStatement)
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createFullTextStopListStatementToJSON(s *ast.CreateFullTextStopListStatement) jsonNode {
@@ -19224,7 +19331,7 @@ func createFullTextStopListStatementToJSON(s *ast.CreateFullTextStopListStatemen
 	if s.Owner != nil {
 		node["Owner"] = identifierToJSON(s.Owner)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterFullTextStopListStatementToJSON(s *ast.AlterFullTextStopListStatement) jsonNode {
@@ -19237,7 +19344,7 @@ func alterFullTextStopListStatementToJSON(s *ast.AlterFullTextStopListStatement)
 	if s.Action != nil {
 		node["Action"] = fullTextStopListActionToJSON(s.Action)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func fullTextStopListActionToJSON(a *ast.FullTextStopListAction) jsonNode {
@@ -19252,7 +19359,7 @@ func fullTextStopListActionToJSON(a *ast.FullTextStopListAction) jsonNode {
 	if a.LanguageTerm != nil {
 		node["LanguageTerm"] = identifierOrValueExpressionToJSON(a.LanguageTerm)
 	}
-	return node
+	return addSpan(node, frag(a))
 }
 
 func dropFullTextStopListStatementToJSON(s *ast.DropFullTextStopListStatement) jsonNode {
@@ -19263,7 +19370,7 @@ func dropFullTextStopListStatementToJSON(s *ast.DropFullTextStopListStatement) j
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropFullTextCatalogStatementToJSON(s *ast.DropFullTextCatalogStatement) jsonNode {
@@ -19274,7 +19381,7 @@ func dropFullTextCatalogStatementToJSON(s *ast.DropFullTextCatalogStatement) jso
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropFulltextIndexStatementToJSON(s *ast.DropFulltextIndexStatement) jsonNode {
@@ -19284,7 +19391,7 @@ func dropFulltextIndexStatementToJSON(s *ast.DropFulltextIndexStatement) jsonNod
 	if s.TableName != nil {
 		node["TableName"] = schemaObjectNameToJSON(s.TableName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterFulltextIndexStatementToJSON(s *ast.AlterFulltextIndexStatement) jsonNode {
@@ -19297,16 +19404,16 @@ func alterFulltextIndexStatementToJSON(s *ast.AlterFulltextIndexStatement) jsonN
 	if s.Action != nil {
 		node["Action"] = alterFullTextIndexActionToJSON(s.Action)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterFullTextIndexActionToJSON(a ast.AlterFullTextIndexActionOption) jsonNode {
 	switch action := a.(type) {
 	case *ast.SimpleAlterFullTextIndexAction:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "SimpleAlterFullTextIndexAction",
 			"ActionKind": action.ActionKind,
-		}
+		}, frag(a))
 	case *ast.AddAlterFullTextIndexAction:
 		node := jsonNode{
 			"$type":            "AddAlterFullTextIndexAction",
@@ -19319,7 +19426,7 @@ func alterFullTextIndexActionToJSON(a ast.AlterFullTextIndexActionOption) jsonNo
 			}
 			node["Columns"] = cols
 		}
-		return node
+		return addSpan(node, frag(a))
 	case *ast.DropAlterFullTextIndexAction:
 		node := jsonNode{
 			"$type":            "DropAlterFullTextIndexAction",
@@ -19332,7 +19439,7 @@ func alterFullTextIndexActionToJSON(a ast.AlterFullTextIndexActionOption) jsonNo
 			}
 			node["Columns"] = cols
 		}
-		return node
+		return addSpan(node, frag(a))
 	case *ast.SetStopListAlterFullTextIndexAction:
 		node := jsonNode{
 			"$type":            "SetStopListAlterFullTextIndexAction",
@@ -19341,7 +19448,7 @@ func alterFullTextIndexActionToJSON(a ast.AlterFullTextIndexActionOption) jsonNo
 		if action.StopListOption != nil {
 			node["StopListOption"] = stopListFullTextIndexOptionToJSON(action.StopListOption)
 		}
-		return node
+		return addSpan(node, frag(a))
 	case *ast.SetSearchPropertyListAlterFullTextIndexAction:
 		node := jsonNode{
 			"$type":            "SetSearchPropertyListAlterFullTextIndexAction",
@@ -19350,7 +19457,7 @@ func alterFullTextIndexActionToJSON(a ast.AlterFullTextIndexActionOption) jsonNo
 		if action.SearchPropertyListOption != nil {
 			node["SearchPropertyListOption"] = searchPropertyListFullTextIndexOptionToJSON(action.SearchPropertyListOption)
 		}
-		return node
+		return addSpan(node, frag(a))
 	case *ast.AlterColumnAlterFullTextIndexAction:
 		node := jsonNode{
 			"$type":            "AlterColumnAlterFullTextIndexAction",
@@ -19359,7 +19466,7 @@ func alterFullTextIndexActionToJSON(a ast.AlterFullTextIndexActionOption) jsonNo
 		if action.Column != nil {
 			node["Column"] = fullTextIndexColumnToJSON(action.Column)
 		}
-		return node
+		return addSpan(node, frag(a))
 	}
 	return nil
 }
@@ -19373,7 +19480,7 @@ func stopListFullTextIndexOptionToJSON(opt *ast.StopListFullTextIndexOption) jso
 	if opt.StopListName != nil {
 		node["StopListName"] = identifierToJSON(opt.StopListName)
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func searchPropertyListFullTextIndexOptionToJSON(opt *ast.SearchPropertyListFullTextIndexOption) jsonNode {
@@ -19385,7 +19492,7 @@ func searchPropertyListFullTextIndexOptionToJSON(opt *ast.SearchPropertyListFull
 	if opt.PropertyListName != nil {
 		node["PropertyListName"] = identifierToJSON(opt.PropertyListName)
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func fullTextIndexColumnToJSON(col *ast.FullTextIndexColumn) jsonNode {
@@ -19402,7 +19509,7 @@ func fullTextIndexColumnToJSON(col *ast.FullTextIndexColumn) jsonNode {
 	if col.LanguageTerm != nil {
 		node["LanguageTerm"] = identifierOrValueExpressionToJSON(col.LanguageTerm)
 	}
-	return node
+	return addSpan(node, frag(col))
 }
 
 func alterSymmetricKeyStatementToJSON(s *ast.AlterSymmetricKeyStatement) jsonNode {
@@ -19423,7 +19530,7 @@ func alterSymmetricKeyStatementToJSON(s *ast.AlterSymmetricKeyStatement) jsonNod
 		}
 		node["EncryptingMechanisms"] = mechs
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterServiceMasterKeyStatementToJSON(s *ast.AlterServiceMasterKeyStatement) jsonNode {
@@ -19439,7 +19546,7 @@ func alterServiceMasterKeyStatementToJSON(s *ast.AlterServiceMasterKeyStatement)
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func renameEntityStatementToJSON(s *ast.RenameEntityStatement) jsonNode {
@@ -19458,7 +19565,7 @@ func renameEntityStatementToJSON(s *ast.RenameEntityStatement) jsonNode {
 	if s.NewName != nil {
 		node["NewName"] = identifierToJSON(s.NewName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
@@ -19503,15 +19610,15 @@ func createDatabaseStatementToJSON(s *ast.CreateDatabaseStatement) jsonNode {
 	if s.DatabaseSnapshot != nil {
 		node["DatabaseSnapshot"] = identifierToJSON(s.DatabaseSnapshot)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func containmentDatabaseOptionToJSON(c *ast.ContainmentDatabaseOption) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":      "ContainmentDatabaseOption",
 		"Value":      c.Value,
 		"OptionKind": c.OptionKind,
-	}
+	}, frag(c))
 }
 
 func createDatabaseEncryptionKeyStatementToJSON(s *ast.CreateDatabaseEncryptionKeyStatement) jsonNode {
@@ -19524,7 +19631,7 @@ func createDatabaseEncryptionKeyStatementToJSON(s *ast.CreateDatabaseEncryptionK
 	if s.Algorithm != "" {
 		node["Algorithm"] = s.Algorithm
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseEncryptionKeyStatementToJSON(s *ast.AlterDatabaseEncryptionKeyStatement) jsonNode {
@@ -19538,13 +19645,13 @@ func alterDatabaseEncryptionKeyStatementToJSON(s *ast.AlterDatabaseEncryptionKey
 	if s.Algorithm != "" {
 		node["Algorithm"] = s.Algorithm
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropDatabaseEncryptionKeyStatementToJSON(s *ast.DropDatabaseEncryptionKeyStatement) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type": "DropDatabaseEncryptionKeyStatement",
-	}
+	}, frag(s))
 }
 
 func fileGroupDefinitionToJSON(fg *ast.FileGroupDefinition) jsonNode {
@@ -19564,7 +19671,7 @@ func fileGroupDefinitionToJSON(fg *ast.FileGroupDefinition) jsonNode {
 	node["IsDefault"] = fg.IsDefault
 	node["ContainsFileStream"] = fg.ContainsFileStream
 	node["ContainsMemoryOptimizedData"] = fg.ContainsMemoryOptimizedData
-	return node
+	return addSpan(node, frag(fg))
 }
 
 func fileDeclarationToJSON(fd *ast.FileDeclaration) jsonNode {
@@ -19579,16 +19686,16 @@ func fileDeclarationToJSON(fd *ast.FileDeclaration) jsonNode {
 		node["Options"] = opts
 	}
 	node["IsPrimary"] = fd.IsPrimary
-	return node
+	return addSpan(node, frag(fd))
 }
 
 func fileDeclarationOptionToJSON(opt ast.FileDeclarationOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.SimpleFileDeclarationOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "FileDeclarationOption",
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.NameFileDeclarationOption:
 		node := jsonNode{
 			"$type":      "NameFileDeclarationOption",
@@ -19598,7 +19705,7 @@ func fileDeclarationOptionToJSON(opt ast.FileDeclarationOption) jsonNode {
 		if o.LogicalFileName != nil {
 			node["LogicalFileName"] = identifierOrValueExpressionToJSON(o.LogicalFileName)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.FileNameFileDeclarationOption:
 		node := jsonNode{
 			"$type":      "FileNameFileDeclarationOption",
@@ -19607,7 +19714,7 @@ func fileDeclarationOptionToJSON(opt ast.FileDeclarationOption) jsonNode {
 		if o.OSFileName != nil {
 			node["OSFileName"] = stringLiteralToJSON(o.OSFileName)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.SizeFileDeclarationOption:
 		node := jsonNode{
 			"$type":      "SizeFileDeclarationOption",
@@ -19617,7 +19724,7 @@ func fileDeclarationOptionToJSON(opt ast.FileDeclarationOption) jsonNode {
 		if o.Size != nil {
 			node["Size"] = scalarExpressionToJSON(o.Size)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.MaxSizeFileDeclarationOption:
 		node := jsonNode{
 			"$type":      "MaxSizeFileDeclarationOption",
@@ -19628,7 +19735,7 @@ func fileDeclarationOptionToJSON(opt ast.FileDeclarationOption) jsonNode {
 		if o.MaxSize != nil {
 			node["MaxSize"] = scalarExpressionToJSON(o.MaxSize)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.FileGrowthFileDeclarationOption:
 		node := jsonNode{
 			"$type":      "FileGrowthFileDeclarationOption",
@@ -19638,20 +19745,20 @@ func fileDeclarationOptionToJSON(opt ast.FileDeclarationOption) jsonNode {
 		if o.GrowthIncrement != nil {
 			node["GrowthIncrement"] = scalarExpressionToJSON(o.GrowthIncrement)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "FileDeclarationOption"}
+		return addSpan(jsonNode{"$type": "FileDeclarationOption"}, frag(opt))
 	}
 }
 
 func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.OnOffDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "OnOffDatabaseOption",
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.IdentifierDatabaseOption:
 		node := jsonNode{
 			"$type":      "IdentifierDatabaseOption",
@@ -19660,7 +19767,7 @@ func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = identifierToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.MaxSizeDatabaseOption:
 		node := jsonNode{
 			"$type": "MaxSizeDatabaseOption",
@@ -19674,7 +19781,7 @@ func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 		if o.OptionKind != "" {
 			node["OptionKind"] = o.OptionKind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.LiteralDatabaseOption:
 		node := jsonNode{
 			"$type": "LiteralDatabaseOption",
@@ -19685,7 +19792,7 @@ func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 		if o.OptionKind != "" {
 			node["OptionKind"] = o.OptionKind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.ElasticPoolSpecification:
 		node := jsonNode{
 			"$type": "ElasticPoolSpecification",
@@ -19696,12 +19803,12 @@ func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 		if o.OptionKind != "" {
 			node["OptionKind"] = o.OptionKind
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.SimpleDatabaseOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "DatabaseOption",
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.FileStreamDatabaseOption:
 		node := jsonNode{
 			"$type":      "FileStreamDatabaseOption",
@@ -19713,9 +19820,9 @@ func createDatabaseOptionToJSON(opt ast.CreateDatabaseOption) jsonNode {
 		if o.DirectoryName != nil {
 			node["DirectoryName"] = scalarExpressionToJSON(o.DirectoryName)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "CreateDatabaseOption"}
+		return addSpan(jsonNode{"$type": "CreateDatabaseOption"}, frag(opt))
 	}
 }
 
@@ -19729,7 +19836,7 @@ func createLoginStatementToJSON(s *ast.CreateLoginStatement) jsonNode {
 	if s.Source != nil {
 		node["Source"] = createLoginSourceToJSON(s.Source)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createLoginSourceToJSON(s ast.CreateLoginSource) jsonNode {
@@ -19745,7 +19852,7 @@ func createLoginSourceToJSON(s ast.CreateLoginSource) jsonNode {
 			}
 			node["Options"] = opts
 		}
-		return node
+		return addSpan(node, frag(s))
 	case *ast.PasswordCreateLoginSource:
 		node := jsonNode{
 			"$type":      "PasswordCreateLoginSource",
@@ -19762,7 +19869,7 @@ func createLoginSourceToJSON(s ast.CreateLoginSource) jsonNode {
 			}
 			node["Options"] = opts
 		}
-		return node
+		return addSpan(node, frag(s))
 	case *ast.WindowsCreateLoginSource:
 		node := jsonNode{
 			"$type": "WindowsCreateLoginSource",
@@ -19774,7 +19881,7 @@ func createLoginSourceToJSON(s ast.CreateLoginSource) jsonNode {
 			}
 			node["Options"] = opts
 		}
-		return node
+		return addSpan(node, frag(s))
 	case *ast.CertificateCreateLoginSource:
 		node := jsonNode{
 			"$type": "CertificateCreateLoginSource",
@@ -19785,7 +19892,7 @@ func createLoginSourceToJSON(s ast.CreateLoginSource) jsonNode {
 		if src.Credential != nil {
 			node["Credential"] = identifierToJSON(src.Credential)
 		}
-		return node
+		return addSpan(node, frag(s))
 	case *ast.AsymmetricKeyCreateLoginSource:
 		node := jsonNode{
 			"$type": "AsymmetricKeyCreateLoginSource",
@@ -19796,9 +19903,9 @@ func createLoginSourceToJSON(s ast.CreateLoginSource) jsonNode {
 		if src.Credential != nil {
 			node["Credential"] = identifierToJSON(src.Credential)
 		}
-		return node
+		return addSpan(node, frag(s))
 	default:
-		return jsonNode{}
+		return addSpan(jsonNode{}, frag(s))
 	}
 }
 
@@ -19812,7 +19919,7 @@ func principalOptionToJSON(o ast.PrincipalOption) jsonNode {
 		if opt.Value != nil {
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.IdentifierPrincipalOption:
 		node := jsonNode{
 			"$type":      "IdentifierPrincipalOption",
@@ -19821,18 +19928,18 @@ func principalOptionToJSON(o ast.PrincipalOption) jsonNode {
 		if opt.Identifier != nil {
 			node["Identifier"] = identifierToJSON(opt.Identifier)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.OnOffPrincipalOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "OnOffPrincipalOption",
 			"OptionKind":  opt.OptionKind,
 			"OptionState": opt.OptionState,
-		}
+		}, frag(o))
 	case *ast.PrincipalOptionSimple:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "PrincipalOption",
 			"OptionKind": opt.OptionKind,
-		}
+		}, frag(o))
 	case *ast.PasswordAlterPrincipalOption:
 		node := jsonNode{
 			"$type":      "PasswordAlterPrincipalOption",
@@ -19847,9 +19954,9 @@ func principalOptionToJSON(o ast.PrincipalOption) jsonNode {
 		if opt.OldPassword != nil {
 			node["OldPassword"] = stringLiteralToJSON(opt.OldPassword)
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
-		return jsonNode{}
+		return addSpan(jsonNode{}, frag(o))
 	}
 }
 
@@ -19861,7 +19968,7 @@ func alterLoginEnableDisableStatementToJSON(s *ast.AlterLoginEnableDisableStatem
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterLoginOptionsStatementToJSON(s *ast.AlterLoginOptionsStatement) jsonNode {
@@ -19878,7 +19985,7 @@ func alterLoginOptionsStatementToJSON(s *ast.AlterLoginOptionsStatement) jsonNod
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropLoginStatementToJSON(s *ast.DropLoginStatement) jsonNode {
@@ -19889,7 +19996,7 @@ func dropLoginStatementToJSON(s *ast.DropLoginStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createIndexStatementToJSON(s *ast.CreateIndexStatement) jsonNode {
@@ -19937,7 +20044,7 @@ func createIndexStatementToJSON(s *ast.CreateIndexStatement) jsonNode {
 	if s.FileStreamOn != nil {
 		node["FileStreamOn"] = identifierOrValueExpressionToJSON(s.FileStreamOn)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createAsymmetricKeyStatementToJSON(s *ast.CreateAsymmetricKeyStatement) jsonNode {
@@ -19959,7 +20066,7 @@ func createAsymmetricKeyStatementToJSON(s *ast.CreateAsymmetricKeyStatement) jso
 	if s.Password != nil {
 		node["Password"] = scalarExpressionToJSON(s.Password)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func encryptionSourceToJSON(source ast.EncryptionSource) interface{} {
@@ -20002,7 +20109,7 @@ func providerEncryptionSourceToJSON(s *ast.ProviderEncryptionSource) jsonNode {
 		}
 		node["KeyOptions"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func keyOptionToJSON(opt ast.KeyOption) interface{} {
@@ -20078,7 +20185,7 @@ func createSymmetricKeyStatementToJSON(s *ast.CreateSymmetricKeyStatement) jsonN
 		}
 		node["EncryptingMechanisms"] = mechs
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func cryptoMechanismToJSON(mech *ast.CryptoMechanism) jsonNode {
@@ -20092,7 +20199,7 @@ func cryptoMechanismToJSON(mech *ast.CryptoMechanism) jsonNode {
 	if mech.PasswordOrSignature != nil {
 		node["PasswordOrSignature"] = scalarExpressionToJSON(mech.PasswordOrSignature)
 	}
-	return node
+	return addSpan(node, frag(mech))
 }
 
 func createCertificateStatementToJSON(s *ast.CreateCertificateStatement) jsonNode {
@@ -20131,7 +20238,7 @@ func createCertificateStatementToJSON(s *ast.CreateCertificateStatement) jsonNod
 	if s.DecryptionPassword != nil {
 		node["DecryptionPassword"] = stringLiteralToJSON(s.DecryptionPassword)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createMessageTypeStatementToJSON(s *ast.CreateMessageTypeStatement) jsonNode {
@@ -20150,7 +20257,7 @@ func createMessageTypeStatementToJSON(s *ast.CreateMessageTypeStatement) jsonNod
 	if s.XmlSchemaCollectionName != nil {
 		node["XmlSchemaCollectionName"] = schemaObjectNameToJSON(s.XmlSchemaCollectionName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createServiceStatementToJSON(s *ast.CreateServiceStatement) jsonNode {
@@ -20173,7 +20280,7 @@ func createServiceStatementToJSON(s *ast.CreateServiceStatement) jsonNode {
 		}
 		node["ServiceContracts"] = contracts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func serviceContractToJSON(c *ast.ServiceContract) jsonNode {
@@ -20184,7 +20291,7 @@ func serviceContractToJSON(c *ast.ServiceContract) jsonNode {
 		node["Name"] = identifierToJSON(c.Name)
 	}
 	node["Action"] = c.Action
-	return node
+	return addSpan(node, frag(c))
 }
 
 func createQueueStatementToJSON(s *ast.CreateQueueStatement) jsonNode {
@@ -20204,7 +20311,7 @@ func createQueueStatementToJSON(s *ast.CreateQueueStatement) jsonNode {
 		}
 		node["QueueOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func queueOptionToJSON(opt ast.QueueOption) jsonNode {
@@ -20215,13 +20322,13 @@ func queueOptionToJSON(opt ast.QueueOption) jsonNode {
 			"OptionState": o.OptionState,
 			"OptionKind":  o.OptionKind,
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.QueueOptionSimple:
 		node := jsonNode{
 			"$type":      "QueueOption",
 			"OptionKind": o.OptionKind,
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.QueueProcedureOption:
 		node := jsonNode{
 			"$type":      "QueueProcedureOption",
@@ -20230,7 +20337,7 @@ func queueOptionToJSON(opt ast.QueueOption) jsonNode {
 		if o.OptionValue != nil {
 			node["OptionValue"] = schemaObjectNameToJSON(o.OptionValue)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.QueueValueOption:
 		node := jsonNode{
 			"$type":      "QueueValueOption",
@@ -20239,7 +20346,7 @@ func queueOptionToJSON(opt ast.QueueOption) jsonNode {
 		if o.OptionValue != nil {
 			node["OptionValue"] = scalarExpressionToJSON(o.OptionValue)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	case *ast.QueueExecuteAsOption:
 		node := jsonNode{
 			"$type":      "QueueExecuteAsOption",
@@ -20248,9 +20355,9 @@ func queueOptionToJSON(opt ast.QueueOption) jsonNode {
 		if o.OptionValue != nil {
 			node["OptionValue"] = executeAsClauseToJSON(o.OptionValue)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "QueueOption"}
+		return addSpan(jsonNode{"$type": "QueueOption"}, frag(opt))
 	}
 }
 
@@ -20271,7 +20378,7 @@ func createRouteStatementToJSON(s *ast.CreateRouteStatement) jsonNode {
 		}
 		node["RouteOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func routeOptionToJSON(opt *ast.RouteOption) jsonNode {
@@ -20282,7 +20389,7 @@ func routeOptionToJSON(opt *ast.RouteOption) jsonNode {
 	if opt.Literal != nil {
 		node["Literal"] = scalarExpressionToJSON(opt.Literal)
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func createEndpointStatementToJSON(s *ast.CreateEndpointStatement) jsonNode {
@@ -20321,7 +20428,7 @@ func createEndpointStatementToJSON(s *ast.CreateEndpointStatement) jsonNode {
 		}
 		node["PayloadOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createAssemblyStatementToJSON(s *ast.CreateAssemblyStatement) jsonNode {
@@ -20348,7 +20455,7 @@ func createAssemblyStatementToJSON(s *ast.CreateAssemblyStatement) jsonNode {
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createApplicationRoleStatementToJSON(s *ast.CreateApplicationRoleStatement) jsonNode {
@@ -20365,7 +20472,7 @@ func createApplicationRoleStatementToJSON(s *ast.CreateApplicationRoleStatement)
 		}
 		node["ApplicationRoleOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func applicationRoleOptionToJSON(opt *ast.ApplicationRoleOption) jsonNode {
@@ -20376,7 +20483,7 @@ func applicationRoleOptionToJSON(opt *ast.ApplicationRoleOption) jsonNode {
 	if opt.Value != nil {
 		node["Value"] = identifierOrValueExpressionToJSON(opt.Value)
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func createFulltextCatalogStatementToJSON(s *ast.CreateFulltextCatalogStatement) jsonNode {
@@ -20386,7 +20493,7 @@ func createFulltextCatalogStatementToJSON(s *ast.CreateFulltextCatalogStatement)
 	if s.Name != nil {
 		node["Name"] = identifierToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createFulltextIndexStatementToJSON(s *ast.CreateFulltextIndexStatement) jsonNode {
@@ -20416,7 +20523,7 @@ func createFulltextIndexStatementToJSON(s *ast.CreateFulltextIndexStatement) jso
 		}
 		node["Options"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func fullTextCatalogAndFileGroupToJSON(cfg *ast.FullTextCatalogAndFileGroup) jsonNode {
@@ -20430,21 +20537,21 @@ func fullTextCatalogAndFileGroupToJSON(cfg *ast.FullTextCatalogAndFileGroup) jso
 	if cfg.FileGroupName != nil {
 		node["FileGroupName"] = identifierToJSON(cfg.FileGroupName)
 	}
-	return node
+	return addSpan(node, frag(cfg))
 }
 
 func fullTextIndexOptionToJSON(opt ast.FullTextIndexOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.ChangeTrackingFullTextIndexOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "ChangeTrackingFullTextIndexOption",
 			"Value":      o.Value,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(opt))
 	case *ast.StopListFullTextIndexOption:
-		return stopListFullTextIndexOptionToJSON(o)
+		return addSpan(stopListFullTextIndexOptionToJSON(o), frag(opt))
 	case *ast.SearchPropertyListFullTextIndexOption:
-		return searchPropertyListFullTextIndexOptionToJSON(o)
+		return addSpan(searchPropertyListFullTextIndexOptionToJSON(o), frag(opt))
 	}
 	return nil
 }
@@ -20466,7 +20573,7 @@ func createRemoteServiceBindingStatementToJSON(s *ast.CreateRemoteServiceBinding
 		}
 		node["Options"] = options
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createStatisticsStatementToJSON(s *ast.CreateStatisticsStatement) jsonNode {
@@ -20496,7 +20603,7 @@ func createStatisticsStatementToJSON(s *ast.CreateStatisticsStatement) jsonNode 
 	if s.FilterPredicate != nil {
 		node["FilterPredicate"] = booleanExpressionToJSON(s.FilterPredicate)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createTypeStatementToJSON(s *ast.CreateTypeStatement) jsonNode {
@@ -20506,7 +20613,7 @@ func createTypeStatementToJSON(s *ast.CreateTypeStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createTypeUddtStatementToJSON(s *ast.CreateTypeUddtStatement) jsonNode {
@@ -20522,7 +20629,7 @@ func createTypeUddtStatementToJSON(s *ast.CreateTypeUddtStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createTypeUdtStatementToJSON(s *ast.CreateTypeUdtStatement) jsonNode {
@@ -20535,7 +20642,7 @@ func createTypeUdtStatementToJSON(s *ast.CreateTypeUdtStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createTypeTableStatementToJSON(s *ast.CreateTypeTableStatement) jsonNode {
@@ -20555,7 +20662,7 @@ func createTypeTableStatementToJSON(s *ast.CreateTypeTableStatement) jsonNode {
 	if s.Name != nil {
 		node["Name"] = schemaObjectNameToJSON(s.Name)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createXmlIndexStatementToJSON(s *ast.CreateXmlIndexStatement) jsonNode {
@@ -20585,7 +20692,7 @@ func createXmlIndexStatementToJSON(s *ast.CreateXmlIndexStatement) jsonNode {
 		}
 		node["IndexOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createSelectiveXmlIndexStatementToJSON(s *ast.CreateSelectiveXmlIndexStatement) jsonNode {
@@ -20625,7 +20732,7 @@ func createSelectiveXmlIndexStatementToJSON(s *ast.CreateSelectiveXmlIndexStatem
 		}
 		node["IndexOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createPartitionFunctionStatementToJSON(s *ast.CreatePartitionFunctionStatement) jsonNode {
@@ -20648,7 +20755,7 @@ func createPartitionFunctionStatementToJSON(s *ast.CreatePartitionFunctionStatem
 		}
 		node["BoundaryValues"] = values
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func partitionParameterTypeToJSON(p *ast.PartitionParameterType) jsonNode {
@@ -20661,7 +20768,7 @@ func partitionParameterTypeToJSON(p *ast.PartitionParameterType) jsonNode {
 	if p.Collation != nil {
 		node["Collation"] = identifierToJSON(p.Collation)
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func createEventNotificationStatementToJSON(s *ast.CreateEventNotificationStatement) jsonNode {
@@ -20689,7 +20796,7 @@ func createEventNotificationStatementToJSON(s *ast.CreateEventNotificationStatem
 	if s.BrokerInstanceSpecifier != nil {
 		node["BrokerInstanceSpecifier"] = stringLiteralToJSON(s.BrokerInstanceSpecifier)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func eventNotificationObjectScopeToJSON(s *ast.EventNotificationObjectScope) jsonNode {
@@ -20700,23 +20807,23 @@ func eventNotificationObjectScopeToJSON(s *ast.EventNotificationObjectScope) jso
 	if s.QueueName != nil {
 		node["QueueName"] = schemaObjectNameToJSON(s.QueueName)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func eventTypeGroupContainerToJSON(c ast.EventTypeGroupContainer) jsonNode {
 	switch v := c.(type) {
 	case *ast.EventTypeContainer:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":     "EventTypeContainer",
 			"EventType": v.EventType,
-		}
+		}, frag(c))
 	case *ast.EventGroupContainer:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "EventGroupContainer",
 			"EventGroup": v.EventGroup,
-		}
+		}, frag(c))
 	default:
-		return jsonNode{"$type": "Unknown"}
+		return addSpan(jsonNode{"$type": "Unknown"}, frag(c))
 	}
 }
 
@@ -20752,7 +20859,7 @@ func alterDatabaseAddFileStatementToJSON(s *ast.AlterDatabaseAddFileStatement) j
 	if hasCompleteDeclarations {
 		node["UseCurrent"] = s.UseCurrent
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseAddFileGroupStatementToJSON(s *ast.AlterDatabaseAddFileGroupStatement) jsonNode {
@@ -20768,7 +20875,7 @@ func alterDatabaseAddFileGroupStatementToJSON(s *ast.AlterDatabaseAddFileGroupSt
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = s.UseCurrent
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseModifyFileStatementToJSON(s *ast.AlterDatabaseModifyFileStatement) jsonNode {
@@ -20782,7 +20889,7 @@ func alterDatabaseModifyFileStatementToJSON(s *ast.AlterDatabaseModifyFileStatem
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = s.UseCurrent
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseModifyFileGroupStatementToJSON(s *ast.AlterDatabaseModifyFileGroupStatement) jsonNode {
@@ -20808,7 +20915,7 @@ func alterDatabaseModifyFileGroupStatementToJSON(s *ast.AlterDatabaseModifyFileG
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = s.UseCurrent
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseTerminationToJSON(t *ast.AlterDatabaseTermination) jsonNode {
@@ -20820,7 +20927,7 @@ func alterDatabaseTerminationToJSON(t *ast.AlterDatabaseTermination) jsonNode {
 		node["RollbackAfter"] = scalarExpressionToJSON(t.RollbackAfter)
 	}
 	node["NoWait"] = t.NoWait
-	return node
+	return addSpan(node, frag(t))
 }
 
 func alterDatabaseModifyNameStatementToJSON(s *ast.AlterDatabaseModifyNameStatement) jsonNode {
@@ -20834,7 +20941,7 @@ func alterDatabaseModifyNameStatementToJSON(s *ast.AlterDatabaseModifyNameStatem
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = false
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseRemoveFileStatementToJSON(s *ast.AlterDatabaseRemoveFileStatement) jsonNode {
@@ -20848,7 +20955,7 @@ func alterDatabaseRemoveFileStatementToJSON(s *ast.AlterDatabaseRemoveFileStatem
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = false
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseRemoveFileGroupStatementToJSON(s *ast.AlterDatabaseRemoveFileGroupStatement) jsonNode {
@@ -20862,7 +20969,7 @@ func alterDatabaseRemoveFileGroupStatementToJSON(s *ast.AlterDatabaseRemoveFileG
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = s.UseCurrent
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseCollateStatementToJSON(s *ast.AlterDatabaseCollateStatement) jsonNode {
@@ -20876,7 +20983,7 @@ func alterDatabaseCollateStatementToJSON(s *ast.AlterDatabaseCollateStatement) j
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = false
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseRebuildLogStatementToJSON(s *ast.AlterDatabaseRebuildLogStatement) jsonNode {
@@ -20890,7 +20997,7 @@ func alterDatabaseRebuildLogStatementToJSON(s *ast.AlterDatabaseRebuildLogStatem
 		node["DatabaseName"] = identifierToJSON(s.DatabaseName)
 	}
 	node["UseCurrent"] = s.UseCurrent
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterDatabaseScopedConfigurationClearStatementToJSON(s *ast.AlterDatabaseScopedConfigurationClearStatement) jsonNode {
@@ -20901,7 +21008,7 @@ func alterDatabaseScopedConfigurationClearStatementToJSON(s *ast.AlterDatabaseSc
 		node["Option"] = databaseConfigurationClearOptionToJSON(s.Option)
 	}
 	node["Secondary"] = s.Secondary
-	return node
+	return addSpan(node, frag(s))
 }
 
 func databaseConfigurationClearOptionToJSON(o *ast.DatabaseConfigurationClearOption) jsonNode {
@@ -20914,7 +21021,7 @@ func databaseConfigurationClearOptionToJSON(o *ast.DatabaseConfigurationClearOpt
 	if o.PlanHandle != nil {
 		node["PlanHandle"] = scalarExpressionToJSON(o.PlanHandle)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func alterDatabaseScopedConfigurationSetStatementToJSON(s *ast.AlterDatabaseScopedConfigurationSetStatement) jsonNode {
@@ -20925,7 +21032,7 @@ func alterDatabaseScopedConfigurationSetStatementToJSON(s *ast.AlterDatabaseScop
 		node["Option"] = databaseConfigurationSetOptionToJSON(s.Option)
 	}
 	node["Secondary"] = s.Secondary
-	return node
+	return addSpan(node, frag(s))
 }
 
 func databaseConfigurationSetOptionToJSON(o ast.DatabaseConfigurationSetOption) jsonNode {
@@ -20939,13 +21046,13 @@ func databaseConfigurationSetOptionToJSON(o ast.DatabaseConfigurationSetOption) 
 			node["Value"] = scalarExpressionToJSON(opt.Value)
 		}
 		node["OptionKind"] = opt.OptionKind
-		return node
+		return addSpan(node, frag(o))
 	case *ast.OnOffPrimaryConfigurationOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "OnOffPrimaryConfigurationOption",
 			"OptionState": opt.OptionState,
 			"OptionKind":  opt.OptionKind,
-		}
+		}, frag(o))
 	case *ast.GenericConfigurationOption:
 		node := jsonNode{
 			"$type": "GenericConfigurationOption",
@@ -20957,9 +21064,9 @@ func databaseConfigurationSetOptionToJSON(o ast.DatabaseConfigurationSetOption) 
 		if opt.GenericOptionKind != nil {
 			node["GenericOptionKind"] = identifierToJSON(opt.GenericOptionKind)
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
-		return jsonNode{"$type": "UnknownDatabaseConfigurationSetOption"}
+		return addSpan(jsonNode{"$type": "UnknownDatabaseConfigurationSetOption"}, frag(o))
 	}
 }
 
@@ -20973,7 +21080,7 @@ func identifierOrScalarExpressionToJSON(i *ast.IdentifierOrScalarExpression) jso
 	if i.ScalarExpression != nil {
 		node["ScalarExpression"] = scalarExpressionToJSON(i.ScalarExpression)
 	}
-	return node
+	return addSpan(node, frag(i))
 }
 
 func alterResourceGovernorStatementToJSON(s *ast.AlterResourceGovernorStatement) jsonNode {
@@ -20986,7 +21093,7 @@ func alterResourceGovernorStatementToJSON(s *ast.AlterResourceGovernorStatement)
 	if s.ClassifierFunction != nil {
 		node["ClassifierFunction"] = schemaObjectNameToJSON(s.ClassifierFunction)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createResourcePoolStatementToJSON(s *ast.CreateResourcePoolStatement) jsonNode {
@@ -21003,7 +21110,7 @@ func createResourcePoolStatementToJSON(s *ast.CreateResourcePoolStatement) jsonN
 		}
 		node["ResourcePoolParameters"] = params
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterResourcePoolStatementToJSON(s *ast.AlterResourcePoolStatement) jsonNode {
@@ -21020,7 +21127,7 @@ func alterResourcePoolStatementToJSON(s *ast.AlterResourcePoolStatement) jsonNod
 		}
 		node["ResourcePoolParameters"] = params
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropResourcePoolStatementToJSON(s *ast.DropResourcePoolStatement) jsonNode {
@@ -21031,7 +21138,7 @@ func dropResourcePoolStatementToJSON(s *ast.DropResourcePoolStatement) jsonNode 
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterExternalResourcePoolStatementToJSON(s *ast.AlterExternalResourcePoolStatement) jsonNode {
@@ -21048,7 +21155,7 @@ func alterExternalResourcePoolStatementToJSON(s *ast.AlterExternalResourcePoolSt
 		}
 		node["ExternalResourcePoolParameters"] = params
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createExternalResourcePoolStatementToJSON(s *ast.CreateExternalResourcePoolStatement) jsonNode {
@@ -21065,7 +21172,7 @@ func createExternalResourcePoolStatementToJSON(s *ast.CreateExternalResourcePool
 		}
 		node["ExternalResourcePoolParameters"] = params
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func externalResourcePoolParameterToJSON(p *ast.ExternalResourcePoolParameter) jsonNode {
@@ -21081,7 +21188,7 @@ func externalResourcePoolParameterToJSON(p *ast.ExternalResourcePoolParameter) j
 	if p.AffinitySpecification != nil {
 		node["AffinitySpecification"] = externalResourcePoolAffinitySpecificationToJSON(p.AffinitySpecification)
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func externalResourcePoolAffinitySpecificationToJSON(s *ast.ExternalResourcePoolAffinitySpecification) jsonNode {
@@ -21099,7 +21206,7 @@ func externalResourcePoolAffinitySpecificationToJSON(s *ast.ExternalResourcePool
 		}
 		node["PoolAffinityRanges"] = ranges
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func resourcePoolParameterToJSON(p *ast.ResourcePoolParameter) jsonNode {
@@ -21115,7 +21222,7 @@ func resourcePoolParameterToJSON(p *ast.ResourcePoolParameter) jsonNode {
 	if p.AffinitySpecification != nil {
 		node["AffinitySpecification"] = resourcePoolAffinitySpecificationToJSON(p.AffinitySpecification)
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func resourcePoolAffinitySpecificationToJSON(s *ast.ResourcePoolAffinitySpecification) jsonNode {
@@ -21133,7 +21240,7 @@ func resourcePoolAffinitySpecificationToJSON(s *ast.ResourcePoolAffinitySpecific
 		}
 		node["PoolAffinityRanges"] = ranges
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func literalRangeToJSON(r *ast.LiteralRange) jsonNode {
@@ -21146,7 +21253,7 @@ func literalRangeToJSON(r *ast.LiteralRange) jsonNode {
 	if r.To != nil {
 		node["To"] = scalarExpressionToJSON(r.To)
 	}
-	return node
+	return addSpan(node, frag(r))
 }
 
 func createCryptographicProviderStatementToJSON(s *ast.CreateCryptographicProviderStatement) jsonNode {
@@ -21159,7 +21266,7 @@ func createCryptographicProviderStatementToJSON(s *ast.CreateCryptographicProvid
 	if s.File != nil {
 		node["File"] = scalarExpressionToJSON(s.File)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createColumnMasterKeyStatementToJSON(s *ast.CreateColumnMasterKeyStatement) jsonNode {
@@ -21176,7 +21283,7 @@ func createColumnMasterKeyStatementToJSON(s *ast.CreateColumnMasterKeyStatement)
 		}
 		node["Parameters"] = params
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func columnMasterKeyParameterToJSON(p ast.ColumnMasterKeyParameter) jsonNode {
@@ -21189,7 +21296,7 @@ func columnMasterKeyParameterToJSON(p ast.ColumnMasterKeyParameter) jsonNode {
 			node["Name"] = scalarExpressionToJSON(param.Name)
 		}
 		node["ParameterKind"] = param.ParameterKind
-		return node
+		return addSpan(node, frag(p))
 	case *ast.ColumnMasterKeyPathParameter:
 		node := jsonNode{
 			"$type": "ColumnMasterKeyPathParameter",
@@ -21198,7 +21305,7 @@ func columnMasterKeyParameterToJSON(p ast.ColumnMasterKeyParameter) jsonNode {
 			node["Path"] = scalarExpressionToJSON(param.Path)
 		}
 		node["ParameterKind"] = param.ParameterKind
-		return node
+		return addSpan(node, frag(p))
 	case *ast.ColumnMasterKeyEnclaveComputationsParameter:
 		node := jsonNode{
 			"$type": "ColumnMasterKeyEnclaveComputationsParameter",
@@ -21207,9 +21314,9 @@ func columnMasterKeyParameterToJSON(p ast.ColumnMasterKeyParameter) jsonNode {
 			node["Signature"] = scalarExpressionToJSON(param.Signature)
 		}
 		node["ParameterKind"] = param.ParameterKind
-		return node
+		return addSpan(node, frag(p))
 	default:
-		return jsonNode{"$type": "UnknownColumnMasterKeyParameter"}
+		return addSpan(jsonNode{"$type": "UnknownColumnMasterKeyParameter"}, frag(p))
 	}
 }
 
@@ -21221,7 +21328,7 @@ func dropColumnMasterKeyStatementToJSON(s *ast.DropColumnMasterKeyStatement) jso
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createColumnEncryptionKeyStatementToJSON(s *ast.CreateColumnEncryptionKeyStatement) jsonNode {
@@ -21238,7 +21345,7 @@ func createColumnEncryptionKeyStatementToJSON(s *ast.CreateColumnEncryptionKeySt
 		}
 		node["ColumnEncryptionKeyValues"] = values
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterColumnEncryptionKeyStatementToJSON(s *ast.AlterColumnEncryptionKeyStatement) jsonNode {
@@ -21258,7 +21365,7 @@ func alterColumnEncryptionKeyStatementToJSON(s *ast.AlterColumnEncryptionKeyStat
 		}
 		node["ColumnEncryptionKeyValues"] = values
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropColumnEncryptionKeyStatementToJSON(s *ast.DropColumnEncryptionKeyStatement) jsonNode {
@@ -21269,7 +21376,7 @@ func dropColumnEncryptionKeyStatementToJSON(s *ast.DropColumnEncryptionKeyStatem
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func columnEncryptionKeyValueToJSON(v *ast.ColumnEncryptionKeyValue) jsonNode {
@@ -21283,7 +21390,7 @@ func columnEncryptionKeyValueToJSON(v *ast.ColumnEncryptionKeyValue) jsonNode {
 		}
 		node["Parameters"] = params
 	}
-	return node
+	return addSpan(node, frag(v))
 }
 
 func columnEncryptionKeyValueParameterToJSON(p ast.ColumnEncryptionKeyValueParameter) jsonNode {
@@ -21296,7 +21403,7 @@ func columnEncryptionKeyValueParameterToJSON(p ast.ColumnEncryptionKeyValueParam
 			node["Name"] = identifierToJSON(param.Name)
 		}
 		node["ParameterKind"] = param.ParameterKind
-		return node
+		return addSpan(node, frag(p))
 	case *ast.ColumnEncryptionAlgorithmNameParameter:
 		node := jsonNode{
 			"$type": "ColumnEncryptionAlgorithmNameParameter",
@@ -21305,7 +21412,7 @@ func columnEncryptionKeyValueParameterToJSON(p ast.ColumnEncryptionKeyValueParam
 			node["Algorithm"] = scalarExpressionToJSON(param.Algorithm)
 		}
 		node["ParameterKind"] = param.ParameterKind
-		return node
+		return addSpan(node, frag(p))
 	case *ast.EncryptedValueParameter:
 		node := jsonNode{
 			"$type": "EncryptedValueParameter",
@@ -21314,9 +21421,9 @@ func columnEncryptionKeyValueParameterToJSON(p ast.ColumnEncryptionKeyValueParam
 			node["Value"] = scalarExpressionToJSON(param.Value)
 		}
 		node["ParameterKind"] = param.ParameterKind
-		return node
+		return addSpan(node, frag(p))
 	default:
-		return jsonNode{"$type": "UnknownColumnEncryptionKeyValueParameter"}
+		return addSpan(jsonNode{"$type": "UnknownColumnEncryptionKeyValueParameter"}, frag(p))
 	}
 }
 
@@ -21333,7 +21440,7 @@ func alterCryptographicProviderStatementToJSON(s *ast.AlterCryptographicProvider
 	if s.File != nil {
 		node["File"] = scalarExpressionToJSON(s.File)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropCryptographicProviderStatementToJSON(s *ast.DropCryptographicProviderStatement) jsonNode {
@@ -21344,7 +21451,7 @@ func dropCryptographicProviderStatementToJSON(s *ast.DropCryptographicProviderSt
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createBrokerPriorityStatementToJSON(s *ast.CreateBrokerPriorityStatement) jsonNode {
@@ -21361,7 +21468,7 @@ func createBrokerPriorityStatementToJSON(s *ast.CreateBrokerPriorityStatement) j
 		}
 		node["BrokerPriorityParameters"] = params
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterBrokerPriorityStatementToJSON(s *ast.AlterBrokerPriorityStatement) jsonNode {
@@ -21378,7 +21485,7 @@ func alterBrokerPriorityStatementToJSON(s *ast.AlterBrokerPriorityStatement) jso
 		}
 		node["BrokerPriorityParameters"] = params
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropBrokerPriorityStatementToJSON(s *ast.DropBrokerPriorityStatement) jsonNode {
@@ -21389,7 +21496,7 @@ func dropBrokerPriorityStatementToJSON(s *ast.DropBrokerPriorityStatement) jsonN
 		node["Name"] = identifierToJSON(s.Name)
 	}
 	node["IsIfExists"] = s.IsIfExists
-	return node
+	return addSpan(node, frag(s))
 }
 
 func brokerPriorityParameterToJSON(p *ast.BrokerPriorityParameter) jsonNode {
@@ -21405,7 +21512,7 @@ func brokerPriorityParameterToJSON(p *ast.BrokerPriorityParameter) jsonNode {
 	if p.ParameterValue != nil {
 		node["ParameterValue"] = identifierOrValueExpressionToJSON(p.ParameterValue)
 	}
-	return node
+	return addSpan(node, frag(p))
 }
 
 func useFederationStatementToJSON(s *ast.UseFederationStatement) jsonNode {
@@ -21422,7 +21529,7 @@ func useFederationStatementToJSON(s *ast.UseFederationStatement) jsonNode {
 		node["Value"] = scalarExpressionToJSON(s.Value)
 	}
 	node["Filtering"] = s.Filtering
-	return node
+	return addSpan(node, frag(s))
 }
 
 func createFederationStatementToJSON(s *ast.CreateFederationStatement) jsonNode {
@@ -21438,7 +21545,7 @@ func createFederationStatementToJSON(s *ast.CreateFederationStatement) jsonNode 
 	if s.DataType != nil {
 		node["DataType"] = dataTypeReferenceToJSON(s.DataType)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterFederationStatementToJSON(s *ast.AlterFederationStatement) jsonNode {
@@ -21457,7 +21564,7 @@ func alterFederationStatementToJSON(s *ast.AlterFederationStatement) jsonNode {
 	if s.Boundary != nil {
 		node["Boundary"] = scalarExpressionToJSON(s.Boundary)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func callTargetToJSON(ct ast.CallTarget) jsonNode {
@@ -21469,7 +21576,7 @@ func callTargetToJSON(ct ast.CallTarget) jsonNode {
 		if t.MultiPartIdentifier != nil {
 			node["MultiPartIdentifier"] = multiPartIdentifierToJSON(t.MultiPartIdentifier)
 		}
-		return node
+		return addSpan(node, frag(ct))
 	case *ast.ExpressionCallTarget:
 		node := jsonNode{
 			"$type": "ExpressionCallTarget",
@@ -21477,7 +21584,7 @@ func callTargetToJSON(ct ast.CallTarget) jsonNode {
 		if t.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(t.Expression)
 		}
-		return node
+		return addSpan(node, frag(ct))
 	case *ast.UserDefinedTypeCallTarget:
 		node := jsonNode{
 			"$type": "UserDefinedTypeCallTarget",
@@ -21485,9 +21592,9 @@ func callTargetToJSON(ct ast.CallTarget) jsonNode {
 		if t.SchemaObjectName != nil {
 			node["SchemaObjectName"] = schemaObjectNameToJSON(t.SchemaObjectName)
 		}
-		return node
+		return addSpan(node, frag(ct))
 	default:
-		return jsonNode{}
+		return addSpan(jsonNode{}, frag(ct))
 	}
 }
 
@@ -21516,7 +21623,7 @@ func alterProcedureStatementToJSON(s *ast.AlterProcedureStatement) jsonNode {
 	if s.StatementList != nil {
 		node["StatementList"] = statementListToJSON(s.StatementList)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterExternalDataSourceStatementToJSON(s *ast.AlterExternalDataSourceStatement) jsonNode {
@@ -21542,7 +21649,7 @@ func alterExternalDataSourceStatementToJSON(s *ast.AlterExternalDataSourceStatem
 		}
 		node["ExternalDataSourceOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterExternalLanguageStatementToJSON(s *ast.AlterExternalLanguageStatement) jsonNode {
@@ -21568,7 +21675,7 @@ func alterExternalLanguageStatementToJSON(s *ast.AlterExternalLanguageStatement)
 		}
 		node["ExternalLanguageFiles"] = files
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterExternalLibraryStatementToJSON(s *ast.AlterExternalLibraryStatement) jsonNode {
@@ -21591,7 +21698,7 @@ func alterExternalLibraryStatementToJSON(s *ast.AlterExternalLibraryStatement) j
 		}
 		node["ExternalLibraryFiles"] = files
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func fetchTypeToJSON(f *ast.FetchType) jsonNode {
@@ -21604,7 +21711,7 @@ func fetchTypeToJSON(f *ast.FetchType) jsonNode {
 	if f.RowOffset != nil {
 		node["RowOffset"] = scalarExpressionToJSON(f.RowOffset)
 	}
-	return node
+	return addSpan(node, frag(f))
 }
 
 func openCursorStatementToJSON(s *ast.OpenCursorStatement) jsonNode {
@@ -21614,7 +21721,7 @@ func openCursorStatementToJSON(s *ast.OpenCursorStatement) jsonNode {
 	if s.Cursor != nil {
 		node["Cursor"] = cursorIdToJSON(s.Cursor)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func closeCursorStatementToJSON(s *ast.CloseCursorStatement) jsonNode {
@@ -21624,7 +21731,7 @@ func closeCursorStatementToJSON(s *ast.CloseCursorStatement) jsonNode {
 	if s.Cursor != nil {
 		node["Cursor"] = cursorIdToJSON(s.Cursor)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func deallocateCursorStatementToJSON(s *ast.DeallocateCursorStatement) jsonNode {
@@ -21634,7 +21741,7 @@ func deallocateCursorStatementToJSON(s *ast.DeallocateCursorStatement) jsonNode 
 	if s.Cursor != nil {
 		node["Cursor"] = cursorIdToJSON(s.Cursor)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func fetchCursorStatementToJSON(s *ast.FetchCursorStatement) jsonNode {
@@ -21654,7 +21761,7 @@ func fetchCursorStatementToJSON(s *ast.FetchCursorStatement) jsonNode {
 		}
 		node["IntoVariables"] = vars
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func updateStatisticsStatementToJSON(s *ast.UpdateStatisticsStatement) jsonNode {
@@ -21678,21 +21785,21 @@ func updateStatisticsStatementToJSON(s *ast.UpdateStatisticsStatement) jsonNode 
 		}
 		node["StatisticsOptions"] = opts
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func statisticsOptionToJSON(opt ast.StatisticsOption) jsonNode {
 	switch o := opt.(type) {
 	case *ast.SimpleStatisticsOption:
-		return simpleStatisticsOptionToJSON(o)
+		return addSpan(simpleStatisticsOptionToJSON(o), frag(opt))
 	case *ast.LiteralStatisticsOption:
-		return literalStatisticsOptionToJSON(o)
+		return addSpan(literalStatisticsOptionToJSON(o), frag(opt))
 	case *ast.OnOffStatisticsOption:
-		return onOffStatisticsOptionToJSON(o)
+		return addSpan(onOffStatisticsOptionToJSON(o), frag(opt))
 	case *ast.ResampleStatisticsOption:
-		return resampleStatisticsOptionToJSON(o)
+		return addSpan(resampleStatisticsOptionToJSON(o), frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownStatisticsOption"}
+		return addSpan(jsonNode{"$type": "UnknownStatisticsOption"}, frag(opt))
 	}
 }
 
@@ -21703,7 +21810,7 @@ func simpleStatisticsOptionToJSON(o *ast.SimpleStatisticsOption) jsonNode {
 	if o.OptionKind != "" {
 		node["OptionKind"] = o.OptionKind
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func literalStatisticsOptionToJSON(o *ast.LiteralStatisticsOption) jsonNode {
@@ -21716,7 +21823,7 @@ func literalStatisticsOptionToJSON(o *ast.LiteralStatisticsOption) jsonNode {
 	if o.Literal != nil {
 		node["Literal"] = scalarExpressionToJSON(o.Literal)
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func onOffStatisticsOptionToJSON(o *ast.OnOffStatisticsOption) jsonNode {
@@ -21729,7 +21836,7 @@ func onOffStatisticsOptionToJSON(o *ast.OnOffStatisticsOption) jsonNode {
 	if o.OptionState != "" {
 		node["OptionState"] = o.OptionState
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func resampleStatisticsOptionToJSON(o *ast.ResampleStatisticsOption) jsonNode {
@@ -21746,7 +21853,7 @@ func resampleStatisticsOptionToJSON(o *ast.ResampleStatisticsOption) jsonNode {
 	if o.OptionKind != "" {
 		node["OptionKind"] = o.OptionKind
 	}
-	return node
+	return addSpan(node, frag(o))
 }
 
 func statisticsPartitionRangeToJSON(r *ast.StatisticsPartitionRange) jsonNode {
@@ -21759,7 +21866,7 @@ func statisticsPartitionRangeToJSON(r *ast.StatisticsPartitionRange) jsonNode {
 	if r.To != nil {
 		node["To"] = scalarExpressionToJSON(r.To)
 	}
-	return node
+	return addSpan(node, frag(r))
 }
 
 func declareCursorStatementToJSON(s *ast.DeclareCursorStatement) jsonNode {
@@ -21772,7 +21879,7 @@ func declareCursorStatementToJSON(s *ast.DeclareCursorStatement) jsonNode {
 	if s.CursorDefinition != nil {
 		node["CursorDefinition"] = declareCursorDefinitionToJSON(s.CursorDefinition)
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func declareCursorDefinitionToJSON(d *ast.CursorDefinition) jsonNode {
@@ -21792,7 +21899,7 @@ func declareCursorDefinitionToJSON(d *ast.CursorDefinition) jsonNode {
 	if d.Select != nil {
 		node["Select"] = selectStatementToJSON(d.Select)
 	}
-	return node
+	return addSpan(node, frag(d))
 }
 
 func addSignatureStatementToJSON(s *ast.AddSignatureStatement) jsonNode {
@@ -21811,7 +21918,7 @@ func addSignatureStatementToJSON(s *ast.AddSignatureStatement) jsonNode {
 		}
 		node["Cryptos"] = cryptos
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropSignatureStatementToJSON(s *ast.DropSignatureStatement) jsonNode {
@@ -21830,7 +21937,7 @@ func dropSignatureStatementToJSON(s *ast.DropSignatureStatement) jsonNode {
 		}
 		node["Cryptos"] = cryptos
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func addSensitivityClassificationStatementToJSON(s *ast.AddSensitivityClassificationStatement) jsonNode {
@@ -21851,7 +21958,7 @@ func addSensitivityClassificationStatementToJSON(s *ast.AddSensitivityClassifica
 		}
 		node["Columns"] = cols
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func dropSensitivityClassificationStatementToJSON(s *ast.DropSensitivityClassificationStatement) jsonNode {
@@ -21865,7 +21972,7 @@ func dropSensitivityClassificationStatementToJSON(s *ast.DropSensitivityClassifi
 		}
 		node["Columns"] = cols
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func sensitivityClassificationOptionToJSON(opt *ast.SensitivityClassificationOption) jsonNode {
@@ -21876,7 +21983,7 @@ func sensitivityClassificationOptionToJSON(opt *ast.SensitivityClassificationOpt
 	if opt.Value != nil {
 		node["Value"] = scalarExpressionToJSON(opt.Value)
 	}
-	return node
+	return addSpan(node, frag(opt))
 }
 
 func openRowsetCosmosOptionToJSON(opt ast.OpenRowsetCosmosOption) jsonNode {
@@ -21889,9 +21996,9 @@ func openRowsetCosmosOptionToJSON(opt ast.OpenRowsetCosmosOption) jsonNode {
 		if o.Value != nil {
 			node["Value"] = scalarExpressionToJSON(o.Value)
 		}
-		return node
+		return addSpan(node, frag(opt))
 	default:
-		return jsonNode{"$type": "UnknownOpenRowsetCosmosOption"}
+		return addSpan(jsonNode{"$type": "UnknownOpenRowsetCosmosOption"}, frag(opt))
 	}
 }
 
@@ -21914,7 +22021,7 @@ func openRowsetColumnDefinitionToJSON(col *ast.OpenRowsetColumnDefinition) jsonN
 	if col.Collation != nil {
 		node["Collation"] = identifierToJSON(col.Collation)
 	}
-	return node
+	return addSpan(node, frag(col))
 }
 
 func createSecurityPolicyStatementToJSON(s *ast.CreateSecurityPolicyStatement) jsonNode {
@@ -21940,7 +22047,7 @@ func createSecurityPolicyStatementToJSON(s *ast.CreateSecurityPolicyStatement) j
 		}
 		node["SecurityPredicateActions"] = actions
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func alterSecurityPolicyStatementToJSON(s *ast.AlterSecurityPolicyStatement) jsonNode {
@@ -21976,23 +22083,23 @@ func alterSecurityPolicyStatementToJSON(s *ast.AlterSecurityPolicyStatement) jso
 		}
 		node["SecurityPredicateActions"] = actions
 	}
-	return node
+	return addSpan(node, frag(s))
 }
 
 func securityPolicyOptionToJSON(opt *ast.SecurityPolicyOption) jsonNode {
-	return jsonNode{
+	return addSpan(jsonNode{
 		"$type":       "SecurityPolicyOption",
 		"OptionKind":  opt.OptionKind,
 		"OptionState": opt.OptionState,
-	}
+	}, frag(opt))
 }
 
 func securityPredicateActionToJSON(action *ast.SecurityPredicateAction) jsonNode {
 	node := jsonNode{
-		"$type":                        "SecurityPredicateAction",
-		"ActionType":                   action.ActionType,
-		"SecurityPredicateType":        action.SecurityPredicateType,
-		"SecurityPredicateOperation":   action.SecurityPredicateOperation,
+		"$type":                      "SecurityPredicateAction",
+		"ActionType":                 action.ActionType,
+		"SecurityPredicateType":      action.SecurityPredicateType,
+		"SecurityPredicateOperation": action.SecurityPredicateOperation,
 	}
 	if action.FunctionCall != nil {
 		node["FunctionCall"] = scalarExpressionToJSON(action.FunctionCall)
@@ -22000,5 +22107,5 @@ func securityPredicateActionToJSON(action *ast.SecurityPredicateAction) jsonNode
 	if action.TargetObjectName != nil {
 		node["TargetObjectName"] = schemaObjectNameToJSON(action.TargetObjectName)
 	}
-	return node
+	return addSpan(node, frag(action))
 }

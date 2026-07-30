@@ -2,6 +2,7 @@ package ast
 
 // CreateMasterKeyStatement represents a CREATE MASTER KEY ENCRYPTION BY PASSWORD statement.
 type CreateMasterKeyStatement struct {
+	Fragment
 	Password ScalarExpression `json:"Password"`
 }
 

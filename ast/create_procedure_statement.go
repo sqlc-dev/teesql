@@ -2,6 +2,7 @@ package ast
 
 // CreateProcedureStatement represents a CREATE PROCEDURE statement.
 type CreateProcedureStatement struct {
+	Fragment
 	ProcedureReference *ProcedureReference
 	Parameters         []*ProcedureParameter
 	StatementList      *StatementList
@@ -15,6 +16,7 @@ func (c *CreateProcedureStatement) statement() {}
 
 // CreateOrAlterProcedureStatement represents a CREATE OR ALTER PROCEDURE statement.
 type CreateOrAlterProcedureStatement struct {
+	Fragment
 	ProcedureReference *ProcedureReference
 	Parameters         []*ProcedureParameter
 	StatementList      *StatementList
@@ -28,6 +30,7 @@ func (c *CreateOrAlterProcedureStatement) statement() {}
 
 // ProcedureParameter represents a parameter in a procedure definition.
 type ProcedureParameter struct {
+	Fragment
 	VariableName *Identifier
 	DataType     DataTypeReference
 	Value        ScalarExpression // Default value
@@ -46,6 +49,7 @@ type ProcedureOptionBase interface {
 
 // ProcedureOption represents a simple procedure option like RECOMPILE or ENCRYPTION.
 type ProcedureOption struct {
+	Fragment
 	OptionKind string // Recompile, Encryption
 }
 
@@ -54,6 +58,7 @@ func (p *ProcedureOption) procedureOption() {}
 
 // ExecuteAsProcedureOption represents an EXECUTE AS option for a procedure.
 type ExecuteAsProcedureOption struct {
+	Fragment
 	ExecuteAs  *ExecuteAsClause
 	OptionKind string // ExecuteAs
 }

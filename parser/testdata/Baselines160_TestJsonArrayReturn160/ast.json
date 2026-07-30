@@ -1,15 +1,35 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 114,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 113,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterFunctionStatement",
+          "StartOffset": 0,
+          "FragmentLength": 113,
+          "StartLine": 1,
+          "StartColumn": 1,
           "Name": {
             "$type": "SchemaObjectName",
+            "StartOffset": 15,
+            "FragmentLength": 13,
+            "StartLine": 1,
+            "StartColumn": 16,
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 15,
+              "FragmentLength": 13,
+              "StartLine": 1,
+              "StartColumn": 16,
               "Value": "TestJsonArray",
               "QuoteType": "NotQuoted"
             },
@@ -22,20 +42,40 @@
           },
           "ReturnType": {
             "$type": "ScalarFunctionReturnType",
+            "StartOffset": 41,
+            "FragmentLength": 14,
+            "StartLine": 3,
+            "StartColumn": 9,
             "DataType": {
               "$type": "SqlDataTypeReference",
+              "StartOffset": 41,
+              "FragmentLength": 14,
+              "StartLine": 3,
+              "StartColumn": 9,
               "SqlDataTypeOption": "NVarChar",
               "Parameters": [
                 {
                   "$type": "MaxLiteral",
+                  "StartOffset": 51,
+                  "FragmentLength": 3,
+                  "StartLine": 3,
+                  "StartColumn": 19,
                   "LiteralType": "Max",
                   "Value": "MAX"
                 }
               ],
               "Name": {
                 "$type": "SchemaObjectName",
+                "StartOffset": 41,
+                "FragmentLength": 8,
+                "StartLine": 3,
+                "StartColumn": 9,
                 "BaseIdentifier": {
                   "$type": "Identifier",
+                  "StartOffset": 41,
+                  "FragmentLength": 8,
+                  "StartLine": 3,
+                  "StartColumn": 9,
                   "Value": "NVARCHAR",
                   "QuoteType": "NotQuoted"
                 },
@@ -50,26 +90,54 @@
           },
           "StatementList": {
             "$type": "StatementList",
+            "StartOffset": 59,
+            "FragmentLength": 54,
+            "StartLine": 5,
+            "StartColumn": 1,
             "Statements": [
               {
                 "$type": "BeginEndBlockStatement",
+                "StartOffset": 59,
+                "FragmentLength": 54,
+                "StartLine": 5,
+                "StartColumn": 1,
                 "StatementList": {
                   "$type": "StatementList",
                   "Statements": [
                     {
                       "$type": "ReturnStatement",
+                      "StartOffset": 69,
+                      "FragmentLength": 40,
+                      "StartLine": 6,
+                      "StartColumn": 5,
                       "Expression": {
                         "$type": "ParenthesisExpression",
+                        "StartOffset": 76,
+                        "FragmentLength": 32,
+                        "StartLine": 6,
+                        "StartColumn": 12,
                         "Expression": {
                           "$type": "FunctionCall",
+                          "StartOffset": 77,
+                          "FragmentLength": 30,
+                          "StartLine": 6,
+                          "StartColumn": 13,
                           "FunctionName": {
                             "$type": "Identifier",
+                            "StartOffset": 77,
+                            "FragmentLength": 10,
+                            "StartLine": 6,
+                            "StartColumn": 13,
                             "Value": "JSON_ARRAY",
                             "QuoteType": "NotQuoted"
                           },
                           "Parameters": [
                             {
                               "$type": "StringLiteral",
+                              "StartOffset": 88,
+                              "FragmentLength": 8,
+                              "StartLine": 6,
+                              "StartColumn": 24,
                               "LiteralType": "String",
                               "IsNational": false,
                               "IsLargeObject": false,
@@ -77,6 +145,10 @@
                             },
                             {
                               "$type": "StringLiteral",
+                              "StartOffset": 98,
+                              "FragmentLength": 8,
+                              "StartLine": 6,
+                              "StartColumn": 34,
                               "LiteralType": "String",
                               "IsNational": false,
                               "IsLargeObject": false,

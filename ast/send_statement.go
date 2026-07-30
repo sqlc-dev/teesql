@@ -2,6 +2,7 @@ package ast
 
 // SendStatement represents a SEND ON CONVERSATION statement.
 type SendStatement struct {
+	Fragment
 	ConversationHandles []ScalarExpression
 	MessageTypeName     *IdentifierOrValueExpression
 	MessageBody         ScalarExpression

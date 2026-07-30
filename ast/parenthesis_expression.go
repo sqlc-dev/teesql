@@ -2,6 +2,7 @@ package ast
 
 // ParenthesisExpression represents a parenthesized scalar expression.
 type ParenthesisExpression struct {
+	Fragment
 	Expression ScalarExpression `json:"Expression,omitempty"`
 }
 

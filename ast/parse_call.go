@@ -2,6 +2,7 @@ package ast
 
 // ParseCall represents the PARSE(string AS type [USING culture]) function
 type ParseCall struct {
+	Fragment
 	StringValue ScalarExpression `json:"StringValue,omitempty"`
 	DataType    DataTypeReference `json:"DataType,omitempty"`
 	Culture     ScalarExpression `json:"Culture,omitempty"`
@@ -12,6 +13,7 @@ func (*ParseCall) scalarExpression() {}
 
 // TryParseCall represents the TRY_PARSE(string AS type [USING culture]) function
 type TryParseCall struct {
+	Fragment
 	StringValue ScalarExpression `json:"StringValue,omitempty"`
 	DataType    DataTypeReference `json:"DataType,omitempty"`
 	Culture     ScalarExpression `json:"Culture,omitempty"`

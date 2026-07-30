@@ -2,6 +2,7 @@ package ast
 
 // AlterTableSwitchStatement represents ALTER TABLE ... SWITCH
 type AlterTableSwitchStatement struct {
+	Fragment
 	SchemaObjectName  *SchemaObjectName
 	SourcePartition   ScalarExpression
 	TargetTable       *SchemaObjectName
@@ -21,6 +22,7 @@ type TableSwitchOption interface {
 
 // TruncateTargetTableSwitchOption represents TRUNCATE_TARGET option
 type TruncateTargetTableSwitchOption struct {
+	Fragment
 	TruncateTarget bool
 	OptionKind     string
 }
@@ -30,6 +32,7 @@ func (o *TruncateTargetTableSwitchOption) node()              {}
 
 // LowPriorityLockWaitTableSwitchOption represents WAIT_AT_LOW_PRIORITY option
 type LowPriorityLockWaitTableSwitchOption struct {
+	Fragment
 	OptionKind string
 	Options    []LowPriorityLockWaitOption
 }
@@ -39,6 +42,7 @@ func (o *LowPriorityLockWaitTableSwitchOption) node()              {}
 
 // LowPriorityLockWait represents LOW_PRIORITY_LOCK_WAIT option (legacy)
 type LowPriorityLockWait struct {
+	Fragment
 	MaxDuration       ScalarExpression
 	MaxDurationUnit   string // "MINUTES", "SECONDS"
 	AfterWaitAbort    string // "NONE", "SELF", "BLOCKERS"

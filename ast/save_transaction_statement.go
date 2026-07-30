@@ -2,6 +2,7 @@ package ast
 
 // SaveTransactionStatement represents a SAVE [TRAN|TRANSACTION] statement.
 type SaveTransactionStatement struct {
+	Fragment
 	Name *IdentifierOrValueExpression `json:"Name,omitempty"`
 }
 

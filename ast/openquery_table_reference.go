@@ -2,6 +2,7 @@ package ast
 
 // OpenQueryTableReference represents OPENQUERY(linked_server, 'query') table reference
 type OpenQueryTableReference struct {
+	Fragment
 	LinkedServer *Identifier      `json:"LinkedServer,omitempty"`
 	Query        ScalarExpression `json:"Query,omitempty"`
 	Alias        *Identifier      `json:"Alias,omitempty"`

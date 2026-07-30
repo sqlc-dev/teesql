@@ -2,6 +2,7 @@ package ast
 
 // AlterFunctionStatement represents an ALTER FUNCTION statement
 type AlterFunctionStatement struct {
+	Fragment
 	Name          *SchemaObjectName
 	Parameters    []*ProcedureParameter
 	ReturnType    FunctionReturnType
@@ -14,6 +15,7 @@ func (s *AlterFunctionStatement) node()      {}
 
 // CreateFunctionStatement represents a CREATE FUNCTION statement
 type CreateFunctionStatement struct {
+	Fragment
 	Name            *SchemaObjectName
 	Parameters      []*ProcedureParameter
 	ReturnType      FunctionReturnType
@@ -33,6 +35,7 @@ type FunctionReturnType interface {
 
 // ScalarFunctionReturnType represents a scalar function return type
 type ScalarFunctionReturnType struct {
+	Fragment
 	DataType DataTypeReference
 }
 
@@ -40,6 +43,7 @@ func (r *ScalarFunctionReturnType) functionReturnTypeNode() {}
 
 // TableValuedFunctionReturnType represents a table-valued function return type
 type TableValuedFunctionReturnType struct {
+	Fragment
 	DeclareTableVariableBody *DeclareTableVariableBody
 }
 
@@ -47,6 +51,7 @@ func (r *TableValuedFunctionReturnType) functionReturnTypeNode() {}
 
 // SelectFunctionReturnType represents a SELECT function return type (inline table-valued function)
 type SelectFunctionReturnType struct {
+	Fragment
 	SelectStatement *SelectStatement
 }
 
@@ -60,6 +65,7 @@ type FunctionOptionBase interface {
 
 // FunctionOption represents a function option (like ENCRYPTION, SCHEMABINDING)
 type FunctionOption struct {
+	Fragment
 	OptionKind string
 }
 
@@ -68,6 +74,7 @@ func (o *FunctionOption) functionOption() {}
 
 // InlineFunctionOption represents an INLINE function option
 type InlineFunctionOption struct {
+	Fragment
 	OptionKind  string // "Inline"
 	OptionState string // "On", "Off"
 }
@@ -77,6 +84,7 @@ func (o *InlineFunctionOption) functionOption() {}
 
 // ExecuteAsFunctionOption represents an EXECUTE AS function option
 type ExecuteAsFunctionOption struct {
+	Fragment
 	OptionKind string           // "ExecuteAs"
 	ExecuteAs  *ExecuteAsClause // The EXECUTE AS clause
 }
@@ -86,6 +94,7 @@ func (o *ExecuteAsFunctionOption) functionOption() {}
 
 // CreateOrAlterFunctionStatement represents a CREATE OR ALTER FUNCTION statement
 type CreateOrAlterFunctionStatement struct {
+	Fragment
 	Name          *SchemaObjectName
 	Parameters    []*ProcedureParameter
 	ReturnType    FunctionReturnType

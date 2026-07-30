@@ -3,6 +3,7 @@ package ast
 // PartitionFunctionCall represents a $PARTITION function call.
 // Syntax: [database.]$PARTITION.function(args)
 type PartitionFunctionCall struct {
+	Fragment
 	DatabaseName *Identifier         `json:"DatabaseName,omitempty"`
 	SchemaName   *Identifier         `json:"SchemaName,omitempty"`
 	FunctionName *Identifier         `json:"FunctionName,omitempty"`

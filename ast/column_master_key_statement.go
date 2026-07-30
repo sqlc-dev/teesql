@@ -2,6 +2,7 @@ package ast
 
 // CreateColumnMasterKeyStatement represents a CREATE COLUMN MASTER KEY statement.
 type CreateColumnMasterKeyStatement struct {
+	Fragment
 	Name       *Identifier
 	Parameters []ColumnMasterKeyParameter
 }
@@ -17,6 +18,7 @@ type ColumnMasterKeyParameter interface {
 
 // ColumnMasterKeyStoreProviderNameParameter represents KEY_STORE_PROVIDER_NAME parameter.
 type ColumnMasterKeyStoreProviderNameParameter struct {
+	Fragment
 	Name          ScalarExpression
 	ParameterKind string
 }
@@ -26,6 +28,7 @@ func (c *ColumnMasterKeyStoreProviderNameParameter) columnMasterKeyParameter() {
 
 // ColumnMasterKeyPathParameter represents KEY_PATH parameter.
 type ColumnMasterKeyPathParameter struct {
+	Fragment
 	Path          ScalarExpression
 	ParameterKind string
 }
@@ -35,6 +38,7 @@ func (c *ColumnMasterKeyPathParameter) columnMasterKeyParameter() {}
 
 // ColumnMasterKeyEnclaveComputationsParameter represents ENCLAVE_COMPUTATIONS parameter.
 type ColumnMasterKeyEnclaveComputationsParameter struct {
+	Fragment
 	Signature     ScalarExpression
 	ParameterKind string
 }
@@ -44,6 +48,7 @@ func (c *ColumnMasterKeyEnclaveComputationsParameter) columnMasterKeyParameter()
 
 // DropColumnMasterKeyStatement represents a DROP COLUMN MASTER KEY statement.
 type DropColumnMasterKeyStatement struct {
+	Fragment
 	Name       *Identifier
 	IsIfExists bool
 }

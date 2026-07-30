@@ -2,6 +2,7 @@ package ast
 
 // BinaryExpression represents a binary scalar expression (Add, Subtract, etc.).
 type BinaryExpression struct {
+	Fragment
 	BinaryExpressionType string           `json:"BinaryExpressionType,omitempty"`
 	FirstExpression      ScalarExpression `json:"FirstExpression,omitempty"`
 	SecondExpression     ScalarExpression `json:"SecondExpression,omitempty"`

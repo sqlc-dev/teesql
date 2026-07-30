@@ -1,26 +1,54 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 273,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 72,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "CreateServerRoleStatement",
+          "StartOffset": 0,
+          "FragmentLength": 22,
+          "StartLine": 1,
+          "StartColumn": 1,
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 19,
+            "FragmentLength": 2,
+            "StartLine": 1,
+            "StartColumn": 20,
             "Value": "r1",
             "QuoteType": "NotQuoted"
           }
         },
         {
           "$type": "CreateServerRoleStatement",
+          "StartOffset": 24,
+          "FragmentLength": 48,
+          "StartLine": 3,
+          "StartColumn": 1,
           "Owner": {
             "$type": "Identifier",
+            "StartOffset": 66,
+            "FragmentLength": 5,
+            "StartLine": 4,
+            "StartColumn": 19,
             "Value": "dbo",
             "QuoteType": "SquareBracket"
           },
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 43,
+            "FragmentLength": 4,
+            "StartLine": 3,
+            "StartColumn": 20,
             "Value": "r1",
             "QuoteType": "SquareBracket"
           }
@@ -29,64 +57,128 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 78,
+      "FragmentLength": 195,
+      "StartLine": 8,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterServerRoleStatement",
+          "StartOffset": 78,
+          "FragmentLength": 41,
+          "StartLine": 8,
+          "StartColumn": 1,
           "Action": {
             "$type": "RenameAlterRoleAction",
+            "StartOffset": 104,
+            "FragmentLength": 14,
+            "StartLine": 8,
+            "StartColumn": 27,
             "NewName": {
               "$type": "Identifier",
+              "StartOffset": 111,
+              "FragmentLength": 7,
+              "StartLine": 8,
+              "StartColumn": 34,
               "Value": "newName",
               "QuoteType": "NotQuoted"
             }
           },
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 96,
+            "FragmentLength": 2,
+            "StartLine": 8,
+            "StartColumn": 19,
             "Value": "r1",
             "QuoteType": "NotQuoted"
           }
         },
         {
           "$type": "AlterServerRoleStatement",
+          "StartOffset": 121,
+          "FragmentLength": 44,
+          "StartLine": 10,
+          "StartColumn": 1,
           "Action": {
             "$type": "AddMemberAlterRoleAction",
+            "StartOffset": 142,
+            "FragmentLength": 22,
+            "StartLine": 10,
+            "StartColumn": 22,
             "Member": {
               "$type": "Identifier",
+              "StartOffset": 153,
+              "FragmentLength": 11,
+              "StartLine": 10,
+              "StartColumn": 33,
               "Value": "role_member",
               "QuoteType": "NotQuoted"
             }
           },
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 139,
+            "FragmentLength": 2,
+            "StartLine": 10,
+            "StartColumn": 19,
             "Value": "r1",
             "QuoteType": "NotQuoted"
           }
         },
         {
           "$type": "AlterServerRoleStatement",
+          "StartOffset": 167,
+          "FragmentLength": 45,
+          "StartLine": 12,
+          "StartColumn": 1,
           "Action": {
             "$type": "DropMemberAlterRoleAction",
+            "StartOffset": 188,
+            "FragmentLength": 23,
+            "StartLine": 12,
+            "StartColumn": 22,
             "Member": {
               "$type": "Identifier",
+              "StartOffset": 200,
+              "FragmentLength": 11,
+              "StartLine": 12,
+              "StartColumn": 34,
               "Value": "role_member",
               "QuoteType": "NotQuoted"
             }
           },
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 185,
+            "FragmentLength": 2,
+            "StartLine": 12,
+            "StartColumn": 19,
             "Value": "r1",
             "QuoteType": "NotQuoted"
           }
         },
         {
           "$type": "GrantStatement",
+          "StartOffset": 214,
+          "FragmentLength": 59,
+          "StartLine": 14,
+          "StartColumn": 1,
           "WithGrantOption": false,
           "Permissions": [
             {
               "$type": "Permission",
+              "StartOffset": 220,
+              "FragmentLength": 5,
+              "StartLine": 14,
+              "StartColumn": 7,
               "Identifiers": [
                 {
                   "$type": "Identifier",
+                  "StartOffset": 220,
+                  "FragmentLength": 5,
+                  "StartLine": 14,
+                  "StartColumn": 7,
                   "Value": "alter",
                   "QuoteType": "NotQuoted"
                 }
@@ -95,15 +187,31 @@
           ],
           "SecurityTargetObject": {
             "$type": "SecurityTargetObject",
+            "StartOffset": 230,
+            "FragmentLength": 27,
+            "StartLine": 15,
+            "StartColumn": 5,
             "ObjectKind": "ServerRole",
             "ObjectName": {
               "$type": "SecurityTargetObjectName",
+              "StartOffset": 246,
+              "FragmentLength": 11,
+              "StartLine": 15,
+              "StartColumn": 21,
               "MultiPartIdentifier": {
                 "$type": "MultiPartIdentifier",
+                "StartOffset": 246,
+                "FragmentLength": 11,
+                "StartLine": 15,
+                "StartColumn": 21,
                 "Count": 1,
                 "Identifiers": [
                   {
                     "$type": "Identifier",
+                    "StartOffset": 246,
+                    "FragmentLength": 11,
+                    "StartLine": 15,
+                    "StartColumn": 21,
                     "Value": "serverRole1",
                     "QuoteType": "NotQuoted"
                   }
@@ -114,9 +222,17 @@
           "Principals": [
             {
               "$type": "SecurityPrincipal",
+              "StartOffset": 261,
+              "FragmentLength": 11,
+              "StartLine": 15,
+              "StartColumn": 36,
               "PrincipalType": "Identifier",
               "Identifier": {
                 "$type": "Identifier",
+                "StartOffset": 261,
+                "FragmentLength": 11,
+                "StartLine": 15,
+                "StartColumn": 36,
                 "Value": "serverRole2",
                 "QuoteType": "NotQuoted"
               }

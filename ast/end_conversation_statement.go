@@ -2,6 +2,7 @@ package ast
 
 // EndConversationStatement represents END CONVERSATION statement
 type EndConversationStatement struct {
+	Fragment
 	Conversation     ScalarExpression // The conversation handle
 	WithCleanup      bool             // true if WITH CLEANUP specified
 	ErrorCode        ScalarExpression // optional error code with WITH ERROR

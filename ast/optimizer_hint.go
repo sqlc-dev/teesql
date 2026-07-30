@@ -2,6 +2,7 @@ package ast
 
 // OptimizerHint represents an optimizer hint in an OPTION clause.
 type OptimizerHint struct {
+	Fragment
 	HintKind string `json:"HintKind,omitempty"`
 }
 
@@ -10,6 +11,7 @@ func (*OptimizerHint) optimizerHint() {}
 
 // TableHintsOptimizerHint represents a TABLE HINT optimizer hint.
 type TableHintsOptimizerHint struct {
+	Fragment
 	HintKind   string            `json:"HintKind,omitempty"`
 	ObjectName *SchemaObjectName `json:"ObjectName,omitempty"`
 	TableHints []TableHintType   `json:"TableHints,omitempty"`
@@ -20,6 +22,7 @@ func (*TableHintsOptimizerHint) optimizerHint() {}
 
 // UseHintList represents a USE HINT optimizer hint with a list of hint strings.
 type UseHintList struct {
+	Fragment
 	HintKind string             `json:"HintKind,omitempty"`
 	Hints    []ScalarExpression `json:"Hints,omitempty"`
 }

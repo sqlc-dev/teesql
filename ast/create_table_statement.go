@@ -2,6 +2,7 @@ package ast
 
 // CreateTableStatement represents a CREATE TABLE statement
 type CreateTableStatement struct {
+	Fragment
 	SchemaObjectName             *SchemaObjectName
 	AsEdge                       bool
 	AsFileTable                  bool
@@ -18,6 +19,7 @@ type CreateTableStatement struct {
 
 // FederationScheme represents a FEDERATED ON clause
 type FederationScheme struct {
+	Fragment
 	DistributionName *Identifier
 	ColumnName       *Identifier
 }
@@ -26,6 +28,7 @@ func (*FederationScheme) node() {}
 
 // TableDataCompressionOption represents a DATA_COMPRESSION option
 type TableDataCompressionOption struct {
+	Fragment
 	DataCompressionOption *DataCompressionOption
 	OptionKind            string
 }
@@ -38,6 +41,7 @@ func (s *CreateTableStatement) statement() {}
 
 // TableDefinition represents a table definition
 type TableDefinition struct {
+	Fragment
 	ColumnDefinitions []*ColumnDefinition
 	TableConstraints  []TableConstraint
 	Indexes           []*IndexDefinition
@@ -48,6 +52,7 @@ func (t *TableDefinition) node() {}
 
 // SystemTimePeriodDefinition represents PERIOD FOR SYSTEM_TIME clause
 type SystemTimePeriodDefinition struct {
+	Fragment
 	StartTimeColumn *Identifier
 	EndTimeColumn   *Identifier
 }
@@ -56,6 +61,7 @@ func (s *SystemTimePeriodDefinition) node() {}
 
 // ColumnDefinition represents a column definition in CREATE TABLE
 type ColumnDefinition struct {
+	Fragment
 	ColumnIdentifier         *Identifier
 	DataType                 DataTypeReference
 	ComputedColumnExpression ScalarExpression
@@ -79,6 +85,7 @@ func (c *ColumnDefinition) node() {}
 
 // ColumnStorageOptions represents storage options for a column (SPARSE, FILESTREAM)
 type ColumnStorageOptions struct {
+	Fragment
 	IsFileStream bool   // true if FILESTREAM specified
 	SparseOption string // "None", "Sparse", "ColumnSetForAllSparseColumns"
 }
@@ -93,6 +100,7 @@ type DataTypeReference interface {
 
 // DefaultConstraintDefinition represents a DEFAULT constraint
 type DefaultConstraintDefinition struct {
+	Fragment
 	ConstraintIdentifier *Identifier
 	Expression           ScalarExpression
 	Column               *Identifier // For table-level DEFAULT constraint (DEFAULT ... FOR column)
@@ -105,6 +113,7 @@ func (d *DefaultConstraintDefinition) tableConstraint()      {}
 
 // IdentityOptions represents IDENTITY options
 type IdentityOptions struct {
+	Fragment
 	IdentitySeed      ScalarExpression
 	IdentityIncrement ScalarExpression
 	NotForReplication bool
@@ -120,6 +129,7 @@ type ConstraintDefinition interface {
 
 // NullableConstraintDefinition represents a NULL or NOT NULL constraint
 type NullableConstraintDefinition struct {
+	Fragment
 	Nullable bool
 }
 
@@ -134,6 +144,7 @@ type TableConstraint interface {
 
 // IndexDefinition represents an index definition within CREATE TABLE
 type IndexDefinition struct {
+	Fragment
 	Name                         *Identifier
 	Columns                      []*ColumnWithSortOrder
 	Unique                       bool
@@ -149,6 +160,7 @@ func (i *IndexDefinition) node() {}
 
 // ColumnWithSortOrder represents a column with optional sort order
 type ColumnWithSortOrder struct {
+	Fragment
 	Column    *ColumnReferenceExpression
 	SortOrder SortOrder
 }
@@ -166,6 +178,7 @@ const (
 
 // CheckConstraintDefinition represents a CHECK constraint
 type CheckConstraintDefinition struct {
+	Fragment
 	ConstraintIdentifier *Identifier
 	CheckCondition       BooleanExpression
 	NotForReplication    bool
@@ -177,6 +190,7 @@ func (c *CheckConstraintDefinition) constraintDefinition() {}
 
 // UniqueConstraintDefinition represents a UNIQUE or PRIMARY KEY constraint
 type UniqueConstraintDefinition struct {
+	Fragment
 	ConstraintIdentifier         *Identifier
 	Clustered                    bool
 	IsPrimaryKey                 bool
@@ -193,6 +207,7 @@ func (u *UniqueConstraintDefinition) constraintDefinition() {}
 
 // ForeignKeyConstraintDefinition represents a FOREIGN KEY constraint
 type ForeignKeyConstraintDefinition struct {
+	Fragment
 	ConstraintIdentifier *Identifier
 	Columns              []*Identifier
 	ReferenceTableName   *SchemaObjectName

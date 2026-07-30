@@ -2,6 +2,7 @@ package ast
 
 // OpenRowsetCosmos represents an OPENROWSET with PROVIDER = ..., CONNECTION = ..., OBJECT = ... syntax.
 type OpenRowsetCosmos struct {
+	Fragment
 	Options     []OpenRowsetCosmosOption     `json:"Options,omitempty"`
 	WithColumns []*OpenRowsetColumnDefinition `json:"WithColumns,omitempty"`
 	Alias       *Identifier                  `json:"Alias,omitempty"`
@@ -18,6 +19,7 @@ type OpenRowsetCosmosOption interface {
 
 // LiteralOpenRowsetCosmosOption represents an option with a literal value.
 type LiteralOpenRowsetCosmosOption struct {
+	Fragment
 	Value      ScalarExpression `json:"Value,omitempty"`
 	OptionKind string           `json:"OptionKind,omitempty"`
 }
@@ -28,6 +30,7 @@ func (l *LiteralOpenRowsetCosmosOption) openRowsetCosmosOption() {}
 // - OPENROWSET('provider', 'connstr', object)
 // - OPENROWSET('provider', 'server'; 'user'; 'password', 'query')
 type OpenRowsetTableReference struct {
+	Fragment
 	ProviderName   ScalarExpression              `json:"ProviderName,omitempty"`
 	ProviderString ScalarExpression              `json:"ProviderString,omitempty"`
 	DataSource     ScalarExpression              `json:"DataSource,omitempty"`
@@ -45,6 +48,7 @@ func (o *OpenRowsetTableReference) tableReference() {}
 
 // OpenRowsetColumnDefinition represents a column definition in WITH clause.
 type OpenRowsetColumnDefinition struct {
+	Fragment
 	ColumnOrdinal    ScalarExpression  `json:"ColumnOrdinal,omitempty"`
 	JsonPath         ScalarExpression  `json:"JsonPath,omitempty"`
 	ColumnIdentifier *Identifier       `json:"ColumnIdentifier,omitempty"`

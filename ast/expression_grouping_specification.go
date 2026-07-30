@@ -2,6 +2,7 @@ package ast
 
 // ExpressionGroupingSpecification represents a grouping by expression.
 type ExpressionGroupingSpecification struct {
+	Fragment
 	Expression              ScalarExpression `json:"Expression,omitempty"`
 	DistributedAggregation bool             `json:"DistributedAggregation,omitempty"`
 }

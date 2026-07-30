@@ -2,6 +2,7 @@ package ast
 
 // BooleanNotExpression represents a NOT expression
 type BooleanNotExpression struct {
+	Fragment
 	Expression BooleanExpression
 }
 

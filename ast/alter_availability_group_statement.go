@@ -2,6 +2,7 @@ package ast
 
 // AlterAvailabilityGroupStatement represents ALTER AVAILABILITY GROUP statement
 type AlterAvailabilityGroupStatement struct {
+	Fragment
 	Name              *Identifier
 	StatementType     string // "Action", "AddDatabase", "RemoveDatabase", "AddReplica", "ModifyReplica", "RemoveReplica", "Set"
 	Action            AvailabilityGroupAction
@@ -21,6 +22,7 @@ type AvailabilityGroupAction interface {
 
 // AlterAvailabilityGroupAction represents simple actions like JOIN, ONLINE, OFFLINE
 type AlterAvailabilityGroupAction struct {
+	Fragment
 	ActionType string // "Join", "ForceFailoverAllowDataLoss", "Online", "Offline"
 }
 
@@ -29,6 +31,7 @@ func (a *AlterAvailabilityGroupAction) availabilityGroupAction() {}
 
 // AlterAvailabilityGroupFailoverAction represents FAILOVER action with options
 type AlterAvailabilityGroupFailoverAction struct {
+	Fragment
 	ActionType string // "Failover"
 	Options    []*AlterAvailabilityGroupFailoverOption
 }
@@ -38,6 +41,7 @@ func (a *AlterAvailabilityGroupFailoverAction) availabilityGroupAction() {}
 
 // AlterAvailabilityGroupFailoverOption represents an option for failover action
 type AlterAvailabilityGroupFailoverOption struct {
+	Fragment
 	OptionKind string           // "Target"
 	Value      ScalarExpression // StringLiteral for target server
 }

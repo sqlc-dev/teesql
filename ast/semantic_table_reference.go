@@ -2,6 +2,7 @@ package ast
 
 // SemanticTableReference represents SEMANTICKEYPHRASETABLE, SEMANTICSIMILARITYTABLE, or SEMANTICSIMILARITYDETAILSTABLE in a FROM clause
 type SemanticTableReference struct {
+	Fragment
 	SemanticFunctionType string                       `json:"SemanticFunctionType,omitempty"` // SemanticKeyPhraseTable, SemanticSimilarityTable, SemanticSimilarityDetailsTable
 	TableName            *SchemaObjectName            `json:"TableName,omitempty"`
 	Columns              []*ColumnReferenceExpression `json:"Columns,omitempty"`

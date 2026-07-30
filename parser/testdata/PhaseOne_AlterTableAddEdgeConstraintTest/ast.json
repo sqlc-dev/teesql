@@ -1,29 +1,70 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 57,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 57,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterTableAddTableElementStatement",
+          "StartOffset": 0,
+          "FragmentLength": 57,
+          "StartLine": 1,
+          "StartColumn": 1,
+          "ExistingRowsCheckEnforcement": "NotSpecified",
           "Definition": {
             "$type": "TableDefinition",
+            "StartOffset": 36,
+            "FragmentLength": 21,
+            "StartLine": 1,
+            "StartColumn": 37,
             "ColumnDefinitions": [
               {
                 "$type": "ColumnDefinition",
+                "StartOffset": 36,
+                "FragmentLength": 21,
+                "StartLine": 1,
+                "StartColumn": 37,
+                "IsPersisted": false,
+                "IsRowGuidCol": false,
+                "IsHidden": false,
+                "IsMasked": false,
                 "ColumnIdentifier": {
                   "$type": "Identifier",
-                  "QuoteType": "NotQuoted",
-                  "Value": "CONNECTION"
+                  "StartOffset": 36,
+                  "FragmentLength": 10,
+                  "StartLine": 1,
+                  "StartColumn": 37,
+                  "Value": "CONNECTION",
+                  "QuoteType": "NotQuoted"
                 },
                 "DataType": {
-                  "$type": "SqlDataTypeReference",
+                  "$type": "UserDataTypeReference",
+                  "StartOffset": 47,
+                  "FragmentLength": 10,
+                  "StartLine": 1,
+                  "StartColumn": 48,
                   "Name": {
                     "$type": "SchemaObjectName",
+                    "StartOffset": 47,
+                    "FragmentLength": 10,
+                    "StartLine": 1,
+                    "StartColumn": 48,
                     "BaseIdentifier": {
                       "$type": "Identifier",
-                      "QuoteType": "NotQuoted",
-                      "Value": "CONNECTION"
+                      "StartOffset": 47,
+                      "FragmentLength": 10,
+                      "StartLine": 1,
+                      "StartColumn": 48,
+                      "Value": "CONNECTION",
+                      "QuoteType": "NotQuoted"
                     },
                     "Count": 1,
                     "Identifiers": [
@@ -31,30 +72,45 @@
                         "$ref": "Identifier"
                       }
                     ]
-                  },
-                  "SqlDataTypeOption": "Connection"
-                },
-                "IsHidden": false,
-                "IsMasked": false,
-                "IsPersisted": false,
-                "IsRowGuidCol": false
+                  }
+                }
               }
             ]
           },
-          "ExistingRowsCheckEnforcement": "NotSpecified",
           "SchemaObjectName": {
             "$type": "SchemaObjectName",
-            "BaseIdentifier": {
-              "$type": "Identifier",
-              "QuoteType": "SquareBracket",
-              "Value": "t1"
-            },
-            "Count": 3,
+            "StartOffset": 12,
+            "FragmentLength": 19,
+            "StartLine": 1,
+            "StartColumn": 13,
             "DatabaseIdentifier": {
               "$type": "Identifier",
-              "QuoteType": "SquareBracket",
-              "Value": "master"
+              "StartOffset": 12,
+              "FragmentLength": 8,
+              "StartLine": 1,
+              "StartColumn": 13,
+              "Value": "master",
+              "QuoteType": "SquareBracket"
             },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "StartOffset": 21,
+              "FragmentLength": 5,
+              "StartLine": 1,
+              "StartColumn": 22,
+              "Value": "dbo",
+              "QuoteType": "SquareBracket"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "StartOffset": 27,
+              "FragmentLength": 4,
+              "StartLine": 1,
+              "StartColumn": 28,
+              "Value": "t1",
+              "QuoteType": "SquareBracket"
+            },
+            "Count": 3,
             "Identifiers": [
               {
                 "$ref": "Identifier"
@@ -65,12 +121,7 @@
               {
                 "$ref": "Identifier"
               }
-            ],
-            "SchemaIdentifier": {
-              "$type": "Identifier",
-              "QuoteType": "SquareBracket",
-              "Value": "dbo"
-            }
+            ]
           }
         }
       ]

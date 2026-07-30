@@ -2,6 +2,7 @@ package ast
 
 // ExistsPredicate represents EXISTS (subquery)
 type ExistsPredicate struct {
+	Fragment
 	Subquery QueryExpression `json:"Subquery,omitempty"`
 }
 

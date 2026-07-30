@@ -2,6 +2,7 @@ package ast
 
 // UseFederationStatement represents USE FEDERATION statement
 type UseFederationStatement struct {
+	Fragment
 	FederationName   *Identifier
 	DistributionName *Identifier
 	Value            ScalarExpression

@@ -2,6 +2,7 @@ package ast
 
 // AlterTableConstraintModificationStatement represents ALTER TABLE ... CHECK/NOCHECK CONSTRAINT
 type AlterTableConstraintModificationStatement struct {
+	Fragment
 	SchemaObjectName            *SchemaObjectName
 	ExistingRowsCheckEnforcement string // "NotSpecified", "Check", "NoCheck"
 	ConstraintEnforcement       string // "Check", "NoCheck"

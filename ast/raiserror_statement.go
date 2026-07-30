@@ -2,6 +2,7 @@ package ast
 
 // RaiseErrorStatement represents a RAISERROR statement.
 type RaiseErrorStatement struct {
+	Fragment
 	FirstParameter     ScalarExpression
 	SecondParameter    ScalarExpression
 	ThirdParameter     ScalarExpression

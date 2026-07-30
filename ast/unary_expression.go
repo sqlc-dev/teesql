@@ -2,6 +2,7 @@ package ast
 
 // UnaryExpression represents a unary expression (e.g., -1, +5).
 type UnaryExpression struct {
+	Fragment
 	UnaryExpressionType string           `json:"UnaryExpressionType,omitempty"`
 	Expression          ScalarExpression `json:"Expression,omitempty"`
 }

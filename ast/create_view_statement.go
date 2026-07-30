@@ -2,6 +2,7 @@ package ast
 
 // CreateViewStatement represents a CREATE VIEW statement.
 type CreateViewStatement struct {
+	Fragment
 	SchemaObjectName  *SchemaObjectName    `json:"SchemaObjectName,omitempty"`
 	Columns           []*Identifier        `json:"Columns,omitempty"`
 	SelectStatement   *SelectStatement     `json:"SelectStatement,omitempty"`
@@ -15,6 +16,7 @@ func (c *CreateViewStatement) statement() {}
 
 // CreateOrAlterViewStatement represents a CREATE OR ALTER VIEW statement.
 type CreateOrAlterViewStatement struct {
+	Fragment
 	SchemaObjectName  *SchemaObjectName    `json:"SchemaObjectName,omitempty"`
 	Columns           []*Identifier        `json:"Columns,omitempty"`
 	SelectStatement   *SelectStatement     `json:"SelectStatement,omitempty"`
@@ -28,6 +30,7 @@ func (c *CreateOrAlterViewStatement) statement() {}
 
 // AlterViewStatement represents an ALTER VIEW statement.
 type AlterViewStatement struct {
+	Fragment
 	SchemaObjectName *SchemaObjectName `json:"SchemaObjectName,omitempty"`
 	Columns          []*Identifier     `json:"Columns,omitempty"`
 	SelectStatement  *SelectStatement  `json:"SelectStatement,omitempty"`
@@ -48,6 +51,7 @@ type ViewOption interface {
 
 // ViewStatementOption represents a simple view option like SCHEMABINDING.
 type ViewStatementOption struct {
+	Fragment
 	OptionKind string `json:"OptionKind,omitempty"`
 }
 
@@ -60,6 +64,7 @@ type ViewDistributionPolicy interface {
 
 // ViewDistributionOption represents a DISTRIBUTION option for materialized views.
 type ViewDistributionOption struct {
+	Fragment
 	OptionKind string                   `json:"OptionKind,omitempty"`
 	Value      ViewDistributionPolicy   `json:"Value,omitempty"`
 }
@@ -68,6 +73,7 @@ func (v *ViewDistributionOption) viewOption() {}
 
 // ViewHashDistributionPolicy represents the hash distribution policy for materialized views.
 type ViewHashDistributionPolicy struct {
+	Fragment
 	DistributionColumn  *Identifier   `json:"DistributionColumn,omitempty"`
 	DistributionColumns []*Identifier `json:"DistributionColumns,omitempty"`
 }
@@ -81,6 +87,7 @@ func (v *ViewRoundRobinDistributionPolicy) distributionPolicy() {}
 
 // ViewForAppendOption represents the FOR_APPEND option for materialized views.
 type ViewForAppendOption struct {
+	Fragment
 	OptionKind string `json:"OptionKind,omitempty"`
 }
 

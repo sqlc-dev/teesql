@@ -2,6 +2,7 @@ package ast
 
 // PredictTableReference represents PREDICT(...) in a FROM clause
 type PredictTableReference struct {
+	Fragment
 	ModelVariable          ScalarExpression         `json:"ModelVariable,omitempty"`
 	DataSource             *NamedTableReference     `json:"DataSource,omitempty"`
 	RunTime                *Identifier              `json:"RunTime,omitempty"`
@@ -15,6 +16,7 @@ func (*PredictTableReference) tableReference() {}
 
 // SchemaDeclarationItem represents a column definition in PREDICT/OPENXML WITH clause
 type SchemaDeclarationItem struct {
+	Fragment
 	ColumnDefinition *ColumnDefinitionBase `json:"ColumnDefinition,omitempty"`
 	Mapping          ScalarExpression      `json:"Mapping,omitempty"` // Optional XPath mapping for OPENXML
 }

@@ -2,6 +2,7 @@ package ast
 
 // AlterDatabaseSetStatement represents ALTER DATABASE ... SET statement
 type AlterDatabaseSetStatement struct {
+	Fragment
 	DatabaseName      *Identifier
 	UseCurrent        bool
 	WithManualCutover bool
@@ -11,6 +12,7 @@ type AlterDatabaseSetStatement struct {
 
 // AlterDatabaseTermination represents the termination clause (WITH NO_WAIT, WITH ROLLBACK AFTER N, WITH ROLLBACK IMMEDIATE)
 type AlterDatabaseTermination struct {
+	Fragment
 	NoWait            bool
 	ImmediateRollback bool
 	RollbackAfter     ScalarExpression
@@ -29,6 +31,7 @@ type DatabaseOption interface {
 
 // AcceleratedDatabaseRecoveryDatabaseOption represents ACCELERATED_DATABASE_RECOVERY option
 type AcceleratedDatabaseRecoveryDatabaseOption struct {
+	Fragment
 	OptionKind  string // "AcceleratedDatabaseRecovery"
 	OptionState string // "On" or "Off"
 }
@@ -38,6 +41,7 @@ func (a *AcceleratedDatabaseRecoveryDatabaseOption) databaseOption() {}
 
 // OnOffDatabaseOption represents a simple ON/OFF database option
 type OnOffDatabaseOption struct {
+	Fragment
 	OptionKind  string // "TemporalHistoryRetention", etc.
 	OptionState string // "On" or "Off"
 }
@@ -47,6 +51,7 @@ func (o *OnOffDatabaseOption) databaseOption() {}
 
 // DelayedDurabilityDatabaseOption represents DELAYED_DURABILITY option
 type DelayedDurabilityDatabaseOption struct {
+	Fragment
 	OptionKind string // "DelayedDurability"
 	Value      string // "Disabled", "Allowed", "Forced"
 }
@@ -56,6 +61,7 @@ func (d *DelayedDurabilityDatabaseOption) databaseOption() {}
 
 // AutoCreateStatisticsDatabaseOption represents AUTO_CREATE_STATISTICS option with optional INCREMENTAL
 type AutoCreateStatisticsDatabaseOption struct {
+	Fragment
 	OptionKind       string // "AutoCreateStatistics"
 	OptionState      string // "On" or "Off"
 	HasIncremental   bool   // Whether INCREMENTAL is specified
@@ -67,6 +73,7 @@ func (a *AutoCreateStatisticsDatabaseOption) databaseOption() {}
 
 // IdentifierDatabaseOption represents a database option with an identifier value
 type IdentifierDatabaseOption struct {
+	Fragment
 	OptionKind string      `json:"OptionKind,omitempty"` // "CatalogCollation"
 	Value      *Identifier `json:"Value,omitempty"`
 }
@@ -87,6 +94,7 @@ func (d *DelayedDurabilityDatabaseOption) createDatabaseOption() {}
 
 // SimpleDatabaseOption represents a simple database option with just OptionKind (e.g., ENABLE_BROKER)
 type SimpleDatabaseOption struct {
+	Fragment
 	OptionKind string `json:"OptionKind,omitempty"`
 }
 
@@ -96,6 +104,7 @@ func (d *SimpleDatabaseOption) databaseOption()       {}
 
 // MaxSizeDatabaseOption represents a MAXSIZE option.
 type MaxSizeDatabaseOption struct {
+	Fragment
 	OptionKind string           `json:"OptionKind,omitempty"`
 	MaxSize    ScalarExpression `json:"MaxSize,omitempty"`
 	Units      string           `json:"Units,omitempty"` // "GB", "TB", etc.
@@ -107,6 +116,7 @@ func (m *MaxSizeDatabaseOption) createDatabaseOption() {}
 
 // LiteralDatabaseOption represents a database option with a literal value (e.g., EDITION).
 type LiteralDatabaseOption struct {
+	Fragment
 	OptionKind string           `json:"OptionKind,omitempty"`
 	Value      ScalarExpression `json:"Value,omitempty"`
 }
@@ -117,6 +127,7 @@ func (l *LiteralDatabaseOption) createDatabaseOption() {}
 
 // AutomaticTuningDatabaseOption represents AUTOMATIC_TUNING option
 type AutomaticTuningDatabaseOption struct {
+	Fragment
 	OptionKind            string                   // "AutomaticTuning"
 	AutomaticTuningState  string                   // "Inherit", "Custom", "Auto", "NotSet"
 	Options               []AutomaticTuningOption  // Sub-options like CREATE_INDEX, DROP_INDEX, etc.
@@ -133,6 +144,7 @@ type AutomaticTuningOption interface {
 
 // AutomaticTuningCreateIndexOption represents CREATE_INDEX option
 type AutomaticTuningCreateIndexOption struct {
+	Fragment
 	OptionKind string // "Create_Index"
 	Value      string // "On", "Off", "Default"
 }
@@ -142,6 +154,7 @@ func (a *AutomaticTuningCreateIndexOption) automaticTuningOption() {}
 
 // AutomaticTuningDropIndexOption represents DROP_INDEX option
 type AutomaticTuningDropIndexOption struct {
+	Fragment
 	OptionKind string // "Drop_Index"
 	Value      string // "On", "Off", "Default"
 }
@@ -151,6 +164,7 @@ func (a *AutomaticTuningDropIndexOption) automaticTuningOption() {}
 
 // AutomaticTuningForceLastGoodPlanOption represents FORCE_LAST_GOOD_PLAN option
 type AutomaticTuningForceLastGoodPlanOption struct {
+	Fragment
 	OptionKind string // "Force_Last_Good_Plan"
 	Value      string // "On", "Off", "Default"
 }
@@ -160,6 +174,7 @@ func (a *AutomaticTuningForceLastGoodPlanOption) automaticTuningOption() {}
 
 // AutomaticTuningMaintainIndexOption represents MAINTAIN_INDEX option
 type AutomaticTuningMaintainIndexOption struct {
+	Fragment
 	OptionKind string // "Maintain_Index"
 	Value      string // "On", "Off", "Default"
 }
@@ -169,6 +184,7 @@ func (a *AutomaticTuningMaintainIndexOption) automaticTuningOption() {}
 
 // ElasticPoolSpecification represents SERVICE_OBJECTIVE = ELASTIC_POOL(name = poolname)
 type ElasticPoolSpecification struct {
+	Fragment
 	ElasticPoolName *Identifier
 	OptionKind      string // "ServiceObjective"
 }
@@ -179,6 +195,7 @@ func (e *ElasticPoolSpecification) createDatabaseOption() {}
 
 // AlterDatabaseAddFileStatement represents ALTER DATABASE ... ADD FILE statement
 type AlterDatabaseAddFileStatement struct {
+	Fragment
 	DatabaseName     *Identifier
 	FileDeclarations []*FileDeclaration
 	FileGroup        *Identifier
@@ -191,6 +208,7 @@ func (a *AlterDatabaseAddFileStatement) statement() {}
 
 // AlterDatabaseAddFileGroupStatement represents ALTER DATABASE ... ADD FILEGROUP statement
 type AlterDatabaseAddFileGroupStatement struct {
+	Fragment
 	DatabaseName              *Identifier
 	FileGroupName             *Identifier
 	ContainsFileStream        bool
@@ -203,6 +221,7 @@ func (a *AlterDatabaseAddFileGroupStatement) statement() {}
 
 // AlterDatabaseModifyFileStatement represents ALTER DATABASE ... MODIFY FILE statement
 type AlterDatabaseModifyFileStatement struct {
+	Fragment
 	DatabaseName    *Identifier
 	FileDeclaration *FileDeclaration
 	UseCurrent      bool
@@ -213,6 +232,7 @@ func (a *AlterDatabaseModifyFileStatement) statement() {}
 
 // AlterDatabaseModifyFileGroupStatement represents ALTER DATABASE ... MODIFY FILEGROUP statement
 type AlterDatabaseModifyFileGroupStatement struct {
+	Fragment
 	DatabaseName       *Identifier
 	FileGroupName      *Identifier
 	MakeDefault        bool
@@ -227,6 +247,7 @@ func (a *AlterDatabaseModifyFileGroupStatement) statement() {}
 
 // AlterDatabaseRebuildLogStatement represents ALTER DATABASE ... REBUILD LOG statement
 type AlterDatabaseRebuildLogStatement struct {
+	Fragment
 	DatabaseName    *Identifier
 	FileDeclaration *FileDeclaration
 	UseCurrent      bool
@@ -237,6 +258,7 @@ func (a *AlterDatabaseRebuildLogStatement) statement() {}
 
 // AlterDatabaseModifyNameStatement represents ALTER DATABASE ... MODIFY NAME statement
 type AlterDatabaseModifyNameStatement struct {
+	Fragment
 	DatabaseName *Identifier
 	NewName      *Identifier
 }
@@ -246,6 +268,7 @@ func (a *AlterDatabaseModifyNameStatement) statement() {}
 
 // AlterDatabaseRemoveFileStatement represents ALTER DATABASE ... REMOVE FILE statement
 type AlterDatabaseRemoveFileStatement struct {
+	Fragment
 	DatabaseName *Identifier
 	FileName     *Identifier
 }
@@ -255,6 +278,7 @@ func (a *AlterDatabaseRemoveFileStatement) statement() {}
 
 // AlterDatabaseRemoveFileGroupStatement represents ALTER DATABASE ... REMOVE FILEGROUP statement
 type AlterDatabaseRemoveFileGroupStatement struct {
+	Fragment
 	DatabaseName  *Identifier
 	FileGroupName *Identifier
 	UseCurrent    bool
@@ -265,6 +289,7 @@ func (a *AlterDatabaseRemoveFileGroupStatement) statement() {}
 
 // AlterDatabaseCollateStatement represents ALTER DATABASE ... COLLATE statement
 type AlterDatabaseCollateStatement struct {
+	Fragment
 	DatabaseName *Identifier
 	Collation    *Identifier
 }
@@ -274,6 +299,7 @@ func (a *AlterDatabaseCollateStatement) statement() {}
 
 // AlterDatabaseScopedConfigurationClearStatement represents ALTER DATABASE SCOPED CONFIGURATION CLEAR statement
 type AlterDatabaseScopedConfigurationClearStatement struct {
+	Fragment
 	Option    *DatabaseConfigurationClearOption
 	Secondary bool
 }
@@ -283,6 +309,7 @@ func (a *AlterDatabaseScopedConfigurationClearStatement) statement() {}
 
 // DatabaseConfigurationClearOption represents a CLEAR option
 type DatabaseConfigurationClearOption struct {
+	Fragment
 	OptionKind string           // "ProcedureCache"
 	PlanHandle ScalarExpression // Optional binary plan handle
 }
@@ -291,6 +318,7 @@ func (d *DatabaseConfigurationClearOption) node() {}
 
 // RemoteDataArchiveDatabaseOption represents REMOTE_DATA_ARCHIVE database option
 type RemoteDataArchiveDatabaseOption struct {
+	Fragment
 	OptionKind  string                       // "RemoteDataArchive"
 	OptionState string                       // "On", "Off", "NotSet"
 	Settings    []RemoteDataArchiveDbSetting // Settings like SERVER, CREDENTIAL, FEDERATED_SERVICE_ACCOUNT
@@ -307,6 +335,7 @@ type RemoteDataArchiveDbSetting interface {
 
 // RemoteDataArchiveDbServerSetting represents the SERVER setting
 type RemoteDataArchiveDbServerSetting struct {
+	Fragment
 	SettingKind string           // "Server"
 	Server      ScalarExpression // The server string literal
 }
@@ -316,6 +345,7 @@ func (r *RemoteDataArchiveDbServerSetting) remoteDataArchiveDbSetting() {}
 
 // RemoteDataArchiveDbCredentialSetting represents the CREDENTIAL setting
 type RemoteDataArchiveDbCredentialSetting struct {
+	Fragment
 	SettingKind string      // "Credential"
 	Credential  *Identifier // The credential name
 }
@@ -325,6 +355,7 @@ func (r *RemoteDataArchiveDbCredentialSetting) remoteDataArchiveDbSetting() {}
 
 // RemoteDataArchiveDbFederatedServiceAccountSetting represents the FEDERATED_SERVICE_ACCOUNT setting
 type RemoteDataArchiveDbFederatedServiceAccountSetting struct {
+	Fragment
 	SettingKind string // "FederatedServiceAccount"
 	IsOn        bool   // true for ON, false for OFF
 }
@@ -334,6 +365,7 @@ func (r *RemoteDataArchiveDbFederatedServiceAccountSetting) remoteDataArchiveDbS
 
 // ChangeTrackingDatabaseOption represents the CHANGE_TRACKING database option
 type ChangeTrackingDatabaseOption struct {
+	Fragment
 	OptionKind  string                            // "ChangeTracking"
 	OptionState string                            // "On", "Off", "NotSet"
 	Details     []ChangeTrackingOptionDetail      // AUTO_CLEANUP, CHANGE_RETENTION
@@ -350,6 +382,7 @@ type ChangeTrackingOptionDetail interface {
 
 // AutoCleanupChangeTrackingOptionDetail represents AUTO_CLEANUP option
 type AutoCleanupChangeTrackingOptionDetail struct {
+	Fragment
 	IsOn bool
 }
 
@@ -358,6 +391,7 @@ func (a *AutoCleanupChangeTrackingOptionDetail) changeTrackingOptionDetail() {}
 
 // ChangeRetentionChangeTrackingOptionDetail represents CHANGE_RETENTION option
 type ChangeRetentionChangeTrackingOptionDetail struct {
+	Fragment
 	RetentionPeriod ScalarExpression
 	Unit            string // "Days", "Hours", "Minutes"
 }
@@ -367,6 +401,7 @@ func (c *ChangeRetentionChangeTrackingOptionDetail) changeTrackingOptionDetail()
 
 // RecoveryDatabaseOption represents RECOVERY database option
 type RecoveryDatabaseOption struct {
+	Fragment
 	OptionKind string // "Recovery"
 	Value      string // "Full", "BulkLogged", "Simple"
 }
@@ -376,6 +411,7 @@ func (r *RecoveryDatabaseOption) databaseOption() {}
 
 // CursorDefaultDatabaseOption represents CURSOR_DEFAULT database option
 type CursorDefaultDatabaseOption struct {
+	Fragment
 	OptionKind string // "CursorDefault"
 	IsLocal    bool   // true for LOCAL, false for GLOBAL
 }
@@ -385,6 +421,7 @@ func (c *CursorDefaultDatabaseOption) databaseOption() {}
 
 // PageVerifyDatabaseOption represents PAGE_VERIFY database option
 type PageVerifyDatabaseOption struct {
+	Fragment
 	OptionKind string // "PageVerify"
 	Value      string // "Checksum", "None", "TornPageDetection"
 }
@@ -394,6 +431,7 @@ func (p *PageVerifyDatabaseOption) databaseOption() {}
 
 // PartnerDatabaseOption represents PARTNER database mirroring option
 type PartnerDatabaseOption struct {
+	Fragment
 	OptionKind    string           // "Partner"
 	PartnerServer ScalarExpression // For PARTNER = 'server'
 	PartnerOption string           // "PartnerServer", "Failover", "ForceServiceAllowDataLoss", "Resume", "SafetyFull", "SafetyOff", "Suspend", "Timeout"
@@ -405,6 +443,7 @@ func (p *PartnerDatabaseOption) databaseOption() {}
 
 // WitnessDatabaseOption represents WITNESS database mirroring option
 type WitnessDatabaseOption struct {
+	Fragment
 	OptionKind    string           // "Witness"
 	WitnessServer ScalarExpression // For WITNESS = 'server'
 	IsOff         bool             // For WITNESS OFF
@@ -415,6 +454,7 @@ func (w *WitnessDatabaseOption) databaseOption() {}
 
 // ParameterizationDatabaseOption represents PARAMETERIZATION database option
 type ParameterizationDatabaseOption struct {
+	Fragment
 	OptionKind string // "Parameterization"
 	IsSimple   bool   // true for SIMPLE, false for FORCED
 }
@@ -424,6 +464,7 @@ func (p *ParameterizationDatabaseOption) databaseOption() {}
 
 // GenericDatabaseOption represents a simple database option with just OptionKind
 type GenericDatabaseOption struct {
+	Fragment
 	OptionKind string // e.g., "Emergency", "ErrorBrokerConversations", "EnableBroker", etc.
 }
 
@@ -432,6 +473,7 @@ func (g *GenericDatabaseOption) databaseOption() {}
 
 // HadrDatabaseOption represents ALTER DATABASE SET HADR {SUSPEND|RESUME|OFF}
 type HadrDatabaseOption struct {
+	Fragment
 	HadrOption string // "Suspend", "Resume", "Off"
 	OptionKind string // "Hadr"
 }
@@ -441,6 +483,7 @@ func (h *HadrDatabaseOption) databaseOption() {}
 
 // HadrAvailabilityGroupDatabaseOption represents ALTER DATABASE SET HADR AVAILABILITY GROUP = name
 type HadrAvailabilityGroupDatabaseOption struct {
+	Fragment
 	GroupName  *Identifier
 	HadrOption string // "AvailabilityGroup"
 	OptionKind string // "Hadr"
@@ -451,6 +494,7 @@ func (h *HadrAvailabilityGroupDatabaseOption) databaseOption() {}
 
 // TargetRecoveryTimeDatabaseOption represents TARGET_RECOVERY_TIME database option
 type TargetRecoveryTimeDatabaseOption struct {
+	Fragment
 	OptionKind   string           // "TargetRecoveryTime"
 	RecoveryTime ScalarExpression // Integer literal
 	Unit         string           // "Seconds" or "Minutes"
@@ -461,6 +505,7 @@ func (t *TargetRecoveryTimeDatabaseOption) databaseOption() {}
 
 // QueryStoreDatabaseOption represents QUERY_STORE database option
 type QueryStoreDatabaseOption struct {
+	Fragment
 	OptionKind  string             // "QueryStore"
 	OptionState string             // "On", "Off", "NotSet"
 	Clear       bool               // QUERY_STORE CLEAR [ALL]
@@ -479,6 +524,7 @@ type QueryStoreOption interface {
 
 // QueryStoreDesiredStateOption represents DESIRED_STATE option
 type QueryStoreDesiredStateOption struct {
+	Fragment
 	OptionKind             string // "Desired_State"
 	Value                  string // "ReadOnly", "ReadWrite", "Off"
 	OperationModeSpecified bool   // Whether OPERATION_MODE was explicitly specified
@@ -489,6 +535,7 @@ func (q *QueryStoreDesiredStateOption) queryStoreOption() {}
 
 // QueryStoreCapturePolicyOption represents QUERY_CAPTURE_MODE option
 type QueryStoreCapturePolicyOption struct {
+	Fragment
 	OptionKind string // "Query_Capture_Mode"
 	Value      string // "ALL", "AUTO", "NONE", "CUSTOM"
 }
@@ -498,6 +545,7 @@ func (q *QueryStoreCapturePolicyOption) queryStoreOption() {}
 
 // QueryStoreSizeCleanupPolicyOption represents SIZE_BASED_CLEANUP_MODE option
 type QueryStoreSizeCleanupPolicyOption struct {
+	Fragment
 	OptionKind string // "Size_Based_Cleanup_Mode"
 	Value      string // "OFF", "AUTO"
 }
@@ -507,6 +555,7 @@ func (q *QueryStoreSizeCleanupPolicyOption) queryStoreOption() {}
 
 // QueryStoreIntervalLengthOption represents INTERVAL_LENGTH_MINUTES option
 type QueryStoreIntervalLengthOption struct {
+	Fragment
 	OptionKind          string           // "Interval_Length_Minutes"
 	StatsIntervalLength ScalarExpression // Integer literal
 }
@@ -516,6 +565,7 @@ func (q *QueryStoreIntervalLengthOption) queryStoreOption() {}
 
 // QueryStoreMaxStorageSizeOption represents MAX_STORAGE_SIZE_MB option
 type QueryStoreMaxStorageSizeOption struct {
+	Fragment
 	OptionKind string           // "Current_Storage_Size_MB" (note: uses Current_Storage_Size_MB as OptionKind)
 	MaxQdsSize ScalarExpression // Integer literal
 }
@@ -525,6 +575,7 @@ func (q *QueryStoreMaxStorageSizeOption) queryStoreOption() {}
 
 // QueryStoreMaxPlansPerQueryOption represents MAX_PLANS_PER_QUERY option
 type QueryStoreMaxPlansPerQueryOption struct {
+	Fragment
 	OptionKind       string           // "Max_Plans_Per_Query"
 	MaxPlansPerQuery ScalarExpression // Integer literal
 }
@@ -534,6 +585,7 @@ func (q *QueryStoreMaxPlansPerQueryOption) queryStoreOption() {}
 
 // QueryStoreTimeCleanupPolicyOption represents STALE_QUERY_THRESHOLD_DAYS option (in CLEANUP_POLICY)
 type QueryStoreTimeCleanupPolicyOption struct {
+	Fragment
 	OptionKind          string           // "Stale_Query_Threshold_Days"
 	StaleQueryThreshold ScalarExpression // Integer literal
 }
@@ -543,6 +595,7 @@ func (q *QueryStoreTimeCleanupPolicyOption) queryStoreOption() {}
 
 // QueryStoreWaitStatsCaptureOption represents WAIT_STATS_CAPTURE_MODE option
 type QueryStoreWaitStatsCaptureOption struct {
+	Fragment
 	OptionKind  string // "Wait_Stats_Capture_Mode"
 	OptionState string // "On", "Off"
 }
@@ -552,6 +605,7 @@ func (q *QueryStoreWaitStatsCaptureOption) queryStoreOption() {}
 
 // QueryStoreDataFlushIntervalOption represents FLUSH_INTERVAL_SECONDS/DATA_FLUSH_INTERVAL_SECONDS option
 type QueryStoreDataFlushIntervalOption struct {
+	Fragment
 	OptionKind    string           // "Flush_Interval_Seconds"
 	FlushInterval ScalarExpression // Integer literal
 }
@@ -561,6 +615,7 @@ func (q *QueryStoreDataFlushIntervalOption) queryStoreOption() {}
 
 // AlterDatabaseScopedConfigurationSetStatement represents ALTER DATABASE SCOPED CONFIGURATION SET statement
 type AlterDatabaseScopedConfigurationSetStatement struct {
+	Fragment
 	Secondary bool
 	Option    DatabaseConfigurationSetOption
 }
@@ -576,6 +631,7 @@ type DatabaseConfigurationSetOption interface {
 
 // MaxDopConfigurationOption represents MAXDOP configuration option
 type MaxDopConfigurationOption struct {
+	Fragment
 	OptionKind string           // "MaxDop"
 	Value      ScalarExpression // Integer value
 	Primary    bool             // true if set to PRIMARY
@@ -586,6 +642,7 @@ func (m *MaxDopConfigurationOption) databaseConfigurationSetOption() {}
 
 // OnOffPrimaryConfigurationOption represents ON/OFF/PRIMARY configuration option
 type OnOffPrimaryConfigurationOption struct {
+	Fragment
 	OptionKind  string // "LegacyCardinalityEstimate", "ParameterSniffing", "QueryOptimizerHotFixes"
 	OptionState string // "On", "Off", "Primary"
 }
@@ -595,6 +652,7 @@ func (o *OnOffPrimaryConfigurationOption) databaseConfigurationSetOption() {}
 
 // GenericConfigurationOption represents a generic configuration option
 type GenericConfigurationOption struct {
+	Fragment
 	OptionKind         string                       // "MaxDop"
 	GenericOptionKind  *Identifier                  // The custom option name
 	GenericOptionState *IdentifierOrScalarExpression // The value (identifier or scalar)
@@ -605,6 +663,7 @@ func (g *GenericConfigurationOption) databaseConfigurationSetOption() {}
 
 // IdentifierOrScalarExpression represents either an identifier or a scalar expression
 type IdentifierOrScalarExpression struct {
+	Fragment
 	Identifier       *Identifier
 	ScalarExpression ScalarExpression
 }

@@ -2,6 +2,7 @@ package ast
 
 // GrantStatement represents a GRANT statement
 type GrantStatement struct {
+	Fragment
 	Permissions          []*Permission
 	Principals           []*SecurityPrincipal
 	WithGrantOption      bool
@@ -14,6 +15,7 @@ func (s *GrantStatement) statement() {}
 
 // Permission represents a permission in GRANT/REVOKE
 type Permission struct {
+	Fragment
 	Identifiers []*Identifier
 	Columns     []*Identifier
 }
@@ -22,6 +24,7 @@ func (p *Permission) node() {}
 
 // SecurityPrincipal represents a security principal in GRANT/REVOKE
 type SecurityPrincipal struct {
+	Fragment
 	PrincipalType string
 	Identifier    *Identifier
 }

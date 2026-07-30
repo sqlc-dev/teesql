@@ -2,6 +2,7 @@ package ast
 
 // BeginTransactionStatement represents a BEGIN [DISTRIBUTED] [TRAN|TRANSACTION] statement.
 type BeginTransactionStatement struct {
+	Fragment
 	Name           *IdentifierOrValueExpression `json:"Name,omitempty"`
 	Distributed    bool                         `json:"Distributed"`
 	MarkDefined    bool                         `json:"MarkDefined"`

@@ -2,6 +2,7 @@ package ast
 
 // AlterRemoteServiceBindingStatement represents ALTER REMOTE SERVICE BINDING.
 type AlterRemoteServiceBindingStatement struct {
+	Fragment
 	Name    *Identifier
 	Options []RemoteServiceBindingOption
 }
@@ -16,6 +17,7 @@ type RemoteServiceBindingOption interface {
 
 // UserRemoteServiceBindingOption represents USER = identifier option.
 type UserRemoteServiceBindingOption struct {
+	Fragment
 	OptionKind string
 	User       *Identifier
 }
@@ -24,6 +26,7 @@ func (u *UserRemoteServiceBindingOption) remoteServiceBindingOption() {}
 
 // OnOffRemoteServiceBindingOption represents ANONYMOUS = ON/OFF option.
 type OnOffRemoteServiceBindingOption struct {
+	Fragment
 	OptionKind  string
 	OptionState string // "On" or "Off"
 }

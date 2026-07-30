@@ -2,6 +2,7 @@ package ast
 
 // PivotedTableReference represents a table with PIVOT
 type PivotedTableReference struct {
+	Fragment
 	TableReference              TableReference
 	InColumns                   []*Identifier
 	PivotColumn                 *ColumnReferenceExpression
@@ -16,6 +17,7 @@ func (p *PivotedTableReference) tableReference() {}
 
 // UnpivotedTableReference represents a table with UNPIVOT
 type UnpivotedTableReference struct {
+	Fragment
 	TableReference       TableReference
 	InColumns            []*ColumnReferenceExpression
 	PivotColumn          *Identifier

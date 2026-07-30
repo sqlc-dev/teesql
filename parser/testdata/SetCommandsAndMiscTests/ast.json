@@ -1,38 +1,78 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 858,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 16,
+      "FragmentLength": 403,
+      "StartLine": 2,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "SetCommandStatement",
+          "StartOffset": 16,
+          "FragmentLength": 71,
+          "StartLine": 2,
+          "StartColumn": 1,
           "Commands": [
             {
               "$type": "SetFipsFlaggerCommand",
+              "StartOffset": 33,
+              "FragmentLength": 3,
+              "StartLine": 2,
+              "StartColumn": 18,
               "ComplianceLevel": "Off"
             },
             {
               "$type": "SetFipsFlaggerCommand",
+              "StartOffset": 51,
+              "FragmentLength": 7,
+              "StartLine": 2,
+              "StartColumn": 36,
               "ComplianceLevel": "Entry"
             },
             {
               "$type": "SetFipsFlaggerCommand",
+              "StartOffset": 73,
+              "FragmentLength": 14,
+              "StartLine": 2,
+              "StartColumn": 58,
               "ComplianceLevel": "Intermediate"
             }
           ]
         },
         {
           "$type": "SetCommandStatement",
+          "StartOffset": 88,
+          "FragmentLength": 53,
+          "StartLine": 3,
+          "StartColumn": 1,
           "Commands": [
             {
               "$type": "SetFipsFlaggerCommand",
+              "StartOffset": 105,
+              "FragmentLength": 6,
+              "StartLine": 3,
+              "StartColumn": 18,
               "ComplianceLevel": "Full"
             },
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 139,
+              "FragmentLength": 2,
+              "StartLine": 3,
+              "StartColumn": 52,
               "CommandType": "QueryGovernorCostLimit",
               "Parameter": {
                 "$type": "IntegerLiteral",
+                "StartOffset": 139,
+                "FragmentLength": 2,
+                "StartLine": 3,
+                "StartColumn": 52,
                 "LiteralType": "Integer",
                 "Value": "10"
               }
@@ -41,12 +81,24 @@
         },
         {
           "$type": "SetCommandStatement",
+          "StartOffset": 142,
+          "FragmentLength": 23,
+          "StartLine": 4,
+          "StartColumn": 1,
           "Commands": [
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 155,
+              "FragmentLength": 10,
+              "StartLine": 4,
+              "StartColumn": 14,
               "CommandType": "Language",
               "Parameter": {
                 "$type": "IdentifierLiteral",
+                "StartOffset": 155,
+                "FragmentLength": 10,
+                "StartLine": 4,
+                "StartColumn": 14,
                 "LiteralType": "Identifier",
                 "QuoteType": "NotQuoted",
                 "Value": "us_english"
@@ -56,12 +108,24 @@
         },
         {
           "$type": "SetCommandStatement",
+          "StartOffset": 166,
+          "FragmentLength": 38,
+          "StartLine": 5,
+          "StartColumn": 1,
           "Commands": [
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 179,
+              "FragmentLength": 9,
+              "StartLine": 5,
+              "StartColumn": 14,
               "CommandType": "Language",
               "Parameter": {
                 "$type": "StringLiteral",
+                "StartOffset": 179,
+                "FragmentLength": 9,
+                "StartLine": 5,
+                "StartColumn": 14,
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -70,9 +134,17 @@
             },
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 201,
+              "FragmentLength": 3,
+              "StartLine": 5,
+              "StartColumn": 36,
               "CommandType": "DateFormat",
               "Parameter": {
                 "$type": "IdentifierLiteral",
+                "StartOffset": 201,
+                "FragmentLength": 3,
+                "StartLine": 5,
+                "StartColumn": 36,
                 "LiteralType": "Identifier",
                 "QuoteType": "NotQuoted",
                 "Value": "ymd"
@@ -82,12 +154,24 @@
         },
         {
           "$type": "SetCommandStatement",
+          "StartOffset": 205,
+          "FragmentLength": 22,
+          "StartLine": 6,
+          "StartColumn": 1,
           "Commands": [
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 219,
+              "FragmentLength": 8,
+              "StartLine": 6,
+              "StartColumn": 15,
               "CommandType": "DateFirst",
               "Parameter": {
                 "$type": "VariableReference",
+                "StartOffset": 219,
+                "FragmentLength": 8,
+                "StartLine": 6,
+                "StartColumn": 15,
                 "Name": "@SomeVar"
               }
             }
@@ -95,12 +179,24 @@
         },
         {
           "$type": "SetCommandStatement",
+          "StartOffset": 228,
+          "FragmentLength": 56,
+          "StartLine": 7,
+          "StartColumn": 1,
           "Commands": [
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 250,
+              "FragmentLength": 3,
+              "StartLine": 7,
+              "StartColumn": 23,
               "CommandType": "DeadlockPriority",
               "Parameter": {
                 "$type": "IdentifierLiteral",
+                "StartOffset": 250,
+                "FragmentLength": 3,
+                "StartLine": 7,
+                "StartColumn": 23,
                 "LiteralType": "Identifier",
                 "QuoteType": "NotQuoted",
                 "Value": "low"
@@ -108,9 +204,17 @@
             },
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 273,
+              "FragmentLength": 11,
+              "StartLine": 7,
+              "StartColumn": 46,
               "CommandType": "DeadlockPriority",
               "Parameter": {
                 "$type": "VariableReference",
+                "StartOffset": 273,
+                "FragmentLength": 11,
+                "StartLine": 7,
+                "StartColumn": 46,
                 "Name": "@anotherVar"
               }
             }
@@ -118,12 +222,24 @@
         },
         {
           "$type": "SetCommandStatement",
+          "StartOffset": 285,
+          "FragmentLength": 28,
+          "StartLine": 8,
+          "StartColumn": 1,
           "Commands": [
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 307,
+              "FragmentLength": 6,
+              "StartLine": 8,
+              "StartColumn": 23,
               "CommandType": "DeadlockPriority",
               "Parameter": {
                 "$type": "IdentifierLiteral",
+                "StartOffset": 307,
+                "FragmentLength": 6,
+                "StartLine": 8,
+                "StartColumn": 23,
                 "LiteralType": "Identifier",
                 "QuoteType": "NotQuoted",
                 "Value": "normal"
@@ -133,15 +249,31 @@
         },
         {
           "$type": "SetCommandStatement",
+          "StartOffset": 314,
+          "FragmentLength": 19,
+          "StartLine": 9,
+          "StartColumn": 1,
           "Commands": [
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 331,
+              "FragmentLength": 2,
+              "StartLine": 9,
+              "StartColumn": 18,
               "CommandType": "LockTimeout",
               "Parameter": {
                 "$type": "UnaryExpression",
+                "StartOffset": 331,
+                "FragmentLength": 2,
+                "StartLine": 9,
+                "StartColumn": 18,
                 "UnaryExpressionType": "Negative",
                 "Expression": {
                   "$type": "IntegerLiteral",
+                  "StartOffset": 332,
+                  "FragmentLength": 1,
+                  "StartLine": 9,
+                  "StartColumn": 19,
                   "LiteralType": "Integer",
                   "Value": "1"
                 }
@@ -151,12 +283,24 @@
         },
         {
           "$type": "SetCommandStatement",
+          "StartOffset": 334,
+          "FragmentLength": 43,
+          "StartLine": 10,
+          "StartColumn": 1,
           "Commands": [
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 351,
+              "FragmentLength": 7,
+              "StartLine": 10,
+              "StartColumn": 18,
               "CommandType": "ContextInfo",
               "Parameter": {
                 "$type": "BinaryLiteral",
+                "StartOffset": 351,
+                "FragmentLength": 7,
+                "StartLine": 10,
+                "StartColumn": 18,
                 "LiteralType": "Binary",
                 "IsLargeObject": false,
                 "Value": "0x10000"
@@ -164,9 +308,17 @@
             },
             {
               "$type": "GeneralSetCommand",
+              "StartOffset": 373,
+              "FragmentLength": 4,
+              "StartLine": 10,
+              "StartColumn": 40,
               "CommandType": "LockTimeout",
               "Parameter": {
                 "$type": "IntegerLiteral",
+                "StartOffset": 373,
+                "FragmentLength": 4,
+                "StartLine": 10,
+                "StartColumn": 40,
                 "LiteralType": "Integer",
                 "Value": "1000"
               }
@@ -175,6 +327,10 @@
         },
         {
           "$type": "PredicateSetStatement",
+          "StartOffset": 378,
+          "FragmentLength": 41,
+          "StartLine": 11,
+          "StartColumn": 1,
           "Options": "NoCount, RemoteProcTransactions",
           "IsOn": false
         }
@@ -182,46 +338,94 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 475,
+      "FragmentLength": 383,
+      "StartLine": 15,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "SetTransactionIsolationLevelStatement",
+          "StartOffset": 475,
+          "FragmentLength": 46,
+          "StartLine": 15,
+          "StartColumn": 1,
           "Level": "ReadCommitted"
         },
         {
           "$type": "SetTransactionIsolationLevelStatement",
+          "StartOffset": 523,
+          "FragmentLength": 48,
+          "StartLine": 16,
+          "StartColumn": 1,
           "Level": "ReadUncommitted"
         },
         {
           "$type": "SetTransactionIsolationLevelStatement",
+          "StartOffset": 573,
+          "FragmentLength": 47,
+          "StartLine": 17,
+          "StartColumn": 1,
           "Level": "RepeatableRead"
         },
         {
           "$type": "SetTransactionIsolationLevelStatement",
+          "StartOffset": 622,
+          "FragmentLength": 44,
+          "StartLine": 18,
+          "StartColumn": 1,
           "Level": "Serializable"
         },
         {
           "$type": "SetTextSizeStatement",
+          "StartOffset": 695,
+          "FragmentLength": 15,
+          "StartLine": 21,
+          "StartColumn": 1,
           "TextSize": {
             "$type": "IntegerLiteral",
+            "StartOffset": 708,
+            "FragmentLength": 2,
+            "StartLine": 21,
+            "StartColumn": 14,
             "LiteralType": "Integer",
             "Value": "10"
           }
         },
         {
           "$type": "SetTextSizeStatement",
+          "StartOffset": 711,
+          "FragmentLength": 14,
+          "StartLine": 22,
+          "StartColumn": 1,
           "TextSize": {
             "$type": "IntegerLiteral",
+            "StartOffset": 724,
+            "FragmentLength": 1,
+            "StartLine": 22,
+            "StartColumn": 14,
             "LiteralType": "Integer",
             "Value": "0"
           }
         },
         {
           "$type": "SetTextSizeStatement",
+          "StartOffset": 726,
+          "FragmentLength": 17,
+          "StartLine": 23,
+          "StartColumn": 1,
           "TextSize": {
             "$type": "UnaryExpression",
+            "StartOffset": 739,
+            "FragmentLength": 4,
+            "StartLine": 23,
+            "StartColumn": 14,
             "UnaryExpressionType": "Negative",
             "Expression": {
               "$type": "IntegerLiteral",
+              "StartOffset": 740,
+              "FragmentLength": 3,
+              "StartLine": 23,
+              "StartColumn": 15,
               "LiteralType": "Integer",
               "Value": "100"
             }
@@ -229,20 +433,40 @@
         },
         {
           "$type": "SetIdentityInsertStatement",
+          "StartOffset": 768,
+          "FragmentLength": 32,
+          "StartLine": 26,
+          "StartColumn": 1,
           "Table": {
             "$type": "SchemaObjectName",
+            "StartOffset": 788,
+            "FragmentLength": 9,
+            "StartLine": 26,
+            "StartColumn": 21,
             "DatabaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 788,
+              "FragmentLength": 2,
+              "StartLine": 26,
+              "StartColumn": 21,
               "Value": "d1",
               "QuoteType": "NotQuoted"
             },
             "SchemaIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 791,
+              "FragmentLength": 3,
+              "StartLine": 26,
+              "StartColumn": 24,
               "Value": "dbo",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 795,
+              "FragmentLength": 2,
+              "StartLine": 26,
+              "StartColumn": 28,
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -263,10 +487,22 @@
         },
         {
           "$type": "SetIdentityInsertStatement",
+          "StartOffset": 801,
+          "FragmentLength": 26,
+          "StartLine": 27,
+          "StartColumn": 1,
           "Table": {
             "$type": "SchemaObjectName",
+            "StartOffset": 821,
+            "FragmentLength": 2,
+            "StartLine": 27,
+            "StartColumn": 21,
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 821,
+              "FragmentLength": 2,
+              "StartLine": 27,
+              "StartColumn": 21,
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -281,8 +517,16 @@
         },
         {
           "$type": "SetErrorLevelStatement",
+          "StartOffset": 843,
+          "FragmentLength": 15,
+          "StartLine": 30,
+          "StartColumn": 1,
           "Level": {
             "$type": "IntegerLiteral",
+            "StartOffset": 854,
+            "FragmentLength": 4,
+            "StartLine": 30,
+            "StartColumn": 12,
             "LiteralType": "Integer",
             "Value": "1000"
           }

@@ -2,6 +2,7 @@ package ast
 
 // DeclareVariableStatement represents a DECLARE statement.
 type DeclareVariableStatement struct {
+	Fragment
 	Declarations []*DeclareVariableElement `json:"Declarations,omitempty"`
 }
 
@@ -10,6 +11,7 @@ func (d *DeclareVariableStatement) statement() {}
 
 // DeclareVariableElement represents a single variable declaration.
 type DeclareVariableElement struct {
+	Fragment
 	VariableName *Identifier                   `json:"VariableName,omitempty"`
 	DataType     *SqlDataTypeReference         `json:"DataType,omitempty"`
 	Value        ScalarExpression              `json:"Value,omitempty"`
@@ -18,6 +20,7 @@ type DeclareVariableElement struct {
 
 // DeclareTableVariableStatement represents a DECLARE @var TABLE statement.
 type DeclareTableVariableStatement struct {
+	Fragment
 	Body *DeclareTableVariableBody `json:"Body,omitempty"`
 }
 
@@ -26,6 +29,7 @@ func (d *DeclareTableVariableStatement) statement() {}
 
 // DeclareTableVariableBody represents the body of a table variable declaration.
 type DeclareTableVariableBody struct {
+	Fragment
 	VariableName *Identifier      `json:"VariableName,omitempty"`
 	AsDefined    bool             `json:"AsDefined,omitempty"`
 	Definition   *TableDefinition `json:"Definition,omitempty"`
@@ -35,6 +39,7 @@ func (d *DeclareTableVariableBody) node() {}
 
 // SqlDataTypeReference represents a SQL data type.
 type SqlDataTypeReference struct {
+	Fragment
 	SqlDataTypeOption string            `json:"SqlDataTypeOption,omitempty"`
 	Parameters        []ScalarExpression `json:"Parameters,omitempty"`
 	Name              *SchemaObjectName `json:"Name,omitempty"`
@@ -45,6 +50,7 @@ func (s *SqlDataTypeReference) dataTypeReference() {}
 
 // XmlDataTypeReference represents an XML data type with optional schema collection
 type XmlDataTypeReference struct {
+	Fragment
 	XmlDataTypeOption   string            `json:"XmlDataTypeOption,omitempty"`
 	XmlSchemaCollection *SchemaObjectName `json:"XmlSchemaCollection,omitempty"`
 	Name                *SchemaObjectName `json:"Name,omitempty"`
@@ -55,6 +61,7 @@ func (x *XmlDataTypeReference) dataTypeReference() {}
 
 // UserDataTypeReference represents a user-defined data type reference.
 type UserDataTypeReference struct {
+	Fragment
 	Name       *SchemaObjectName `json:"Name,omitempty"`
 	Parameters []ScalarExpression `json:"Parameters,omitempty"`
 }

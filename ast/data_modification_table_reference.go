@@ -3,6 +3,7 @@ package ast
 // DataModificationTableReference represents a DML statement used as a table source in FROM clause
 // This allows using INSERT/UPDATE/DELETE/MERGE with OUTPUT clause as table sources
 type DataModificationTableReference struct {
+	Fragment
 	DataModificationSpecification DataModificationSpecification
 	Alias                         *Identifier
 	Columns                       []*Identifier

@@ -2,6 +2,7 @@ package ast
 
 // BackupDatabaseStatement represents a BACKUP DATABASE statement
 type BackupDatabaseStatement struct {
+	Fragment
 	Files          []*BackupRestoreFileInfo
 	DatabaseName   *IdentifierOrValueExpression
 	MirrorToClauses []*MirrorToClause
@@ -11,6 +12,7 @@ type BackupDatabaseStatement struct {
 
 // MirrorToClause represents a MIRROR TO clause in a BACKUP statement
 type MirrorToClause struct {
+	Fragment
 	Devices []*DeviceInfo
 }
 
@@ -20,6 +22,7 @@ func (s *BackupDatabaseStatement) node()          {}
 
 // BackupTransactionLogStatement represents a BACKUP LOG statement
 type BackupTransactionLogStatement struct {
+	Fragment
 	DatabaseName *IdentifierOrValueExpression
 	Devices      []*DeviceInfo
 	Options      []BackupOptionBase
@@ -36,6 +39,7 @@ type BackupOptionBase interface {
 
 // BackupOption represents a backup option
 type BackupOption struct {
+	Fragment
 	OptionKind string // Compression, NoCompression, StopOnError, ContinueAfterError, etc.
 	Value      ScalarExpression
 }
@@ -44,6 +48,7 @@ func (o *BackupOption) backupOption() {}
 
 // BackupEncryptionOption represents an ENCRYPTION(...) backup option
 type BackupEncryptionOption struct {
+	Fragment
 	Algorithm  string           // Aes128, Aes192, Aes256, TripleDes3Key
 	Encryptor  *CryptoMechanism
 	OptionKind string           // typically "None"
@@ -55,6 +60,7 @@ func (o *BackupEncryptionOption) backupOption() {}
 
 // BackupCertificateStatement represents a BACKUP CERTIFICATE statement
 type BackupCertificateStatement struct {
+	Fragment
 	Name                  *Identifier
 	File                  ScalarExpression
 	PrivateKeyPath        ScalarExpression
@@ -68,6 +74,7 @@ func (s *BackupCertificateStatement) node()      {}
 
 // BackupServiceMasterKeyStatement represents a BACKUP SERVICE MASTER KEY statement
 type BackupServiceMasterKeyStatement struct {
+	Fragment
 	File     ScalarExpression
 	Password ScalarExpression
 }
@@ -77,6 +84,7 @@ func (s *BackupServiceMasterKeyStatement) node()      {}
 
 // BackupMasterKeyStatement represents a BACKUP MASTER KEY statement
 type BackupMasterKeyStatement struct {
+	Fragment
 	File     ScalarExpression
 	Password ScalarExpression
 }
@@ -86,6 +94,7 @@ func (s *BackupMasterKeyStatement) node()      {}
 
 // RestoreServiceMasterKeyStatement represents a RESTORE SERVICE MASTER KEY statement
 type RestoreServiceMasterKeyStatement struct {
+	Fragment
 	File     ScalarExpression
 	Password ScalarExpression
 	IsForce  bool
@@ -96,6 +105,7 @@ func (s *RestoreServiceMasterKeyStatement) node()      {}
 
 // RestoreMasterKeyStatement represents a RESTORE MASTER KEY statement
 type RestoreMasterKeyStatement struct {
+	Fragment
 	File               ScalarExpression
 	Password           ScalarExpression
 	EncryptionPassword ScalarExpression

@@ -2,6 +2,7 @@ package ast
 
 // SchemaObjectName represents a schema object name.
 type SchemaObjectName struct {
+	Fragment
 	ServerIdentifier   *Identifier   `json:"ServerIdentifier,omitempty"`
 	DatabaseIdentifier *Identifier   `json:"DatabaseIdentifier,omitempty"`
 	SchemaIdentifier   *Identifier   `json:"SchemaIdentifier,omitempty"`

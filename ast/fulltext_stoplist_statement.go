@@ -2,6 +2,7 @@ package ast
 
 // CreateFullTextStopListStatement represents CREATE FULLTEXT STOPLIST statement
 type CreateFullTextStopListStatement struct {
+	Fragment
 	Name               *Identifier `json:"Name,omitempty"`
 	IsSystemStopList   bool        `json:"IsSystemStopList"`
 	DatabaseName       *Identifier `json:"DatabaseName,omitempty"`
@@ -14,6 +15,7 @@ func (s *CreateFullTextStopListStatement) statement() {}
 
 // AlterFullTextStopListStatement represents ALTER FULLTEXT STOPLIST statement
 type AlterFullTextStopListStatement struct {
+	Fragment
 	Name   *Identifier           `json:"Name,omitempty"`
 	Action *FullTextStopListAction `json:"Action,omitempty"`
 }
@@ -23,6 +25,7 @@ func (s *AlterFullTextStopListStatement) statement() {}
 
 // FullTextStopListAction represents an action in ALTER FULLTEXT STOPLIST
 type FullTextStopListAction struct {
+	Fragment
 	IsAdd        bool                         `json:"IsAdd"`
 	IsAll        bool                         `json:"IsAll"`
 	StopWord     *StringLiteral               `json:"StopWord,omitempty"`
@@ -33,6 +36,7 @@ func (a *FullTextStopListAction) node() {}
 
 // DropFullTextStopListStatement represents DROP FULLTEXT STOPLIST statement
 type DropFullTextStopListStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -42,6 +46,7 @@ func (s *DropFullTextStopListStatement) statement() {}
 
 // DropFullTextCatalogStatement represents DROP FULLTEXT CATALOG statement
 type DropFullTextCatalogStatement struct {
+	Fragment
 	Name       *Identifier `json:"Name,omitempty"`
 	IsIfExists bool        `json:"IsIfExists"`
 }
@@ -51,6 +56,7 @@ func (s *DropFullTextCatalogStatement) statement() {}
 
 // DropFulltextIndexStatement represents DROP FULLTEXT INDEX statement
 type DropFulltextIndexStatement struct {
+	Fragment
 	TableName *SchemaObjectName `json:"TableName,omitempty"`
 }
 

@@ -10,6 +10,7 @@ type BooleanExpression interface {
 // encounter a scalar expression in a boolean context without a comparison operator.
 // This allows the caller to detect and handle cases like (XACT_STATE()) = -1.
 type BooleanScalarPlaceholder struct {
+	Fragment
 	Scalar ScalarExpression
 }
 

@@ -1,28 +1,60 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 136,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 54,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "WaitForStatement",
+          "StartOffset": 0,
+          "FragmentLength": 54,
+          "StartLine": 1,
+          "StartColumn": 1,
           "WaitForOption": "Statement",
           "Timeout": {
             "$type": "IntegerLiteral",
+            "StartOffset": 48,
+            "FragmentLength": 5,
+            "StartLine": 1,
+            "StartColumn": 49,
             "LiteralType": "Integer",
             "Value": "60000"
           },
           "Statement": {
             "$type": "ReceiveStatement",
+            "StartOffset": 9,
+            "FragmentLength": 27,
+            "StartLine": 1,
+            "StartColumn": 10,
             "SelectElements": [
               {
-                "$type": "SelectStarExpression"
+                "$type": "SelectStarExpression",
+                "StartOffset": 17,
+                "FragmentLength": 1,
+                "StartLine": 1,
+                "StartColumn": 18
               }
             ],
             "Queue": {
               "$type": "SchemaObjectName",
+              "StartOffset": 24,
+              "FragmentLength": 12,
+              "StartLine": 1,
+              "StartColumn": 25,
               "BaseIdentifier": {
                 "$type": "Identifier",
+                "StartOffset": 24,
+                "FragmentLength": 12,
+                "StartLine": 1,
+                "StartColumn": 25,
                 "Value": "ExpenseQueue",
                 "QuoteType": "NotQuoted"
               },
@@ -40,20 +72,44 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 60,
+      "FragmentLength": 74,
+      "StartLine": 5,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "WaitForStatement",
+          "StartOffset": 60,
+          "FragmentLength": 74,
+          "StartLine": 5,
+          "StartColumn": 1,
           "WaitForOption": "Statement",
           "Statement": {
             "$type": "GetConversationGroupStatement",
+            "StartOffset": 69,
+            "FragmentLength": 63,
+            "StartLine": 5,
+            "StartColumn": 10,
             "GroupId": {
               "$type": "VariableReference",
+              "StartOffset": 92,
+              "FragmentLength": 22,
+              "StartLine": 5,
+              "StartColumn": 33,
               "Name": "@conversation_group_id"
             },
             "Queue": {
               "$type": "SchemaObjectName",
+              "StartOffset": 120,
+              "FragmentLength": 12,
+              "StartLine": 5,
+              "StartColumn": 61,
               "BaseIdentifier": {
                 "$type": "Identifier",
+                "StartOffset": 120,
+                "FragmentLength": 12,
+                "StartLine": 5,
+                "StartColumn": 61,
                 "Value": "ExpenseQueue",
                 "QuoteType": "NotQuoted"
               },

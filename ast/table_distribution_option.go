@@ -7,6 +7,7 @@ type TableDistributionPolicy interface {
 
 // TableDistributionOption represents DISTRIBUTION option for tables
 type TableDistributionOption struct {
+	Fragment
 	Value      TableDistributionPolicy
 	OptionKind string // "Distribution"
 }
@@ -16,6 +17,7 @@ func (t *TableDistributionOption) tableOption() {}
 
 // TableHashDistributionPolicy represents HASH distribution for tables
 type TableHashDistributionPolicy struct {
+	Fragment
 	DistributionColumn  *Identifier
 	DistributionColumns []*Identifier
 }
@@ -38,6 +40,7 @@ func (t *TableReplicateDistributionPolicy) tableDistributionPolicy() {}
 // TablePartitionOption represents PARTITION option for Azure Synapse tables
 // PARTITION(column RANGE [LEFT|RIGHT] FOR VALUES (v1, v2, ...))
 type TablePartitionOption struct {
+	Fragment
 	PartitionColumn     *Identifier
 	PartitionOptionSpecs *TablePartitionOptionSpecifications
 	OptionKind          string // "Partition"
@@ -48,6 +51,7 @@ func (t *TablePartitionOption) tableOption() {}
 
 // TablePartitionOptionSpecifications represents the partition specifications
 type TablePartitionOptionSpecifications struct {
+	Fragment
 	Range          string            // "Left", "Right", "NotSpecified"
 	BoundaryValues []ScalarExpression // the values in the FOR VALUES clause
 }

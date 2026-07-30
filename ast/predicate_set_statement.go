@@ -3,6 +3,7 @@ package ast
 // PredicateSetStatement represents a SET statement like SET ANSI_NULLS ON
 // Options can contain multiple comma-separated values like "ConcatNullYieldsNull, CursorCloseOnCommit"
 type PredicateSetStatement struct {
+	Fragment
 	Options string
 	IsOn    bool
 }

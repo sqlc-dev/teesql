@@ -2,6 +2,7 @@ package ast
 
 // GlobalVariableExpression represents a global variable like @@IDENTITY, @@ERROR, etc.
 type GlobalVariableExpression struct {
+	Fragment
 	Name string
 }
 
