@@ -4329,11 +4329,14 @@ func (p *Parser) parseAuditTargetOption() (ast.AuditTargetOption, error) {
 		// Check for UNLIMITED
 		if strings.ToUpper(p.curTok.Literal) == "UNLIMITED" {
 			p.nextToken()
-			return spanned(p, &ast.MaxSizeAuditTargetOption{
+			opt := &ast.MaxSizeAuditTargetOption{
 				OptionKind:  "MaxSize",
 				IsUnlimited: true,
 				Unit:        "Unspecified",
-			}, astStart), nil
+			}
+			// ScriptDom spans MAXSIZE = UNLIMITED on the keyword alone.
+			p.tokSpan(opt, astStart)
+			return opt, nil
 		}
 		// Parse size value
 		size, err := p.parseScalarExpression()

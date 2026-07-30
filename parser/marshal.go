@@ -12646,6 +12646,8 @@ parseWithClause:
 		p.nextToken()
 
 		for {
+			restoreOptTok := p.curTok
+			nOptsBefore := len(stmt.Options)
 			optionName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken()
 
@@ -12861,6 +12863,18 @@ parseWithClause:
 					opt.OptionValue = expr
 				}
 				stmt.Options = append(stmt.Options, opt)
+			}
+
+			for _, o := range stmt.Options[nOptsBefore:] {
+				switch o.(type) {
+				case *ast.StopRestoreOption, *ast.MoveRestoreOption, *ast.ScalarExpressionRestoreOption:
+					// ScriptDom spans these options over their value
+					// expressions only (derived from children).
+					continue
+				}
+				if s, ok := any(o).(spannable); ok && !s.Frag().HasSpan() {
+					p.spanFrom(restoreOptTok, s)
+				}
 			}
 
 			if p.curTok.Type == TokenComma {

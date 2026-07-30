@@ -10413,10 +10413,10 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 		return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "ResumePopulation"}, astStart)
 	case "ADD":
 		action, _ := p.parseAddAlterFullTextIndexAction()
-		return spanned(p, action, astStart)
+		return action
 	case "DROP":
 		action, _ := p.parseDropAlterFullTextIndexAction()
-		return spanned(p, action, astStart)
+		return action
 	case "ALTER":
 		action, _ := p.parseAlterColumnAlterFullTextIndexAction()
 		return spanned(p, action, astStart)
@@ -10436,6 +10436,7 @@ func (p *Parser) parseAlterColumnAlterFullTextIndexAction() (*ast.AlterColumnAlt
 	}
 	p.nextToken() // consume COLUMN
 
+	colNameTok := p.curTok
 	action := &ast.AlterColumnAlterFullTextIndexAction{
 		Column: &ast.FullTextIndexColumn{
 			Name: p.parseIdentifier(),
@@ -10456,6 +10457,8 @@ func (p *Parser) parseAlterColumnAlterFullTextIndexAction() (*ast.AlterColumnAlt
 			action.Column.StatisticalSemantics = false
 		}
 	}
+	// The column spans the name and ADD/DROP STATISTICAL_SEMANTICS suffix.
+	p.spanFrom(colNameTok, action.Column)
 
 	// Check for WITH NO POPULATION
 	if p.curTok.Type == TokenWith {
@@ -10482,8 +10485,11 @@ func (p *Parser) parseAddAlterFullTextIndexAction() (*ast.AddAlterFullTextIndexA
 	// Parse (column list)
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
+		// ScriptDom spans the action from the first column.
+		astStart = p.curTok
 
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			ftColTok := p.curTok
 			col := &ast.FullTextIndexColumn{}
 			col.Name = p.parseIdentifier()
 
@@ -10502,7 +10508,8 @@ func (p *Parser) parseAddAlterFullTextIndexAction() (*ast.AddAlterFullTextIndexA
 				col.LanguageTerm = &ast.IdentifierOrValueExpression{}
 				if p.curTok.Type == TokenNumber {
 					col.LanguageTerm.Value = p.curTok.Literal
-					col.LanguageTerm.ValueExpression = &ast.IntegerLiteral{Value: p.curTok.Literal, LiteralType: "Integer"}
+					col.LanguageTerm.ValueExpression = p.intLitFromToken(p.curTok)
+					p.tokSpan(col.LanguageTerm, p.curTok)
 					p.nextToken()
 				} else if p.curTok.Type == TokenString {
 					// Strip quotes from string literal
@@ -10512,9 +10519,13 @@ func (p *Parser) parseAddAlterFullTextIndexAction() (*ast.AddAlterFullTextIndexA
 					}
 					col.LanguageTerm.Value = val
 					col.LanguageTerm.ValueExpression = p.strLit(val, false)
+					p.tokSpan(col.LanguageTerm, p.curTok)
 					p.nextToken()
 				}
 			}
+
+			// The column's span excludes any STATISTICAL_SEMANTICS suffix.
+			p.spanFrom(ftColTok, col)
 
 			// Check for STATISTICAL_SEMANTICS
 			if strings.ToUpper(p.curTok.Literal) == "STATISTICAL_SEMANTICS" {
@@ -10561,6 +10572,8 @@ func (p *Parser) parseDropAlterFullTextIndexAction() (*ast.DropAlterFullTextInde
 	// Parse (column list)
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
+		// ScriptDom spans the action from the first column.
+		astStart = p.curTok
 
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			action.Columns = append(action.Columns, p.parseIdentifier())
