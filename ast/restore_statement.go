@@ -40,7 +40,7 @@ func (o *FileStreamRestoreOption) restoreOptionNode() {}
 type FileStreamDatabaseOption struct {
 	Fragment
 	OptionKind          string
-	NonTransactedAccess string           // "Off", "ReadOnly", "Full", or "" if not specified
+	NonTransactedAccess string // "Off", "ReadOnly", "Full", or "" if not specified
 	DirectoryName       ScalarExpression
 }
 

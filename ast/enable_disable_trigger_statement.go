@@ -3,8 +3,8 @@ package ast
 // EnableDisableTriggerStatement represents ENABLE/DISABLE TRIGGER statements
 type EnableDisableTriggerStatement struct {
 	Fragment
-	TriggerEnforcement string            // "Enable" or "Disable"
-	All                bool              // true if ENABLE/DISABLE TRIGGER ALL
+	TriggerEnforcement string // "Enable" or "Disable"
+	All                bool   // true if ENABLE/DISABLE TRIGGER ALL
 	TriggerNames       []*SchemaObjectName
 	TriggerObject      *TriggerObject
 }

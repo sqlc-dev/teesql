@@ -33,8 +33,8 @@ func (*DropResourcePoolStatement) statement() {}
 // ResourcePoolParameter represents a parameter in a resource pool statement
 type ResourcePoolParameter struct {
 	Fragment
-	ParameterType         string                            `json:"ParameterType,omitempty"` // MinCpuPercent, MaxCpuPercent, CapCpuPercent, MinMemoryPercent, MaxMemoryPercent, MinIoPercent, MaxIoPercent, CapIoPercent, Affinity, etc.
-	ParameterValue        ScalarExpression                  `json:"ParameterValue,omitempty"`
+	ParameterType         string                             `json:"ParameterType,omitempty"` // MinCpuPercent, MaxCpuPercent, CapCpuPercent, MinMemoryPercent, MaxMemoryPercent, MinIoPercent, MaxIoPercent, CapIoPercent, Affinity, etc.
+	ParameterValue        ScalarExpression                   `json:"ParameterValue,omitempty"`
 	AffinitySpecification *ResourcePoolAffinitySpecification `json:"AffinitySpecification,omitempty"`
 }
 
@@ -76,8 +76,8 @@ func (*AlterExternalResourcePoolStatement) statement() {}
 // ExternalResourcePoolParameter represents a parameter in an external resource pool statement
 type ExternalResourcePoolParameter struct {
 	Fragment
-	ParameterType         string                                    `json:"ParameterType,omitempty"` // MaxCpuPercent, MaxMemoryPercent, MaxProcesses, Affinity
-	ParameterValue        ScalarExpression                          `json:"ParameterValue,omitempty"`
+	ParameterType         string                                     `json:"ParameterType,omitempty"` // MaxCpuPercent, MaxMemoryPercent, MaxProcesses, Affinity
+	ParameterValue        ScalarExpression                           `json:"ParameterValue,omitempty"`
 	AffinitySpecification *ExternalResourcePoolAffinitySpecification `json:"AffinitySpecification,omitempty"`
 }
 

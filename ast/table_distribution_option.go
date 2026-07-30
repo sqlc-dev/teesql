@@ -41,9 +41,9 @@ func (t *TableReplicateDistributionPolicy) tableDistributionPolicy() {}
 // PARTITION(column RANGE [LEFT|RIGHT] FOR VALUES (v1, v2, ...))
 type TablePartitionOption struct {
 	Fragment
-	PartitionColumn     *Identifier
+	PartitionColumn      *Identifier
 	PartitionOptionSpecs *TablePartitionOptionSpecifications
-	OptionKind          string // "Partition"
+	OptionKind           string // "Partition"
 }
 
 func (t *TablePartitionOption) node()        {}
@@ -52,7 +52,7 @@ func (t *TablePartitionOption) tableOption() {}
 // TablePartitionOptionSpecifications represents the partition specifications
 type TablePartitionOptionSpecifications struct {
 	Fragment
-	Range          string            // "Left", "Right", "NotSpecified"
+	Range          string             // "Left", "Right", "NotSpecified"
 	BoundaryValues []ScalarExpression // the values in the FOR VALUES clause
 }
 

@@ -3,13 +3,13 @@ package ast
 // BeginDialogStatement represents a BEGIN DIALOG statement for SQL Server Service Broker.
 type BeginDialogStatement struct {
 	Fragment
-	IsConversation       bool                        `json:"IsConversation,omitempty"`
-	Handle               ScalarExpression            `json:"Handle,omitempty"`
+	IsConversation       bool                         `json:"IsConversation,omitempty"`
+	Handle               ScalarExpression             `json:"Handle,omitempty"`
 	InitiatorServiceName *IdentifierOrValueExpression `json:"InitiatorServiceName,omitempty"`
-	TargetServiceName    ScalarExpression            `json:"TargetServiceName,omitempty"`
+	TargetServiceName    ScalarExpression             `json:"TargetServiceName,omitempty"`
 	ContractName         *IdentifierOrValueExpression `json:"ContractName,omitempty"`
-	InstanceSpec         ScalarExpression            `json:"InstanceSpec,omitempty"`
-	Options              []DialogOption              `json:"Options,omitempty"`
+	InstanceSpec         ScalarExpression             `json:"InstanceSpec,omitempty"`
+	Options              []DialogOption               `json:"Options,omitempty"`
 }
 
 func (s *BeginDialogStatement) node()      {}

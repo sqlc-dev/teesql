@@ -36,8 +36,8 @@ type CreateSelectiveXmlIndexStatement struct {
 	OnName            *SchemaObjectName
 	XmlColumn         *Identifier
 	IsSecondary       bool
-	UsingXmlIndexName *Identifier     // For secondary indexes
-	PathName          *Identifier     // For secondary indexes
+	UsingXmlIndexName *Identifier // For secondary indexes
+	PathName          *Identifier // For secondary indexes
 	PromotedPaths     []*SelectiveXmlIndexPromotedPath
 	XmlNamespaces     *XmlNamespaces
 	IndexOptions      []IndexOption

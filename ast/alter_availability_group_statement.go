@@ -3,12 +3,12 @@ package ast
 // AlterAvailabilityGroupStatement represents ALTER AVAILABILITY GROUP statement
 type AlterAvailabilityGroupStatement struct {
 	Fragment
-	Name              *Identifier
-	StatementType     string // "Action", "AddDatabase", "RemoveDatabase", "AddReplica", "ModifyReplica", "RemoveReplica", "Set"
-	Action            AvailabilityGroupAction
-	Databases         []*Identifier
-	Replicas          []*AvailabilityReplica
-	Options           []AvailabilityGroupOption
+	Name          *Identifier
+	StatementType string // "Action", "AddDatabase", "RemoveDatabase", "AddReplica", "ModifyReplica", "RemoveReplica", "Set"
+	Action        AvailabilityGroupAction
+	Databases     []*Identifier
+	Replicas      []*AvailabilityReplica
+	Options       []AvailabilityGroupOption
 }
 
 func (s *AlterAvailabilityGroupStatement) node()      {}

@@ -3,10 +3,10 @@ package ast
 // OpenRowsetCosmos represents an OPENROWSET with PROVIDER = ..., CONNECTION = ..., OBJECT = ... syntax.
 type OpenRowsetCosmos struct {
 	Fragment
-	Options     []OpenRowsetCosmosOption     `json:"Options,omitempty"`
+	Options     []OpenRowsetCosmosOption      `json:"Options,omitempty"`
 	WithColumns []*OpenRowsetColumnDefinition `json:"WithColumns,omitempty"`
-	Alias       *Identifier                  `json:"Alias,omitempty"`
-	ForPath     bool                         `json:"ForPath"`
+	Alias       *Identifier                   `json:"Alias,omitempty"`
+	ForPath     bool                          `json:"ForPath"`
 }
 
 func (o *OpenRowsetCosmos) node()           {}

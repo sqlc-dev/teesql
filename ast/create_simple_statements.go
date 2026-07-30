@@ -249,10 +249,10 @@ func (s *CreateEndpointStatement) statement() {}
 // CreateAssemblyStatement represents a CREATE ASSEMBLY statement.
 type CreateAssemblyStatement struct {
 	Fragment
-	Name       *Identifier           `json:"Name,omitempty"`
-	Owner      *Identifier           `json:"Owner,omitempty"`
-	Parameters []ScalarExpression    `json:"Parameters,omitempty"`
-	Options    []AssemblyOptionBase  `json:"Options,omitempty"`
+	Name       *Identifier          `json:"Name,omitempty"`
+	Owner      *Identifier          `json:"Owner,omitempty"`
+	Parameters []ScalarExpression   `json:"Parameters,omitempty"`
+	Options    []AssemblyOptionBase `json:"Options,omitempty"`
 }
 
 func (s *CreateAssemblyStatement) node()      {}
@@ -261,14 +261,14 @@ func (s *CreateAssemblyStatement) statement() {}
 // CreateCertificateStatement represents a CREATE CERTIFICATE statement.
 type CreateCertificateStatement struct {
 	Fragment
-	Name               *Identifier         `json:"Name,omitempty"`
-	Owner              *Identifier         `json:"Owner,omitempty"`
-	CertificateSource  EncryptionSource    `json:"CertificateSource,omitempty"`
-	ActiveForBeginDialog string            `json:"ActiveForBeginDialog,omitempty"` // "On", "Off", "NotSet"
-	PrivateKeyPath     *StringLiteral      `json:"PrivateKeyPath,omitempty"`
-	EncryptionPassword *StringLiteral      `json:"EncryptionPassword,omitempty"`
-	DecryptionPassword *StringLiteral      `json:"DecryptionPassword,omitempty"`
-	CertificateOptions []*CertificateOption `json:"CertificateOptions,omitempty"`
+	Name                 *Identifier          `json:"Name,omitempty"`
+	Owner                *Identifier          `json:"Owner,omitempty"`
+	CertificateSource    EncryptionSource     `json:"CertificateSource,omitempty"`
+	ActiveForBeginDialog string               `json:"ActiveForBeginDialog,omitempty"` // "On", "Off", "NotSet"
+	PrivateKeyPath       *StringLiteral       `json:"PrivateKeyPath,omitempty"`
+	EncryptionPassword   *StringLiteral       `json:"EncryptionPassword,omitempty"`
+	DecryptionPassword   *StringLiteral       `json:"DecryptionPassword,omitempty"`
+	CertificateOptions   []*CertificateOption `json:"CertificateOptions,omitempty"`
 }
 
 func (s *CreateCertificateStatement) node()      {}
@@ -305,11 +305,11 @@ func (s *FileEncryptionSource) encryptionSource() {}
 // CreateAsymmetricKeyStatement represents a CREATE ASYMMETRIC KEY statement.
 type CreateAsymmetricKeyStatement struct {
 	Fragment
-	Name                *Identifier            `json:"Name,omitempty"`
-	KeySource           EncryptionSource       `json:"KeySource,omitempty"`
-	EncryptionAlgorithm string                 `json:"EncryptionAlgorithm,omitempty"`
-	Owner               *Identifier            `json:"Owner,omitempty"`
-	Password            ScalarExpression       `json:"Password,omitempty"`
+	Name                *Identifier      `json:"Name,omitempty"`
+	KeySource           EncryptionSource `json:"KeySource,omitempty"`
+	EncryptionAlgorithm string           `json:"EncryptionAlgorithm,omitempty"`
+	Owner               *Identifier      `json:"Owner,omitempty"`
+	Password            ScalarExpression `json:"Password,omitempty"`
 }
 
 func (s *CreateAsymmetricKeyStatement) node()      {}
@@ -457,7 +457,7 @@ func (s *CreateApplicationRoleStatement) statement() {}
 // ApplicationRoleOption represents an option in CREATE/ALTER APPLICATION ROLE
 type ApplicationRoleOption struct {
 	Fragment
-	OptionKind string                      `json:"OptionKind,omitempty"`
+	OptionKind string                       `json:"OptionKind,omitempty"`
 	Value      *IdentifierOrValueExpression `json:"Value,omitempty"`
 }
 
@@ -497,10 +497,10 @@ func (p *PartitionParameterType) node() {}
 // CreatePartitionFunctionStatement represents a CREATE PARTITION FUNCTION statement.
 type CreatePartitionFunctionStatement struct {
 	Fragment
-	Name           *Identifier              `json:"Name,omitempty"`
-	ParameterType  *PartitionParameterType  `json:"ParameterType,omitempty"`
-	Range          string                   `json:"Range,omitempty"` // "Left" or "Right"
-	BoundaryValues []ScalarExpression       `json:"BoundaryValues,omitempty"`
+	Name           *Identifier             `json:"Name,omitempty"`
+	ParameterType  *PartitionParameterType `json:"ParameterType,omitempty"`
+	Range          string                  `json:"Range,omitempty"` // "Left" or "Right"
+	BoundaryValues []ScalarExpression      `json:"BoundaryValues,omitempty"`
 }
 
 func (s *CreatePartitionFunctionStatement) node()      {}
@@ -509,17 +509,17 @@ func (s *CreatePartitionFunctionStatement) statement() {}
 // CreateIndexStatement represents a CREATE INDEX statement.
 type CreateIndexStatement struct {
 	Fragment
-	Name                         *Identifier                   `json:"Name,omitempty"`
-	OnName                       *SchemaObjectName             `json:"OnName,omitempty"`
-	Translated80SyntaxTo90       bool                          `json:"Translated80SyntaxTo90,omitempty"`
-	Unique                       bool                          `json:"Unique,omitempty"`
-	Clustered                    *bool                         `json:"Clustered,omitempty"` // nil = not specified, true = CLUSTERED, false = NONCLUSTERED
-	Columns                      []*ColumnWithSortOrder        `json:"Columns,omitempty"`
-	IncludeColumns               []*ColumnReferenceExpression  `json:"IncludeColumns,omitempty"`
-	FilterPredicate              BooleanExpression             `json:"FilterPredicate,omitempty"`
-	IndexOptions                 []IndexOption                 `json:"IndexOptions,omitempty"`
-	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme   `json:"OnFileGroupOrPartitionScheme,omitempty"`
-	FileStreamOn                 *IdentifierOrValueExpression  `json:"FileStreamOn,omitempty"`
+	Name                         *Identifier                  `json:"Name,omitempty"`
+	OnName                       *SchemaObjectName            `json:"OnName,omitempty"`
+	Translated80SyntaxTo90       bool                         `json:"Translated80SyntaxTo90,omitempty"`
+	Unique                       bool                         `json:"Unique,omitempty"`
+	Clustered                    *bool                        `json:"Clustered,omitempty"` // nil = not specified, true = CLUSTERED, false = NONCLUSTERED
+	Columns                      []*ColumnWithSortOrder       `json:"Columns,omitempty"`
+	IncludeColumns               []*ColumnReferenceExpression `json:"IncludeColumns,omitempty"`
+	FilterPredicate              BooleanExpression            `json:"FilterPredicate,omitempty"`
+	IndexOptions                 []IndexOption                `json:"IndexOptions,omitempty"`
+	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme  `json:"OnFileGroupOrPartitionScheme,omitempty"`
+	FileStreamOn                 *IdentifierOrValueExpression `json:"FileStreamOn,omitempty"`
 }
 
 func (s *CreateIndexStatement) node()      {}
@@ -528,11 +528,11 @@ func (s *CreateIndexStatement) statement() {}
 // CreateStatisticsStatement represents a CREATE STATISTICS statement.
 type CreateStatisticsStatement struct {
 	Fragment
-	Name              *Identifier                   `json:"Name,omitempty"`
-	OnName            *SchemaObjectName             `json:"OnName,omitempty"`
-	Columns           []*ColumnReferenceExpression  `json:"Columns,omitempty"`
-	StatisticsOptions []StatisticsOption            `json:"StatisticsOptions,omitempty"`
-	FilterPredicate   BooleanExpression             `json:"FilterPredicate,omitempty"`
+	Name              *Identifier                  `json:"Name,omitempty"`
+	OnName            *SchemaObjectName            `json:"OnName,omitempty"`
+	Columns           []*ColumnReferenceExpression `json:"Columns,omitempty"`
+	StatisticsOptions []StatisticsOption           `json:"StatisticsOptions,omitempty"`
+	FilterPredicate   BooleanExpression            `json:"FilterPredicate,omitempty"`
 }
 
 func (s *CreateStatisticsStatement) node()      {}
@@ -582,13 +582,13 @@ func (s *CreateTypeTableStatement) statement() {}
 // CreateXmlIndexStatement represents a CREATE XML INDEX statement.
 type CreateXmlIndexStatement struct {
 	Fragment
-	Primary               bool          `json:"Primary,omitempty"`
-	XmlColumn             *Identifier   `json:"XmlColumn,omitempty"`
-	SecondaryXmlIndexName *Identifier   `json:"SecondaryXmlIndexName,omitempty"`
-	SecondaryXmlIndexType string        `json:"SecondaryXmlIndexType,omitempty"` // "NotSpecified", "Value", "Path", "Property"
-	Name                  *Identifier   `json:"Name,omitempty"`
+	Primary               bool              `json:"Primary,omitempty"`
+	XmlColumn             *Identifier       `json:"XmlColumn,omitempty"`
+	SecondaryXmlIndexName *Identifier       `json:"SecondaryXmlIndexName,omitempty"`
+	SecondaryXmlIndexType string            `json:"SecondaryXmlIndexType,omitempty"` // "NotSpecified", "Value", "Path", "Property"
+	Name                  *Identifier       `json:"Name,omitempty"`
 	OnName                *SchemaObjectName `json:"OnName,omitempty"`
-	IndexOptions          []IndexOption `json:"IndexOptions,omitempty"`
+	IndexOptions          []IndexOption     `json:"IndexOptions,omitempty"`
 }
 
 func (s *CreateXmlIndexStatement) node()      {}

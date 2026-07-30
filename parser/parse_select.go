@@ -1856,8 +1856,6 @@ func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
 
 // parseStringLiteralValue creates a StringLiteral from the current token without consuming it
 func (p *Parser) parseStringLiteralValue() *ast.StringLiteral {
-	astStart := p.curTok
-
 	raw := p.curTok.Literal
 
 	// Remove surrounding quotes and handle escaped quotes
@@ -1865,20 +1863,10 @@ func (p *Parser) parseStringLiteralValue() *ast.StringLiteral {
 		inner := raw[1 : len(raw)-1]
 		// Replace escaped quotes
 		value := strings.ReplaceAll(inner, "''", "'")
-		return spanned(p, &ast.StringLiteral{
-			LiteralType:   "String",
-			IsNational:    false,
-			IsLargeObject: false,
-			Value:         value,
-		}, astStart)
+		return p.strLit(value, false)
 	}
 
-	return spanned(p, &ast.StringLiteral{
-		LiteralType:   "String",
-		IsNational:    false,
-		IsLargeObject: false,
-		Value:         raw,
-	}, astStart)
+	return p.strLit(raw, false)
 }
 
 func (p *Parser) parseNationalStringLiteral() (*ast.StringLiteral, error) {

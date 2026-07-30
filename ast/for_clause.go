@@ -39,8 +39,8 @@ func (*XmlForClause) forClause() {}
 // XmlForClauseOption represents an option in a FOR XML clause.
 type XmlForClauseOption struct {
 	Fragment
-	OptionKind string           `json:"OptionKind,omitempty"`
-	Value      *StringLiteral   `json:"Value,omitempty"`
+	OptionKind string         `json:"OptionKind,omitempty"`
+	Value      *StringLiteral `json:"Value,omitempty"`
 }
 
 func (*XmlForClauseOption) node() {}

@@ -34,10 +34,10 @@ type SetClause interface {
 // AssignmentSetClause represents column = value in UPDATE.
 type AssignmentSetClause struct {
 	Fragment
-	Variable       *VariableReference        `json:"Variable,omitempty"`
+	Variable       *VariableReference         `json:"Variable,omitempty"`
 	Column         *ColumnReferenceExpression `json:"Column,omitempty"`
-	NewValue       ScalarExpression          `json:"NewValue,omitempty"`
-	AssignmentKind string                    `json:"AssignmentKind,omitempty"`
+	NewValue       ScalarExpression           `json:"NewValue,omitempty"`
+	AssignmentKind string                     `json:"AssignmentKind,omitempty"`
 }
 
 func (a *AssignmentSetClause) setClause() {}

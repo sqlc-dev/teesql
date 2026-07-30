@@ -3,11 +3,11 @@ package ast
 // BackupDatabaseStatement represents a BACKUP DATABASE statement
 type BackupDatabaseStatement struct {
 	Fragment
-	Files          []*BackupRestoreFileInfo
-	DatabaseName   *IdentifierOrValueExpression
+	Files           []*BackupRestoreFileInfo
+	DatabaseName    *IdentifierOrValueExpression
 	MirrorToClauses []*MirrorToClause
-	Devices        []*DeviceInfo
-	Options        []BackupOptionBase
+	Devices         []*DeviceInfo
+	Options         []BackupOptionBase
 }
 
 // MirrorToClause represents a MIRROR TO clause in a BACKUP statement
@@ -49,9 +49,9 @@ func (o *BackupOption) backupOption() {}
 // BackupEncryptionOption represents an ENCRYPTION(...) backup option
 type BackupEncryptionOption struct {
 	Fragment
-	Algorithm  string           // Aes128, Aes192, Aes256, TripleDes3Key
+	Algorithm  string // Aes128, Aes192, Aes256, TripleDes3Key
 	Encryptor  *CryptoMechanism
-	OptionKind string           // typically "None"
+	OptionKind string // typically "None"
 }
 
 func (o *BackupEncryptionOption) backupOption() {}
@@ -61,12 +61,12 @@ func (o *BackupEncryptionOption) backupOption() {}
 // BackupCertificateStatement represents a BACKUP CERTIFICATE statement
 type BackupCertificateStatement struct {
 	Fragment
-	Name                  *Identifier
-	File                  ScalarExpression
-	PrivateKeyPath        ScalarExpression
-	EncryptionPassword    ScalarExpression
-	DecryptionPassword    ScalarExpression
-	ActiveForBeginDialog  string // "NotSet", "Active", "Inactive"
+	Name                 *Identifier
+	File                 ScalarExpression
+	PrivateKeyPath       ScalarExpression
+	EncryptionPassword   ScalarExpression
+	DecryptionPassword   ScalarExpression
+	ActiveForBeginDialog string // "NotSet", "Active", "Inactive"
 }
 
 func (s *BackupCertificateStatement) statement() {}

@@ -13,8 +13,8 @@ type CreateTableStatement struct {
 	FileStreamOn                 *IdentifierOrValueExpression
 	Options                      []TableOption
 	FederationScheme             *FederationScheme
-	SelectStatement              *SelectStatement   // For CTAS: CREATE TABLE ... AS SELECT
-	CtasColumns                  []*Identifier      // For CTAS with column names: CREATE TABLE (col1, col2) WITH ... AS SELECT
+	SelectStatement              *SelectStatement // For CTAS: CREATE TABLE ... AS SELECT
+	CtasColumns                  []*Identifier    // For CTAS with column names: CREATE TABLE (col1, col2) WITH ... AS SELECT
 }
 
 // FederationScheme represents a FEDERATED ON clause
@@ -184,8 +184,8 @@ type CheckConstraintDefinition struct {
 	NotForReplication    bool
 }
 
-func (c *CheckConstraintDefinition) node()              {}
-func (c *CheckConstraintDefinition) tableConstraint()   {}
+func (c *CheckConstraintDefinition) node()                 {}
+func (c *CheckConstraintDefinition) tableConstraint()      {}
 func (c *CheckConstraintDefinition) constraintDefinition() {}
 
 // UniqueConstraintDefinition represents a UNIQUE or PRIMARY KEY constraint
@@ -201,8 +201,8 @@ type UniqueConstraintDefinition struct {
 	OnFileGroupOrPartitionScheme *FileGroupOrPartitionScheme
 }
 
-func (u *UniqueConstraintDefinition) node()              {}
-func (u *UniqueConstraintDefinition) tableConstraint()   {}
+func (u *UniqueConstraintDefinition) node()                 {}
+func (u *UniqueConstraintDefinition) tableConstraint()      {}
 func (u *UniqueConstraintDefinition) constraintDefinition() {}
 
 // ForeignKeyConstraintDefinition represents a FOREIGN KEY constraint
@@ -218,6 +218,6 @@ type ForeignKeyConstraintDefinition struct {
 	IsEnforced           *bool // nil = not specified (default enforced), true = ENFORCED, false = NOT ENFORCED
 }
 
-func (f *ForeignKeyConstraintDefinition) node()            {}
-func (f *ForeignKeyConstraintDefinition) tableConstraint() {}
+func (f *ForeignKeyConstraintDefinition) node()                 {}
+func (f *ForeignKeyConstraintDefinition) tableConstraint()      {}
 func (f *ForeignKeyConstraintDefinition) constraintDefinition() {}

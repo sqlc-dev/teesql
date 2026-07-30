@@ -52,7 +52,7 @@ type ColumnMasterKeyNameParameter struct {
 	ParameterKind string // "ColumnMasterKeyName"
 }
 
-func (c *ColumnMasterKeyNameParameter) node()                             {}
+func (c *ColumnMasterKeyNameParameter) node()                              {}
 func (c *ColumnMasterKeyNameParameter) columnEncryptionKeyValueParameter() {}
 
 // ColumnEncryptionAlgorithmNameParameter represents ALGORITHM parameter in CEK
@@ -62,7 +62,7 @@ type ColumnEncryptionAlgorithmNameParameter struct {
 	ParameterKind string // "EncryptionAlgorithmName"
 }
 
-func (c *ColumnEncryptionAlgorithmNameParameter) node()                             {}
+func (c *ColumnEncryptionAlgorithmNameParameter) node()                              {}
 func (c *ColumnEncryptionAlgorithmNameParameter) columnEncryptionKeyValueParameter() {}
 
 // EncryptedValueParameter represents ENCRYPTED_VALUE parameter
@@ -72,7 +72,7 @@ type EncryptedValueParameter struct {
 	ParameterKind string // "EncryptedValue"
 }
 
-func (e *EncryptedValueParameter) node()                             {}
+func (e *EncryptedValueParameter) node()                              {}
 func (e *EncryptedValueParameter) columnEncryptionKeyValueParameter() {}
 
 // ColumnEncryptionKeyValue represents a value in CREATE/ALTER COLUMN ENCRYPTION KEY

@@ -13,12 +13,12 @@ func (s *AlterRouteStatement) statement() {}
 // AlterAssemblyStatement represents an ALTER ASSEMBLY statement.
 type AlterAssemblyStatement struct {
 	Fragment
-	Name       *Identifier         `json:"Name,omitempty"`
-	Parameters []ScalarExpression  `json:"Parameters,omitempty"` // FROM 'path' parameters
+	Name       *Identifier          `json:"Name,omitempty"`
+	Parameters []ScalarExpression   `json:"Parameters,omitempty"` // FROM 'path' parameters
 	Options    []AssemblyOptionBase `json:"Options,omitempty"`
-	AddFiles   []*AddFileSpec      `json:"AddFiles,omitempty"`
-	DropFiles  []*StringLiteral    `json:"DropFiles,omitempty"`
-	IsDropAll  bool                `json:"IsDropAll"`
+	AddFiles   []*AddFileSpec       `json:"AddFiles,omitempty"`
+	DropFiles  []*StringLiteral     `json:"DropFiles,omitempty"`
+	IsDropAll  bool                 `json:"IsDropAll"`
 }
 
 func (s *AlterAssemblyStatement) node()      {}
@@ -71,8 +71,8 @@ func (o *PermissionSetAssemblyOption) assemblyOption() {}
 // AlterSearchPropertyListStatement represents an ALTER SEARCH PROPERTY LIST statement.
 type AlterSearchPropertyListStatement struct {
 	Fragment
-	Name   *Identifier                  `json:"Name,omitempty"`
-	Action SearchPropertyListAction     `json:"Action,omitempty"`
+	Name   *Identifier              `json:"Name,omitempty"`
+	Action SearchPropertyListAction `json:"Action,omitempty"`
 }
 
 func (s *AlterSearchPropertyListStatement) node()      {}
@@ -87,10 +87,10 @@ type SearchPropertyListAction interface {
 // AddSearchPropertyListAction represents an ADD action in ALTER SEARCH PROPERTY LIST.
 type AddSearchPropertyListAction struct {
 	Fragment
-	PropertyName *StringLiteral `json:"PropertyName,omitempty"`
-	Guid         *StringLiteral `json:"Guid,omitempty"`
+	PropertyName *StringLiteral  `json:"PropertyName,omitempty"`
+	Guid         *StringLiteral  `json:"Guid,omitempty"`
 	Id           *IntegerLiteral `json:"Id,omitempty"`
-	Description  *StringLiteral `json:"Description,omitempty"`
+	Description  *StringLiteral  `json:"Description,omitempty"`
 }
 
 func (a *AddSearchPropertyListAction) node()                     {}
@@ -108,13 +108,13 @@ func (a *DropSearchPropertyListAction) searchPropertyListAction() {}
 // AlterEndpointStatement represents an ALTER ENDPOINT statement.
 type AlterEndpointStatement struct {
 	Fragment
-	Name            *Identifier             `json:"Name,omitempty"`
-	State           string                  `json:"State,omitempty"`           // Started, Disabled, NotSpecified
-	Affinity        *EndpointAffinity       `json:"Affinity,omitempty"`
-	Protocol        string                  `json:"Protocol,omitempty"`        // None, Tcp, Http
+	Name            *Identifier              `json:"Name,omitempty"`
+	State           string                   `json:"State,omitempty"` // Started, Disabled, NotSpecified
+	Affinity        *EndpointAffinity        `json:"Affinity,omitempty"`
+	Protocol        string                   `json:"Protocol,omitempty"` // None, Tcp, Http
 	ProtocolOptions []EndpointProtocolOption `json:"ProtocolOptions,omitempty"`
-	EndpointType    string                  `json:"EndpointType,omitempty"`    // NotSpecified, Soap, ServiceBroker, etc.
-	PayloadOptions  []PayloadOption         `json:"PayloadOptions,omitempty"`
+	EndpointType    string                   `json:"EndpointType,omitempty"` // NotSpecified, Soap, ServiceBroker, etc.
+	PayloadOptions  []PayloadOption          `json:"PayloadOptions,omitempty"`
 }
 
 func (s *AlterEndpointStatement) node()      {}
@@ -123,8 +123,8 @@ func (s *AlterEndpointStatement) statement() {}
 // EndpointAffinity represents the affinity setting for an endpoint.
 type EndpointAffinity struct {
 	Fragment
-	Kind  string           `json:"Kind,omitempty"` // None, Admin, Integer
-	Value *IntegerLiteral  `json:"Value,omitempty"`
+	Kind  string          `json:"Kind,omitempty"` // None, Admin, Integer
+	Value *IntegerLiteral `json:"Value,omitempty"`
 }
 
 func (e *EndpointAffinity) node() {}
@@ -307,9 +307,9 @@ func (s *SessionTimeoutPayloadOption) payloadOption() {}
 // WsdlPayloadOption represents a WSDL payload option for SOAP.
 type WsdlPayloadOption struct {
 	Fragment
-	Value   ScalarExpression `json:"Value,omitempty"`
-	IsNone  bool             `json:"IsNone"`
-	Kind    string           `json:"Kind,omitempty"` // Wsdl
+	Value  ScalarExpression `json:"Value,omitempty"`
+	IsNone bool             `json:"IsNone"`
+	Kind   string           `json:"Kind,omitempty"` // Wsdl
 }
 
 func (w *WsdlPayloadOption) node()          {}
@@ -339,13 +339,13 @@ func (s *AlterServiceStatement) statement() {}
 // AlterCertificateStatement represents an ALTER CERTIFICATE statement.
 type AlterCertificateStatement struct {
 	Fragment
-	Name               *Identifier    `json:"Name,omitempty"`
-	Kind               string         `json:"Kind,omitempty"` // RemovePrivateKey, WithActiveForBeginDialog, WithPrivateKey, RemoveAttestedOption, AttestedBy
-	ActiveForBeginDialog string       `json:"ActiveForBeginDialog,omitempty"` // NotSet, On, Off
-	PrivateKeyPath     *StringLiteral `json:"PrivateKeyPath,omitempty"`
-	DecryptionPassword *StringLiteral `json:"DecryptionPassword,omitempty"`
-	EncryptionPassword *StringLiteral `json:"EncryptionPassword,omitempty"`
-	AttestedBy         *StringLiteral `json:"AttestedBy,omitempty"`
+	Name                 *Identifier    `json:"Name,omitempty"`
+	Kind                 string         `json:"Kind,omitempty"`                 // RemovePrivateKey, WithActiveForBeginDialog, WithPrivateKey, RemoveAttestedOption, AttestedBy
+	ActiveForBeginDialog string         `json:"ActiveForBeginDialog,omitempty"` // NotSet, On, Off
+	PrivateKeyPath       *StringLiteral `json:"PrivateKeyPath,omitempty"`
+	DecryptionPassword   *StringLiteral `json:"DecryptionPassword,omitempty"`
+	EncryptionPassword   *StringLiteral `json:"EncryptionPassword,omitempty"`
+	AttestedBy           *StringLiteral `json:"AttestedBy,omitempty"`
 }
 
 func (s *AlterCertificateStatement) node()      {}
@@ -495,10 +495,10 @@ func (*AlterColumnAlterFullTextIndexAction) alterFullTextIndexAction() {}
 // FullTextIndexColumn represents a column in a fulltext index
 type FullTextIndexColumn struct {
 	Fragment
-	Name                 *Identifier              `json:"Name,omitempty"`
-	TypeColumn           *Identifier              `json:"TypeColumn,omitempty"`
+	Name                 *Identifier                  `json:"Name,omitempty"`
+	TypeColumn           *Identifier                  `json:"TypeColumn,omitempty"`
 	LanguageTerm         *IdentifierOrValueExpression `json:"LanguageTerm,omitempty"`
-	StatisticalSemantics bool                     `json:"StatisticalSemantics"`
+	StatisticalSemantics bool                         `json:"StatisticalSemantics"`
 }
 
 func (*FullTextIndexColumn) node() {}
@@ -532,7 +532,7 @@ func (*StopListFullTextIndexOption) fullTextIndexOption() {}
 // ChangeTrackingFullTextIndexOption represents a CHANGE_TRACKING option for fulltext index
 type ChangeTrackingFullTextIndexOption struct {
 	Fragment
-	Value      string `json:"Value,omitempty"` // "Auto", "Manual", "Off", "OffNoPopulation"
+	Value      string `json:"Value,omitempty"`      // "Auto", "Manual", "Off", "OffNoPopulation"
 	OptionKind string `json:"OptionKind,omitempty"` // "ChangeTracking"
 }
 

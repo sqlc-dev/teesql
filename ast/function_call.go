@@ -88,7 +88,7 @@ type FunctionCall struct {
 	WithArrayWrapper   bool               `json:"WithArrayWrapper,omitempty"`
 	TrimOptions        *Identifier        `json:"TrimOptions,omitempty"` // For TRIM(LEADING/TRAILING/BOTH chars FROM string)
 	Collation          *Identifier        `json:"Collation,omitempty"`
-	JsonParameters     []*JsonKeyValue    `json:"JsonParameters,omitempty"`  // For JSON_OBJECT function key:value pairs
+	JsonParameters     []*JsonKeyValue    `json:"JsonParameters,omitempty"`     // For JSON_OBJECT function key:value pairs
 	AbsentOrNullOnNull []*Identifier      `json:"AbsentOrNullOnNull,omitempty"` // For JSON_OBJECT/JSON_ARRAY NULL ON NULL or ABSENT ON NULL
 }
 
@@ -98,9 +98,9 @@ func (*FunctionCall) scalarExpression() {}
 // CastCall represents a CAST expression: CAST(expression AS data_type)
 type CastCall struct {
 	Fragment
-	DataType   DataTypeReference `json:"DataType,omitempty"`
-	Parameter  ScalarExpression  `json:"Parameter,omitempty"`
-	Collation  *Identifier       `json:"Collation,omitempty"`
+	DataType  DataTypeReference `json:"DataType,omitempty"`
+	Parameter ScalarExpression  `json:"Parameter,omitempty"`
+	Collation *Identifier       `json:"Collation,omitempty"`
 }
 
 func (*CastCall) node()             {}
@@ -121,9 +121,9 @@ func (*ConvertCall) scalarExpression() {}
 // TryCastCall represents a TRY_CAST expression
 type TryCastCall struct {
 	Fragment
-	DataType   DataTypeReference `json:"DataType,omitempty"`
-	Parameter  ScalarExpression  `json:"Parameter,omitempty"`
-	Collation  *Identifier       `json:"Collation,omitempty"`
+	DataType  DataTypeReference `json:"DataType,omitempty"`
+	Parameter ScalarExpression  `json:"Parameter,omitempty"`
+	Collation *Identifier       `json:"Collation,omitempty"`
 }
 
 func (*TryCastCall) node()             {}

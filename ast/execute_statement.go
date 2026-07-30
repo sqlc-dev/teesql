@@ -26,8 +26,8 @@ func (o *ExecuteOption) executeOption() {}
 // ResultSetsExecuteOption represents the WITH RESULT SETS option.
 type ResultSetsExecuteOption struct {
 	Fragment
-	OptionKind           string                   `json:"OptionKind,omitempty"`
-	ResultSetsOptionKind string                   `json:"ResultSetsOptionKind,omitempty"` // None, Undefined, ResultSetsDefined
+	OptionKind           string                    `json:"OptionKind,omitempty"`
+	ResultSetsOptionKind string                    `json:"ResultSetsOptionKind,omitempty"` // None, Undefined, ResultSetsDefined
 	Definitions          []ResultSetDefinitionType `json:"Definitions,omitempty"`
 }
 

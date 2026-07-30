@@ -3,7 +3,7 @@ package ast
 // XmlCompressionOption represents an XML compression option
 type XmlCompressionOption struct {
 	Fragment
-	IsCompressed    string                     // "On", "Off"
+	IsCompressed    string // "On", "Off"
 	PartitionRanges []*CompressionPartitionRange
 	OptionKind      string // "XmlCompression"
 }

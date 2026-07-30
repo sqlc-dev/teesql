@@ -15,12 +15,12 @@ func (r *RemoteDataArchiveTableOption) tableOption() {}
 // RemoteDataArchiveAlterTableOption represents REMOTE_DATA_ARCHIVE option for ALTER TABLE SET
 type RemoteDataArchiveAlterTableOption struct {
 	Fragment
-	RdaTableOption            string           // "Enable", "Disable", "DisableWithoutDataRecovery"
-	MigrationState            string           // "Paused", "Outbound", "Inbound"
-	IsMigrationStateSpecified bool
-	FilterPredicate           ScalarExpression // Optional filter predicate function call
+	RdaTableOption             string // "Enable", "Disable", "DisableWithoutDataRecovery"
+	MigrationState             string // "Paused", "Outbound", "Inbound"
+	IsMigrationStateSpecified  bool
+	FilterPredicate            ScalarExpression // Optional filter predicate function call
 	IsFilterPredicateSpecified bool
-	OptionKind                string           // "RemoteDataArchive"
+	OptionKind                 string // "RemoteDataArchive"
 }
 
 func (r *RemoteDataArchiveAlterTableOption) node()        {}

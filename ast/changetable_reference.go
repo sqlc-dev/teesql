@@ -3,12 +3,12 @@ package ast
 // ChangeTableChangesTableReference represents CHANGETABLE(CHANGES ...) table reference
 type ChangeTableChangesTableReference struct {
 	Fragment
-	Target       *SchemaObjectName  `json:"Target,omitempty"`
-	SinceVersion ScalarExpression   `json:"SinceVersion,omitempty"`
-	ForceSeek    bool               `json:"ForceSeek"`
-	Columns      []*Identifier      `json:"Columns,omitempty"`
-	Alias        *Identifier        `json:"Alias,omitempty"`
-	ForPath      bool               `json:"ForPath"`
+	Target       *SchemaObjectName `json:"Target,omitempty"`
+	SinceVersion ScalarExpression  `json:"SinceVersion,omitempty"`
+	ForceSeek    bool              `json:"ForceSeek"`
+	Columns      []*Identifier     `json:"Columns,omitempty"`
+	Alias        *Identifier       `json:"Alias,omitempty"`
+	ForPath      bool              `json:"ForPath"`
 }
 
 func (c *ChangeTableChangesTableReference) node()           {}

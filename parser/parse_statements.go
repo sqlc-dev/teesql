@@ -5192,6 +5192,7 @@ func (p *Parser) parseCreateMaterializedViewStatement() (*ast.CreateViewStatemen
 		if p.curTok.Type == TokenLParen {
 			p.nextToken()
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optTok := p.curTok
 				optionName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken()
 
@@ -5201,6 +5202,7 @@ func (p *Parser) parseCreateMaterializedViewStatement() (*ast.CreateViewStatemen
 						p.nextToken()
 					}
 					if strings.ToUpper(p.curTok.Literal) == "HASH" {
+						hashTok := p.curTok
 						p.nextToken()
 						if p.curTok.Type == TokenLParen {
 							p.nextToken()
@@ -5221,22 +5223,31 @@ func (p *Parser) parseCreateMaterializedViewStatement() (*ast.CreateViewStatemen
 							if p.curTok.Type == TokenRParen {
 								p.nextToken()
 							}
-							stmt.ViewOptions = append(stmt.ViewOptions, &ast.ViewDistributionOption{
+							p.spanFrom(hashTok, hashPolicy)
+							vdo := &ast.ViewDistributionOption{
 								OptionKind: "Distribution",
 								Value:      hashPolicy,
-							})
+							}
+							p.tokSpan(vdo, optTok)
+							stmt.ViewOptions = append(stmt.ViewOptions, vdo)
 						}
 					} else if strings.ToUpper(p.curTok.Literal) == "ROUND_ROBIN" {
+						rrPolicy := &ast.ViewRoundRobinDistributionPolicy{}
+						p.tokSpan(rrPolicy, p.curTok)
 						p.nextToken() // consume ROUND_ROBIN
-						stmt.ViewOptions = append(stmt.ViewOptions, &ast.ViewDistributionOption{
+						vdo := &ast.ViewDistributionOption{
 							OptionKind: "Distribution",
-							Value:      &ast.ViewRoundRobinDistributionPolicy{},
-						})
+							Value:      rrPolicy,
+						}
+						p.tokSpan(vdo, optTok)
+						stmt.ViewOptions = append(stmt.ViewOptions, vdo)
 					}
 				} else if optionName == "FOR_APPEND" {
-					stmt.ViewOptions = append(stmt.ViewOptions, &ast.ViewForAppendOption{
+					vfa := &ast.ViewForAppendOption{
 						OptionKind: "ForAppend",
-					})
+					}
+					p.tokSpan(vfa, optTok)
+					stmt.ViewOptions = append(stmt.ViewOptions, vfa)
 				}
 
 				if p.curTok.Type == TokenComma {
@@ -14795,16 +14806,19 @@ func (p *Parser) parseCreateTypeStatement() (ast.Statement, error) {
 								if p.curTok.Type == TokenEquals {
 									p.nextToken() // consume =
 								}
+								stateTok := p.curTok
 								stateUpper := strings.ToUpper(p.curTok.Literal)
 								state := "On"
 								if stateUpper == "OFF" {
 									state = "Off"
 								}
 								p.nextToken() // consume ON/OFF
-								stmt.Options = append(stmt.Options, &ast.MemoryOptimizedTableOption{
+								mo := &ast.MemoryOptimizedTableOption{
 									OptionKind:  "MemoryOptimized",
 									OptionState: state,
-								})
+								}
+								p.tokSpan(mo, stateTok)
+								stmt.Options = append(stmt.Options, mo)
 							} else {
 								// Skip unknown option
 								p.nextToken()
@@ -15083,6 +15097,11 @@ func (p *Parser) parseSelectiveXmlIndexPath() *ast.SelectiveXmlIndexPromotedPath
 		}
 	}
 
+	// The path's span runs from its name through its last child clause
+	// (MAXLENGTH includes its closing paren); a trailing SINGLETON keyword
+	// is excluded.
+	p.spanFrom(astStart, path)
+
 	// Parse optional AS XQUERY/SQL clause
 	if p.curTok.Type == TokenAs {
 		p.nextToken() // consume AS
@@ -15093,6 +15112,7 @@ func (p *Parser) parseSelectiveXmlIndexPath() *ast.SelectiveXmlIndexPromotedPath
 			if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
 				// XQuery type like 'xs:string' or 'node()'
 				path.XQueryDataType, _ = p.parseStringLiteral()
+				p.spanFrom(astStart, path)
 			}
 			// Check for MAXLENGTH
 			if strings.ToUpper(p.curTok.Literal) == "MAXLENGTH" {
@@ -15107,8 +15127,9 @@ func (p *Parser) parseSelectiveXmlIndexPath() *ast.SelectiveXmlIndexPromotedPath
 						p.nextToken() // consume )
 					}
 				}
+				p.spanFrom(astStart, path)
 			}
-			// Check for SINGLETON
+			// Check for SINGLETON (excluded from the path's span)
 			if strings.ToUpper(p.curTok.Literal) == "SINGLETON" {
 				path.IsSingleton = true
 				p.nextToken() // consume SINGLETON
@@ -15120,7 +15141,8 @@ func (p *Parser) parseSelectiveXmlIndexPath() *ast.SelectiveXmlIndexPromotedPath
 			if sdt, ok := dt.(*ast.SqlDataTypeReference); ok {
 				path.SQLDataType = sdt
 			}
-			// Check for SINGLETON
+			p.spanFrom(astStart, path)
+			// Check for SINGLETON (excluded from the path's span)
 			if strings.ToUpper(p.curTok.Literal) == "SINGLETON" {
 				path.IsSingleton = true
 				p.nextToken() // consume SINGLETON
@@ -15128,7 +15150,7 @@ func (p *Parser) parseSelectiveXmlIndexPath() *ast.SelectiveXmlIndexPromotedPath
 		}
 	}
 
-	return spanned(p, path, astStart)
+	return path
 }
 
 func (p *Parser) parseCreateXmlSchemaCollectionFromXml() (*ast.CreateXmlSchemaCollectionStatement, error) {

@@ -2,7 +2,7 @@ package ast
 
 type TruncateTableStatement struct {
 	Fragment
-	TableName       *SchemaObjectName           `json:"TableName,omitempty"`
+	TableName       *SchemaObjectName            `json:"TableName,omitempty"`
 	PartitionRanges []*CompressionPartitionRange `json:"PartitionRanges,omitempty"`
 }
 

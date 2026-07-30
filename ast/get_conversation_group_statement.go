@@ -2,7 +2,7 @@ package ast
 
 type GetConversationGroupStatement struct {
 	Fragment
-	GroupId ScalarExpression `json:"GroupId,omitempty"`
+	GroupId ScalarExpression  `json:"GroupId,omitempty"`
 	Queue   *SchemaObjectName `json:"Queue,omitempty"`
 }
 

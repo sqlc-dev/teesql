@@ -4,10 +4,10 @@ package ast
 // Syntax: [database.]$PARTITION.function(args)
 type PartitionFunctionCall struct {
 	Fragment
-	DatabaseName *Identifier         `json:"DatabaseName,omitempty"`
-	SchemaName   *Identifier         `json:"SchemaName,omitempty"`
-	FunctionName *Identifier         `json:"FunctionName,omitempty"`
-	Parameters   []ScalarExpression  `json:"Parameters,omitempty"`
+	DatabaseName *Identifier        `json:"DatabaseName,omitempty"`
+	SchemaName   *Identifier        `json:"SchemaName,omitempty"`
+	FunctionName *Identifier        `json:"FunctionName,omitempty"`
+	Parameters   []ScalarExpression `json:"Parameters,omitempty"`
 }
 
 func (*PartitionFunctionCall) node()             {}

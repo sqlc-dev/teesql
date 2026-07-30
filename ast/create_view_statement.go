@@ -3,12 +3,12 @@ package ast
 // CreateViewStatement represents a CREATE VIEW statement.
 type CreateViewStatement struct {
 	Fragment
-	SchemaObjectName  *SchemaObjectName    `json:"SchemaObjectName,omitempty"`
-	Columns           []*Identifier        `json:"Columns,omitempty"`
-	SelectStatement   *SelectStatement     `json:"SelectStatement,omitempty"`
-	WithCheckOption   bool                 `json:"WithCheckOption"`
-	ViewOptions       []ViewOption         `json:"ViewOptions,omitempty"`
-	IsMaterialized    bool                 `json:"IsMaterialized"`
+	SchemaObjectName *SchemaObjectName `json:"SchemaObjectName,omitempty"`
+	Columns          []*Identifier     `json:"Columns,omitempty"`
+	SelectStatement  *SelectStatement  `json:"SelectStatement,omitempty"`
+	WithCheckOption  bool              `json:"WithCheckOption"`
+	ViewOptions      []ViewOption      `json:"ViewOptions,omitempty"`
+	IsMaterialized   bool              `json:"IsMaterialized"`
 }
 
 func (c *CreateViewStatement) node()      {}
@@ -17,12 +17,12 @@ func (c *CreateViewStatement) statement() {}
 // CreateOrAlterViewStatement represents a CREATE OR ALTER VIEW statement.
 type CreateOrAlterViewStatement struct {
 	Fragment
-	SchemaObjectName  *SchemaObjectName    `json:"SchemaObjectName,omitempty"`
-	Columns           []*Identifier        `json:"Columns,omitempty"`
-	SelectStatement   *SelectStatement     `json:"SelectStatement,omitempty"`
-	WithCheckOption   bool                 `json:"WithCheckOption"`
-	ViewOptions       []ViewOption         `json:"ViewOptions,omitempty"`
-	IsMaterialized    bool                 `json:"IsMaterialized"`
+	SchemaObjectName *SchemaObjectName `json:"SchemaObjectName,omitempty"`
+	Columns          []*Identifier     `json:"Columns,omitempty"`
+	SelectStatement  *SelectStatement  `json:"SelectStatement,omitempty"`
+	WithCheckOption  bool              `json:"WithCheckOption"`
+	ViewOptions      []ViewOption      `json:"ViewOptions,omitempty"`
+	IsMaterialized   bool              `json:"IsMaterialized"`
 }
 
 func (c *CreateOrAlterViewStatement) node()      {}
@@ -65,8 +65,8 @@ type ViewDistributionPolicy interface {
 // ViewDistributionOption represents a DISTRIBUTION option for materialized views.
 type ViewDistributionOption struct {
 	Fragment
-	OptionKind string                   `json:"OptionKind,omitempty"`
-	Value      ViewDistributionPolicy   `json:"Value,omitempty"`
+	OptionKind string                 `json:"OptionKind,omitempty"`
+	Value      ViewDistributionPolicy `json:"Value,omitempty"`
 }
 
 func (v *ViewDistributionOption) viewOption() {}
@@ -81,7 +81,9 @@ type ViewHashDistributionPolicy struct {
 func (v *ViewHashDistributionPolicy) distributionPolicy() {}
 
 // ViewRoundRobinDistributionPolicy represents the round robin distribution policy for materialized views.
-type ViewRoundRobinDistributionPolicy struct{}
+type ViewRoundRobinDistributionPolicy struct {
+	Fragment
+}
 
 func (v *ViewRoundRobinDistributionPolicy) distributionPolicy() {}
 

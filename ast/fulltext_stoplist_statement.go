@@ -16,7 +16,7 @@ func (s *CreateFullTextStopListStatement) statement() {}
 // AlterFullTextStopListStatement represents ALTER FULLTEXT STOPLIST statement
 type AlterFullTextStopListStatement struct {
 	Fragment
-	Name   *Identifier           `json:"Name,omitempty"`
+	Name   *Identifier             `json:"Name,omitempty"`
 	Action *FullTextStopListAction `json:"Action,omitempty"`
 }
 

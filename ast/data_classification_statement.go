@@ -22,7 +22,7 @@ func (s *DropSensitivityClassificationStatement) statement() {}
 // SensitivityClassificationOption represents an option in ADD SENSITIVITY CLASSIFICATION
 type SensitivityClassificationOption struct {
 	Fragment
-	Type  string          // "Label", "LabelId", "InformationType", "InformationTypeId", "Rank"
+	Type  string           // "Label", "LabelId", "InformationType", "InformationTypeId", "Rank"
 	Value ScalarExpression // StringLiteral or IdentifierLiteral
 }
 

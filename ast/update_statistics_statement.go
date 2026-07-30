@@ -3,9 +3,9 @@ package ast
 // UpdateStatisticsStatement represents UPDATE STATISTICS.
 type UpdateStatisticsStatement struct {
 	Fragment
-	SchemaObjectName  *SchemaObjectName   `json:"SchemaObjectName,omitempty"`
-	SubElements       []*Identifier       `json:"SubElements,omitempty"`
-	StatisticsOptions []StatisticsOption  `json:"StatisticsOptions,omitempty"`
+	SchemaObjectName  *SchemaObjectName  `json:"SchemaObjectName,omitempty"`
+	SubElements       []*Identifier      `json:"SubElements,omitempty"`
+	StatisticsOptions []StatisticsOption `json:"StatisticsOptions,omitempty"`
 }
 
 func (u *UpdateStatisticsStatement) node()      {}
@@ -36,7 +36,7 @@ func (l *LiteralStatisticsOption) statisticsOption() {}
 // OnOffStatisticsOption represents a statistics option with ON/OFF value.
 type OnOffStatisticsOption struct {
 	Fragment
-	OptionKind string `json:"OptionKind,omitempty"`
+	OptionKind  string `json:"OptionKind,omitempty"`
 	OptionState string `json:"OptionState,omitempty"`
 }
 
@@ -45,7 +45,7 @@ func (o *OnOffStatisticsOption) statisticsOption() {}
 // ResampleStatisticsOption represents RESAMPLE statistics option.
 type ResampleStatisticsOption struct {
 	Fragment
-	OptionKind string                     `json:"OptionKind,omitempty"`
+	OptionKind string                      `json:"OptionKind,omitempty"`
 	Partitions []*StatisticsPartitionRange `json:"Partitions,omitempty"`
 }
 

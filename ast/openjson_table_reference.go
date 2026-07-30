@@ -3,11 +3,11 @@ package ast
 // OpenJsonTableReference represents an OPENJSON table reference in the FROM clause.
 type OpenJsonTableReference struct {
 	Fragment
-	Variable               ScalarExpression             `json:"Variable,omitempty"`
-	RowPattern             ScalarExpression             `json:"RowPattern,omitempty"`
+	Variable               ScalarExpression                 `json:"Variable,omitempty"`
+	RowPattern             ScalarExpression                 `json:"RowPattern,omitempty"`
 	SchemaDeclarationItems []*SchemaDeclarationItemOpenjson `json:"SchemaDeclarationItems,omitempty"`
-	Alias                  *Identifier                  `json:"Alias,omitempty"`
-	ForPath                bool                         `json:"ForPath,omitempty"`
+	Alias                  *Identifier                      `json:"Alias,omitempty"`
+	ForPath                bool                             `json:"ForPath,omitempty"`
 }
 
 func (*OpenJsonTableReference) node()           {}

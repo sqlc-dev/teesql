@@ -3,9 +3,9 @@ package ast
 // InsertBulkStatement represents an INSERT BULK statement.
 type InsertBulkStatement struct {
 	Fragment
-	To                *SchemaObjectName            `json:"To,omitempty"`
+	To                *SchemaObjectName             `json:"To,omitempty"`
 	ColumnDefinitions []*InsertBulkColumnDefinition `json:"ColumnDefinitions,omitempty"`
-	Options           []BulkInsertOption           `json:"Options,omitempty"`
+	Options           []BulkInsertOption            `json:"Options,omitempty"`
 }
 
 func (i *InsertBulkStatement) node()      {}

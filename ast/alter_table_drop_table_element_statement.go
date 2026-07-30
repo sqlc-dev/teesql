@@ -34,8 +34,8 @@ type DropClusteredConstraintStateOption struct {
 	OptionState string
 }
 
-func (*DropClusteredConstraintStateOption) node()                            {}
-func (*DropClusteredConstraintStateOption) dropClusteredConstraintOption()   {}
+func (*DropClusteredConstraintStateOption) node()                          {}
+func (*DropClusteredConstraintStateOption) dropClusteredConstraintOption() {}
 
 // DropClusteredConstraintMoveOption represents a MOVE TO option.
 type DropClusteredConstraintMoveOption struct {
@@ -54,8 +54,8 @@ type DropClusteredConstraintValueOption struct {
 	OptionValue ScalarExpression
 }
 
-func (*DropClusteredConstraintValueOption) node()                           {}
-func (*DropClusteredConstraintValueOption) dropClusteredConstraintOption()  {}
+func (*DropClusteredConstraintValueOption) node()                          {}
+func (*DropClusteredConstraintValueOption) dropClusteredConstraintOption() {}
 
 // FileGroupOrPartitionScheme represents a filegroup or partition scheme reference.
 type FileGroupOrPartitionScheme struct {

@@ -234,7 +234,7 @@ type AuditActionGroupReference struct {
 	Group string
 }
 
-func (r *AuditActionGroupReference) node()                    {}
+func (r *AuditActionGroupReference) node()                     {}
 func (r *AuditActionGroupReference) auditSpecificationDetail() {}
 
 // AuditActionSpecification represents an action specification in audit parts
@@ -246,7 +246,7 @@ type AuditActionSpecification struct {
 	TargetObject *SecurityTargetObject
 }
 
-func (a *AuditActionSpecification) node()                    {}
+func (a *AuditActionSpecification) node()                     {}
 func (a *AuditActionSpecification) auditSpecificationDetail() {}
 
 // DatabaseAuditAction represents a database audit action

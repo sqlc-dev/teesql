@@ -3,11 +3,11 @@ package ast
 // AlterTableConstraintModificationStatement represents ALTER TABLE ... CHECK/NOCHECK CONSTRAINT
 type AlterTableConstraintModificationStatement struct {
 	Fragment
-	SchemaObjectName            *SchemaObjectName
+	SchemaObjectName             *SchemaObjectName
 	ExistingRowsCheckEnforcement string // "NotSpecified", "Check", "NoCheck"
-	ConstraintEnforcement       string // "Check", "NoCheck"
-	All                         bool
-	ConstraintNames             []*Identifier
+	ConstraintEnforcement        string // "Check", "NoCheck"
+	All                          bool
+	ConstraintNames              []*Identifier
 }
 
 func (s *AlterTableConstraintModificationStatement) statement() {}

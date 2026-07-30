@@ -3,11 +3,11 @@ package ast
 // AlterTableSwitchStatement represents ALTER TABLE ... SWITCH
 type AlterTableSwitchStatement struct {
 	Fragment
-	SchemaObjectName  *SchemaObjectName
-	SourcePartition   ScalarExpression
-	TargetTable       *SchemaObjectName
-	TargetPartition   ScalarExpression
-	Options           []TableSwitchOption
+	SchemaObjectName    *SchemaObjectName
+	SourcePartition     ScalarExpression
+	TargetTable         *SchemaObjectName
+	TargetPartition     ScalarExpression
+	Options             []TableSwitchOption
 	LowPriorityLockWait *LowPriorityLockWait
 }
 
@@ -43,9 +43,9 @@ func (o *LowPriorityLockWaitTableSwitchOption) node()              {}
 // LowPriorityLockWait represents LOW_PRIORITY_LOCK_WAIT option (legacy)
 type LowPriorityLockWait struct {
 	Fragment
-	MaxDuration       ScalarExpression
-	MaxDurationUnit   string // "MINUTES", "SECONDS"
-	AfterWaitAbort    string // "NONE", "SELF", "BLOCKERS"
+	MaxDuration     ScalarExpression
+	MaxDurationUnit string // "MINUTES", "SECONDS"
+	AfterWaitAbort  string // "NONE", "SELF", "BLOCKERS"
 }
 
 func (l *LowPriorityLockWait) node() {}

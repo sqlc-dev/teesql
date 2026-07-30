@@ -6210,6 +6210,7 @@ func (p *Parser) parseAlterColumnWithOptions() ([]ast.IndexOption, error) {
 	p.nextToken() // consume (
 
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optTok := p.curTok
 		optName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken() // consume option name
 
@@ -6229,6 +6230,7 @@ func (p *Parser) parseAlterColumnWithOptions() ([]ast.IndexOption, error) {
 				opt.OptionState = "Off"
 			}
 			p.nextToken()
+			p.spanFrom(optTok, opt)
 			options = append(options, opt)
 		default:
 			// Skip unknown option value

@@ -57,8 +57,8 @@ func (a *AlterServerConfigurationSetExternalAuthenticationStatement) statement()
 // AlterServerConfigurationExternalAuthenticationContainerOption represents the container option for external authentication
 type AlterServerConfigurationExternalAuthenticationContainerOption struct {
 	Fragment
-	OptionKind  string                                               // "OnOff"
-	OptionValue *OnOffOptionValue                                    // ON or OFF
+	OptionKind  string                                                  // "OnOff"
+	OptionValue *OnOffOptionValue                                       // ON or OFF
 	Suboptions  []*AlterServerConfigurationExternalAuthenticationOption // suboptions inside parentheses
 }
 
@@ -67,7 +67,7 @@ func (a *AlterServerConfigurationExternalAuthenticationContainerOption) node() {
 // AlterServerConfigurationExternalAuthenticationOption represents an external authentication suboption
 type AlterServerConfigurationExternalAuthenticationOption struct {
 	Fragment
-	OptionKind  string             // "UseIdentity", "CredentialName"
+	OptionKind  string              // "UseIdentity", "CredentialName"
 	OptionValue *LiteralOptionValue // optional, for CredentialName
 }
 
@@ -103,19 +103,21 @@ type AlterServerConfigurationDiagnosticsLogOption struct {
 	OptionValue interface{} // *OnOffOptionValue or *LiteralOptionValue
 }
 
-func (a *AlterServerConfigurationDiagnosticsLogOption) node()                                       {}
-func (a *AlterServerConfigurationDiagnosticsLogOption) alterServerConfigurationDiagnosticsLogOption() {}
+func (a *AlterServerConfigurationDiagnosticsLogOption) node() {}
+func (a *AlterServerConfigurationDiagnosticsLogOption) alterServerConfigurationDiagnosticsLogOption() {
+}
 
 // AlterServerConfigurationDiagnosticsLogMaxSizeOption represents MAX_SIZE option with size unit
 type AlterServerConfigurationDiagnosticsLogMaxSizeOption struct {
 	Fragment
-	OptionKind  string             // "MaxSize"
+	OptionKind  string // "MaxSize"
 	OptionValue *LiteralOptionValue
-	SizeUnit    string             // "KB", "MB", "GB", "Unspecified"
+	SizeUnit    string // "KB", "MB", "GB", "Unspecified"
 }
 
-func (a *AlterServerConfigurationDiagnosticsLogMaxSizeOption) node()                                       {}
-func (a *AlterServerConfigurationDiagnosticsLogMaxSizeOption) alterServerConfigurationDiagnosticsLogOption() {}
+func (a *AlterServerConfigurationDiagnosticsLogMaxSizeOption) node() {}
+func (a *AlterServerConfigurationDiagnosticsLogMaxSizeOption) alterServerConfigurationDiagnosticsLogOption() {
+}
 
 // AlterServerConfigurationSetFailoverClusterPropertyStatement represents ALTER SERVER CONFIGURATION SET FAILOVER CLUSTER PROPERTY statement
 type AlterServerConfigurationSetFailoverClusterPropertyStatement struct {
@@ -129,7 +131,7 @@ func (a *AlterServerConfigurationSetFailoverClusterPropertyStatement) statement(
 // AlterServerConfigurationFailoverClusterPropertyOption represents a failover cluster property option
 type AlterServerConfigurationFailoverClusterPropertyOption struct {
 	Fragment
-	OptionKind  string             // "VerboseLogging", "SqlDumperDumpFlags", etc.
+	OptionKind  string // "VerboseLogging", "SqlDumperDumpFlags", etc.
 	OptionValue *LiteralOptionValue
 }
 
@@ -147,8 +149,8 @@ func (a *AlterServerConfigurationSetBufferPoolExtensionStatement) statement() {}
 // AlterServerConfigurationBufferPoolExtensionContainerOption represents the container option for buffer pool extension
 type AlterServerConfigurationBufferPoolExtensionContainerOption struct {
 	Fragment
-	OptionKind  string                                              // "OnOff"
-	OptionValue *OnOffOptionValue                                   // ON or OFF
+	OptionKind  string                                                  // "OnOff"
+	OptionValue *OnOffOptionValue                                       // ON or OFF
 	Suboptions  []AlterServerConfigurationBufferPoolExtensionOptionBase // suboptions inside parentheses
 }
 
@@ -163,23 +165,25 @@ type AlterServerConfigurationBufferPoolExtensionOptionBase interface {
 // AlterServerConfigurationBufferPoolExtensionOption represents a buffer pool extension option
 type AlterServerConfigurationBufferPoolExtensionOption struct {
 	Fragment
-	OptionKind  string             // "FileName"
+	OptionKind  string // "FileName"
 	OptionValue *LiteralOptionValue
 }
 
-func (a *AlterServerConfigurationBufferPoolExtensionOption) node()                                       {}
-func (a *AlterServerConfigurationBufferPoolExtensionOption) alterServerConfigurationBufferPoolExtensionOption() {}
+func (a *AlterServerConfigurationBufferPoolExtensionOption) node() {}
+func (a *AlterServerConfigurationBufferPoolExtensionOption) alterServerConfigurationBufferPoolExtensionOption() {
+}
 
 // AlterServerConfigurationBufferPoolExtensionSizeOption represents SIZE option with size unit
 type AlterServerConfigurationBufferPoolExtensionSizeOption struct {
 	Fragment
-	OptionKind  string             // "Size"
+	OptionKind  string // "Size"
 	OptionValue *LiteralOptionValue
-	SizeUnit    string             // "KB", "MB", "GB"
+	SizeUnit    string // "KB", "MB", "GB"
 }
 
-func (a *AlterServerConfigurationBufferPoolExtensionSizeOption) node()                                       {}
-func (a *AlterServerConfigurationBufferPoolExtensionSizeOption) alterServerConfigurationBufferPoolExtensionOption() {}
+func (a *AlterServerConfigurationBufferPoolExtensionSizeOption) node() {}
+func (a *AlterServerConfigurationBufferPoolExtensionSizeOption) alterServerConfigurationBufferPoolExtensionOption() {
+}
 
 // AlterServerConfigurationSetHadrClusterStatement represents ALTER SERVER CONFIGURATION SET HADR CLUSTER statement
 type AlterServerConfigurationSetHadrClusterStatement struct {
@@ -193,9 +197,9 @@ func (a *AlterServerConfigurationSetHadrClusterStatement) statement() {}
 // AlterServerConfigurationHadrClusterOption represents a HADR cluster option
 type AlterServerConfigurationHadrClusterOption struct {
 	Fragment
-	OptionKind  string             // "Context"
+	OptionKind  string              // "Context"
 	OptionValue *LiteralOptionValue // string literal for context name
-	IsLocal     bool               // true if LOCAL was specified
+	IsLocal     bool                // true if LOCAL was specified
 }
 
 func (a *AlterServerConfigurationHadrClusterOption) node() {}

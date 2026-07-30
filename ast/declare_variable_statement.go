@@ -40,9 +40,9 @@ func (d *DeclareTableVariableBody) node() {}
 // SqlDataTypeReference represents a SQL data type.
 type SqlDataTypeReference struct {
 	Fragment
-	SqlDataTypeOption string            `json:"SqlDataTypeOption,omitempty"`
+	SqlDataTypeOption string             `json:"SqlDataTypeOption,omitempty"`
 	Parameters        []ScalarExpression `json:"Parameters,omitempty"`
-	Name              *SchemaObjectName `json:"Name,omitempty"`
+	Name              *SchemaObjectName  `json:"Name,omitempty"`
 }
 
 func (s *SqlDataTypeReference) node()              {}
@@ -62,7 +62,7 @@ func (x *XmlDataTypeReference) dataTypeReference() {}
 // UserDataTypeReference represents a user-defined data type reference.
 type UserDataTypeReference struct {
 	Fragment
-	Name       *SchemaObjectName `json:"Name,omitempty"`
+	Name       *SchemaObjectName  `json:"Name,omitempty"`
 	Parameters []ScalarExpression `json:"Parameters,omitempty"`
 }
 

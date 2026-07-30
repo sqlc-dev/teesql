@@ -29,7 +29,7 @@ func (s *MergeSpecification) dataModificationSpecification() {}
 // MergeActionClause represents a WHEN clause in a MERGE statement
 type MergeActionClause struct {
 	Fragment
-	Condition       string      // "Matched", "NotMatched", "NotMatchedBySource", "NotMatchedByTarget"
+	Condition       string // "Matched", "NotMatched", "NotMatchedBySource", "NotMatchedByTarget"
 	SearchCondition BooleanExpression
 	Action          MergeAction
 }
@@ -118,11 +118,11 @@ func (g *GraphMatchNodeExpression) graphMatchExpression() {}
 // GraphMatchRecursivePredicate represents SHORTEST_PATH graph pattern
 type GraphMatchRecursivePredicate struct {
 	Fragment
-	Function             string // "ShortestPath"
-	OuterNodeExpression  *GraphMatchNodeExpression
-	Expression           []*GraphMatchCompositeExpression
-	RecursiveQuantifier  *GraphRecursiveMatchQuantifier
-	AnchorOnLeft         bool
+	Function            string // "ShortestPath"
+	OuterNodeExpression *GraphMatchNodeExpression
+	Expression          []*GraphMatchCompositeExpression
+	RecursiveQuantifier *GraphRecursiveMatchQuantifier
+	AnchorOnLeft        bool
 }
 
 func (g *GraphMatchRecursivePredicate) node()                 {}

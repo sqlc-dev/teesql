@@ -5165,11 +5165,11 @@ func viewOptionToJSON(opt ast.ViewOption) jsonNode {
 					}
 					valueNode["DistributionColumns"] = cols
 				}
-				node["Value"] = valueNode
+				node["Value"] = addSpan(valueNode, frag(v))
 			case *ast.ViewRoundRobinDistributionPolicy:
-				node["Value"] = jsonNode{
+				node["Value"] = addSpan(jsonNode{
 					"$type": "ViewRoundRobinDistributionPolicy",
-				}
+				}, frag(v))
 			}
 		}
 		return addSpan(node, frag(opt))
@@ -5647,16 +5647,19 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
 						}
+						stateTok := p.curTok
 						stateUpper := strings.ToUpper(p.curTok.Literal)
 						state := "On"
 						if stateUpper == "OFF" {
 							state = "Off"
 						}
 						p.nextToken() // consume ON/OFF
-						stmt.Options = append(stmt.Options, &ast.MemoryOptimizedTableOption{
+						mo := &ast.MemoryOptimizedTableOption{
 							OptionKind:  "MemoryOptimized",
 							OptionState: state,
-						})
+						}
+						p.tokSpan(mo, stateTok)
+						stmt.Options = append(stmt.Options, mo)
 					} else if optionName == "DURABILITY" {
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
@@ -6073,16 +6076,19 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
 						}
+						stateTok := p.curTok
 						stateUpper := strings.ToUpper(p.curTok.Literal)
 						state := "On"
 						if stateUpper == "OFF" {
 							state = "Off"
 						}
 						p.nextToken() // consume ON/OFF
-						stmt.Options = append(stmt.Options, &ast.MemoryOptimizedTableOption{
+						mo := &ast.MemoryOptimizedTableOption{
 							OptionKind:  "MemoryOptimized",
 							OptionState: state,
-						})
+						}
+						p.tokSpan(mo, stateTok)
+						stmt.Options = append(stmt.Options, mo)
 					} else if optionName == "DURABILITY" {
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
@@ -8520,6 +8526,8 @@ func (p *Parser) parseConstraintIndexOptions() []ast.IndexOption {
 			break
 		}
 
+		optTok := p.curTok
+		lenBefore := len(options)
 		optionName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
 
@@ -8572,9 +8580,19 @@ func (p *Parser) parseConstraintIndexOptions() []ast.IndexOption {
 			// Expression option like FILLFACTOR = 34
 			opt := &ast.IndexExpressionOption{
 				OptionKind: p.getIndexOptionKind(optionName),
-				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+				Expression: p.intLitFromToken(valueToken),
 			}
 			options = append(options, opt)
+		}
+
+		if len(options) > lenBefore {
+			last := options[len(options)-1]
+			if o, ok := last.(spannable); ok {
+				p.spanFrom(optTok, o)
+			}
+			if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
+				p.spanFromChild(eo, eo.Expression)
+			}
 		}
 
 		if p.curTok.Type == TokenComma {
@@ -14344,6 +14362,11 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 					}
 				}
 
+				// The path's span runs from its name through its last child
+				// clause (MAXLENGTH includes its closing paren); a trailing
+				// SINGLETON keyword is excluded.
+				p.spanFrom(pathNameTok, path)
+
 				// Check for MAXLENGTH(n) or SINGLETON
 				for {
 					upperLit := strings.ToUpper(p.curTok.Literal)
@@ -14357,6 +14380,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 								p.nextToken() // consume )
 							}
 						}
+						p.spanFrom(pathNameTok, path)
 					} else if upperLit == "SINGLETON" {
 						path.IsSingleton = true
 						p.nextToken()
@@ -14365,7 +14389,6 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 					}
 				}
 
-				p.spanFrom(pathNameTok, path)
 				stmt.PromotedPaths = append(stmt.PromotedPaths, path)
 
 				if p.curTok.Type == TokenComma {

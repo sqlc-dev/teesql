@@ -88,8 +88,8 @@ type CreateDatabaseOption interface {
 }
 
 // Make existing database options implement CreateDatabaseOption
-func (o *OnOffDatabaseOption) createDatabaseOption()            {}
-func (i *IdentifierDatabaseOption) createDatabaseOption()       {}
+func (o *OnOffDatabaseOption) createDatabaseOption()             {}
+func (i *IdentifierDatabaseOption) createDatabaseOption()        {}
 func (d *DelayedDurabilityDatabaseOption) createDatabaseOption() {}
 
 // SimpleDatabaseOption represents a simple database option with just OptionKind (e.g., ENABLE_BROKER)
@@ -128,9 +128,9 @@ func (l *LiteralDatabaseOption) createDatabaseOption() {}
 // AutomaticTuningDatabaseOption represents AUTOMATIC_TUNING option
 type AutomaticTuningDatabaseOption struct {
 	Fragment
-	OptionKind            string                   // "AutomaticTuning"
-	AutomaticTuningState  string                   // "Inherit", "Custom", "Auto", "NotSet"
-	Options               []AutomaticTuningOption  // Sub-options like CREATE_INDEX, DROP_INDEX, etc.
+	OptionKind           string                  // "AutomaticTuning"
+	AutomaticTuningState string                  // "Inherit", "Custom", "Auto", "NotSet"
+	Options              []AutomaticTuningOption // Sub-options like CREATE_INDEX, DROP_INDEX, etc.
 }
 
 func (a *AutomaticTuningDatabaseOption) node()           {}
@@ -209,11 +209,11 @@ func (a *AlterDatabaseAddFileStatement) statement() {}
 // AlterDatabaseAddFileGroupStatement represents ALTER DATABASE ... ADD FILEGROUP statement
 type AlterDatabaseAddFileGroupStatement struct {
 	Fragment
-	DatabaseName              *Identifier
-	FileGroupName             *Identifier
-	ContainsFileStream        bool
+	DatabaseName                *Identifier
+	FileGroupName               *Identifier
+	ContainsFileStream          bool
 	ContainsMemoryOptimizedData bool
-	UseCurrent                bool
+	UseCurrent                  bool
 }
 
 func (a *AlterDatabaseAddFileGroupStatement) node()      {}
@@ -340,7 +340,7 @@ type RemoteDataArchiveDbServerSetting struct {
 	Server      ScalarExpression // The server string literal
 }
 
-func (r *RemoteDataArchiveDbServerSetting) node()                      {}
+func (r *RemoteDataArchiveDbServerSetting) node()                       {}
 func (r *RemoteDataArchiveDbServerSetting) remoteDataArchiveDbSetting() {}
 
 // RemoteDataArchiveDbCredentialSetting represents the CREDENTIAL setting
@@ -350,7 +350,7 @@ type RemoteDataArchiveDbCredentialSetting struct {
 	Credential  *Identifier // The credential name
 }
 
-func (r *RemoteDataArchiveDbCredentialSetting) node()                      {}
+func (r *RemoteDataArchiveDbCredentialSetting) node()                       {}
 func (r *RemoteDataArchiveDbCredentialSetting) remoteDataArchiveDbSetting() {}
 
 // RemoteDataArchiveDbFederatedServiceAccountSetting represents the FEDERATED_SERVICE_ACCOUNT setting
@@ -360,15 +360,15 @@ type RemoteDataArchiveDbFederatedServiceAccountSetting struct {
 	IsOn        bool   // true for ON, false for OFF
 }
 
-func (r *RemoteDataArchiveDbFederatedServiceAccountSetting) node()                      {}
+func (r *RemoteDataArchiveDbFederatedServiceAccountSetting) node()                       {}
 func (r *RemoteDataArchiveDbFederatedServiceAccountSetting) remoteDataArchiveDbSetting() {}
 
 // ChangeTrackingDatabaseOption represents the CHANGE_TRACKING database option
 type ChangeTrackingDatabaseOption struct {
 	Fragment
-	OptionKind  string                            // "ChangeTracking"
-	OptionState string                            // "On", "Off", "NotSet"
-	Details     []ChangeTrackingOptionDetail      // AUTO_CLEANUP, CHANGE_RETENTION
+	OptionKind  string                       // "ChangeTracking"
+	OptionState string                       // "On", "Off", "NotSet"
+	Details     []ChangeTrackingOptionDetail // AUTO_CLEANUP, CHANGE_RETENTION
 }
 
 func (c *ChangeTrackingDatabaseOption) node()           {}
@@ -386,7 +386,7 @@ type AutoCleanupChangeTrackingOptionDetail struct {
 	IsOn bool
 }
 
-func (a *AutoCleanupChangeTrackingOptionDetail) node()                        {}
+func (a *AutoCleanupChangeTrackingOptionDetail) node()                       {}
 func (a *AutoCleanupChangeTrackingOptionDetail) changeTrackingOptionDetail() {}
 
 // ChangeRetentionChangeTrackingOptionDetail represents CHANGE_RETENTION option
@@ -396,7 +396,7 @@ type ChangeRetentionChangeTrackingOptionDetail struct {
 	Unit            string // "Days", "Hours", "Minutes"
 }
 
-func (c *ChangeRetentionChangeTrackingOptionDetail) node()                        {}
+func (c *ChangeRetentionChangeTrackingOptionDetail) node()                       {}
 func (c *ChangeRetentionChangeTrackingOptionDetail) changeTrackingOptionDetail() {}
 
 // RecoveryDatabaseOption represents RECOVERY database option
@@ -637,7 +637,7 @@ type MaxDopConfigurationOption struct {
 	Primary    bool             // true if set to PRIMARY
 }
 
-func (m *MaxDopConfigurationOption) node()                         {}
+func (m *MaxDopConfigurationOption) node()                           {}
 func (m *MaxDopConfigurationOption) databaseConfigurationSetOption() {}
 
 // OnOffPrimaryConfigurationOption represents ON/OFF/PRIMARY configuration option
@@ -647,18 +647,18 @@ type OnOffPrimaryConfigurationOption struct {
 	OptionState string // "On", "Off", "Primary"
 }
 
-func (o *OnOffPrimaryConfigurationOption) node()                         {}
+func (o *OnOffPrimaryConfigurationOption) node()                           {}
 func (o *OnOffPrimaryConfigurationOption) databaseConfigurationSetOption() {}
 
 // GenericConfigurationOption represents a generic configuration option
 type GenericConfigurationOption struct {
 	Fragment
-	OptionKind         string                       // "MaxDop"
-	GenericOptionKind  *Identifier                  // The custom option name
+	OptionKind         string                        // "MaxDop"
+	GenericOptionKind  *Identifier                   // The custom option name
 	GenericOptionState *IdentifierOrScalarExpression // The value (identifier or scalar)
 }
 
-func (g *GenericConfigurationOption) node()                         {}
+func (g *GenericConfigurationOption) node()                           {}
 func (g *GenericConfigurationOption) databaseConfigurationSetOption() {}
 
 // IdentifierOrScalarExpression represents either an identifier or a scalar expression

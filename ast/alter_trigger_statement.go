@@ -3,15 +3,15 @@ package ast
 // AlterTriggerStatement represents an ALTER TRIGGER statement
 type AlterTriggerStatement struct {
 	Fragment
-	Name                  *SchemaObjectName
-	TriggerObject         *TriggerObject
-	TriggerType           string // "For", "After", "InsteadOf"
-	TriggerActions        []*TriggerAction
-	Options               []TriggerOptionType
-	WithAppend            bool
-	IsNotForReplication   bool
-	MethodSpecifier       *MethodSpecifier
-	StatementList         *StatementList
+	Name                *SchemaObjectName
+	TriggerObject       *TriggerObject
+	TriggerType         string // "For", "After", "InsteadOf"
+	TriggerActions      []*TriggerAction
+	Options             []TriggerOptionType
+	WithAppend          bool
+	IsNotForReplication bool
+	MethodSpecifier     *MethodSpecifier
+	StatementList       *StatementList
 }
 
 func (s *AlterTriggerStatement) statement() {}
@@ -48,8 +48,8 @@ func (o *TriggerOption) triggerOption() {}
 // ExecuteAsClause represents an EXECUTE AS clause
 type ExecuteAsClause struct {
 	Fragment
-	ExecuteAsOption string           // Caller, Self, Owner, String
-	Literal         *StringLiteral   // Used when ExecuteAsOption is "String"
+	ExecuteAsOption string         // Caller, Self, Owner, String
+	Literal         *StringLiteral // Used when ExecuteAsOption is "String"
 }
 
 func (e *ExecuteAsClause) node() {}
