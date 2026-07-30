@@ -206,6 +206,26 @@ func (p *Parser) spanTokens(n spannable, start, end Token) {
 	n.SetSpan(su, eu-su, sl, sc)
 }
 
+// optHint builds a plain OptimizerHint spanning a single token. ScriptDom
+// positions keyword-only optimizer hints on their first token (e.g.
+// CHECKCONSTRAINTS PLAN spans just CHECKCONSTRAINTS).
+func (p *Parser) optHint(kind string, tok Token) *ast.OptimizerHint {
+	h := &ast.OptimizerHint{HintKind: kind}
+	p.tokSpan(h, tok)
+	return h
+}
+
+// spanChildToToken spans n from an already-spanned child's start through the
+// end of the given token.
+func (p *Parser) spanChildToToken(n spannable, child spannable, end Token) {
+	cf := child.Frag()
+	if !cf.HasSpan() {
+		return
+	}
+	eu, _, _ := p.srcMap.at(end.Pos + len(end.Literal))
+	n.SetSpan(cf.StartOffset, eu-cf.StartOffset, cf.StartLine, cf.StartColumn)
+}
+
 // identFromToken builds an Identifier from the given token's literal with
 // the token's source span, without consuming it.
 func (p *Parser) identFromToken(tok Token) *ast.Identifier {

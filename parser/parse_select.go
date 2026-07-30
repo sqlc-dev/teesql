@@ -1451,7 +1451,7 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		}
 		p.nextToken()
 		// Check for property access after parenthesized expression: (c1).SomeProperty
-		spanV17, spanErr17 := p.parsePostExpressionAccess(&ast.ParenthesisExpression{Expression: expr})
+		spanV17, spanErr17 := p.parsePostExpressionAccess(spanned(p, &ast.ParenthesisExpression{Expression: expr}, astStart))
 		return spanned(p, spanV17, astStart), spanErr17
 	case TokenCase:
 		spanV18, spanErr18 := p.parseCaseExpression()
@@ -2067,6 +2067,7 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 
 	// Check for :: (user-defined type method call or property access): a.b::func() or a::prop
 	if p.curTok.Type == TokenColonColon && len(identifiers) > 0 {
+		colonTok := p.curTok
 		p.nextToken() // consume ::
 
 		// Parse function/property name - can be regular identifier or bracket-quoted
@@ -2092,14 +2093,20 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		}
 		schemaObjName := identifiersToSchemaObjectName(nonEmptyIdents)
 
+		// ScriptDom spans the call target through the :: token.
+		udtTarget := &ast.UserDefinedTypeCallTarget{SchemaObjectName: schemaObjName}
+		if len(nonEmptyIdents) > 0 {
+			p.spanChildToToken(udtTarget, nonEmptyIdents[0], colonTok)
+		} else if len(identifiers) > 0 {
+			p.spanChildToToken(udtTarget, identifiers[0], colonTok)
+		}
+
 		// If followed by ( it's a method call, otherwise property access
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 
 			fc := &ast.FunctionCall{
-				CallTarget: &ast.UserDefinedTypeCallTarget{
-					SchemaObjectName: schemaObjName,
-				},
+				CallTarget:       udtTarget,
 				FunctionName:     name,
 				UniqueRowFilter:  "NotSpecified",
 				WithArrayWrapper: false,
@@ -2134,9 +2141,7 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 
 		// Property access: t::a
 		propAccess := &ast.UserDefinedTypePropertyAccess{
-			CallTarget: &ast.UserDefinedTypeCallTarget{
-				SchemaObjectName: schemaObjName,
-			},
+			CallTarget:   udtTarget,
 			PropertyName: name,
 		}
 
@@ -2254,6 +2259,7 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 
 	// Check for :: (user-defined type method call or property access): .t::func() or .t::prop
 	if p.curTok.Type == TokenColonColon && len(identifiers) > 0 {
+		colonTok := p.curTok
 		p.nextToken() // consume ::
 
 		// Parse function/property name - can be regular identifier or bracket-quoted
@@ -2279,14 +2285,20 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 		}
 		schemaObjName := identifiersToSchemaObjectName(nonEmptyIdents)
 
+		// ScriptDom spans the call target through the :: token.
+		udtTarget := &ast.UserDefinedTypeCallTarget{SchemaObjectName: schemaObjName}
+		if len(nonEmptyIdents) > 0 {
+			p.spanChildToToken(udtTarget, nonEmptyIdents[0], colonTok)
+		} else if len(identifiers) > 0 {
+			p.spanChildToToken(udtTarget, identifiers[0], colonTok)
+		}
+
 		// If followed by ( it's a method call, otherwise property access
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 
 			fc := &ast.FunctionCall{
-				CallTarget: &ast.UserDefinedTypeCallTarget{
-					SchemaObjectName: schemaObjName,
-				},
+				CallTarget:       udtTarget,
 				FunctionName:     name,
 				UniqueRowFilter:  "NotSpecified",
 				WithArrayWrapper: false,
@@ -2321,9 +2333,7 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 
 		// Property access: .t::a
 		propAccess := &ast.UserDefinedTypePropertyAccess{
-			CallTarget: &ast.UserDefinedTypeCallTarget{
-				SchemaObjectName: schemaObjName,
-			},
+			CallTarget:   udtTarget,
 			PropertyName: name,
 		}
 
@@ -5134,7 +5144,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			spanV56, spanErr56 := p.parseUseHintList()
 			return spanned(p, spanV56, astStart), spanErr56
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "Use"}, astStart), nil
+		return p.optHint("Use", astStart), nil
 	}
 
 	// Handle keyword tokens that can be optimizer hints (ORDER, GROUP, MAXDOP, etc.)
@@ -5154,7 +5164,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 				p.nextToken()
 			}
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: hintKind}, astStart), nil
+		return p.optHint(hintKind, astStart), nil
 	}
 
 	// Handle MAXDOP keyword
@@ -5168,7 +5178,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			}
 			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "MaxDop", Value: value}, astStart), nil
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "MaxDop"}, astStart), nil
+		return p.optHint("MaxDop", astStart), nil
 	}
 
 	// Handle TABLE HINT optimizer hint
@@ -5179,7 +5189,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			spanV57, spanErr57 := p.parseTableHintsOptimizerHint()
 			return spanned(p, spanV57, astStart), spanErr57
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "Table"}, astStart), nil
+		return p.optHint("Table", astStart), nil
 	}
 
 	// Handle FAST keyword
@@ -5193,7 +5203,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			}
 			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}, astStart), nil
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "Fast"}, astStart), nil
+		return p.optHint("Fast", astStart), nil
 	}
 
 	if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLabel {
@@ -5211,12 +5221,12 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			subUpper := strings.ToUpper(p.curTok.Literal)
 			p.nextToken()
 			if subUpper == "SIMPLE" {
-				return spanned(p, &ast.OptimizerHint{HintKind: "ParameterizationSimple"}, astStart), nil
+				return p.optHint("ParameterizationSimple", astStart), nil
 			} else if subUpper == "FORCED" {
-				return spanned(p, &ast.OptimizerHint{HintKind: "ParameterizationForced"}, astStart), nil
+				return p.optHint("ParameterizationForced", astStart), nil
 			}
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "Parameterization"}, astStart), nil
+		return p.optHint("Parameterization", astStart), nil
 
 	case "MAXRECURSION":
 		p.nextToken() // consume MAXRECURSION
@@ -5236,24 +5246,27 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 				return spanned(p, spanV58, astStart), spanErr58
 			} else if subUpper == "CORRELATED" {
 				p.nextToken() // consume CORRELATED
+				hintTok := astStart
 				if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNION" {
+					// ScriptDom positions this hint on the UNION token.
+					hintTok = p.curTok
 					p.nextToken() // consume UNION
 					if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ALL" {
 						p.nextToken() // consume ALL
 					}
 				}
-				return spanned(p, &ast.OptimizerHint{HintKind: "OptimizeCorrelatedUnionAll"}, astStart), nil
+				return p.optHint("OptimizeCorrelatedUnionAll", hintTok), nil
 			}
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "Optimize"}, astStart), nil
+		return p.optHint("Optimize", astStart), nil
 
 	case "CHECKCONSTRAINTS":
 		p.nextToken() // consume CHECKCONSTRAINTS
 		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PLAN" {
 			p.nextToken() // consume PLAN
-			return spanned(p, &ast.OptimizerHint{HintKind: "CheckConstraintsPlan"}, astStart), nil
+			return p.optHint("CheckConstraintsPlan", astStart), nil
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "CheckConstraints"}, astStart), nil
+		return p.optHint("CheckConstraints", astStart), nil
 
 	case "LABEL":
 		p.nextToken() // consume LABEL
@@ -5265,7 +5278,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			}
 			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "Label", Value: value}, astStart), nil
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "Label"}, astStart), nil
+		return p.optHint("Label", astStart), nil
 
 	case "MAX_GRANT_PERCENT":
 		p.nextToken() // consume MAX_GRANT_PERCENT
@@ -5277,7 +5290,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			}
 			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "MaxGrantPercent", Value: value}, astStart), nil
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "MaxGrantPercent"}, astStart), nil
+		return p.optHint("MaxGrantPercent", astStart), nil
 
 	case "MIN_GRANT_PERCENT":
 		p.nextToken() // consume MIN_GRANT_PERCENT
@@ -5289,7 +5302,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			}
 			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "MinGrantPercent", Value: value}, astStart), nil
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "MinGrantPercent"}, astStart), nil
+		return p.optHint("MinGrantPercent", astStart), nil
 
 	case "FAST":
 		p.nextToken() // consume FAST
@@ -5301,11 +5314,11 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			}
 			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}, astStart), nil
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: "Fast"}, astStart), nil
+		return p.optHint("Fast", astStart), nil
 
 	case "NO_PERFORMANCE_SPOOL":
 		p.nextToken() // consume NO_PERFORMANCE_SPOOL
-		return spanned(p, &ast.OptimizerHint{HintKind: "NoPerformanceSpool"}, astStart), nil
+		return p.optHint("NoPerformanceSpool", astStart), nil
 
 	default:
 		// Handle generic hints
@@ -5347,7 +5360,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			}
 			return spanned(p, &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}, astStart), nil
 		}
-		return spanned(p, &ast.OptimizerHint{HintKind: hintKind}, astStart), nil
+		return p.optHint(hintKind, astStart), nil
 	}
 }
 

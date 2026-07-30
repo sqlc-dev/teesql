@@ -2023,7 +2023,7 @@ func selectElementToJSON(elem ast.SelectElement) jsonNode {
 			if e.Variable.Name != "" {
 				varNode["Name"] = e.Variable.Name
 			}
-			node["Variable"] = varNode
+			node["Variable"] = addSpan(varNode, frag(e.Variable))
 		}
 		if e.Expression != nil {
 			node["Expression"] = scalarExpressionToJSON(e.Expression)
