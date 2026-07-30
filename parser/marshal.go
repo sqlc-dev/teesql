@@ -8233,6 +8233,12 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					}
 				}
 			}
+			// ScriptDom ends the column's span at the masking function
+			// string, excluding the closing paren.
+			if mf, ok := any(col.MaskingFunction).(spannable); ok && mf.Frag().HasSpan() {
+				capEnd = mf.Frag().EndOffset()
+				capPrevEnd = p.prevEndByte
+			}
 		} else if upperLit == "ENCRYPTED" {
 			p.nextToken() // consume ENCRYPTED
 			if strings.ToUpper(p.curTok.Literal) == "WITH" {
@@ -13655,6 +13661,7 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 				default:
 					opt.OptionKind = capitalizeFirst(p.curTok.Literal)
 				}
+				p.tokSpan(opt, p.curTok)
 				p.nextToken()
 				stmt.Options = append(stmt.Options, opt)
 

@@ -6383,6 +6383,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 							break
 						}
 
+						optTok := p.curTok
 						optionName := upperLiteral
 						p.nextToken()
 						if p.curTok.Type == TokenEquals {
@@ -6400,12 +6401,18 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 								OptionKind:  convertIndexOptionKind(optionName),
 								OptionState: state,
 							}
+							p.spanFrom(optTok, option)
 							constraint.IndexOptions = append(constraint.IndexOptions, option)
 						} else {
 							expr, _ := p.parseScalarExpression()
 							option := &ast.IndexExpressionOption{
 								OptionKind: convertIndexOptionKind(optionName),
 								Expression: expr,
+							}
+							if option.OptionKind == "BucketCount" {
+								p.spanFromChild(option, expr)
+							} else {
+								p.spanFrom(optTok, option)
 							}
 							constraint.IndexOptions = append(constraint.IndexOptions, option)
 						}
@@ -6543,6 +6550,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 							break
 						}
 
+						optTok := p.curTok
 						optionName := upperLiteral
 						p.nextToken()
 						if p.curTok.Type == TokenEquals {
@@ -6560,12 +6568,18 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 								OptionKind:  convertIndexOptionKind(optionName),
 								OptionState: state,
 							}
+							p.spanFrom(optTok, option)
 							constraint.IndexOptions = append(constraint.IndexOptions, option)
 						} else {
 							expr, _ := p.parseScalarExpression()
 							option := &ast.IndexExpressionOption{
 								OptionKind: convertIndexOptionKind(optionName),
 								Expression: expr,
+							}
+							if option.OptionKind == "BucketCount" {
+								p.spanFromChild(option, expr)
+							} else {
+								p.spanFrom(optTok, option)
 							}
 							constraint.IndexOptions = append(constraint.IndexOptions, option)
 						}

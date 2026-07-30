@@ -2379,6 +2379,15 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 
 	// Check for special functions that need custom handling
 	if len(identifiers) == 1 {
+		// copyNameSpan gives the synthesized function-name identifier the
+		// span of the original name token.
+		copyNameSpan := func(v any) {
+			fc, ok := v.(*ast.FunctionCall)
+			if ok && fc != nil && fc.FunctionName != nil && identifiers[0].Frag().HasSpan() {
+				f := identifiers[0].Frag()
+				fc.FunctionName.SetSpan(f.StartOffset, f.FragmentLength, f.StartLine, f.StartColumn)
+			}
+		}
 		funcName := strings.ToUpper(identifiers[0].Value)
 		switch funcName {
 		case "IIF":
@@ -2386,15 +2395,19 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 			return spanned(p, spanV31, astStart), spanErr31
 		case "PARSE":
 			spanV32, spanErr32 := p.parseParseCall(false)
+			copyNameSpan(spanV32)
 			return spanned(p, spanV32, astStart), spanErr32
 		case "TRY_PARSE":
 			spanV33, spanErr33 := p.parseParseCall(true)
+			copyNameSpan(spanV33)
 			return spanned(p, spanV33, astStart), spanErr33
 		case "JSON_OBJECT":
 			spanV34, spanErr34 := p.parseJsonObjectCall()
+			copyNameSpan(spanV34)
 			return spanned(p, spanV34, astStart), spanErr34
 		case "JSON_ARRAY":
 			spanV35, spanErr35 := p.parseJsonArrayCall()
+			copyNameSpan(spanV35)
 			return spanned(p, spanV35, astStart), spanErr35
 		}
 	}

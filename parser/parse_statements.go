@@ -311,10 +311,12 @@ func (p *Parser) parseTableConstraint() (ast.TableConstraint, error) {
 					sortOrder = ast.SortOrderDescending
 					p.nextToken()
 				}
-				constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+				cws := &ast.ColumnWithSortOrder{
 					Column:    colRef,
 					SortOrder: sortOrder,
-				})
+				}
+				p.spanFromChild(cws, colName)
+				constraint.Columns = append(constraint.Columns, cws)
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
 				} else {
@@ -401,10 +403,12 @@ func (p *Parser) parseTableConstraint() (ast.TableConstraint, error) {
 					sortOrder = ast.SortOrderDescending
 					p.nextToken()
 				}
-				constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+				cws := &ast.ColumnWithSortOrder{
 					Column:    colRef,
 					SortOrder: sortOrder,
-				})
+				}
+				p.spanFromChild(cws, colName)
+				constraint.Columns = append(constraint.Columns, cws)
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
 				} else {
@@ -7755,6 +7759,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 	// Parse devices
 	var devices []*ast.DeviceInfo
 	for {
+		deviceStart := p.curTok
 		device := &ast.DeviceInfo{
 			DeviceType: "None",
 		}
@@ -7785,9 +7790,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		if hasPhysicalType {
 			// Physical device: use PhysicalDevice field with ScalarExpression
 			if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
-				device.PhysicalDevice = &ast.VariableReference{
-					Name: p.curTok.Literal,
-				}
+				device.PhysicalDevice = p.spanVarRef(p.curTok.Literal)
 				p.nextToken()
 			} else if p.curTok.Type == TokenString {
 				str, err := p.parseStringLiteral()
@@ -7824,6 +7827,8 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 			}
 		}
 
+		// ScriptDom spans a device on its name expression only.
+		p.spanDeviceInfo(device, deviceStart)
 		devices = append(devices, device)
 
 		// Check for comma (more devices)
@@ -7846,6 +7851,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 		mirrorClause := &ast.MirrorToClause{}
 		// Parse mirror devices
 		for {
+			mirrorDeviceStart := p.curTok
 			mirrorDevice := &ast.DeviceInfo{
 				DeviceType: "None",
 			}
@@ -7915,6 +7921,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 				}
 			}
 
+			p.spanDeviceInfo(mirrorDevice, mirrorDeviceStart)
 			mirrorClause.Devices = append(mirrorClause.Devices, mirrorDevice)
 
 			// Check for comma (more mirror devices)

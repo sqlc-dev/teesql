@@ -585,3 +585,25 @@ func (p *Parser) parseStatementInner() (ast.Statement, error) {
 		return nil, fmt.Errorf("unexpected token: %s", p.curTok.Literal)
 	}
 }
+
+// spanDeviceInfo spans a backup/restore device on its name expression when it
+// carries one (matching ScriptDom), falling back to the full clause.
+func (p *Parser) spanDeviceInfo(d *ast.DeviceInfo, start Token) {
+	var child any
+	if d.PhysicalDevice != nil {
+		child = d.PhysicalDevice
+	} else if d.LogicalDevice != nil {
+		if d.LogicalDevice.Identifier != nil {
+			child = d.LogicalDevice.Identifier
+		} else if d.LogicalDevice.ValueExpression != nil {
+			child = d.LogicalDevice.ValueExpression
+		}
+	}
+	if c, ok := child.(spannable); ok {
+		if f := c.Frag(); f.HasSpan() {
+			d.SetSpan(f.StartOffset, f.FragmentLength, f.StartLine, f.StartColumn)
+			return
+		}
+	}
+	p.spanFrom(start, d)
+}
