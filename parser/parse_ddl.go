@@ -8820,8 +8820,12 @@ func (p *Parser) parseAlterUserStatement() (*ast.AlterUserStatement, error) {
 						Value:      value,
 					}
 				}
-				if sp, ok := opt.(spannable); ok {
-					p.spanFrom(optTok, sp)
+				switch o := opt.(type) {
+				case *ast.IdentifierPrincipalOption:
+					// ScriptDom spans this option on its identifier value.
+					p.spanFromChild(o, o.Identifier)
+				case spannable:
+					p.spanFrom(optTok, o)
 				}
 				stmt.UserOptions = append(stmt.UserOptions, opt)
 			}
@@ -10754,18 +10758,27 @@ func (p *Parser) parseAlterProcedureStatement() (*ast.AlterProcedureStatement, e
 			}
 			upperLit := strings.ToUpper(p.curTok.Literal)
 			if upperLit == "RECOMPILE" {
-				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "Recompile"})
+				sopt := &ast.ProcedureOption{OptionKind: "Recompile"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			} else if upperLit == "ENCRYPTION" {
-				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "Encryption"})
+				sopt := &ast.ProcedureOption{OptionKind: "Encryption"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			} else if upperLit == "NATIVE_COMPILATION" {
-				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "NativeCompilation"})
+				sopt := &ast.ProcedureOption{OptionKind: "NativeCompilation"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			} else if upperLit == "SCHEMABINDING" {
-				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "SchemaBinding"})
+				sopt := &ast.ProcedureOption{OptionKind: "SchemaBinding"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			} else if upperLit == "EXECUTE" {
+				execTok := p.curTok
 				p.nextToken() // consume EXECUTE
 				if p.curTok.Type == TokenAs {
 					p.nextToken() // consume AS
@@ -10774,6 +10787,9 @@ func (p *Parser) parseAlterProcedureStatement() (*ast.AlterProcedureStatement, e
 					OptionKind: "ExecuteAs",
 					ExecuteAs:  &ast.ExecuteAsClause{},
 				}
+				// ScriptDom spans EXECUTE AS options on the EXECUTE keyword.
+				p.tokSpan(executeAsOpt, execTok)
+				p.tokSpan(executeAsOpt.ExecuteAs, execTok)
 				upperOption := strings.ToUpper(p.curTok.Literal)
 				if upperOption == "CALLER" {
 					executeAsOpt.ExecuteAs.ExecuteAsOption = "Caller"

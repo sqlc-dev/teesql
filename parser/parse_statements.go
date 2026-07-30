@@ -4842,18 +4842,27 @@ func (p *Parser) parseCreateProcedureStatement() (*ast.CreateProcedureStatement,
 			}
 			upperLit := strings.ToUpper(p.curTok.Literal)
 			if upperLit == "RECOMPILE" {
-				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "Recompile"})
+				sopt := &ast.ProcedureOption{OptionKind: "Recompile"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			} else if upperLit == "ENCRYPTION" {
-				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "Encryption"})
+				sopt := &ast.ProcedureOption{OptionKind: "Encryption"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			} else if upperLit == "NATIVE_COMPILATION" {
-				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "NativeCompilation"})
+				sopt := &ast.ProcedureOption{OptionKind: "NativeCompilation"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			} else if upperLit == "SCHEMABINDING" {
-				stmt.Options = append(stmt.Options, &ast.ProcedureOption{OptionKind: "SchemaBinding"})
+				sopt := &ast.ProcedureOption{OptionKind: "SchemaBinding"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			} else if upperLit == "EXECUTE" {
+				execTok := p.curTok
 				p.nextToken() // consume EXECUTE
 				if p.curTok.Type == TokenAs {
 					p.nextToken() // consume AS
@@ -4862,6 +4871,9 @@ func (p *Parser) parseCreateProcedureStatement() (*ast.CreateProcedureStatement,
 					OptionKind: "ExecuteAs",
 					ExecuteAs:  &ast.ExecuteAsClause{},
 				}
+				// ScriptDom spans EXECUTE AS options on the EXECUTE keyword.
+				p.tokSpan(executeAsOpt, execTok)
+				p.tokSpan(executeAsOpt.ExecuteAs, execTok)
 				upperOption := strings.ToUpper(p.curTok.Literal)
 				if upperOption == "CALLER" {
 					executeAsOpt.ExecuteAs.ExecuteAsOption = "Caller"
@@ -11538,7 +11550,11 @@ func (p *Parser) parsePrincipalOptions() []ast.PrincipalOption {
 		}
 
 		if len(options) > lenBefore {
-			if o, ok := options[len(options)-1].(spannable); ok {
+			switch o := options[len(options)-1].(type) {
+			case *ast.IdentifierPrincipalOption:
+				// ScriptDom spans this option on its identifier value.
+				p.spanFromChild(o, o.Identifier)
+			case spannable:
 				p.spanFrom(optTok, o)
 			}
 		}

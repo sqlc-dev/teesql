@@ -12988,8 +12988,12 @@ func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
 					Value:      value,
 				}
 			}
-			if sp, ok := opt.(spannable); ok {
-				p.spanFrom(optTok, sp)
+			switch o := opt.(type) {
+			case *ast.IdentifierPrincipalOption:
+				// ScriptDom spans this option on its identifier value.
+				p.spanFromChild(o, o.Identifier)
+			case spannable:
+				p.spanFrom(optTok, o)
 			}
 			stmt.UserOptions = append(stmt.UserOptions, opt)
 
@@ -13725,26 +13729,39 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 						OptionState: state,
 					})
 				case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION", "CALLED":
+					optNameTok2 := p.curTok
 					optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
 					p.nextToken()
 					// Handle CALLED ON NULL INPUT
+					var inputTok Token
 					if optKind == "Called" {
 						for strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+							if strings.ToUpper(p.curTok.Literal) == "INPUT" {
+								inputTok = p.curTok
+							}
 							p.nextToken()
 						}
 						optKind = "CalledOnNullInput"
 					}
-					stmt.Options = append(stmt.Options, &ast.FunctionOption{
-						OptionKind: optKind,
-					})
+					fo := &ast.FunctionOption{OptionKind: optKind}
+					if inputTok.Literal != "" {
+						p.tokSpan(fo, inputTok)
+					} else {
+						p.tokSpan(fo, optNameTok2)
+					}
+					stmt.Options = append(stmt.Options, fo)
 				case "RETURNS":
 					// Handle RETURNS NULL ON NULL INPUT
+					var inputTok Token
 					for strings.ToUpper(p.curTok.Literal) == "RETURNS" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+						if strings.ToUpper(p.curTok.Literal) == "INPUT" {
+							inputTok = p.curTok
+						}
 						p.nextToken()
 					}
-					stmt.Options = append(stmt.Options, &ast.FunctionOption{
-						OptionKind: "ReturnsNullOnNullInput",
-					})
+					fo := &ast.FunctionOption{OptionKind: "ReturnsNullOnNullInput"}
+					p.tokSpan(fo, inputTok)
+					stmt.Options = append(stmt.Options, fo)
 				default:
 					// Unknown option - skip it
 					if p.curTok.Type == TokenIdent {
@@ -14934,27 +14951,36 @@ func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
 			case "NATIVE_COMPILATION":
 				optKind = "NativeCompilation"
 			}
+			fo := &ast.FunctionOption{OptionKind: optKind}
+			p.tokSpan(fo, p.curTok)
 			p.nextToken()
-			stmt.Options = append(stmt.Options, &ast.FunctionOption{
-				OptionKind: optKind,
-			})
+			stmt.Options = append(stmt.Options, fo)
 		case "CALLED":
 			p.nextToken() // consume CALLED
 			// Handle CALLED ON NULL INPUT
+			var inputTok Token
 			for strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+				if strings.ToUpper(p.curTok.Literal) == "INPUT" {
+					inputTok = p.curTok
+				}
 				p.nextToken()
 			}
-			stmt.Options = append(stmt.Options, &ast.FunctionOption{
-				OptionKind: "CalledOnNullInput",
-			})
+			fo := &ast.FunctionOption{OptionKind: "CalledOnNullInput"}
+			// ScriptDom spans this option on the INPUT keyword.
+			p.tokSpan(fo, inputTok)
+			stmt.Options = append(stmt.Options, fo)
 		case "RETURNS":
 			// Handle RETURNS NULL ON NULL INPUT
+			var inputTok Token
 			for strings.ToUpper(p.curTok.Literal) == "RETURNS" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+				if strings.ToUpper(p.curTok.Literal) == "INPUT" {
+					inputTok = p.curTok
+				}
 				p.nextToken()
 			}
-			stmt.Options = append(stmt.Options, &ast.FunctionOption{
-				OptionKind: "ReturnsNullOnNullInput",
-			})
+			fo := &ast.FunctionOption{OptionKind: "ReturnsNullOnNullInput"}
+			p.tokSpan(fo, inputTok)
+			stmt.Options = append(stmt.Options, fo)
 		case "EXECUTE":
 			p.nextToken() // consume EXECUTE
 			if p.curTok.Type == TokenAs {
@@ -15157,12 +15183,16 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 				})
 			case "RETURNS":
 				// Handle RETURNS NULL ON NULL INPUT
+				var inputTok Token
 				for strings.ToUpper(p.curTok.Literal) == "RETURNS" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+					if strings.ToUpper(p.curTok.Literal) == "INPUT" {
+						inputTok = p.curTok
+					}
 					p.nextToken()
 				}
-				stmt.Options = append(stmt.Options, &ast.FunctionOption{
-					OptionKind: "ReturnsNullOnNullInput",
-				})
+				fo := &ast.FunctionOption{OptionKind: "ReturnsNullOnNullInput"}
+				p.tokSpan(fo, inputTok)
+				stmt.Options = append(stmt.Options, fo)
 			case "EXECUTE":
 				p.nextToken() // consume EXECUTE
 				if p.curTok.Type == TokenAs {
@@ -15349,13 +15379,19 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 			optName := strings.ToUpper(p.curTok.Literal)
 			switch optName {
 			case "NATIVE_COMPILATION":
-				stmt.Options = append(stmt.Options, &ast.TriggerOption{OptionKind: "NativeCompile"})
+				sopt := &ast.TriggerOption{OptionKind: "NativeCompile"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			case "SCHEMABINDING":
-				stmt.Options = append(stmt.Options, &ast.TriggerOption{OptionKind: "SchemaBinding"})
+				sopt := &ast.TriggerOption{OptionKind: "SchemaBinding"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			case "ENCRYPTION":
-				stmt.Options = append(stmt.Options, &ast.TriggerOption{OptionKind: "Encryption"})
+				sopt := &ast.TriggerOption{OptionKind: "Encryption"}
+				p.tokSpan(sopt, p.curTok)
+				stmt.Options = append(stmt.Options, sopt)
 				p.nextToken()
 			case "EXECUTE":
 				p.nextToken() // consume EXECUTE
