@@ -1523,6 +1523,7 @@ func (p *Parser) parseSearchedCaseExpression() (*ast.SearchedCaseExpression, err
 	expr := &ast.SearchedCaseExpression{}
 
 	for p.curTok.Type == TokenWhen {
+		whenTok := p.curTok
 		p.nextToken() // consume WHEN
 
 		when, err := p.parseBooleanExpression()
@@ -1540,10 +1541,12 @@ func (p *Parser) parseSearchedCaseExpression() (*ast.SearchedCaseExpression, err
 			return nil, err
 		}
 
-		expr.WhenClauses = append(expr.WhenClauses, &ast.SearchedWhenClause{
+		wc := &ast.SearchedWhenClause{
 			WhenExpression: when,
 			ThenExpression: then,
-		})
+		}
+		p.spanFrom(whenTok, wc)
+		expr.WhenClauses = append(expr.WhenClauses, wc)
 	}
 
 	// Optional ELSE

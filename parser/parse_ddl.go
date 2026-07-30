@@ -7837,6 +7837,7 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 		if strings.ToUpper(p.curTok.Literal) != "NAME" {
 			return nil, fmt.Errorf("expected NAME after WITH, got %s", p.curTok.Literal)
 		}
+		nameTok := p.curTok
 		p.nextToken() // consume NAME
 		if p.curTok.Type != TokenEquals {
 			return nil, fmt.Errorf("expected = after NAME, got %s", p.curTok.Literal)
@@ -7844,6 +7845,7 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 		p.nextToken() // consume =
 		action := &ast.RenameAlterRoleAction{}
 		action.NewName = p.parseIdentifier()
+		p.spanFrom(nameTok, action)
 		stmt.Action = action
 
 	default:
@@ -7986,6 +7988,7 @@ func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement,
 		if strings.ToUpper(p.curTok.Literal) != "NAME" {
 			return nil, fmt.Errorf("expected NAME after WITH, got %s", p.curTok.Literal)
 		}
+		nameTok := p.curTok
 		p.nextToken() // consume NAME
 		if p.curTok.Type != TokenEquals {
 			return nil, fmt.Errorf("expected = after NAME, got %s", p.curTok.Literal)
@@ -7993,6 +7996,7 @@ func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement,
 		p.nextToken() // consume =
 		action := &ast.RenameAlterRoleAction{}
 		action.NewName = p.parseIdentifier()
+		p.spanFrom(nameTok, action)
 		stmt.Action = action
 
 	default:
@@ -8161,6 +8165,7 @@ func (p *Parser) parseAlterRemoteServiceBindingStatement() (*ast.AlterRemoteServ
 			}
 			stmt.Options = append(stmt.Options, opt)
 		case "ANONYMOUS":
+			valTok := p.curTok
 			optState := strings.ToUpper(p.curTok.Literal)
 			var state string
 			if optState == "ON" {
@@ -8173,6 +8178,8 @@ func (p *Parser) parseAlterRemoteServiceBindingStatement() (*ast.AlterRemoteServ
 				OptionKind:  "Anonymous",
 				OptionState: state,
 			}
+			// ScriptDom spans this option on its ON/OFF value.
+			p.tokSpan(opt, valTok)
 			stmt.Options = append(stmt.Options, opt)
 		}
 
@@ -8906,6 +8913,7 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 				optUpper := strings.ToUpper(p.curTok.Literal)
 				switch optUpper {
 				case "PERMISSION_SET":
+					permTok := p.curTok
 					p.nextToken() // consume PERMISSION_SET
 					if p.curTok.Type == TokenEquals {
 						p.nextToken()
@@ -8923,6 +8931,7 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 						opt.PermissionSetOption = "Unsafe"
 					}
 					p.nextToken()
+					p.spanFrom(permTok, opt)
 					stmt.Options = append(stmt.Options, opt)
 
 				case "VISIBILITY":

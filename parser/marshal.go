@@ -14982,6 +14982,7 @@ func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
 			p.tokSpan(fo, inputTok)
 			stmt.Options = append(stmt.Options, fo)
 		case "EXECUTE":
+			execTok := p.curTok
 			p.nextToken() // consume EXECUTE
 			if p.curTok.Type == TokenAs {
 				p.nextToken() // consume AS
@@ -14990,6 +14991,9 @@ func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
 				OptionKind: "ExecuteAs",
 				ExecuteAs:  &ast.ExecuteAsClause{},
 			}
+			// ScriptDom spans EXECUTE AS options on the EXECUTE keyword.
+			p.tokSpan(execAsOpt, execTok)
+			p.tokSpan(execAsOpt.ExecuteAs, execTok)
 			upperOption := strings.ToUpper(p.curTok.Literal)
 			switch upperOption {
 			case "CALLER":
@@ -15194,6 +15198,7 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 				p.tokSpan(fo, inputTok)
 				stmt.Options = append(stmt.Options, fo)
 			case "EXECUTE":
+				execTok := p.curTok
 				p.nextToken() // consume EXECUTE
 				if p.curTok.Type == TokenAs {
 					p.nextToken() // consume AS
@@ -15202,6 +15207,9 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 					OptionKind: "ExecuteAs",
 					ExecuteAs:  &ast.ExecuteAsClause{},
 				}
+				// ScriptDom spans EXECUTE AS options on the EXECUTE keyword.
+				p.tokSpan(execAsOpt, execTok)
+				p.tokSpan(execAsOpt.ExecuteAs, execTok)
 				upperOption := strings.ToUpper(p.curTok.Literal)
 				switch upperOption {
 				case "CALLER":

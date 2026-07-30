@@ -7081,11 +7081,13 @@ func (p *Parser) parseWriteTextStatement() (*ast.WriteTextStatement, error) {
 
 	// Parse text ID (can be binary literal, variable, or integer)
 	if p.curTok.Type == TokenBinary {
-		stmt.TextId = &ast.BinaryLiteral{
+		bl := &ast.BinaryLiteral{
 			LiteralType:   "Binary",
 			Value:         p.curTok.Literal,
 			IsLargeObject: false,
 		}
+		p.tokSpan(bl, p.curTok)
+		stmt.TextId = bl
 		p.nextToken()
 	} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		stmt.TextId = p.spanVarRef(p.curTok.Literal)
@@ -7155,11 +7157,13 @@ func (p *Parser) parseUpdateTextStatement() (*ast.UpdateTextStatement, error) {
 
 	// Parse text ID (can be binary literal, variable, or integer)
 	if p.curTok.Type == TokenBinary {
-		stmt.TextId = &ast.BinaryLiteral{
+		bl := &ast.BinaryLiteral{
 			LiteralType:   "Binary",
 			Value:         p.curTok.Literal,
 			IsLargeObject: false,
 		}
+		p.tokSpan(bl, p.curTok)
+		stmt.TextId = bl
 		p.nextToken()
 	} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		stmt.TextId = p.spanVarRef(p.curTok.Literal)
