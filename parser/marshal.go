@@ -18145,15 +18145,15 @@ func externalTableDistributionOptionToJSON(opt *ast.ExternalTableDistributionOpt
 			if v.ShardingColumn != nil {
 				policyNode["ShardingColumn"] = identifierToJSON(v.ShardingColumn)
 			}
-			node["Value"] = policyNode
+			node["Value"] = addSpan(policyNode, frag(v))
 		case *ast.ExternalTableRoundRobinDistributionPolicy:
-			node["Value"] = jsonNode{
+			node["Value"] = addSpan(jsonNode{
 				"$type": "ExternalTableRoundRobinDistributionPolicy",
-			}
+			}, frag(v))
 		case *ast.ExternalTableReplicatedDistributionPolicy:
-			node["Value"] = jsonNode{
+			node["Value"] = addSpan(jsonNode{
 				"$type": "ExternalTableReplicatedDistributionPolicy",
-			}
+			}, frag(v))
 		}
 	}
 	return addSpan(node, frag(opt))

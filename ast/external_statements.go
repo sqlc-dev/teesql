@@ -128,12 +128,16 @@ type ExternalTableShardedDistributionPolicy struct {
 func (p *ExternalTableShardedDistributionPolicy) externalTableDistributionPolicy() {}
 
 // ExternalTableRoundRobinDistributionPolicy represents ROUND_ROBIN distribution
-type ExternalTableRoundRobinDistributionPolicy struct{}
+type ExternalTableRoundRobinDistributionPolicy struct {
+	Fragment
+}
 
 func (p *ExternalTableRoundRobinDistributionPolicy) externalTableDistributionPolicy() {}
 
 // ExternalTableReplicatedDistributionPolicy represents REPLICATE distribution
-type ExternalTableReplicatedDistributionPolicy struct{}
+type ExternalTableReplicatedDistributionPolicy struct {
+	Fragment
+}
 
 func (p *ExternalTableReplicatedDistributionPolicy) externalTableDistributionPolicy() {}
 

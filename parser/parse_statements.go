@@ -8921,6 +8921,7 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optTok := p.curTok
 				optName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken() // consume option name
 
@@ -8947,6 +8948,7 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 						opt.Value = val
 					}
 					p.nextToken() // consume value
+					p.spanFrom(optTok, opt)
 					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
 				case "REJECT_VALUE", "REJECT_SAMPLE_VALUE":
 					opt := &ast.ExternalTableLiteralOrIdentifierOption{
@@ -8961,23 +8963,28 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 					if p.curTok.Type == TokenNumber {
 						if strings.Contains(p.curTok.Literal, ".") {
 							numLit := &ast.NumericLiteral{LiteralType: "Numeric", Value: p.curTok.Literal}
+							p.tokSpan(numLit, p.curTok)
 							opt.Value.Value = p.curTok.Literal
 							opt.Value.ValueExpression = numLit
 						} else {
-							intLit := &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
 							opt.Value.Value = p.curTok.Literal
-							opt.Value.ValueExpression = intLit
+							opt.Value.ValueExpression = p.intLitFromToken(p.curTok)
 						}
+						// ScriptDom spans REJECT_VALUE options on the value only.
+						p.tokSpan(opt, p.curTok)
 						p.nextToken()
 					}
 					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
 				case "DISTRIBUTION":
 					// Parse DISTRIBUTION = SHARDED(col), ROUND_ROBIN, or REPLICATE
+					distTok := p.curTok
 					distVal := strings.ToUpper(p.curTok.Literal)
 					p.nextToken()
 					opt := &ast.ExternalTableDistributionOption{
 						OptionKind: "Distribution",
 					}
+					// ScriptDom spans this option on the DISTRIBUTION keyword.
+					p.tokSpan(opt, optTok)
 					if distVal == "SHARDED" {
 						if p.curTok.Type == TokenLParen {
 							p.nextToken() // consume (
@@ -8987,12 +8994,17 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 							if p.curTok.Type == TokenRParen {
 								p.nextToken() // consume )
 							}
+							p.spanFrom(distTok, sharded)
 							opt.Value = sharded
 						}
 					} else if distVal == "ROUND_ROBIN" {
-						opt.Value = &ast.ExternalTableRoundRobinDistributionPolicy{}
+						rr := &ast.ExternalTableRoundRobinDistributionPolicy{}
+						p.tokSpan(rr, distTok)
+						opt.Value = rr
 					} else if distVal == "REPLICATE" || distVal == "REPLICATED" {
-						opt.Value = &ast.ExternalTableReplicatedDistributionPolicy{}
+						rp := &ast.ExternalTableReplicatedDistributionPolicy{}
+						p.tokSpan(rp, distTok)
+						opt.Value = rp
 					}
 					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
 				case "LOCATION", "FILE_FORMAT", "TABLE_OPTIONS", "SCHEMA_NAME", "OBJECT_NAME", "REJECTED_ROW_LOCATION":
@@ -9029,6 +9041,7 @@ func (p *Parser) parseCreateExternalTableStatement() (*ast.CreateExternalTableSt
 						opt.Value.Value = ident.Value
 						opt.Value.Identifier = ident
 					}
+					p.spanFrom(optTok, opt)
 					stmt.ExternalTableOptions = append(stmt.ExternalTableOptions, opt)
 				default:
 					// Skip unknown options
@@ -9820,11 +9833,17 @@ func (p *Parser) parseSessionOption() ast.SessionOption {
 			unit = strings.ToUpper(p.curTok.Literal)
 			p.nextToken()
 		}
-		return spanned(p, &ast.LiteralSessionOption{
+		lso := &ast.LiteralSessionOption{
 			OptionKind: p.sessionOptionKind(optName),
 			Value:      value,
 			Unit:       unit,
-		}, astStart)
+		}
+		// ScriptDom spans this option on its value literal only.
+		if c, ok := any(value).(spannable); ok && c.Frag().HasSpan() {
+			f := c.Frag()
+			lso.SetSpan(f.StartOffset, f.FragmentLength, f.StartLine, f.StartColumn)
+		}
+		return lso
 	case "EVENT_RETENTION_MODE":
 		value := p.curTok.Literal
 		p.nextToken()

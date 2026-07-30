@@ -976,10 +976,15 @@ func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
 				return nil, err
 			}
 		}
-		return spanned(p, &ast.LiteralBulkInsertOption{
+		lbo := spanned(p, &ast.LiteralBulkInsertOption{
 			OptionKind: optionKind,
 			Value:      value,
-		}, astStart), nil
+		}, astStart)
+		// ScriptDom spans HEADER_ROW and ROWSET_OPTIONS on the keyword only.
+		if optionKind == "HeaderRow" || optionKind == "RowsetOptions" {
+			p.tokSpan(lbo, astStart)
+		}
+		return lbo, nil
 	}
 
 	return spanned(p, &ast.BulkInsertOptionBase{OptionKind: optionKind}, astStart), nil
@@ -2490,10 +2495,15 @@ func (p *Parser) parseBulkInsertOption() (ast.BulkInsertOption, error) {
 		if err != nil {
 			return nil, err
 		}
-		return spanned(p, &ast.LiteralBulkInsertOption{
+		lbo := spanned(p, &ast.LiteralBulkInsertOption{
 			OptionKind: optionKind,
 			Value:      value,
-		}, astStart), nil
+		}, astStart)
+		// ScriptDom spans HEADER_ROW and ROWSET_OPTIONS on the keyword only.
+		if optionKind == "HeaderRow" || optionKind == "RowsetOptions" {
+			p.tokSpan(lbo, astStart)
+		}
+		return lbo, nil
 	}
 
 	// Simple option without value
