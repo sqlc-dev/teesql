@@ -1498,14 +1498,18 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 	}
 
 	spec.ExecutableEntity = procRef
-	return spanned(p, spec, astStart), nil
+	spanned(p, spec, astStart)
+	// A trailing semicolon consumed by the parameter scan belongs to the
+	// statement, not the specification.
+	p.trimTrailingSemicolon(spec)
+	return spec, nil
 }
 
 func (p *Parser) parseExecutableStringList() (*ast.ExecutableStringList, error) {
-	astStart := p.curTok
-
 	// We're positioned on (, consume it
 	p.nextToken()
+	// ScriptDom spans the string list over the parenthesized contents only.
+	contentTok := p.curTok
 
 	strList := &ast.ExecutableStringList{}
 
@@ -1552,9 +1556,10 @@ func (p *Parser) parseExecutableStringList() (*ast.ExecutableStringList, error) 
 	if p.curTok.Type != TokenRParen {
 		return nil, fmt.Errorf("expected ) after EXECUTE string list, got %s", p.curTok.Literal)
 	}
+	p.spanFrom(contentTok, strList)
 	p.nextToken()
 
-	return spanned(p, strList, astStart), nil
+	return strList, nil
 }
 
 func (p *Parser) flattenStringExpression(expr ast.ScalarExpression, strings *[]ast.ScalarExpression) {
@@ -1576,6 +1581,7 @@ func (p *Parser) parseExecuteContextForSpec() (*ast.ExecuteContext, error) {
 
 	ctx := &ast.ExecuteContext{}
 
+	kindTok := p.curTok
 	upper := strings.ToUpper(p.curTok.Literal)
 	switch upper {
 	case "USER":
@@ -1613,7 +1619,15 @@ func (p *Parser) parseExecuteContextForSpec() (*ast.ExecuteContext, error) {
 		return nil, fmt.Errorf("expected USER, LOGIN, CALLER, OWNER, or SELF after AS, got %s", p.curTok.Literal)
 	}
 
-	return spanned(p, ctx, astStart), nil
+	// ScriptDom positions the context on its principal expression when
+	// present, otherwise on the kind keyword.
+	if pr, ok := ctx.Principal.(spannable); ok && pr.Frag().HasSpan() {
+		*ctx.Frag() = *pr.Frag()
+	} else {
+		p.tokSpan(ctx, kindTok)
+	}
+	_ = astStart
+	return ctx, nil
 }
 
 func (p *Parser) parseExecuteParameter() (*ast.ExecuteParameter, error) {

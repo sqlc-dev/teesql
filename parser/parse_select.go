@@ -6288,6 +6288,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 
 			// Wrap the scalar in a ParenthesisExpression
 			parenExpr := &ast.ParenthesisExpression{Expression: placeholder.Scalar}
+			p.spanFrom(astStart, parenExpr)
 
 			// Check for comparison operators after the parenthesized expression
 			if p.isComparisonOperator() {

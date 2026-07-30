@@ -5872,6 +5872,7 @@ func (p *Parser) parseExecuteAsStatement() (*ast.ExecuteAsStatement, error) {
 	// Parse the execute context
 	stmt.ExecuteContext = &ast.ExecuteContext{}
 
+	ctxKindTok := p.curTok
 	switch p.curTok.Type {
 	case TokenCaller:
 		stmt.ExecuteContext.Kind = "Caller"
@@ -5902,6 +5903,14 @@ func (p *Parser) parseExecuteAsStatement() (*ast.ExecuteAsStatement, error) {
 		stmt.ExecuteContext.Principal = principal
 	default:
 		return nil, fmt.Errorf("expected CALLER, LOGIN, or USER after EXECUTE AS, got %s", p.curTok.Literal)
+	}
+
+	// ScriptDom positions the context on its principal expression when
+	// present, otherwise on the kind keyword.
+	if pr, ok := stmt.ExecuteContext.Principal.(spannable); ok && pr.Frag().HasSpan() {
+		*stmt.ExecuteContext.Frag() = *pr.Frag()
+	} else {
+		p.tokSpan(stmt.ExecuteContext, ctxKindTok)
 	}
 
 	// Check for WITH options
@@ -7397,6 +7406,9 @@ func (p *Parser) parseImplicitExecuteStatement(procName string) (ast.Statement, 
 	spec := &ast.ExecuteSpecification{
 		ExecutableEntity: procRef,
 	}
+	// The specification excludes any trailing semicolon, which belongs to
+	// the statement alone.
+	p.spanFrom(astStart, spec)
 
 	stmt := &ast.ExecuteStatement{ExecuteSpecification: spec}
 
