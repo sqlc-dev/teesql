@@ -5502,6 +5502,7 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 			return nil, fmt.Errorf("expected identifier, got %s", p.curTok.Literal)
 		}
 
+		nameTok := p.curTok
 		element := &ast.AlterTableDropTableElement{
 			TableElementType: currentElementType,
 			Name:             p.parseIdentifier(),
@@ -5517,6 +5518,9 @@ func (p *Parser) parseAlterTableDropStatement(tableName *ast.SchemaObjectName) (
 			element.DropClusteredConstraintOptions = options
 		}
 
+		// ScriptDom spans the element from its name (excluding any
+		// COLUMN/CONSTRAINT keyword) through its WITH options.
+		p.spanFrom(nameTok, element)
 		stmt.AlterTableDropTableElements = append(stmt.AlterTableDropTableElements, element)
 
 		// After adding an element, reset type to NotSpecified for next element

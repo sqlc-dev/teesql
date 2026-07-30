@@ -247,6 +247,22 @@ func (p *Parser) strLit(value string, isNational bool) *ast.StringLiteral {
 	return l
 }
 
+// respanStart widens an already-spanned node so its span begins at the given
+// earlier token, keeping the current end.
+func (p *Parser) respanStart(n spannable, start Token) {
+	f := n.Frag()
+	if !f.HasSpan() {
+		return
+	}
+	su, sl, sc := p.srcMap.at(start.Pos)
+	if su < f.StartOffset {
+		f.FragmentLength += f.StartOffset - su
+		f.StartOffset = su
+		f.StartLine = sl
+		f.StartColumn = sc
+	}
+}
+
 // identFromToken builds an Identifier from the given token's literal with
 // the token's source span, without consuming it.
 func (p *Parser) identFromToken(tok Token) *ast.Identifier {

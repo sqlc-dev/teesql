@@ -10852,6 +10852,7 @@ func (p *Parser) parseFileGroups() ([]*ast.FileGroupDefinition, error) {
 	for {
 		fg := &ast.FileGroupDefinition{}
 		isPrimary := false
+		groupStart := p.curTok
 
 		// Check for PRIMARY keyword or FILEGROUP keyword
 		switch strings.ToUpper(p.curTok.Literal) {
@@ -10884,6 +10885,10 @@ func (p *Parser) parseFileGroups() ([]*ast.FileGroupDefinition, error) {
 		decls, err := p.parseFileDeclarationList(isPrimary)
 		if err != nil {
 			return nil, err
+		}
+		// ScriptDom spans the first PRIMARY declaration from the PRIMARY keyword.
+		if isPrimary && len(decls) > 0 {
+			p.respanStart(decls[0], groupStart)
 		}
 		fg.FileDeclarations = decls
 		fileGroups = append(fileGroups, fg)
@@ -10922,6 +10927,7 @@ func (p *Parser) parseFileDeclarationList(firstIsPrimary bool) ([]*ast.FileDecla
 		if p.curTok.Type != TokenLParen {
 			break
 		}
+		parenStart := p.curTok
 		p.nextToken() // consume (
 
 		decl := &ast.FileDeclaration{}
@@ -10942,6 +10948,7 @@ func (p *Parser) parseFileDeclarationList(firstIsPrimary bool) ([]*ast.FileDecla
 			p.nextToken() // consume )
 		}
 
+		p.spanFrom(parenStart, decl)
 		decls = append(decls, decl)
 
 		// Check for comma
@@ -10972,6 +10979,8 @@ func (p *Parser) parseFileDeclarationOptions() ([]ast.FileDeclarationOption, err
 			continue
 		}
 
+		optStart := p.curTok
+		lenBefore := len(opts)
 		optName := strings.ToUpper(p.curTok.Literal)
 
 		switch optName {
@@ -11096,6 +11105,12 @@ func (p *Parser) parseFileDeclarationOptions() ([]ast.FileDeclarationOption, err
 			// Unknown option, break
 			return opts, nil
 		}
+
+		if len(opts) > lenBefore {
+			if o, ok := opts[len(opts)-1].(spannable); ok {
+				p.spanFrom(optStart, o)
+			}
+		}
 	}
 
 	return opts, nil
@@ -11108,27 +11123,28 @@ func (p *Parser) parseSizeValue() (ast.ScalarExpression, string) {
 	value := p.curTok.Literal
 	p.nextToken() // consume value
 
+	intLit := func(v string) *ast.IntegerLiteral {
+		l := &ast.IntegerLiteral{LiteralType: "Integer", Value: v}
+		p.tokSpan(l, astStart)
+		return l
+	}
+
 	// Check if unit is attached to value (e.g., "5MB", "15%")
 	upperVal := strings.ToUpper(value)
 	if strings.HasSuffix(upperVal, "%") {
-		numVal := strings.TrimSuffix(value, "%")
-		return spanned(p, &ast.IntegerLiteral{LiteralType: "Integer", Value: numVal}, astStart), "Percent"
+		return intLit(strings.TrimSuffix(value, "%")), "Percent"
 	}
 	if strings.HasSuffix(upperVal, "KB") {
-		numVal := strings.TrimSuffix(upperVal, "KB")
-		return spanned(p, &ast.IntegerLiteral{LiteralType: "Integer", Value: numVal}, astStart), "KB"
+		return intLit(strings.TrimSuffix(upperVal, "KB")), "KB"
 	}
 	if strings.HasSuffix(upperVal, "MB") {
-		numVal := strings.TrimSuffix(upperVal, "MB")
-		return spanned(p, &ast.IntegerLiteral{LiteralType: "Integer", Value: numVal}, astStart), "MB"
+		return intLit(strings.TrimSuffix(upperVal, "MB")), "MB"
 	}
 	if strings.HasSuffix(upperVal, "GB") {
-		numVal := strings.TrimSuffix(upperVal, "GB")
-		return spanned(p, &ast.IntegerLiteral{LiteralType: "Integer", Value: numVal}, astStart), "GB"
+		return intLit(strings.TrimSuffix(upperVal, "GB")), "GB"
 	}
 	if strings.HasSuffix(upperVal, "TB") {
-		numVal := strings.TrimSuffix(upperVal, "TB")
-		return spanned(p, &ast.IntegerLiteral{LiteralType: "Integer", Value: numVal}, astStart), "TB"
+		return intLit(strings.TrimSuffix(upperVal, "TB")), "TB"
 	}
 
 	// Check for separate unit token
@@ -11154,7 +11170,7 @@ func (p *Parser) parseSizeValue() (ast.ScalarExpression, string) {
 		}
 	}
 
-	return spanned(p, &ast.IntegerLiteral{LiteralType: "Integer", Value: value}, astStart), units
+	return intLit(value), units
 }
 
 func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) {

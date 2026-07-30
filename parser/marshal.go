@@ -7429,6 +7429,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 
 		// Parse optional IDENTITY specification
 		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "IDENTITY" {
+			identityTok := p.curTok
 			p.nextToken() // consume IDENTITY
 			identityOpts := &ast.IdentityOptions{}
 
@@ -7458,6 +7459,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					p.nextToken() // consume )
 				}
 			}
+			p.spanFrom(identityTok, identityOpts)
 
 			// Check for NOT FOR REPLICATION
 			if p.curTok.Type == TokenNot {
@@ -7468,6 +7470,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					if strings.ToUpper(p.curTok.Literal) == "REPLICATION" {
 						p.nextToken() // consume REPLICATION
 						identityOpts.NotForReplication = true
+						p.spanFrom(identityTok, identityOpts)
 					}
 				} else if p.curTok.Type == TokenNull {
 					// NOT NULL after IDENTITY - handle it here since NOT was already consumed
@@ -8165,6 +8168,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			}
 		} else if upperLit == "IDENTITY" && col.IdentityOptions == nil {
 			// IDENTITY can appear after DEFAULT or other constraints
+			identityTok := p.curTok
 			p.nextToken() // consume IDENTITY
 			identityOpts := &ast.IdentityOptions{}
 
@@ -8207,6 +8211,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				}
 			}
 
+			p.spanFrom(identityTok, identityOpts)
 			col.IdentityOptions = identityOpts
 		} else {
 			break
