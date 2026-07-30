@@ -1586,6 +1586,7 @@ func (p *Parser) parseSimpleCaseExpression() (*ast.SimpleCaseExpression, error) 
 	expr.InputExpression = input
 
 	for p.curTok.Type == TokenWhen {
+		whenTok := p.curTok
 		p.nextToken() // consume WHEN
 
 		when, err := p.parseScalarExpression()
@@ -1603,10 +1604,12 @@ func (p *Parser) parseSimpleCaseExpression() (*ast.SimpleCaseExpression, error) 
 			return nil, err
 		}
 
-		expr.WhenClauses = append(expr.WhenClauses, &ast.SimpleWhenClause{
+		wc := &ast.SimpleWhenClause{
 			WhenExpression: when,
 			ThenExpression: then,
-		})
+		}
+		p.spanFrom(whenTok, wc)
+		expr.WhenClauses = append(expr.WhenClauses, wc)
 	}
 
 	// Optional ELSE

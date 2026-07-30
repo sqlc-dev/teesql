@@ -2695,18 +2695,23 @@ func (p *Parser) parseDropEventNotificationStatement() (ast.Statement, error) {
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "SERVER":
 		scope.Target = "Server"
+		p.tokSpan(scope, p.curTok)
 		p.nextToken()
 	case "DATABASE":
 		scope.Target = "Database"
+		p.tokSpan(scope, p.curTok)
 		p.nextToken()
 	case "QUEUE":
 		scope.Target = "Queue"
 		p.nextToken()
+		queueTok := p.curTok
 		queueName, err := p.parseSchemaObjectName()
 		if err != nil {
 			return nil, err
 		}
 		scope.QueueName = queueName
+		// ScriptDom spans the QUEUE scope over the queue name.
+		p.spanFrom(queueTok, scope)
 	}
 	stmt.Scope = scope
 
@@ -7899,6 +7904,7 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 	// Parse action: ADD MEMBER, DROP MEMBER, or WITH NAME =
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "ADD":
+		actionTok := p.curTok
 		p.nextToken() // consume ADD
 		if strings.ToUpper(p.curTok.Literal) != "MEMBER" {
 			return nil, fmt.Errorf("expected MEMBER after ADD, got %s", p.curTok.Literal)
@@ -7906,9 +7912,11 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 		p.nextToken() // consume MEMBER
 		action := &ast.AddMemberAlterRoleAction{}
 		action.Member = p.parseIdentifier()
+		p.spanFrom(actionTok, action)
 		stmt.Action = action
 
 	case "DROP":
+		actionTok := p.curTok
 		p.nextToken() // consume DROP
 		if strings.ToUpper(p.curTok.Literal) != "MEMBER" {
 			return nil, fmt.Errorf("expected MEMBER after DROP, got %s", p.curTok.Literal)
@@ -7916,6 +7924,7 @@ func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
 		p.nextToken() // consume MEMBER
 		action := &ast.DropMemberAlterRoleAction{}
 		action.Member = p.parseIdentifier()
+		p.spanFrom(actionTok, action)
 		stmt.Action = action
 
 	case "WITH":
@@ -8050,6 +8059,7 @@ func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement,
 	// Parse action: ADD MEMBER, DROP MEMBER, or WITH NAME =
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "ADD":
+		actionTok := p.curTok
 		p.nextToken() // consume ADD
 		if strings.ToUpper(p.curTok.Literal) != "MEMBER" {
 			return nil, fmt.Errorf("expected MEMBER after ADD, got %s", p.curTok.Literal)
@@ -8057,9 +8067,11 @@ func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement,
 		p.nextToken() // consume MEMBER
 		action := &ast.AddMemberAlterRoleAction{}
 		action.Member = p.parseIdentifier()
+		p.spanFrom(actionTok, action)
 		stmt.Action = action
 
 	case "DROP":
+		actionTok := p.curTok
 		p.nextToken() // consume DROP
 		if strings.ToUpper(p.curTok.Literal) != "MEMBER" {
 			return nil, fmt.Errorf("expected MEMBER after DROP, got %s", p.curTok.Literal)
@@ -8067,6 +8079,7 @@ func (p *Parser) parseAlterServerRoleStatement() (*ast.AlterServerRoleStatement,
 		p.nextToken() // consume MEMBER
 		action := &ast.DropMemberAlterRoleAction{}
 		action.Member = p.parseIdentifier()
+		p.spanFrom(actionTok, action)
 		stmt.Action = action
 
 	case "WITH":
@@ -8913,10 +8926,14 @@ func (p *Parser) parseAlterUserStatement() (*ast.AlterUserStatement, error) {
 						Value:      value,
 					}
 				}
+				// ScriptDom quirk (inverse of CREATE USER): ALTER USER spans
+				// identifier options keyword-through-value but literal options
+				// on the value alone.
 				switch o := opt.(type) {
 				case *ast.IdentifierPrincipalOption:
-					// ScriptDom spans this option on its identifier value.
-					p.spanFromChild(o, o.Identifier)
+					p.spanFrom(optTok, o)
+				case *ast.LiteralPrincipalOption:
+					p.spanFromChild(o, o.Value)
 				case spannable:
 					p.spanFrom(optTok, o)
 				}
@@ -11272,6 +11289,7 @@ func (p *Parser) parseAlterExternalResourcePoolStatement() (*ast.AlterExternalRe
 
 	// Parse parameters
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		paramTok := p.curTok
 		paramName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
 
@@ -11368,6 +11386,10 @@ func (p *Parser) parseAlterExternalResourcePoolStatement() (*ast.AlterExternalRe
 			param.AffinitySpecification = affinitySpec
 		}
 
+		p.spanFrom(paramTok, param)
+		if param.AffinitySpecification != nil {
+			p.spanFrom(paramTok, param.AffinitySpecification)
+		}
 		stmt.ExternalResourcePoolParameters = append(stmt.ExternalResourcePoolParameters, param)
 
 		// Check for comma

@@ -9394,6 +9394,7 @@ func (p *Parser) parseCreateExternalResourcePoolStatement() (*ast.CreateExternal
 
 		// Parse parameters
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			paramTok := p.curTok
 			paramName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken()
 
@@ -9490,6 +9491,10 @@ func (p *Parser) parseCreateExternalResourcePoolStatement() (*ast.CreateExternal
 				param.AffinitySpecification = affinitySpec
 			}
 
+			p.spanFrom(paramTok, param)
+			if param.AffinitySpecification != nil {
+				p.spanFrom(paramTok, param.AffinitySpecification)
+			}
 			stmt.ExternalResourcePoolParameters = append(stmt.ExternalResourcePoolParameters, param)
 
 			// Check for comma
@@ -10086,15 +10091,20 @@ func (p *Parser) parseCreateEventNotificationFromEvent() (*ast.CreateEventNotifi
 		switch scopeUpper {
 		case "SERVER":
 			stmt.Scope.Target = "Server"
+			p.tokSpan(stmt.Scope, p.curTok)
 			p.nextToken()
 		case "DATABASE":
 			stmt.Scope.Target = "Database"
+			p.tokSpan(stmt.Scope, p.curTok)
 			p.nextToken()
 		case "QUEUE":
 			stmt.Scope.Target = "Queue"
 			p.nextToken()
 			// Parse queue name
+			queueTok := p.curTok
 			stmt.Scope.QueueName, _ = p.parseSchemaObjectName()
+			// ScriptDom spans the QUEUE scope over the queue name.
+			p.spanFrom(queueTok, stmt.Scope)
 		}
 	}
 
@@ -10113,6 +10123,7 @@ func (p *Parser) parseCreateEventNotificationFromEvent() (*ast.CreateEventNotifi
 
 		// Parse comma-separated list of event types/groups
 		for {
+			eventTok := p.curTok
 			eventName := p.curTok.Literal
 			p.nextToken()
 
@@ -10128,13 +10139,17 @@ func (p *Parser) parseCreateEventNotificationFromEvent() (*ast.CreateEventNotifi
 				strings.HasPrefix(upperName, "DDL_")
 
 			if isGroup {
-				stmt.EventTypeGroups = append(stmt.EventTypeGroups, &ast.EventGroupContainer{
+				egc := &ast.EventGroupContainer{
 					EventGroup: pascalName,
-				})
+				}
+				p.tokSpan(egc, eventTok)
+				stmt.EventTypeGroups = append(stmt.EventTypeGroups, egc)
 			} else {
-				stmt.EventTypeGroups = append(stmt.EventTypeGroups, &ast.EventTypeContainer{
+				etc := &ast.EventTypeContainer{
 					EventType: pascalName,
-				})
+				}
+				p.tokSpan(etc, eventTok)
+				stmt.EventTypeGroups = append(stmt.EventTypeGroups, etc)
 			}
 
 			if p.curTok.Type != TokenComma {
@@ -10498,6 +10513,7 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 
 	// Check for CONTAINMENT = NONE/PARTIAL
 	if strings.ToUpper(p.curTok.Literal) == "CONTAINMENT" {
+		containTok := p.curTok
 		p.nextToken() // consume CONTAINMENT
 		if p.curTok.Type == TokenEquals {
 			p.nextToken() // consume =
@@ -10512,6 +10528,7 @@ func (p *Parser) parseCreateDatabaseStatement() (ast.Statement, error) {
 			OptionKind: "Containment",
 		}
 		p.nextToken()
+		p.spanFrom(containTok, stmt.Containment)
 	}
 
 	// Check for AS COPY OF syntax
@@ -13219,11 +13236,13 @@ func (p *Parser) parseQueueOptions() ([]ast.QueueOption, error) {
 			}
 			p.nextToken() // consume =
 			state := strings.ToUpper(p.curTok.Literal)
-			p.nextToken() // consume ON/OFF
 			opt := &ast.QueueStateOption{
 				OptionState: capitalizeFirst(state),
 				OptionKind:  "Status",
 			}
+			// ScriptDom positions the option on the ON/OFF token.
+			p.tokSpan(opt, p.curTok)
+			p.nextToken() // consume ON/OFF
 			options = append(options, opt)
 
 		case "RETENTION":
@@ -13233,14 +13252,16 @@ func (p *Parser) parseQueueOptions() ([]ast.QueueOption, error) {
 			}
 			p.nextToken() // consume =
 			state := strings.ToUpper(p.curTok.Literal)
-			p.nextToken() // consume ON/OFF
 			opt := &ast.QueueStateOption{
 				OptionState: capitalizeFirst(state),
 				OptionKind:  "Retention",
 			}
+			p.tokSpan(opt, p.curTok)
+			p.nextToken() // consume ON/OFF
 			options = append(options, opt)
 
 		case "POISON_MESSAGE_HANDLING":
+			poisonTok := p.curTok
 			p.nextToken() // consume POISON_MESSAGE_HANDLING
 			if p.curTok.Type != TokenLParen {
 				return nil, fmt.Errorf("expected ( after POISON_MESSAGE_HANDLING, got %s", p.curTok.Literal)
@@ -13265,6 +13286,7 @@ func (p *Parser) parseQueueOptions() ([]ast.QueueOption, error) {
 				OptionState: capitalizeFirst(state),
 				OptionKind:  "PoisonMessageHandlingStatus",
 			}
+			p.spanFrom(poisonTok, opt)
 			options = append(options, opt)
 
 		case "ACTIVATION":
@@ -13275,6 +13297,7 @@ func (p *Parser) parseQueueOptions() ([]ast.QueueOption, error) {
 			p.nextToken() // consume (
 			// Check for DROP or other activation options
 			if strings.ToUpper(p.curTok.Literal) == "DROP" {
+				dropTok := p.curTok
 				p.nextToken() // consume DROP
 				if p.curTok.Type != TokenRParen {
 					return nil, fmt.Errorf("expected ) after ACTIVATION DROP, got %s", p.curTok.Literal)
@@ -13283,6 +13306,7 @@ func (p *Parser) parseQueueOptions() ([]ast.QueueOption, error) {
 				opt := &ast.QueueOptionSimple{
 					OptionKind: "ActivationDrop",
 				}
+				p.tokSpan(opt, dropTok)
 				options = append(options, opt)
 			} else {
 				// Parse activation options
@@ -13317,6 +13341,7 @@ func (p *Parser) parseActivationOptions() ([]ast.QueueOption, error) {
 	var options []ast.QueueOption
 
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		actOptTok := p.curTok
 		optName := strings.ToUpper(p.curTok.Literal)
 		switch optName {
 		case "STATUS":
@@ -13330,6 +13355,7 @@ func (p *Parser) parseActivationOptions() ([]ast.QueueOption, error) {
 				OptionState: capitalizeFirst(state),
 				OptionKind:  "ActivationStatus",
 			}
+			p.spanFrom(actOptTok, opt)
 			options = append(options, opt)
 
 		case "PROCEDURE_NAME":
@@ -13342,6 +13368,7 @@ func (p *Parser) parseActivationOptions() ([]ast.QueueOption, error) {
 				OptionValue: procName,
 				OptionKind:  "ActivationProcedureName",
 			}
+			p.spanFrom(actOptTok, opt)
 			options = append(options, opt)
 
 		case "MAX_QUEUE_READERS":
@@ -13354,6 +13381,7 @@ func (p *Parser) parseActivationOptions() ([]ast.QueueOption, error) {
 				OptionValue: value,
 				OptionKind:  "ActivationMaxQueueReaders",
 			}
+			p.spanFrom(actOptTok, opt)
 			options = append(options, opt)
 
 		case "EXECUTE":
@@ -13388,6 +13416,15 @@ func (p *Parser) parseActivationOptions() ([]ast.QueueOption, error) {
 			opt := &ast.QueueExecuteAsOption{
 				OptionValue: execAs,
 				OptionKind:  "ActivationExecuteAs",
+			}
+			// ScriptDom positions SELF/OWNER forms on the EXECUTE keyword
+			// alone but spans the string form through the literal.
+			if execAs.ExecuteAsOption == "String" {
+				p.spanFrom(actOptTok, opt)
+				p.spanFrom(actOptTok, execAs)
+			} else {
+				p.tokSpan(opt, actOptTok)
+				p.tokSpan(execAs, actOptTok)
 			}
 			options = append(options, opt)
 

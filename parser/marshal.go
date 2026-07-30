@@ -2587,7 +2587,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 				if c.ThenExpression != nil {
 					clause["ThenExpression"] = scalarExpressionToJSON(c.ThenExpression)
 				}
-				clauses[i] = clause
+				clauses[i] = addSpan(clause, frag(c))
 			}
 			node["WhenClauses"] = clauses
 		}
@@ -2617,7 +2617,7 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 				if c.ThenExpression != nil {
 					clause["ThenExpression"] = scalarExpressionToJSON(c.ThenExpression)
 				}
-				clauses[i] = clause
+				clauses[i] = addSpan(clause, frag(c))
 			}
 			node["WhenClauses"] = clauses
 		}
@@ -13934,6 +13934,7 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 	}
 
 	// Check for ALL SERVER or DATABASE
+	triggerObjTok := p.curTok
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "ALL":
 		p.nextToken()
@@ -13952,6 +13953,8 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 		}
 		triggerObject.Name = objName
 	}
+	// ScriptDom spans the trigger object over the ON target tokens.
+	p.spanFrom(triggerObjTok, triggerObject)
 	stmt.TriggerObject = triggerObject
 
 	// Parse trigger type (FOR, AFTER, INSTEAD OF)
@@ -15456,6 +15459,7 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 	}
 
 	// Check for ALL SERVER or DATABASE
+	triggerObjTok := p.curTok
 	switch strings.ToUpper(p.curTok.Literal) {
 	case "ALL":
 		p.nextToken()
@@ -15474,6 +15478,8 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 		}
 		triggerObject.Name = objName
 	}
+	// ScriptDom spans the trigger object over the ON target tokens.
+	p.spanFrom(triggerObjTok, triggerObject)
 	stmt.TriggerObject = triggerObject
 
 	// Parse optional WITH clause
@@ -16674,10 +16680,10 @@ func triggerActionToJSON(a *ast.TriggerAction) jsonNode {
 		"TriggerActionType": a.TriggerActionType,
 	}
 	if a.EventTypeGroup != nil {
-		node["EventTypeGroup"] = jsonNode{
+		node["EventTypeGroup"] = addSpan(jsonNode{
 			"$type":     "EventTypeContainer",
 			"EventType": a.EventTypeGroup.EventType,
-		}
+		}, frag(a.EventTypeGroup))
 	}
 	return addSpan(node, frag(a))
 }
