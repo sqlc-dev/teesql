@@ -13439,11 +13439,13 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 					if valueStr == "ON" && p.curTok.Type == TokenLParen {
 						p.nextToken() // consume (
 						if strings.ToUpper(p.curTok.Literal) == "WAIT_AT_LOW_PRIORITY" {
+							waitLpTok := p.curTok
 							p.nextToken() // consume WAIT_AT_LOW_PRIORITY
 							lowPriorityOpt := &ast.OnlineIndexLowPriorityLockWaitOption{}
 							if p.curTok.Type == TokenLParen {
 								p.nextToken() // consume (
 								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									lpSubTok := p.curTok
 									subOptName := strings.ToUpper(p.curTok.Literal)
 									if subOptName == "MAX_DURATION" {
 										p.nextToken() // consume MAX_DURATION
@@ -13459,11 +13461,13 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 											unit = "Seconds"
 											p.nextToken()
 										}
-										lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitMaxDurationOption{
+										maxDurOpt := &ast.LowPriorityLockWaitMaxDurationOption{
 											MaxDuration: durVal,
 											Unit:        unit,
 											OptionKind:  "MaxDuration",
-										})
+										}
+										p.spanFrom(lpSubTok, maxDurOpt)
+										lowPriorityOpt.Options = append(lowPriorityOpt.Options, maxDurOpt)
 									} else if subOptName == "ABORT_AFTER_WAIT" {
 										p.nextToken() // consume ABORT_AFTER_WAIT
 										if p.curTok.Type == TokenEquals {
@@ -13479,10 +13483,12 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 											abortType = "Blockers"
 										}
 										p.nextToken()
-										lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+										abortOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
 											AbortAfterWait: abortType,
 											OptionKind:     "AbortAfterWait",
-										})
+										}
+										p.spanFrom(lpSubTok, abortOpt)
+										lowPriorityOpt.Options = append(lowPriorityOpt.Options, abortOpt)
 									} else {
 										break
 									}
@@ -13494,6 +13500,7 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 									p.nextToken() // consume ) for WAIT_AT_LOW_PRIORITY options
 								}
 							}
+							p.spanFrom(waitLpTok, lowPriorityOpt)
 							onlineOpt.LowPriorityLockWaitOption = lowPriorityOpt
 						}
 						if p.curTok.Type == TokenRParen {
@@ -14170,6 +14177,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 						OptionKind: "WaitAtLowPriority",
 					}
 					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						lpSubTok := p.curTok
 						subOptName := strings.ToUpper(p.curTok.Literal)
 						if subOptName == "MAX_DURATION" {
 							p.nextToken() // consume MAX_DURATION
@@ -14182,11 +14190,13 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 								unit = "Minutes"
 								p.nextToken()
 							}
-							waitOpt.Options = append(waitOpt.Options, &ast.LowPriorityLockWaitMaxDurationOption{
+							maxDurOpt := &ast.LowPriorityLockWaitMaxDurationOption{
 								MaxDuration: durVal,
 								Unit:        unit,
 								OptionKind:  "MaxDuration",
-							})
+							}
+							p.spanFrom(lpSubTok, maxDurOpt)
+							waitOpt.Options = append(waitOpt.Options, maxDurOpt)
 						} else if subOptName == "ABORT_AFTER_WAIT" {
 							p.nextToken() // consume ABORT_AFTER_WAIT
 							if p.curTok.Type == TokenEquals {
@@ -14202,10 +14212,12 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 								abortType = "Blockers"
 							}
 							p.nextToken()
-							waitOpt.Options = append(waitOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+							abortOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
 								AbortAfterWait: abortType,
 								OptionKind:     "AbortAfterWait",
-							})
+							}
+							p.spanFrom(lpSubTok, abortOpt)
+							waitOpt.Options = append(waitOpt.Options, abortOpt)
 						} else {
 							break
 						}
@@ -14254,11 +14266,13 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 							if valueStr == "ON" && p.curTok.Type == TokenLParen {
 								p.nextToken() // consume (
 								if strings.ToUpper(p.curTok.Literal) == "WAIT_AT_LOW_PRIORITY" {
+									waitLpTok := p.curTok
 									p.nextToken() // consume WAIT_AT_LOW_PRIORITY
 									lowPriorityOpt := &ast.OnlineIndexLowPriorityLockWaitOption{}
 									if p.curTok.Type == TokenLParen {
 										p.nextToken() // consume (
 										for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+											lpSubTok := p.curTok
 											subOptName := strings.ToUpper(p.curTok.Literal)
 											if subOptName == "MAX_DURATION" {
 												p.nextToken() // consume MAX_DURATION
@@ -14274,11 +14288,13 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 													unit = "Seconds"
 													p.nextToken()
 												}
-												lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitMaxDurationOption{
+												maxDurOpt := &ast.LowPriorityLockWaitMaxDurationOption{
 													MaxDuration: durVal,
 													Unit:        unit,
 													OptionKind:  "MaxDuration",
-												})
+												}
+												p.spanFrom(lpSubTok, maxDurOpt)
+												lowPriorityOpt.Options = append(lowPriorityOpt.Options, maxDurOpt)
 											} else if subOptName == "ABORT_AFTER_WAIT" {
 												p.nextToken() // consume ABORT_AFTER_WAIT
 												if p.curTok.Type == TokenEquals {
@@ -14294,10 +14310,12 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 													abortType = "Blockers"
 												}
 												p.nextToken()
-												lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+												abortOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
 													AbortAfterWait: abortType,
 													OptionKind:     "AbortAfterWait",
-												})
+												}
+												p.spanFrom(lpSubTok, abortOpt)
+												lowPriorityOpt.Options = append(lowPriorityOpt.Options, abortOpt)
 											} else {
 												break
 											}
@@ -14309,6 +14327,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 											p.nextToken() // consume ) for WAIT_AT_LOW_PRIORITY options
 										}
 									}
+									p.spanFrom(waitLpTok, lowPriorityOpt)
 									onlineOpt.LowPriorityLockWaitOption = lowPriorityOpt
 								}
 								if p.curTok.Type == TokenRParen {
@@ -17958,14 +17977,7 @@ func alterTableRebuildStatementToJSON(s *ast.AlterTableRebuildStatement) jsonNod
 		"$type": "AlterTableRebuildStatement",
 	}
 	if s.Partition != nil {
-		partNode := jsonNode{
-			"$type": "PartitionSpecifier",
-			"All":   s.Partition.All,
-		}
-		if s.Partition.Number != nil {
-			partNode["Number"] = scalarExpressionToJSON(s.Partition.Number)
-		}
-		node["Partition"] = partNode
+		node["Partition"] = partitionSpecifierToJSON(s.Partition)
 	}
 	if len(s.IndexOptions) > 0 {
 		var opts []jsonNode

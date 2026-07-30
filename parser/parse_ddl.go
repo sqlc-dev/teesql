@@ -1952,6 +1952,8 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 	var options []ast.DropIndexOption
 
 	for {
+		optTok := p.curTok
+		nOptsBefore := len(options)
 		upperLit := strings.ToUpper(p.curTok.Literal)
 		switch upperLit {
 		case "ONLINE":
@@ -1972,11 +1974,13 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 			if optState == "On" && p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
 				if strings.ToUpper(p.curTok.Literal) == "WAIT_AT_LOW_PRIORITY" {
+					waitLpTok := p.curTok
 					p.nextToken() // consume WAIT_AT_LOW_PRIORITY
 					lowPriorityOpt := &ast.OnlineIndexLowPriorityLockWaitOption{}
 					if p.curTok.Type == TokenLParen {
 						p.nextToken() // consume (
 						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							lpSubTok := p.curTok
 							optName := strings.ToUpper(p.curTok.Literal)
 							if optName == "MAX_DURATION" {
 								p.nextToken() // consume MAX_DURATION
@@ -1991,11 +1995,13 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 									unit = "Seconds"
 									p.nextToken()
 								}
-								lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitMaxDurationOption{
+								maxDurOpt := &ast.LowPriorityLockWaitMaxDurationOption{
 									MaxDuration: durVal,
 									Unit:        unit,
 									OptionKind:  "MaxDuration",
-								})
+								}
+								p.spanFrom(lpSubTok, maxDurOpt)
+								lowPriorityOpt.Options = append(lowPriorityOpt.Options, maxDurOpt)
 							} else if optName == "ABORT_AFTER_WAIT" {
 								p.nextToken() // consume ABORT_AFTER_WAIT
 								if p.curTok.Type == TokenEquals {
@@ -2011,10 +2017,12 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 									abortType = "Blockers"
 								}
 								p.nextToken()
-								lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+								abortOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
 									AbortAfterWait: abortType,
 									OptionKind:     "AbortAfterWait",
-								})
+								}
+								p.spanFrom(lpSubTok, abortOpt)
+								lowPriorityOpt.Options = append(lowPriorityOpt.Options, abortOpt)
 							} else {
 								break
 							}
@@ -2026,6 +2034,7 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 							p.nextToken() // consume )
 						}
 					}
+					p.spanFrom(waitLpTok, lowPriorityOpt)
 					onlineOpt.LowPriorityLockWaitOption = lowPriorityOpt
 				}
 				if p.curTok.Type == TokenRParen {
@@ -2040,6 +2049,7 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 			}
 			moveTo := &ast.FileGroupOrPartitionScheme{}
 			// Parse filegroup name
+			fgTok := p.curTok
 			fgName := p.parseIdentifier()
 			moveTo.Name = &ast.IdentifierOrValueExpression{
 				Value:      fgName.Value,
@@ -2061,6 +2071,7 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 					p.nextToken() // consume )
 				}
 			}
+			p.spanFrom(fgTok, moveTo)
 			options = append(options, &ast.MoveToDropIndexOption{
 				MoveTo:     moveTo,
 				OptionKind: "MoveTo",
@@ -2118,6 +2129,7 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
 				for {
+					lpSubTok := p.curTok
 					optName := strings.ToUpper(p.curTok.Literal)
 					if optName == "MAX_DURATION" {
 						p.nextToken() // consume MAX_DURATION
@@ -2141,6 +2153,7 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 							maxDur.Unit = "Seconds"
 							p.nextToken()
 						}
+						p.spanFrom(lpSubTok, maxDur)
 						waitOpt.Options = append(waitOpt.Options, maxDur)
 					} else if optName == "ABORT_AFTER_WAIT" {
 						p.nextToken() // consume ABORT_AFTER_WAIT
@@ -2160,6 +2173,7 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 							abortOpt.AbortAfterWait = "Blockers"
 						}
 						p.nextToken()
+						p.spanFrom(lpSubTok, abortOpt)
 						waitOpt.Options = append(waitOpt.Options, abortOpt)
 					} else {
 						break
@@ -2178,6 +2192,12 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 		default:
 			// Unknown option, skip
 			p.nextToken()
+		}
+
+		for _, o := range options[nOptsBefore:] {
+			if s, ok := any(o).(spannable); ok && !s.Frag().HasSpan() {
+				p.spanFrom(optTok, s)
+			}
 		}
 
 		if p.curTok.Type == TokenComma {
@@ -3140,6 +3160,8 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 
 	// Parse options
 	for {
+		optTok := p.curTok
+		nOptsBefore := len(stmt.Options)
 		optionName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
 
@@ -3613,6 +3635,29 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 			}
 		}
 
+		for _, o := range stmt.Options[nOptsBefore:] {
+			s, ok := any(o).(spannable)
+			if !ok {
+				continue
+			}
+			if oo, isOnOff := o.(*ast.OnOffDatabaseOption); isOnOff && !s.Frag().HasSpan() {
+				// ScriptDom positions ALTER DATABASE SET on/off options on
+				// the ON/OFF state token alone.
+				start := p.prevEndByte - len(oo.OptionState)
+				if start >= 0 {
+					su, sl, sc := p.srcMap.at(start)
+					eu, _, _ := p.srcMap.at(p.prevEndByte)
+					s.SetSpan(su, eu-su, sl, sc)
+				}
+				continue
+			}
+			if s.Frag().HasSpan() {
+				p.respanStart(s, optTok)
+			} else {
+				p.spanFrom(optTok, s)
+			}
+		}
+
 		if p.curTok.Type == TokenComma {
 			p.nextToken()
 		} else {
@@ -3800,6 +3845,7 @@ func (p *Parser) parseChangeTrackingOption() (*ast.ChangeTrackingDatabaseOption,
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
 		for {
+			detailTok := p.curTok
 			detailName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume detail name
 
@@ -3816,6 +3862,7 @@ func (p *Parser) parseChangeTrackingOption() (*ast.ChangeTrackingDatabaseOption,
 				detail := &ast.AutoCleanupChangeTrackingOptionDetail{
 					IsOn: isOn,
 				}
+				p.spanFrom(detailTok, detail)
 				opt.Details = append(opt.Details, detail)
 			case "CHANGE_RETENTION":
 				// Parse value and unit (e.g., 100 HOURS, 3 DAYS, 5 MINUTES)
@@ -3840,6 +3887,7 @@ func (p *Parser) parseChangeTrackingOption() (*ast.ChangeTrackingDatabaseOption,
 					RetentionPeriod: val,
 					Unit:            unit,
 				}
+				p.spanFrom(detailTok, detail)
 				opt.Details = append(opt.Details, detail)
 			default:
 				return nil, fmt.Errorf("unknown CHANGE_TRACKING detail: %s", detailName)
@@ -4479,6 +4527,7 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationClearStatement(secondary b
 	}
 
 	// Parse option (PROCEDURE_CACHE)
+	optTok := p.curTok
 	optionKind := strings.ToUpper(p.curTok.Literal)
 	p.nextToken()
 
@@ -4491,12 +4540,15 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationClearStatement(secondary b
 
 	// Check for optional plan handle (binary literal)
 	if p.curTok.Type == TokenBinary {
-		option.PlanHandle = &ast.BinaryLiteral{
+		lit := &ast.BinaryLiteral{
 			LiteralType: "Binary",
 			Value:       p.curTok.Literal,
 		}
+		p.tokSpan(lit, p.curTok)
+		option.PlanHandle = lit
 		p.nextToken()
 	}
+	p.spanFrom(optTok, option)
 
 	stmt.Option = option
 	p.skipToEndOfStatement()
@@ -4512,6 +4564,7 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 		Secondary: secondary,
 	}
 
+	optTok := p.curTok
 	optionNameOriginal := p.curTok.Literal // preserve original case for generic options
 	optionName := strings.ToUpper(optionNameOriginal)
 	p.nextToken() // consume option name
@@ -4525,40 +4578,34 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 	case "MAXDOP":
 		// MAXDOP = N | PRIMARY
 		if strings.ToUpper(p.curTok.Literal) == "PRIMARY" {
-			stmt.Option = &ast.MaxDopConfigurationOption{
+			opt := &ast.MaxDopConfigurationOption{
 				OptionKind: "MaxDop",
 				Primary:    true,
 			}
 			p.nextToken()
+			// ScriptDom spans MAXDOP = PRIMARY through the PRIMARY keyword.
+			p.spanFrom(optTok, opt)
+			stmt.Option = opt
 		} else {
 			val, err := p.parseScalarExpression()
 			if err != nil {
 				return nil, err
 			}
-			stmt.Option = &ast.MaxDopConfigurationOption{
+			opt := &ast.MaxDopConfigurationOption{
 				OptionKind: "MaxDop",
 				Value:      val,
 				Primary:    false,
 			}
+			// ScriptDom spans MAXDOP = N on the MAXDOP keyword only.
+			p.tokSpan(opt, optTok)
+			stmt.Option = opt
 		}
 	case "LEGACY_CARDINALITY_ESTIMATION":
-		state := p.parseOnOffPrimaryState()
-		stmt.Option = &ast.OnOffPrimaryConfigurationOption{
-			OptionKind:  "LegacyCardinalityEstimate",
-			OptionState: state,
-		}
+		stmt.Option = p.onOffPrimaryConfigOption(optTok, "LegacyCardinalityEstimate")
 	case "PARAMETER_SNIFFING":
-		state := p.parseOnOffPrimaryState()
-		stmt.Option = &ast.OnOffPrimaryConfigurationOption{
-			OptionKind:  "ParameterSniffing",
-			OptionState: state,
-		}
+		stmt.Option = p.onOffPrimaryConfigOption(optTok, "ParameterSniffing")
 	case "QUERY_OPTIMIZER_HOTFIXES":
-		state := p.parseOnOffPrimaryState()
-		stmt.Option = &ast.OnOffPrimaryConfigurationOption{
-			OptionKind:  "QueryOptimizerHotFixes",
-			OptionState: state,
-		}
+		stmt.Option = p.onOffPrimaryConfigOption(optTok, "QueryOptimizerHotFixes")
 	default:
 		// Handle generic options (like DW_COMPATIBILITY_LEVEL)
 		// Handle bracketed and quoted identifiers properly
@@ -4573,7 +4620,8 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 			optionValue = optionNameOriginal[1 : len(optionNameOriginal)-1]
 			optionValue = strings.ReplaceAll(optionValue, "\"\"", "\"")
 		}
-		optionKindIdent := p.spanIdent(optionValue, optionQuoteType)
+		optionKindIdent := &ast.Identifier{Value: optionValue, QuoteType: optionQuoteType}
+		p.tokSpan(optionKindIdent, optTok)
 
 		var state *ast.IdentifierOrScalarExpression
 		// Check if value is a number, string, negative number, or identifier
@@ -4601,6 +4649,23 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 
 	p.skipToEndOfStatement()
 	return spanned(p, stmt, astStart), nil
+}
+
+// onOffPrimaryConfigOption builds an OnOffPrimaryConfigurationOption whose
+// span matches ScriptDom: through the ON/OFF state token, but only the option
+// keyword when the state is PRIMARY.
+func (p *Parser) onOffPrimaryConfigOption(optTok Token, kind string) *ast.OnOffPrimaryConfigurationOption {
+	state := p.parseOnOffPrimaryState()
+	opt := &ast.OnOffPrimaryConfigurationOption{
+		OptionKind:  kind,
+		OptionState: state,
+	}
+	if state == "Primary" {
+		p.tokSpan(opt, optTok)
+	} else {
+		p.spanFrom(optTok, opt)
+	}
+	return opt
 }
 
 func (p *Parser) parseOnOffPrimaryState() string {
@@ -6019,18 +6084,22 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 				stmt.StorageOptions = &ast.ColumnStorageOptions{}
 			}
 			stmt.StorageOptions.SparseOption = "Sparse"
+			// ScriptDom positions storage options on the last storage keyword.
+			p.tokSpan(stmt.StorageOptions, p.curTok)
 			p.nextToken()
 		} else if upperLit == "FILESTREAM" {
 			if stmt.StorageOptions == nil {
 				stmt.StorageOptions = &ast.ColumnStorageOptions{}
 			}
 			stmt.StorageOptions.IsFileStream = true
+			p.tokSpan(stmt.StorageOptions, p.curTok)
 			p.nextToken()
 		} else if upperLit == "COLUMN_SET" {
 			p.nextToken() // consume COLUMN_SET
 			if strings.ToUpper(p.curTok.Literal) == "FOR" {
 				p.nextToken() // consume FOR
 			}
+			lastTok := p.curTok
 			if strings.ToUpper(p.curTok.Literal) == "ALL_SPARSE_COLUMNS" {
 				p.nextToken() // consume ALL_SPARSE_COLUMNS
 			}
@@ -6038,6 +6107,7 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 				stmt.StorageOptions = &ast.ColumnStorageOptions{}
 			}
 			stmt.StorageOptions.SparseOption = "ColumnSetForAllSparseColumns"
+			p.tokSpan(stmt.StorageOptions, lastTok)
 		} else if upperLit == "HIDDEN" {
 			stmt.IsHidden = true
 			p.nextToken()
@@ -6144,14 +6214,13 @@ func (p *Parser) parseAlterTableAlterColumnStatement(tableName *ast.SchemaObject
 }
 
 func (p *Parser) parseColumnEncryptionSpecification() (*ast.ColumnEncryptionDefinition, error) {
-	astStart := p.curTok
-
 	// curTok should be (
 	p.nextToken() // consume (
 
 	encDef := &ast.ColumnEncryptionDefinition{}
 
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		paramTok := p.curTok
 		paramName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
 
@@ -6159,12 +6228,14 @@ func (p *Parser) parseColumnEncryptionSpecification() (*ast.ColumnEncryptionDefi
 			p.nextToken() // consume =
 		}
 
+		// ScriptDom positions encryption parameters on their keyword token.
 		switch paramName {
 		case "COLUMN_ENCRYPTION_KEY":
 			param := &ast.ColumnEncryptionKeyNameParameter{
 				ParameterKind: "ColumnEncryptionKey",
 				Name:          p.parseIdentifier(),
 			}
+			p.tokSpan(param, paramTok)
 			encDef.Parameters = append(encDef.Parameters, param)
 		case "ENCRYPTION_TYPE":
 			encType := strings.ToUpper(p.curTok.Literal)
@@ -6179,6 +6250,7 @@ func (p *Parser) parseColumnEncryptionSpecification() (*ast.ColumnEncryptionDefi
 				param.EncryptionType = encType
 			}
 			p.nextToken()
+			p.tokSpan(param, paramTok)
 			encDef.Parameters = append(encDef.Parameters, param)
 		case "ALGORITHM":
 			str, err := p.parseStringLiteral()
@@ -6189,6 +6261,7 @@ func (p *Parser) parseColumnEncryptionSpecification() (*ast.ColumnEncryptionDefi
 				ParameterKind:       "Algorithm",
 				EncryptionAlgorithm: str,
 			}
+			p.tokSpan(param, paramTok)
 			encDef.Parameters = append(encDef.Parameters, param)
 		}
 
@@ -6201,7 +6274,17 @@ func (p *Parser) parseColumnEncryptionSpecification() (*ast.ColumnEncryptionDefi
 		p.nextToken() // consume )
 	}
 
-	return spanned(p, encDef, astStart), nil
+	// ScriptDom spans the definition from the first parameter through the
+	// end of the last parameter's keyword token.
+	if len(encDef.Parameters) > 0 {
+		first, ok1 := any(encDef.Parameters[0]).(spannable)
+		last, ok2 := any(encDef.Parameters[len(encDef.Parameters)-1]).(spannable)
+		if ok1 && ok2 && first.Frag().HasSpan() && last.Frag().HasSpan() {
+			ff, lf := first.Frag(), last.Frag()
+			encDef.SetSpan(ff.StartOffset, lf.EndOffset()-ff.StartOffset, ff.StartLine, ff.StartColumn)
+		}
+	}
+	return encDef, nil
 }
 
 func (p *Parser) parseAlterColumnWithOptions() ([]ast.IndexOption, error) {
@@ -7493,11 +7576,14 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 			} else if valueUpper == "DISABLE" {
 				value = "Disable"
 			}
-			p.nextToken()
-			stmt.Options = append(stmt.Options, &ast.LockEscalationTableOption{
+			opt := &ast.LockEscalationTableOption{
 				OptionKind: "LockEscalation",
 				Value:      value,
-			})
+			}
+			// ScriptDom positions the option on the value token.
+			p.tokSpan(opt, p.curTok)
+			p.nextToken()
+			stmt.Options = append(stmt.Options, opt)
 		} else if optionName == "FILESTREAM_ON" {
 			if p.curTok.Type == TokenEquals {
 				p.nextToken() // consume =
@@ -12523,11 +12609,13 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 					if p.curTok.Type == TokenLParen {
 						p.nextToken() // consume (
 						if strings.ToUpper(p.curTok.Literal) == "WAIT_AT_LOW_PRIORITY" {
+							waitLpTok := p.curTok
 							p.nextToken() // consume WAIT_AT_LOW_PRIORITY
 							if p.curTok.Type == TokenLParen {
 								p.nextToken() // consume (
 								lwOpt := &ast.OnlineIndexLowPriorityLockWaitOption{}
 								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									lpSubTok := p.curTok
 									lwOptName := strings.ToUpper(p.curTok.Literal)
 									p.nextToken()
 									if p.curTok.Type == TokenEquals {
@@ -12544,6 +12632,7 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 											maxDurOpt.Unit = "Minutes"
 											p.nextToken()
 										}
+										p.spanFrom(lpSubTok, maxDurOpt)
 										lwOpt.Options = append(lwOpt.Options, maxDurOpt)
 									} else if lwOptName == "ABORT_AFTER_WAIT" {
 										abortVal := strings.ToUpper(p.curTok.Literal)
@@ -12559,10 +12648,12 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 											abortAfterWait = abortVal
 										}
 										p.nextToken()
-										lwOpt.Options = append(lwOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+										lwAbortOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
 											OptionKind:     "AbortAfterWait",
 											AbortAfterWait: abortAfterWait,
-										})
+										}
+										p.spanFrom(lpSubTok, lwAbortOpt)
+										lwOpt.Options = append(lwOpt.Options, lwAbortOpt)
 									}
 									if p.curTok.Type == TokenComma {
 										p.nextToken()
@@ -12571,6 +12662,7 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 								if p.curTok.Type == TokenRParen {
 									p.nextToken() // consume inner )
 								}
+								p.spanFrom(waitLpTok, lwOpt)
 								opt.LowPriorityLockWaitOption = lwOpt
 							}
 						}

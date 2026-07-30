@@ -2203,18 +2203,22 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 				}
 				// Parse the isolation level identifier - may be multi-word like "READ COMMITTED"
 				levelValue := strings.ToUpper(p.curTok.Literal)
+				lastTok := p.curTok
 				p.nextToken()
 				// Check for two-word isolation levels
 				nextWord := strings.ToUpper(p.curTok.Literal)
 				if (levelValue == "READ" && (nextWord == "COMMITTED" || nextWord == "UNCOMMITTED")) ||
 					(levelValue == "REPEATABLE" && nextWord == "READ") {
 					levelValue = levelValue + " " + nextWord
+					lastTok = p.curTok
 					p.nextToken()
 				}
 				opt := &ast.IdentifierAtomicBlockOption{
 					OptionKind: "IsolationLevel",
 					Value:      &ast.Identifier{Value: levelValue, QuoteType: "NotQuoted"},
 				}
+				// ScriptDom positions the option on the final isolation-level token.
+				p.tokSpan(opt, lastTok)
 				stmt.Options = append(stmt.Options, opt)
 			case "LANGUAGE":
 				// Parse the language value
@@ -2272,11 +2276,13 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 				if stateUpper == "ON" {
 					optState = "On"
 				}
+				stateTok := p.curTok
 				p.nextToken()
 				opt := &ast.OnOffAtomicBlockOption{
 					OptionKind:  "DelayedDurability",
 					OptionState: optState,
 				}
+				p.tokSpan(opt, stateTok)
 				stmt.Options = append(stmt.Options, opt)
 			default:
 				// Skip unknown options
@@ -11811,11 +11817,13 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 			if valueStr == "ON" && p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
 				if strings.ToUpper(p.curTok.Literal) == "WAIT_AT_LOW_PRIORITY" {
+					waitLpTok := p.curTok
 					p.nextToken() // consume WAIT_AT_LOW_PRIORITY
 					lowPriorityOpt := &ast.OnlineIndexLowPriorityLockWaitOption{}
 					if p.curTok.Type == TokenLParen {
 						p.nextToken() // consume (
 						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							lpSubTok := p.curTok
 							optName := strings.ToUpper(p.curTok.Literal)
 							if optName == "MAX_DURATION" {
 								p.nextToken() // consume MAX_DURATION
@@ -11830,11 +11838,13 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 									unit = "Seconds"
 									p.nextToken()
 								}
-								lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitMaxDurationOption{
+								maxDurOpt := &ast.LowPriorityLockWaitMaxDurationOption{
 									MaxDuration: durVal,
 									Unit:        unit,
 									OptionKind:  "MaxDuration",
-								})
+								}
+								p.spanFrom(lpSubTok, maxDurOpt)
+								lowPriorityOpt.Options = append(lowPriorityOpt.Options, maxDurOpt)
 							} else if optName == "ABORT_AFTER_WAIT" {
 								p.nextToken() // consume ABORT_AFTER_WAIT
 								if p.curTok.Type == TokenEquals {
@@ -11850,10 +11860,12 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 									abortType = "Blockers"
 								}
 								p.nextToken()
-								lowPriorityOpt.Options = append(lowPriorityOpt.Options, &ast.LowPriorityLockWaitAbortAfterWaitOption{
+								abortOpt := &ast.LowPriorityLockWaitAbortAfterWaitOption{
 									AbortAfterWait: abortType,
 									OptionKind:     "AbortAfterWait",
-								})
+								}
+								p.spanFrom(lpSubTok, abortOpt)
+								lowPriorityOpt.Options = append(lowPriorityOpt.Options, abortOpt)
 							} else {
 								break
 							}
@@ -11865,6 +11877,7 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 							p.nextToken() // consume )
 						}
 					}
+					p.spanFrom(waitLpTok, lowPriorityOpt)
 					onlineOpt.LowPriorityLockWaitOption = lowPriorityOpt
 				}
 				if p.curTok.Type == TokenRParen {
