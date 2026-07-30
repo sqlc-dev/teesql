@@ -9166,6 +9166,7 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 
 	// Parse principal(s)
 	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+		prTok := p.curTok
 		principal := &ast.SecurityPrincipal{}
 		if p.curTok.Type == TokenPublic {
 			principal.PrincipalType = "Public"
@@ -9180,6 +9181,7 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 		} else {
 			break
 		}
+		p.spanFrom(prTok, principal)
 		stmt.Principals = append(stmt.Principals, principal)
 
 		if p.curTok.Type == TokenComma {
@@ -9458,6 +9460,7 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 
 	// Parse principal(s)
 	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && strings.ToUpper(p.curTok.Literal) != "CASCADE" && strings.ToUpper(p.curTok.Literal) != "AS" {
+		prTok := p.curTok
 		principal := &ast.SecurityPrincipal{}
 		if p.curTok.Type == TokenPublic {
 			principal.PrincipalType = "Public"
@@ -9471,6 +9474,7 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 		} else {
 			break
 		}
+		p.spanFrom(prTok, principal)
 		stmt.Principals = append(stmt.Principals, principal)
 
 		if p.curTok.Type == TokenComma {
@@ -9732,6 +9736,7 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 
 	// Parse principal(s)
 	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon && strings.ToUpper(p.curTok.Literal) != "CASCADE" && strings.ToUpper(p.curTok.Literal) != "AS" {
+		prTok := p.curTok
 		principal := &ast.SecurityPrincipal{}
 		if p.curTok.Type == TokenPublic {
 			principal.PrincipalType = "Public"
@@ -9745,6 +9750,7 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 		} else {
 			break
 		}
+		p.spanFrom(prTok, principal)
 		stmt.Principals = append(stmt.Principals, principal)
 
 		if p.curTok.Type == TokenComma {
@@ -13031,6 +13037,7 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 		}
 
 		p.spanFrom(paramStart, param)
+		p.spanFrom(paramStart, param)
 		stmt.Parameters = append(stmt.Parameters, param)
 
 		if p.curTok.Type == TokenComma {
@@ -13548,6 +13555,7 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 	if p.curTok.Type == TokenLParen {
 		p.nextToken()
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			paramStart := p.curTok
 			param := &ast.ProcedureParameter{
 				IsVarying: false,
 				Modifier:  "None",
@@ -13555,10 +13563,7 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 
 			// Parse parameter name
 			if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-				param.VariableName = &ast.Identifier{
-					Value:     p.curTok.Literal,
-					QuoteType: "NotQuoted",
-				}
+				param.VariableName = p.spanIdent(p.curTok.Literal, "NotQuoted")
 				p.nextToken()
 			}
 
@@ -13586,6 +13591,7 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 				param.Value = val
 			}
 
+			p.spanFrom(paramStart, param)
 			stmt.Parameters = append(stmt.Parameters, param)
 
 			if p.curTok.Type == TokenComma {
@@ -14524,6 +14530,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 	if p.curTok.Type == TokenLParen {
 		p.nextToken()
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			paramStart := p.curTok
 			param := &ast.ProcedureParameter{
 				IsVarying: false,
 				Modifier:  "None",
@@ -14531,10 +14538,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 
 			// Parse parameter name
 			if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-				param.VariableName = &ast.Identifier{
-					Value:     p.curTok.Literal,
-					QuoteType: "NotQuoted",
-				}
+				param.VariableName = p.spanIdent(p.curTok.Literal, "NotQuoted")
 				p.nextToken()
 			}
 
@@ -14579,6 +14583,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 				p.nextToken()
 			}
 
+			p.spanFrom(paramStart, param)
 			stmt.Parameters = append(stmt.Parameters, param)
 
 			if p.curTok.Type == TokenComma {
@@ -14988,6 +14993,7 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 	if p.curTok.Type == TokenLParen {
 		p.nextToken()
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			paramStart := p.curTok
 			param := &ast.ProcedureParameter{
 				IsVarying: false,
 				Modifier:  "None",
@@ -14995,10 +15001,7 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 
 			// Parse parameter name
 			if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-				param.VariableName = &ast.Identifier{
-					Value:     p.curTok.Literal,
-					QuoteType: "NotQuoted",
-				}
+				param.VariableName = p.spanIdent(p.curTok.Literal, "NotQuoted")
 				p.nextToken()
 			}
 
@@ -15043,6 +15046,7 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 				p.nextToken()
 			}
 
+			p.spanFrom(paramStart, param)
 			stmt.Parameters = append(stmt.Parameters, param)
 
 			if p.curTok.Type == TokenComma {

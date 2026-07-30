@@ -4181,6 +4181,7 @@ func (p *Parser) parseAuditSpecificationPart(isDrop bool) (*ast.AuditSpecificati
 			if strings.ToUpper(p.curTok.Literal) == "BY" {
 				p.nextToken() // consume BY
 				for {
+					prTok := p.curTok
 					principal := &ast.SecurityPrincipal{}
 					upper := strings.ToUpper(p.curTok.Literal)
 					if upper == "PUBLIC" {
@@ -4193,6 +4194,7 @@ func (p *Parser) parseAuditSpecificationPart(isDrop bool) (*ast.AuditSpecificati
 						principal.PrincipalType = "Identifier"
 						principal.Identifier = p.parseIdentifier()
 					}
+					p.spanFrom(prTok, principal)
 					spec.Principals = append(spec.Principals, principal)
 					if p.curTok.Type == TokenComma {
 						p.nextToken()
@@ -6448,8 +6450,10 @@ func (p *Parser) parseUseFederationStatement() (ast.Statement, error) {
 
 	// Check if it's just "USE FEDERATION" as a database name (no other tokens before GO/EOF)
 	if p.curTok.Type == TokenEOF || p.curTok.Type == TokenSemicolon || strings.ToUpper(p.curTok.Literal) == "GO" {
+		dbName := &ast.Identifier{Value: "federation", QuoteType: "NotQuoted"}
+		p.tokSpan(dbName, astStart)
 		return spanned(p, &ast.UseStatement{
-			DatabaseName: p.spanIdent("federation", "NotQuoted"),
+			DatabaseName: dbName,
 		}, astStart), nil
 	}
 
@@ -9847,10 +9851,11 @@ func (p *Parser) parseSessionOption() ast.SessionOption {
 	case "EVENT_RETENTION_MODE":
 		value := p.curTok.Literal
 		p.nextToken()
-		return spanned(p, &ast.EventRetentionSessionOption{
+		// ScriptDom leaves this option without position information.
+		return &ast.EventRetentionSessionOption{
 			OptionKind: "EventRetention",
 			Value:      p.eventRetentionValue(value),
-		}, astStart)
+		}
 	case "MAX_DISPATCH_LATENCY":
 		value, _ := p.parseScalarExpression()
 		// Check for SECONDS
