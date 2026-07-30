@@ -6825,6 +6825,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 			// Continue to check for comma (don't return here - allow multiple constraints)
 		} else if p.curTok.Type == TokenIndex {
 			// ADD INDEX
+			idxStart := p.curTok
 			p.nextToken() // consume INDEX
 
 			indexDef := &ast.IndexDefinition{}
@@ -6834,6 +6835,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 
 			// Parse optional UNIQUE, CLUSTERED, NONCLUSTERED, HASH keywords
 			var indexTypeKind string
+			var indexTypeTok Token
 			for {
 				switch strings.ToUpper(p.curTok.Literal) {
 				case "UNIQUE":
@@ -6849,6 +6851,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken()
 					if strings.ToUpper(p.curTok.Literal) == "HASH" {
 						indexTypeKind = "NonClusteredHash"
+						indexTypeTok = p.curTok
 						p.nextToken()
 					} else {
 						indexTypeKind = "NonClustered"
@@ -6858,6 +6861,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					if indexTypeKind == "" {
 						indexTypeKind = "NonClusteredHash"
 					}
+					indexTypeTok = p.curTok
 					p.nextToken()
 					continue
 				}
@@ -6868,6 +6872,10 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				indexDef.IndexType = &ast.IndexType{
 					IndexTypeKind: indexTypeKind,
 				}
+				// ScriptDom positions hash index types on the HASH token.
+				if indexTypeTok.Literal != "" {
+					p.tokSpan(indexDef.IndexType, indexTypeTok)
+				}
 			}
 
 			// Parse column list (c1, c2, ...)
@@ -6875,6 +6883,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				p.nextToken() // consume (
 
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					colStart := p.curTok
 					colRef := &ast.ColumnReferenceExpression{
 						ColumnType: "Regular",
 						MultiPartIdentifier: &ast.MultiPartIdentifier{
@@ -6898,6 +6907,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 						p.nextToken()
 					}
 
+					p.spanFrom(colStart, col)
 					indexDef.Columns = append(indexDef.Columns, col)
 
 					if p.curTok.Type == TokenComma {
@@ -6921,6 +6931,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 
 					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 						// Parse option name
+						optStart := p.curTok
 						optionName := strings.ToUpper(p.curTok.Literal)
 						p.nextToken()
 
@@ -6940,6 +6951,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 								OptionKind:  convertIndexOptionKind(optionName),
 								OptionState: state,
 							}
+							p.spanFrom(optStart, option)
 							indexDef.IndexOptions = append(indexDef.IndexOptions, option)
 						} else {
 							// Parse expression option value
@@ -6954,6 +6966,12 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 							option := &ast.IndexExpressionOption{
 								OptionKind: convertIndexOptionKind(optionName),
 								Expression: expr,
+							}
+							if option.OptionKind == "BucketCount" {
+								// ScriptDom spans BUCKET_COUNT on its value only.
+								p.spanFromChild(option, expr)
+							} else {
+								p.spanFrom(optStart, option)
 							}
 							indexDef.IndexOptions = append(indexDef.IndexOptions, option)
 						}
@@ -6971,6 +6989,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				}
 			}
 
+			p.spanFrom(idxStart, indexDef)
 			stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
 		} else if strings.ToUpper(p.curTok.Literal) == "CHECK" {
 			// Table-level CHECK constraint without CONSTRAINT keyword
@@ -8923,12 +8942,14 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 								value = value[1 : len(value)-1]
 							}
-							stmt.DropFiles = append(stmt.DropFiles, &ast.StringLiteral{
+							lit := &ast.StringLiteral{
 								LiteralType:   "String",
 								IsNational:    false,
 								IsLargeObject: false,
 								Value:         value,
-							})
+							}
+							p.tokSpan(lit, p.curTok)
+							stmt.DropFiles = append(stmt.DropFiles, lit)
 							p.nextToken()
 						}
 						if p.curTok.Type == TokenComma {
@@ -8965,12 +8986,14 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 								value = value[1 : len(value)-1]
 							}
-							fileSpec.FileName = &ast.StringLiteral{
+							fn := &ast.StringLiteral{
 								LiteralType:   "String",
 								IsNational:    false,
 								IsLargeObject: false,
 								Value:         value,
 							}
+							p.tokSpan(fn, p.curTok)
+							fileSpec.FileName = fn
 							p.nextToken()
 						}
 					}

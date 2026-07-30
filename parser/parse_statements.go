@@ -655,6 +655,8 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optStart := p.curTok
+				lenBefore := len(indexDef.IndexOptions)
 				optionName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken() // consume option name
 				if p.curTok.Type == TokenEquals {
@@ -665,20 +667,14 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 				case "BUCKET_COUNT":
 					opt := &ast.IndexExpressionOption{
 						OptionKind: "BucketCount",
-						Expression: &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						},
+						Expression: p.intLitFromToken(p.curTok),
 					}
 					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 					p.nextToken()
 				case "FILLFACTOR":
 					opt := &ast.IndexExpressionOption{
 						OptionKind: "FillFactor",
-						Expression: &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						},
+						Expression: p.intLitFromToken(p.curTok),
 					}
 					indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 					p.nextToken()
@@ -743,20 +739,12 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 									pr := &ast.CompressionPartitionRange{}
 									// Parse From value
-									from := &ast.IntegerLiteral{
-										LiteralType: "Integer",
-										Value:       p.curTok.Literal,
-									}
-									pr.From = from
+									pr.From = p.intLitFromToken(p.curTok)
 									p.nextToken()
 									// Check for TO
 									if strings.ToUpper(p.curTok.Literal) == "TO" {
 										p.nextToken() // consume TO
-										to := &ast.IntegerLiteral{
-											LiteralType: "Integer",
-											Value:       p.curTok.Literal,
-										}
-										pr.To = to
+										pr.To = p.intLitFromToken(p.curTok)
 										p.nextToken()
 									}
 									opt.PartitionRanges = append(opt.PartitionRanges, pr)
@@ -776,11 +764,8 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 				case "COMPRESSION_DELAY":
 					opt := &ast.CompressionDelayIndexOption{
 						OptionKind: "CompressionDelay",
-						Expression: &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						},
-						TimeUnit: "Unitless",
+						Expression: p.intLitFromToken(p.curTok),
+						TimeUnit:   "Unitless",
 					}
 					p.nextToken() // consume the number
 					// Check for optional MINUTE/MINUTES time unit
@@ -796,6 +781,16 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 				default:
 					// Skip unknown options
 					p.nextToken()
+				}
+				if len(indexDef.IndexOptions) > lenBefore {
+					last := indexDef.IndexOptions[len(indexDef.IndexOptions)-1]
+					if o, ok := last.(spannable); ok {
+						p.spanFrom(optStart, o)
+					}
+					// ScriptDom spans BUCKET_COUNT on its value only.
+					if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
+						p.spanFromChild(eo, eo.Expression)
+					}
 				}
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
@@ -11657,6 +11652,8 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 	p.nextToken() // consume (
 
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optStart := p.curTok
+		lenBefore := len(options)
 		optionName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken() // consume option name
 
@@ -11679,7 +11676,7 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 		case "FILLFACTOR":
 			options = append(options, &ast.IndexExpressionOption{
 				OptionKind: "FillFactor",
-				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+				Expression: p.intLitFromToken(valueToken),
 			})
 		case "IGNORE_DUP_KEY":
 			opt := &ast.IgnoreDupKeyIndexOption{
@@ -11801,13 +11798,13 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 		case "MAXDOP":
 			options = append(options, &ast.IndexExpressionOption{
 				OptionKind: "MaxDop",
-				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+				Expression: p.intLitFromToken(valueToken),
 			})
 		case "MAX_DURATION":
 			// Parse MAX_DURATION = value [MINUTES]
 			opt := &ast.MaxDurationOption{
 				OptionKind:  "MaxDuration",
-				MaxDuration: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+				MaxDuration: p.intLitFromToken(valueToken),
 			}
 			// Check for optional MINUTES unit
 			if strings.ToUpper(p.curTok.Literal) == "MINUTES" {
@@ -11844,12 +11841,12 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 							partRange := &ast.CompressionPartitionRange{}
 							// Parse From value
-							partRange.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							partRange.From = p.intLitFromToken(p.curTok)
 							p.nextToken()
 							// Check for TO keyword indicating a range
 							if strings.ToUpper(p.curTok.Literal) == "TO" {
 								p.nextToken() // consume TO
-								partRange.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+								partRange.To = p.intLitFromToken(p.curTok)
 								p.nextToken()
 							}
 							opt.PartitionRanges = append(opt.PartitionRanges, partRange)
@@ -11886,12 +11883,12 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 							partRange := &ast.CompressionPartitionRange{}
 							// Parse From value
-							partRange.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							partRange.From = p.intLitFromToken(p.curTok)
 							p.nextToken()
 							// Check for TO keyword indicating a range
 							if strings.ToUpper(p.curTok.Literal) == "TO" {
 								p.nextToken() // consume TO
-								partRange.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+								partRange.To = p.intLitFromToken(p.curTok)
 								p.nextToken()
 							}
 							opt.PartitionRanges = append(opt.PartitionRanges, partRange)
@@ -11918,8 +11915,19 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 			} else {
 				options = append(options, &ast.IndexExpressionOption{
 					OptionKind: p.getIndexOptionKind(optionName),
-					Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+					Expression: p.intLitFromToken(valueToken),
 				})
+			}
+		}
+
+		if len(options) > lenBefore {
+			last := options[len(options)-1]
+			if o, ok := last.(spannable); ok {
+				p.spanFrom(optStart, o)
+			}
+			// ScriptDom spans BUCKET_COUNT on its value only.
+			if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
+				p.spanFromChild(eo, eo.Expression)
 			}
 		}
 
@@ -11947,6 +11955,8 @@ func (p *Parser) parseCreateIndexOptions80Style() []ast.IndexOption {
 			break
 		}
 
+		optStart := p.curTok
+		lenBefore := len(options)
 		optionName := upper
 		p.nextToken() // consume option name
 
@@ -11973,7 +11983,7 @@ func (p *Parser) parseCreateIndexOptions80Style() []ast.IndexOption {
 		case "FILLFACTOR":
 			options = append(options, &ast.IndexExpressionOption{
 				OptionKind: "FillFactor",
-				Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+				Expression: p.intLitFromToken(valueToken),
 			})
 		case "IGNORE_DUP_KEY":
 			// In SQL 80 style, IGNORE_DUP_KEY uses IndexStateOption
@@ -12006,8 +12016,14 @@ func (p *Parser) parseCreateIndexOptions80Style() []ast.IndexOption {
 			} else if valueToken.Type == TokenNumber || valueToken.Type != 0 {
 				options = append(options, &ast.IndexExpressionOption{
 					OptionKind: p.getIndexOptionKind(optionName),
-					Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueToken.Literal},
+					Expression: p.intLitFromToken(valueToken),
 				})
+			}
+		}
+
+		if len(options) > lenBefore {
+			if o, ok := options[len(options)-1].(spannable); ok {
+				p.spanFrom(optStart, o)
 			}
 		}
 

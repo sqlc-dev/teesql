@@ -4732,11 +4732,8 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 			HintKind: "Index",
 			IndexValues: []*ast.IdentifierOrValueExpression{
 				{
-					Value: p.curTok.Literal,
-					ValueExpression: &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					},
+					Value:           p.curTok.Literal,
+					ValueExpression: p.intLitFromToken(p.curTok),
 				},
 			},
 		}
@@ -4746,11 +4743,8 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 			p.nextToken()
 			if p.curTok.Type == TokenNumber {
 				hint.IndexValues = append(hint.IndexValues, &ast.IdentifierOrValueExpression{
-					Value: p.curTok.Literal,
-					ValueExpression: &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					},
+					Value:           p.curTok.Literal,
+					ValueExpression: p.intLitFromToken(p.curTok),
 				})
 				p.nextToken()
 			} else if p.curTok.Type == TokenIdent {
@@ -4780,11 +4774,8 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 			var iov *ast.IdentifierOrValueExpression
 			if p.curTok.Type == TokenNumber {
 				iov = &ast.IdentifierOrValueExpression{
-					Value: p.curTok.Literal,
-					ValueExpression: &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					},
+					Value:           p.curTok.Literal,
+					ValueExpression: p.intLitFromToken(p.curTok),
 				}
 				p.nextToken()
 			} else if p.curTok.Type == TokenIdent {
@@ -4805,11 +4796,8 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 				var iov *ast.IdentifierOrValueExpression
 				if p.curTok.Type == TokenNumber {
 					iov = &ast.IdentifierOrValueExpression{
-						Value: p.curTok.Literal,
-						ValueExpression: &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						},
+						Value:           p.curTok.Literal,
+						ValueExpression: p.intLitFromToken(p.curTok),
 					}
 					p.nextToken()
 				} else if p.curTok.Type == TokenIdent {
@@ -4866,11 +4854,8 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 		// Parse index value (identifier or number)
 		if p.curTok.Type == TokenNumber {
 			hint.IndexValue = &ast.IdentifierOrValueExpression{
-				Value: p.curTok.Literal,
-				ValueExpression: &ast.IntegerLiteral{
-					LiteralType: "Integer",
-					Value:       p.curTok.Literal,
-				},
+				Value:           p.curTok.Literal,
+				ValueExpression: p.intLitFromToken(p.curTok),
 			}
 			p.nextToken()
 		} else if p.curTok.Type == TokenIdent {
@@ -5137,12 +5122,13 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "UsePlan", Value: value}, astStart), nil
+			h := &ast.LiteralOptimizerHint{HintKind: "UsePlan", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "HINT" {
 			p.nextToken() // consume HINT
-			spanV56, spanErr56 := p.parseUseHintList()
-			return spanned(p, spanV56, astStart), spanErr56
+			return p.parseUseHintList()
 		}
 		return p.optHint("Use", astStart), nil
 	}
@@ -5176,7 +5162,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "MaxDop", Value: value}, astStart), nil
+			h := &ast.LiteralOptimizerHint{HintKind: "MaxDop", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 		return p.optHint("MaxDop", astStart), nil
 	}
@@ -5201,7 +5189,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}, astStart), nil
+			h := &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 		return p.optHint("Fast", astStart), nil
 	}
@@ -5234,7 +5224,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		if err != nil {
 			return nil, err
 		}
-		return spanned(p, &ast.LiteralOptimizerHint{HintKind: "MaxRecursion", Value: value}, astStart), nil
+		h := &ast.LiteralOptimizerHint{HintKind: "MaxRecursion", Value: value}
+		p.spanFromChild(h, value)
+		return h, nil
 
 	case "OPTIMIZE":
 		p.nextToken() // consume OPTIMIZE
@@ -5242,8 +5234,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			subUpper := strings.ToUpper(p.curTok.Literal)
 			if subUpper == "FOR" {
 				p.nextToken() // consume FOR
-				spanV58, spanErr58 := p.parseOptimizeForHint()
-				return spanned(p, spanV58, astStart), spanErr58
+				return p.parseOptimizeForHint()
 			} else if subUpper == "CORRELATED" {
 				p.nextToken() // consume CORRELATED
 				hintTok := astStart
@@ -5276,7 +5267,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "Label", Value: value}, astStart), nil
+			h := &ast.LiteralOptimizerHint{HintKind: "Label", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 		return p.optHint("Label", astStart), nil
 
@@ -5288,7 +5281,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "MaxGrantPercent", Value: value}, astStart), nil
+			h := &ast.LiteralOptimizerHint{HintKind: "MaxGrantPercent", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 		return p.optHint("MaxGrantPercent", astStart), nil
 
@@ -5300,7 +5295,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "MinGrantPercent", Value: value}, astStart), nil
+			h := &ast.LiteralOptimizerHint{HintKind: "MinGrantPercent", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 		return p.optHint("MinGrantPercent", astStart), nil
 
@@ -5312,7 +5309,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return spanned(p, &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}, astStart), nil
+			h := &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 		return p.optHint("Fast", astStart), nil
 
@@ -5348,7 +5347,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return spanned(p, &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}, astStart), nil
+			h := &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 
 		// Check if this is a literal hint (LABEL = value, etc.)
@@ -5358,7 +5359,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return spanned(p, &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}, astStart), nil
+			h := &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 		return p.optHint(hintKind, astStart), nil
 	}
@@ -5474,6 +5477,10 @@ func (p *Parser) parseOptimizeForHint() (ast.OptimizerHintBase, error) {
 	}
 	p.nextToken()
 
+	// ScriptDom spans this hint from the first pair through the closing
+	// paren, excluding "OPTIMIZE FOR (".
+	astStart = p.curTok
+
 	// Parse variable-value pairs
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 		if p.curTok.Type == TokenComma {
@@ -5507,9 +5514,7 @@ func (p *Parser) parseVariableValuePair() (*ast.VariableValuePair, error) {
 	}
 
 	pair := &ast.VariableValuePair{
-		Variable: &ast.VariableReference{
-			Name: p.curTok.Literal,
-		},
+		Variable:     p.spanVarRef(p.curTok.Literal),
 		IsForUnknown: false,
 	}
 	p.nextToken()

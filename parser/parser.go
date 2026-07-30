@@ -226,6 +226,13 @@ func (p *Parser) spanChildToToken(n spannable, child spannable, end Token) {
 	n.SetSpan(cf.StartOffset, eu-cf.StartOffset, cf.StartLine, cf.StartColumn)
 }
 
+// intLitFromToken builds an IntegerLiteral carrying the span of the given token.
+func (p *Parser) intLitFromToken(tok Token) *ast.IntegerLiteral {
+	l := &ast.IntegerLiteral{LiteralType: "Integer", Value: tok.Literal}
+	p.tokSpan(l, tok)
+	return l
+}
+
 // identFromToken builds an Identifier from the given token's literal with
 // the token's source span, without consuming it.
 func (p *Parser) identFromToken(tok Token) *ast.Identifier {

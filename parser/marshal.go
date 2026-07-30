@@ -12956,6 +12956,7 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 
 	// Parse parameters
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		paramStart := p.curTok
 		param := &ast.ProcedureParameter{
 			IsVarying: false,
 			Modifier:  "None",
@@ -12963,10 +12964,7 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 
 		// Parse parameter name
 		if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-			param.VariableName = &ast.Identifier{
-				Value:     p.curTok.Literal,
-				QuoteType: "NotQuoted",
-			}
+			param.VariableName = p.spanIdent(p.curTok.Literal, "NotQuoted")
 			p.nextToken()
 		} else {
 			param.VariableName = p.parseIdentifier()
@@ -12991,6 +12989,7 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 			}
 		}
 
+		p.spanFrom(paramStart, param)
 		stmt.Parameters = append(stmt.Parameters, param)
 
 		if p.curTok.Type == TokenComma {
