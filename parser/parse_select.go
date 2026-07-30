@@ -1080,15 +1080,18 @@ func (p *Parser) parsePostfixExpression() (ast.ScalarExpression, error) {
 					fc.OverClause = overClause
 				}
 
+				p.spanFromChild(fc, expr)
 				expr = fc
 			} else {
 				// It's a property access: expr.prop
-				expr = &ast.UserDefinedTypePropertyAccess{
+				propAccess := &ast.UserDefinedTypePropertyAccess{
 					CallTarget: &ast.ExpressionCallTarget{
 						Expression: expr,
 					},
 					PropertyName: methodName,
 				}
+				p.spanFromChild(propAccess, expr)
+				expr = propAccess
 			}
 			continue
 		}
@@ -1186,15 +1189,18 @@ func (p *Parser) handlePostfixOperations(expr ast.ScalarExpression) (ast.ScalarE
 					fc.OverClause = overClause
 				}
 
+				p.spanFromChild(fc, expr)
 				expr = fc
 			} else {
 				// It's a property access: expr.prop
-				expr = &ast.UserDefinedTypePropertyAccess{
+				propAccess := &ast.UserDefinedTypePropertyAccess{
 					CallTarget: &ast.ExpressionCallTarget{
 						Expression: expr,
 					},
 					PropertyName: methodName,
 				}
+				p.spanFromChild(propAccess, expr)
+				expr = propAccess
 			}
 			continue
 		}
@@ -2544,6 +2550,7 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 
 		// Check for WITHIN GROUP clause for function calls (e.g., PERCENTILE_CONT)
 		if fc, ok := expr.(*ast.FunctionCall); ok && strings.ToUpper(p.curTok.Literal) == "WITHIN" {
+			withinTok := p.curTok
 			p.nextToken() // consume WITHIN
 			if strings.ToUpper(p.curTok.Literal) == "GROUP" {
 				p.nextToken() // consume GROUP
@@ -2577,6 +2584,7 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 			}
 			p.nextToken() // consume )
 
+			p.spanFrom(withinTok, withinGroup)
 			fc.WithinGroupClause = withinGroup
 			continue // continue to check for more clauses like OVER
 		}

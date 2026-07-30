@@ -11756,14 +11756,14 @@ func (p *Parser) parseAddSensitivityClassificationStatement() (*ast.AddSensitivi
 				p.nextToken()
 			} else {
 				// Identifier literal (for RANK = HIGH, etc.)
-				// ScriptDom spans this option on the value token and leaves
+				// ScriptDom spans this option on its keyword and leaves
 				// the IdentifierLiteral itself spanless.
 				opt.Value = &ast.IdentifierLiteral{
 					LiteralType: "Identifier",
 					QuoteType:   "NotQuoted",
 					Value:       strings.ToUpper(p.curTok.Literal),
 				}
-				p.tokSpan(opt, p.curTok)
+				p.tokSpan(opt, optTok)
 				p.nextToken()
 			}
 

@@ -10590,6 +10590,8 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 	var options []ast.CreateDatabaseOption
 
 	for {
+		optTok := p.curTok
+		lenBefore := len(options)
 		optName := strings.ToUpper(p.curTok.Literal)
 		switch optName {
 		case "LEDGER":
@@ -10805,6 +10807,12 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 			return options, nil
 		}
 
+		if len(options) > lenBefore {
+			if o, ok := options[len(options)-1].(spannable); ok {
+				p.spanFrom(optTok, o)
+			}
+		}
+
 		// Check for comma separator
 		if p.curTok.Type == TokenComma {
 			p.nextToken()
@@ -10966,6 +10974,16 @@ func (p *Parser) parseFileGroups() ([]*ast.FileGroupDefinition, error) {
 		// ScriptDom spans the first PRIMARY declaration from the PRIMARY keyword.
 		if isPrimary && len(decls) > 0 {
 			p.respanStart(decls[0], groupStart)
+		}
+		// Named FILEGROUP definitions span from the keyword through their
+		// last declaration; the unnamed primary group stays spanless.
+		if fg.Name != nil {
+			p.spanFrom(groupStart, fg)
+			if len(decls) > 0 {
+				if f := decls[len(decls)-1].Frag(); f.HasSpan() && fg.Frag().HasSpan() {
+					fg.Frag().FragmentLength = f.EndOffset() - fg.Frag().StartOffset
+				}
+			}
 		}
 		fg.FileDeclarations = decls
 		fileGroups = append(fileGroups, fg)
