@@ -3710,11 +3710,14 @@ func (p *Parser) parseCreateServerAuditStatement() (ast.Statement, error) {
 
 	// Parse TO clause (audit target)
 	if strings.ToUpper(p.curTok.Literal) == "TO" {
+		toTok := p.curTok
 		p.nextToken() // consume TO
 		target, err := p.parseAuditTarget()
 		if err != nil {
 			return nil, err
 		}
+		// ScriptDom spans the target from the TO keyword.
+		p.respanStart(target, toTok)
 		stmt.AuditTarget = target
 	}
 
@@ -3788,6 +3791,7 @@ func (p *Parser) parseCreateServerAuditSpecificationStatement() (*ast.CreateServ
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 		if upperLit == "ADD" || upperLit == "DROP" {
+			partTok := p.curTok
 			part := &ast.AuditSpecificationPart{
 				IsDrop: upperLit == "DROP",
 			}
@@ -3796,14 +3800,17 @@ func (p *Parser) parseCreateServerAuditSpecificationStatement() (*ast.CreateServ
 				p.nextToken() // consume (
 				// Parse audit action group reference
 				groupName := p.curTok.Literal
-				part.Details = &ast.AuditActionGroupReference{
+				agr := &ast.AuditActionGroupReference{
 					Group: convertAuditGroupName(groupName),
 				}
+				p.tokSpan(agr, p.curTok)
+				part.Details = agr
 				p.nextToken() // consume group name
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
 				}
 			}
+			p.spanFrom(partTok, part)
 			stmt.Parts = append(stmt.Parts, part)
 			if p.curTok.Type == TokenComma {
 				p.nextToken() // consume ,
@@ -3868,6 +3875,7 @@ func (p *Parser) parseAlterServerAuditSpecificationStatement() (*ast.AlterServer
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 		if upperLit == "ADD" || upperLit == "DROP" {
+			partTok := p.curTok
 			part := &ast.AuditSpecificationPart{
 				IsDrop: upperLit == "DROP",
 			}
@@ -3876,14 +3884,17 @@ func (p *Parser) parseAlterServerAuditSpecificationStatement() (*ast.AlterServer
 				p.nextToken() // consume (
 				// Parse audit action group reference
 				groupName := p.curTok.Literal
-				part.Details = &ast.AuditActionGroupReference{
+				agr := &ast.AuditActionGroupReference{
 					Group: convertAuditGroupName(groupName),
 				}
+				p.tokSpan(agr, p.curTok)
+				part.Details = agr
 				p.nextToken() // consume group name
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
 				}
 			}
+			p.spanFrom(partTok, part)
 			stmt.Parts = append(stmt.Parts, part)
 			if p.curTok.Type == TokenComma {
 				p.nextToken() // consume ,
@@ -6960,11 +6971,13 @@ func (p *Parser) parseReadTextStatement() (*ast.ReadTextStatement, error) {
 
 	// Parse text pointer (variable or binary literal)
 	if p.curTok.Type == TokenBinary {
-		stmt.TextPointer = &ast.BinaryLiteral{
+		bl := &ast.BinaryLiteral{
 			LiteralType:   "Binary",
 			Value:         p.curTok.Literal,
 			IsLargeObject: false,
 		}
+		p.tokSpan(bl, p.curTok)
+		stmt.TextPointer = bl
 		p.nextToken()
 	} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		stmt.TextPointer = p.spanVarRef(p.curTok.Literal)
@@ -9862,11 +9875,12 @@ func (p *Parser) parseSessionOption() ast.SessionOption {
 		if strings.ToUpper(p.curTok.Literal) == "SECONDS" {
 			p.nextToken()
 		}
-		return spanned(p, &ast.MaxDispatchLatencySessionOption{
+		// ScriptDom leaves this option without position information.
+		return &ast.MaxDispatchLatencySessionOption{
 			OptionKind: "MaxDispatchLatency",
 			Value:      value,
 			IsInfinite: false,
-		}, astStart)
+		}
 	case "MEMORY_PARTITION_MODE":
 		value := p.curTok.Literal
 		p.nextToken()
@@ -11399,6 +11413,8 @@ func (p *Parser) parsePrincipalOptions() []ast.PrincipalOption {
 	var options []ast.PrincipalOption
 
 	for {
+		optTok := p.curTok
+		lenBefore := len(options)
 		optName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken() // consume option name
 
@@ -11411,13 +11427,15 @@ func (p *Parser) parsePrincipalOptions() []ast.PrincipalOption {
 		case "SID":
 			// SID = 0x... (binary literal)
 			if p.curTok.Type == TokenBinary {
+				bl := &ast.BinaryLiteral{
+					LiteralType:   "Binary",
+					IsLargeObject: false,
+					Value:         p.curTok.Literal,
+				}
+				p.tokSpan(bl, p.curTok)
 				options = append(options, &ast.LiteralPrincipalOption{
 					OptionKind: "Sid",
-					Value: &ast.BinaryLiteral{
-						LiteralType:   "Binary",
-						IsLargeObject: false,
-						Value:         p.curTok.Literal,
-					},
+					Value:      bl,
 				})
 				p.nextToken()
 			}
@@ -11468,6 +11486,12 @@ func (p *Parser) parsePrincipalOptions() []ast.PrincipalOption {
 			// Unknown option, skip value
 			if p.curTok.Type != TokenComma && p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
 				p.nextToken()
+			}
+		}
+
+		if len(options) > lenBefore {
+			if o, ok := options[len(options)-1].(spannable); ok {
+				p.spanFrom(optTok, o)
 			}
 		}
 

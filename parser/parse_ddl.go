@@ -8043,11 +8043,14 @@ func (p *Parser) parseAlterServerAuditStatement() (ast.Statement, error) {
 
 	// Parse TO clause (audit target)
 	if strings.ToUpper(p.curTok.Literal) == "TO" {
+		toTok := p.curTok
 		p.nextToken() // consume TO
 		target, err := p.parseAuditTarget()
 		if err != nil {
 			return nil, err
 		}
+		// ScriptDom spans the target from the TO keyword.
+		p.respanStart(target, toTok)
 		stmt.AuditTarget = target
 	}
 
@@ -11707,6 +11710,7 @@ func (p *Parser) parseAddSensitivityClassificationStatement() (*ast.AddSensitivi
 
 		// Parse options
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			optTok := p.curTok
 			opt := &ast.SensitivityClassificationOption{}
 
 			// Parse option type
@@ -11743,14 +11747,17 @@ func (p *Parser) parseAddSensitivityClassificationStatement() (*ast.AddSensitivi
 				p.nextToken()
 			} else {
 				// Identifier literal (for RANK = HIGH, etc.)
-				opt.Value = &ast.IdentifierLiteral{
+				il := &ast.IdentifierLiteral{
 					LiteralType: "Identifier",
 					QuoteType:   "NotQuoted",
 					Value:       strings.ToUpper(p.curTok.Literal),
 				}
+				p.tokSpan(il, p.curTok)
+				opt.Value = il
 				p.nextToken()
 			}
 
+			p.spanFrom(optTok, opt)
 			stmt.Options = append(stmt.Options, opt)
 
 			if p.curTok.Type == TokenComma {

@@ -8943,6 +8943,7 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 
 	// Parse permission(s)
 	perm := &ast.Permission{}
+	permStart := p.curTok
 	for p.curTok.Type != TokenTo && p.curTok.Type != TokenOn && p.curTok.Type != TokenEOF {
 		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenCreate ||
 			p.curTok.Type == TokenProcedure || p.curTok.Type == TokenView ||
@@ -8973,10 +8974,12 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken() // consume )
 			}
+			p.spanFrom(permStart, perm)
 		} else if p.curTok.Type == TokenComma {
 			stmt.Permissions = append(stmt.Permissions, perm)
 			perm = &ast.Permission{}
 			p.nextToken()
+			permStart = p.curTok
 		} else {
 			break
 		}
@@ -8987,6 +8990,7 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 
 	// Check for ON clause (SecurityTargetObject)
 	if p.curTok.Type == TokenOn {
+		onTok := p.curTok
 		p.nextToken() // consume ON
 
 		stmt.SecurityTargetObject = &ast.SecurityTargetObject{}
@@ -9157,6 +9161,8 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 				p.nextToken() // consume )
 			}
 		}
+		// ScriptDom spans the target from the ON keyword.
+		p.spanFrom(onTok, stmt.SecurityTargetObject)
 	}
 
 	// Expect TO
@@ -9239,6 +9245,7 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 
 	// Parse permission(s)
 	perm := &ast.Permission{}
+	permStart := p.curTok
 	for p.curTok.Type != TokenTo && p.curTok.Type != TokenOn && p.curTok.Type != TokenEOF && strings.ToUpper(p.curTok.Literal) != "FROM" {
 		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenCreate ||
 			p.curTok.Type == TokenProcedure || p.curTok.Type == TokenView ||
@@ -9268,10 +9275,12 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken() // consume )
 			}
+			p.spanFrom(permStart, perm)
 		} else if p.curTok.Type == TokenComma {
 			stmt.Permissions = append(stmt.Permissions, perm)
 			perm = &ast.Permission{}
 			p.nextToken()
+			permStart = p.curTok
 		} else {
 			break
 		}
@@ -9282,6 +9291,7 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 
 	// Check for ON clause (SecurityTargetObject)
 	if p.curTok.Type == TokenOn {
+		onTok := p.curTok
 		p.nextToken() // consume ON
 
 		stmt.SecurityTargetObject = &ast.SecurityTargetObject{}
@@ -9451,6 +9461,8 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 				p.nextToken() // consume )
 			}
 		}
+		// ScriptDom spans the target from the ON keyword.
+		p.spanFrom(onTok, stmt.SecurityTargetObject)
 	}
 
 	// Expect TO or FROM
@@ -9514,6 +9526,7 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 
 	// Parse permission(s)
 	perm := &ast.Permission{}
+	permStart := p.curTok
 	for p.curTok.Type != TokenTo && p.curTok.Type != TokenOn && p.curTok.Type != TokenEOF {
 		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenCreate ||
 			p.curTok.Type == TokenProcedure || p.curTok.Type == TokenView ||
@@ -9544,10 +9557,12 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken() // consume )
 			}
+			p.spanFrom(permStart, perm)
 		} else if p.curTok.Type == TokenComma {
 			stmt.Permissions = append(stmt.Permissions, perm)
 			perm = &ast.Permission{}
 			p.nextToken()
+			permStart = p.curTok
 		} else {
 			break
 		}
@@ -9558,6 +9573,7 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 
 	// Check for ON clause (SecurityTargetObject)
 	if p.curTok.Type == TokenOn {
+		onTok := p.curTok
 		p.nextToken() // consume ON
 
 		stmt.SecurityTargetObject = &ast.SecurityTargetObject{}
@@ -9727,6 +9743,8 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 				p.nextToken() // consume )
 			}
 		}
+		// ScriptDom spans the target from the ON keyword.
+		p.spanFrom(onTok, stmt.SecurityTargetObject)
 	}
 
 	// Expect TO
@@ -13503,6 +13521,7 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 	// Parse optional ON filegroup/partition scheme
 	if p.curTok.Type == TokenOn {
 		p.nextToken() // consume ON
+		fgStart := p.curTok
 		fgps := &ast.FileGroupOrPartitionScheme{
 			Name: &ast.IdentifierOrValueExpression{
 				Identifier: p.parseIdentifier(),
@@ -13524,6 +13543,7 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 				p.nextToken()
 			}
 		}
+		p.spanFrom(fgStart, fgps)
 		stmt.OnFileGroupOrPartitionScheme = fgps
 	}
 
