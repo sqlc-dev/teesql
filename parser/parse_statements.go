@@ -14322,6 +14322,7 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 
 		// Parse ON clause for catalog/filegroup
 		if p.curTok.Type == TokenOn {
+			onTok := p.curTok
 			p.nextToken() // consume ON
 			stmt.CatalogAndFileGroup = &ast.FullTextCatalogAndFileGroup{}
 
@@ -14363,6 +14364,8 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 				stmt.CatalogAndFileGroup.CatalogName = p.parseIdentifier()
 				stmt.CatalogAndFileGroup.FileGroupIsFirst = false
 			}
+			// ScriptDom spans this clause from the ON keyword.
+			p.spanFrom(onTok, stmt.CatalogAndFileGroup)
 		}
 
 		// Parse WITH clause
@@ -14378,6 +14381,7 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 
 			noPopulation := false
 			for {
+				ftOptTok := p.curTok
 				optLit := strings.ToUpper(p.curTok.Literal)
 				if optLit == "CHANGE_TRACKING" {
 					p.nextToken() // consume CHANGE_TRACKING
@@ -14400,10 +14404,12 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 					if trackingValue == "Off" && noPopulation {
 						trackingValue = "OffNoPopulation"
 					}
-					stmt.Options = append(stmt.Options, &ast.ChangeTrackingFullTextIndexOption{
+					ctIdxOpt := &ast.ChangeTrackingFullTextIndexOption{
 						Value:      trackingValue,
 						OptionKind: "ChangeTracking",
-					})
+					}
+					p.spanFrom(ftOptTok, ctIdxOpt)
+					stmt.Options = append(stmt.Options, ctIdxOpt)
 				} else if optLit == "STOPLIST" {
 					p.nextToken() // consume STOPLIST
 					// Handle optional = sign
@@ -14423,6 +14429,7 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 						opt.IsOff = false
 						opt.StopListName = p.parseIdentifier()
 					}
+					p.spanFrom(ftOptTok, opt)
 					stmt.Options = append(stmt.Options, opt)
 				} else if optLit == "SEARCH" {
 					p.nextToken() // consume SEARCH
@@ -14440,6 +14447,8 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 					opt := &ast.SearchPropertyListFullTextIndexOption{
 						OptionKind: "SearchPropertyList",
 					}
+					// ScriptDom spans this option on the value alone.
+					spValueTok := p.curTok
 					if strings.ToUpper(p.curTok.Literal) == "OFF" {
 						opt.IsOff = true
 						p.nextToken()
@@ -14447,6 +14456,7 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 						opt.IsOff = false
 						opt.PropertyListName = p.parseIdentifier()
 					}
+					p.spanFrom(spValueTok, opt)
 					stmt.Options = append(stmt.Options, opt)
 				} else if optLit == "NO" {
 					p.nextToken() // consume NO
@@ -14457,6 +14467,8 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 						for i, opt := range stmt.Options {
 							if ctOpt, ok := opt.(*ast.ChangeTrackingFullTextIndexOption); ok && ctOpt.Value == "Off" {
 								ctOpt.Value = "OffNoPopulation"
+								// The option's span extends through NO POPULATION.
+								p.respanEnd(ctOpt)
 								stmt.Options[i] = ctOpt
 							}
 						}

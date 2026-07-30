@@ -6844,6 +6844,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 							return nil, err
 						}
 						conn.ToNode = toNode
+						p.spanFromChild(conn, conn.FromNode)
 						constraint.FromNodeToNodeList = append(constraint.FromNodeToNodeList, conn)
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
@@ -10298,6 +10299,7 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 			}
 		} else if strings.ToUpper(p.curTok.Literal) == "STOPLIST" {
 			// Parse SET STOPLIST OFF | SYSTEM | name [WITH NO POPULATION]
+			stoplistTok := p.curTok
 			p.nextToken() // consume STOPLIST
 			// Handle optional = sign
 			if p.curTok.Type == TokenEquals {
@@ -10315,6 +10317,8 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 				action.StopListOption.IsOff = false
 				action.StopListOption.StopListName = p.parseIdentifier()
 			}
+			// The nested option ends at the stoplist value.
+			p.spanFrom(stoplistTok, action.StopListOption)
 			// Check for WITH NO POPULATION
 			if p.curTok.Type == TokenWith {
 				p.nextToken() // consume WITH
@@ -10326,7 +10330,9 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 					}
 				}
 			}
-			return spanned(p, action, astStart)
+			// ScriptDom spans this action from the STOPLIST keyword.
+			p.spanFrom(stoplistTok, action)
+			return action
 		} else if strings.ToUpper(p.curTok.Literal) == "SEARCH" {
 			// Parse SET SEARCH PROPERTY LIST OFF | name [WITH NO POPULATION]
 			p.nextToken() // consume SEARCH
@@ -10345,6 +10351,8 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 					OptionKind: "SearchPropertyList",
 				},
 			}
+			// ScriptDom spans this action from the OFF / list-name value.
+			valueTok := p.curTok
 			if strings.ToUpper(p.curTok.Literal) == "OFF" {
 				action.SearchPropertyListOption.IsOff = true
 				p.nextToken()
@@ -10352,6 +10360,8 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 				action.SearchPropertyListOption.IsOff = false
 				action.SearchPropertyListOption.PropertyListName = p.parseIdentifier()
 			}
+			// The nested option spans the value alone.
+			p.spanFrom(valueTok, action.SearchPropertyListOption)
 			// Check for WITH NO POPULATION
 			if p.curTok.Type == TokenWith {
 				p.nextToken() // consume WITH
@@ -10363,7 +10373,8 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 					}
 				}
 			}
-			return spanned(p, action, astStart)
+			p.spanFrom(valueTok, action)
+			return action
 		}
 		return nil
 	case "START":

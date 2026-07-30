@@ -5481,6 +5481,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 				stmt.Definition.Indexes = append(stmt.Definition.Indexes, indexDef)
 			} else if upperLit == "CONNECTION" {
 				// Parse unnamed CONNECTION constraint for graph edge tables
+				connectionTok := p.curTok
 				p.nextToken() // consume CONNECTION
 				constraint := &ast.GraphConnectionConstraintDefinition{}
 				if p.curTok.Type == TokenLParen {
@@ -5505,6 +5506,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							return spanned(p, stmt, astStart), nil
 						}
 						conn.ToNode = toNode
+						p.spanFromChild(conn, conn.FromNode)
 						constraint.FromNodeToNodeList = append(constraint.FromNodeToNodeList, conn)
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
@@ -5531,6 +5533,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						}
 					}
 				}
+				p.spanFrom(connectionTok, constraint)
 				stmt.Definition.TableConstraints = append(stmt.Definition.TableConstraints, constraint)
 			} else {
 				// Parse column definition
@@ -8989,7 +8992,7 @@ func (p *Parser) parseConnectionConstraint() (*ast.GraphConnectionConstraintDefi
 				return nil, err
 			}
 			conn.ToNode = toNode
-
+			p.spanFromChild(conn, conn.FromNode)
 			constraint.FromNodeToNodeList = append(constraint.FromNodeToNodeList, conn)
 
 			if p.curTok.Type == TokenComma {
@@ -10342,7 +10345,7 @@ func graphConnectionConstraintToJSON(c *ast.GraphConnectionConstraintDefinition)
 			if conn.ToNode != nil {
 				connNode["ToNode"] = schemaObjectNameToJSON(conn.ToNode)
 			}
-			connections[i] = connNode
+			connections[i] = addSpan(connNode, frag(conn))
 		}
 		node["FromNodeToNodeList"] = connections
 	}
