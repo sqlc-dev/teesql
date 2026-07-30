@@ -89,6 +89,9 @@ func spanned[T any](p *Parser, n T, start Token) T {
 	if v := reflect.ValueOf(any(n)); v.Kind() == reflect.Pointer && v.IsNil() {
 		return n
 	}
+	if s.Frag().Pinned() {
+		return n
+	}
 	if p.prevEndByte <= start.Pos {
 		return n
 	}
@@ -606,4 +609,17 @@ func (p *Parser) spanDeviceInfo(d *ast.DeviceInfo, start Token) {
 		}
 	}
 	p.spanFrom(start, d)
+}
+
+// pinBinaryFromPinnedChild records a boolean binary expression's span when
+// its first operand carries a pinned (quirk-narrowed) span: the parent then
+// starts at that operand's start rather than its own first token, and is
+// itself pinned so enclosing calls keep the narrowed start.
+func (p *Parser) pinBinaryFromPinnedChild(b *ast.BooleanBinaryExpression) {
+	fs, ok := any(b.FirstExpression).(spannable)
+	if !ok || !fs.Frag().Pinned() || !fs.Frag().HasSpan() {
+		return
+	}
+	p.spanFromChild(b, b.FirstExpression)
+	b.Frag().Pin()
 }

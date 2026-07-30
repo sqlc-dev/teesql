@@ -3748,7 +3748,7 @@ func graphMatchExpressionToJSONWithContext(expr ast.GraphMatchExpression, ctx *g
 			node["RightNode"] = graphMatchNodeExpressionToJSONWithContext(e.RightNode, ctx)
 		}
 		node["ArrowOnRight"] = e.ArrowOnRight
-		return node
+		return addSpan(node, frag(e))
 	case *ast.GraphMatchNodeExpression:
 		return graphMatchNodeExpressionToJSONWithContext(e, ctx)
 	case *ast.BooleanBinaryExpression:
@@ -3831,7 +3831,7 @@ func booleanBinaryExpressionToJSONWithGraphContext(e *ast.BooleanBinaryExpressio
 			node["SecondExpression"] = booleanExpressionToJSON(e.SecondExpression)
 		}
 	}
-	return node
+	return addSpan(node, frag(e))
 }
 
 func graphMatchNodeExpressionToJSON(expr *ast.GraphMatchNodeExpression) jsonNode {
@@ -5959,6 +5959,9 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 				if err != nil {
 					return nil, err
 				}
+				// The nested SELECT excludes the trailing semicolon, which
+				// belongs to the CREATE TABLE statement.
+				p.trimTrailingSemicolon(selectStmt)
 				stmt.SelectStatement = selectStmt
 			}
 		} else if upperLit == "FEDERATED" {
@@ -6372,6 +6375,9 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 				if err != nil {
 					return nil, err
 				}
+				// The nested SELECT excludes the trailing semicolon, which
+				// belongs to the CREATE TABLE statement.
+				p.trimTrailingSemicolon(selectStmt)
 				stmt.SelectStatement = selectStmt
 			}
 		} else {
@@ -6800,6 +6806,9 @@ func (p *Parser) parseGraphMatchPredicate() (*ast.GraphMatchPredicate, error) {
 		return nil, fmt.Errorf("expected ( after MATCH, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
+	// ScriptDom spans the predicate over the pattern expression and closing
+	// paren, excluding the MATCH( prefix.
+	patternTok := p.curTok
 
 	// Parse the graph pattern expression (may be multiple composites joined by AND)
 	expr, err := p.parseGraphMatchAndExpression()
@@ -6813,7 +6822,10 @@ func (p *Parser) parseGraphMatchPredicate() (*ast.GraphMatchPredicate, error) {
 		p.nextToken()
 	}
 
-	return spanned(p, pred, astStart), nil
+	p.spanFrom(patternTok, pred)
+	pred.Frag().Pin()
+	_ = astStart
+	return pred, nil
 }
 
 // parseGraphMatchAndExpression parses graph match expressions connected by AND
@@ -7134,9 +7146,13 @@ func (p *Parser) parseGraphMatchSingleComposite(leftNode *ast.GraphMatchNodeExpr
 		if leftNode != nil {
 			composite.LeftNode = leftNode
 		} else {
-			composite.LeftNode = &ast.GraphMatchNodeExpression{
+			ln := &ast.GraphMatchNodeExpression{
 				Node: p.parseIdentifier(),
 			}
+			if ln.Node != nil && ln.Node.Frag().HasSpan() {
+				*ln.Frag() = *ln.Node.Frag()
+			}
+			composite.LeftNode = ln
 		}
 
 		// Now check for arrow direction at the start: <- or -
@@ -7175,6 +7191,7 @@ func (p *Parser) parseGraphMatchSingleComposite(leftNode *ast.GraphMatchNodeExpr
 	// Parse right node (only if there's an identifier - in recursive patterns the right node may be implicit)
 	var rightNode *ast.GraphMatchNodeExpression
 	if p.curTok.Type == TokenIdent || strings.ToUpper(p.curTok.Literal) == "LAST_NODE" {
+		rightNodeTok := p.curTok
 		rightNode = &ast.GraphMatchNodeExpression{}
 		if strings.ToUpper(p.curTok.Literal) == "LAST_NODE" {
 			rightNode.UsesLastNode = true
@@ -7186,10 +7203,19 @@ func (p *Parser) parseGraphMatchSingleComposite(leftNode *ast.GraphMatchNodeExpr
 					p.nextToken() // consume )
 				}
 			}
+			p.spanFrom(rightNodeTok, rightNode)
 		} else {
 			rightNode.Node = p.parseIdentifier()
+			if rightNode.Node != nil && rightNode.Node.Frag().HasSpan() {
+				*rightNode.Frag() = *rightNode.Node.Frag()
+			}
 		}
 		composite.RightNode = rightNode
+	}
+
+	// The composite spans from its left node through its right node.
+	if composite.LeftNode != nil && composite.LeftNode.Frag().HasSpan() {
+		p.spanFromChild(composite, composite.LeftNode)
 	}
 
 	return composite, rightNode, nil

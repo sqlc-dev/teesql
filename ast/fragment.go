@@ -16,6 +16,22 @@ type Fragment struct {
 	FragmentLength int
 	StartLine      int
 	StartColumn    int
+
+	// pinned marks a span that reproduces a ScriptDom quirk narrower than
+	// the node's full token extent; generic outer span recording must not
+	// widen it.
+	pinned bool
+}
+
+// Pin marks the recorded span as final so that enclosing parse functions'
+// generic span recording leaves it unchanged.
+func (f *Fragment) Pin() {
+	f.pinned = true
+}
+
+// Pinned reports whether the span has been marked final.
+func (f *Fragment) Pinned() bool {
+	return f.pinned
 }
 
 // SetSpan records the source span of a node.

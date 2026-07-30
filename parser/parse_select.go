@@ -6151,6 +6151,9 @@ func (p *Parser) parseBooleanOrExpression() (ast.BooleanExpression, error) {
 			FirstExpression:      left,
 			SecondExpression:     right,
 		}
+		if bbe, ok := left.(*ast.BooleanBinaryExpression); ok {
+			p.pinBinaryFromPinnedChild(bbe)
+		}
 	}
 
 	return spanned(p, left, astStart), nil
@@ -6176,6 +6179,9 @@ func (p *Parser) parseBooleanAndExpression() (ast.BooleanExpression, error) {
 			BinaryExpressionType: "And",
 			FirstExpression:      left,
 			SecondExpression:     right,
+		}
+		if bbe, ok := left.(*ast.BooleanBinaryExpression); ok {
+			p.pinBinaryFromPinnedChild(bbe)
 		}
 	}
 
