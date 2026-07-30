@@ -14109,6 +14109,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 		p.nextToken()
 
 		stmt.Partition = &ast.PartitionSpecifier{}
+		partValTok := p.curTok
 		if strings.ToUpper(p.curTok.Literal) == "ALL" {
 			stmt.Partition.All = true
 			p.nextToken()
@@ -14120,6 +14121,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 			}
 			stmt.Partition.Number = expr
 		}
+		p.spanFrom(partValTok, stmt.Partition)
 	}
 
 	// Parse WITH clause if present

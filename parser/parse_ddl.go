@@ -846,7 +846,9 @@ func (p *Parser) parseSecurityPolicyOption() *ast.SecurityPolicyOption {
 	}
 	p.nextToken()
 
-	return spanned(p, opt, astStart)
+	// ScriptDom spans this option on its keyword only.
+	p.tokSpan(opt, astStart)
+	return opt
 }
 
 func (p *Parser) parseSecurityPredicateAction(actionType string) (*ast.SecurityPredicateAction, error) {
@@ -1885,6 +1887,7 @@ func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
 
 	// Parse index clauses (comma-separated)
 	for {
+		clauseStart := p.curTok
 		clause := &ast.DropIndexClause{}
 
 		// Parse index name
@@ -1928,6 +1931,7 @@ func (p *Parser) parseDropIndexStatement() (*ast.DropIndexStatement, error) {
 			}
 		}
 
+		p.spanFrom(clauseStart, clause)
 		stmt.DropIndexClauses = append(stmt.DropIndexClauses, clause)
 
 		if p.curTok.Type != TokenComma {
@@ -11752,17 +11756,20 @@ func (p *Parser) parseAddSensitivityClassificationStatement() (*ast.AddSensitivi
 				p.nextToken()
 			} else {
 				// Identifier literal (for RANK = HIGH, etc.)
-				il := &ast.IdentifierLiteral{
+				// ScriptDom spans this option on the value token and leaves
+				// the IdentifierLiteral itself spanless.
+				opt.Value = &ast.IdentifierLiteral{
 					LiteralType: "Identifier",
 					QuoteType:   "NotQuoted",
 					Value:       strings.ToUpper(p.curTok.Literal),
 				}
-				p.tokSpan(il, p.curTok)
-				opt.Value = il
+				p.tokSpan(opt, p.curTok)
 				p.nextToken()
 			}
 
-			p.spanFrom(optTok, opt)
+			if !opt.HasSpan() {
+				p.spanFrom(optTok, opt)
+			}
 			stmt.Options = append(stmt.Options, opt)
 
 			if p.curTok.Type == TokenComma {
@@ -12398,6 +12405,7 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 			p.nextToken() // consume =
 		}
 		stmt.Partition = &ast.PartitionSpecifier{}
+		partValTok := p.curTok
 		if strings.ToUpper(p.curTok.Literal) == "ALL" {
 			stmt.Partition.All = true
 			p.nextToken()
@@ -12406,6 +12414,7 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 			stmt.Partition.Number = p.intLitFromToken(p.curTok)
 			p.nextToken()
 		}
+		p.spanFrom(partValTok, stmt.Partition)
 	}
 
 	// Check for WITH
@@ -12414,6 +12423,8 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optTok := p.curTok
+				lenBefore := len(stmt.IndexOptions)
 				optionName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken() // consume option name
 				if p.curTok.Type == TokenEquals {
@@ -12587,6 +12598,11 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 				default:
 					// Skip unknown options
 					p.nextToken()
+				}
+				if len(stmt.IndexOptions) > lenBefore {
+					if o, ok := stmt.IndexOptions[len(stmt.IndexOptions)-1].(spannable); ok {
+						p.spanFrom(optTok, o)
+					}
 				}
 				if p.curTok.Type == TokenComma {
 					p.nextToken()

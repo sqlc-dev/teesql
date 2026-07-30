@@ -145,6 +145,9 @@ func (p *Parser) parseDeclareTableVariableStatement(varName *ast.Identifier, asD
 	}
 	p.nextToken()
 
+	// The body spans from the variable name through the closing paren.
+	p.spanFromChild(stmt.Body, varName)
+
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
@@ -4577,6 +4580,7 @@ func (p *Parser) parseCreateContractStatement() (*ast.CreateContractStatement, e
 
 	// Parse messages
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		msgStart := p.curTok
 		msg := &ast.ContractMessage{}
 
 		// Parse message name
@@ -4608,6 +4612,7 @@ func (p *Parser) parseCreateContractStatement() (*ast.CreateContractStatement, e
 		}
 		p.nextToken()
 
+		p.spanFrom(msgStart, msg)
 		stmt.Messages = append(stmt.Messages, msg)
 
 		// Check for comma or end of list
@@ -7405,6 +7410,7 @@ func (p *Parser) parseSendStatement() (*ast.SendStatement, error) {
 		// Check for double parens: ((...))
 		if p.curTok.Type == TokenLParen {
 			// Double paren case - parse as single ParenthesisExpression
+			innerParen := p.curTok
 			p.nextToken() // consume inner (
 			inner, err := p.parseScalarExpression()
 			if err != nil {
@@ -7413,7 +7419,9 @@ func (p *Parser) parseSendStatement() (*ast.SendStatement, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken() // consume inner )
 			}
-			stmt.ConversationHandles = append(stmt.ConversationHandles, &ast.ParenthesisExpression{Expression: inner})
+			pe := &ast.ParenthesisExpression{Expression: inner}
+			p.spanFrom(innerParen, pe)
+			stmt.ConversationHandles = append(stmt.ConversationHandles, pe)
 			if p.curTok.Type == TokenRParen {
 				p.nextToken() // consume outer )
 			}
