@@ -7502,6 +7502,10 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 	// Parse column constraints (NULL, NOT NULL, UNIQUE, PRIMARY KEY, DEFAULT, CHECK, CONSTRAINT)
 	var constraintName *ast.Identifier
 	var constraintTok Token
+	// capEnd caps the column's span when its last clause is an inline index
+	// whose trailing keywords ScriptDom excludes from both fragments.
+	capEnd := 0
+	capPrevEnd := -1
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 
@@ -7875,6 +7879,9 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			if p.curTok.Type == TokenIdent && idxUpper != "CLUSTERED" && idxUpper != "NONCLUSTERED" && idxUpper != "UNIQUE" && p.curTok.Type != TokenLParen {
 				indexDef.Name = p.parseIdentifier()
 			}
+			// ScriptDom spans the inline index through its last concrete
+			// clause; bare CLUSTERED/NONCLUSTERED keywords do not extend it.
+			p.spanFrom(idxTok, indexDef)
 			// Parse optional UNIQUE
 			if strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
 				indexDef.Unique = true
@@ -7889,6 +7896,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					indexDef.IndexType.IndexTypeKind = "ClusteredHash"
 					p.tokSpan(indexDef.IndexType, p.curTok)
 					p.nextToken()
+					p.spanFrom(idxTok, indexDef)
 				}
 			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
 				indexDef.IndexType.IndexTypeKind = "NonClustered"
@@ -7898,12 +7906,14 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
 					p.tokSpan(indexDef.IndexType, p.curTok)
 					p.nextToken()
+					p.spanFrom(idxTok, indexDef)
 				}
 			} else if strings.ToUpper(p.curTok.Literal) == "HASH" {
 				// Standalone HASH is treated as NonClusteredHash
 				indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
 				p.tokSpan(indexDef.IndexType, p.curTok)
 				p.nextToken()
+				p.spanFrom(idxTok, indexDef)
 			}
 			// Parse optional column list: (col1 [ASC|DESC], ...)
 			if p.curTok.Type == TokenLParen {
@@ -7941,6 +7951,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
 				}
+				p.spanFrom(idxTok, indexDef)
 			}
 			// Parse optional WITH (index_options)
 			if strings.ToUpper(p.curTok.Literal) == "WITH" {
@@ -8104,6 +8115,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					if p.curTok.Type == TokenRParen {
 						p.nextToken() // consume )
 					}
+					p.spanFrom(idxTok, indexDef)
 				}
 			}
 			// Parse optional ON filegroup for inline index
@@ -8111,6 +8123,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				p.nextToken() // consume ON
 				fg, _ := p.parseFileGroupOrPartitionScheme()
 				indexDef.OnFileGroupOrPartitionScheme = fg
+				p.spanFrom(idxTok, indexDef)
 			}
 			// Parse optional FILESTREAM_ON for inline index
 			if strings.ToUpper(p.curTok.Literal) == "FILESTREAM_ON" {
@@ -8120,6 +8133,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					Value:      ident.Value,
 					Identifier: ident,
 				}
+				p.spanFrom(idxTok, indexDef)
 			}
 			// Parse optional INCLUDE clause
 			if strings.ToUpper(p.curTok.Literal) == "INCLUDE" {
@@ -8145,6 +8159,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					if p.curTok.Type == TokenRParen {
 						p.nextToken() // consume )
 					}
+					p.spanFrom(idxTok, indexDef)
 				}
 			}
 			// Parse optional WHERE clause for filtered index
@@ -8155,8 +8170,12 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					return nil, err
 				}
 				indexDef.FilterPredicate = filterExpr
+				p.spanFrom(idxTok, indexDef)
 			}
-			p.spanFrom(idxTok, indexDef)
+			if indexDef.Frag().HasSpan() {
+				capEnd = indexDef.Frag().EndOffset()
+				capPrevEnd = p.prevEndByte
+			}
 			col.Index = indexDef
 		} else if upperLit == "SPARSE" {
 			p.nextToken() // consume SPARSE
@@ -8278,7 +8297,12 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 		}
 	}
 
-	return spanned(p, col, astStart), nil
+	spanned(p, col, astStart)
+	if f := col.Frag(); capEnd > 0 && capPrevEnd == p.prevEndByte &&
+		f.HasSpan() && capEnd > f.StartOffset && capEnd < f.EndOffset() {
+		f.FragmentLength = capEnd - f.StartOffset
+	}
+	return col, nil
 }
 
 // parseNamedTableConstraint parses a CONSTRAINT name ... table constraint

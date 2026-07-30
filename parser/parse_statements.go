@@ -489,9 +489,11 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		// Check for HASH or COLUMNSTORE
 		if strings.ToUpper(p.curTok.Literal) == "HASH" {
 			indexDef.IndexType.IndexTypeKind = "ClusteredHash"
+			p.tokSpan(indexDef.IndexType, p.curTok)
 			p.nextToken()
 		} else if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
 			indexDef.IndexType.IndexTypeKind = "ClusteredColumnStore"
+			p.tokSpan(indexDef.IndexType, p.curTok)
 			p.nextToken()
 		}
 	} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
@@ -500,18 +502,22 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		// Check for HASH or COLUMNSTORE
 		if strings.ToUpper(p.curTok.Literal) == "HASH" {
 			indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
+			p.tokSpan(indexDef.IndexType, p.curTok)
 			p.nextToken()
 		} else if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
 			indexDef.IndexType.IndexTypeKind = "NonClusteredColumnStore"
+			p.tokSpan(indexDef.IndexType, p.curTok)
 			p.nextToken()
 		}
 	} else if strings.ToUpper(p.curTok.Literal) == "COLUMNSTORE" {
 		// Implicit NONCLUSTERED COLUMNSTORE
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredColumnStore"}
+		p.tokSpan(indexDef.IndexType, p.curTok)
 		p.nextToken()
 	} else if strings.ToUpper(p.curTok.Literal) == "HASH" {
 		// Implicit NONCLUSTERED HASH
 		indexDef.IndexType = &ast.IndexType{IndexTypeKind: "NonClusteredHash"}
+		p.tokSpan(indexDef.IndexType, p.curTok)
 		p.nextToken()
 	}
 

@@ -2979,6 +2979,7 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 // Returns (outputClause, outputIntoClause, error).
 // If INTO is present, outputIntoClause is set; otherwise outputClause is set.
 func (p *Parser) parseOutputClause() (*ast.OutputClause, *ast.OutputIntoClause, error) {
+	outputTok := p.curTok
 	// Consume OUTPUT
 	p.nextToken()
 
@@ -3047,16 +3048,20 @@ func (p *Parser) parseOutputClause() (*ast.OutputClause, *ast.OutputIntoClause, 
 			}
 		}
 
-		return nil, &ast.OutputIntoClause{
+		oic := &ast.OutputIntoClause{
 			SelectColumns:    selectColumns,
 			IntoTable:        intoTable,
 			IntoTableColumns: intoColumns,
-		}, nil
+		}
+		p.spanFrom(outputTok, oic)
+		return nil, oic, nil
 	}
 
-	return &ast.OutputClause{
+	oc := &ast.OutputClause{
 		SelectColumns: selectColumns,
-	}, nil, nil
+	}
+	p.spanFrom(outputTok, oc)
+	return oc, nil, nil
 }
 
 // parseCopyStatement parses COPY INTO statement for Azure Synapse Analytics

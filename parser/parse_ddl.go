@@ -6318,6 +6318,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					hasColumnsPK = true
 					p.nextToken() // consume (
 					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						colStart := p.curTok
 						colRef := &ast.ColumnReferenceExpression{
 							ColumnType: "Regular",
 						}
@@ -6335,10 +6336,12 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 							sortOrder = ast.SortOrderDescending
 							p.nextToken()
 						}
-						constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+						cws := &ast.ColumnWithSortOrder{
 							Column:    colRef,
 							SortOrder: sortOrder,
-						})
+						}
+						p.spanFrom(colStart, cws)
+						constraint.Columns = append(constraint.Columns, cws)
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
 						} else {
@@ -6475,6 +6478,7 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					hasColumnsUQ = true
 					p.nextToken() // consume (
 					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						colStart := p.curTok
 						colRef := &ast.ColumnReferenceExpression{
 							ColumnType: "Regular",
 						}
@@ -6492,10 +6496,12 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 							sortOrder = ast.SortOrderDescending
 							p.nextToken()
 						}
-						constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+						cws := &ast.ColumnWithSortOrder{
 							Column:    colRef,
 							SortOrder: sortOrder,
-						})
+						}
+						p.spanFrom(colStart, cws)
+						constraint.Columns = append(constraint.Columns, cws)
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
 						} else {
