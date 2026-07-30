@@ -5451,6 +5451,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 					p.nextToken() // consume (
 				}
 				// Parse start column
+				periodStart := p.curTok
 				startCol := p.parseIdentifier()
 				// Expect comma
 				if p.curTok.Type == TokenComma {
@@ -5462,10 +5463,14 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
 				}
-				stmt.Definition.SystemTimePeriod = &ast.SystemTimePeriodDefinition{
+				stp := &ast.SystemTimePeriodDefinition{
 					StartTimeColumn: startCol,
 					EndTimeColumn:   endCol,
 				}
+				// ScriptDom spans the period from the first column name
+				// through the closing paren.
+				p.spanFrom(periodStart, stp)
+				stmt.Definition.SystemTimePeriod = stp
 			} else if upperLit == "INDEX" {
 				// Parse inline index definition
 				indexDef, err := p.parseInlineIndexDefinition()
@@ -7490,6 +7495,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 
 	// Parse column constraints (NULL, NOT NULL, UNIQUE, PRIMARY KEY, DEFAULT, CHECK, CONSTRAINT)
 	var constraintName *ast.Identifier
+	var constraintTok Token
 	for {
 		upperLit := strings.ToUpper(p.curTok.Literal)
 
@@ -7619,6 +7625,10 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				constraint.IsEnforced = &enforced
 			}
 			p.spanFrom(uqTok, constraint)
+			// A named constraint spans from its CONSTRAINT keyword.
+			if constraint.ConstraintIdentifier != nil {
+				p.respanStart(constraint, constraintTok)
+			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "PRIMARY" {
 			uqTok := p.curTok
@@ -7699,8 +7709,13 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				constraint.IsEnforced = &enforced
 			}
 			p.spanFrom(uqTok, constraint)
+			// A named constraint spans from its CONSTRAINT keyword.
+			if constraint.ConstraintIdentifier != nil {
+				p.respanStart(constraint, constraintTok)
+			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if p.curTok.Type == TokenDefault {
+			defTok := p.curTok
 			p.nextToken() // consume DEFAULT
 			defaultConstraint := &ast.DefaultConstraintDefinition{
 				ConstraintIdentifier: constraintName,
@@ -7721,8 +7736,13 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 					defaultConstraint.WithValues = true
 				}
 			}
+			p.spanFrom(defTok, defaultConstraint)
+			if defaultConstraint.ConstraintIdentifier != nil {
+				p.respanStart(defaultConstraint, constraintTok)
+			}
 			col.DefaultConstraint = defaultConstraint
 		} else if upperLit == "CHECK" {
+			checkTok := p.curTok
 			p.nextToken() // consume CHECK
 			notForReplication := false
 			// Check for NOT FOR REPLICATION (comes before the condition)
@@ -7745,11 +7765,16 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
 				}
-				col.Constraints = append(col.Constraints, &ast.CheckConstraintDefinition{
+				ck := &ast.CheckConstraintDefinition{
 					CheckCondition:       cond,
 					ConstraintIdentifier: constraintName,
 					NotForReplication:    notForReplication,
-				})
+				}
+				p.spanFrom(checkTok, ck)
+				if ck.ConstraintIdentifier != nil {
+					p.respanStart(ck, constraintTok)
+				}
+				col.Constraints = append(col.Constraints, ck)
 				constraintName = nil // clear for next constraint
 			}
 		} else if upperLit == "FOREIGN" {
@@ -7759,6 +7784,9 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				return nil, err
 			}
 			constraint.ConstraintIdentifier = constraintName
+			if constraintName != nil {
+				p.respanStart(constraint, constraintTok)
+			}
 			constraintName = nil
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "REFERENCES" {
@@ -7821,6 +7849,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "CONSTRAINT" {
+			constraintTok = p.curTok
 			p.nextToken() // consume CONSTRAINT
 			// Parse and save constraint name for next constraint
 			constraintName = p.parseIdentifier()
@@ -14295,6 +14324,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 					p.nextToken() // consume add/remove
 				}
 				// Parse path name
+				pathNameTok := p.curTok
 				path.Name = p.parseIdentifier()
 
 				// Check for = 'path'
@@ -14335,6 +14365,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 					}
 				}
 
+				p.spanFrom(pathNameTok, path)
 				stmt.PromotedPaths = append(stmt.PromotedPaths, path)
 
 				if p.curTok.Type == TokenComma {

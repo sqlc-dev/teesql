@@ -2977,6 +2977,7 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 
 	// Check for SCOPED CREDENTIAL or SCOPED CONFIGURATION
 	if p.curTok.Type == TokenScoped {
+		scopedTok := p.curTok
 		p.nextToken() // consume SCOPED
 		if p.curTok.Type == TokenCredential {
 			spanV204, spanErr204 := p.parseAlterDatabaseScopedCredentialStatement()
@@ -2988,7 +2989,7 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 			return spanned(p, spanV205, astStart), spanErr205
 		}
 		// SCOPED is actually a database name, treat it as such
-		dbName := p.spanIdent("SCOPED", "NotQuoted")
+		dbName := p.identFromToken(scopedTok)
 		// Check for COLLATE
 		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
 			p.nextToken() // consume COLLATE
@@ -7594,17 +7595,25 @@ func (p *Parser) parseSystemVersioningTableOption(kwTok Token) (*ast.SystemVersi
 			}
 		}
 
-		// ScriptDom ends this option's span before the closing paren.
-		p.spanFrom(kwTok, opt)
-
 		// Consume )
 		if p.curTok.Type == TokenRParen {
 			p.nextToken()
 		}
 	}
-	if !opt.HasSpan() {
-		// Without sub-options the span covers only the keyword.
-		p.tokSpan(opt, kwTok)
+
+	// ScriptDom spans this option from the keyword through its last child
+	// node (history table / retention period), not through ON/OFF states or
+	// the closing paren.
+	p.tokSpan(opt, kwTok)
+	if opt.HistoryTable != nil && opt.HistoryTable.Frag().HasSpan() {
+		if end := opt.HistoryTable.Frag().EndOffset(); end > opt.Frag().EndOffset() {
+			opt.Frag().FragmentLength = end - opt.Frag().StartOffset
+		}
+	}
+	if opt.RetentionPeriod != nil && opt.RetentionPeriod.Frag().HasSpan() {
+		if end := opt.RetentionPeriod.Frag().EndOffset(); end > opt.Frag().EndOffset() {
+			opt.Frag().FragmentLength = end - opt.Frag().StartOffset
+		}
 	}
 
 	return opt, nil

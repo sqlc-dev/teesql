@@ -6263,9 +6263,7 @@ func (p *Parser) parseGetConversationGroupStatement() (*ast.GetConversationGroup
 
 	// Parse the group id variable
 	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
-		stmt.GroupId = &ast.VariableReference{
-			Name: p.curTok.Literal,
-		}
+		stmt.GroupId = p.spanVarRef(p.curTok.Literal)
 		p.nextToken()
 	} else {
 		return nil, fmt.Errorf("expected variable reference for group id, got %s", p.curTok.Literal)
@@ -14555,6 +14553,8 @@ func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatemen
 		p.nextToken() // consume WITH
 
 		for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+			optTok := p.curTok
+			lenBefore := len(stmt.StatisticsOptions)
 			optionName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume option name
 
@@ -14631,6 +14631,22 @@ func (p *Parser) parseCreateStatisticsStatement() (*ast.CreateStatisticsStatemen
 				}
 			default:
 				// Unknown option, skip
+			}
+
+			if len(stmt.StatisticsOptions) > lenBefore {
+				last := stmt.StatisticsOptions[len(stmt.StatisticsOptions)-1]
+				switch o := last.(type) {
+				case *ast.SimpleStatisticsOption:
+					// ScriptDom spans keyword-only options on their keyword.
+					p.tokSpan(o, optTok)
+				case *ast.LiteralStatisticsOption:
+					// SAMPLE n PERCENT/ROWS and STATS_STREAM span from the value.
+					p.spanFromChild(o, o.Literal)
+				default:
+					if sp, ok := last.(spannable); ok {
+						p.spanFrom(optTok, sp)
+					}
+				}
 			}
 
 			if p.curTok.Type == TokenComma {
