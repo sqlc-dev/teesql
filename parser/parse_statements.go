@@ -479,6 +479,10 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		indexDef.Name = p.parseIdentifier()
 	}
 
+	// ScriptDom spans the inline index through its last concrete clause;
+	// bare CLUSTERED/NONCLUSTERED/COLUMNSTORE keywords do not extend it.
+	p.spanFrom(astStart, indexDef)
+
 	// Parse optional UNIQUE
 	if strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
 		indexDef.Unique = true
@@ -590,6 +594,7 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 		if p.curTok.Type == TokenRParen {
 			p.nextToken()
 		}
+		p.spanFrom(astStart, indexDef)
 	}
 
 	// Parse optional INCLUDE
@@ -649,6 +654,7 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
+			p.spanFrom(astStart, indexDef)
 		}
 	}
 
@@ -660,6 +666,7 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 			return nil, err
 		}
 		indexDef.FilterPredicate = filterPredicate
+		p.spanFrom(astStart, indexDef)
 	}
 
 	// Parse optional WITH options
@@ -820,6 +827,7 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
+			p.spanFrom(astStart, indexDef)
 		}
 	}
 
@@ -834,6 +842,7 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 			},
 		}
 		indexDef.OnFileGroupOrPartitionScheme = fg
+		p.spanFrom(astStart, indexDef)
 	}
 
 	// Parse optional FILESTREAM_ON clause
@@ -844,9 +853,10 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 			Value:      fsName,
 			Identifier: p.parseIdentifier(),
 		}
+		p.spanFrom(astStart, indexDef)
 	}
 
-	return spanned(p, indexDef, astStart), nil
+	return indexDef, nil
 }
 
 // skipParenthesizedContent skips content within parentheses, handling nested parens

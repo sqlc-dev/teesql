@@ -2112,6 +2112,7 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 				UniqueRowFilter:  "NotSpecified",
 				WithArrayWrapper: false,
 			}
+			fcStartTarget := udtTarget
 
 			// Parse parameters
 			if p.curTok.Type != TokenRParen {
@@ -2135,6 +2136,8 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			}
 			p.nextToken()
 
+			p.spanFromChild(fc, fcStartTarget)
+
 			// Check for OVER clause or property access after method call
 			spanV25, spanErr25 := p.parsePostExpressionAccess(fc)
 			return spanned(p, spanV25, astStart), spanErr25
@@ -2145,11 +2148,13 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			CallTarget:   udtTarget,
 			PropertyName: name,
 		}
+		p.spanFromChild(propAccess, udtTarget)
 
 		// Check for COLLATE clause
 		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
 			p.nextToken() // consume COLLATE
 			propAccess.Collation = p.parseIdentifier()
+			p.spanFromChild(propAccess, udtTarget)
 		}
 
 		// Check for chained property access
@@ -2304,6 +2309,7 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 				UniqueRowFilter:  "NotSpecified",
 				WithArrayWrapper: false,
 			}
+			fcStartTarget := udtTarget
 
 			// Parse parameters
 			if p.curTok.Type != TokenRParen {
@@ -2327,6 +2333,8 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 			}
 			p.nextToken()
 
+			p.spanFromChild(fc, fcStartTarget)
+
 			// Check for OVER clause or property access after method call
 			spanV28, spanErr28 := p.parsePostExpressionAccess(fc)
 			return spanned(p, spanV28, astStart), spanErr28
@@ -2337,11 +2345,13 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 			CallTarget:   udtTarget,
 			PropertyName: name,
 		}
+		p.spanFromChild(propAccess, udtTarget)
 
 		// Check for COLLATE clause
 		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
 			p.nextToken() // consume COLLATE
 			propAccess.Collation = p.parseIdentifier()
+			p.spanFromChild(propAccess, udtTarget)
 		}
 
 		// Check for chained property access
