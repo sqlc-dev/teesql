@@ -1310,7 +1310,7 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 				numRows = p.spanVarRef(p.curTok.Literal)
 				p.nextToken()
 			} else {
-				numRows = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+				numRows = p.intLitFromToken(p.curTok)
 				p.nextToken()
 			}
 			if p.curTok.Type == TokenSemicolon {
@@ -13522,14 +13522,14 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 					} else if optName == "CLEAR_PORT" {
 						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpClearPort"}
 						if p.curTok.Type == TokenNumber {
-							opt.Value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							opt.Value = p.intLitFromToken(p.curTok)
 							p.nextToken()
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
 					} else if optName == "SSL_PORT" {
 						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpSslPort"}
 						if p.curTok.Type == TokenNumber {
-							opt.Value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							opt.Value = p.intLitFromToken(p.curTok)
 							p.nextToken()
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
@@ -13689,7 +13689,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 							stOpt.IsNever = true
 							p.nextToken()
 						} else if p.curTok.Type == TokenNumber {
-							stOpt.Timeout = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							stOpt.Timeout = p.intLitFromToken(p.curTok)
 							p.nextToken()
 						}
 						stmt.PayloadOptions = append(stmt.PayloadOptions, stOpt)
@@ -13741,7 +13741,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 						}
 						litOpt := &ast.LiteralPayloadOption{Kind: kind}
 						if p.curTok.Type == TokenNumber {
-							litOpt.Value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+							litOpt.Value = p.intLitFromToken(p.curTok)
 							p.nextToken()
 						}
 						stmt.PayloadOptions = append(stmt.PayloadOptions, litOpt)

@@ -7827,6 +7827,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			p.nextToken() // consume COLLATE
 			col.Collation = p.parseIdentifier()
 		} else if upperLit == "INDEX" {
+			idxTok := p.curTok
 			p.nextToken() // consume INDEX
 			indexDef := &ast.IndexDefinition{
 				IndexType: &ast.IndexType{},
@@ -7848,6 +7849,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				// Check for HASH
 				if strings.ToUpper(p.curTok.Literal) == "HASH" {
 					indexDef.IndexType.IndexTypeKind = "ClusteredHash"
+					p.tokSpan(indexDef.IndexType, p.curTok)
 					p.nextToken()
 				}
 			} else if strings.ToUpper(p.curTok.Literal) == "NONCLUSTERED" {
@@ -7856,11 +7858,13 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				// Check for HASH
 				if strings.ToUpper(p.curTok.Literal) == "HASH" {
 					indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
+					p.tokSpan(indexDef.IndexType, p.curTok)
 					p.nextToken()
 				}
 			} else if strings.ToUpper(p.curTok.Literal) == "HASH" {
 				// Standalone HASH is treated as NonClusteredHash
 				indexDef.IndexType.IndexTypeKind = "NonClusteredHash"
+				p.tokSpan(indexDef.IndexType, p.curTok)
 				p.nextToken()
 			}
 			// Parse optional column list: (col1 [ASC|DESC], ...)
@@ -7906,6 +7910,8 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				if p.curTok.Type == TokenLParen {
 					p.nextToken() // consume (
 					for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+						optStart := p.curTok
+						lenBefore := len(indexDef.IndexOptions)
 						optionName := strings.ToUpper(p.curTok.Literal)
 						p.nextToken() // consume option name
 						if p.curTok.Type == TokenEquals {
@@ -7948,11 +7954,11 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 										p.nextToken() // consume (
 										for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 											partRange := &ast.CompressionPartitionRange{}
-											partRange.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+											partRange.From = p.intLitFromToken(p.curTok)
 											p.nextToken()
 											if strings.ToUpper(p.curTok.Literal) == "TO" {
 												p.nextToken() // consume TO
-												partRange.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+												partRange.To = p.intLitFromToken(p.curTok)
 												p.nextToken()
 											}
 											opt.PartitionRanges = append(opt.PartitionRanges, partRange)
@@ -8036,6 +8042,15 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 							// Skip other options
 							p.nextToken()
 						}
+						if len(indexDef.IndexOptions) > lenBefore {
+							last := indexDef.IndexOptions[len(indexDef.IndexOptions)-1]
+							if o, ok := last.(spannable); ok {
+								p.spanFrom(optStart, o)
+							}
+							if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
+								p.spanFromChild(eo, eo.Expression)
+							}
+						}
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
 						} else {
@@ -8097,6 +8112,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				}
 				indexDef.FilterPredicate = filterExpr
 			}
+			p.spanFrom(idxTok, indexDef)
 			col.Index = indexDef
 		} else if upperLit == "SPARSE" {
 			p.nextToken() // consume SPARSE
@@ -13265,11 +13281,11 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 								p.nextToken() // consume (
 								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 									partRange := &ast.CompressionPartitionRange{}
-									partRange.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+									partRange.From = p.intLitFromToken(p.curTok)
 									p.nextToken()
 									if strings.ToUpper(p.curTok.Literal) == "TO" {
 										p.nextToken() // consume TO
-										partRange.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+										partRange.To = p.intLitFromToken(p.curTok)
 										p.nextToken()
 									}
 									opt.PartitionRanges = append(opt.PartitionRanges, partRange)
@@ -13739,6 +13755,7 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 	isDatabaseOrServerTrigger := triggerObject.TriggerScope == "Database" || triggerObject.TriggerScope == "AllServer"
 	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
 		action := &ast.TriggerAction{}
+		p.tokSpan(action, p.curTok)
 		actionType := strings.ToUpper(p.curTok.Literal)
 
 		// Check for empty action type (lenient parsing for incomplete statements)
@@ -13762,6 +13779,7 @@ func (p *Parser) parseAlterTriggerStatement() (*ast.AlterTriggerStatement, error
 				action.EventTypeGroup = &ast.EventTypeContainer{
 					EventType: eventType,
 				}
+				p.tokSpan(action.EventTypeGroup, p.curTok)
 			} else {
 				action.TriggerActionType = actionType
 			}
@@ -14186,11 +14204,11 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 									p.nextToken() // consume (
 									for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 										partRange := &ast.CompressionPartitionRange{}
-										partRange.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+										partRange.From = p.intLitFromToken(p.curTok)
 										p.nextToken()
 										if strings.ToUpper(p.curTok.Literal) == "TO" {
 											p.nextToken() // consume TO
-											partRange.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+											partRange.To = p.intLitFromToken(p.curTok)
 											p.nextToken()
 										}
 										opt.PartitionRanges = append(opt.PartitionRanges, partRange)
@@ -15265,6 +15283,7 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 	isDatabaseOrServerTrigger := triggerObject.TriggerScope == "Database" || triggerObject.TriggerScope == "AllServer"
 	for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
 		action := &ast.TriggerAction{}
+		p.tokSpan(action, p.curTok)
 		actionType := strings.ToUpper(p.curTok.Literal)
 
 		// Check for empty action type (lenient parsing for incomplete statements)
@@ -15293,6 +15312,7 @@ func (p *Parser) parseCreateTriggerStatement() (*ast.CreateTriggerStatement, err
 				action.EventTypeGroup = &ast.EventTypeContainer{
 					EventType: eventType,
 				}
+				p.tokSpan(action.EventTypeGroup, p.curTok)
 			} else {
 				action.TriggerActionType = actionType
 			}

@@ -263,6 +263,19 @@ func (p *Parser) respanStart(n spannable, start Token) {
 	}
 }
 
+// respanEnd widens an already-spanned node so its span runs through the end
+// of the last consumed token.
+func (p *Parser) respanEnd(n spannable) {
+	f := n.Frag()
+	if !f.HasSpan() {
+		return
+	}
+	eu, _, _ := p.srcMap.at(p.prevEndByte)
+	if eu > f.EndOffset() {
+		f.FragmentLength = eu - f.StartOffset
+	}
+}
+
 // identFromToken builds an Identifier from the given token's literal with
 // the token's source span, without consuming it.
 func (p *Parser) identFromToken(tok Token) *ast.Identifier {

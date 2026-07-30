@@ -703,8 +703,10 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		switch e := expr.(type) {
 		case *ast.FunctionCall:
 			e.Collation = collation
+			p.respanEnd(e)
 		case *ast.ColumnReferenceExpression:
 			e.Collation = collation
+			p.respanEnd(e)
 		}
 	}
 
@@ -2465,6 +2467,12 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 	}
 	p.nextToken()
 
+	// Span the call from its first identifier through the closing paren so
+	// wrappers built by parsePostExpressionAccess see the full extent.
+	if len(identifiers) > 0 {
+		p.spanFromChild(fc, identifiers[0])
+	}
+
 	// Check for OVER clause or property access after function call
 	spanV36, spanErr36 := p.parsePostExpressionAccess(fc)
 	return spanned(p, spanV36, astStart), spanErr36
@@ -2522,6 +2530,7 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 				}
 				p.nextToken()
 
+				p.spanFromChild(fc, expr)
 				expr = fc
 				continue
 			}
@@ -2540,6 +2549,7 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 				propAccess.Collation = p.parseIdentifier()
 			}
 
+			p.spanFromChild(propAccess, expr)
 			expr = propAccess
 			continue
 		}

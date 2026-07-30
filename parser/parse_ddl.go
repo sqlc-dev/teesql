@@ -4859,7 +4859,7 @@ func (p *Parser) parseProcessAffinityRanges() ([]*ast.ProcessAffinityRange, erro
 		if p.curTok.Type != TokenNumber {
 			return nil, fmt.Errorf("expected number in process affinity range, got %s", p.curTok.Literal)
 		}
-		r.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		r.From = p.intLitFromToken(p.curTok)
 		p.nextToken()
 
 		// Check for TO
@@ -4868,7 +4868,7 @@ func (p *Parser) parseProcessAffinityRanges() ([]*ast.ProcessAffinityRange, erro
 			if p.curTok.Type != TokenNumber {
 				return nil, fmt.Errorf("expected number after TO, got %s", p.curTok.Literal)
 			}
-			r.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+			r.To = p.intLitFromToken(p.curTok)
 			p.nextToken()
 		}
 
@@ -4925,7 +4925,7 @@ func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast
 			value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
 			p.nextToken()
 		} else {
-			value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+			value = p.intLitFromToken(p.curTok)
 			p.nextToken()
 			// Check for size unit
 			unitUpper := strings.ToUpper(p.curTok.Literal)
@@ -4949,7 +4949,7 @@ func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast
 			value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
 			p.nextToken()
 		} else {
-			value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+			value = p.intLitFromToken(p.curTok)
 			p.nextToken()
 		}
 		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogOption{
@@ -5038,7 +5038,7 @@ func (p *Parser) parseAlterServerConfigurationSetFailoverClusterPropertyStatemen
 		value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
 		p.nextToken()
 	} else if p.curTok.Type == TokenNumber {
-		value = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		value = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	} else if p.curTok.Type == TokenBinary {
 		value = &ast.BinaryLiteral{LiteralType: "Binary", Value: p.curTok.Literal}
@@ -6260,6 +6260,11 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 
 	// Loop to parse multiple elements separated by commas
 	for {
+		elemStart := p.curTok
+		constraintsBefore := len(stmt.Definition.TableConstraints)
+		columnsBefore := len(stmt.Definition.ColumnDefinitions)
+		indexesBefore := len(stmt.Definition.Indexes)
+
 		// Check if this is ADD CONSTRAINT
 		if strings.ToUpper(p.curTok.Literal) == "CONSTRAINT" {
 			p.nextToken() // consume CONSTRAINT
@@ -7020,6 +7025,20 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 				return nil, err
 			}
 			stmt.Definition.ColumnDefinitions = append(stmt.Definition.ColumnDefinitions, colDef)
+		}
+
+		// ScriptDom spans each added element from its first token (including
+		// any CONSTRAINT keyword) through its last consumed token.
+		for i := constraintsBefore; i < len(stmt.Definition.TableConstraints); i++ {
+			if o, ok := any(stmt.Definition.TableConstraints[i]).(spannable); ok {
+				p.spanFrom(elemStart, o)
+			}
+		}
+		for i := columnsBefore; i < len(stmt.Definition.ColumnDefinitions); i++ {
+			p.spanFrom(elemStart, stmt.Definition.ColumnDefinitions[i])
+		}
+		for i := indexesBefore; i < len(stmt.Definition.Indexes); i++ {
+			p.spanFrom(elemStart, stmt.Definition.Indexes[i])
 		}
 
 		// Check for comma to continue parsing more elements
@@ -12095,77 +12114,77 @@ func (p *Parser) parseResourcePoolParameter() (*ast.ResourcePoolParameter, error
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "MAX_CPU_PERCENT":
 		param.ParameterType = "MaxCpuPercent"
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "CAP_CPU_PERCENT":
 		param.ParameterType = "CapCpuPercent"
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "MIN_MEMORY_PERCENT":
 		param.ParameterType = "MinMemoryPercent"
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "MAX_MEMORY_PERCENT":
 		param.ParameterType = "MaxMemoryPercent"
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "TARGET_MEMORY_PERCENT":
 		param.ParameterType = "TargetMemoryPercent"
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "MIN_IO_PERCENT":
 		param.ParameterType = "MinIoPercent"
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "MAX_IO_PERCENT":
 		param.ParameterType = "MaxIoPercent"
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "CAP_IO_PERCENT":
 		param.ParameterType = "CapIoPercent"
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "MIN_IOPS_PER_VOLUME":
 		param.ParameterType = "MinIopsPerVolume"
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "MAX_IOPS_PER_VOLUME":
 		param.ParameterType = "MaxIopsPerVolume"
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
-		param.ParameterValue = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+		param.ParameterValue = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	case "AFFINITY":
 		param.ParameterType = "Affinity"
@@ -12219,13 +12238,13 @@ func (p *Parser) parseResourcePoolAffinitySpecification() (*ast.ResourcePoolAffi
 			lr := &ast.LiteralRange{}
 
 			// Parse 'from' value
-			lr.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+			lr.From = p.intLitFromToken(p.curTok)
 			p.nextToken()
 
 			// Check for TO
 			if strings.ToUpper(p.curTok.Literal) == "TO" {
 				p.nextToken() // consume TO
-				lr.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+				lr.To = p.intLitFromToken(p.curTok)
 				p.nextToken()
 			}
 
@@ -12418,7 +12437,7 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 									if lwOptName == "MAX_DURATION" {
 										maxDurOpt := &ast.LowPriorityLockWaitMaxDurationOption{
 											OptionKind:  "MaxDuration",
-											MaxDuration: &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal},
+											MaxDuration: p.intLitFromToken(p.curTok),
 										}
 										p.nextToken()
 										// Check for MINUTES
@@ -12493,14 +12512,14 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 									pr := &ast.CompressionPartitionRange{}
 									if p.curTok.Type == TokenNumber {
-										pr.From = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+										pr.From = p.intLitFromToken(p.curTok)
 										p.nextToken()
 									}
 									// Check for TO range
 									if strings.ToUpper(p.curTok.Literal) == "TO" {
 										p.nextToken() // consume TO
 										if p.curTok.Type == TokenNumber {
-											pr.To = &ast.IntegerLiteral{LiteralType: "Integer", Value: p.curTok.Literal}
+											pr.To = p.intLitFromToken(p.curTok)
 											p.nextToken()
 										}
 									}
