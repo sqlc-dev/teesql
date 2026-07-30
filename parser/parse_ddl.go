@@ -2098,10 +2098,7 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 			}
 			var expr ast.ScalarExpression
 			if p.curTok.Type == TokenNumber {
-				expr = &ast.IntegerLiteral{
-					LiteralType: "Integer",
-					Value:       p.curTok.Literal,
-				}
+				expr = p.intLitFromToken(p.curTok)
 				p.nextToken()
 			}
 			options = append(options, &ast.IndexExpressionOption{
@@ -2128,10 +2125,7 @@ func (p *Parser) parseDropIndexOptions() []ast.DropIndexOption {
 						}
 						// Parse integer value
 						if p.curTok.Type == TokenNumber {
-							maxDur.MaxDuration = &ast.IntegerLiteral{
-								LiteralType: "Integer",
-								Value:       p.curTok.Literal,
-							}
+							maxDur.MaxDuration = p.intLitFromToken(p.curTok)
 							p.nextToken()
 						}
 						// Parse unit: MINUTES or SECONDS
@@ -3425,10 +3419,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 			if p.curTok.Type == TokenNumber {
 				opt := &ast.LiteralDatabaseOption{
 					OptionKind: "DefaultLanguage",
-					Value: &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					},
+					Value:      p.intLitFromToken(p.curTok),
 				}
 				stmt.Options = append(stmt.Options, opt)
 				p.nextToken()
@@ -3447,10 +3438,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 			if p.curTok.Type == TokenNumber {
 				opt := &ast.LiteralDatabaseOption{
 					OptionKind: "DefaultFullTextLanguage",
-					Value: &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					},
+					Value:      p.intLitFromToken(p.curTok),
 				}
 				stmt.Options = append(stmt.Options, opt)
 				p.nextToken()
@@ -3468,10 +3456,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 			}
 			opt := &ast.LiteralDatabaseOption{
 				OptionKind: "TwoDigitYearCutoff",
-				Value: &ast.IntegerLiteral{
-					LiteralType: "Integer",
-					Value:       p.curTok.Literal,
-				},
+				Value:      p.intLitFromToken(p.curTok),
 			}
 			stmt.Options = append(stmt.Options, opt)
 			p.nextToken()
@@ -3549,12 +3534,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 							}
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
-							opt.DirectoryName = &ast.StringLiteral{
-								LiteralType:   "String",
-								Value:         strings.Trim(p.curTok.Literal, "'"),
-								IsNational:    false,
-								IsLargeObject: false,
-							}
+							opt.DirectoryName = p.strLit(strings.Trim(p.curTok.Literal, "'"), false)
 							p.nextToken()
 						}
 					}
@@ -4990,7 +4970,7 @@ func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast
 			if len(strVal) >= 2 && strVal[0] == '\'' && strVal[len(strVal)-1] == '\'' {
 				strVal = strVal[1 : len(strVal)-1]
 			}
-			value = &ast.StringLiteral{LiteralType: "String", Value: strVal}
+			value = p.strLit(strVal, false)
 			p.nextToken()
 		}
 		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogOption{
@@ -5068,7 +5048,7 @@ func (p *Parser) parseAlterServerConfigurationSetFailoverClusterPropertyStatemen
 		if len(strVal) >= 2 && strVal[0] == '\'' && strVal[len(strVal)-1] == '\'' {
 			strVal = strVal[1 : len(strVal)-1]
 		}
-		value = &ast.StringLiteral{LiteralType: "String", Value: strVal}
+		value = p.strLit(strVal, false)
 		p.nextToken()
 	}
 
@@ -5136,7 +5116,7 @@ func (p *Parser) parseAlterServerConfigurationSetBufferPoolExtensionStatement() 
 					containerOption.Suboptions = append(containerOption.Suboptions,
 						&ast.AlterServerConfigurationBufferPoolExtensionOption{
 							OptionKind:  "FileName",
-							OptionValue: &ast.LiteralOptionValue{Value: &ast.StringLiteral{LiteralType: "String", Value: strVal}},
+							OptionValue: &ast.LiteralOptionValue{Value: p.strLit(strVal, false)},
 						})
 					p.nextToken()
 				case "SIZE":
@@ -5213,7 +5193,7 @@ func (p *Parser) parseAlterServerConfigurationSetHadrClusterStatement() (*ast.Al
 		if len(strVal) >= 2 && strVal[0] == '\'' && strVal[len(strVal)-1] == '\'' {
 			strVal = strVal[1 : len(strVal)-1]
 		}
-		option.OptionValue = &ast.LiteralOptionValue{Value: &ast.StringLiteral{LiteralType: "String", Value: strVal}}
+		option.OptionValue = &ast.LiteralOptionValue{Value: p.strLit(strVal, false)}
 		p.nextToken()
 	}
 
@@ -5621,11 +5601,8 @@ func (p *Parser) parseDropClusteredConstraintOptions() ([]ast.DropClusteredConst
 				return nil, fmt.Errorf("expected number after MAXDOP =, got %s", p.curTok.Literal)
 			}
 			options = append(options, &ast.DropClusteredConstraintValueOption{
-				OptionKind: "MaxDop",
-				OptionValue: &ast.IntegerLiteral{
-					LiteralType: "Integer",
-					Value:       p.curTok.Literal,
-				},
+				OptionKind:  "MaxDop",
+				OptionValue: p.intLitFromToken(p.curTok),
 			})
 			p.nextToken() // consume number
 
@@ -5686,10 +5663,7 @@ func (p *Parser) parseWaitAtLowPriorityOption() (*ast.DropClusteredConstraintWai
 			if p.curTok.Type != TokenNumber {
 				return nil, fmt.Errorf("expected number after MAX_DURATION =, got %s", p.curTok.Literal)
 			}
-			maxDuration.MaxDuration = &ast.IntegerLiteral{
-				LiteralType: "Integer",
-				Value:       p.curTok.Literal,
-			}
+			maxDuration.MaxDuration = p.intLitFromToken(p.curTok)
 			p.nextToken() // consume number
 
 			// Parse optional unit (MINUTES or SECONDS)
@@ -7441,21 +7415,11 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 					value = value[1 : len(value)-1]
 				}
-				opt.Value = &ast.StringLiteral{
-					LiteralType:   "String",
-					Value:         value,
-					IsNational:    false,
-					IsLargeObject: false,
-				}
+				opt.Value = p.strLit(value, false)
 				p.nextToken()
 			} else {
 				value := p.curTok.Literal
-				opt.Value = &ast.StringLiteral{
-					LiteralType:   "String",
-					Value:         value,
-					IsNational:    false,
-					IsLargeObject: false,
-				}
+				opt.Value = p.strLit(value, false)
 				p.nextToken()
 			}
 			stmt.Options = append(stmt.Options, opt)
@@ -7488,13 +7452,8 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 					value = value[1 : len(value)-1]
 				}
 				opt.Value = &ast.IdentifierOrValueExpression{
-					Value: value,
-					ValueExpression: &ast.StringLiteral{
-						LiteralType:   "String",
-						Value:         value,
-						IsNational:    false,
-						IsLargeObject: false,
-					},
+					Value:           value,
+					ValueExpression: p.strLit(value, false),
 				}
 				p.nextToken()
 			} else {
@@ -7734,10 +7693,7 @@ func (p *Parser) parseRetentionPeriodDefinition() (*ast.RetentionPeriodDefinitio
 
 	// Parse integer literal
 	if p.curTok.Type == TokenNumber {
-		lit := &ast.IntegerLiteral{
-			LiteralType: "Integer",
-			Value:       p.curTok.Literal,
-		}
+		lit := p.intLitFromToken(p.curTok)
 		ret.Duration = lit
 		p.nextToken()
 	} else {
@@ -8595,12 +8551,7 @@ func (p *Parser) parseAlterLoginOptions(name *ast.Identifier) (*ast.AlterLoginOp
 				if len(val) >= 2 && val[0] == '\'' && val[len(val)-1] == '\'' {
 					val = val[1 : len(val)-1]
 				}
-				opt.Password = &ast.StringLiteral{
-					LiteralType:   "String",
-					Value:         val,
-					IsNational:    isNational,
-					IsLargeObject: false,
-				}
+				opt.Password = p.strLit(val, isNational)
 				p.nextToken()
 			} else if p.curTok.Type == TokenBinary {
 				opt.Password = &ast.BinaryLiteral{
@@ -8942,12 +8893,7 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 								value = value[1 : len(value)-1]
 							}
-							lit := &ast.StringLiteral{
-								LiteralType:   "String",
-								IsNational:    false,
-								IsLargeObject: false,
-								Value:         value,
-							}
+							lit := p.strLit(value, false)
 							p.tokSpan(lit, p.curTok)
 							stmt.DropFiles = append(stmt.DropFiles, lit)
 							p.nextToken()
@@ -8986,12 +8932,7 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 								value = value[1 : len(value)-1]
 							}
-							fn := &ast.StringLiteral{
-								LiteralType:   "String",
-								IsNational:    false,
-								IsLargeObject: false,
-								Value:         value,
-							}
+							fn := p.strLit(value, false)
 							p.tokSpan(fn, p.curTok)
 							fileSpec.FileName = fn
 							p.nextToken()
@@ -9076,10 +9017,7 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 				// Integer affinity
 				affinity.Kind = "Integer"
 				if p.curTok.Type == TokenNumber {
-					affinity.Value = &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					}
+					affinity.Value = p.intLitFromToken(p.curTok)
 					p.nextToken()
 				}
 			}
@@ -9137,16 +9075,10 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 							opt.Kind = optName
 						}
 						if p.curTok.Type == TokenNumber {
-							opt.Value = &ast.IntegerLiteral{
-								LiteralType: "Integer",
-								Value:       p.curTok.Literal,
-							}
+							opt.Value = p.intLitFromToken(p.curTok)
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
-							opt.Value = &ast.StringLiteral{
-								LiteralType: "String",
-								Value:       p.curTok.Literal,
-							}
+							opt.Value = p.strLit(p.curTok.Literal, false)
 							p.nextToken()
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
@@ -10370,7 +10302,7 @@ func (p *Parser) parseAddAlterFullTextIndexAction() (*ast.AddAlterFullTextIndexA
 						val = val[1 : len(val)-1]
 					}
 					col.LanguageTerm.Value = val
-					col.LanguageTerm.ValueExpression = &ast.StringLiteral{Value: val, LiteralType: "String"}
+					col.LanguageTerm.ValueExpression = p.strLit(val, false)
 					p.nextToken()
 				}
 			}
@@ -10779,12 +10711,7 @@ func (p *Parser) parseAlterProcedureStatement() (*ast.AlterProcedureStatement, e
 					if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 						value = value[1 : len(value)-1]
 					}
-					executeAsOpt.ExecuteAs.Literal = &ast.StringLiteral{
-						LiteralType:   "String",
-						IsNational:    false,
-						IsLargeObject: false,
-						Value:         value,
-					}
+					executeAsOpt.ExecuteAs.Literal = p.strLit(value, false)
 					p.nextToken()
 				}
 				stmt.Options = append(stmt.Options, executeAsOpt)
@@ -11758,12 +11685,7 @@ func (p *Parser) parseAddSensitivityClassificationStatement() (*ast.AddSensitivi
 				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 					value = value[1 : len(value)-1]
 				}
-				opt.Value = &ast.StringLiteral{
-					LiteralType:   "String",
-					IsNational:    false,
-					IsLargeObject: false,
-					Value:         value,
-				}
+				opt.Value = p.strLit(value, false)
 				p.nextToken()
 			} else {
 				// Identifier literal (for RANK = HIGH, etc.)
@@ -11987,12 +11909,7 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 			if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 				value = value[1 : len(value)-1]
 			}
-			addAction.PropertyName = &ast.StringLiteral{
-				LiteralType:   "String",
-				IsNational:    false,
-				IsLargeObject: false,
-				Value:         value,
-			}
+			addAction.PropertyName = p.strLit(value, false)
 			p.nextToken()
 		}
 		// Parse WITH clause
@@ -12014,12 +11931,7 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 								value = value[1 : len(value)-1]
 							}
-							addAction.Guid = &ast.StringLiteral{
-								LiteralType:   "String",
-								IsNational:    false,
-								IsLargeObject: false,
-								Value:         value,
-							}
+							addAction.Guid = p.strLit(value, false)
 							p.nextToken()
 						}
 					case "PROPERTY_INT_ID":
@@ -12028,10 +11940,7 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 							p.nextToken()
 						}
 						if p.curTok.Type == TokenNumber {
-							addAction.Id = &ast.IntegerLiteral{
-								LiteralType: "Integer",
-								Value:       p.curTok.Literal,
-							}
+							addAction.Id = p.intLitFromToken(p.curTok)
 							p.nextToken()
 						}
 					case "PROPERTY_DESCRIPTION":
@@ -12044,12 +11953,7 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 								value = value[1 : len(value)-1]
 							}
-							addAction.Description = &ast.StringLiteral{
-								LiteralType:   "String",
-								IsNational:    false,
-								IsLargeObject: false,
-								Value:         value,
-							}
+							addAction.Description = p.strLit(value, false)
 							p.nextToken()
 						}
 					default:
@@ -12074,12 +11978,7 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 			if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 				value = value[1 : len(value)-1]
 			}
-			dropAction.PropertyName = &ast.StringLiteral{
-				LiteralType:   "String",
-				IsNational:    false,
-				IsLargeObject: false,
-				Value:         value,
-			}
+			dropAction.PropertyName = p.strLit(value, false)
 			p.nextToken()
 		}
 		stmt.Action = dropAction
@@ -12432,10 +12331,7 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 			p.nextToken()
 		} else if p.curTok.Type == TokenNumber {
 			stmt.Partition.All = false
-			stmt.Partition.Number = &ast.IntegerLiteral{
-				LiteralType: "Integer",
-				Value:       p.curTok.Literal,
-			}
+			stmt.Partition.Number = p.intLitFromToken(p.curTok)
 			p.nextToken()
 		}
 	}
@@ -12455,10 +12351,7 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 				case "MAXDOP":
 					opt := &ast.IndexExpressionOption{
 						OptionKind: "MaxDop",
-						Expression: &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						},
+						Expression: p.intLitFromToken(p.curTok),
 					}
 					stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					p.nextToken()
@@ -12489,10 +12382,7 @@ func (p *Parser) parseAlterTableRebuildStatement(tableName *ast.SchemaObjectName
 				case "FILLFACTOR":
 					opt := &ast.IndexExpressionOption{
 						OptionKind: "FillFactor",
-						Expression: &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						},
+						Expression: p.intLitFromToken(p.curTok),
 					}
 					stmt.IndexOptions = append(stmt.IndexOptions, opt)
 					p.nextToken()

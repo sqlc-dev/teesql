@@ -1905,12 +1905,7 @@ func (p *Parser) parseSetCommandParameter() (ast.ScalarExpression, error) {
 	} else if p.curTok.Type == TokenString {
 		// String literal - strip quotes from value
 		val := strings.Trim(p.curTok.Literal, "'\"")
-		lit := &ast.StringLiteral{
-			LiteralType:   "String",
-			Value:         val,
-			IsNational:    false,
-			IsLargeObject: false,
-		}
+		lit := p.strLit(val, false)
 		p.nextToken()
 		return spanned(p, lit, astStart), nil
 	} else if p.curTok.Type == TokenIdent {
@@ -2200,12 +2195,7 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 						// Strip quotes from regular strings
 						value = value[1 : len(value)-1]
 					}
-					strLit := &ast.StringLiteral{
-						LiteralType:   "String",
-						Value:         value,
-						IsNational:    isNational,
-						IsLargeObject: false,
-					}
+					strLit := p.strLit(value, isNational)
 					p.nextToken()
 					opt := &ast.LiteralAtomicBlockOption{
 						OptionKind: "Language",
@@ -2221,10 +2211,7 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 				}
 			case "DATEFIRST":
 				// Parse as integer literal
-				intLit := &ast.IntegerLiteral{
-					LiteralType: "Integer",
-					Value:       p.curTok.Literal,
-				}
+				intLit := p.intLitFromToken(p.curTok)
 				p.nextToken()
 				opt := &ast.LiteralAtomicBlockOption{
 					OptionKind: "DateFirst",
@@ -2238,12 +2225,7 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 				if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 					value = value[1 : len(value)-1]
 				}
-				strLit := &ast.StringLiteral{
-					LiteralType:   "String",
-					Value:         value,
-					IsNational:    false,
-					IsLargeObject: false,
-				}
+				strLit := p.strLit(value, false)
 				p.nextToken()
 				opt := &ast.LiteralAtomicBlockOption{
 					OptionKind: "DateFormat",
@@ -2644,10 +2626,7 @@ func (p *Parser) parseBeginDialogStatement() (*ast.BeginDialogStatement, error) 
 			case "LIFETIME":
 				if p.curTok.Type == TokenNumber {
 					stmt.Options = append(stmt.Options, &ast.ScalarExpressionDialogOption{
-						Value: &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						},
+						Value:      p.intLitFromToken(p.curTok),
 						OptionKind: "Lifetime",
 					})
 					p.nextToken()
@@ -2711,10 +2690,7 @@ func (p *Parser) parseBeginConversationTimerStatement() (*ast.BeginConversationT
 	}
 
 	if p.curTok.Type == TokenNumber {
-		stmt.Timeout = &ast.IntegerLiteral{
-			LiteralType: "Integer",
-			Value:       p.curTok.Literal,
-		}
+		stmt.Timeout = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	} else {
 		return nil, fmt.Errorf("expected integer for timeout value")
@@ -4685,12 +4661,7 @@ func (p *Parser) parseCreatePartitionSchemeStatement() (*ast.CreatePartitionSche
 				litVal = litVal[1 : len(litVal)-1]
 			}
 			idOrVal.Value = litVal
-			idOrVal.ValueExpression = &ast.StringLiteral{
-				LiteralType:   "String",
-				Value:         litVal,
-				IsNational:    false,
-				IsLargeObject: false,
-			}
+			idOrVal.ValueExpression = p.strLit(litVal, false)
 			p.nextToken()
 		} else {
 			// Identifier
@@ -4858,12 +4829,7 @@ func (p *Parser) parseCreateProcedureStatement() (*ast.CreateProcedureStatement,
 					if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 						value = value[1 : len(value)-1]
 					}
-					executeAsOpt.ExecuteAs.Literal = &ast.StringLiteral{
-						LiteralType:   "String",
-						IsNational:    false,
-						IsLargeObject: false,
-						Value:         value,
-					}
+					executeAsOpt.ExecuteAs.Literal = p.strLit(value, false)
 					p.nextToken()
 				}
 				stmt.Options = append(stmt.Options, executeAsOpt)
@@ -7049,10 +7015,7 @@ func (p *Parser) parseWriteTextStatement() (*ast.WriteTextStatement, error) {
 		stmt.TextId = p.spanVarRef(p.curTok.Literal)
 		p.nextToken()
 	} else if p.curTok.Type == TokenNumber {
-		stmt.TextId = &ast.IntegerLiteral{
-			LiteralType: "Integer",
-			Value:       p.curTok.Literal,
-		}
+		stmt.TextId = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	} else {
 		return nil, fmt.Errorf("expected text ID, got %s", p.curTok.Literal)
@@ -7126,10 +7089,7 @@ func (p *Parser) parseUpdateTextStatement() (*ast.UpdateTextStatement, error) {
 		stmt.TextId = p.spanVarRef(p.curTok.Literal)
 		p.nextToken()
 	} else if p.curTok.Type == TokenNumber {
-		stmt.TextId = &ast.IntegerLiteral{
-			LiteralType: "Integer",
-			Value:       p.curTok.Literal,
-		}
+		stmt.TextId = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	} else {
 		return nil, fmt.Errorf("expected text ID, got %s", p.curTok.Literal)
@@ -8783,10 +8743,7 @@ func (p *Parser) parseCreateExternalFileFormatStatement() (*ast.CreateExternalFi
 						})
 					} else {
 						// Handle identifiers like FALSE, TRUE, etc.
-						val := &ast.StringLiteral{
-							LiteralType: "String",
-							Value:       p.curTok.Literal,
-						}
+						val := p.strLit(p.curTok.Literal, false)
 						p.nextToken()
 						stmt.ExternalFileFormatOptions = append(stmt.ExternalFileFormatOptions, &ast.ExternalFileFormatLiteralOption{
 							OptionKind: optionKind,
@@ -8859,10 +8816,7 @@ func (p *Parser) parseExternalFileFormatSuboption() ast.ExternalFileFormatOption
 
 		// Handle integer values for FIRST_ROW
 		if optName == "FIRST_ROW" {
-			val := &ast.IntegerLiteral{
-				LiteralType: "Integer",
-				Value:       p.curTok.Literal,
-			}
+			val := p.intLitFromToken(p.curTok)
 			p.nextToken()
 			return spanned(p, &ast.ExternalFileFormatLiteralOption{
 				OptionKind: optionKind,
@@ -10089,12 +10043,7 @@ func (p *Parser) parseCreateEventNotificationFromEvent() (*ast.CreateEventNotifi
 				if len(litVal) >= 2 && litVal[0] == '\'' && litVal[len(litVal)-1] == '\'' {
 					litVal = litVal[1 : len(litVal)-1]
 				}
-				stmt.BrokerService = &ast.StringLiteral{
-					LiteralType:   "String",
-					IsNational:    false,
-					IsLargeObject: false,
-					Value:         litVal,
-				}
+				stmt.BrokerService = p.strLit(litVal, false)
 				p.nextToken()
 			}
 
@@ -10108,12 +10057,7 @@ func (p *Parser) parseCreateEventNotificationFromEvent() (*ast.CreateEventNotifi
 					if len(litVal) >= 2 && litVal[0] == '\'' && litVal[len(litVal)-1] == '\'' {
 						litVal = litVal[1 : len(litVal)-1]
 					}
-					stmt.BrokerInstanceSpecifier = &ast.StringLiteral{
-						LiteralType:   "String",
-						IsNational:    false,
-						IsLargeObject: false,
-						Value:         litVal,
-					}
+					stmt.BrokerInstanceSpecifier = p.strLit(litVal, false)
 					p.nextToken()
 				}
 			}
@@ -10357,12 +10301,7 @@ func (p *Parser) parseCreatePartitionSchemeStatementFromPartition() (*ast.Create
 				litVal = litVal[1 : len(litVal)-1]
 			}
 			idOrVal.Value = litVal
-			idOrVal.ValueExpression = &ast.StringLiteral{
-				LiteralType:   "String",
-				Value:         litVal,
-				IsNational:    false,
-				IsLargeObject: false,
-			}
+			idOrVal.ValueExpression = p.strLit(litVal, false)
 			p.nextToken()
 		} else {
 			// Identifier
@@ -10684,10 +10623,7 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 			if p.curTok.Type == TokenNumber {
 				opt := &ast.LiteralDatabaseOption{
 					OptionKind: "DefaultLanguage",
-					Value: &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					},
+					Value:      p.intLitFromToken(p.curTok),
 				}
 				options = append(options, opt)
 				p.nextToken()
@@ -10708,10 +10644,7 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 			if p.curTok.Type == TokenNumber {
 				opt := &ast.LiteralDatabaseOption{
 					OptionKind: "DefaultFullTextLanguage",
-					Value: &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					},
+					Value:      p.intLitFromToken(p.curTok),
 				}
 				options = append(options, opt)
 				p.nextToken()
@@ -10730,10 +10663,7 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 			}
 			opt := &ast.LiteralDatabaseOption{
 				OptionKind: "TwoDigitYearCutoff",
-				Value: &ast.IntegerLiteral{
-					LiteralType: "Integer",
-					Value:       p.curTok.Literal,
-				},
+				Value:      p.intLitFromToken(p.curTok),
 			}
 			options = append(options, opt)
 			p.nextToken()
@@ -10779,12 +10709,7 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 							}
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
-							opt.DirectoryName = &ast.StringLiteral{
-								LiteralType:   "String",
-								Value:         strings.Trim(p.curTok.Literal, "'"),
-								IsNational:    false,
-								IsLargeObject: false,
-							}
+							opt.DirectoryName = p.strLit(strings.Trim(p.curTok.Literal, "'"), false)
 							p.nextToken()
 						}
 					}
@@ -13268,12 +13193,7 @@ func (p *Parser) parseActivationOptions() ([]ast.QueueOption, error) {
 						value = value[1 : len(value)-1]
 					}
 					execAs.ExecuteAsOption = "String"
-					execAs.Literal = &ast.StringLiteral{
-						LiteralType:   "String",
-						IsNational:    false,
-						IsLargeObject: false,
-						Value:         value,
-					}
+					execAs.Literal = p.strLit(value, false)
 					p.nextToken()
 				}
 			}
@@ -13364,16 +13284,10 @@ func (p *Parser) parseRouteOptions() []*ast.RouteOption {
 			if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 				value = value[1 : len(value)-1]
 			}
-			literal = &ast.StringLiteral{
-				LiteralType: "String",
-				Value:       value,
-			}
+			literal = p.strLit(value, false)
 			p.nextToken()
 		} else if p.curTok.Type == TokenNumber {
-			literal = &ast.IntegerLiteral{
-				LiteralType: "Integer",
-				Value:       p.curTok.Literal,
-			}
+			literal = p.intLitFromToken(p.curTok)
 			p.nextToken()
 		} else {
 			// Unknown value, try to skip
@@ -13454,10 +13368,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 			default:
 				affinity.Kind = "Integer"
 				if p.curTok.Type == TokenNumber {
-					affinity.Value = &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					}
+					affinity.Value = p.intLitFromToken(p.curTok)
 					p.nextToken()
 				}
 			}
@@ -13633,10 +13544,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 							opt.Kind = optName
 						}
 						if p.curTok.Type == TokenNumber {
-							opt.Value = &ast.IntegerLiteral{
-								LiteralType: "Integer",
-								Value:       p.curTok.Literal,
-							}
+							opt.Value = p.intLitFromToken(p.curTok)
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
 							opt.Value = p.parseStringLiteralValue()
@@ -14014,11 +13922,8 @@ func (p *Parser) parseApplicationRoleOptions() ([]*ast.ApplicationRoleOption, er
 					val = val[1 : len(val)-1]
 				}
 				opt.Value = &ast.IdentifierOrValueExpression{
-					Value: val,
-					ValueExpression: &ast.StringLiteral{
-						Value:       val,
-						LiteralType: "String",
-					},
+					Value:           val,
+					ValueExpression: p.strLit(val, false),
 				}
 				p.nextToken()
 			}
@@ -14119,10 +14024,7 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 							col.LanguageTerm.ValueExpression = lit
 						} else {
 							// Parse integer literal directly
-							lit := &ast.IntegerLiteral{
-								LiteralType: "Integer",
-								Value:       p.curTok.Literal,
-							}
+							lit := p.intLitFromToken(p.curTok)
 							col.LanguageTerm.Value = p.curTok.Literal
 							col.LanguageTerm.ValueExpression = lit
 						}
@@ -15145,10 +15047,7 @@ func (p *Parser) parseSelectiveXmlIndexPath() *ast.SelectiveXmlIndexPromotedPath
 				if p.curTok.Type == TokenLParen {
 					p.nextToken() // consume (
 					if p.curTok.Type == TokenNumber {
-						path.MaxLength = &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						}
+						path.MaxLength = p.intLitFromToken(p.curTok)
 						p.nextToken() // consume number
 					}
 					if p.curTok.Type == TokenRParen {

@@ -862,19 +862,11 @@ func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
 
 				// Parse optional column ordinal (integer) or JSON path (string)
 				if p.curTok.Type == TokenNumber {
-					colDef.ColumnOrdinal = &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					}
+					colDef.ColumnOrdinal = p.intLitFromToken(p.curTok)
 					p.nextToken()
 				} else if p.curTok.Type == TokenString {
 					// JSON path specification like '$.stateName' or 'strict $.population'
-					colDef.JsonPath = &ast.StringLiteral{
-						LiteralType:   "String",
-						IsNational:    false,
-						IsLargeObject: false,
-						Value:         strings.Trim(p.curTok.Literal, "'"),
-					}
+					colDef.JsonPath = p.strLit(strings.Trim(p.curTok.Literal, "'"), false)
 					p.nextToken()
 				}
 
@@ -1033,6 +1025,7 @@ func (p *Parser) parseOpenRowsetOrderOption() (*ast.OrderBulkInsertOption, error
 
 	// Parse column list with sort order
 	for {
+		colStart := p.curTok
 		col := &ast.ColumnWithSortOrder{
 			SortOrder: ast.SortOrderNotSpecified,
 		}
@@ -1053,6 +1046,7 @@ func (p *Parser) parseOpenRowsetOrderOption() (*ast.OrderBulkInsertOption, error
 			p.nextToken()
 		}
 
+		p.spanFrom(colStart, col)
 		result.Columns = append(result.Columns, col)
 
 		if p.curTok.Type == TokenComma {
@@ -1455,10 +1449,7 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken() // consume ;
 			if p.curTok.Type == TokenNumber {
-				pr.Number = &ast.IntegerLiteral{
-					LiteralType: "Integer",
-					Value:       p.curTok.Literal,
-				}
+				pr.Number = p.intLitFromToken(p.curTok)
 				p.nextToken()
 			}
 		}
@@ -2517,6 +2508,7 @@ func (p *Parser) parseOrderBulkInsertOption() (*ast.OrderBulkInsertOption, error
 	p.nextToken()
 
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		colStart := p.curTok
 		col, err := p.parseMultiPartIdentifierAsColumn()
 		if err != nil {
 			return nil, err
@@ -2531,10 +2523,12 @@ func (p *Parser) parseOrderBulkInsertOption() (*ast.OrderBulkInsertOption, error
 			p.nextToken()
 		}
 
-		opt.Columns = append(opt.Columns, &ast.ColumnWithSortOrder{
+		cws := &ast.ColumnWithSortOrder{
 			Column:    col,
 			SortOrder: sortOrder,
-		})
+		}
+		p.spanFrom(colStart, cws)
+		opt.Columns = append(opt.Columns, cws)
 
 		if p.curTok.Type != TokenComma {
 			break
@@ -2610,10 +2604,7 @@ func (p *Parser) parseIdentifierOrValueExpression() (*ast.IdentifierOrValueExpre
 	} else if p.curTok.Type == TokenNumber {
 		// Integer literal
 		result.Value = p.curTok.Literal
-		result.ValueExpression = &ast.IntegerLiteral{
-			LiteralType: "Integer",
-			Value:       p.curTok.Literal,
-		}
+		result.ValueExpression = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	} else if p.curTok.Type == TokenBinary {
 		// Binary/hex literal
@@ -2865,10 +2856,7 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 								// Parse partition range: number or number TO number
 								// Just parse the literal value directly
-								fromVal := &ast.IntegerLiteral{
-									LiteralType: "Integer",
-									Value:       p.curTok.Literal,
-								}
+								fromVal := p.intLitFromToken(p.curTok)
 								p.nextToken() // consume the number
 								partRange := &ast.StatisticsPartitionRange{
 									From: fromVal,
@@ -2876,10 +2864,7 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 								// Check for TO (TokenTo)
 								if p.curTok.Type == TokenTo {
 									p.nextToken() // consume TO
-									toVal := &ast.IntegerLiteral{
-										LiteralType: "Integer",
-										Value:       p.curTok.Literal,
-									}
+									toVal := p.intLitFromToken(p.curTok)
 									p.nextToken() // consume the number
 									partRange.To = toVal
 								}

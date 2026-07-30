@@ -4832,10 +4832,7 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 			p.nextToken() // consume =
 		}
 		if p.curTok.Type == TokenNumber {
-			hint.Value = &ast.IntegerLiteral{
-				LiteralType: "Integer",
-				Value:       p.curTok.Literal,
-			}
+			hint.Value = p.intLitFromToken(p.curTok)
 			p.nextToken()
 		}
 		return spanned(p, hint, astStart), nil

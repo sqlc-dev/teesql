@@ -5571,11 +5571,8 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 					value = value[1 : len(value)-1]
 				}
 				stmt.TextImageOn = &ast.IdentifierOrValueExpression{
-					Value: value,
-					ValueExpression: &ast.StringLiteral{
-						LiteralType: "String",
-						Value:       value,
-					},
+					Value:           value,
+					ValueExpression: p.strLit(value, false),
 				}
 				p.nextToken()
 			} else {
@@ -5595,11 +5592,8 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 					value = value[1 : len(value)-1]
 				}
 				stmt.FileStreamOn = &ast.IdentifierOrValueExpression{
-					Value: value,
-					ValueExpression: &ast.StringLiteral{
-						LiteralType: "String",
-						Value:       value,
-					},
+					Value:           value,
+					ValueExpression: p.strLit(value, false),
 				}
 				p.nextToken()
 			} else {
@@ -5976,11 +5970,8 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 					value = value[1 : len(value)-1]
 				}
 				stmt.TextImageOn = &ast.IdentifierOrValueExpression{
-					Value: value,
-					ValueExpression: &ast.StringLiteral{
-						LiteralType: "String",
-						Value:       value,
-					},
+					Value:           value,
+					ValueExpression: p.strLit(value, false),
 				}
 				p.nextToken()
 			} else {
@@ -6000,11 +5991,8 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 					value = value[1 : len(value)-1]
 				}
 				stmt.FileStreamOn = &ast.IdentifierOrValueExpression{
-					Value: value,
-					ValueExpression: &ast.StringLiteral{
-						LiteralType: "String",
-						Value:       value,
-					},
+					Value:           value,
+					ValueExpression: p.strLit(value, false),
 				}
 				p.nextToken()
 			} else {
@@ -6055,21 +6043,11 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 							if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 								value = value[1 : len(value)-1]
 							}
-							opt.Value = &ast.StringLiteral{
-								LiteralType:   "String",
-								Value:         value,
-								IsNational:    false,
-								IsLargeObject: false,
-							}
+							opt.Value = p.strLit(value, false)
 							p.nextToken()
 						} else {
 							value := p.curTok.Literal
-							opt.Value = &ast.StringLiteral{
-								LiteralType:   "String",
-								Value:         value,
-								IsNational:    false,
-								IsLargeObject: false,
-							}
+							opt.Value = p.strLit(value, false)
 							p.nextToken()
 						}
 						stmt.Options = append(stmt.Options, opt)
@@ -7316,10 +7294,7 @@ func (p *Parser) parseDataCompressionOption() (*ast.DataCompressionOption, error
 
 					// Parse From
 					if p.curTok.Type == TokenNumber {
-						pr.From = &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						}
+						pr.From = p.intLitFromToken(p.curTok)
 						p.nextToken()
 					}
 
@@ -7327,10 +7302,7 @@ func (p *Parser) parseDataCompressionOption() (*ast.DataCompressionOption, error
 					if strings.ToUpper(p.curTok.Literal) == "TO" {
 						p.nextToken() // consume TO
 						if p.curTok.Type == TokenNumber {
-							pr.To = &ast.IntegerLiteral{
-								LiteralType: "Integer",
-								Value:       p.curTok.Literal,
-							}
+							pr.To = p.intLitFromToken(p.curTok)
 							p.nextToken()
 						}
 					}
@@ -7382,10 +7354,7 @@ func (p *Parser) parseXmlCompressionOption() (*ast.XmlCompressionOption, error) 
 
 					// Parse From
 					if p.curTok.Type == TokenNumber {
-						pr.From = &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						}
+						pr.From = p.intLitFromToken(p.curTok)
 						p.nextToken()
 					}
 
@@ -7393,10 +7362,7 @@ func (p *Parser) parseXmlCompressionOption() (*ast.XmlCompressionOption, error) 
 					if strings.ToUpper(p.curTok.Literal) == "TO" {
 						p.nextToken() // consume TO
 						if p.curTok.Type == TokenNumber {
-							pr.To = &ast.IntegerLiteral{
-								LiteralType: "Integer",
-								Value:       p.curTok.Literal,
-							}
+							pr.To = p.intLitFromToken(p.curTok)
 							p.nextToken()
 						}
 					}
@@ -7945,10 +7911,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 						if optionName == "BUCKET_COUNT" {
 							opt := &ast.IndexExpressionOption{
 								OptionKind: "BucketCount",
-								Expression: &ast.IntegerLiteral{
-									LiteralType: "Integer",
-									Value:       p.curTok.Literal,
-								},
+								Expression: p.intLitFromToken(p.curTok),
 							}
 							indexDef.IndexOptions = append(indexDef.IndexOptions, opt)
 							p.nextToken()
@@ -8063,10 +8026,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 							}
 							indexDef.IndexOptions = append(indexDef.IndexOptions, &ast.IndexExpressionOption{
 								OptionKind: optKind,
-								Expression: &ast.IntegerLiteral{
-									LiteralType: "Integer",
-									Value:       p.curTok.Literal,
-								},
+								Expression: p.intLitFromToken(p.curTok),
 							})
 							p.nextToken()
 						} else {
@@ -12293,12 +12253,7 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 				if len(val) >= 2 && ((val[0] == '\'' && val[len(val)-1] == '\'') || (val[0] == '"' && val[len(val)-1] == '"')) {
 					val = val[1 : len(val)-1]
 				}
-				item = &ast.StringLiteral{
-					LiteralType:   "String",
-					Value:         val,
-					IsNational:    p.curTok.Type == TokenNationalString,
-					IsLargeObject: false,
-				}
+				item = p.strLit(val, p.curTok.Type == TokenNationalString)
 				p.nextToken()
 			} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 				item = &ast.VariableReference{Name: p.curTok.Literal}
@@ -12373,12 +12328,7 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 				if len(val) >= 2 && ((val[0] == '\'' && val[len(val)-1] == '\'') || (val[0] == '"' && val[len(val)-1] == '"')) {
 					val = val[1 : len(val)-1]
 				}
-				strLit := &ast.StringLiteral{
-					LiteralType:   "String",
-					Value:         val,
-					IsNational:    p.curTok.Type == TokenNationalString,
-					IsLargeObject: false,
-				}
+				strLit := p.strLit(val, p.curTok.Type == TokenNationalString)
 				device.PhysicalDevice = strLit
 				p.nextToken()
 			} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
@@ -12399,12 +12349,7 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 				if len(val) >= 2 && ((val[0] == '\'' && val[len(val)-1] == '\'') || (val[0] == '"' && val[len(val)-1] == '"')) {
 					val = val[1 : len(val)-1]
 				}
-				strLit := &ast.StringLiteral{
-					LiteralType:   "String",
-					Value:         val,
-					IsNational:    p.curTok.Type == TokenNationalString,
-					IsLargeObject: false,
-				}
+				strLit := p.strLit(val, p.curTok.Type == TokenNationalString)
 				deviceName.Value = strLit.Value
 				deviceName.ValueExpression = strLit
 				p.nextToken()
@@ -13189,6 +13134,8 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 					continue
 				}
 
+				optStart := p.curTok
+				lenBefore := len(stmt.IndexOptions)
 				optName := strings.ToUpper(p.curTok.Literal)
 				switch optName {
 				case "COMPRESSION_DELAY":
@@ -13422,6 +13369,15 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 					if p.curTok.Type == TokenEquals {
 						p.nextToken()
 						p.nextToken() // skip value
+					}
+				}
+				if len(stmt.IndexOptions) > lenBefore {
+					last := stmt.IndexOptions[len(stmt.IndexOptions)-1]
+					if o, ok := last.(spannable); ok {
+						p.spanFrom(optStart, o)
+					}
+					if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
+						p.spanFromChild(eo, eo.Expression)
 					}
 				}
 			}
@@ -13899,12 +13855,15 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 		if p.curTok.Type == TokenLParen {
 			p.nextToken()
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optStart := p.curTok
+				lenBefore := len(stmt.IndexOptions)
 				optionName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken()
 
 				if p.curTok.Type == TokenEquals {
 					p.nextToken()
 					valueStr := p.curTok.Literal
+					valueTok := p.curTok
 					valueUpper := strings.ToUpper(valueStr)
 					p.nextToken()
 
@@ -13921,7 +13880,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 						}
 						opt := &ast.CompressionDelayIndexOption{
 							OptionKind: "CompressionDelay",
-							Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
+							Expression: p.intLitFromToken(valueTok),
 							TimeUnit:   timeUnit,
 						}
 						stmt.IndexOptions = append(stmt.IndexOptions, opt)
@@ -13962,9 +13921,19 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 					} else {
 						opt := &ast.IndexExpressionOption{
 							OptionKind: p.getIndexOptionKind(optionName),
-							Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
+							Expression: p.intLitFromToken(valueTok),
 						}
 						stmt.IndexOptions = append(stmt.IndexOptions, opt)
+					}
+				}
+
+				if len(stmt.IndexOptions) > lenBefore {
+					last := stmt.IndexOptions[len(stmt.IndexOptions)-1]
+					if o, ok := last.(spannable); ok {
+						p.spanFrom(optStart, o)
+					}
+					if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
+						p.spanFromChild(eo, eo.Expression)
 					}
 				}
 
@@ -14019,6 +13988,8 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 			p.nextToken()
 
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				optStart := p.curTok
+				lenBefore := len(stmt.IndexOptions)
 				optionName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken()
 
@@ -14079,6 +14050,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 				} else if p.curTok.Type == TokenEquals {
 					p.nextToken()
 					valueStr := strings.ToUpper(p.curTok.Literal)
+					valueTok := p.curTok
 					p.nextToken()
 
 					// Handle MAX_DURATION = value [MINUTES] as top-level option
@@ -14089,7 +14061,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 							p.nextToken()
 						}
 						opt := &ast.MaxDurationOption{
-							MaxDuration: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
+							MaxDuration: p.intLitFromToken(valueTok),
 							Unit:        unit,
 							OptionKind:  "MaxDuration",
 						}
@@ -14234,9 +14206,19 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 						// Expression option like FILLFACTOR = 80
 						opt := &ast.IndexExpressionOption{
 							OptionKind: p.getIndexOptionKind(optionName),
-							Expression: &ast.IntegerLiteral{LiteralType: "Integer", Value: valueStr},
+							Expression: p.intLitFromToken(valueTok),
 						}
 						stmt.IndexOptions = append(stmt.IndexOptions, opt)
+					}
+				}
+
+				if len(stmt.IndexOptions) > lenBefore {
+					last := stmt.IndexOptions[len(stmt.IndexOptions)-1]
+					if o, ok := last.(spannable); ok {
+						p.spanFrom(optStart, o)
+					}
+					if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
+						p.spanFromChild(eo, eo.Expression)
 					}
 				}
 
@@ -14290,10 +14272,7 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 						p.nextToken() // consume MAXLENGTH
 						if p.curTok.Type == TokenLParen {
 							p.nextToken() // consume (
-							path.MaxLength = &ast.IntegerLiteral{
-								LiteralType: "Integer",
-								Value:       p.curTok.Literal,
-							}
+							path.MaxLength = p.intLitFromToken(p.curTok)
 							p.nextToken() // consume number
 							if p.curTok.Type == TokenRParen {
 								p.nextToken() // consume )
@@ -14840,12 +14819,7 @@ func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
 					if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 						value = value[1 : len(value)-1]
 					}
-					execAsOpt.ExecuteAs.Literal = &ast.StringLiteral{
-						LiteralType:   "String",
-						IsNational:    false,
-						IsLargeObject: false,
-						Value:         value,
-					}
+					execAsOpt.ExecuteAs.Literal = p.strLit(value, false)
 					p.nextToken()
 				}
 			}
@@ -15054,12 +15028,7 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 						if len(value) >= 2 && value[0] == '\'' && value[len(value)-1] == '\'' {
 							value = value[1 : len(value)-1]
 						}
-						execAsOpt.ExecuteAs.Literal = &ast.StringLiteral{
-							LiteralType:   "String",
-							IsNational:    false,
-							IsLargeObject: false,
-							Value:         value,
-						}
+						execAsOpt.ExecuteAs.Literal = p.strLit(value, false)
 						p.nextToken()
 					}
 				}

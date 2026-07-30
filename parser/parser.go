@@ -233,6 +233,20 @@ func (p *Parser) intLitFromToken(tok Token) *ast.IntegerLiteral {
 	return l
 }
 
+// strLit builds a StringLiteral (with an already-stripped value) carrying the
+// span of the current token. It must be called while p.curTok is still the
+// string's token.
+func (p *Parser) strLit(value string, isNational bool) *ast.StringLiteral {
+	l := &ast.StringLiteral{
+		LiteralType:   "String",
+		Value:         value,
+		IsNational:    isNational,
+		IsLargeObject: false,
+	}
+	p.tokSpan(l, p.curTok)
+	return l
+}
+
 // identFromToken builds an Identifier from the given token's literal with
 // the token's source span, without consuming it.
 func (p *Parser) identFromToken(tok Token) *ast.Identifier {
