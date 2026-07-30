@@ -2457,6 +2457,8 @@ func (p *Parser) parseTryCatchStatement() (*ast.TryCatchStatement, error) {
 		p.nextToken()
 	}
 
+	spanStatementList(stmt.TryStatements)
+	spanStatementList(stmt.CatchStatements)
 	return spanned(p, stmt, astStart), nil
 }
 
@@ -9833,8 +9835,6 @@ func (p *Parser) parseEventPredicatePrimary() ast.BooleanExpression {
 }
 
 func (p *Parser) parseSessionOption() ast.SessionOption {
-	astStart := p.curTok
-
 	optName := strings.ToUpper(p.curTok.Literal)
 	p.nextToken()
 
@@ -9884,21 +9884,26 @@ func (p *Parser) parseSessionOption() ast.SessionOption {
 	case "MEMORY_PARTITION_MODE":
 		value := p.curTok.Literal
 		p.nextToken()
-		return spanned(p, &ast.MemoryPartitionSessionOption{
+		// ScriptDom leaves this option without position information.
+		return &ast.MemoryPartitionSessionOption{
 			OptionKind: "MemoryPartition",
 			Value:      p.memoryPartitionValue(value),
-		}, astStart)
+		}
 	case "TRACK_CAUSALITY", "STARTUP_STATE":
+		valTok := p.curTok
 		stateUpper := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
 		state := "Off"
 		if stateUpper == "ON" {
 			state = "On"
 		}
-		return spanned(p, &ast.OnOffSessionOption{
+		oo := &ast.OnOffSessionOption{
 			OptionKind:  p.sessionOptionKind(optName),
 			OptionState: state,
-		}, astStart)
+		}
+		// ScriptDom spans this option on its ON/OFF value.
+		p.tokSpan(oo, valTok)
+		return oo
 	default:
 		// Skip unknown option value
 		p.nextToken()

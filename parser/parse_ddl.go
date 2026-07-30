@@ -8750,6 +8750,7 @@ func (p *Parser) parseAlterUserStatement() (*ast.AlterUserStatement, error) {
 		p.nextToken()
 
 		for {
+			optTok := p.curTok
 			optionName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken()
 
@@ -8776,6 +8777,7 @@ func (p *Parser) parseAlterUserStatement() (*ast.AlterUserStatement, error) {
 						p.nextToken()
 					}
 				}
+				p.spanFrom(optTok, passwordOpt)
 				stmt.UserOptions = append(stmt.UserOptions, passwordOpt)
 			} else {
 				if p.curTok.Type == TokenEquals {
@@ -8799,6 +8801,9 @@ func (p *Parser) parseAlterUserStatement() (*ast.AlterUserStatement, error) {
 						OptionKind: convertUserOptionKind(optionName),
 						Value:      value,
 					}
+				}
+				if sp, ok := opt.(spannable); ok {
+					p.spanFrom(optTok, sp)
 				}
 				stmt.UserOptions = append(stmt.UserOptions, opt)
 			}
@@ -12236,6 +12241,12 @@ func (p *Parser) parseResourcePoolParameter() (*ast.ResourcePoolParameter, error
 		return nil, nil
 	}
 
+	// ScriptDom spans the parameter on its value literal when present.
+	if pv, ok := any(param.ParameterValue).(spannable); ok && pv != nil && pv.Frag().HasSpan() {
+		f := pv.Frag()
+		param.SetSpan(f.StartOffset, f.FragmentLength, f.StartLine, f.StartColumn)
+		return param, nil
+	}
 	return spanned(p, param, astStart), nil
 }
 

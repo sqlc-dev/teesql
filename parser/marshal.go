@@ -12954,6 +12954,7 @@ func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
 		p.nextToken()
 
 		for {
+			optTok := p.curTok
 			optionName := p.curTok.Literal
 			p.nextToken()
 
@@ -12980,6 +12981,9 @@ func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
 					OptionKind: convertUserOptionKind(optionName),
 					Value:      value,
 				}
+			}
+			if sp, ok := opt.(spannable); ok {
+				p.spanFrom(optTok, sp)
 			}
 			stmt.UserOptions = append(stmt.UserOptions, opt)
 

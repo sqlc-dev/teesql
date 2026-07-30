@@ -7360,6 +7360,7 @@ func (p *Parser) parsePredictTableReference() (*ast.PredictTableReference, error
 			// MODEL can be a subquery or variable
 			if p.curTok.Type == TokenLParen {
 				// Subquery
+				parenTok := p.curTok
 				p.nextToken() // consume (
 				qe, err := p.parseQueryExpression()
 				if err != nil {
@@ -7369,7 +7370,9 @@ func (p *Parser) parsePredictTableReference() (*ast.PredictTableReference, error
 					return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 				}
 				p.nextToken() // consume )
-				ref.ModelVariable = &ast.ScalarSubquery{QueryExpression: qe}
+				ss := &ast.ScalarSubquery{QueryExpression: qe}
+				p.spanFrom(parenTok, ss)
+				ref.ModelVariable = ss
 			} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 				// Variable
 				ref.ModelVariable = p.spanVarRef(p.curTok.Literal)
