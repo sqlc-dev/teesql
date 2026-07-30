@@ -43,7 +43,9 @@ type MergeAction interface {
 }
 
 // DeleteMergeAction represents DELETE in a MERGE WHEN clause
-type DeleteMergeAction struct{}
+type DeleteMergeAction struct {
+	Fragment
+}
 
 func (a *DeleteMergeAction) node()        {}
 func (a *DeleteMergeAction) mergeAction() {}

@@ -643,7 +643,9 @@ func (s *CreateDatabaseEncryptionKeyStatement) node()      {}
 func (s *CreateDatabaseEncryptionKeyStatement) statement() {}
 
 // DropDatabaseEncryptionKeyStatement represents a DROP DATABASE ENCRYPTION KEY statement.
-type DropDatabaseEncryptionKeyStatement struct{}
+type DropDatabaseEncryptionKeyStatement struct {
+	Fragment
+}
 
 func (s *DropDatabaseEncryptionKeyStatement) node()      {}
 func (s *DropDatabaseEncryptionKeyStatement) statement() {}

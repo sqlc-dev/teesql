@@ -69,7 +69,9 @@ func (s *CloseSymmetricKeyStatement) node()      {}
 func (s *CloseSymmetricKeyStatement) statement() {}
 
 // CloseMasterKeyStatement represents CLOSE MASTER KEY statement
-type CloseMasterKeyStatement struct{}
+type CloseMasterKeyStatement struct {
+	Fragment
+}
 
 func (s *CloseMasterKeyStatement) node()      {}
 func (s *CloseMasterKeyStatement) statement() {}

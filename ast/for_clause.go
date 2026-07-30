@@ -7,13 +7,17 @@ type ForClause interface {
 }
 
 // BrowseForClause represents a FOR BROWSE clause.
-type BrowseForClause struct{}
+type BrowseForClause struct {
+	Fragment
+}
 
 func (*BrowseForClause) node()      {}
 func (*BrowseForClause) forClause() {}
 
 // ReadOnlyForClause represents a FOR READ ONLY clause.
-type ReadOnlyForClause struct{}
+type ReadOnlyForClause struct {
+	Fragment
+}
 
 func (*ReadOnlyForClause) node()      {}
 func (*ReadOnlyForClause) forClause() {}

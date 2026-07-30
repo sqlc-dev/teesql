@@ -26,13 +26,17 @@ func (t *TableHashDistributionPolicy) node()                    {}
 func (t *TableHashDistributionPolicy) tableDistributionPolicy() {}
 
 // TableRoundRobinDistributionPolicy represents ROUND_ROBIN distribution for tables
-type TableRoundRobinDistributionPolicy struct{}
+type TableRoundRobinDistributionPolicy struct {
+	Fragment
+}
 
 func (t *TableRoundRobinDistributionPolicy) node()                    {}
 func (t *TableRoundRobinDistributionPolicy) tableDistributionPolicy() {}
 
 // TableReplicateDistributionPolicy represents REPLICATE distribution for tables
-type TableReplicateDistributionPolicy struct{}
+type TableReplicateDistributionPolicy struct {
+	Fragment
+}
 
 func (t *TableReplicateDistributionPolicy) node()                    {}
 func (t *TableReplicateDistributionPolicy) tableDistributionPolicy() {}

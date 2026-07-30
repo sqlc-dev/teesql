@@ -6278,9 +6278,7 @@ func (p *Parser) parseMoveConversationStatement() (*ast.MoveConversationStatemen
 
 	// Parse the conversation handle (variable reference)
 	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
-		stmt.Conversation = &ast.VariableReference{
-			Name: p.curTok.Literal,
-		}
+		stmt.Conversation = p.spanVarRef(p.curTok.Literal)
 		p.nextToken()
 	} else {
 		return nil, fmt.Errorf("expected variable reference for conversation handle, got %s", p.curTok.Literal)
@@ -6294,9 +6292,7 @@ func (p *Parser) parseMoveConversationStatement() (*ast.MoveConversationStatemen
 
 	// Parse the group id (variable reference)
 	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
-		stmt.Group = &ast.VariableReference{
-			Name: p.curTok.Literal,
-		}
+		stmt.Group = p.spanVarRef(p.curTok.Literal)
 		p.nextToken()
 	} else {
 		return nil, fmt.Errorf("expected variable reference for conversation group, got %s", p.curTok.Literal)
@@ -6817,9 +6813,7 @@ func (p *Parser) parseSetUserStatement() (*ast.SetUserStatement, error) {
 
 	// Parse optional user name (variable or string)
 	if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
-		stmt.UserName = &ast.VariableReference{
-			Name: p.curTok.Literal,
-		}
+		stmt.UserName = p.spanVarRef(p.curTok.Literal)
 		p.nextToken()
 	} else if p.curTok.Type == TokenString {
 		str, err := p.parseStringLiteral()
@@ -7904,9 +7898,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 			if hasMirrorPhysicalType {
 				// Physical device: use PhysicalDevice field with ScalarExpression
 				if p.curTok.Type == TokenIdent && len(p.curTok.Literal) > 0 && p.curTok.Literal[0] == '@' {
-					mirrorDevice.PhysicalDevice = &ast.VariableReference{
-						Name: p.curTok.Literal,
-					}
+					mirrorDevice.PhysicalDevice = p.spanVarRef(p.curTok.Literal)
 					p.nextToken()
 				} else if p.curTok.Type == TokenString {
 					str, err := p.parseStringLiteral()
@@ -7973,6 +7965,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 				options = append(options, encOpt)
 			} else {
 				option := &ast.BackupOption{}
+				backupOptTok := p.curTok
 
 				switch optionName {
 				case "COMPRESSION":
@@ -8056,6 +8049,11 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 						return nil, err
 					}
 					option.Value = val
+					// ScriptDom positions valued backup options on the value.
+					p.spanFromChild(option, val)
+				} else {
+					// Keyword-only options span the keyword token.
+					p.tokSpan(option, backupOptTok)
 				}
 
 				options = append(options, option)
@@ -12498,6 +12496,7 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 			stmt.EncryptionAlgorithm = "None"
 		case "PROVIDER":
 			p.nextToken() // consume PROVIDER
+			provNameTok := p.curTok
 			source := &ast.ProviderEncryptionSource{
 				Name: p.parseIdentifier(),
 			}
@@ -12507,6 +12506,7 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 			if p.curTok.Type == TokenWith {
 				p.nextToken() // consume WITH
 				for {
+					keyOptTok := p.curTok
 					optName := strings.ToUpper(p.curTok.Literal)
 					switch optName {
 					case "ALGORITHM":
@@ -12516,32 +12516,38 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 						}
 						alg := strings.ToUpper(p.curTok.Literal)
 						mappedAlg := p.mapEncryptionAlgorithm(alg)
-						source.KeyOptions = append(source.KeyOptions, &ast.AlgorithmKeyOption{
+						algOpt := &ast.AlgorithmKeyOption{
 							Algorithm:  mappedAlg,
 							OptionKind: "Algorithm",
-						})
+						}
 						p.nextToken()
+						p.spanFrom(keyOptTok, algOpt)
+						source.KeyOptions = append(source.KeyOptions, algOpt)
 					case "PROVIDER_KEY_NAME":
 						p.nextToken() // consume PROVIDER_KEY_NAME
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
 						}
 						keyName, _ := p.parseStringLiteral()
-						source.KeyOptions = append(source.KeyOptions, &ast.ProviderKeyNameKeyOption{
+						pknOpt := &ast.ProviderKeyNameKeyOption{
 							KeyName:    keyName,
 							OptionKind: "ProviderKeyName",
-						})
+						}
+						p.spanFrom(keyOptTok, pknOpt)
+						source.KeyOptions = append(source.KeyOptions, pknOpt)
 					case "CREATION_DISPOSITION":
 						p.nextToken() // consume CREATION_DISPOSITION
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
 						}
 						isCreateNew := strings.ToUpper(p.curTok.Literal) == "CREATE_NEW"
-						source.KeyOptions = append(source.KeyOptions, &ast.CreationDispositionKeyOption{
+						cdOpt := &ast.CreationDispositionKeyOption{
 							IsCreateNew: isCreateNew,
 							OptionKind:  "CreationDisposition",
-						})
+						}
 						p.nextToken()
+						p.spanFrom(keyOptTok, cdOpt)
+						source.KeyOptions = append(source.KeyOptions, cdOpt)
 					default:
 						goto doneWithProviderOptions
 					}
@@ -12556,6 +12562,7 @@ func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeySt
 				}
 			doneWithProviderOptions:
 			}
+			p.spanFrom(provNameTok, source)
 			stmt.KeySource = source
 		}
 	}
@@ -14521,6 +14528,7 @@ func (p *Parser) parseCreateFulltextCatalogStatement() (*ast.CreateFullTextCatal
 					} else {
 						opt.OptionState = "Off"
 					}
+					p.tokSpan(opt, p.curTok)
 					p.nextToken() // consume ON/OFF
 					stmt.Options = append(stmt.Options, opt)
 				} else {
@@ -15552,6 +15560,11 @@ func (p *Parser) parseDeclareCursorStatementContinued(cursorName *ast.Identifier
 		CursorDefinition: &ast.CursorDefinition{},
 	}
 
+	// The cursor definition starts at the first cursor option when present
+	// (otherwise at the SELECT keyword).
+	var firstOptTok Token
+	hasOpt := false
+
 	// Parse cursor options (INSENSITIVE, SCROLL, LOCAL, GLOBAL, FORWARD_ONLY, etc.)
 	for p.curTok.Type != TokenCursor && p.curTok.Type != TokenEOF && strings.ToUpper(p.curTok.Literal) != "FOR" {
 		kwd := strings.ToUpper(p.curTok.Literal)
@@ -15559,9 +15572,15 @@ func (p *Parser) parseDeclareCursorStatementContinued(cursorName *ast.Identifier
 		case "INSENSITIVE", "SCROLL", "LOCAL", "GLOBAL", "FORWARD_ONLY", "STATIC",
 			"KEYSET", "DYNAMIC", "FAST_FORWARD", "READ_ONLY", "SCROLL_LOCKS",
 			"OPTIMISTIC", "TYPE_WARNING":
-			stmt.CursorDefinition.Options = append(stmt.CursorDefinition.Options, &ast.CursorOption{
+			if !hasOpt {
+				firstOptTok = p.curTok
+				hasOpt = true
+			}
+			cursorOpt := &ast.CursorOption{
 				OptionKind: toTitleCase(kwd),
-			})
+			}
+			p.tokSpan(cursorOpt, p.curTok)
+			stmt.CursorDefinition.Options = append(stmt.CursorDefinition.Options, cursorOpt)
 			p.nextToken()
 		default:
 			break
@@ -15583,9 +15602,15 @@ func (p *Parser) parseDeclareCursorStatementContinued(cursorName *ast.Identifier
 		case "LOCAL", "GLOBAL", "FORWARD_ONLY", "SCROLL", "STATIC", "KEYSET",
 			"DYNAMIC", "FAST_FORWARD", "READ_ONLY", "SCROLL_LOCKS", "OPTIMISTIC",
 			"TYPE_WARNING":
-			stmt.CursorDefinition.Options = append(stmt.CursorDefinition.Options, &ast.CursorOption{
+			if !hasOpt {
+				firstOptTok = p.curTok
+				hasOpt = true
+			}
+			cursorOpt := &ast.CursorOption{
 				OptionKind: toTitleCase(kwd),
-			})
+			}
+			p.tokSpan(cursorOpt, p.curTok)
+			stmt.CursorDefinition.Options = append(stmt.CursorDefinition.Options, cursorOpt)
 			p.nextToken()
 		default:
 			break
@@ -15621,6 +15646,15 @@ func (p *Parser) parseDeclareCursorStatementContinued(cursorName *ast.Identifier
 		}
 	}
 	stmt.CursorDefinition.Select = selectStmt
+	// The nested SELECT (and the cursor definition) exclude any trailing
+	// semicolon, which belongs to the DECLARE statement.
+	p.trimTrailingSemicolon(selectStmt)
+	if hasOpt {
+		p.spanFrom(firstOptTok, stmt.CursorDefinition)
+	} else {
+		p.spanFromChild(stmt.CursorDefinition, selectStmt)
+	}
+	p.trimTrailingSemicolon(stmt.CursorDefinition)
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {

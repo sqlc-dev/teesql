@@ -10154,9 +10154,11 @@ func (p *Parser) parseAlterFulltextStatement() (ast.Statement, error) {
 					}
 					if p.curTok.Type == TokenOn {
 						opt.OptionState = "On"
+						p.tokSpan(opt, p.curTok)
 						p.nextToken()
 					} else if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OFF" {
 						opt.OptionState = "Off"
+						p.tokSpan(opt, p.curTok)
 						p.nextToken()
 					}
 					stmt.Options = append(stmt.Options, opt)
@@ -11577,6 +11579,7 @@ func (p *Parser) parseCreateSequenceStatement() (*ast.CreateSequenceStatement, e
 
 // parseSequenceOption parses a single sequence option.
 func (p *Parser) parseSequenceOption() (interface{}, error) {
+	optStartTok := p.curTok
 	optionName := strings.ToUpper(p.curTok.Literal)
 
 	// Check for NO prefix
@@ -11624,10 +11627,12 @@ func (p *Parser) parseSequenceOption() (interface{}, error) {
 		optionKind = "Cycle"
 		p.nextToken()
 		// CYCLE is always a SequenceOption (not ScalarExpressionSequenceOption)
-		return &ast.SequenceOption{
+		cycleOpt := &ast.SequenceOption{
 			OptionKind: optionKind,
 			NoValue:    isNo,
-		}, nil
+		}
+		p.spanFrom(optStartTok, cycleOpt)
+		return cycleOpt, nil
 	case "CACHE":
 		optionKind = "Cache"
 		p.nextToken()
@@ -11655,44 +11660,54 @@ func (p *Parser) parseSequenceOption() (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &ast.DataTypeSequenceOption{
+		dtOpt := &ast.DataTypeSequenceOption{
 			OptionKind: "As",
 			DataType:   dataType,
 			NoValue:    false,
-		}, nil
+		}
+		p.spanFrom(optStartTok, dtOpt)
+		return dtOpt, nil
 	default:
 		return nil, nil
 	}
 
 	if isNo {
 		// NO prefix means NoValue = true
-		return &ast.SequenceOption{
+		noOpt := &ast.SequenceOption{
 			OptionKind: optionKind,
 			NoValue:    true,
-		}, nil
+		}
+		p.spanFrom(optStartTok, noOpt)
+		return noOpt, nil
 	}
 
 	if !hasValue {
-		return &ast.ScalarExpressionSequenceOption{
+		bareOpt := &ast.ScalarExpressionSequenceOption{
 			OptionKind: optionKind,
 			NoValue:    false,
-		}, nil
+		}
+		p.spanFrom(optStartTok, bareOpt)
+		return bareOpt, nil
 	}
 
 	// Parse the value
 	val, err := p.parseScalarExpression()
 	if err != nil {
-		return &ast.ScalarExpressionSequenceOption{
+		errOpt := &ast.ScalarExpressionSequenceOption{
 			OptionKind: optionKind,
 			NoValue:    false,
-		}, nil
+		}
+		p.spanFrom(optStartTok, errOpt)
+		return errOpt, nil
 	}
 
-	return &ast.ScalarExpressionSequenceOption{
+	valOpt := &ast.ScalarExpressionSequenceOption{
 		OptionKind:  optionKind,
 		OptionValue: val,
 		NoValue:     false,
-	}, nil
+	}
+	p.spanFrom(optStartTok, valOpt)
+	return valOpt, nil
 }
 
 func (p *Parser) parseAddStatement() (ast.Statement, error) {

@@ -28,7 +28,9 @@ func (t *TableClusteredIndexType) node()           {}
 func (t *TableClusteredIndexType) tableIndexType() {}
 
 // TableNonClusteredIndexType represents HEAP (non-clustered)
-type TableNonClusteredIndexType struct{}
+type TableNonClusteredIndexType struct {
+	Fragment
+}
 
 func (t *TableNonClusteredIndexType) node()           {}
 func (t *TableNonClusteredIndexType) tableIndexType() {}

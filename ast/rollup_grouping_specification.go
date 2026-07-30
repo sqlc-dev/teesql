@@ -28,7 +28,9 @@ func (*CompositeGroupingSpecification) node()                  {}
 func (*CompositeGroupingSpecification) groupingSpecification() {}
 
 // GrandTotalGroupingSpecification represents empty parentheses () which means grand total.
-type GrandTotalGroupingSpecification struct{}
+type GrandTotalGroupingSpecification struct {
+	Fragment
+}
 
 func (*GrandTotalGroupingSpecification) node()                  {}
 func (*GrandTotalGroupingSpecification) groupingSpecification() {}

@@ -147,6 +147,7 @@ func (l *LiteralEndpointProtocolOption) endpointProtocolOption() {}
 
 // IPv4 represents an IPv4 address with four octets.
 type IPv4 struct {
+	Fragment
 	OctetOne   *IntegerLiteral
 	OctetTwo   *IntegerLiteral
 	OctetThree *IntegerLiteral

@@ -41,7 +41,9 @@ func (*DropCertificateStatement) statement() {}
 func (*DropCertificateStatement) node()      {}
 
 // DropMasterKeyStatement represents a DROP MASTER KEY statement
-type DropMasterKeyStatement struct{}
+type DropMasterKeyStatement struct {
+	Fragment
+}
 
 func (*DropMasterKeyStatement) statement() {}
 func (*DropMasterKeyStatement) node()      {}

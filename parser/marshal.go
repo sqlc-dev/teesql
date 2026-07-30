@@ -4864,10 +4864,10 @@ func cursorDefinitionToJSON(cd *ast.CursorDefinition) jsonNode {
 	if len(cd.Options) > 0 {
 		opts := make([]jsonNode, len(cd.Options))
 		for i, opt := range cd.Options {
-			opts[i] = jsonNode{
+			opts[i] = addSpan(jsonNode{
 				"$type":      "CursorOption",
 				"OptionKind": opt.OptionKind,
-			}
+			}, frag(opt))
 		}
 		node["Options"] = opts
 	}
@@ -5707,6 +5707,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 								p.nextToken() // consume ORDER
 								if p.curTok.Type == TokenLParen {
 									p.nextToken() // consume (
+									firstColTok := p.curTok
 									for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 										col := &ast.ColumnReferenceExpression{
 											ColumnType: "Regular",
@@ -5725,6 +5726,9 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 									if p.curTok.Type == TokenRParen {
 										p.nextToken()
 									}
+									// ScriptDom spans the index type from the first
+									// ordered column through the closing paren.
+									p.spanFrom(firstColTok, indexType)
 								}
 							}
 							stmt.Options = append(stmt.Options, &ast.TableIndexOption{
@@ -5739,7 +5743,9 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							}
 							if p.curTok.Type == TokenLParen {
 								p.nextToken() // consume (
+								firstColTok := p.curTok
 								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									colTok := p.curTok
 									col := &ast.ColumnWithSortOrder{
 										SortOrder: ast.SortOrderNotSpecified,
 										Column: &ast.ColumnReferenceExpression{
@@ -5759,6 +5765,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 										col.SortOrder = ast.SortOrderDescending
 										p.nextToken()
 									}
+									p.spanFrom(colTok, col)
 									indexType.Columns = append(indexType.Columns, col)
 									if p.curTok.Type == TokenComma {
 										p.nextToken()
@@ -5769,6 +5776,9 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 								if p.curTok.Type == TokenRParen {
 									p.nextToken()
 								}
+								// ScriptDom spans the index type from the first
+								// column through the closing paren.
+								p.spanFrom(firstColTok, indexType)
 							}
 							stmt.Options = append(stmt.Options, &ast.TableIndexOption{
 								Value:      indexType,
@@ -5776,8 +5786,10 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							})
 						}
 					} else if optionName == "HEAP" {
+						heapType := &ast.TableNonClusteredIndexType{}
+						p.tokSpan(heapType, optNameTok)
 						stmt.Options = append(stmt.Options, &ast.TableIndexOption{
-							Value:      &ast.TableNonClusteredIndexType{},
+							Value:      heapType,
 							OptionKind: "LockEscalation",
 						})
 					} else if optionName == "DISTRIBUTION" {
@@ -5785,6 +5797,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
 						}
+						distTypeTok := p.curTok
 						distTypeUpper := strings.ToUpper(p.curTok.Literal)
 						if distTypeUpper == "HASH" {
 							p.nextToken() // consume HASH
@@ -5807,23 +5820,35 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 								if p.curTok.Type == TokenRParen {
 									p.nextToken()
 								}
-								stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+								p.spanFrom(distTypeTok, hashPolicy)
+								distOpt := &ast.TableDistributionOption{
 									OptionKind: "Distribution",
 									Value:      hashPolicy,
-								})
+								}
+								// ScriptDom positions the option on the DISTRIBUTION keyword.
+								p.tokSpan(distOpt, optNameTok)
+								stmt.Options = append(stmt.Options, distOpt)
 							}
 						} else if distTypeUpper == "ROUND_ROBIN" {
 							p.nextToken() // consume ROUND_ROBIN
-							stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+							rrPolicy := &ast.TableRoundRobinDistributionPolicy{}
+							p.tokSpan(rrPolicy, distTypeTok)
+							distOpt := &ast.TableDistributionOption{
 								OptionKind: "Distribution",
-								Value:      &ast.TableRoundRobinDistributionPolicy{},
-							})
+								Value:      rrPolicy,
+							}
+							p.tokSpan(distOpt, optNameTok)
+							stmt.Options = append(stmt.Options, distOpt)
 						} else if distTypeUpper == "REPLICATE" {
 							p.nextToken() // consume REPLICATE
-							stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+							repPolicy := &ast.TableReplicateDistributionPolicy{}
+							p.tokSpan(repPolicy, distTypeTok)
+							distOpt := &ast.TableDistributionOption{
 								OptionKind: "Distribution",
-								Value:      &ast.TableReplicateDistributionPolicy{},
-							})
+								Value:      repPolicy,
+							}
+							p.tokSpan(distOpt, optNameTok)
+							stmt.Options = append(stmt.Options, distOpt)
 						} else {
 							// Unknown distribution - skip for now
 							p.nextToken()
@@ -5842,12 +5867,18 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							if strings.ToUpper(p.curTok.Literal) == "RANGE" {
 								p.nextToken() // consume RANGE
 								// Check for LEFT or RIGHT
+								var dirTok Token
+								hasDir := false
 								rangeDir := strings.ToUpper(p.curTok.Literal)
 								if rangeDir == "LEFT" {
 									partOpt.PartitionOptionSpecs.Range = "Left"
+									dirTok = p.curTok
+									hasDir = true
 									p.nextToken()
 								} else if rangeDir == "RIGHT" {
 									partOpt.PartitionOptionSpecs.Range = "Right"
+									dirTok = p.curTok
+									hasDir = true
 									p.nextToken()
 								} else {
 									partOpt.PartitionOptionSpecs.Range = "NotSpecified"
@@ -5875,6 +5906,15 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 										}
 									}
 									if p.curTok.Type == TokenRParen {
+										// ScriptDom spans the specifications from the
+										// range direction (when present) through the
+										// closing paren of the VALUES list; without a
+										// direction only the closing paren is covered.
+										if hasDir {
+											p.spanTokens(partOpt.PartitionOptionSpecs, dirTok, p.curTok)
+										} else {
+											p.spanTokens(partOpt.PartitionOptionSpecs, p.curTok, p.curTok)
+										}
 										p.nextToken() // consume )
 									}
 								}
@@ -5882,6 +5922,9 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 							if p.curTok.Type == TokenRParen {
 								p.nextToken() // consume )
 							}
+							// ScriptDom spans the option from the PARTITION keyword
+							// through the closing paren.
+							p.spanFrom(optNameTok, partOpt)
 							stmt.Options = append(stmt.Options, partOpt)
 						}
 					} else {
@@ -6151,6 +6194,7 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 								p.nextToken() // consume ORDER
 								if p.curTok.Type == TokenLParen {
 									p.nextToken() // consume (
+									firstColTok := p.curTok
 									for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 										col := &ast.ColumnReferenceExpression{
 											ColumnType: "Regular",
@@ -6169,6 +6213,9 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 									if p.curTok.Type == TokenRParen {
 										p.nextToken()
 									}
+									// ScriptDom spans the index type from the first
+									// ordered column through the closing paren.
+									p.spanFrom(firstColTok, indexType)
 								}
 							}
 							stmt.Options = append(stmt.Options, &ast.TableIndexOption{
@@ -6183,7 +6230,9 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 							}
 							if p.curTok.Type == TokenLParen {
 								p.nextToken() // consume (
+								firstColTok := p.curTok
 								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+									colTok := p.curTok
 									col := &ast.ColumnWithSortOrder{
 										SortOrder: ast.SortOrderNotSpecified,
 										Column: &ast.ColumnReferenceExpression{
@@ -6203,6 +6252,7 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 										col.SortOrder = ast.SortOrderDescending
 										p.nextToken()
 									}
+									p.spanFrom(colTok, col)
 									indexType.Columns = append(indexType.Columns, col)
 									if p.curTok.Type == TokenComma {
 										p.nextToken()
@@ -6213,6 +6263,9 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 								if p.curTok.Type == TokenRParen {
 									p.nextToken()
 								}
+								// ScriptDom spans the index type from the first
+								// column through the closing paren.
+								p.spanFrom(firstColTok, indexType)
 							}
 							stmt.Options = append(stmt.Options, &ast.TableIndexOption{
 								Value:      indexType,
@@ -6220,8 +6273,10 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 							})
 						}
 					} else if optionName == "HEAP" {
+						heapType := &ast.TableNonClusteredIndexType{}
+						p.tokSpan(heapType, optNameTok)
 						stmt.Options = append(stmt.Options, &ast.TableIndexOption{
-							Value:      &ast.TableNonClusteredIndexType{},
+							Value:      heapType,
 							OptionKind: "LockEscalation",
 						})
 					} else if optionName == "DISTRIBUTION" {
@@ -6229,6 +6284,7 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
 						}
+						distTypeTok := p.curTok
 						distTypeUpper := strings.ToUpper(p.curTok.Literal)
 						if distTypeUpper == "HASH" {
 							p.nextToken() // consume HASH
@@ -6251,23 +6307,35 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 								if p.curTok.Type == TokenRParen {
 									p.nextToken()
 								}
-								stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+								p.spanFrom(distTypeTok, hashPolicy)
+								distOpt := &ast.TableDistributionOption{
 									OptionKind: "Distribution",
 									Value:      hashPolicy,
-								})
+								}
+								// ScriptDom positions the option on the DISTRIBUTION keyword.
+								p.tokSpan(distOpt, optNameTok)
+								stmt.Options = append(stmt.Options, distOpt)
 							}
 						} else if distTypeUpper == "ROUND_ROBIN" {
 							p.nextToken() // consume ROUND_ROBIN
-							stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+							rrPolicy := &ast.TableRoundRobinDistributionPolicy{}
+							p.tokSpan(rrPolicy, distTypeTok)
+							distOpt := &ast.TableDistributionOption{
 								OptionKind: "Distribution",
-								Value:      &ast.TableRoundRobinDistributionPolicy{},
-							})
+								Value:      rrPolicy,
+							}
+							p.tokSpan(distOpt, optNameTok)
+							stmt.Options = append(stmt.Options, distOpt)
 						} else if distTypeUpper == "REPLICATE" {
 							p.nextToken() // consume REPLICATE
-							stmt.Options = append(stmt.Options, &ast.TableDistributionOption{
+							repPolicy := &ast.TableReplicateDistributionPolicy{}
+							p.tokSpan(repPolicy, distTypeTok)
+							distOpt := &ast.TableDistributionOption{
 								OptionKind: "Distribution",
-								Value:      &ast.TableReplicateDistributionPolicy{},
-							})
+								Value:      repPolicy,
+							}
+							p.tokSpan(distOpt, optNameTok)
+							stmt.Options = append(stmt.Options, distOpt)
 						} else {
 							// Unknown distribution - skip for now
 							p.nextToken()
@@ -7671,6 +7739,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					cwsTok := p.curTok
 					colRef := &ast.ColumnReferenceExpression{
 						ColumnType: "Regular",
 						MultiPartIdentifier: &ast.MultiPartIdentifier{
@@ -7686,10 +7755,12 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 						sortOrder = ast.SortOrderDescending
 						p.nextToken()
 					}
-					constraint.Columns = append(constraint.Columns, &ast.ColumnWithSortOrder{
+					cwsCol := &ast.ColumnWithSortOrder{
 						Column:    colRef,
 						SortOrder: sortOrder,
-					})
+					}
+					p.spanFrom(cwsTok, cwsCol)
+					constraint.Columns = append(constraint.Columns, cwsCol)
 					if p.curTok.Type == TokenComma {
 						p.nextToken()
 					} else {
@@ -7919,6 +7990,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					cwsTok := p.curTok
 					colWithSort := &ast.ColumnWithSortOrder{
 						SortOrder: ast.SortOrderNotSpecified,
 					}
@@ -7940,6 +8012,7 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 						colWithSort.SortOrder = ast.SortOrderDescending
 						p.nextToken()
 					}
+					p.spanFrom(cwsTok, colWithSort)
 					indexDef.Columns = append(indexDef.Columns, colWithSort)
 
 					if p.curTok.Type == TokenComma {
@@ -12347,7 +12420,7 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 		dbName := &ast.IdentifierOrValueExpression{}
 		if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 			// Variable reference
-			varRef := &ast.VariableReference{Name: p.curTok.Literal}
+			varRef := p.spanVarRef(p.curTok.Literal)
 			p.nextToken()
 			dbName.Value = varRef.Name
 			dbName.ValueExpression = varRef
@@ -12382,7 +12455,7 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 				item = p.strLit(val, p.curTok.Type == TokenNationalString)
 				p.nextToken()
 			} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-				item = &ast.VariableReference{Name: p.curTok.Literal}
+				item = p.spanVarRef(p.curTok.Literal)
 				p.nextToken()
 			} else {
 				ident := p.parseIdentifier()
@@ -12458,7 +12531,7 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 				device.PhysicalDevice = strLit
 				p.nextToken()
 			} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-				varRef := &ast.VariableReference{Name: p.curTok.Literal}
+				varRef := p.spanVarRef(p.curTok.Literal)
 				device.PhysicalDevice = varRef
 				p.nextToken()
 			}
@@ -12466,7 +12539,7 @@ func (p *Parser) parseRestoreStatement() (ast.Statement, error) {
 			// For other device types, use LogicalDevice
 			deviceName := &ast.IdentifierOrValueExpression{}
 			if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-				varRef := &ast.VariableReference{Name: p.curTok.Literal}
+				varRef := p.spanVarRef(p.curTok.Literal)
 				p.nextToken()
 				deviceName.Value = varRef.Name
 				deviceName.ValueExpression = varRef
@@ -14786,6 +14859,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 
 		// Parse optional ORDER clause for CLR table-valued functions
 		if strings.ToUpper(p.curTok.Literal) == "ORDER" {
+			orderTok := p.curTok
 			p.nextToken() // consume ORDER
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
@@ -14796,6 +14870,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 
 				// Parse columns with sort order
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					cwsTok := p.curTok
 					colWithSort := &ast.ColumnWithSortOrder{
 						Column: &ast.ColumnReferenceExpression{
 							ColumnType: "Regular",
@@ -14817,6 +14892,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 						p.nextToken()
 					}
 
+					p.spanFrom(cwsTok, colWithSort)
 					orderHint.Columns = append(orderHint.Columns, colWithSort)
 
 					if p.curTok.Type == TokenComma {
@@ -14830,6 +14906,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 					p.nextToken()
 				}
 
+				p.spanFrom(orderTok, orderHint)
 				stmt.OrderHint = orderHint
 			}
 		}
@@ -17673,11 +17750,11 @@ func createSequenceStatementToJSON(s *ast.CreateSequenceStatement) jsonNode {
 func sequenceOptionToJSON(opt interface{}) jsonNode {
 	switch o := opt.(type) {
 	case *ast.SequenceOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "SequenceOption",
 			"OptionKind": o.OptionKind,
 			"NoValue":    o.NoValue,
-		}
+		}, frag(o))
 	case *ast.ScalarExpressionSequenceOption:
 		node := jsonNode{
 			"$type":      "ScalarExpressionSequenceOption",
@@ -17687,7 +17764,7 @@ func sequenceOptionToJSON(opt interface{}) jsonNode {
 		if o.OptionValue != nil {
 			node["OptionValue"] = scalarExpressionToJSON(o.OptionValue)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.DataTypeSequenceOption:
 		node := jsonNode{
 			"$type":      "DataTypeSequenceOption",
@@ -17697,7 +17774,7 @@ func sequenceOptionToJSON(opt interface{}) jsonNode {
 		if o.DataType != nil {
 			node["DataType"] = dataTypeReferenceToJSON(o.DataType)
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
 		return jsonNode{}
 	}
@@ -19461,7 +19538,7 @@ func alterFulltextCatalogStatementToJSON(s *ast.AlterFulltextCatalogStatement) j
 			if opt.OptionKind != "" {
 				optNode["OptionKind"] = opt.OptionKind
 			}
-			opts[i] = optNode
+			opts[i] = addSpan(optNode, frag(opt))
 		}
 		node["Options"] = opts
 	}
@@ -19497,7 +19574,7 @@ func createFullTextCatalogStatementToJSON(s *ast.CreateFullTextCatalogStatement)
 			if opt.OptionKind != "" {
 				optNode["OptionKind"] = opt.OptionKind
 			}
-			opts[i] = optNode
+			opts[i] = addSpan(optNode, frag(opt))
 		}
 		node["Options"] = opts
 	}
@@ -20270,7 +20347,7 @@ func encryptionSourceToJSON(source ast.EncryptionSource) interface{} {
 		if s.Assembly != nil {
 			node["Assembly"] = identifierToJSON(s.Assembly)
 		}
-		return node
+		return addSpan(node, frag(s))
 	case *ast.FileEncryptionSource:
 		node := jsonNode{
 			"$type":        "FileEncryptionSource",
@@ -20279,7 +20356,7 @@ func encryptionSourceToJSON(source ast.EncryptionSource) interface{} {
 		if s.File != nil {
 			node["File"] = stringLiteralToJSON(s.File)
 		}
-		return node
+		return addSpan(node, frag(s))
 	default:
 		return nil
 	}
@@ -20305,11 +20382,11 @@ func providerEncryptionSourceToJSON(s *ast.ProviderEncryptionSource) jsonNode {
 func keyOptionToJSON(opt ast.KeyOption) interface{} {
 	switch o := opt.(type) {
 	case *ast.AlgorithmKeyOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":      "AlgorithmKeyOption",
 			"Algorithm":  o.Algorithm,
 			"OptionKind": o.OptionKind,
-		}
+		}, frag(o))
 	case *ast.ProviderKeyNameKeyOption:
 		node := jsonNode{
 			"$type":      "ProviderKeyNameKeyOption",
@@ -20318,13 +20395,13 @@ func keyOptionToJSON(opt ast.KeyOption) interface{} {
 		if o.KeyName != nil {
 			node["KeyName"] = scalarExpressionToJSON(o.KeyName)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.CreationDispositionKeyOption:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":       "CreationDispositionKeyOption",
 			"IsCreateNew": o.IsCreateNew,
 			"OptionKind":  o.OptionKind,
-		}
+		}, frag(o))
 	case *ast.KeySourceKeyOption:
 		node := jsonNode{
 			"$type":      "KeySourceKeyOption",
@@ -20333,7 +20410,7 @@ func keyOptionToJSON(opt ast.KeyOption) interface{} {
 		if o.PassPhrase != nil {
 			node["PassPhrase"] = scalarExpressionToJSON(o.PassPhrase)
 		}
-		return node
+		return addSpan(node, frag(o))
 	case *ast.IdentityValueKeyOption:
 		node := jsonNode{
 			"$type":      "IdentityValueKeyOption",
@@ -20342,7 +20419,7 @@ func keyOptionToJSON(opt ast.KeyOption) interface{} {
 		if o.IdentityPhrase != nil {
 			node["IdentityPhrase"] = scalarExpressionToJSON(o.IdentityPhrase)
 		}
-		return node
+		return addSpan(node, frag(o))
 	default:
 		return nil
 	}
@@ -22079,10 +22156,10 @@ func declareCursorDefinitionToJSON(d *ast.CursorDefinition) jsonNode {
 	if len(d.Options) > 0 {
 		opts := make([]jsonNode, len(d.Options))
 		for i, o := range d.Options {
-			opts[i] = jsonNode{
+			opts[i] = addSpan(jsonNode{
 				"$type":      "CursorOption",
 				"OptionKind": o.OptionKind,
-			}
+			}, frag(o))
 		}
 		node["Options"] = opts
 	}
