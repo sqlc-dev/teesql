@@ -595,24 +595,28 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 					includeCol := &ast.ColumnReferenceExpression{
 						ColumnType: "PseudoColumnGraphNodeId",
 					}
+					p.tokSpan(includeCol, p.curTok)
 					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
 					p.nextToken()
 				} else if upperLit == "$EDGE_ID" {
 					includeCol := &ast.ColumnReferenceExpression{
 						ColumnType: "PseudoColumnGraphEdgeId",
 					}
+					p.tokSpan(includeCol, p.curTok)
 					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
 					p.nextToken()
 				} else if upperLit == "$FROM_ID" {
 					includeCol := &ast.ColumnReferenceExpression{
 						ColumnType: "PseudoColumnGraphFromId",
 					}
+					p.tokSpan(includeCol, p.curTok)
 					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
 					p.nextToken()
 				} else if upperLit == "$TO_ID" {
 					includeCol := &ast.ColumnReferenceExpression{
 						ColumnType: "PseudoColumnGraphToId",
 					}
+					p.tokSpan(includeCol, p.curTok)
 					indexDef.IncludeColumns = append(indexDef.IncludeColumns, includeCol)
 					p.nextToken()
 				} else {
@@ -790,6 +794,12 @@ func (p *Parser) parseInlineIndexDefinition() (*ast.IndexDefinition, error) {
 					// ScriptDom spans BUCKET_COUNT on its value only.
 					if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
 						p.spanFromChild(eo, eo.Expression)
+					}
+					// ScriptDom excludes the trailing time unit from COMPRESSION_DELAY.
+					if co, ok := last.(*ast.CompressionDelayIndexOption); ok {
+						if c, ok2 := any(co.Expression).(spannable); ok2 && c.Frag().HasSpan() && co.Frag().HasSpan() {
+							co.Frag().FragmentLength = c.Frag().EndOffset() - co.Frag().StartOffset
+						}
 					}
 				}
 				if p.curTok.Type == TokenComma {
@@ -5345,6 +5355,7 @@ func (p *Parser) parseCreateSchemaStatement() (*ast.CreateSchemaStatement, error
 		p.nextToken()
 	}
 
+	spanStatementList(stmt.StatementList)
 	return spanned(p, stmt, astStart), nil
 }
 
@@ -11501,21 +11512,25 @@ func (p *Parser) parseCreateIndexStatement() (*ast.CreateIndexStatement, error) 
 					colRef = &ast.ColumnReferenceExpression{
 						ColumnType: "PseudoColumnGraphNodeId",
 					}
+					p.tokSpan(colRef, p.curTok)
 					p.nextToken()
 				} else if upperLit == "$EDGE_ID" {
 					colRef = &ast.ColumnReferenceExpression{
 						ColumnType: "PseudoColumnGraphEdgeId",
 					}
+					p.tokSpan(colRef, p.curTok)
 					p.nextToken()
 				} else if upperLit == "$FROM_ID" {
 					colRef = &ast.ColumnReferenceExpression{
 						ColumnType: "PseudoColumnGraphFromId",
 					}
+					p.tokSpan(colRef, p.curTok)
 					p.nextToken()
 				} else if upperLit == "$TO_ID" {
 					colRef = &ast.ColumnReferenceExpression{
 						ColumnType: "PseudoColumnGraphToId",
 					}
+					p.tokSpan(colRef, p.curTok)
 					p.nextToken()
 				} else {
 					colRef = &ast.ColumnReferenceExpression{
@@ -11869,6 +11884,12 @@ func (p *Parser) parseCreateIndexOptions() []ast.IndexOption {
 			// ScriptDom spans BUCKET_COUNT on its value only.
 			if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
 				p.spanFromChild(eo, eo.Expression)
+			}
+			// ScriptDom excludes the trailing time unit from COMPRESSION_DELAY.
+			if co, ok := last.(*ast.CompressionDelayIndexOption); ok {
+				if c, ok2 := any(co.Expression).(spannable); ok2 && c.Frag().HasSpan() && co.Frag().HasSpan() {
+					co.Frag().FragmentLength = c.Frag().EndOffset() - co.Frag().StartOffset
+				}
 			}
 		}
 
@@ -15675,6 +15696,7 @@ func (p *Parser) parseCreateWorkloadGroupStatement() (*ast.CreateWorkloadGroupSt
 // parseWorkloadGroupParameter parses a single workload group parameter.
 func (p *Parser) parseWorkloadGroupParameter() (interface{}, error) {
 	// Parse parameter name
+	paramTok := p.curTok
 	paramName := strings.ToUpper(p.curTok.Literal)
 	p.nextToken()
 
@@ -15701,11 +15723,13 @@ func (p *Parser) parseWorkloadGroupParameter() (interface{}, error) {
 		case "HIGH":
 			importanceValue = "High"
 		}
-		p.nextToken()
-		return &ast.WorkloadGroupImportanceParameter{
+		imp := &ast.WorkloadGroupImportanceParameter{
 			ParameterType:  "Importance",
 			ParameterValue: importanceValue,
-		}, nil
+		}
+		p.nextToken()
+		p.spanFrom(paramTok, imp)
+		return imp, nil
 	}
 
 	param := &ast.WorkloadGroupResourceParameter{}
@@ -15743,6 +15767,7 @@ func (p *Parser) parseWorkloadGroupParameter() (interface{}, error) {
 	}
 	param.ParameterValue = val
 
+	p.spanFrom(paramTok, param)
 	return param, nil
 }
 

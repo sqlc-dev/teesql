@@ -5610,6 +5610,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 				p.nextToken() // consume (
 				// Parse table options
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optNameTok := p.curTok
 					optionName := strings.ToUpper(p.curTok.Literal)
 					p.nextToken() // consume option name
 
@@ -5672,7 +5673,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						}
 						stmt.Options = append(stmt.Options, opt)
 					} else if optionName == "SYSTEM_VERSIONING" {
-						opt, err := p.parseSystemVersioningTableOption()
+						opt, err := p.parseSystemVersioningTableOption(optNameTok)
 						if err != nil {
 							return nil, err
 						}
@@ -6009,6 +6010,8 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 				p.nextToken() // consume (
 				// Parse table options
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					optNameTok := p.curTok
+					_ = optNameTok
 					optionName := strings.ToUpper(p.curTok.Literal)
 					p.nextToken() // consume option name
 
@@ -8050,6 +8053,12 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 							if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
 								p.spanFromChild(eo, eo.Expression)
 							}
+							// ScriptDom excludes the trailing time unit from COMPRESSION_DELAY.
+							if co, ok := last.(*ast.CompressionDelayIndexOption); ok {
+								if c, ok2 := any(co.Expression).(spannable); ok2 && c.Frag().HasSpan() && co.Frag().HasSpan() {
+									co.Frag().FragmentLength = c.Frag().EndOffset() - co.Frag().StartOffset
+								}
+							}
 						}
 						if p.curTok.Type == TokenComma {
 							p.nextToken()
@@ -8808,21 +8817,25 @@ func (p *Parser) parseColumnWithSortOrder() *ast.ColumnWithSortOrder {
 		col.Column = &ast.ColumnReferenceExpression{
 			ColumnType: "PseudoColumnGraphNodeId",
 		}
+		p.tokSpan(col.Column, p.curTok)
 		p.nextToken()
 	} else if upperLit == "$EDGE_ID" {
 		col.Column = &ast.ColumnReferenceExpression{
 			ColumnType: "PseudoColumnGraphEdgeId",
 		}
+		p.tokSpan(col.Column, p.curTok)
 		p.nextToken()
 	} else if upperLit == "$FROM_ID" {
 		col.Column = &ast.ColumnReferenceExpression{
 			ColumnType: "PseudoColumnGraphFromId",
 		}
+		p.tokSpan(col.Column, p.curTok)
 		p.nextToken()
 	} else if upperLit == "$TO_ID" {
 		col.Column = &ast.ColumnReferenceExpression{
 			ColumnType: "PseudoColumnGraphToId",
 		}
+		p.tokSpan(col.Column, p.curTok)
 		p.nextToken()
 	} else {
 		// Parse regular column name
@@ -8872,10 +8885,7 @@ func (p *Parser) parseGrantStatement() (*ast.GrantStatement, error) {
 			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
 			p.curTok.Type == TokenSchema || p.curTok.Type == TokenMaster ||
 			p.curTok.Type == TokenKey || p.curTok.Type == TokenEncryption {
-			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
-				Value:     p.curTok.Literal,
-				QuoteType: "NotQuoted",
-			})
+			perm.Identifiers = append(perm.Identifiers, p.spanIdent(p.curTok.Literal, "NotQuoted"))
 			p.nextToken()
 		} else if p.curTok.Type == TokenLParen {
 			// Column list for permission (e.g., SELECT (c1, c2))
@@ -9168,10 +9178,7 @@ func (p *Parser) parseRevokeStatement() (*ast.RevokeStatement, error) {
 			p.curTok.Type == TokenFunction || p.curTok.Type == TokenBackup ||
 			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
 			p.curTok.Type == TokenSchema {
-			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
-				Value:     p.curTok.Literal,
-				QuoteType: "NotQuoted",
-			})
+			perm.Identifiers = append(perm.Identifiers, p.spanIdent(p.curTok.Literal, "NotQuoted"))
 			p.nextToken()
 		} else if p.curTok.Type == TokenLParen {
 			// Parse column list for permission
@@ -9445,10 +9452,7 @@ func (p *Parser) parseDenyStatement() (*ast.DenyStatement, error) {
 			p.curTok.Type == TokenDefault || p.curTok.Type == TokenTrigger ||
 			p.curTok.Type == TokenSchema || p.curTok.Type == TokenMaster ||
 			p.curTok.Type == TokenKey || p.curTok.Type == TokenEncryption {
-			perm.Identifiers = append(perm.Identifiers, &ast.Identifier{
-				Value:     p.curTok.Literal,
-				QuoteType: "NotQuoted",
-			})
+			perm.Identifiers = append(perm.Identifiers, p.spanIdent(p.curTok.Literal, "NotQuoted"))
 			p.nextToken()
 		} else if p.curTok.Type == TokenLParen {
 			// Column list for permission (e.g., SELECT (c1, c2))
@@ -13069,21 +13073,25 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 				colRef = &ast.ColumnReferenceExpression{
 					ColumnType: "PseudoColumnGraphNodeId",
 				}
+				p.tokSpan(colRef, p.curTok)
 				p.nextToken()
 			} else if upperLit == "$EDGE_ID" {
 				colRef = &ast.ColumnReferenceExpression{
 					ColumnType: "PseudoColumnGraphEdgeId",
 				}
+				p.tokSpan(colRef, p.curTok)
 				p.nextToken()
 			} else if upperLit == "$FROM_ID" {
 				colRef = &ast.ColumnReferenceExpression{
 					ColumnType: "PseudoColumnGraphFromId",
 				}
+				p.tokSpan(colRef, p.curTok)
 				p.nextToken()
 			} else if upperLit == "$TO_ID" {
 				colRef = &ast.ColumnReferenceExpression{
 					ColumnType: "PseudoColumnGraphToId",
 				}
+				p.tokSpan(colRef, p.curTok)
 				p.nextToken()
 			} else {
 				colRef = &ast.ColumnReferenceExpression{
@@ -13399,6 +13407,12 @@ func (p *Parser) parseCreateColumnStoreIndexStatement() (*ast.CreateColumnStoreI
 					}
 					if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
 						p.spanFromChild(eo, eo.Expression)
+					}
+					// ScriptDom excludes the trailing time unit from COMPRESSION_DELAY.
+					if co, ok := last.(*ast.CompressionDelayIndexOption); ok {
+						if c, ok2 := any(co.Expression).(spannable); ok2 && c.Frag().HasSpan() && co.Frag().HasSpan() {
+							co.Frag().FragmentLength = c.Frag().EndOffset() - co.Frag().StartOffset
+						}
 					}
 				}
 			}
@@ -13958,6 +13972,12 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 					if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
 						p.spanFromChild(eo, eo.Expression)
 					}
+					// ScriptDom excludes the trailing time unit from COMPRESSION_DELAY.
+					if co, ok := last.(*ast.CompressionDelayIndexOption); ok {
+						if c, ok2 := any(co.Expression).(spannable); ok2 && c.Frag().HasSpan() && co.Frag().HasSpan() {
+							co.Frag().FragmentLength = c.Frag().EndOffset() - co.Frag().StartOffset
+						}
+					}
 				}
 
 				if p.curTok.Type == TokenComma {
@@ -14242,6 +14262,12 @@ func (p *Parser) parseAlterIndexStatement() (*ast.AlterIndexStatement, error) {
 					}
 					if eo, ok := last.(*ast.IndexExpressionOption); ok && eo.OptionKind == "BucketCount" {
 						p.spanFromChild(eo, eo.Expression)
+					}
+					// ScriptDom excludes the trailing time unit from COMPRESSION_DELAY.
+					if co, ok := last.(*ast.CompressionDelayIndexOption); ok {
+						if c, ok2 := any(co.Expression).(spannable); ok2 && c.Frag().HasSpan() && co.Frag().HasSpan() {
+							co.Frag().FragmentLength = c.Frag().EndOffset() - co.Frag().StartOffset
+						}
 					}
 				}
 
@@ -17420,13 +17446,13 @@ func workloadGroupParameterToJSON(p interface{}) jsonNode {
 		if param.ParameterValue != nil {
 			node["ParameterValue"] = scalarExpressionToJSON(param.ParameterValue)
 		}
-		return node
+		return addSpan(node, frag(param))
 	case *ast.WorkloadGroupImportanceParameter:
-		return jsonNode{
+		return addSpan(jsonNode{
 			"$type":          "WorkloadGroupImportanceParameter",
 			"ParameterType":  param.ParameterType,
 			"ParameterValue": param.ParameterValue,
-		}
+		}, frag(param))
 	default:
 		return jsonNode{}
 	}

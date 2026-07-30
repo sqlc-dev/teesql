@@ -7003,8 +7003,10 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 			}
 			// Parse (start_column, end_column)
 			var startCol, endCol *ast.Identifier
+			var periodStart Token
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
+				periodStart = p.curTok
 				startCol = p.parseIdentifier()
 				if p.curTok.Type == TokenComma {
 					p.nextToken() // consume ,
@@ -7014,10 +7016,16 @@ func (p *Parser) parseAlterTableAddStatement(tableName *ast.SchemaObjectName) (*
 					p.nextToken() // consume )
 				}
 			}
-			stmt.Definition.SystemTimePeriod = &ast.SystemTimePeriodDefinition{
+			stp := &ast.SystemTimePeriodDefinition{
 				StartTimeColumn: startCol,
 				EndTimeColumn:   endCol,
 			}
+			// ScriptDom spans the period from the first column name through
+			// the closing paren.
+			if periodStart.Literal != "" {
+				p.spanFrom(periodStart, stp)
+			}
+			stmt.Definition.SystemTimePeriod = stp
 		} else {
 			// Parse column definition (column_name data_type ...)
 			colDef, err := p.parseColumnDefinition()
@@ -7410,11 +7418,12 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 
 	// Parse options
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		optTok := p.curTok
 		optionName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
 
 		if optionName == "SYSTEM_VERSIONING" {
-			opt, err := p.parseSystemVersioningTableOption()
+			opt, err := p.parseSystemVersioningTableOption(optTok)
 			if err != nil {
 				return nil, err
 			}
@@ -7520,9 +7529,7 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 	return spanned(p, stmt, astStart), nil
 }
 
-func (p *Parser) parseSystemVersioningTableOption() (*ast.SystemVersioningTableOption, error) {
-	astStart := p.curTok
-
+func (p *Parser) parseSystemVersioningTableOption(kwTok Token) (*ast.SystemVersioningTableOption, error) {
 	opt := &ast.SystemVersioningTableOption{
 		OptionKind:              "LockEscalation",
 		ConsistencyCheckEnabled: "NotSet",
@@ -7587,13 +7594,20 @@ func (p *Parser) parseSystemVersioningTableOption() (*ast.SystemVersioningTableO
 			}
 		}
 
+		// ScriptDom ends this option's span before the closing paren.
+		p.spanFrom(kwTok, opt)
+
 		// Consume )
 		if p.curTok.Type == TokenRParen {
 			p.nextToken()
 		}
 	}
+	if !opt.HasSpan() {
+		// Without sub-options the span covers only the keyword.
+		p.tokSpan(opt, kwTok)
+	}
 
-	return spanned(p, opt, astStart), nil
+	return opt, nil
 }
 
 func (p *Parser) parseLedgerTableOption() (*ast.LedgerTableOption, error) {

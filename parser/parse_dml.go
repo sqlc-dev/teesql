@@ -1169,13 +1169,19 @@ func (p *Parser) parseColumnList() ([]*ast.ColumnReferenceExpression, error) {
 		lit := p.curTok.Literal
 		upperLit := strings.ToUpper(lit)
 		if upperLit == "$ACTION" {
-			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnAction"})
+			cr := &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnAction"}
+			p.tokSpan(cr, p.curTok)
+			cols = append(cols, cr)
 			p.nextToken()
 		} else if upperLit == "$CUID" {
-			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"})
+			cr := &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"}
+			p.tokSpan(cr, p.curTok)
+			cols = append(cols, cr)
 			p.nextToken()
 		} else if upperLit == "$ROWGUID" {
-			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnRowGuid"})
+			cr := &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnRowGuid"}
+			p.tokSpan(cr, p.curTok)
+			cols = append(cols, cr)
 			p.nextToken()
 		} else {
 			col, err := p.parseMultiPartIdentifierAsColumn()
@@ -2072,6 +2078,7 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 		clause.Column = &ast.ColumnReferenceExpression{
 			ColumnType: "PseudoColumnRowGuid",
 		}
+		p.tokSpan(clause.Column, p.curTok)
 		p.nextToken()
 	} else {
 		// col = value or col ||= value
@@ -2770,6 +2777,8 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 		p.nextToken() // consume WITH
 
 		for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+			optTok := p.curTok
+			lenBefore := len(stmt.StatisticsOptions)
 			optionName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume option name
 
@@ -2800,13 +2809,18 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 					p.nextToken()
 				}
 				val := p.curTok.Literal
+				valTok := p.curTok
 				p.nextToken()
 				// Use NumericLiteral for very large numbers, IntegerLiteral otherwise
 				var literal ast.ScalarExpression
 				if len(val) > 18 { // Numbers > 18 digits are likely > MaxInt64
-					literal = &ast.NumericLiteral{LiteralType: "Numeric", Value: val}
+					nl := &ast.NumericLiteral{LiteralType: "Numeric", Value: val}
+					p.tokSpan(nl, valTok)
+					literal = nl
 				} else {
-					literal = &ast.IntegerLiteral{LiteralType: "Integer", Value: val}
+					il := &ast.IntegerLiteral{LiteralType: "Integer", Value: val}
+					p.tokSpan(il, valTok)
+					literal = il
 				}
 				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
 					OptionKind: "RowCount",
@@ -2818,13 +2832,18 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 					p.nextToken()
 				}
 				val := p.curTok.Literal
+				valTok := p.curTok
 				p.nextToken()
 				// Use NumericLiteral for very large numbers, IntegerLiteral otherwise
 				var literal ast.ScalarExpression
 				if len(val) > 18 { // Numbers > 18 digits are likely > MaxInt64
-					literal = &ast.NumericLiteral{LiteralType: "Numeric", Value: val}
+					nl := &ast.NumericLiteral{LiteralType: "Numeric", Value: val}
+					p.tokSpan(nl, valTok)
+					literal = nl
 				} else {
-					literal = &ast.IntegerLiteral{LiteralType: "Integer", Value: val}
+					il := &ast.IntegerLiteral{LiteralType: "Integer", Value: val}
+					p.tokSpan(il, valTok)
+					literal = il
 				}
 				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
 					OptionKind: "PageCount",
@@ -2905,17 +2924,39 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 					p.nextToken()
 				}
 				val := p.curTok.Literal
+				bl := &ast.BinaryLiteral{
+					LiteralType:   "Binary",
+					Value:         val,
+					IsLargeObject: false,
+				}
+				p.tokSpan(bl, p.curTok)
 				p.nextToken()
 				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
 					OptionKind: "StatsStream",
-					Literal: &ast.BinaryLiteral{
-						LiteralType:   "Binary",
-						Value:         val,
-						IsLargeObject: false,
-					},
+					Literal:    bl,
 				})
 			default:
 				// Unknown option, skip
+			}
+
+			if len(stmt.StatisticsOptions) > lenBefore {
+				last := stmt.StatisticsOptions[len(stmt.StatisticsOptions)-1]
+				switch o := last.(type) {
+				case *ast.SimpleStatisticsOption:
+					// ScriptDom spans keyword-only options on their keyword.
+					p.tokSpan(o, optTok)
+				case *ast.LiteralStatisticsOption:
+					if o.OptionKind == "RowCount" || o.OptionKind == "PageCount" {
+						p.spanFrom(optTok, o)
+					} else {
+						// SAMPLE n PERCENT/ROWS and STATS_STREAM span from the value.
+						p.spanFromChild(o, o.Literal)
+					}
+				default:
+					if sp, ok := last.(spannable); ok {
+						p.spanFrom(optTok, sp)
+					}
+				}
 			}
 
 			if p.curTok.Type == TokenComma {
