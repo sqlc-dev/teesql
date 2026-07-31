@@ -6134,7 +6134,13 @@ func (p *Parser) parseCommitTransactionStatement() (*ast.CommitTransactionStatem
 	}
 
 	// Skip optional WORK, TRAN, or TRANSACTION
-	if p.curTok.Type == TokenWork || p.curTok.Type == TokenTran || p.curTok.Type == TokenTransaction {
+	if p.curTok.Type == TokenWork {
+		// ScriptDom does not include the WORK keyword in the span of
+		// COMMIT WORK.
+		savedEnd := p.prevEndByte
+		p.nextToken()
+		p.prevEndByte = savedEnd
+	} else if p.curTok.Type == TokenTran || p.curTok.Type == TokenTransaction {
 		p.nextToken()
 	}
 
@@ -13376,6 +13382,12 @@ func (p *Parser) parseCreateMessageTypeStatement() (*ast.CreateMessageTypeStatem
 				}
 			}
 		}
+	}
+
+	// ScriptDom always records the validation method, defaulting it when
+	// unspecified.
+	if stmt.ValidationMethod == "" {
+		stmt.ValidationMethod = "NotSpecified"
 	}
 
 	// Skip optional semicolon

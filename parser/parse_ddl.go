@@ -9584,34 +9584,33 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 
 		default:
 			// Unknown token, break out
-			if hasOptions {
-				// Set defaults for unspecified fields when options were parsed
-				if stmt.State == "" {
-					stmt.State = "NotSpecified"
-				}
-				if stmt.Protocol == "" {
-					stmt.Protocol = "None"
-				}
-				if stmt.EndpointType == "" {
-					stmt.EndpointType = "NotSpecified"
-				}
+			// ScriptDom always records these fields, defaulting them
+			// when unspecified.
+			if stmt.State == "" {
+				stmt.State = "NotSpecified"
+			}
+			if stmt.Protocol == "" {
+				stmt.Protocol = "None"
+			}
+			if stmt.EndpointType == "" {
+				stmt.EndpointType = "NotSpecified"
 			}
 			return spanned(p, stmt, astStart), nil
 		}
 	}
 
-	// Set defaults for unspecified fields when options were parsed
-	if hasOptions {
-		if stmt.State == "" {
-			stmt.State = "NotSpecified"
-		}
-		if stmt.Protocol == "" {
-			stmt.Protocol = "None"
-		}
-		if stmt.EndpointType == "" {
-			stmt.EndpointType = "NotSpecified"
-		}
+	// ScriptDom always records these fields, defaulting them when
+	// unspecified.
+	if stmt.State == "" {
+		stmt.State = "NotSpecified"
 	}
+	if stmt.Protocol == "" {
+		stmt.Protocol = "None"
+	}
+	if stmt.EndpointType == "" {
+		stmt.EndpointType = "NotSpecified"
+	}
+	_ = hasOptions
 
 	return spanned(p, stmt, astStart), nil
 }
@@ -9686,13 +9685,18 @@ func (p *Parser) parseIPv4Address() *ast.IPv4 {
 				i++
 			}
 			comps = 1
-			if i+1 < len(raw) && raw[i] == '.' && isDigit(raw[i+1]) {
-				// Decimal-shaped token N.M covering two octets.
-				i++
-				for i < len(raw) && isDigit(raw[i]) {
+			if i < len(raw) && raw[i] == '.' {
+				if i+1 < len(raw) && isDigit(raw[i+1]) {
+					// Decimal-shaped token N.M covering two octets.
+					i++
+					for i < len(raw) && isDigit(raw[i]) {
+						i++
+					}
+					comps = 2
+				} else {
+					// Trailing-dot numeric token N. with a single octet.
 					i++
 				}
-				comps = 2
 			}
 		} else {
 			break

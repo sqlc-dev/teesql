@@ -2315,17 +2315,24 @@ func (p *Parser) parseDeleteWhereClause() (*ast.WhereClause, error) {
 		p.nextToken()
 
 		// Parse cursor name
+		nameTok := p.curTok
 		cursorName := p.curTok.Literal
+		ident := p.spanIdent(cursorName, "NotQuoted")
+		p.tokSpan(ident, nameTok)
+		iove := &ast.IdentifierOrValueExpression{
+			Value:      cursorName,
+			Identifier: ident,
+		}
+		p.tokSpan(iove, nameTok)
+		cursorId := &ast.CursorId{
+			IsGlobal: false,
+			Name:     iove,
+		}
+		p.tokSpan(cursorId, nameTok)
 		p.nextToken()
 
 		return spanned(p, &ast.WhereClause{
-			Cursor: &ast.CursorId{
-				IsGlobal: false,
-				Name: &ast.IdentifierOrValueExpression{
-					Value:      cursorName,
-					Identifier: p.spanIdent(cursorName, "NotQuoted"),
-				},
-			},
+			Cursor: cursorId,
 		}, astStart), nil
 	}
 

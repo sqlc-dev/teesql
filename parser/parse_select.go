@@ -787,6 +787,23 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		}
 	}
 
+	// When the expression's recorded span is pinned and starts after the
+	// element's first token (e.g. a leading dot excluded by ScriptDom),
+	// the select element inherits the later start.
+	if es, ok := expr.(spannable); ok && es.Frag().Pinned() && sse.ColumnName == nil {
+		esf := es.Frag()
+		if esf.HasSpan() {
+			su, sl, sc := p.srcMap.at(astStart.Pos)
+			_ = sl
+			_ = sc
+			if esf.StartOffset > su {
+				p.spanFromChild(sse, expr)
+				sse.Pin()
+				return sse, nil
+			}
+		}
+	}
+
 	return spanned(p, sse, astStart), nil
 }
 
@@ -2164,6 +2181,7 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			p.nextToken()
 
 			p.spanFromChild(fc, fcStartTarget)
+			fc.Pin()
 
 			// Check for OVER clause or property access after method call
 			spanV25, spanErr25 := p.parsePostExpressionAccess(fc)
@@ -2176,6 +2194,7 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			PropertyName: name,
 		}
 		p.spanFromChild(propAccess, udtTarget)
+		propAccess.Pin()
 
 		// Check for COLLATE clause
 		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
@@ -2361,6 +2380,7 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 			p.nextToken()
 
 			p.spanFromChild(fc, fcStartTarget)
+			fc.Pin()
 
 			// Check for OVER clause or property access after method call
 			spanV28, spanErr28 := p.parsePostExpressionAccess(fc)
@@ -2373,6 +2393,7 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 			PropertyName: name,
 		}
 		p.spanFromChild(propAccess, udtTarget)
+		propAccess.Pin()
 
 		// Check for COLLATE clause
 		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
