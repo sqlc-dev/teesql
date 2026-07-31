@@ -11229,11 +11229,13 @@ func (p *Parser) parseFileGroups() ([]*ast.FileGroupDefinition, error) {
 			p.respanStart(decls[0], groupStart)
 		}
 		// Named FILEGROUP definitions span from the keyword through their
-		// last declaration; the unnamed primary group stays spanless.
+		// first declaration only (a ScriptDom quirk: additional
+		// comma-separated declarations do not extend the fragment); the
+		// unnamed primary group stays spanless.
 		if fg.Name != nil {
 			p.spanFrom(groupStart, fg)
 			if len(decls) > 0 {
-				if f := decls[len(decls)-1].Frag(); f.HasSpan() && fg.Frag().HasSpan() {
+				if f := decls[0].Frag(); f.HasSpan() && fg.Frag().HasSpan() {
 					fg.Frag().FragmentLength = f.EndOffset() - fg.Frag().StartOffset
 				}
 			}
@@ -11417,6 +11419,9 @@ func (p *Parser) parseFileDeclarationOptions() ([]ast.FileDeclarationOption, err
 					Unlimited:  true,
 					OptionKind: "MaxSize",
 				}
+				// MAXSIZE = UNLIMITED spans the keyword only.
+				p.tokSpan(opt, optStart)
+				opt.Pin()
 				opts = append(opts, opt)
 			} else {
 				size, units := p.parseSizeValue()
@@ -11455,7 +11460,7 @@ func (p *Parser) parseFileDeclarationOptions() ([]ast.FileDeclarationOption, err
 		}
 
 		if len(opts) > lenBefore {
-			if o, ok := opts[len(opts)-1].(spannable); ok {
+			if o, ok := opts[len(opts)-1].(spannable); ok && !o.Frag().Pinned() {
 				p.spanFrom(optStart, o)
 			}
 		}
