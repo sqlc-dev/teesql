@@ -3682,10 +3682,12 @@ func booleanExpressionToJSON(expr ast.BooleanExpression) jsonNode {
 			"$type": "ExistsPredicate",
 		}
 		if e.Subquery != nil {
-			node["Subquery"] = jsonNode{
+			// The synthesized ScalarSubquery shares the predicate's span
+			// (the parenthesized subquery).
+			node["Subquery"] = addSpan(jsonNode{
 				"$type":           "ScalarSubquery",
 				"QueryExpression": queryExpressionToJSON(e.Subquery),
-			}
+			}, frag(expr))
 		}
 		return addSpan(node, frag(expr))
 	case *ast.GraphMatchCompositeExpression:

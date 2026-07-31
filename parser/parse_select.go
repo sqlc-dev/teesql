@@ -6407,6 +6407,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		// Peek ahead to see if it's a subquery (SELECT)
 		if p.peekTok.Type == TokenSelect {
 			// Parse as scalar subquery that will be used in a comparison
+			lparenTok := p.curTok
 			p.nextToken() // consume (
 			qe, err := p.parseQueryExpression()
 			if err != nil {
@@ -6418,6 +6419,9 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			p.nextToken() // consume )
 
 			subquery := &ast.ScalarSubquery{QueryExpression: qe}
+			// ScriptDom spans the subquery over its parentheses.
+			p.spanFrom(lparenTok, subquery)
+			subquery.Pin()
 
 			// Now check for comparison operators
 			if p.isComparisonOperator() {
@@ -7982,43 +7986,56 @@ func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			if p.curTok.Type == TokenStar {
-				pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				starCol := &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}
+				p.tokSpan(starCol, p.curTok)
+				pred.Columns = append(pred.Columns, starCol)
 				p.nextToken()
 			} else {
+				colTok := p.curTok
 				col := p.parseIdentifier()
 				// Check for pseudo column
 				pseudoType := getPseudoColumnType(col.Value)
 				if pseudoType != "" && p.curTok.Type != TokenDot {
 					// Standalone pseudo column like $identity
-					pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+					pseudoCol := &ast.ColumnReferenceExpression{
 						ColumnType: pseudoType,
-					})
+					}
+					p.tokSpan(pseudoCol, colTok)
+					pred.Columns = append(pred.Columns, pseudoCol)
 				} else if p.curTok.Type == TokenDot {
 					// Check for table.column or table.*
 					p.nextToken() // consume .
 					if p.curTok.Type == TokenStar {
 						// table.*
 						p.nextToken() // consume *
-						pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+						wcCol := &ast.ColumnReferenceExpression{
 							ColumnType: "Wildcard",
 							MultiPartIdentifier: &ast.MultiPartIdentifier{
 								Identifiers: []*ast.Identifier{col},
 								Count:       1,
 							},
-						})
+						}
+						// Spans table.* including the star.
+						p.spanFrom(colTok, wcCol)
+						wcCol.Pin()
+						pred.Columns = append(pred.Columns, wcCol)
 					} else {
 						// table.column or table.$identity
 						col2 := p.parseIdentifier()
 						pseudoType2 := getPseudoColumnType(col2.Value)
 						if pseudoType2 != "" {
 							// table.$identity - pseudo column with table prefix
-							pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+							psCol := &ast.ColumnReferenceExpression{
 								ColumnType: pseudoType2,
 								MultiPartIdentifier: &ast.MultiPartIdentifier{
 									Identifiers: []*ast.Identifier{col},
 									Count:       1,
 								},
-							})
+							}
+							// Spans through the pseudo column name.
+							p.spanFrom(colTok, psCol)
+							psCol.Pin()
+							pred.Columns = append(pred.Columns, psCol)
 						} else {
 							pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
 								ColumnType: "Regular",
@@ -8220,12 +8237,14 @@ func (p *Parser) parseTSEqualPredicate() (*ast.TSEqualCall, error) {
 // parseExistsPredicate parses EXISTS (subquery)
 func (p *Parser) parseExistsPredicate() (*ast.ExistsPredicate, error) {
 	astStart := p.curTok
+	_ = astStart
 
 	p.nextToken() // consume EXISTS
 
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after EXISTS, got %s", p.curTok.Literal)
 	}
+	lparenTok := p.curTok
 	p.nextToken() // consume (
 
 	// Parse subquery
@@ -8239,7 +8258,12 @@ func (p *Parser) parseExistsPredicate() (*ast.ExistsPredicate, error) {
 	}
 	p.nextToken() // consume )
 
-	return spanned(p, &ast.ExistsPredicate{Subquery: subquery}, astStart), nil
+	// ScriptDom spans the predicate over the parenthesized subquery,
+	// excluding the EXISTS keyword itself.
+	pred := &ast.ExistsPredicate{Subquery: subquery}
+	p.spanFrom(lparenTok, pred)
+	pred.Pin()
+	return pred, nil
 }
 
 // parseIIfCall parses IIF(condition, true_value, false_value)
