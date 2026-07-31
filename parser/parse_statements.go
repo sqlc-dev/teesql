@@ -2665,16 +2665,14 @@ func (p *Parser) parseBeginDialogStatement() (*ast.BeginDialogStatement, error) 
 				}
 			case "ENCRYPTION":
 				optState := strings.ToUpper(p.curTok.Literal)
-				if optState == "ON" {
-					stmt.Options = append(stmt.Options, &ast.OnOffDialogOption{
-						OptionState: "On",
+				if optState == "ON" || optState == "OFF" {
+					dOpt := &ast.OnOffDialogOption{
+						OptionState: capitalizeFirst(optState),
 						OptionKind:  "Encryption",
-					})
-				} else if optState == "OFF" {
-					stmt.Options = append(stmt.Options, &ast.OnOffDialogOption{
-						OptionState: "Off",
-						OptionKind:  "Encryption",
-					})
+					}
+					// ScriptDom spans this option on its ON/OFF value.
+					p.tokSpan(dOpt, p.curTok)
+					stmt.Options = append(stmt.Options, dOpt)
 				}
 				p.nextToken()
 			case "LIFETIME":

@@ -12187,7 +12187,7 @@ func alterServerConfigurationSetDiagnosticsLogStatementToJSON(s *ast.AlterServer
 						optNode["OptionValue"] = literalOptionValueToJSON(v)
 					}
 				}
-				options[i] = optNode
+				options[i] = addSpan(optNode, opt.Frag())
 			case *ast.AlterServerConfigurationDiagnosticsLogMaxSizeOption:
 				optNode := jsonNode{
 					"$type":      "AlterServerConfigurationDiagnosticsLogMaxSizeOption",
@@ -12197,7 +12197,7 @@ func alterServerConfigurationSetDiagnosticsLogStatementToJSON(s *ast.AlterServer
 				if opt.OptionValue != nil {
 					optNode["OptionValue"] = literalOptionValueToJSON(opt.OptionValue)
 				}
-				options[i] = optNode
+				options[i] = addSpan(optNode, opt.Frag())
 			}
 		}
 		node["Options"] = options
@@ -12219,7 +12219,7 @@ func alterServerConfigurationSetFailoverClusterPropertyStatementToJSON(s *ast.Al
 			if o.OptionValue != nil {
 				optNode["OptionValue"] = literalOptionValueToJSON(o.OptionValue)
 			}
-			options[i] = optNode
+			options[i] = addSpan(optNode, o.Frag())
 		}
 		node["Options"] = options
 	}
@@ -12248,7 +12248,7 @@ func alterServerConfigurationSetBufferPoolExtensionStatementToJSON(s *ast.AlterS
 						if s.OptionValue != nil {
 							subNode["OptionValue"] = literalOptionValueToJSON(s.OptionValue)
 						}
-						suboptions[j] = subNode
+						suboptions[j] = addSpan(subNode, s.Frag())
 					case *ast.AlterServerConfigurationBufferPoolExtensionSizeOption:
 						subNode := jsonNode{
 							"$type":      "AlterServerConfigurationBufferPoolExtensionSizeOption",
@@ -12258,7 +12258,7 @@ func alterServerConfigurationSetBufferPoolExtensionStatementToJSON(s *ast.AlterS
 						if s.OptionValue != nil {
 							subNode["OptionValue"] = literalOptionValueToJSON(s.OptionValue)
 						}
-						suboptions[j] = subNode
+						suboptions[j] = addSpan(subNode, s.Frag())
 					}
 				}
 				optNode["Suboptions"] = suboptions
@@ -12267,7 +12267,7 @@ func alterServerConfigurationSetBufferPoolExtensionStatementToJSON(s *ast.AlterS
 			if o.OptionValue != nil {
 				optNode["OptionValue"] = onOffOptionValueToJSON(o.OptionValue)
 			}
-			options[i] = optNode
+			options[i] = addSpan(optNode, o.Frag())
 		}
 		node["Options"] = options
 	}
@@ -12289,7 +12289,7 @@ func alterServerConfigurationSetHadrClusterStatementToJSON(s *ast.AlterServerCon
 				optNode["OptionValue"] = literalOptionValueToJSON(o.OptionValue)
 			}
 			optNode["IsLocal"] = o.IsLocal
-			options[i] = optNode
+			options[i] = addSpan(optNode, o.Frag())
 		}
 		node["Options"] = options
 	}

@@ -5056,27 +5056,30 @@ func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast
 	optionKind := strings.ToUpper(p.curTok.Literal)
 
 	switch optionKind {
-	case "ON":
+	case "ON", "OFF":
+		stateTok := p.curTok
 		p.nextToken()
-		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogOption{
+		oov := &ast.OnOffOptionValue{OptionState: capitalizeFirst(optionKind)}
+		dlOpt := &ast.AlterServerConfigurationDiagnosticsLogOption{
 			OptionKind:  "OnOff",
-			OptionValue: &ast.OnOffOptionValue{OptionState: "On"},
-		})
-	case "OFF":
-		p.nextToken()
-		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogOption{
-			OptionKind:  "OnOff",
-			OptionValue: &ast.OnOffOptionValue{OptionState: "Off"},
-		})
+			OptionValue: oov,
+		}
+		// ScriptDom spans the option and its value on the ON/OFF token.
+		p.tokSpan(dlOpt, stateTok)
+		p.tokSpan(oov, stateTok)
+		stmt.Options = append(stmt.Options, dlOpt)
 	case "MAX_SIZE":
 		p.nextToken()
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
+		valTok := p.curTok
 		var value ast.ScalarExpression
 		sizeUnit := "Unspecified"
 		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-			value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+			dl := &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+			p.tokSpan(dl, p.curTok)
+			value = dl
 			p.nextToken()
 		} else {
 			value = p.intLitFromToken(p.curTok)
@@ -5088,36 +5091,51 @@ func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast
 				p.nextToken()
 			}
 		}
-		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogMaxSizeOption{
+		msLov := &ast.LiteralOptionValue{Value: value}
+		msOpt := &ast.AlterServerConfigurationDiagnosticsLogMaxSizeOption{
 			OptionKind:  "MaxSize",
-			OptionValue: &ast.LiteralOptionValue{Value: value},
+			OptionValue: msLov,
 			SizeUnit:    sizeUnit,
-		})
+		}
+		p.spanFrom(valTok, msOpt)
+		// The literal option value spans only the numeric token.
+		p.tokSpan(msLov, valTok)
+		stmt.Options = append(stmt.Options, msOpt)
 	case "MAX_FILES":
 		p.nextToken()
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
+		valTok := p.curTok
 		var value ast.ScalarExpression
 		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-			value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+			dl := &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+			p.tokSpan(dl, p.curTok)
+			value = dl
 			p.nextToken()
 		} else {
 			value = p.intLitFromToken(p.curTok)
 			p.nextToken()
 		}
-		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogOption{
+		mfLov := &ast.LiteralOptionValue{Value: value}
+		mfOpt := &ast.AlterServerConfigurationDiagnosticsLogOption{
 			OptionKind:  "MaxFiles",
-			OptionValue: &ast.LiteralOptionValue{Value: value},
-		})
+			OptionValue: mfLov,
+		}
+		p.tokSpan(mfOpt, valTok)
+		p.tokSpan(mfLov, valTok)
+		stmt.Options = append(stmt.Options, mfOpt)
 	case "PATH":
 		p.nextToken()
 		if p.curTok.Type == TokenEquals {
 			p.nextToken()
 		}
+		valTok := p.curTok
 		var value ast.ScalarExpression
 		if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-			value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+			dl := &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+			p.tokSpan(dl, p.curTok)
+			value = dl
 			p.nextToken()
 		} else if p.curTok.Type == TokenString {
 			strVal := p.curTok.Literal
@@ -5127,10 +5145,14 @@ func (p *Parser) parseAlterServerConfigurationSetDiagnosticsLogStatement() (*ast
 			value = p.strLit(strVal, false)
 			p.nextToken()
 		}
-		stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationDiagnosticsLogOption{
+		pLov := &ast.LiteralOptionValue{Value: value}
+		pOpt := &ast.AlterServerConfigurationDiagnosticsLogOption{
 			OptionKind:  "Path",
-			OptionValue: &ast.LiteralOptionValue{Value: value},
-		})
+			OptionValue: pLov,
+		}
+		p.tokSpan(pOpt, valTok)
+		p.tokSpan(pLov, valTok)
+		stmt.Options = append(stmt.Options, pOpt)
 	}
 
 	// Skip optional semicolon
@@ -5187,15 +5209,20 @@ func (p *Parser) parseAlterServerConfigurationSetFailoverClusterPropertyStatemen
 		optionKind = "HealthCheckTimeout"
 	}
 
+	valTok := p.curTok
 	var value ast.ScalarExpression
 	if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-		value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+		dl := &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+		p.tokSpan(dl, p.curTok)
+		value = dl
 		p.nextToken()
 	} else if p.curTok.Type == TokenNumber {
 		value = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	} else if p.curTok.Type == TokenBinary {
-		value = &ast.BinaryLiteral{LiteralType: "Binary", Value: p.curTok.Literal}
+		bl := &ast.BinaryLiteral{LiteralType: "Binary", Value: p.curTok.Literal}
+		p.tokSpan(bl, p.curTok)
+		value = bl
 		p.nextToken()
 	} else if p.curTok.Type == TokenString {
 		strVal := p.curTok.Literal
@@ -5206,10 +5233,15 @@ func (p *Parser) parseAlterServerConfigurationSetFailoverClusterPropertyStatemen
 		p.nextToken()
 	}
 
-	stmt.Options = append(stmt.Options, &ast.AlterServerConfigurationFailoverClusterPropertyOption{
+	fcLov := &ast.LiteralOptionValue{Value: value}
+	p.tokSpan(fcLov, valTok)
+	fcOpt := &ast.AlterServerConfigurationFailoverClusterPropertyOption{
 		OptionKind:  optionKind,
-		OptionValue: &ast.LiteralOptionValue{Value: value},
-	})
+		OptionValue: fcLov,
+	}
+	// ScriptDom spans this option on its value token.
+	p.tokSpan(fcOpt, valTok)
+	stmt.Options = append(stmt.Options, fcOpt)
 
 	// Skip optional semicolon
 	if p.curTok.Type == TokenSemicolon {
@@ -5240,13 +5272,16 @@ func (p *Parser) parseAlterServerConfigurationSetBufferPoolExtensionStatement() 
 	stmt := &ast.AlterServerConfigurationSetBufferPoolExtensionStatement{}
 
 	// Parse ON or OFF
+	stateTok := p.curTok
 	stateUpper := strings.ToUpper(p.curTok.Literal)
 	containerOption := &ast.AlterServerConfigurationBufferPoolExtensionContainerOption{
 		OptionKind: "OnOff",
 	}
 
 	if stateUpper == "ON" {
-		containerOption.OptionValue = &ast.OnOffOptionValue{OptionState: "On"}
+		oov := &ast.OnOffOptionValue{OptionState: "On"}
+		p.tokSpan(oov, stateTok)
+		containerOption.OptionValue = oov
 		p.nextToken()
 
 		// Check for parentheses with suboptions
@@ -5267,24 +5302,35 @@ func (p *Parser) parseAlterServerConfigurationSetBufferPoolExtensionStatement() 
 					if len(strVal) >= 2 && strVal[0] == '\'' && strVal[len(strVal)-1] == '\'' {
 						strVal = strVal[1 : len(strVal)-1]
 					}
-					containerOption.Suboptions = append(containerOption.Suboptions,
-						&ast.AlterServerConfigurationBufferPoolExtensionOption{
-							OptionKind:  "FileName",
-							OptionValue: &ast.LiteralOptionValue{Value: p.strLit(strVal, false)},
-						})
+					fnLov := &ast.LiteralOptionValue{Value: p.strLit(strVal, false)}
+					p.tokSpan(fnLov, p.curTok)
+					fnOpt := &ast.AlterServerConfigurationBufferPoolExtensionOption{
+						OptionKind:  "FileName",
+						OptionValue: fnLov,
+					}
+					// ScriptDom spans this option on its value token.
+					p.tokSpan(fnOpt, p.curTok)
+					containerOption.Suboptions = append(containerOption.Suboptions, fnOpt)
 					p.nextToken()
 				case "SIZE":
+					sizeTok := p.curTok
 					sizeVal := p.curTok.Literal
+					sizeLit := &ast.IntegerLiteral{LiteralType: "Integer", Value: sizeVal}
+					p.tokSpan(sizeLit, sizeTok)
 					p.nextToken()
 					// Get size unit
 					sizeUnit := strings.ToUpper(p.curTok.Literal)
 					p.nextToken()
-					containerOption.Suboptions = append(containerOption.Suboptions,
-						&ast.AlterServerConfigurationBufferPoolExtensionSizeOption{
-							OptionKind:  "Size",
-							OptionValue: &ast.LiteralOptionValue{Value: &ast.IntegerLiteral{LiteralType: "Integer", Value: sizeVal}},
-							SizeUnit:    sizeUnit,
-						})
+					szLov := &ast.LiteralOptionValue{Value: sizeLit}
+					p.tokSpan(szLov, sizeTok)
+					szOpt := &ast.AlterServerConfigurationBufferPoolExtensionSizeOption{
+						OptionKind:  "Size",
+						OptionValue: szLov,
+						SizeUnit:    sizeUnit,
+					}
+					// Spans the value and its unit.
+					p.spanFrom(sizeTok, szOpt)
+					containerOption.Suboptions = append(containerOption.Suboptions, szOpt)
 				}
 
 				if p.curTok.Type == TokenComma {
@@ -5296,8 +5342,13 @@ func (p *Parser) parseAlterServerConfigurationSetBufferPoolExtensionStatement() 
 				p.nextToken()
 			}
 		}
+		// Spans ON through the closing parenthesis.
+		p.spanFrom(stateTok, containerOption)
 	} else if stateUpper == "OFF" {
-		containerOption.OptionValue = &ast.OnOffOptionValue{OptionState: "Off"}
+		oov := &ast.OnOffOptionValue{OptionState: "Off"}
+		p.tokSpan(oov, stateTok)
+		containerOption.OptionValue = oov
+		p.tokSpan(containerOption, stateTok)
 		p.nextToken()
 	}
 
@@ -5339,15 +5390,20 @@ func (p *Parser) parseAlterServerConfigurationSetHadrClusterStatement() (*ast.Al
 		OptionKind: "Context",
 	}
 
+	// ScriptDom spans this option on its value token.
 	if strings.ToUpper(p.curTok.Literal) == "LOCAL" {
 		option.IsLocal = true
+		p.tokSpan(option, p.curTok)
 		p.nextToken()
 	} else if p.curTok.Type == TokenString {
 		strVal := p.curTok.Literal
 		if len(strVal) >= 2 && strVal[0] == '\'' && strVal[len(strVal)-1] == '\'' {
 			strVal = strVal[1 : len(strVal)-1]
 		}
-		option.OptionValue = &ast.LiteralOptionValue{Value: p.strLit(strVal, false)}
+		hcLov := &ast.LiteralOptionValue{Value: p.strLit(strVal, false)}
+		p.tokSpan(hcLov, p.curTok)
+		option.OptionValue = hcLov
+		p.tokSpan(option, p.curTok)
 		p.nextToken()
 	}
 
