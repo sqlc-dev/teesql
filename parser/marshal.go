@@ -8323,35 +8323,47 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			}
 			col.Index = indexDef
 		} else if upperLit == "SPARSE" {
-			p.nextToken() // consume SPARSE
 			if col.StorageOptions == nil {
 				col.StorageOptions = &ast.ColumnStorageOptions{}
 			}
 			col.StorageOptions.SparseOption = "Sparse"
+			// ScriptDom positions storage options on the last storage keyword.
+			p.tokSpan(col.StorageOptions, p.curTok)
+			p.nextToken() // consume SPARSE
 		} else if upperLit == "FILESTREAM" {
-			p.nextToken() // consume FILESTREAM
 			if col.StorageOptions == nil {
 				col.StorageOptions = &ast.ColumnStorageOptions{}
 			}
 			col.StorageOptions.IsFileStream = true
+			p.tokSpan(col.StorageOptions, p.curTok)
+			p.nextToken() // consume FILESTREAM
 		} else if upperLit == "COLUMN_SET" {
 			p.nextToken() // consume COLUMN_SET
 			// Expect FOR ALL_SPARSE_COLUMNS
 			if strings.ToUpper(p.curTok.Literal) == "FOR" {
 				p.nextToken() // consume FOR
 				if strings.ToUpper(p.curTok.Literal) == "ALL_SPARSE_COLUMNS" {
-					p.nextToken() // consume ALL_SPARSE_COLUMNS
 					if col.StorageOptions == nil {
 						col.StorageOptions = &ast.ColumnStorageOptions{}
 					}
 					col.StorageOptions.SparseOption = "ColumnSetForAllSparseColumns"
+					p.tokSpan(col.StorageOptions, p.curTok)
+					p.nextToken() // consume ALL_SPARSE_COLUMNS
 				}
 			}
 		} else if upperLit == "ROWGUIDCOL" {
 			p.nextToken() // consume ROWGUIDCOL
 			col.IsRowGuidCol = true
 		} else if upperLit == "HIDDEN" {
+			// ScriptDom excludes a trailing HIDDEN keyword from the column's
+			// span (it still counts when later clauses follow). An earlier,
+			// narrower cap (e.g. an encryption clause) stays in effect.
+			hidStart, _, _ := p.srcMap.at(p.prevEndByte)
+			if !(capPrevEnd == p.prevEndByte && capEnd > 0 && capEnd < hidStart) {
+				capEnd = hidStart
+			}
 			p.nextToken() // consume HIDDEN
+			capPrevEnd = p.prevEndByte
 			col.IsHidden = true
 		} else if upperLit == "MASKED" {
 			p.nextToken() // consume MASKED
@@ -8394,6 +8406,12 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				encSpec, err := p.parseColumnEncryptionSpecification()
 				if err == nil {
 					col.Encryption = encSpec
+					// A trailing encryption clause caps the column's span at
+					// the specification's (keyword-narrowed) end.
+					if encSpec.Frag().HasSpan() {
+						capEnd = encSpec.Frag().EndOffset()
+						capPrevEnd = p.prevEndByte
+					}
 				}
 			}
 		} else if upperLit == "IDENTITY" && col.IdentityOptions == nil {
@@ -16779,7 +16797,7 @@ func triggerOptionTypeToJSON(o ast.TriggerOptionType) jsonNode {
 			if opt.ExecuteAsClause.Literal != nil {
 				execClause["Literal"] = stringLiteralToJSON(opt.ExecuteAsClause.Literal)
 			}
-			node["ExecuteAsClause"] = execClause
+			node["ExecuteAsClause"] = addSpan(execClause, frag(opt.ExecuteAsClause))
 		}
 		return addSpan(node, frag(o))
 	default:

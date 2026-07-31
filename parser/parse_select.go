@@ -8646,7 +8646,19 @@ func (p *Parser) parseWindowFrameClause() (*ast.WindowFrameClause, error) {
 		frame.Top = top
 	}
 
-	return spanned(p, frame, astStart), nil
+	spanned(p, frame, astStart)
+	// The frame clause ends where its last delimiter ends (a CURRENT ROW
+	// delimiter ends at CURRENT, excluding ROW).
+	last := frame.Bottom
+	if last == nil {
+		last = frame.Top
+	}
+	if last != nil && last.Frag().HasSpan() && frame.Frag().HasSpan() {
+		if e := last.Frag().EndOffset(); e < frame.Frag().EndOffset() {
+			frame.Frag().FragmentLength = e - frame.Frag().StartOffset
+		}
+	}
+	return frame, nil
 }
 
 // parseWindowDelimiter parses UNBOUNDED PRECEDING/FOLLOWING, CURRENT ROW, n PRECEDING/FOLLOWING
@@ -8664,6 +8676,9 @@ func (p *Parser) parseWindowDelimiter() (*ast.WindowDelimiter, error) {
 		}
 		p.nextToken() // consume ROW
 		delim.WindowDelimiterType = "CurrentRow"
+		// ScriptDom positions CURRENT ROW on the CURRENT keyword alone.
+		p.tokSpan(delim, astStart)
+		return delim, nil
 	} else if upperLit == "UNBOUNDED" {
 		p.nextToken() // consume UNBOUNDED
 		upperDir := strings.ToUpper(p.curTok.Literal)
