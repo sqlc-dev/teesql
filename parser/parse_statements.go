@@ -1479,6 +1479,7 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 	if p.curTok.Type == TokenCursor {
 		p.nextToken()
 		cursorDef := &ast.CursorDefinition{}
+		defStartTok := p.curTok
 
 		// Parse cursor options (SCROLL, DYNAMIC, etc.) until FOR
 		for p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
@@ -1489,7 +1490,9 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 			// Cursor options are typically identifiers like SCROLL, DYNAMIC, STATIC, etc.
 			if p.curTok.Type == TokenIdent {
 				optKind := strings.Title(strings.ToLower(p.curTok.Literal))
-				cursorDef.Options = append(cursorDef.Options, &ast.CursorOption{OptionKind: optKind})
+				cOpt := &ast.CursorOption{OptionKind: optKind}
+				p.tokSpan(cOpt, p.curTok)
+				cursorDef.Options = append(cursorDef.Options, cOpt)
 			}
 			p.nextToken()
 		}
@@ -1499,8 +1502,14 @@ func (p *Parser) parseSetVariableStatement() (ast.Statement, error) {
 			if err != nil {
 				return nil, err
 			}
-			cursorDef.Select = &ast.SelectStatement{QueryExpression: qe}
+			sel := &ast.SelectStatement{QueryExpression: qe}
+			p.spanFromChild(sel, qe)
+			cursorDef.Select = sel
 		}
+		// ScriptDom spans the cursor definition from the first option (or
+		// the select) through the select end.
+		p.spanFrom(defStartTok, cursorDef)
+		cursorDef.Pin()
 		stmt.CursorDefinition = cursorDef
 	} else {
 		expr, err := p.parseScalarExpression()
@@ -7380,11 +7389,13 @@ func (p *Parser) parseUpdateTextStatement() (*ast.UpdateTextStatement, error) {
 					ColumnType:          "Regular",
 					MultiPartIdentifier: srcMultiPart,
 				}
-				stmt.SourceParameter = &ast.BinaryLiteral{
+				srcBin := &ast.BinaryLiteral{
 					LiteralType:   "Binary",
 					Value:         p.curTok.Literal,
 					IsLargeObject: false,
 				}
+				p.tokSpan(srcBin, p.curTok)
+				stmt.SourceParameter = srcBin
 				p.nextToken()
 			} else {
 				// Just a source parameter (the "column" we parsed is actually a value)

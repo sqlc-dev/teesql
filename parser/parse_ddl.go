@@ -9652,39 +9652,58 @@ func (p *Parser) parseIPv4Address() *ast.IPv4 {
 	}
 
 	// ScriptDom lexes an address like 1.2.3.4 as the numeric tokens
-	// [1.2][.3][.4] and positions each octet on its source token, so the
-	// first two octets can share a span. Recompute those token boundaries.
+	// [1.2][.3][.4] and positions each octet on its source token, so a
+	// decimal-shaped token provides two octets that share a span.
+	// Recompute those token boundaries, allowing whitespace between them.
+	isDigit := func(b byte) bool { return b >= '0' && b <= '9' }
 	var tokSpans [][2]int
+	var tokComps []int
 	raw := p.lexer.input[astStart.Pos:endPos]
 	i := 0
 	for i < len(raw) {
+		c := raw[i]
+		if c == ' ' || c == '\t' || c == '\r' || c == '\n' {
+			i++
+			continue
+		}
 		st := i
-		if raw[i] == '.' {
-			i++
-		}
-		for i < len(raw) && raw[i] >= '0' && raw[i] <= '9' {
-			i++
-		}
-		if st == 0 && i < len(raw) && raw[i] == '.' {
-			// The leading token merges a following decimal part: 1.2
-			j := i + 1
-			for j < len(raw) && raw[j] >= '0' && raw[j] <= '9' {
-				j++
+		comps := 0
+		if c == '.' {
+			if i+1 < len(raw) && isDigit(raw[i+1]) {
+				// Numeric token of the form .N
+				i++
+				for i < len(raw) && isDigit(raw[i]) {
+					i++
+				}
+				comps = 1
+			} else {
+				// Standalone dot token, no octet.
+				i++
+				continue
 			}
-			if j > i+1 {
-				i = j
+		} else if isDigit(c) {
+			for i < len(raw) && isDigit(raw[i]) {
+				i++
 			}
-		}
-		if i == st {
+			comps = 1
+			if i+1 < len(raw) && raw[i] == '.' && isDigit(raw[i+1]) {
+				// Decimal-shaped token N.M covering two octets.
+				i++
+				for i < len(raw) && isDigit(raw[i]) {
+					i++
+				}
+				comps = 2
+			}
+		} else {
 			break
 		}
 		tokSpans = append(tokSpans, [2]int{astStart.Pos + st, astStart.Pos + i})
+		tokComps = append(tokComps, comps)
 	}
 	// Map octets to their covering tokens.
 	var octTok [][2]int
 	for ti, ts := range tokSpans {
-		octTok = append(octTok, ts)
-		if ti == 0 && strings.Contains(p.lexer.input[ts[0]:ts[1]], ".") {
+		for k := 0; k < tokComps[ti]; k++ {
 			octTok = append(octTok, ts)
 		}
 	}

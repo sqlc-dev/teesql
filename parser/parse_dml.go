@@ -1420,6 +1420,7 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 	// Check for OPENDATASOURCE or OPENROWSET
 	upperLit := strings.ToUpper(p.curTok.Literal)
 	if upperLit == "OPENDATASOURCE" || upperLit == "OPENROWSET" {
+		odsTok := p.curTok
 		p.nextToken() // consume OPENDATASOURCE/OPENROWSET
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
@@ -1452,6 +1453,10 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 				ProviderName: providerName,
 				InitString:   initString,
 			}
+			// ScriptDom spans the data source from the OPENDATASOURCE
+			// keyword through the closing parenthesis.
+			p.spanFrom(odsTok, procRef.AdHocDataSource)
+			procRef.AdHocDataSource.Pin()
 
 			// Expect . and then schema.object.procedure name
 			if p.curTok.Type == TokenDot {
