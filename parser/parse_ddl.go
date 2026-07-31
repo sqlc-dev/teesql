@@ -3304,11 +3304,14 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 			}
 			p.nextToken()
 			optionValue := strings.ToUpper(p.curTok.Literal)
-			p.nextToken()
 			opt := &ast.DelayedDurabilityDatabaseOption{
 				OptionKind: "DelayedDurability",
 				Value:      capitalizeFirst(optionValue),
 			}
+			// ScriptDom positions this option on the value token.
+			p.tokSpan(opt, p.curTok)
+			opt.Frag().Pin()
+			p.nextToken()
 			stmt.Options = append(stmt.Options, opt)
 		case "AUTO_CREATE_STATISTICS":
 			// Parse ON/OFF and optional (INCREMENTAL = ON/OFF)
@@ -12564,6 +12567,12 @@ func (p *Parser) parseResourcePoolParameter() (*ast.ResourcePoolParameter, error
 	if pv, ok := any(param.ParameterValue).(spannable); ok && pv != nil && pv.Frag().HasSpan() {
 		f := pv.Frag()
 		param.SetSpan(f.StartOffset, f.FragmentLength, f.StartLine, f.StartColumn)
+		param.Frag().Pin()
+		return param, nil
+	}
+	if param.AffinitySpecification != nil && param.AffinitySpecification.Frag().HasSpan() {
+		*param.Frag() = *param.AffinitySpecification.Frag()
+		param.Frag().Pin()
 		return param, nil
 	}
 	return spanned(p, param, astStart), nil
@@ -12594,6 +12603,7 @@ func (p *Parser) parseResourcePoolAffinitySpecification() (*ast.ResourcePoolAffi
 	}
 
 	// Check for AUTO or range list
+	affValueTok := p.curTok
 	if strings.ToUpper(p.curTok.Literal) == "AUTO" {
 		spec.IsAuto = true
 		p.nextToken()
@@ -12628,7 +12638,12 @@ func (p *Parser) parseResourcePoolAffinitySpecification() (*ast.ResourcePoolAffi
 		}
 	}
 
-	return spanned(p, spec, astStart), nil
+	// ScriptDom spans the specification on its value (AUTO or the
+	// parenthesized range list).
+	p.spanFrom(affValueTok, spec)
+	spec.Frag().Pin()
+	_ = astStart
+	return spec, nil
 }
 
 func (p *Parser) parseAlterBrokerPriorityStatement() (*ast.AlterBrokerPriorityStatement, error) {
