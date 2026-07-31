@@ -10476,15 +10476,24 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 			if p.curTok.Type == TokenEquals {
 				p.nextToken() // consume =
 			}
+			trackingTok := p.curTok
 			trackingLit := strings.ToUpper(p.curTok.Literal)
 			p.nextToken()
+			// ScriptDom spans SET CHANGE_TRACKING actions on the value token.
+			var trackingKind string
 			switch trackingLit {
 			case "MANUAL":
-				return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingManual"}, astStart)
+				trackingKind = "SetChangeTrackingManual"
 			case "AUTO":
-				return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingAuto"}, astStart)
+				trackingKind = "SetChangeTrackingAuto"
 			case "OFF":
-				return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "SetChangeTrackingOff"}, astStart)
+				trackingKind = "SetChangeTrackingOff"
+			}
+			if trackingKind != "" {
+				ctAction := &ast.SimpleAlterFullTextIndexAction{ActionKind: trackingKind}
+				p.tokSpan(ctAction, trackingTok)
+				ctAction.Pin()
+				return ctAction
 			}
 		} else if strings.ToUpper(p.curTok.Literal) == "STOPLIST" {
 			// Parse SET STOPLIST OFF | SYSTEM | name [WITH NO POPULATION]
@@ -10570,36 +10579,51 @@ func (p *Parser) tryParseAlterFullTextIndexAction() ast.AlterFullTextIndexAction
 		p.nextToken() // consume START
 		popType := strings.ToUpper(p.curTok.Literal)
 		p.nextToken()
+		popTok := p.curTok
+		havePop := false
 		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+			havePop = true
 			p.nextToken()
 		}
+		var startKind string
 		switch popType {
 		case "FULL":
-			return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartFullPopulation"}, astStart)
+			startKind = "StartFullPopulation"
 		case "INCREMENTAL":
-			return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartIncrementalPopulation"}, astStart)
+			startKind = "StartIncrementalPopulation"
 		case "UPDATE":
-			return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "StartUpdatePopulation"}, astStart)
+			startKind = "StartUpdatePopulation"
+		default:
+			return nil
 		}
-		return nil
-	case "STOP":
-		p.nextToken() // consume STOP
+		popAction := &ast.SimpleAlterFullTextIndexAction{ActionKind: startKind}
+		// ScriptDom spans population actions on the POPULATION keyword.
+		if havePop {
+			p.tokSpan(popAction, popTok)
+			popAction.Pin()
+			return popAction
+		}
+		return spanned(p, popAction, astStart)
+	case "STOP", "PAUSE", "RESUME":
+		p.nextToken() // consume STOP/PAUSE/RESUME
+		popTok := p.curTok
+		havePop := false
 		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
+			havePop = true
 			p.nextToken()
 		}
-		return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "StopPopulation"}, astStart)
-	case "PAUSE":
-		p.nextToken() // consume PAUSE
-		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
-			p.nextToken()
+		kindByVerb := map[string]string{
+			"STOP":   "StopPopulation",
+			"PAUSE":  "PausePopulation",
+			"RESUME": "ResumePopulation",
 		}
-		return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "PausePopulation"}, astStart)
-	case "RESUME":
-		p.nextToken() // consume RESUME
-		if strings.ToUpper(p.curTok.Literal) == "POPULATION" {
-			p.nextToken()
+		popAction := &ast.SimpleAlterFullTextIndexAction{ActionKind: kindByVerb[actionLit]}
+		if havePop {
+			p.tokSpan(popAction, popTok)
+			popAction.Pin()
+			return popAction
 		}
-		return spanned(p, &ast.SimpleAlterFullTextIndexAction{ActionKind: "ResumePopulation"}, astStart)
+		return spanned(p, popAction, astStart)
 	case "ADD":
 		action, _ := p.parseAddAlterFullTextIndexAction()
 		return action

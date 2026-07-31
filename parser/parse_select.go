@@ -4349,6 +4349,7 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 // parseTemporalClause parses a FOR SYSTEM_TIME clause for temporal tables
 func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
 	astStart := p.curTok
+	entryEnd := p.prevEndByte
 
 	clause := &ast.TemporalClause{}
 
@@ -4370,6 +4371,8 @@ func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
 			return nil, err
 		}
 		clause.StartTime = startTime
+		p.spanFromChild(clause, startTime)
+		clause.Pin()
 
 	case "BETWEEN":
 		// BETWEEN <start> AND <end>
@@ -4389,6 +4392,8 @@ func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
 			return nil, err
 		}
 		clause.EndTime = endTime
+		p.spanFromChild(clause, startTime)
+		clause.Pin()
 
 	case "FROM":
 		// FROM <start> TO <end>
@@ -4408,6 +4413,8 @@ func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
 			return nil, err
 		}
 		clause.EndTime = endTime
+		p.spanFromChild(clause, startTime)
+		clause.Pin()
 
 	case "CONTAINED":
 		// CONTAINED IN (<start>, <end>)
@@ -4435,20 +4442,36 @@ func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
 			return nil, err
 		}
 		clause.EndTime = endTime
+		p.spanFromChild(clause, startTime)
+		clause.Pin()
 		if p.curTok.Type != TokenRParen {
 			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
+		// ScriptDom ends the enclosing table reference, FROM clause and
+		// query specification before this closing parenthesis, so do not
+		// let it advance the recorded end position.
+		savedEnd := p.prevEndByte
 		p.nextToken() // consume )
+		p.prevEndByte = savedEnd
 
 	case "ALL":
-		// ALL
+		// ALL has no source position in ScriptDom, and the enclosing table
+		// reference, FROM clause and query specification end before the
+		// whole FOR SYSTEM_TIME ALL clause.
 		p.nextToken() // consume ALL
 		clause.TemporalClauseType = "TemporalAll"
+		p.prevEndByte = entryEnd
 
 	default:
 		return nil, fmt.Errorf("unexpected temporal clause type: %s", p.curTok.Literal)
 	}
 
+	if clause.Pinned() {
+		return clause, nil
+	}
+	if clause.TemporalClauseType == "TemporalAll" {
+		return clause, nil
+	}
 	return spanned(p, clause, astStart), nil
 }
 
@@ -5311,11 +5334,11 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			} else if subUpper == "CORRELATED" {
 				p.nextToken() // consume CORRELATED
 				hintTok := astStart
-				if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNION" {
+				if strings.ToUpper(p.curTok.Literal) == "UNION" {
 					// ScriptDom positions this hint on the UNION token.
 					hintTok = p.curTok
 					p.nextToken() // consume UNION
-					if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ALL" {
+					if strings.ToUpper(p.curTok.Literal) == "ALL" {
 						p.nextToken() // consume ALL
 					}
 				}

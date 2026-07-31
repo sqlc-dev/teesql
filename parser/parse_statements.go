@@ -14476,6 +14476,7 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				col := &ast.FullTextIndexColumn{}
+				colStartTok := p.curTok
 				col.Name = p.parseIdentifier()
 
 				// Parse optional TYPE COLUMN type_column_name
@@ -14491,6 +14492,7 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 				if p.curTok.Type == TokenLanguage {
 					p.nextToken() // consume LANGUAGE
 					col.LanguageTerm = &ast.IdentifierOrValueExpression{}
+					langValTok := p.curTok
 					if p.curTok.Type == TokenString {
 						strLit, _ := p.parseStringLiteral()
 						col.LanguageTerm.Value = strLit.Value
@@ -14503,6 +14505,7 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 								IsLargeObject: false,
 								Value:         p.curTok.Literal,
 							}
+							p.tokSpan(lit, p.curTok)
 							col.LanguageTerm.Value = p.curTok.Literal
 							col.LanguageTerm.ValueExpression = lit
 						} else {
@@ -14519,6 +14522,7 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 							IsLargeObject: false,
 							Value:         p.curTok.Literal,
 						}
+						p.tokSpan(lit, p.curTok)
 						col.LanguageTerm.Value = p.curTok.Literal
 						col.LanguageTerm.ValueExpression = lit
 						p.nextToken()
@@ -14526,7 +14530,11 @@ func (p *Parser) parseCreateFulltextStatement() (ast.Statement, error) {
 						col.LanguageTerm.Identifier = p.parseIdentifier()
 						col.LanguageTerm.Value = col.LanguageTerm.Identifier.Value
 					}
+					p.spanFrom(langValTok, col.LanguageTerm)
 				}
+
+				p.spanFrom(colStartTok, col)
+				col.Pin()
 
 				// Parse optional STATISTICAL_SEMANTICS
 				if strings.ToUpper(p.curTok.Literal) == "STATISTICAL_SEMANTICS" {
