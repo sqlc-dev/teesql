@@ -48,6 +48,10 @@ type Parser struct {
 	// consumed semicolon token, used to verify that a span actually ends
 	// with that semicolon before trimming it.
 	lastSemiEndByte int
+	// parenQueryDepth tracks nesting inside parenthesized queries (derived
+	// tables); ScriptDom records FOR XML clauses there without the FOR XML
+	// keywords.
+	parenQueryDepth int
 }
 
 func newParser(input string) *Parser {

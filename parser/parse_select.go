@@ -3374,6 +3374,8 @@ func (p *Parser) parseOdbcQualifiedJoinTableReference() (ast.TableReference, err
 // or an inline derived table (VALUES clause) like (VALUES (...), (...)) AS alias(cols)
 // or a data modification table reference (DML with OUTPUT) like (INSERT ... OUTPUT ...) AS alias
 func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
+	p.parenQueryDepth++
+	defer func() { p.parenQueryDepth-- }()
 	astStart := p.curTok
 
 	p.nextToken() // consume (
@@ -7703,7 +7705,15 @@ func (p *Parser) parseForClause() (ast.ForClause, error) {
 
 	case "XML":
 		p.nextToken() // consume XML
+		optStartTok := p.curTok
 		spanV77, spanErr77 := p.parseXmlForClause()
+		if p.parenQueryDepth > 0 && spanErr77 == nil {
+			// Inside a parenthesized query ScriptDom's clause span omits
+			// the FOR XML keywords.
+			p.spanFrom(optStartTok, spanV77)
+			spanV77.Pin()
+			return spanV77, nil
+		}
 		return spanned(p, spanV77, astStart), spanErr77
 
 	case "JSON":
@@ -9093,6 +9103,12 @@ func (p *Parser) parsePivotedTableReference(tableRef ast.TableReference) (*ast.P
 		pivoted.Alias = p.parseIdentifier()
 	}
 
+	// ScriptDom spans the pivoted reference from its base table.
+	if ts, ok := tableRef.(spannable); ok && ts.Frag().HasSpan() {
+		p.spanFromChild(pivoted, tableRef)
+		pivoted.Pin()
+		return pivoted, nil
+	}
 	return spanned(p, pivoted, astStart), nil
 }
 
