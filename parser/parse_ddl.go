@@ -852,8 +852,6 @@ func (p *Parser) parseSecurityPolicyOption() *ast.SecurityPolicyOption {
 }
 
 func (p *Parser) parseSecurityPredicateAction(actionType string) (*ast.SecurityPredicateAction, error) {
-	astStart := p.curTok
-
 	action := &ast.SecurityPredicateAction{
 		ActionType: actionType,
 	}
@@ -879,6 +877,9 @@ func (p *Parser) parseSecurityPredicateAction(actionType string) (*ast.SecurityP
 	p.nextToken()
 
 	// For DROP, we don't parse function call - only ON target
+	// ScriptDom spans the action from the predicate function (or, for
+	// DROP, the target name) through the last consumed token.
+	actionSpanTok := p.curTok
 	if actionType != "Drop" {
 		// Parse function call (the predicate function)
 		funcCall, err := p.parseFunctionCallForPredicate()
@@ -893,6 +894,10 @@ func (p *Parser) parseSecurityPredicateAction(actionType string) (*ast.SecurityP
 		return nil, fmt.Errorf("expected ON, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
+
+	if actionType == "Drop" {
+		actionSpanTok = p.curTok
+	}
 
 	// Parse target table name
 	targetName, err := p.parseSchemaObjectName()
@@ -921,7 +926,9 @@ func (p *Parser) parseSecurityPredicateAction(actionType string) (*ast.SecurityP
 		p.nextToken()
 	}
 
-	return spanned(p, action, astStart), nil
+	p.spanFrom(actionSpanTok, action)
+	action.Pin()
+	return action, nil
 }
 
 func (p *Parser) parseFunctionCallForPredicate() (*ast.FunctionCall, error) {

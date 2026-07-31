@@ -7809,9 +7809,11 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 	for {
 		upperLiteral := strings.ToUpper(p.curTok.Literal)
 		if upperLiteral == "READ_WRITE_FILEGROUPS" {
-			files = append(files, &ast.BackupRestoreFileInfo{
+			rwInfo := &ast.BackupRestoreFileInfo{
 				ItemKind: "ReadWriteFileGroups",
-			})
+			}
+			p.tokSpan(rwInfo, p.curTok)
+			files = append(files, rwInfo)
 			p.nextToken()
 		} else if upperLiteral == "FILE" {
 			p.nextToken()
@@ -8291,7 +8293,10 @@ func (p *Parser) parseBackupEncryptionOption() (*ast.BackupEncryptionOption, err
 			}
 
 			// Parse identifier
+			nameTok := p.curTok
 			opt.Encryptor.Identifier = p.parseIdentifier()
+			// ScriptDom spans the crypto mechanism over the key name.
+			p.spanFrom(nameTok, opt.Encryptor)
 		}
 
 		if p.curTok.Type == TokenComma {
@@ -8300,10 +8305,16 @@ func (p *Parser) parseBackupEncryptionOption() (*ast.BackupEncryptionOption, err
 	}
 
 	if p.curTok.Type == TokenRParen {
+		// ScriptDom spans this option on the closing parenthesis only.
+		p.tokSpan(opt, p.curTok)
+		opt.Pin()
 		p.nextToken() // consume )
 	}
 
-	return spanned(p, opt, astStart), nil
+	if !opt.HasSpan() {
+		return spanned(p, opt, astStart), nil
+	}
+	return opt, nil
 }
 
 func (p *Parser) parseBackupCertificateStatement() (*ast.BackupCertificateStatement, error) {

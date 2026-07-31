@@ -12751,6 +12751,12 @@ parseWithClause:
 				if p.curTok.Type == TokenRParen {
 					p.nextToken()
 				}
+				// Both option nodes span FILESTREAM(...) including the
+				// closing parenthesis.
+				p.spanFrom(restoreOptTok, fsOpt)
+				p.spanFrom(restoreOptTok, fsOpt.FileStreamOption)
+				fsOpt.Pin()
+				fsOpt.FileStreamOption.Pin()
 				stmt.Options = append(stmt.Options, fsOpt)
 
 			case "MOVE":
