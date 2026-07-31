@@ -1637,7 +1637,9 @@ func (p *Parser) parseExecuteParameter() (*ast.ExecuteParameter, error) {
 
 	// Check for DEFAULT keyword
 	if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-		param.ParameterValue = &ast.DefaultLiteral{LiteralType: "Default", Value: "DEFAULT"}
+		dflt := &ast.DefaultLiteral{LiteralType: "Default", Value: "DEFAULT"}
+		p.tokSpan(dflt, p.curTok)
+		param.ParameterValue = dflt
 		p.nextToken()
 		return spanned(p, param, astStart), nil
 	}
@@ -1654,7 +1656,9 @@ func (p *Parser) parseExecuteParameter() (*ast.ExecuteParameter, error) {
 
 			// Check for DEFAULT keyword as value
 			if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-				param.ParameterValue = &ast.DefaultLiteral{LiteralType: "Default", Value: "DEFAULT"}
+				dflt := &ast.DefaultLiteral{LiteralType: "Default", Value: "DEFAULT"}
+				p.tokSpan(dflt, p.curTok)
+				param.ParameterValue = dflt
 				p.nextToken()
 			} else {
 				// Parse the parameter value
@@ -3126,7 +3130,9 @@ func (p *Parser) parseCopyStatement() (*ast.CopyStatement, error) {
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
 		columnOpts := &ast.ListTypeCopyOption{}
+		firstColTok := p.curTok
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			colTok := p.curTok
 			colOpt := &ast.CopyColumnOption{}
 			colOpt.ColumnName = p.parseIdentifier()
 
@@ -3142,11 +3148,11 @@ func (p *Parser) parseCopyStatement() (*ast.CopyStatement, error) {
 
 			// Parse field number (integer)
 			if p.curTok.Type == TokenNumber {
-				val := p.curTok.Literal
-				colOpt.FieldNumber = &ast.IntegerLiteral{Value: val, LiteralType: "Integer"}
+				colOpt.FieldNumber = p.intLitFromToken(p.curTok)
 				p.nextToken()
 			}
 
+			p.spanFrom(colTok, colOpt)
 			columnOpts.Options = append(columnOpts.Options, colOpt)
 
 			if p.curTok.Type == TokenComma {
@@ -3160,10 +3166,19 @@ func (p *Parser) parseCopyStatement() (*ast.CopyStatement, error) {
 		}
 		// Add column options as an option
 		if len(columnOpts.Options) > 0 {
-			stmt.Options = append(stmt.Options, &ast.CopyOption{
+			// ScriptDom spans the option over the list contents, excluding
+			// the parens.
+			p.spanFrom(firstColTok, columnOpts)
+			if last, ok := any(columnOpts.Options[len(columnOpts.Options)-1]).(spannable); ok && last.Frag().HasSpan() && columnOpts.Frag().HasSpan() {
+				columnOpts.Frag().FragmentLength = last.Frag().EndOffset() - columnOpts.Frag().StartOffset
+			}
+			colCopyOpt := &ast.CopyOption{
 				Kind:  "ColumnOptions",
 				Value: columnOpts,
-			})
+			}
+			*colCopyOpt.Frag() = *columnOpts.Frag()
+			colCopyOpt.Frag().Pin()
+			stmt.Options = append(stmt.Options, colCopyOpt)
 		}
 	}
 
@@ -3270,6 +3285,20 @@ func (p *Parser) parseCopyOption() (*ast.CopyOption, error) {
 		if p.curTok.Type == TokenRParen {
 			p.nextToken() // consume )
 		}
+		// ScriptDom spans credential options from the identity value through
+		// the last value token (excluding the parens).
+		first, ok1 := any(credOpt.Identity).(spannable)
+		lastExpr := credOpt.Secret
+		if lastExpr == nil {
+			lastExpr = credOpt.Identity
+		}
+		last, ok2 := any(lastExpr).(spannable)
+		if ok1 && ok2 && first != nil && last != nil && first.Frag().HasSpan() && last.Frag().HasSpan() {
+			ff, lf := first.Frag(), last.Frag()
+			credOpt.SetSpan(ff.StartOffset, lf.EndOffset()-ff.StartOffset, ff.StartLine, ff.StartColumn)
+			*opt.Frag() = *credOpt.Frag()
+			opt.Frag().Pin()
+		}
 		opt.Value = credOpt
 	} else {
 		// Single value option
@@ -3285,7 +3314,7 @@ func (p *Parser) parseCopyOption() (*ast.CopyOption, error) {
 		} else if p.curTok.Type == TokenNumber {
 			val := p.curTok.Literal
 			idOrVal.Value = val
-			idOrVal.ValueExpression = &ast.IntegerLiteral{Value: val, LiteralType: "Integer"}
+			idOrVal.ValueExpression = p.intLitFromToken(p.curTok)
 			p.nextToken()
 		} else {
 			// Identifier value (like FILEFORMAT, GZIP, etc.)
@@ -3298,5 +3327,24 @@ func (p *Parser) parseCopyOption() (*ast.CopyOption, error) {
 		opt.Value = singleOpt
 	}
 
+	// ScriptDom positions COPY options on their value.
+	switch v := opt.Value.(type) {
+	case *ast.SingleValueTypeCopyOption:
+		if v.SingleValue != nil {
+			if ve, ok := any(v.SingleValue.ValueExpression).(spannable); ok && ve != nil && ve.Frag().HasSpan() {
+				*opt.Frag() = *ve.Frag()
+			} else if v.SingleValue.Identifier != nil && v.SingleValue.Identifier.Frag().HasSpan() {
+				*opt.Frag() = *v.SingleValue.Identifier.Frag()
+			}
+			if opt.Frag().HasSpan() {
+				*v.Frag() = *opt.Frag()
+				*v.SingleValue.Frag() = *opt.Frag()
+			}
+		}
+	}
+	if opt.Frag().HasSpan() {
+		opt.Frag().Pin()
+		return opt, nil
+	}
 	return spanned(p, opt, astStart), nil
 }

@@ -16322,6 +16322,8 @@ func (p *Parser) parseDbccStatement() (*ast.DbccStatement, error) {
 					break
 				}
 				lit.Value = val
+				// ScriptDom positions dbcc literals on their value.
+				p.spanFromChild(lit, val)
 				stmt.Literals = append(stmt.Literals, lit)
 
 				if p.curTok.Type == TokenComma {
@@ -16355,6 +16357,7 @@ func (p *Parser) parseDbccStatement() (*ast.DbccStatement, error) {
 			option := &ast.DbccOption{
 				OptionKind: p.convertDbccOptionKind(optName),
 			}
+			p.tokSpan(option, p.curTok)
 			stmt.Options = append(stmt.Options, option)
 			p.nextToken()
 

@@ -8240,10 +8240,13 @@ func (p *Parser) parseJsonObjectCall() (*ast.FunctionCall, error) {
 				return nil, err
 			}
 
-			fc.JsonParameters = append(fc.JsonParameters, &ast.JsonKeyValue{
+			jkv := &ast.JsonKeyValue{
 				JsonKeyName: keyExpr,
 				JsonValue:   valueExpr,
-			})
+			}
+			// The key-value pair spans from key through value.
+			p.spanFromChild(jkv, keyExpr)
+			fc.JsonParameters = append(fc.JsonParameters, jkv)
 		} else {
 			// Just a regular parameter without colon (shouldn't happen for JSON_OBJECT)
 			fc.Parameters = append(fc.Parameters, keyExpr)
