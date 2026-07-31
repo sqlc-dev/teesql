@@ -7354,6 +7354,7 @@ func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName)
 			p.nextToken()
 
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				switchOptTok := p.curTok
 				optionName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken()
 
@@ -7366,6 +7367,7 @@ func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName)
 							TruncateTarget: value == "ON",
 							OptionKind:     "TruncateTarget",
 						}
+						p.spanFrom(switchOptTok, opt)
 						stmt.Options = append(stmt.Options, opt)
 					}
 				} else if optionName == "WAIT_AT_LOW_PRIORITY" {
@@ -7378,6 +7380,7 @@ func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName)
 						p.nextToken()
 
 						for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+							lpSubTok := p.curTok
 							subOptName := strings.ToUpper(p.curTok.Literal)
 							p.nextToken()
 
@@ -7399,6 +7402,7 @@ func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName)
 									subOpt.Unit = "Minutes"
 									p.nextToken()
 								}
+								p.spanFrom(lpSubTok, subOpt)
 								opt.Options = append(opt.Options, subOpt)
 							} else if subOptName == "ABORT_AFTER_WAIT" {
 								if p.curTok.Type == TokenEquals {
@@ -7420,6 +7424,7 @@ func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName)
 									OptionKind:     "AbortAfterWait",
 									AbortAfterWait: abortValue,
 								}
+								p.spanFrom(lpSubTok, subOpt)
 								opt.Options = append(opt.Options, subOpt)
 							}
 
@@ -7433,6 +7438,7 @@ func (p *Parser) parseAlterTableSwitchStatement(tableName *ast.SchemaObjectName)
 						}
 					}
 
+					p.spanFrom(switchOptTok, opt)
 					stmt.Options = append(stmt.Options, opt)
 				}
 
@@ -13362,6 +13368,7 @@ func (p *Parser) parseAlterAuthorizationStatement() (*ast.AlterAuthorizationStat
 	stmt := &ast.AlterAuthorizationStatement{}
 
 	// Expect ON
+	targetOnTok := p.curTok
 	if p.curTok.Type == TokenOn {
 		p.nextToken() // consume ON
 	}
@@ -13510,6 +13517,8 @@ func (p *Parser) parseAlterAuthorizationStatement() (*ast.AlterAuthorizationStat
 		multiPart.Count = len(multiPart.Identifiers)
 		stmt.SecurityTargetObject.ObjectName.MultiPartIdentifier = multiPart
 	}
+	// ScriptDom spans the target from ON through the object name.
+	p.spanFrom(targetOnTok, stmt.SecurityTargetObject)
 
 	// Expect TO
 	if p.curTok.Type == TokenTo {

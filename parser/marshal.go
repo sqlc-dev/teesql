@@ -13111,6 +13111,10 @@ func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
 			}
 			loginOption.UserLoginOptionType = "External"
 		}
+		// ScriptDom positions the login option on its identifier.
+		if loginOption.Identifier != nil && loginOption.Identifier.Frag().HasSpan() {
+			*loginOption.Frag() = *loginOption.Identifier.Frag()
+		}
 		stmt.UserLoginOption = loginOption
 	} else if strings.ToUpper(p.curTok.Literal) == "WITHOUT" {
 		p.nextToken() // consume WITHOUT
