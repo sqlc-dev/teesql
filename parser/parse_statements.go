@@ -1314,7 +1314,6 @@ func getSqlDataTypeOption(typeName string) (string, bool) {
 		"JSON":             "Json",
 		"ROWVERSION":       "Rowversion",
 		"TIMESTAMP":        "Timestamp",
-		"CONNECTION":       "Connection",
 		"VECTOR":           "Vector",
 	}
 	if mapped, ok := typeMap[strings.ToUpper(typeName)]; ok {
@@ -6205,7 +6204,13 @@ func (p *Parser) parseRollbackTransactionStatement() (*ast.RollbackTransactionSt
 	stmt := &ast.RollbackTransactionStatement{}
 
 	// Skip optional WORK, TRAN, or TRANSACTION
-	if p.curTok.Type == TokenWork || p.curTok.Type == TokenTran || p.curTok.Type == TokenTransaction {
+	if p.curTok.Type == TokenWork {
+		// ScriptDom does not include the WORK keyword in the span of
+		// ROLLBACK WORK.
+		savedEnd := p.prevEndByte
+		p.nextToken()
+		p.prevEndByte = savedEnd
+	} else if p.curTok.Type == TokenTran || p.curTok.Type == TokenTransaction {
 		p.nextToken()
 	}
 

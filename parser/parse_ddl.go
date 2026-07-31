@@ -3041,6 +3041,38 @@ func (p *Parser) parseAlterDatabaseStatement() (ast.Statement, error) {
 		return spanned(p, &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, astStart), nil
 	}
 
+	// Handle SQLCMD variable database names: $(name)
+	if strings.HasPrefix(p.curTok.Literal, "$") && p.curTok.Type != TokenIdent {
+		startPos := p.curTok.Pos
+		startTok := p.curTok
+		endPos := startPos + len(p.curTok.Literal)
+		for p.curTok.Type != TokenEOF {
+			endPos = p.curTok.Pos + len(p.curTok.Literal)
+			isClose := p.curTok.Type == TokenRParen
+			p.nextToken()
+			if isClose {
+				break
+			}
+		}
+		dbName := &ast.Identifier{
+			Value:     p.lexer.input[startPos:endPos],
+			QuoteType: "NotQuoted",
+			IsSqlCmd:  true,
+		}
+		p.tokSpan(dbName, Token{Pos: startPos, Literal: p.lexer.input[startPos:endPos]})
+		_ = startTok
+		switch p.curTok.Type {
+		case TokenSet:
+			spanV206b, spanErr206b := p.parseAlterDatabaseSetStatement(dbName)
+			return spanned(p, spanV206b, astStart), spanErr206b
+		case TokenAdd:
+			spanV207b, spanErr207b := p.parseAlterDatabaseAddStatement(dbName)
+			return spanned(p, spanV207b, astStart), spanErr207b
+		}
+		p.skipToEndOfStatement()
+		return spanned(p, &ast.AlterDatabaseSetStatement{DatabaseName: dbName}, astStart), nil
+	}
+
 	// Parse database name followed by various commands
 	if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket || p.curTok.Type == TokenCurrent {
 		dbName := p.parseIdentifier()

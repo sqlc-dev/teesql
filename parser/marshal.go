@@ -2645,6 +2645,9 @@ func identifierToJSON(id *ast.Identifier) jsonNode {
 	node := jsonNode{
 		"$type": "Identifier",
 	}
+	if id.IsSqlCmd {
+		node["$type"] = "SqlCommandIdentifier"
+	}
 	// Always include Value, even if empty
 	node["Value"] = id.Value
 	if id.QuoteType != "" {
