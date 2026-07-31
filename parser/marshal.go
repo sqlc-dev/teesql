@@ -11784,10 +11784,10 @@ func auditSpecificationDetailToJSON(d ast.AuditSpecificationDetail) jsonNode {
 		if len(detail.Actions) > 0 {
 			actions := make([]jsonNode, len(detail.Actions))
 			for i, a := range detail.Actions {
-				actions[i] = jsonNode{
+				actions[i] = addSpan(jsonNode{
 					"$type":      "DatabaseAuditAction",
 					"ActionKind": a.ActionKind,
-				}
+				}, frag(a))
 			}
 			node["Actions"] = actions
 		}
@@ -11801,7 +11801,7 @@ func auditSpecificationDetailToJSON(d ast.AuditSpecificationDetail) jsonNode {
 				if p.Identifier != nil {
 					principalNode["Identifier"] = identifierToJSON(p.Identifier)
 				}
-				principals[i] = principalNode
+				principals[i] = addSpan(principalNode, frag(p))
 			}
 			node["Principals"] = principals
 		}

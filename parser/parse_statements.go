@@ -4192,12 +4192,15 @@ func (p *Parser) parseAuditSpecificationPart(isDrop bool) (*ast.AuditSpecificati
 		firstWord := strings.ToUpper(p.curTok.Literal)
 		if isAuditAction(firstWord) {
 			// Parse action specification
+			auditSpecTok := p.curTok
 			spec := &ast.AuditActionSpecification{}
 
 			// Parse actions
 			for {
 				actionKind := convertAuditActionKind(strings.ToUpper(p.curTok.Literal))
-				spec.Actions = append(spec.Actions, &ast.DatabaseAuditAction{ActionKind: actionKind})
+				auditAction := &ast.DatabaseAuditAction{ActionKind: actionKind}
+				p.tokSpan(auditAction, p.curTok)
+				spec.Actions = append(spec.Actions, auditAction)
 				p.nextToken()
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
@@ -4212,6 +4215,7 @@ func (p *Parser) parseAuditSpecificationPart(isDrop bool) (*ast.AuditSpecificati
 
 			// Parse ON object
 			if strings.ToUpper(p.curTok.Literal) == "ON" {
+				onTok := p.curTok
 				p.nextToken() // consume ON
 				objIdent := p.parseIdentifier()
 				spec.TargetObject = &ast.SecurityTargetObject{
@@ -4222,6 +4226,11 @@ func (p *Parser) parseAuditSpecificationPart(isDrop bool) (*ast.AuditSpecificati
 							Count:       1,
 						},
 					},
+				}
+				// ScriptDom spans the target from ON through the object name.
+				p.spanFrom(onTok, spec.TargetObject)
+				if objIdent.Frag().HasSpan() {
+					*spec.TargetObject.ObjectName.Frag() = *objIdent.Frag()
 				}
 			}
 
@@ -4251,13 +4260,16 @@ func (p *Parser) parseAuditSpecificationPart(isDrop bool) (*ast.AuditSpecificati
 					}
 				}
 			}
+			p.spanFrom(auditSpecTok, spec)
 			part.Details = spec
 		} else {
 			// Parse audit action group reference
 			groupName := p.curTok.Literal
-			part.Details = &ast.AuditActionGroupReference{
+			agr := &ast.AuditActionGroupReference{
 				Group: convertAuditGroupName(groupName),
 			}
+			p.tokSpan(agr, p.curTok)
+			part.Details = agr
 			p.nextToken() // consume group name
 		}
 
@@ -8827,6 +8839,7 @@ func (p *Parser) parseCreateExternalFileFormatStatement() (*ast.CreateExternalFi
 		p.nextToken() // consume (
 
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			effOptTok := p.curTok
 			optName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume option name
 
@@ -8857,6 +8870,7 @@ func (p *Parser) parseCreateExternalFileFormatStatement() (*ast.CreateExternalFi
 						p.nextToken() // consume )
 					}
 				}
+				p.spanFrom(effOptTok, opt)
 				stmt.ExternalFileFormatOptions = append(stmt.ExternalFileFormatOptions, opt)
 			} else {
 				// Handle other options (SERDE_METHOD, DATA_COMPRESSION) as literal options
@@ -8928,6 +8942,7 @@ func (p *Parser) parseExternalFileFormatSuboption() ast.ExternalFileFormatOption
 	if p.curTok.Type == TokenEquals {
 		p.nextToken() // consume =
 
+		// ScriptDom positions file-format suboptions on their value tokens.
 		// Special handling for USE_TYPE_DEFAULT which uses ExternalFileFormatUseDefaultTypeOption
 		if optName == "USE_TYPE_DEFAULT" {
 			// Value is TRUE or FALSE (as identifier, not string)
@@ -8936,28 +8951,35 @@ func (p *Parser) parseExternalFileFormatSuboption() ast.ExternalFileFormatOption
 			if value == "TRUE" {
 				defaultType = "True"
 			}
-			p.nextToken()
-			return spanned(p, &ast.ExternalFileFormatUseDefaultTypeOption{
+			udOpt := &ast.ExternalFileFormatUseDefaultTypeOption{
 				OptionKind:                       optionKind,
 				ExternalFileFormatUseDefaultType: defaultType,
-			}, astStart)
+			}
+			p.nextToken()
+			// This option spans keyword through value.
+			p.spanFrom(astStart, udOpt)
+			return udOpt
 		}
 
 		// Handle integer values for FIRST_ROW
 		if optName == "FIRST_ROW" {
 			val := p.intLitFromToken(p.curTok)
 			p.nextToken()
-			return spanned(p, &ast.ExternalFileFormatLiteralOption{
+			frOpt := &ast.ExternalFileFormatLiteralOption{
 				OptionKind: optionKind,
 				Value:      val,
-			}, astStart)
+			}
+			p.spanFromChild(frOpt, val)
+			return frOpt
 		}
 
 		val, _ := p.parseStringLiteral()
-		return spanned(p, &ast.ExternalFileFormatLiteralOption{
+		litOpt := &ast.ExternalFileFormatLiteralOption{
 			OptionKind: optionKind,
 			Value:      val,
-		}, astStart)
+		}
+		p.spanFromChild(litOpt, val)
+		return litOpt
 	}
 	return nil
 }
