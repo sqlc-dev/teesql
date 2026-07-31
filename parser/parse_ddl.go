@@ -9310,6 +9310,7 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 							p.nextToken()
 						} else if p.curTok.Type == TokenLParen {
 							p.nextToken() // consume (
+							ipStartTok := p.curTok
 							ipOpt.IPv4PartOne = p.parseIPv4Address()
 							// Check for colon-separated second IP address
 							if p.curTok.Type == TokenColon {
@@ -9319,6 +9320,7 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 							if p.curTok.Type == TokenRParen {
 								p.nextToken() // consume )
 							}
+							p.spanFrom(ipStartTok, ipOpt)
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, ipOpt)
 					} else {
@@ -9336,6 +9338,7 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
 							opt.Value = p.strLit(p.curTok.Literal, false)
+							p.spanFromChild(opt, opt.Value)
 							p.nextToken()
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
@@ -9468,6 +9471,7 @@ func (p *Parser) parseIPv4Address() *ast.IPv4 {
 
 	ipv4 := &ast.IPv4{}
 	var octets []string
+	endPos := astStart.Pos
 
 	// Collect all octets from tokens
 	for len(octets) < 4 {
@@ -9476,8 +9480,7 @@ func (p *Parser) parseIPv4Address() *ast.IPv4 {
 			literal := p.curTok.Literal
 			if strings.Contains(literal, ".") {
 				// Split by dots and add each part as an octet
-				parts := strings.Split(literal, ".")
-				for _, part := range parts {
+				for _, part := range strings.Split(literal, ".") {
 					if part != "" && len(octets) < 4 {
 						octets = append(octets, part)
 					}
@@ -9485,39 +9488,78 @@ func (p *Parser) parseIPv4Address() *ast.IPv4 {
 			} else {
 				octets = append(octets, literal)
 			}
+			endPos = p.curTok.Pos + len(p.curTok.Literal)
 			p.nextToken()
 		} else if p.curTok.Type == TokenDot {
 			// Skip standalone dots
+			endPos = p.curTok.Pos + 1
 			p.nextToken()
 		} else {
 			break
 		}
 	}
 
+	// ScriptDom lexes an address like 1.2.3.4 as the numeric tokens
+	// [1.2][.3][.4] and positions each octet on its source token, so the
+	// first two octets can share a span. Recompute those token boundaries.
+	var tokSpans [][2]int
+	raw := p.lexer.input[astStart.Pos:endPos]
+	i := 0
+	for i < len(raw) {
+		st := i
+		if raw[i] == '.' {
+			i++
+		}
+		for i < len(raw) && raw[i] >= '0' && raw[i] <= '9' {
+			i++
+		}
+		if st == 0 && i < len(raw) && raw[i] == '.' {
+			// The leading token merges a following decimal part: 1.2
+			j := i + 1
+			for j < len(raw) && raw[j] >= '0' && raw[j] <= '9' {
+				j++
+			}
+			if j > i+1 {
+				i = j
+			}
+		}
+		if i == st {
+			break
+		}
+		tokSpans = append(tokSpans, [2]int{astStart.Pos + st, astStart.Pos + i})
+	}
+	// Map octets to their covering tokens.
+	var octTok [][2]int
+	for ti, ts := range tokSpans {
+		octTok = append(octTok, ts)
+		if ti == 0 && strings.Contains(p.lexer.input[ts[0]:ts[1]], ".") {
+			octTok = append(octTok, ts)
+		}
+	}
+
+	mkLit := func(idx int) *ast.IntegerLiteral {
+		lit := &ast.IntegerLiteral{
+			LiteralType: "Integer",
+			Value:       octets[idx],
+		}
+		if idx < len(octTok) {
+			p.tokSpan(lit, Token{Pos: octTok[idx][0], Literal: p.lexer.input[octTok[idx][0]:octTok[idx][1]]})
+		}
+		return lit
+	}
+
 	// Assign octets to the IPv4 struct
 	if len(octets) >= 1 {
-		ipv4.OctetOne = &ast.IntegerLiteral{
-			LiteralType: "Integer",
-			Value:       octets[0],
-		}
+		ipv4.OctetOne = mkLit(0)
 	}
 	if len(octets) >= 2 {
-		ipv4.OctetTwo = &ast.IntegerLiteral{
-			LiteralType: "Integer",
-			Value:       octets[1],
-		}
+		ipv4.OctetTwo = mkLit(1)
 	}
 	if len(octets) >= 3 {
-		ipv4.OctetThree = &ast.IntegerLiteral{
-			LiteralType: "Integer",
-			Value:       octets[2],
-		}
+		ipv4.OctetThree = mkLit(2)
 	}
 	if len(octets) >= 4 {
-		ipv4.OctetFour = &ast.IntegerLiteral{
-			LiteralType: "Integer",
-			Value:       octets[3],
-		}
+		ipv4.OctetFour = mkLit(3)
 	}
 
 	return spanned(p, ipv4, astStart)
@@ -9679,7 +9721,13 @@ func (p *Parser) parseAuthenticationPayloadOption() *ast.AuthenticationPayloadOp
 		}
 	}
 
-	return spanned(p, opt, astStart)
+	// ScriptDom positions this option on the certificate name when present
+	// and leaves it without position info otherwise.
+	if opt.Certificate != nil && opt.Certificate.Frag().HasSpan() {
+		*opt.Frag() = *opt.Certificate.Frag()
+	}
+	_ = astStart
+	return opt
 }
 
 // parseEncryptionPayloadOption parses ENCRYPTION option for service_broker/database_mirroring.
@@ -9732,7 +9780,9 @@ func (p *Parser) parseEncryptionPayloadOption() *ast.EncryptionPayloadOption {
 		}
 	}
 
-	return spanned(p, opt, astStart)
+	// ScriptDom emits this option without position info.
+	_ = astStart
+	return opt
 }
 
 func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {

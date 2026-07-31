@@ -13698,6 +13698,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 							p.nextToken()
 						} else if p.curTok.Type == TokenLParen {
 							p.nextToken() // consume (
+							ipStartTok := p.curTok
 							// Check if it's a string literal (IPv6) or IPv4 address
 							if p.curTok.Type == TokenString {
 								ipOpt.IPv6 = p.parseStringLiteralValue()
@@ -13713,12 +13714,16 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 							if p.curTok.Type == TokenRParen {
 								p.nextToken() // consume )
 							}
+							// ScriptDom spans the option from the address
+							// through the closing paren.
+							p.spanFrom(ipStartTok, ipOpt)
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, ipOpt)
 					} else if optName == "PATH" {
 						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpPath"}
 						if p.curTok.Type == TokenString {
 							opt.Value = p.parseStringLiteralValue()
+							p.spanFromChild(opt, opt.Value)
 							p.nextToken()
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
@@ -13747,6 +13752,9 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 								}
 							}
 							if p.curTok.Type == TokenRParen {
+								// ScriptDom positions this option on the
+								// closing paren alone.
+								p.tokSpan(authOpt, p.curTok)
 								p.nextToken()
 							}
 							// Output in canonical order: Basic, Digest, Integrated, Ntlm, Kerberos
@@ -13778,6 +13786,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 								}
 							}
 							if p.curTok.Type == TokenRParen {
+								p.tokSpan(portsOpt, p.curTok)
 								p.nextToken()
 							}
 							sort.Strings(types)
@@ -13787,12 +13796,14 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 					} else if optName == "COMPRESSION" {
 						compOpt := &ast.CompressionEndpointProtocolOption{Kind: "HttpCompression"}
 						compOpt.IsEnabled = strings.ToUpper(p.curTok.Literal) == "ENABLED"
+						p.tokSpan(compOpt, p.curTok)
 						p.nextToken()
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, compOpt)
 					} else if optName == "SITE" {
 						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpSite"}
 						if p.curTok.Type == TokenString {
 							opt.Value = p.parseStringLiteralValue()
+							p.spanFromChild(opt, opt.Value)
 							p.nextToken()
 						} else if strings.ToUpper(p.curTok.Literal) == "NONE" {
 							p.nextToken()
@@ -13820,6 +13831,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpAuthenticationRealm"}
 						if p.curTok.Type == TokenString {
 							opt.Value = p.parseStringLiteralValue()
+							p.spanFromChild(opt, opt.Value)
 							p.nextToken()
 						} else if strings.ToUpper(p.curTok.Literal) == "NONE" {
 							p.nextToken()
@@ -13829,6 +13841,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpDefaultLogonDomain"}
 						if p.curTok.Type == TokenString {
 							opt.Value = p.parseStringLiteralValue()
+							p.spanFromChild(opt, opt.Value)
 							p.nextToken()
 						} else if strings.ToUpper(p.curTok.Literal) == "NONE" {
 							p.nextToken()
@@ -13849,6 +13862,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
 							opt.Value = p.parseStringLiteralValue()
+							p.spanFromChild(opt, opt.Value)
 							p.nextToken()
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
@@ -13948,12 +13962,16 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 							wsdlOpt.IsNone = true
 							p.nextToken()
 						} else if valUpper == "DEFAULT" {
-							wsdlOpt.Value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+							dl := &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+							p.tokSpan(dl, p.curTok)
+							wsdlOpt.Value = dl
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
 							wsdlOpt.Value = p.parseStringLiteralValue()
 							p.nextToken()
 						}
+						// ScriptDom positions this option on its value.
+						p.spanFromChild(wsdlOpt, wsdlOpt.Value)
 						stmt.PayloadOptions = append(stmt.PayloadOptions, wsdlOpt)
 					} else if optUpper == "LOGIN_TYPE" {
 						p.nextToken() // consume LOGIN_TYPE
@@ -13975,6 +13993,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 							p.nextToken()
 						} else if p.curTok.Type == TokenNumber {
 							stOpt.Timeout = p.intLitFromToken(p.curTok)
+							p.spanFromChild(stOpt, stOpt.Timeout)
 							p.nextToken()
 						}
 						stmt.PayloadOptions = append(stmt.PayloadOptions, stOpt)
@@ -13990,12 +14009,15 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 						litOpt := &ast.LiteralPayloadOption{Kind: kind}
 						valUpper := strings.ToUpper(p.curTok.Literal)
 						if valUpper == "DEFAULT" {
-							litOpt.Value = &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+							dl := &ast.DefaultLiteral{LiteralType: "Default", Value: p.curTok.Literal}
+							p.tokSpan(dl, p.curTok)
+							litOpt.Value = dl
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
 							litOpt.Value = p.parseStringLiteralValue()
 							p.nextToken()
 						}
+						p.spanFromChild(litOpt, litOpt.Value)
 						stmt.PayloadOptions = append(stmt.PayloadOptions, litOpt)
 					} else if optUpper == "SCHEMA" {
 						p.nextToken() // consume SCHEMA
@@ -14027,6 +14049,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 						litOpt := &ast.LiteralPayloadOption{Kind: kind}
 						if p.curTok.Type == TokenNumber {
 							litOpt.Value = p.intLitFromToken(p.curTok)
+							p.spanFromChild(litOpt, litOpt.Value)
 							p.nextToken()
 						}
 						stmt.PayloadOptions = append(stmt.PayloadOptions, litOpt)
