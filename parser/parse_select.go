@@ -3915,6 +3915,7 @@ func (p *Parser) parseInlineDerivedTable() (*ast.InlineDerivedTable, error) {
 		if p.curTok.Type != TokenLParen {
 			break
 		}
+		rowTok := p.curTok
 		p.nextToken() // consume (
 
 		row := &ast.RowValue{}
@@ -3933,6 +3934,7 @@ func (p *Parser) parseInlineDerivedTable() (*ast.InlineDerivedTable, error) {
 		if p.curTok.Type == TokenRParen {
 			p.nextToken() // consume )
 		}
+		p.spanFrom(rowTok, row)
 		ref.RowValues = append(ref.RowValues, row)
 
 		if p.curTok.Type == TokenComma {
@@ -4645,24 +4647,31 @@ func (p *Parser) parseSemanticTableReference(funcType string) (*ast.SemanticTabl
 
 	// Parse column specification - could be *, (columns), or single column
 	if p.curTok.Type == TokenStar {
-		ref.Columns = []*ast.ColumnReferenceExpression{{ColumnType: "Wildcard"}}
+		wc := &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}
+		p.tokSpan(wc, p.curTok)
+		ref.Columns = []*ast.ColumnReferenceExpression{wc}
 		p.nextToken()
 	} else if p.curTok.Type == TokenLParen {
 		// Column list
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			if p.curTok.Type == TokenStar {
-				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				wc := &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}
+				p.tokSpan(wc, p.curTok)
+				ref.Columns = append(ref.Columns, wc)
 				p.nextToken()
 			} else {
+				colTok := p.curTok
 				col := p.parseIdentifier()
-				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{
+				colRef := &ast.ColumnReferenceExpression{
 					ColumnType: "Regular",
 					MultiPartIdentifier: &ast.MultiPartIdentifier{
 						Identifiers: []*ast.Identifier{col},
 						Count:       1,
 					},
-				})
+				}
+				p.spanFrom(colTok, colRef)
+				ref.Columns = append(ref.Columns, colRef)
 			}
 			if p.curTok.Type == TokenComma {
 				p.nextToken()
@@ -6398,6 +6407,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 				if p.curTok.Type != TokenLParen {
 					return nil, fmt.Errorf("expected ( after %s, got %s", upperLit, p.curTok.Literal)
 				}
+				subqLParen := p.curTok
 				p.nextToken() // consume (
 
 				subqueryExpr, err := p.parseQueryExpression()
@@ -6415,10 +6425,12 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 					compType = "IsNotDistinctFrom"
 				}
 
+				subq := &ast.ScalarSubquery{QueryExpression: subqueryExpr}
+				p.spanFrom(subqLParen, subq)
 				return spanned(p, &ast.SubqueryComparisonPredicate{
 					Expression:                      left,
 					ComparisonType:                  compType,
-					Subquery:                        &ast.ScalarSubquery{QueryExpression: subqueryExpr},
+					Subquery:                        subq,
 					SubqueryComparisonPredicateType: predicateType,
 				}, astStart), nil
 			}

@@ -2969,17 +2969,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 		if len(r.RowValues) > 0 {
 			rows := make([]jsonNode, len(r.RowValues))
 			for i, row := range r.RowValues {
-				rowNode := jsonNode{
-					"$type": "RowValue",
-				}
-				if len(row.ColumnValues) > 0 {
-					vals := make([]jsonNode, len(row.ColumnValues))
-					for j, v := range row.ColumnValues {
-						vals[j] = scalarExpressionToJSON(v)
-					}
-					rowNode["ColumnValues"] = vals
-				}
-				rows[i] = rowNode
+				rows[i] = rowValueToJSON(row)
 			}
 			node["RowValues"] = rows
 		}
@@ -13236,11 +13226,14 @@ func (p *Parser) parseCreateAggregateStatement() (*ast.CreateAggregateStatement,
 		// Check for NULL or NOT NULL
 		if p.curTok.Type == TokenNull {
 			param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+			p.tokSpan(param.Nullable, p.curTok)
 			p.nextToken()
 		} else if p.curTok.Type == TokenNot {
+			notTok := p.curTok
 			p.nextToken() // consume NOT
 			if p.curTok.Type == TokenNull {
 				param.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+				p.spanTokens(param.Nullable, notTok, p.curTok)
 				p.nextToken()
 			}
 		}
@@ -14821,11 +14814,14 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 			// Check for NULL/NOT NULL nullability
 			if p.curTok.Type == TokenNull {
 				param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+				p.tokSpan(param.Nullable, p.curTok)
 				p.nextToken()
 			} else if p.curTok.Type == TokenNot {
+				notTok := p.curTok
 				p.nextToken() // consume NOT
 				if p.curTok.Type == TokenNull {
 					param.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+					p.spanTokens(param.Nullable, notTok, p.curTok)
 					p.nextToken()
 				}
 			}
@@ -15319,11 +15315,14 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 			// Check for NULL/NOT NULL nullability
 			if p.curTok.Type == TokenNull {
 				param.Nullable = &ast.NullableConstraintDefinition{Nullable: true}
+				p.tokSpan(param.Nullable, p.curTok)
 				p.nextToken()
 			} else if p.curTok.Type == TokenNot {
+				notTok := p.curTok
 				p.nextToken() // consume NOT
 				if p.curTok.Type == TokenNull {
 					param.Nullable = &ast.NullableConstraintDefinition{Nullable: false}
+					p.spanTokens(param.Nullable, notTok, p.curTok)
 					p.nextToken()
 				}
 			}
