@@ -3473,6 +3473,10 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				OptionKind:  "TransformNoiseWords",
 				OptionState: capitalizeFirst(state),
 			}
+			// Unlike other on/off options, ScriptDom spans this one from
+			// the keyword through the state value.
+			p.spanFrom(optTok, opt)
+			opt.Pin()
 			stmt.Options = append(stmt.Options, opt)
 		case "DEFAULT_LANGUAGE":
 			// DEFAULT_LANGUAGE = identifier | integer
@@ -3591,10 +3595,12 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 					case "DIRECTORY_NAME":
 						// Can be a string literal or NULL
 						if strings.ToUpper(p.curTok.Literal) == "NULL" {
-							opt.DirectoryName = &ast.NullLiteral{
+							nullLit := &ast.NullLiteral{
 								LiteralType: "Null",
 								Value:       p.curTok.Literal, // Preserve original case
 							}
+							p.tokSpan(nullLit, p.curTok)
+							opt.DirectoryName = nullLit
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
 							opt.DirectoryName = p.strLit(strings.Trim(p.curTok.Literal, "'"), false)
@@ -3615,6 +3621,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 			if p.curTok.Type == TokenEquals {
 				p.nextToken() // consume =
 			}
+			trtValTok := p.curTok
 			timeVal, err := p.parseScalarExpression()
 			if err != nil {
 				return nil, err
@@ -3631,6 +3638,9 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				RecoveryTime: timeVal,
 				Unit:         unit,
 			}
+			// ScriptDom spans this option from the value through the unit.
+			p.spanFrom(trtValTok, trtOpt)
+			trtOpt.Pin()
 			stmt.Options = append(stmt.Options, trtOpt)
 		case "QUERY_STORE":
 			qsOpt, err := p.parseQueryStoreOption()
@@ -4714,6 +4724,14 @@ func (p *Parser) parseAlterDatabaseScopedConfigurationSetStatement(secondary boo
 			// It's an identifier (like ON, OFF, PRIMARY, or a custom value)
 			state = &ast.IdentifierOrScalarExpression{
 				Identifier: p.parseIdentifier(),
+			}
+			if strings.ToUpper(state.Identifier.Value) == "PRIMARY" &&
+				state.Identifier.QuoteType == "NotQuoted" {
+				// ScriptDom positions "= PRIMARY" on the option name token
+				// and synthesizes the identifier without a position.
+				p.tokSpan(state, optTok)
+				state.Pin()
+				unspan(state.Identifier)
 			}
 		}
 
@@ -11233,6 +11251,9 @@ func (p *Parser) parseAlterProcedureStatement() (*ast.AlterProcedureStatement, e
 					}
 					executeAsOpt.ExecuteAs.Literal = p.strLit(value, false)
 					p.nextToken()
+					// EXECUTE AS 'user' spans through the string literal.
+					p.spanFrom(execTok, executeAsOpt)
+					p.spanFrom(execTok, executeAsOpt.ExecuteAs)
 				}
 				stmt.Options = append(stmt.Options, executeAsOpt)
 			} else if upperLit == "REPLICATION" {

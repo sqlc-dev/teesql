@@ -4969,6 +4969,9 @@ func (p *Parser) parseCreateProcedureStatement() (*ast.CreateProcedureStatement,
 					}
 					executeAsOpt.ExecuteAs.Literal = p.strLit(value, false)
 					p.nextToken()
+					// EXECUTE AS 'user' spans through the string literal.
+					p.spanFrom(execTok, executeAsOpt)
+					p.spanFrom(execTok, executeAsOpt.ExecuteAs)
 				}
 				stmt.Options = append(stmt.Options, executeAsOpt)
 			} else if upperLit == "REPLICATION" {
@@ -10994,10 +10997,12 @@ func (p *Parser) parseCreateDatabaseOptions() ([]ast.CreateDatabaseOption, error
 					case "DIRECTORY_NAME":
 						// Can be a string literal or NULL
 						if strings.ToUpper(p.curTok.Literal) == "NULL" {
-							opt.DirectoryName = &ast.NullLiteral{
+							nullLit := &ast.NullLiteral{
 								LiteralType: "Null",
 								Value:       p.curTok.Literal, // Preserve original case
 							}
+							p.tokSpan(nullLit, p.curTok)
+							opt.DirectoryName = nullLit
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
 							opt.DirectoryName = p.strLit(strings.Trim(p.curTok.Literal, "'"), false)
