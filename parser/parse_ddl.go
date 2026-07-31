@@ -7719,7 +7719,7 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 			}
 			stmt.Options = append(stmt.Options, rdaOpt)
 		} else if optionName == "LEDGER" {
-			opt, err := p.parseLedgerTableOption()
+			opt, err := p.parseLedgerTableOption(optTok)
 			if err != nil {
 				return nil, err
 			}
@@ -7833,9 +7833,7 @@ func (p *Parser) parseSystemVersioningTableOption(kwTok Token) (*ast.SystemVersi
 	return opt, nil
 }
 
-func (p *Parser) parseLedgerTableOption() (*ast.LedgerTableOption, error) {
-	astStart := p.curTok
-
+func (p *Parser) parseLedgerTableOption(kwTok Token) (*ast.LedgerTableOption, error) {
 	opt := &ast.LedgerTableOption{
 		AppendOnly:       "NotSet",
 		OptionKind:       "LockEscalation",
@@ -7874,6 +7872,7 @@ func (p *Parser) parseLedgerTableOption() (*ast.LedgerTableOption, error) {
 			switch subOptName {
 			case "LEDGER_VIEW":
 				viewOpt := &ast.LedgerViewOption{OptionKind: "LockEscalation"}
+				viewNameTok := p.curTok
 				viewName, err := p.parseSchemaObjectName()
 				if err != nil {
 					return nil, err
@@ -7905,9 +7904,17 @@ func (p *Parser) parseLedgerTableOption() (*ast.LedgerTableOption, error) {
 							p.nextToken()
 						}
 					}
+					// ScriptDom spans the view option from the view name
+					// through the last mapping, excluding the closing paren.
+					p.spanFrom(viewNameTok, viewOpt)
+					viewOpt.Pin()
 					if p.curTok.Type == TokenRParen {
 						p.nextToken()
 					}
+				}
+				if !viewOpt.HasSpan() {
+					p.spanFrom(viewNameTok, viewOpt)
+					viewOpt.Pin()
 				}
 				opt.LedgerViewOption = viewOpt
 
@@ -7932,7 +7939,10 @@ func (p *Parser) parseLedgerTableOption() (*ast.LedgerTableOption, error) {
 		}
 	}
 
-	return spanned(p, opt, astStart), nil
+	// ScriptDom spans the LEDGER option on the keyword only.
+	p.tokSpan(opt, kwTok)
+	opt.Pin()
+	return opt, nil
 }
 
 func (p *Parser) parseRetentionPeriodDefinition() (*ast.RetentionPeriodDefinition, error) {

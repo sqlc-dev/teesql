@@ -11036,6 +11036,7 @@ func (p *Parser) parseAzureDatabaseOptions() ([]ast.CreateDatabaseOption, error)
 			continue
 		}
 
+		azOptTok := p.curTok
 		optName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken() // consume option name
 
@@ -11047,6 +11048,7 @@ func (p *Parser) parseAzureDatabaseOptions() ([]ast.CreateDatabaseOption, error)
 		switch optName {
 		case "MAXSIZE":
 			// Parse maxsize value and unit (e.g., "1gb", "5 gb")
+			maxSizeTok := p.curTok
 			maxSizeValue := p.curTok.Literal
 			p.nextToken() // consume value
 
@@ -11070,14 +11072,17 @@ func (p *Parser) parseAzureDatabaseOptions() ([]ast.CreateDatabaseOption, error)
 				}
 			}
 
+			maxSizeLit := &ast.IntegerLiteral{
+				LiteralType: "Integer",
+				Value:       maxSizeValue,
+			}
+			p.tokSpan(maxSizeLit, maxSizeTok)
 			opt := &ast.MaxSizeDatabaseOption{
 				OptionKind: "MaxSize",
-				MaxSize: &ast.IntegerLiteral{
-					LiteralType: "Integer",
-					Value:       maxSizeValue,
-				},
-				Units: units,
+				MaxSize:    maxSizeLit,
+				Units:      units,
 			}
+			p.spanFrom(azOptTok, opt)
 			options = append(options, opt)
 
 		case "EDITION":
@@ -11087,6 +11092,8 @@ func (p *Parser) parseAzureDatabaseOptions() ([]ast.CreateDatabaseOption, error)
 				OptionKind: "Edition",
 				Value:      value,
 			}
+			p.spanFrom(azOptTok, opt)
+			opt.Pin()
 			options = append(options, opt)
 
 		case "SERVICE_OBJECTIVE":
@@ -11106,6 +11113,10 @@ func (p *Parser) parseAzureDatabaseOptions() ([]ast.CreateDatabaseOption, error)
 							OptionKind:      "ServiceObjective",
 							ElasticPoolName: poolName,
 						}
+						// Spans from the option keyword through the pool
+						// name, excluding the closing parenthesis.
+						p.spanFrom(azOptTok, opt)
+						opt.Pin()
 						options = append(options, opt)
 					}
 					if p.curTok.Type == TokenRParen {
@@ -11119,6 +11130,8 @@ func (p *Parser) parseAzureDatabaseOptions() ([]ast.CreateDatabaseOption, error)
 					OptionKind: "ServiceObjective",
 					Value:      value,
 				}
+				p.spanFrom(azOptTok, opt)
+				opt.Pin()
 				options = append(options, opt)
 			}
 

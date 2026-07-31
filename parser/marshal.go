@@ -5620,10 +5620,14 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						if err != nil {
 							break
 						}
-						stmt.Options = append(stmt.Options, &ast.TableDataCompressionOption{
+						tdcOpt := &ast.TableDataCompressionOption{
 							DataCompressionOption: opt,
 							OptionKind:            "DataCompression",
-						})
+						}
+						p.spanFrom(optNameTok, tdcOpt)
+						p.spanFrom(optNameTok, opt)
+						opt.Pin()
+						stmt.Options = append(stmt.Options, tdcOpt)
 					} else if optionName == "XML_COMPRESSION" {
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
@@ -5632,10 +5636,14 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						if err != nil {
 							break
 						}
-						stmt.Options = append(stmt.Options, &ast.TableXmlCompressionOption{
+						txcOpt := &ast.TableXmlCompressionOption{
 							XmlCompressionOption: opt,
 							OptionKind:           "XmlCompression",
-						})
+						}
+						p.spanFrom(optNameTok, txcOpt)
+						p.spanFrom(optNameTok, opt)
+						opt.Pin()
+						stmt.Options = append(stmt.Options, txcOpt)
 					} else if optionName == "MEMORY_OPTIMIZED" {
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
@@ -5680,7 +5688,7 @@ func (p *Parser) parseCreateTableStatement() (*ast.CreateTableStatement, error) 
 						}
 						stmt.Options = append(stmt.Options, opt)
 					} else if optionName == "LEDGER" {
-						opt, err := p.parseLedgerTableOption()
+						opt, err := p.parseLedgerTableOption(optNameTok)
 						if err != nil {
 							return nil, err
 						}
@@ -6070,10 +6078,14 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 						if err != nil {
 							break
 						}
-						stmt.Options = append(stmt.Options, &ast.TableDataCompressionOption{
+						tdcOpt2 := &ast.TableDataCompressionOption{
 							DataCompressionOption: opt,
 							OptionKind:            "DataCompression",
-						})
+						}
+						p.spanFrom(optNameTok, tdcOpt2)
+						p.spanFrom(optNameTok, opt)
+						opt.Pin()
+						stmt.Options = append(stmt.Options, tdcOpt2)
 					} else if optionName == "FILETABLE_DIRECTORY" {
 						if p.curTok.Type == TokenEquals {
 							p.nextToken() // consume =
