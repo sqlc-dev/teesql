@@ -8764,6 +8764,8 @@ func (p *Parser) parseAlterLoginOptions(name *ast.Identifier) (*ast.AlterLoginOp
 	}
 
 	for {
+		loginOptTok := p.curTok
+		nLoginOptsBefore := len(stmt.Options)
 		optName := strings.ToUpper(p.curTok.Literal)
 
 		if optName == "PASSWORD" {
@@ -8791,11 +8793,13 @@ func (p *Parser) parseAlterLoginOptions(name *ast.Identifier) (*ast.AlterLoginOp
 				opt.Password = p.strLit(val, isNational)
 				p.nextToken()
 			} else if p.curTok.Type == TokenBinary {
-				opt.Password = &ast.BinaryLiteral{
+				pwLit := &ast.BinaryLiteral{
 					LiteralType:   "Binary",
 					IsLargeObject: false,
 					Value:         p.curTok.Literal,
 				}
+				p.tokSpan(pwLit, p.curTok)
+				opt.Password = pwLit
 				p.nextToken()
 			}
 
@@ -8828,10 +8832,13 @@ func (p *Parser) parseAlterLoginOptions(name *ast.Identifier) (*ast.AlterLoginOp
 			stmt.Options = append(stmt.Options, opt)
 		} else if optName == "NO" && strings.ToUpper(p.peekTok.Literal) == "CREDENTIAL" {
 			p.nextToken() // consume NO
-			p.nextToken() // consume CREDENTIAL
-			stmt.Options = append(stmt.Options, &ast.PrincipalOptionSimple{
+			// ScriptDom positions NO CREDENTIAL on the CREDENTIAL keyword.
+			noCredOpt := &ast.PrincipalOptionSimple{
 				OptionKind: "NoCredential",
-			})
+			}
+			p.tokSpan(noCredOpt, p.curTok)
+			p.nextToken() // consume CREDENTIAL
+			stmt.Options = append(stmt.Options, noCredOpt)
 		} else if optName == "NAME" {
 			p.nextToken() // consume NAME
 			if p.curTok.Type == TokenEquals {
@@ -8898,6 +8905,12 @@ func (p *Parser) parseAlterLoginOptions(name *ast.Identifier) (*ast.AlterLoginOp
 			})
 		} else {
 			break
+		}
+
+		for _, o := range stmt.Options[nLoginOptsBefore:] {
+			if s, ok := any(o).(spannable); ok && !s.Frag().HasSpan() {
+				p.spanFrom(loginOptTok, s)
+			}
 		}
 
 		if p.curTok.Type == TokenComma {

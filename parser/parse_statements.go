@@ -11403,6 +11403,7 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 		switch upper {
 		case "EXTERNAL":
 			// FROM EXTERNAL PROVIDER
+			externalTok := p.curTok
 			p.nextToken() // consume EXTERNAL
 			if strings.ToUpper(p.curTok.Literal) == "PROVIDER" {
 				p.nextToken() // consume PROVIDER
@@ -11416,10 +11417,13 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 				source.Options = p.parsePrincipalOptions()
 			}
 
+			// The source spans from EXTERNAL through its options.
+			p.spanFrom(externalTok, source)
 			stmt.Source = source
 
 		case "WINDOWS":
 			// FROM WINDOWS
+			windowsTok := p.curTok
 			p.nextToken() // consume WINDOWS
 
 			source := &ast.WindowsCreateLoginSource{}
@@ -11430,12 +11434,18 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 				source.Options = p.parsePrincipalOptions()
 			}
 
+			// The source spans from WINDOWS through its options.
+			p.spanFrom(windowsTok, source)
+			if !source.Frag().HasSpan() {
+				p.tokSpan(source, windowsTok)
+			}
 			stmt.Source = source
 
 		case "CERTIFICATE":
 			// FROM CERTIFICATE certname
 			p.nextToken() // consume CERTIFICATE
 
+			certNameTok := p.curTok
 			source := &ast.CertificateCreateLoginSource{
 				Certificate: p.parseIdentifier(),
 			}
@@ -11452,6 +11462,8 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 				}
 			}
 
+			// The source spans from the certificate name through its options.
+			p.spanFrom(certNameTok, source)
 			stmt.Source = source
 
 		case "ASYMMETRIC":
@@ -11461,6 +11473,7 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 				p.nextToken() // consume KEY
 			}
 
+			keyNameTok := p.curTok
 			source := &ast.AsymmetricKeyCreateLoginSource{
 				Key: p.parseIdentifier(),
 			}
@@ -11477,6 +11490,8 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 				}
 			}
 
+			// The source spans from the key name through its options.
+			p.spanFrom(keyNameTok, source)
 			stmt.Source = source
 		}
 	} else if p.curTok.Type == TokenWith {
@@ -11492,6 +11507,8 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 				p.nextToken() // consume =
 			}
 
+			// The source spans from the password value onward.
+			pwdValTok := p.curTok
 			// Parse password value (string or binary)
 			source.Password = p.parsePasswordValue()
 
@@ -11507,12 +11524,13 @@ func (p *Parser) parseCreateLoginStatement() (*ast.CreateLoginStatement, error) 
 				} else if p.curTok.Type == TokenComma {
 					p.nextToken()
 					// Parse remaining options
-					source.Options = append(source.Options, p.parsePrincipalOptions()...)
+					source.Options = append(source.Options, p.parsePrincipalOptionsSpanned(true)...)
 					break
 				} else {
 					break
 				}
 			}
+			p.spanFrom(pwdValTok, source)
 		}
 
 		stmt.Source = source
@@ -11559,6 +11577,13 @@ func (p *Parser) parsePasswordValue() ast.ScalarExpression {
 }
 
 func (p *Parser) parsePrincipalOptions() []ast.PrincipalOption {
+	return p.parsePrincipalOptionsSpanned(false)
+}
+
+// parsePrincipalOptionsSpanned parses login options; fullSpans controls
+// whether options cover keyword-through-value (the CREATE LOGIN ... WITH
+// PASSWORD form) or the value alone (FROM WINDOWS / EXTERNAL PROVIDER).
+func (p *Parser) parsePrincipalOptionsSpanned(fullSpans bool) []ast.PrincipalOption {
 	var options []ast.PrincipalOption
 
 	for {
@@ -11641,8 +11666,18 @@ func (p *Parser) parsePrincipalOptions() []ast.PrincipalOption {
 		if len(options) > lenBefore {
 			switch o := options[len(options)-1].(type) {
 			case *ast.IdentifierPrincipalOption:
-				// ScriptDom spans this option on its identifier value.
-				p.spanFromChild(o, o.Identifier)
+				if fullSpans {
+					p.spanFrom(optTok, o)
+				} else {
+					// ScriptDom spans this option on its identifier value.
+					p.spanFromChild(o, o.Identifier)
+				}
+			case *ast.LiteralPrincipalOption:
+				if fullSpans {
+					p.spanFrom(optTok, o)
+				} else {
+					p.spanFromChild(o, o.Value)
+				}
 			case spannable:
 				p.spanFrom(optTok, o)
 			}
