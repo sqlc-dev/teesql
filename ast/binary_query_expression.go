@@ -2,6 +2,7 @@ package ast
 
 // BinaryQueryExpression represents UNION, EXCEPT, or INTERSECT queries.
 type BinaryQueryExpression struct {
+	Fragment
 	BinaryQueryExpressionType string          `json:"BinaryQueryExpressionType,omitempty"`
 	All                       bool            `json:"All"`
 	FirstQueryExpression      QueryExpression `json:"FirstQueryExpression,omitempty"`

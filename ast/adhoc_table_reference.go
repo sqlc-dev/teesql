@@ -4,6 +4,7 @@ package ast
 // Syntax: OPENDATASOURCE('provider', 'connstr').'object'
 // Uses AdHocDataSource from execute_statement.go
 type AdHocTableReference struct {
+	Fragment
 	DataSource *AdHocDataSource                   `json:"DataSource,omitempty"`
 	Object     *SchemaObjectNameOrValueExpression `json:"Object,omitempty"`
 	Alias      *Identifier                        `json:"Alias,omitempty"`
@@ -15,6 +16,7 @@ func (*AdHocTableReference) tableReference() {}
 
 // SchemaObjectNameOrValueExpression represents either a schema object name or a value expression
 type SchemaObjectNameOrValueExpression struct {
+	Fragment
 	SchemaObjectName *SchemaObjectName `json:"SchemaObjectName,omitempty"`
 	ValueExpression  ScalarExpression  `json:"ValueExpression,omitempty"`
 }

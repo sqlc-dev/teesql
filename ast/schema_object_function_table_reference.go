@@ -2,6 +2,7 @@ package ast
 
 // SchemaObjectFunctionTableReference represents a function call as a table reference.
 type SchemaObjectFunctionTableReference struct {
+	Fragment
 	SchemaObject *SchemaObjectName  `json:"SchemaObject,omitempty"`
 	Parameters   []ScalarExpression `json:"Parameters,omitempty"`
 	Alias        *Identifier        `json:"Alias,omitempty"`

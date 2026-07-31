@@ -9,6 +9,8 @@ import (
 )
 
 func (p *Parser) parseWithStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume WITH
 	p.nextToken()
 
@@ -21,12 +23,17 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 			xmlNs := &ast.XmlNamespaces{}
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
+				// ScriptDom spans XMLNAMESPACES from the first element
+				// through the closing paren.
+				firstElemTok := p.curTok
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					elemTok := p.curTok
 					// Check for DEFAULT element
 					if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
 						p.nextToken() // consume DEFAULT
 						strLit, _ := p.parseStringLiteral()
 						elem := &ast.XmlNamespacesDefaultElement{String: strLit}
+						p.spanFrom(elemTok, elem)
 						xmlNs.XmlNamespacesElements = append(xmlNs.XmlNamespacesElements, elem)
 					} else {
 						// Alias element: string AS identifier
@@ -36,6 +43,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 							p.nextToken() // consume AS
 							elem.Identifier = p.parseIdentifier()
 						}
+						p.spanFrom(elemTok, elem)
 						xmlNs.XmlNamespacesElements = append(xmlNs.XmlNamespacesElements, elem)
 					}
 					if p.curTok.Type == TokenComma {
@@ -47,6 +55,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
 				}
+				p.spanFrom(firstElemTok, xmlNs)
 			}
 			withClause.XmlNamespaces = xmlNs
 		} else if strings.ToUpper(p.curTok.Literal) == "CHANGE_TRACKING_CONTEXT" {
@@ -61,6 +70,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 			}
 		} else if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			// Parse CTE: name (columns) AS (query)
+			cteTok := p.curTok
 			cte := &ast.CommonTableExpression{
 				ExpressionName: p.parseIdentifier(),
 			}
@@ -97,6 +107,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 				}
 			}
 
+			p.spanFrom(cteTok, cte)
 			withClause.CommonTableExpressions = append(withClause.CommonTableExpressions, cte)
 		} else {
 			break
@@ -110,6 +121,9 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 		}
 	}
 
+	// The WITH clause spans from the WITH keyword through the last CTE.
+	p.spanFrom(astStart, withClause)
+
 	// Now dispatch to the appropriate statement parser
 	switch p.curTok.Type {
 	case TokenInsert:
@@ -120,7 +134,7 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 		if ins, ok := stmt.(*ast.InsertStatement); ok {
 			ins.WithCtesAndXmlNamespaces = withClause
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case TokenUpdate:
 		stmt, err := p.parseUpdateOrUpdateStatisticsStatement()
 		if err != nil {
@@ -129,21 +143,21 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 		if upd, ok := stmt.(*ast.UpdateStatement); ok {
 			upd.WithCtesAndXmlNamespaces = withClause
 		}
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case TokenDelete:
 		stmt, err := p.parseDeleteStatement()
 		if err != nil {
 			return nil, err
 		}
 		stmt.WithCtesAndXmlNamespaces = withClause
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	case TokenSelect:
 		stmt, err := p.parseSelectStatement()
 		if err != nil {
 			return nil, err
 		}
 		stmt.WithCtesAndXmlNamespaces = withClause
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	// Check for MERGE statement
@@ -153,19 +167,22 @@ func (p *Parser) parseWithStatement() (ast.Statement, error) {
 			return nil, err
 		}
 		stmt.WithCtesAndXmlNamespaces = withClause
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	return nil, fmt.Errorf("expected INSERT, UPDATE, DELETE, SELECT, or MERGE after WITH clause, got %s", p.curTok.Literal)
 }
 
 func (p *Parser) parseInsertStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume INSERT
 	p.nextToken()
 
 	// Check for INSERT BULK
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "BULK" {
-		return p.parseInsertBulkStatement()
+		spanV81, spanErr81 := p.parseInsertBulkStatement()
+		return spanned(p, spanV81, astStart), spanErr81
 	}
 
 	stmt := &ast.InsertStatement{
@@ -229,6 +246,8 @@ func (p *Parser) parseInsertStatement() (ast.Statement, error) {
 	}
 	stmt.InsertSpecification.InsertSource = source
 
+	p.spanFrom(astStart, stmt.InsertSpecification)
+
 	// Parse optional OPTION clause
 	if p.curTok.Type == TokenOption {
 		hints, err := p.parseOptionClause()
@@ -243,11 +262,13 @@ func (p *Parser) parseInsertStatement() (ast.Statement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseInsertSpecification parses an INSERT specification (used in DataModificationTableReference)
 func (p *Parser) parseInsertSpecification() (*ast.InsertSpecification, error) {
+	astStart := p.curTok
+
 	// Consume INSERT
 	p.nextToken()
 
@@ -310,23 +331,26 @@ func (p *Parser) parseInsertSpecification() (*ast.InsertSpecification, error) {
 	}
 	spec.InsertSource = source
 
-	return spec, nil
+	return spanned(p, spec, astStart), nil
 }
 
 func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
+	astStart := p.curTok
+
 	// Check for variable
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-		name := p.curTok.Literal
+		nameTok := p.curTok
 		p.nextToken()
-		return &ast.VariableTableReference{
-			Variable: &ast.VariableReference{Name: name},
+		return spanned(p, &ast.VariableTableReference{
+			Variable: p.varRefFromToken(nameTok),
 			ForPath:  false,
-		}, nil
+		}, astStart), nil
 	}
 
 	// Check for OPENROWSET
 	if p.curTok.Type == TokenOpenRowset {
-		return p.parseOpenRowset()
+		spanV82, spanErr82 := p.parseOpenRowset()
+		return spanned(p, spanV82, astStart), spanErr82
 	}
 
 	// Parse schema object name
@@ -341,11 +365,11 @@ func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &ast.SchemaObjectFunctionTableReference{
+		return spanned(p, &ast.SchemaObjectFunctionTableReference{
 			SchemaObject: son,
 			Parameters:   params,
 			ForPath:      false,
-		}, nil
+		}, astStart), nil
 	}
 
 	ref := &ast.NamedTableReference{
@@ -362,7 +386,7 @@ func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 		ref.TableHints = hints
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseInsertTarget parses the target for INSERT statements.
@@ -371,19 +395,22 @@ func (p *Parser) parseDMLTarget() (ast.TableReference, error) {
 // - table (c1, c2) - a table with column list
 // We check if parentheses contain function parameters vs column names.
 func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
+	astStart := p.curTok
+
 	// Check for variable
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-		name := p.curTok.Literal
+		nameTok := p.curTok
 		p.nextToken()
-		return &ast.VariableTableReference{
-			Variable: &ast.VariableReference{Name: name},
+		return spanned(p, &ast.VariableTableReference{
+			Variable: p.varRefFromToken(nameTok),
 			ForPath:  false,
-		}, nil
+		}, astStart), nil
 	}
 
 	// Check for OPENROWSET
 	if p.curTok.Type == TokenOpenRowset {
-		return p.parseOpenRowset()
+		spanV83, spanErr83 := p.parseOpenRowset()
+		return spanned(p, spanV83, astStart), spanErr83
 	}
 
 	// Parse schema object name
@@ -403,11 +430,11 @@ func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.SchemaObjectFunctionTableReference{
+			return spanned(p, &ast.SchemaObjectFunctionTableReference{
 				SchemaObject: son,
 				Parameters:   params,
 				ForPath:      false,
-			}, nil
+			}, astStart), nil
 		}
 	}
 
@@ -437,7 +464,7 @@ func (p *Parser) parseInsertTarget() (ast.TableReference, error) {
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // isInsertFunctionParams checks if the current parentheses contain function parameters
@@ -469,6 +496,8 @@ func (p *Parser) isInsertFunctionParams() bool {
 }
 
 func (p *Parser) parseOpenRowset() (ast.TableReference, error) {
+	astStart := p.curTok
+
 	// Consume OPENROWSET
 	p.nextToken()
 
@@ -479,24 +508,27 @@ func (p *Parser) parseOpenRowset() (ast.TableReference, error) {
 
 	// Check for BULK form
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "BULK" {
-		return p.parseBulkOpenRowset()
+		spanV84, spanErr84 := p.parseBulkOpenRowset()
+		return spanned(p, spanV84, astStart), spanErr84
 	}
 
 	// Check for Cosmos form: OPENROWSET(PROVIDER = '...', CONNECTION = '...', ...)
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PROVIDER" && p.peekTok.Type == TokenEquals {
-		return p.parseOpenRowsetCosmos()
+		spanV85, spanErr85 := p.parseOpenRowsetCosmos()
+		return spanned(p, spanV85, astStart), spanErr85
 	}
 
 	// Check for traditional form: OPENROWSET('provider', 'connstr', tablename)
 	if p.curTok.Type == TokenString {
-		return p.parseOpenRowsetTableReference()
+		spanV86, spanErr86 := p.parseOpenRowsetTableReference()
+		return spanned(p, spanV86, astStart), spanErr86
 	}
 
 	// Parse identifier
 	if p.curTok.Type != TokenIdent {
 		return nil, fmt.Errorf("expected identifier in OPENROWSET, got %s", p.curTok.Literal)
 	}
-	id := &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+	id := p.spanIdent(p.curTok.Literal, "NotQuoted")
 	p.nextToken()
 
 	var varArgs []ast.ScalarExpression
@@ -514,14 +546,16 @@ func (p *Parser) parseOpenRowset() (ast.TableReference, error) {
 	}
 	p.nextToken()
 
-	return &ast.InternalOpenRowset{
+	return spanned(p, &ast.InternalOpenRowset{
 		Identifier: id,
 		VarArgs:    varArgs,
 		ForPath:    false,
-	}, nil
+	}, astStart), nil
 }
 
 func (p *Parser) parseOpenRowsetCosmos() (*ast.OpenRowsetCosmos, error) {
+	astStart := p.curTok
+
 	result := &ast.OpenRowsetCosmos{
 		ForPath: false,
 	}
@@ -538,6 +572,7 @@ func (p *Parser) parseOpenRowsetCosmos() (*ast.OpenRowsetCosmos, error) {
 			break
 		}
 
+		cosmosOptTok := p.curTok
 		p.nextToken() // consume option name
 
 		if p.curTok.Type != TokenEquals {
@@ -570,6 +605,8 @@ func (p *Parser) parseOpenRowsetCosmos() (*ast.OpenRowsetCosmos, error) {
 			Value:      value,
 			OptionKind: optionKind,
 		}
+		// ScriptDom spans the option from its keyword through the value.
+		p.spanFrom(cosmosOptTok, opt)
 		result.Options = append(result.Options, opt)
 
 		if p.curTok.Type == TokenComma {
@@ -622,10 +659,12 @@ func (p *Parser) parseOpenRowsetCosmos() (*ast.OpenRowsetCosmos, error) {
 		}
 	}
 
-	return result, nil
+	return spanned(p, result, astStart), nil
 }
 
 func (p *Parser) parseOpenRowsetTableReference() (*ast.OpenRowsetTableReference, error) {
+	astStart := p.curTok
+
 	result := &ast.OpenRowsetTableReference{
 		ForPath: false,
 	}
@@ -752,10 +791,12 @@ func (p *Parser) parseOpenRowsetTableReference() (*ast.OpenRowsetTableReference,
 		}
 	}
 
-	return result, nil
+	return spanned(p, result, astStart), nil
 }
 
 func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
+	astStart := p.curTok
+
 	// We're positioned on BULK, consume it
 	p.nextToken()
 
@@ -836,19 +877,11 @@ func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
 
 				// Parse optional column ordinal (integer) or JSON path (string)
 				if p.curTok.Type == TokenNumber {
-					colDef.ColumnOrdinal = &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					}
+					colDef.ColumnOrdinal = p.intLitFromToken(p.curTok)
 					p.nextToken()
 				} else if p.curTok.Type == TokenString {
 					// JSON path specification like '$.stateName' or 'strict $.population'
-					colDef.JsonPath = &ast.StringLiteral{
-						LiteralType:   "String",
-						IsNational:    false,
-						IsLargeObject: false,
-						Value:         strings.Trim(p.curTok.Literal, "'"),
-					}
+					colDef.JsonPath = p.strLit(strings.Trim(p.curTok.Literal, "'"), false)
 					p.nextToken()
 				}
 
@@ -893,29 +926,33 @@ func (p *Parser) parseBulkOpenRowset() (*ast.BulkOpenRowset, error) {
 		p.nextToken()
 	}
 
-	return result, nil
+	return spanned(p, result, astStart), nil
 }
 
 func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
+	astStart := p.curTok
+
 	upper := strings.ToUpper(p.curTok.Literal)
 
 	// Handle simple options (SINGLE_BLOB, SINGLE_CLOB, SINGLE_NCLOB)
 	switch upper {
 	case "SINGLE_BLOB":
 		p.nextToken()
-		return &ast.BulkInsertOptionBase{OptionKind: "SingleBlob"}, nil
+		return spanned(p, &ast.BulkInsertOptionBase{OptionKind: "SingleBlob"}, astStart), nil
 	case "SINGLE_CLOB":
 		p.nextToken()
-		return &ast.BulkInsertOptionBase{OptionKind: "SingleClob"}, nil
+		return spanned(p, &ast.BulkInsertOptionBase{OptionKind: "SingleClob"}, astStart), nil
 	case "SINGLE_NCLOB":
 		p.nextToken()
-		return &ast.BulkInsertOptionBase{OptionKind: "SingleNClob"}, nil
+		return spanned(p, &ast.BulkInsertOptionBase{OptionKind: "SingleNClob"}, astStart), nil
 	}
 
 	// Handle ORDER option
 	if upper == "ORDER" {
+		orderTok := p.curTok
 		p.nextToken()
-		return p.parseOpenRowsetOrderOption()
+		spanV87, spanErr87 := p.parseOpenRowsetOrderOption(orderTok)
+		return spanned(p, spanV87, astStart), spanErr87
 	}
 
 	// Handle KEY=VALUE options
@@ -935,11 +972,17 @@ func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
 			upperVal := strings.ToUpper(p.curTok.Literal)
 			if upperVal == "TRUE" || upperVal == "FALSE" || upperVal == "RAW" ||
 				upperVal == "ACP" || upperVal == "WIDECHAR" || upperVal == "CHAR" {
-				value = &ast.IdentifierLiteral{
+				idLit := &ast.IdentifierLiteral{
 					LiteralType: "Identifier",
 					QuoteType:   "NotQuoted",
 					Value:       p.curTok.Literal,
 				}
+				// ScriptDom synthesizes the IdentifierLiteral for
+				// HEADER_ROW = TRUE without source position info.
+				if optionKind != "HeaderRow" {
+					p.tokSpan(idLit, p.curTok)
+				}
+				value = idLit
 				p.nextToken()
 			} else {
 				var err error
@@ -955,13 +998,18 @@ func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
 				return nil, err
 			}
 		}
-		return &ast.LiteralBulkInsertOption{
+		lbo := spanned(p, &ast.LiteralBulkInsertOption{
 			OptionKind: optionKind,
 			Value:      value,
-		}, nil
+		}, astStart)
+		// ScriptDom spans HEADER_ROW and ROWSET_OPTIONS on the keyword only.
+		if optionKind == "HeaderRow" || optionKind == "RowsetOptions" {
+			p.tokSpan(lbo, astStart)
+		}
+		return lbo, nil
 	}
 
-	return &ast.BulkInsertOptionBase{OptionKind: optionKind}, nil
+	return spanned(p, &ast.BulkInsertOptionBase{OptionKind: optionKind}, astStart), nil
 }
 
 func (p *Parser) getOpenRowsetOptionKind(name string) string {
@@ -990,7 +1038,10 @@ func (p *Parser) getOpenRowsetOptionKind(name string) string {
 	return name
 }
 
-func (p *Parser) parseOpenRowsetOrderOption() (*ast.OrderBulkInsertOption, error) {
+func (p *Parser) parseOpenRowsetOrderOption(orderTok Token) (*ast.OrderBulkInsertOption, error) {
+	astStart := orderTok
+	_ = astStart
+
 	result := &ast.OrderBulkInsertOption{
 		OptionKind: "Order",
 	}
@@ -1002,6 +1053,7 @@ func (p *Parser) parseOpenRowsetOrderOption() (*ast.OrderBulkInsertOption, error
 
 	// Parse column list with sort order
 	for {
+		colStart := p.curTok
 		col := &ast.ColumnWithSortOrder{
 			SortOrder: ast.SortOrderNotSpecified,
 		}
@@ -1022,6 +1074,7 @@ func (p *Parser) parseOpenRowsetOrderOption() (*ast.OrderBulkInsertOption, error
 			p.nextToken()
 		}
 
+		p.spanFrom(colStart, col)
 		result.Columns = append(result.Columns, col)
 
 		if p.curTok.Type == TokenComma {
@@ -1035,6 +1088,11 @@ func (p *Parser) parseOpenRowsetOrderOption() (*ast.OrderBulkInsertOption, error
 		return nil, fmt.Errorf("expected ) after ORDER columns, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
+
+	// ScriptDom's span for this option ends at the closing parenthesis,
+	// excluding a trailing UNIQUE keyword.
+	p.spanFrom(astStart, result)
+	result.Pin()
 
 	// Check for UNIQUE
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
@@ -1144,13 +1202,19 @@ func (p *Parser) parseColumnList() ([]*ast.ColumnReferenceExpression, error) {
 		lit := p.curTok.Literal
 		upperLit := strings.ToUpper(lit)
 		if upperLit == "$ACTION" {
-			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnAction"})
+			cr := &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnAction"}
+			p.tokSpan(cr, p.curTok)
+			cols = append(cols, cr)
 			p.nextToken()
 		} else if upperLit == "$CUID" {
-			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"})
+			cr := &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"}
+			p.tokSpan(cr, p.curTok)
+			cols = append(cols, cr)
 			p.nextToken()
 		} else if upperLit == "$ROWGUID" {
-			cols = append(cols, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnRowGuid"})
+			cr := &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnRowGuid"}
+			p.tokSpan(cr, p.curTok)
+			cols = append(cols, cr)
 			p.nextToken()
 		} else {
 			col, err := p.parseMultiPartIdentifierAsColumn()
@@ -1175,12 +1239,14 @@ func (p *Parser) parseColumnList() ([]*ast.ColumnReferenceExpression, error) {
 }
 
 func (p *Parser) parseMultiPartIdentifierAsColumn() (*ast.ColumnReferenceExpression, error) {
+	astStart := p.curTok
+
 	var identifiers []*ast.Identifier
 
 	for {
 		// Handle empty parts (e.g., ..a means two empty parts then a)
 		if p.curTok.Type == TokenDot {
-			identifiers = append(identifiers, &ast.Identifier{Value: "", QuoteType: "NotQuoted"})
+			identifiers = append(identifiers, p.spanIdent("", "NotQuoted"))
 			p.nextToken()
 			continue
 		}
@@ -1198,34 +1264,38 @@ func (p *Parser) parseMultiPartIdentifierAsColumn() (*ast.ColumnReferenceExpress
 		p.nextToken()
 	}
 
-	return &ast.ColumnReferenceExpression{
+	return spanned(p, &ast.ColumnReferenceExpression{
 		ColumnType: "Regular",
 		MultiPartIdentifier: &ast.MultiPartIdentifier{
 			Count:       len(identifiers),
 			Identifiers: identifiers,
 		},
-	}, nil
+	}, astStart), nil
 }
 
 func (p *Parser) parseInsertSource() (ast.InsertSource, error) {
+	astStart := p.curTok
+
 	// Check for DEFAULT VALUES
 	if p.curTok.Type == TokenDefault {
 		p.nextToken()
 		if p.curTok.Type == TokenValues {
 			p.nextToken()
-			return &ast.ValuesInsertSource{IsDefaultValues: true}, nil
+			return spanned(p, &ast.ValuesInsertSource{IsDefaultValues: true}, astStart), nil
 		}
 		return nil, fmt.Errorf("expected VALUES after DEFAULT, got %s", p.curTok.Literal)
 	}
 
 	// Check for VALUES (...)
 	if p.curTok.Type == TokenValues {
-		return p.parseValuesInsertSource()
+		spanV88, spanErr88 := p.parseValuesInsertSource()
+		return spanned(p, spanV88, astStart), spanErr88
 	}
 
 	// Check for EXEC/EXECUTE
 	if p.curTok.Type == TokenExec || p.curTok.Type == TokenExecute {
-		return p.parseExecuteInsertSource()
+		spanV89, spanErr89 := p.parseExecuteInsertSource()
+		return spanned(p, spanV89, astStart), spanErr89
 	}
 
 	// Otherwise it's a SELECT
@@ -1233,10 +1303,12 @@ func (p *Parser) parseInsertSource() (ast.InsertSource, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ast.SelectInsertSource{Select: qe}, nil
+	return spanned(p, &ast.SelectInsertSource{Select: qe}, astStart), nil
 }
 
 func (p *Parser) parseValuesInsertSource() (*ast.ValuesInsertSource, error) {
+	astStart := p.curTok
+
 	// Consume VALUES
 	p.nextToken()
 
@@ -1259,10 +1331,12 @@ func (p *Parser) parseValuesInsertSource() (*ast.ValuesInsertSource, error) {
 		p.nextToken()
 	}
 
-	return source, nil
+	return spanned(p, source, astStart), nil
 }
 
 func (p *Parser) parseRowValue() (*ast.RowValue, error) {
+	astStart := p.curTok
+
 	// Consume (
 	p.nextToken()
 
@@ -1285,18 +1359,22 @@ func (p *Parser) parseRowValue() (*ast.RowValue, error) {
 	}
 	p.nextToken()
 
-	return row, nil
+	return spanned(p, row, astStart), nil
 }
 
 func (p *Parser) parseExecuteInsertSource() (*ast.ExecuteInsertSource, error) {
+	astStart := p.curTok
+
 	execSpec, err := p.parseExecuteSpecification()
 	if err != nil {
 		return nil, err
 	}
-	return &ast.ExecuteInsertSource{Execute: execSpec}, nil
+	return spanned(p, &ast.ExecuteInsertSource{Execute: execSpec}, astStart), nil
 }
 
 func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) {
+	astStart := p.curTok
+
 	// Consume EXEC/EXECUTE
 	p.nextToken()
 
@@ -1325,24 +1403,24 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 			spec.LinkedServer = p.parseIdentifier()
 		}
 
-		return spec, nil
+		return spanned(p, spec, astStart), nil
 	}
 
 	// Check for return variable assignment @var =
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-		varName := p.curTok.Literal
+		varNameTok := p.curTok
 		p.nextToken()
 		if p.curTok.Type == TokenEquals {
-			spec.Variable = &ast.VariableReference{Name: varName}
+			spec.Variable = p.varRefFromToken(varNameTok)
 			p.nextToken()
 		} else {
 			// It's actually the procedure variable
 			spec.ExecutableEntity = &ast.ExecutableProcedureReference{
 				ProcedureReference: &ast.ProcedureReferenceName{
-					ProcedureVariable: &ast.VariableReference{Name: varName},
+					ProcedureVariable: p.varRefFromToken(varNameTok),
 				},
 			}
-			return spec, nil
+			return spanned(p, spec, astStart), nil
 		}
 	}
 
@@ -1352,6 +1430,7 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 	// Check for OPENDATASOURCE or OPENROWSET
 	upperLit := strings.ToUpper(p.curTok.Literal)
 	if upperLit == "OPENDATASOURCE" || upperLit == "OPENROWSET" {
+		odsTok := p.curTok
 		p.nextToken() // consume OPENDATASOURCE/OPENROWSET
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
@@ -1384,6 +1463,10 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 				ProviderName: providerName,
 				InitString:   initString,
 			}
+			// ScriptDom spans the data source from the OPENDATASOURCE
+			// keyword through the closing parenthesis.
+			p.spanFrom(odsTok, procRef.AdHocDataSource)
+			procRef.AdHocDataSource.Pin()
 
 			// Expect . and then schema.object.procedure name
 			if p.curTok.Type == TokenDot {
@@ -1395,7 +1478,7 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		// Procedure variable
 		procRef.ProcedureReference = &ast.ProcedureReferenceName{
-			ProcedureVariable: &ast.VariableReference{Name: p.curTok.Literal},
+			ProcedureVariable: p.spanVarRef(p.curTok.Literal),
 		}
 		p.nextToken()
 	} else if p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
@@ -1410,10 +1493,7 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 		if p.curTok.Type == TokenSemicolon {
 			p.nextToken() // consume ;
 			if p.curTok.Type == TokenNumber {
-				pr.Number = &ast.IntegerLiteral{
-					LiteralType: "Integer",
-					Value:       p.curTok.Literal,
-				}
+				pr.Number = p.intLitFromToken(p.curTok)
 				p.nextToken()
 			}
 		}
@@ -1439,12 +1519,18 @@ func (p *Parser) parseExecuteSpecification() (*ast.ExecuteSpecification, error) 
 	}
 
 	spec.ExecutableEntity = procRef
+	spanned(p, spec, astStart)
+	// A trailing semicolon consumed by the parameter scan belongs to the
+	// statement, not the specification.
+	p.trimTrailingSemicolon(spec)
 	return spec, nil
 }
 
 func (p *Parser) parseExecutableStringList() (*ast.ExecutableStringList, error) {
 	// We're positioned on (, consume it
 	p.nextToken()
+	// ScriptDom spans the string list over the parenthesized contents only.
+	contentTok := p.curTok
 
 	strList := &ast.ExecutableStringList{}
 
@@ -1491,6 +1577,7 @@ func (p *Parser) parseExecutableStringList() (*ast.ExecutableStringList, error) 
 	if p.curTok.Type != TokenRParen {
 		return nil, fmt.Errorf("expected ) after EXECUTE string list, got %s", p.curTok.Literal)
 	}
+	p.spanFrom(contentTok, strList)
 	p.nextToken()
 
 	return strList, nil
@@ -1508,11 +1595,14 @@ func (p *Parser) flattenStringExpression(expr ast.ScalarExpression, strings *[]a
 }
 
 func (p *Parser) parseExecuteContextForSpec() (*ast.ExecuteContext, error) {
+	astStart := p.curTok
+
 	// We're positioned on AS, consume it
 	p.nextToken()
 
 	ctx := &ast.ExecuteContext{}
 
+	kindTok := p.curTok
 	upper := strings.ToUpper(p.curTok.Literal)
 	switch upper {
 	case "USER":
@@ -1550,32 +1640,45 @@ func (p *Parser) parseExecuteContextForSpec() (*ast.ExecuteContext, error) {
 		return nil, fmt.Errorf("expected USER, LOGIN, CALLER, OWNER, or SELF after AS, got %s", p.curTok.Literal)
 	}
 
+	// In the EXECUTE specification form, ScriptDom spans the context from
+	// the kind keyword through the principal.
+	p.spanFrom(kindTok, ctx)
+	if !ctx.Frag().HasSpan() {
+		p.tokSpan(ctx, kindTok)
+	}
+	_ = astStart
 	return ctx, nil
 }
 
 func (p *Parser) parseExecuteParameter() (*ast.ExecuteParameter, error) {
+	astStart := p.curTok
+
 	param := &ast.ExecuteParameter{IsOutput: false}
 
 	// Check for DEFAULT keyword
 	if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-		param.ParameterValue = &ast.DefaultLiteral{LiteralType: "Default", Value: "DEFAULT"}
+		dflt := &ast.DefaultLiteral{LiteralType: "Default", Value: "DEFAULT"}
+		p.tokSpan(dflt, p.curTok)
+		param.ParameterValue = dflt
 		p.nextToken()
-		return param, nil
+		return spanned(p, param, astStart), nil
 	}
 
 	// Check for named parameter: @name = value
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-		varName := p.curTok.Literal
+		varNameTok := p.curTok
 		p.nextToken()
 
 		if p.curTok.Type == TokenEquals {
 			// Named parameter
 			p.nextToken() // consume =
-			param.Variable = &ast.VariableReference{Name: varName}
+			param.Variable = p.varRefFromToken(varNameTok)
 
 			// Check for DEFAULT keyword as value
 			if strings.ToUpper(p.curTok.Literal) == "DEFAULT" {
-				param.ParameterValue = &ast.DefaultLiteral{LiteralType: "Default", Value: "DEFAULT"}
+				dflt := &ast.DefaultLiteral{LiteralType: "Default", Value: "DEFAULT"}
+				p.tokSpan(dflt, p.curTok)
+				param.ParameterValue = dflt
 				p.nextToken()
 			} else {
 				// Parse the parameter value
@@ -1587,7 +1690,7 @@ func (p *Parser) parseExecuteParameter() (*ast.ExecuteParameter, error) {
 			}
 		} else {
 			// Just a variable as value (not a named parameter)
-			param.ParameterValue = &ast.VariableReference{Name: varName}
+			param.ParameterValue = p.varRefFromToken(varNameTok)
 		}
 	} else {
 		// Check for bare identifier as IdentifierLiteral (e.g., EXEC sp_addtype birthday, datetime)
@@ -1604,11 +1707,13 @@ func (p *Parser) parseExecuteParameter() (*ast.ExecuteParameter, error) {
 				if strings.HasPrefix(p.curTok.Literal, "[") {
 					quoteType = "SquareBracket"
 				}
-				param.ParameterValue = &ast.IdentifierLiteral{
+				pidLit := &ast.IdentifierLiteral{
 					LiteralType: "Identifier",
 					QuoteType:   quoteType,
 					Value:       p.curTok.Literal,
 				}
+				p.tokSpan(pidLit, p.curTok)
+				param.ParameterValue = pidLit
 				p.nextToken()
 			} else {
 				// Regular value expression
@@ -1634,7 +1739,7 @@ func (p *Parser) parseExecuteParameter() (*ast.ExecuteParameter, error) {
 		p.nextToken()
 	}
 
-	return param, nil
+	return spanned(p, param, astStart), nil
 }
 
 func (p *Parser) isStatementTerminator() bool {
@@ -1651,6 +1756,8 @@ func (p *Parser) isStatementTerminator() bool {
 }
 
 func (p *Parser) parseUpdateStatement() (*ast.UpdateStatement, error) {
+	astStart := p.curTok
+
 	// Consume UPDATE
 	p.nextToken()
 
@@ -1705,6 +1812,8 @@ func (p *Parser) parseUpdateStatement() (*ast.UpdateStatement, error) {
 		stmt.UpdateSpecification.WhereClause = whereClause
 	}
 
+	p.spanFrom(astStart, stmt.UpdateSpecification)
+
 	// Parse optional OPTION clause
 	if p.curTok.Type == TokenOption {
 		hints, err := p.parseOptionClause()
@@ -1719,11 +1828,13 @@ func (p *Parser) parseUpdateStatement() (*ast.UpdateStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseUpdateSpecification parses an UPDATE specification (used in DataModificationTableReference)
 func (p *Parser) parseUpdateSpecification() (*ast.UpdateSpecification, error) {
+	astStart := p.curTok
+
 	// Consume UPDATE
 	p.nextToken()
 
@@ -1790,7 +1901,7 @@ func (p *Parser) parseUpdateSpecification() (*ast.UpdateSpecification, error) {
 		spec.WhereClause = whereClause
 	}
 
-	return spec, nil
+	return spanned(p, spec, astStart), nil
 }
 
 func (p *Parser) parseSetClauses() ([]ast.SetClause, error) {
@@ -1815,15 +1926,18 @@ func (p *Parser) parseSetClauses() ([]ast.SetClause, error) {
 func (p *Parser) parseSetClause() (ast.SetClause, error) {
 	// First, try to detect if this is a function call set clause
 	// e.g., SET a.b.c.d.func() or SET a.b.c.d.func(args)
+	astStart := p.curTok
 
 	// Variables start with @ and are never function call set clauses
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-		return p.parseAssignmentSetClause()
+		spanV90, spanErr90 := p.parseAssignmentSetClause()
+		return spanned(p, spanV90, astStart), spanErr90
 	}
 
 	// Check for $ROWGUID pseudo-column - always assignment
 	if p.curTok.Type == TokenIdent && strings.EqualFold(p.curTok.Literal, "$ROWGUID") {
-		return p.parseAssignmentSetClause()
+		spanV91, spanErr91 := p.parseAssignmentSetClause()
+		return spanned(p, spanV91, astStart), spanErr91
 	}
 
 	// Parse multi-part identifier and look ahead for ( or =
@@ -1892,8 +2006,9 @@ func (p *Parser) parseSetClause() (ast.SetClause, error) {
 			UniqueRowFilter:  "NotSpecified",
 			WithArrayWrapper: false,
 		}
+		p.spanFrom(astStart, fc)
 
-		return &ast.FunctionCallSetClause{MutatorFunction: fc}, nil
+		return spanned(p, &ast.FunctionCallSetClause{MutatorFunction: fc}, astStart), nil
 	}
 
 	// Otherwise, it's an assignment set clause
@@ -1922,7 +2037,7 @@ func (p *Parser) parseSetClause() (ast.SetClause, error) {
 	}
 	clause.NewValue = val
 
-	return clause, nil
+	return spanned(p, clause, astStart), nil
 }
 
 // isCompoundAssignment checks if the current token is a compound assignment operator
@@ -1964,15 +2079,17 @@ func (p *Parser) getAssignmentKind() string {
 }
 
 func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
+	astStart := p.curTok
+
 	clause := &ast.AssignmentSetClause{AssignmentKind: "Equals"}
 
 	// Could be @var = col = value, @var = value, @var ||= value, or col = value, col ||= value
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-		varName := p.curTok.Literal
+		varNameTok := p.curTok
 		p.nextToken()
 		if p.isCompoundAssignment() {
 			clause.AssignmentKind = p.getAssignmentKind()
-			clause.Variable = &ast.VariableReference{Name: varName}
+			clause.Variable = p.varRefFromToken(varNameTok)
 			p.nextToken()
 
 			// Check if next is column = value or column ||= value (SET @a = col = value)
@@ -1992,7 +2109,7 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 						return nil, err
 					}
 					clause.NewValue = val
-					return clause, nil
+					return spanned(p, clause, astStart), nil
 				}
 				// Restore and parse as expression - need different approach
 				// The column was actually the value expression
@@ -2001,7 +2118,7 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 					ColumnType:          col.ColumnType,
 					MultiPartIdentifier: col.MultiPartIdentifier,
 				}
-				return clause, nil
+				return spanned(p, clause, astStart), nil
 			}
 
 			// Just @var = value or @var ||= value
@@ -2010,7 +2127,7 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 				return nil, err
 			}
 			clause.NewValue = val
-			return clause, nil
+			return spanned(p, clause, astStart), nil
 		}
 	}
 
@@ -2019,6 +2136,7 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 		clause.Column = &ast.ColumnReferenceExpression{
 			ColumnType: "PseudoColumnRowGuid",
 		}
+		p.tokSpan(clause.Column, p.curTok)
 		p.nextToken()
 	} else {
 		// col = value or col ||= value
@@ -2042,10 +2160,12 @@ func (p *Parser) parseAssignmentSetClause() (*ast.AssignmentSetClause, error) {
 	}
 	clause.NewValue = val
 
-	return clause, nil
+	return spanned(p, clause, astStart), nil
 }
 
 func (p *Parser) parseDeleteStatement() (*ast.DeleteStatement, error) {
+	astStart := p.curTok
+
 	// Consume DELETE
 	p.nextToken()
 
@@ -2106,6 +2226,8 @@ func (p *Parser) parseDeleteStatement() (*ast.DeleteStatement, error) {
 		stmt.DeleteSpecification.WhereClause = whereClause
 	}
 
+	p.spanFrom(astStart, stmt.DeleteSpecification)
+
 	// Parse optional OPTION clause
 	if p.curTok.Type == TokenOption {
 		hints, err := p.parseOptionClause()
@@ -2120,11 +2242,13 @@ func (p *Parser) parseDeleteStatement() (*ast.DeleteStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseDeleteSpecification parses a DELETE specification (used in DataModificationTableReference)
 func (p *Parser) parseDeleteSpecification() (*ast.DeleteSpecification, error) {
+	astStart := p.curTok
+
 	// Consume DELETE
 	p.nextToken()
 
@@ -2183,10 +2307,12 @@ func (p *Parser) parseDeleteSpecification() (*ast.DeleteSpecification, error) {
 		spec.WhereClause = whereClause
 	}
 
-	return spec, nil
+	return spanned(p, spec, astStart), nil
 }
 
 func (p *Parser) parseDeleteWhereClause() (*ast.WhereClause, error) {
+	astStart := p.curTok
+
 	// Consume WHERE
 	p.nextToken()
 
@@ -2199,21 +2325,25 @@ func (p *Parser) parseDeleteWhereClause() (*ast.WhereClause, error) {
 		p.nextToken()
 
 		// Parse cursor name
+		nameTok := p.curTok
 		cursorName := p.curTok.Literal
+		ident := p.spanIdent(cursorName, "NotQuoted")
+		p.tokSpan(ident, nameTok)
+		iove := &ast.IdentifierOrValueExpression{
+			Value:      cursorName,
+			Identifier: ident,
+		}
+		p.tokSpan(iove, nameTok)
+		cursorId := &ast.CursorId{
+			IsGlobal: false,
+			Name:     iove,
+		}
+		p.tokSpan(cursorId, nameTok)
 		p.nextToken()
 
-		return &ast.WhereClause{
-			Cursor: &ast.CursorId{
-				IsGlobal: false,
-				Name: &ast.IdentifierOrValueExpression{
-					Value: cursorName,
-					Identifier: &ast.Identifier{
-						Value:     cursorName,
-						QuoteType: "NotQuoted",
-					},
-				},
-			},
-		}, nil
+		return spanned(p, &ast.WhereClause{
+			Cursor: cursorId,
+		}, astStart), nil
 	}
 
 	condition, err := p.parseBooleanExpression()
@@ -2221,10 +2351,12 @@ func (p *Parser) parseDeleteWhereClause() (*ast.WhereClause, error) {
 		return nil, err
 	}
 
-	return &ast.WhereClause{SearchCondition: condition}, nil
+	return spanned(p, &ast.WhereClause{SearchCondition: condition}, astStart), nil
 }
 
 func (p *Parser) parseInsertBulkStatement() (*ast.InsertBulkStatement, error) {
+	astStart := p.curTok
+
 	// Consume BULK
 	p.nextToken()
 
@@ -2260,7 +2392,7 @@ func (p *Parser) parseInsertBulkStatement() (*ast.InsertBulkStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseInsertBulkColumnDefinitions() ([]*ast.InsertBulkColumnDefinition, error) {
@@ -2289,6 +2421,8 @@ func (p *Parser) parseInsertBulkColumnDefinitions() ([]*ast.InsertBulkColumnDefi
 }
 
 func (p *Parser) parseInsertBulkColumnDefinition() (*ast.InsertBulkColumnDefinition, error) {
+	astStart := p.curTok
+
 	colDef := &ast.InsertBulkColumnDefinition{
 		Column:      &ast.ColumnDefinitionBase{},
 		NullNotNull: "Unspecified",
@@ -2334,7 +2468,7 @@ func (p *Parser) parseInsertBulkColumnDefinition() (*ast.InsertBulkColumnDefinit
 		}
 	}
 
-	return colDef, nil
+	return spanned(p, colDef, astStart), nil
 }
 
 func (p *Parser) parseBulkInsertOptions() ([]ast.BulkInsertOption, error) {
@@ -2368,6 +2502,8 @@ func (p *Parser) parseBulkInsertOptions() ([]ast.BulkInsertOption, error) {
 }
 
 func (p *Parser) parseBulkInsertOption() (ast.BulkInsertOption, error) {
+	astStart := p.curTok
+
 	if p.curTok.Type != TokenIdent && p.curTok.Type != TokenOrder {
 		return nil, fmt.Errorf("expected option name, got %s", p.curTok.Literal)
 	}
@@ -2377,7 +2513,8 @@ func (p *Parser) parseBulkInsertOption() (ast.BulkInsertOption, error) {
 
 	// Handle ORDER option specially
 	if optionName == "ORDER" {
-		return p.parseOrderBulkInsertOption()
+		spanV92, spanErr92 := p.parseOrderBulkInsertOption()
+		return spanned(p, spanV92, astStart), spanErr92
 	}
 
 	// Map option names to OptionKind values
@@ -2418,19 +2555,26 @@ func (p *Parser) parseBulkInsertOption() (ast.BulkInsertOption, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &ast.LiteralBulkInsertOption{
+		lbo := spanned(p, &ast.LiteralBulkInsertOption{
 			OptionKind: optionKind,
 			Value:      value,
-		}, nil
+		}, astStart)
+		// ScriptDom spans HEADER_ROW and ROWSET_OPTIONS on the keyword only.
+		if optionKind == "HeaderRow" || optionKind == "RowsetOptions" {
+			p.tokSpan(lbo, astStart)
+		}
+		return lbo, nil
 	}
 
 	// Simple option without value
-	return &ast.BulkInsertOptionBase{
+	return spanned(p, &ast.BulkInsertOptionBase{
 		OptionKind: optionKind,
-	}, nil
+	}, astStart), nil
 }
 
 func (p *Parser) parseOrderBulkInsertOption() (*ast.OrderBulkInsertOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.OrderBulkInsertOption{
 		OptionKind: "Order",
 	}
@@ -2441,6 +2585,7 @@ func (p *Parser) parseOrderBulkInsertOption() (*ast.OrderBulkInsertOption, error
 	p.nextToken()
 
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+		colStart := p.curTok
 		col, err := p.parseMultiPartIdentifierAsColumn()
 		if err != nil {
 			return nil, err
@@ -2455,10 +2600,12 @@ func (p *Parser) parseOrderBulkInsertOption() (*ast.OrderBulkInsertOption, error
 			p.nextToken()
 		}
 
-		opt.Columns = append(opt.Columns, &ast.ColumnWithSortOrder{
+		cws := &ast.ColumnWithSortOrder{
 			Column:    col,
 			SortOrder: sortOrder,
-		})
+		}
+		p.spanFrom(colStart, cws)
+		opt.Columns = append(opt.Columns, cws)
 
 		if p.curTok.Type != TokenComma {
 			break
@@ -2470,10 +2617,12 @@ func (p *Parser) parseOrderBulkInsertOption() (*ast.OrderBulkInsertOption, error
 		p.nextToken()
 	}
 
-	return opt, nil
+	return spanned(p, opt, astStart), nil
 }
 
 func (p *Parser) parseBulkInsertStatement() (*ast.BulkInsertStatement, error) {
+	astStart := p.curTok
+
 	// BULK has already been consumed, now we expect INSERT
 	if p.curTok.Type != TokenInsert {
 		return nil, fmt.Errorf("expected INSERT after BULK, got %s", p.curTok.Literal)
@@ -2516,10 +2665,12 @@ func (p *Parser) parseBulkInsertStatement() (*ast.BulkInsertStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseIdentifierOrValueExpression() (*ast.IdentifierOrValueExpression, error) {
+	astStart := p.curTok
+
 	result := &ast.IdentifierOrValueExpression{}
 
 	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
@@ -2530,19 +2681,18 @@ func (p *Parser) parseIdentifierOrValueExpression() (*ast.IdentifierOrValueExpre
 	} else if p.curTok.Type == TokenNumber {
 		// Integer literal
 		result.Value = p.curTok.Literal
-		result.ValueExpression = &ast.IntegerLiteral{
-			LiteralType: "Integer",
-			Value:       p.curTok.Literal,
-		}
+		result.ValueExpression = p.intLitFromToken(p.curTok)
 		p.nextToken()
 	} else if p.curTok.Type == TokenBinary {
 		// Binary/hex literal
 		result.Value = p.curTok.Literal
-		result.ValueExpression = &ast.BinaryLiteral{
+		bl := &ast.BinaryLiteral{
 			LiteralType:   "Binary",
 			IsLargeObject: false,
 			Value:         p.curTok.Literal,
 		}
+		p.tokSpan(bl, p.curTok)
+		result.ValueExpression = bl
 		p.nextToken()
 	} else if p.curTok.Type == TokenIdent {
 		// Identifier - use parseIdentifier to handle bracketed identifiers properly
@@ -2552,25 +2702,25 @@ func (p *Parser) parseIdentifierOrValueExpression() (*ast.IdentifierOrValueExpre
 	} else if p.curTok.Type == TokenEOF {
 		// Handle incomplete statement - return empty identifier
 		result.Value = ""
-		result.Identifier = &ast.Identifier{
-			Value:     "",
-			QuoteType: "NotQuoted",
-		}
+		result.Identifier = p.spanIdent("", "NotQuoted")
 	} else {
 		return nil, fmt.Errorf("expected identifier or value, got %s", p.curTok.Literal)
 	}
 
-	return result, nil
+	return spanned(p, result, astStart), nil
 }
 
 // parseUpdateOrUpdateStatisticsStatement routes to UPDATE or UPDATE STATISTICS.
 func (p *Parser) parseUpdateOrUpdateStatisticsStatement() (ast.Statement, error) {
+	astStart := p.curTok
+
 	// Consume UPDATE
 	p.nextToken()
 
 	// Check for UPDATE STATISTICS
 	if p.curTok.Type == TokenStats || strings.ToUpper(p.curTok.Literal) == "STATISTICS" {
-		return p.parseUpdateStatisticsStatementContinued()
+		spanV93, spanErr93 := p.parseUpdateStatisticsStatementContinued()
+		return spanned(p, spanV93, astStart), spanErr93
 	}
 
 	// Otherwise, parse normal UPDATE statement
@@ -2639,6 +2789,8 @@ func (p *Parser) parseUpdateOrUpdateStatisticsStatement() (ast.Statement, error)
 		stmt.UpdateSpecification.WhereClause = whereClause
 	}
 
+	p.spanFrom(astStart, stmt.UpdateSpecification)
+
 	// Parse optional OPTION clause
 	if p.curTok.Type == TokenOption {
 		hints, err := p.parseOptionClause()
@@ -2653,11 +2805,13 @@ func (p *Parser) parseUpdateOrUpdateStatisticsStatement() (ast.Statement, error)
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseUpdateStatisticsStatementContinued parses UPDATE STATISTICS after consuming UPDATE.
 func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatisticsStatement, error) {
+	astStart := p.curTok
+
 	// Consume STATISTICS
 	p.nextToken()
 
@@ -2695,6 +2849,8 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 		p.nextToken() // consume WITH
 
 		for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+			optTok := p.curTok
+			lenBefore := len(stmt.StatisticsOptions)
 			optionName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume option name
 
@@ -2725,13 +2881,18 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 					p.nextToken()
 				}
 				val := p.curTok.Literal
+				valTok := p.curTok
 				p.nextToken()
 				// Use NumericLiteral for very large numbers, IntegerLiteral otherwise
 				var literal ast.ScalarExpression
 				if len(val) > 18 { // Numbers > 18 digits are likely > MaxInt64
-					literal = &ast.NumericLiteral{LiteralType: "Numeric", Value: val}
+					nl := &ast.NumericLiteral{LiteralType: "Numeric", Value: val}
+					p.tokSpan(nl, valTok)
+					literal = nl
 				} else {
-					literal = &ast.IntegerLiteral{LiteralType: "Integer", Value: val}
+					il := &ast.IntegerLiteral{LiteralType: "Integer", Value: val}
+					p.tokSpan(il, valTok)
+					literal = il
 				}
 				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
 					OptionKind: "RowCount",
@@ -2743,13 +2904,18 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 					p.nextToken()
 				}
 				val := p.curTok.Literal
+				valTok := p.curTok
 				p.nextToken()
 				// Use NumericLiteral for very large numbers, IntegerLiteral otherwise
 				var literal ast.ScalarExpression
 				if len(val) > 18 { // Numbers > 18 digits are likely > MaxInt64
-					literal = &ast.NumericLiteral{LiteralType: "Numeric", Value: val}
+					nl := &ast.NumericLiteral{LiteralType: "Numeric", Value: val}
+					p.tokSpan(nl, valTok)
+					literal = nl
 				} else {
-					literal = &ast.IntegerLiteral{LiteralType: "Integer", Value: val}
+					il := &ast.IntegerLiteral{LiteralType: "Integer", Value: val}
+					p.tokSpan(il, valTok)
+					literal = il
 				}
 				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
 					OptionKind: "PageCount",
@@ -2781,10 +2947,7 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 								// Parse partition range: number or number TO number
 								// Just parse the literal value directly
-								fromVal := &ast.IntegerLiteral{
-									LiteralType: "Integer",
-									Value:       p.curTok.Literal,
-								}
+								fromVal := p.intLitFromToken(p.curTok)
 								p.nextToken() // consume the number
 								partRange := &ast.StatisticsPartitionRange{
 									From: fromVal,
@@ -2792,10 +2955,7 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 								// Check for TO (TokenTo)
 								if p.curTok.Type == TokenTo {
 									p.nextToken() // consume TO
-									toVal := &ast.IntegerLiteral{
-										LiteralType: "Integer",
-										Value:       p.curTok.Literal,
-									}
+									toVal := p.intLitFromToken(p.curTok)
 									p.nextToken() // consume the number
 									partRange.To = toVal
 								}
@@ -2836,17 +2996,39 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 					p.nextToken()
 				}
 				val := p.curTok.Literal
+				bl := &ast.BinaryLiteral{
+					LiteralType:   "Binary",
+					Value:         val,
+					IsLargeObject: false,
+				}
+				p.tokSpan(bl, p.curTok)
 				p.nextToken()
 				stmt.StatisticsOptions = append(stmt.StatisticsOptions, &ast.LiteralStatisticsOption{
 					OptionKind: "StatsStream",
-					Literal: &ast.BinaryLiteral{
-						LiteralType:   "Binary",
-						Value:         val,
-						IsLargeObject: false,
-					},
+					Literal:    bl,
 				})
 			default:
 				// Unknown option, skip
+			}
+
+			if len(stmt.StatisticsOptions) > lenBefore {
+				last := stmt.StatisticsOptions[len(stmt.StatisticsOptions)-1]
+				switch o := last.(type) {
+				case *ast.SimpleStatisticsOption:
+					// ScriptDom spans keyword-only options on their keyword.
+					p.tokSpan(o, optTok)
+				case *ast.LiteralStatisticsOption:
+					if o.OptionKind == "RowCount" || o.OptionKind == "PageCount" {
+						p.spanFrom(optTok, o)
+					} else {
+						// SAMPLE n PERCENT/ROWS and STATS_STREAM span from the value.
+						p.spanFromChild(o, o.Literal)
+					}
+				default:
+					if sp, ok := last.(spannable); ok {
+						p.spanFrom(optTok, sp)
+					}
+				}
 			}
 
 			if p.curTok.Type == TokenComma {
@@ -2862,13 +3044,14 @@ func (p *Parser) parseUpdateStatisticsStatementContinued() (*ast.UpdateStatistic
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseOutputClause parses an OUTPUT clause (with optional INTO).
 // Returns (outputClause, outputIntoClause, error).
 // If INTO is present, outputIntoClause is set; otherwise outputClause is set.
 func (p *Parser) parseOutputClause() (*ast.OutputClause, *ast.OutputIntoClause, error) {
+	outputTok := p.curTok
 	// Consume OUTPUT
 	p.nextToken()
 
@@ -2895,12 +3078,14 @@ func (p *Parser) parseOutputClause() (*ast.OutputClause, *ast.OutputIntoClause, 
 		// Parse target table (variable or table name)
 		var intoTable ast.TableReference
 		if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-			name := p.curTok.Literal
+			nameTok := p.curTok
 			p.nextToken()
-			intoTable = &ast.VariableTableReference{
-				Variable: &ast.VariableReference{Name: name},
+			vtr := &ast.VariableTableReference{
+				Variable: p.varRefFromToken(nameTok),
 				ForPath:  false,
 			}
+			p.tokSpan(vtr, nameTok)
+			intoTable = vtr
 		} else {
 			son, err := p.parseSchemaObjectName()
 			if err != nil {
@@ -2937,20 +3122,26 @@ func (p *Parser) parseOutputClause() (*ast.OutputClause, *ast.OutputIntoClause, 
 			}
 		}
 
-		return nil, &ast.OutputIntoClause{
+		oic := &ast.OutputIntoClause{
 			SelectColumns:    selectColumns,
 			IntoTable:        intoTable,
 			IntoTableColumns: intoColumns,
-		}, nil
+		}
+		p.spanFrom(outputTok, oic)
+		return nil, oic, nil
 	}
 
-	return &ast.OutputClause{
+	oc := &ast.OutputClause{
 		SelectColumns: selectColumns,
-	}, nil, nil
+	}
+	p.spanFrom(outputTok, oc)
+	return oc, nil, nil
 }
 
 // parseCopyStatement parses COPY INTO statement for Azure Synapse Analytics
 func (p *Parser) parseCopyStatement() (*ast.CopyStatement, error) {
+	astStart := p.curTok
+
 	// Consume COPY
 	p.nextToken()
 
@@ -2972,7 +3163,9 @@ func (p *Parser) parseCopyStatement() (*ast.CopyStatement, error) {
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
 		columnOpts := &ast.ListTypeCopyOption{}
+		firstColTok := p.curTok
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			colTok := p.curTok
 			colOpt := &ast.CopyColumnOption{}
 			colOpt.ColumnName = p.parseIdentifier()
 
@@ -2988,11 +3181,11 @@ func (p *Parser) parseCopyStatement() (*ast.CopyStatement, error) {
 
 			// Parse field number (integer)
 			if p.curTok.Type == TokenNumber {
-				val := p.curTok.Literal
-				colOpt.FieldNumber = &ast.IntegerLiteral{Value: val, LiteralType: "Integer"}
+				colOpt.FieldNumber = p.intLitFromToken(p.curTok)
 				p.nextToken()
 			}
 
+			p.spanFrom(colTok, colOpt)
 			columnOpts.Options = append(columnOpts.Options, colOpt)
 
 			if p.curTok.Type == TokenComma {
@@ -3006,10 +3199,19 @@ func (p *Parser) parseCopyStatement() (*ast.CopyStatement, error) {
 		}
 		// Add column options as an option
 		if len(columnOpts.Options) > 0 {
-			stmt.Options = append(stmt.Options, &ast.CopyOption{
+			// ScriptDom spans the option over the list contents, excluding
+			// the parens.
+			p.spanFrom(firstColTok, columnOpts)
+			if last, ok := any(columnOpts.Options[len(columnOpts.Options)-1]).(spannable); ok && last.Frag().HasSpan() && columnOpts.Frag().HasSpan() {
+				columnOpts.Frag().FragmentLength = last.Frag().EndOffset() - columnOpts.Frag().StartOffset
+			}
+			colCopyOpt := &ast.CopyOption{
 				Kind:  "ColumnOptions",
 				Value: columnOpts,
-			})
+			}
+			*colCopyOpt.Frag() = *columnOpts.Frag()
+			colCopyOpt.Frag().Pin()
+			stmt.Options = append(stmt.Options, colCopyOpt)
 		}
 	}
 
@@ -3067,11 +3269,13 @@ func (p *Parser) parseCopyStatement() (*ast.CopyStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 // parseCopyOption parses a single COPY option
 func (p *Parser) parseCopyOption() (*ast.CopyOption, error) {
+	astStart := p.curTok
+
 	opt := &ast.CopyOption{}
 
 	// Get option name
@@ -3114,6 +3318,20 @@ func (p *Parser) parseCopyOption() (*ast.CopyOption, error) {
 		if p.curTok.Type == TokenRParen {
 			p.nextToken() // consume )
 		}
+		// ScriptDom spans credential options from the identity value through
+		// the last value token (excluding the parens).
+		first, ok1 := any(credOpt.Identity).(spannable)
+		lastExpr := credOpt.Secret
+		if lastExpr == nil {
+			lastExpr = credOpt.Identity
+		}
+		last, ok2 := any(lastExpr).(spannable)
+		if ok1 && ok2 && first != nil && last != nil && first.Frag().HasSpan() && last.Frag().HasSpan() {
+			ff, lf := first.Frag(), last.Frag()
+			credOpt.SetSpan(ff.StartOffset, lf.EndOffset()-ff.StartOffset, ff.StartLine, ff.StartColumn)
+			*opt.Frag() = *credOpt.Frag()
+			opt.Frag().Pin()
+		}
 		opt.Value = credOpt
 	} else {
 		// Single value option
@@ -3129,19 +3347,37 @@ func (p *Parser) parseCopyOption() (*ast.CopyOption, error) {
 		} else if p.curTok.Type == TokenNumber {
 			val := p.curTok.Literal
 			idOrVal.Value = val
-			idOrVal.ValueExpression = &ast.IntegerLiteral{Value: val, LiteralType: "Integer"}
+			idOrVal.ValueExpression = p.intLitFromToken(p.curTok)
 			p.nextToken()
 		} else {
 			// Identifier value (like FILEFORMAT, GZIP, etc.)
 			val := p.curTok.Literal
 			idOrVal.Value = val
-			idOrVal.Identifier = &ast.Identifier{Value: val, QuoteType: "NotQuoted"}
+			idOrVal.Identifier = p.spanIdent(val, "NotQuoted")
 			p.nextToken()
 		}
 		singleOpt.SingleValue = idOrVal
 		opt.Value = singleOpt
 	}
 
-	return opt, nil
+	// ScriptDom positions COPY options on their value.
+	switch v := opt.Value.(type) {
+	case *ast.SingleValueTypeCopyOption:
+		if v.SingleValue != nil {
+			if ve, ok := any(v.SingleValue.ValueExpression).(spannable); ok && ve != nil && ve.Frag().HasSpan() {
+				*opt.Frag() = *ve.Frag()
+			} else if v.SingleValue.Identifier != nil && v.SingleValue.Identifier.Frag().HasSpan() {
+				*opt.Frag() = *v.SingleValue.Identifier.Frag()
+			}
+			if opt.Frag().HasSpan() {
+				*v.Frag() = *opt.Frag()
+				*v.SingleValue.Frag() = *opt.Frag()
+			}
+		}
+	}
+	if opt.Frag().HasSpan() {
+		opt.Frag().Pin()
+		return opt, nil
+	}
+	return spanned(p, opt, astStart), nil
 }
-

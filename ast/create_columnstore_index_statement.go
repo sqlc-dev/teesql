@@ -2,6 +2,7 @@ package ast
 
 // CreateColumnStoreIndexStatement represents a CREATE COLUMNSTORE INDEX statement
 type CreateColumnStoreIndexStatement struct {
+	Fragment
 	Name                         *Identifier
 	Clustered                    bool
 	ClusteredExplicit            bool // true if CLUSTERED or NONCLUSTERED was explicitly specified

@@ -1,21 +1,45 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 404,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 26,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "UseStatement",
+          "StartOffset": 0,
+          "FragmentLength": 11,
+          "StartLine": 1,
+          "StartColumn": 1,
           "DatabaseName": {
             "$type": "Identifier",
+            "StartOffset": 4,
+            "FragmentLength": 6,
+            "StartLine": 1,
+            "StartColumn": 5,
             "Value": "master",
             "QuoteType": "NotQuoted"
           }
         },
         {
           "$type": "UseStatement",
+          "StartOffset": 13,
+          "FragmentLength": 13,
+          "StartLine": 3,
+          "StartColumn": 1,
           "DatabaseName": {
             "$type": "Identifier",
+            "StartOffset": 17,
+            "FragmentLength": 8,
+            "StartLine": 3,
+            "StartColumn": 5,
             "Value": "master",
             "QuoteType": "SquareBracket"
           }
@@ -24,11 +48,23 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 32,
+      "FragmentLength": 86,
+      "StartLine": 7,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "KillStatement",
+          "StartOffset": 32,
+          "FragmentLength": 8,
+          "StartLine": 7,
+          "StartColumn": 1,
           "Parameter": {
             "$type": "IntegerLiteral",
+            "StartOffset": 37,
+            "FragmentLength": 2,
+            "StartLine": 7,
+            "StartColumn": 6,
             "LiteralType": "Integer",
             "Value": "12"
           },
@@ -36,11 +72,23 @@
         },
         {
           "$type": "KillStatement",
+          "StartOffset": 42,
+          "FragmentLength": 29,
+          "StartLine": 9,
+          "StartColumn": 1,
           "Parameter": {
             "$type": "UnaryExpression",
+            "StartOffset": 47,
+            "FragmentLength": 3,
+            "StartLine": 9,
+            "StartColumn": 6,
             "UnaryExpressionType": "Negative",
             "Expression": {
               "$type": "IntegerLiteral",
+              "StartOffset": 48,
+              "FragmentLength": 2,
+              "StartLine": 9,
+              "StartColumn": 7,
               "LiteralType": "Integer",
               "Value": "12"
             }
@@ -49,8 +97,16 @@
         },
         {
           "$type": "KillStatement",
+          "StartOffset": 73,
+          "FragmentLength": 11,
+          "StartLine": 12,
+          "StartColumn": 1,
           "Parameter": {
             "$type": "StringLiteral",
+            "StartOffset": 78,
+            "FragmentLength": 5,
+            "StartLine": 12,
+            "StartColumn": 6,
             "LiteralType": "String",
             "IsNational": false,
             "IsLargeObject": false,
@@ -60,8 +116,16 @@
         },
         {
           "$type": "KillStatement",
+          "StartOffset": 86,
+          "FragmentLength": 32,
+          "StartLine": 14,
+          "StartColumn": 1,
           "Parameter": {
             "$type": "StringLiteral",
+            "StartOffset": 91,
+            "FragmentLength": 6,
+            "StartLine": 14,
+            "StartColumn": 6,
             "LiteralType": "String",
             "IsNational": true,
             "IsLargeObject": false,
@@ -73,57 +137,113 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 124,
+      "FragmentLength": 11,
+      "StartLine": 19,
+      "StartColumn": 1,
       "Statements": [
         {
-          "$type": "CheckpointStatement"
+          "$type": "CheckpointStatement",
+          "StartOffset": 124,
+          "FragmentLength": 11,
+          "StartLine": 19,
+          "StartColumn": 1
         }
       ]
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 141,
+      "FragmentLength": 44,
+      "StartLine": 23,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "ReconfigureStatement",
+          "StartOffset": 141,
+          "FragmentLength": 12,
+          "StartLine": 23,
+          "StartColumn": 1,
           "WithOverride": false
         },
         {
           "$type": "ReconfigureStatement",
+          "StartOffset": 155,
+          "FragmentLength": 30,
+          "StartLine": 25,
+          "StartColumn": 1,
           "WithOverride": true
         }
       ]
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 191,
+      "FragmentLength": 36,
+      "StartLine": 30,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "ShutdownStatement",
+          "StartOffset": 191,
+          "FragmentLength": 9,
+          "StartLine": 30,
+          "StartColumn": 1,
           "WithNoWait": false
         },
         {
           "$type": "ShutdownStatement",
+          "StartOffset": 202,
+          "FragmentLength": 25,
+          "StartLine": 32,
+          "StartColumn": 1,
           "WithNoWait": true
         }
       ]
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 233,
+      "FragmentLength": 77,
+      "StartLine": 37,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "SetUserStatement",
+          "StartOffset": 233,
+          "FragmentLength": 8,
+          "StartLine": 37,
+          "StartColumn": 1,
           "WithNoReset": false
         },
         {
           "$type": "SetUserStatement",
+          "StartOffset": 243,
+          "FragmentLength": 15,
+          "StartLine": 39,
+          "StartColumn": 1,
           "UserName": {
             "$type": "VariableReference",
+            "StartOffset": 251,
+            "FragmentLength": 6,
+            "StartLine": 39,
+            "StartColumn": 9,
             "Name": "@user1"
           },
           "WithNoReset": false
         },
         {
           "$type": "SetUserStatement",
+          "StartOffset": 260,
+          "FragmentLength": 32,
+          "StartLine": 41,
+          "StartColumn": 1,
           "UserName": {
             "$type": "StringLiteral",
+            "StartOffset": 268,
+            "FragmentLength": 6,
+            "StartLine": 41,
+            "StartColumn": 9,
             "LiteralType": "String",
             "IsNational": false,
             "IsLargeObject": false,
@@ -133,8 +253,16 @@
         },
         {
           "$type": "SetUserStatement",
+          "StartOffset": 294,
+          "FragmentLength": 16,
+          "StartLine": 44,
+          "StartColumn": 1,
           "UserName": {
             "$type": "StringLiteral",
+            "StartOffset": 302,
+            "FragmentLength": 7,
+            "StartLine": 44,
+            "StartColumn": 9,
             "LiteralType": "String",
             "IsNational": true,
             "IsLargeObject": false,
@@ -146,23 +274,47 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 316,
+      "FragmentLength": 70,
+      "StartLine": 48,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "TruncateTableStatement",
+          "StartOffset": 316,
+          "FragmentLength": 22,
+          "StartLine": 48,
+          "StartColumn": 1,
           "TableName": {
             "$type": "SchemaObjectName",
+            "StartOffset": 331,
+            "FragmentLength": 6,
+            "StartLine": 48,
+            "StartColumn": 16,
             "DatabaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 331,
+              "FragmentLength": 1,
+              "StartLine": 48,
+              "StartColumn": 16,
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "SchemaIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 332,
+              "FragmentLength": 1,
+              "StartLine": 48,
+              "StartColumn": 17,
               "Value": "",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 333,
+              "FragmentLength": 4,
+              "StartLine": 48,
+              "StartColumn": 18,
               "Value": "t1",
               "QuoteType": "SquareBracket"
             },
@@ -182,15 +334,31 @@
         },
         {
           "$type": "TruncateTableStatement",
+          "StartOffset": 340,
+          "FragmentLength": 24,
+          "StartLine": 50,
+          "StartColumn": 1,
           "TableName": {
             "$type": "SchemaObjectName",
+            "StartOffset": 355,
+            "FragmentLength": 8,
+            "StartLine": 50,
+            "StartColumn": 16,
             "SchemaIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 355,
+              "FragmentLength": 3,
+              "StartLine": 50,
+              "StartColumn": 16,
               "Value": "dbo",
               "QuoteType": "NotQuoted"
             },
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 359,
+              "FragmentLength": 4,
+              "StartLine": 50,
+              "StartColumn": 20,
               "Value": "t1",
               "QuoteType": "SquareBracket"
             },
@@ -207,10 +375,22 @@
         },
         {
           "$type": "TruncateTableStatement",
+          "StartOffset": 366,
+          "FragmentLength": 20,
+          "StartLine": 52,
+          "StartColumn": 1,
           "TableName": {
             "$type": "SchemaObjectName",
+            "StartOffset": 381,
+            "FragmentLength": 4,
+            "StartLine": 52,
+            "StartColumn": 16,
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 381,
+              "FragmentLength": 4,
+              "StartLine": 52,
+              "StartColumn": 16,
               "Value": "t1",
               "QuoteType": "SquareBracket"
             },
@@ -226,11 +406,23 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 392,
+      "FragmentLength": 10,
+      "StartLine": 56,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "LineNoStatement",
+          "StartOffset": 392,
+          "FragmentLength": 10,
+          "StartLine": 56,
+          "StartColumn": 1,
           "LineNo": {
             "$type": "IntegerLiteral",
+            "StartOffset": 399,
+            "FragmentLength": 2,
+            "StartLine": 56,
+            "StartColumn": 8,
             "LiteralType": "Integer",
             "Value": "42"
           }

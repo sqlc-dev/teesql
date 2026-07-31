@@ -2,6 +2,7 @@ package ast
 
 // IdentifierOrValueExpression represents either an identifier or a value expression.
 type IdentifierOrValueExpression struct {
+	Fragment
 	Value           string           `json:"Value,omitempty"`
 	Identifier      *Identifier      `json:"Identifier,omitempty"`
 	ValueExpression ScalarExpression `json:"ValueExpression,omitempty"`

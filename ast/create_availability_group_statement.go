@@ -2,6 +2,7 @@ package ast
 
 // CreateAvailabilityGroupStatement represents a CREATE AVAILABILITY GROUP statement
 type CreateAvailabilityGroupStatement struct {
+	Fragment
 	Name      *Identifier
 	Options   []AvailabilityGroupOption
 	Databases []*Identifier
@@ -19,6 +20,7 @@ type AvailabilityGroupOption interface {
 
 // LiteralAvailabilityGroupOption represents an availability group option with a literal value
 type LiteralAvailabilityGroupOption struct {
+	Fragment
 	OptionKind string           // e.g., "RequiredCopiesToCommit"
 	Value      ScalarExpression // The value for the option
 }
@@ -28,6 +30,7 @@ func (o *LiteralAvailabilityGroupOption) availabilityGroupOption() {}
 
 // AvailabilityReplica represents a replica in an availability group
 type AvailabilityReplica struct {
+	Fragment
 	ServerName *StringLiteral
 	Options    []AvailabilityReplicaOption
 }
@@ -42,6 +45,7 @@ type AvailabilityReplicaOption interface {
 
 // AvailabilityModeReplicaOption represents AVAILABILITY_MODE option
 type AvailabilityModeReplicaOption struct {
+	Fragment
 	OptionKind string // "AvailabilityMode"
 	Value      string // "SynchronousCommit", "AsynchronousCommit"
 }
@@ -51,6 +55,7 @@ func (o *AvailabilityModeReplicaOption) availabilityReplicaOption() {}
 
 // FailoverModeReplicaOption represents FAILOVER_MODE option
 type FailoverModeReplicaOption struct {
+	Fragment
 	OptionKind string // "FailoverMode"
 	Value      string // "Automatic", "Manual"
 }
@@ -60,6 +65,7 @@ func (o *FailoverModeReplicaOption) availabilityReplicaOption() {}
 
 // LiteralReplicaOption represents a replica option with a literal value
 type LiteralReplicaOption struct {
+	Fragment
 	OptionKind string           // e.g., "EndpointUrl", "SessionTimeout", "ApplyDelay"
 	Value      ScalarExpression // The value for the option
 }
@@ -69,6 +75,7 @@ func (o *LiteralReplicaOption) availabilityReplicaOption() {}
 
 // PrimaryRoleReplicaOption represents PRIMARY_ROLE option
 type PrimaryRoleReplicaOption struct {
+	Fragment
 	OptionKind       string // "PrimaryRole"
 	AllowConnections string // "All", "ReadWrite"
 }
@@ -78,6 +85,7 @@ func (o *PrimaryRoleReplicaOption) availabilityReplicaOption() {}
 
 // SecondaryRoleReplicaOption represents SECONDARY_ROLE option
 type SecondaryRoleReplicaOption struct {
+	Fragment
 	OptionKind       string // "SecondaryRole"
 	AllowConnections string // "No", "ReadOnly", "All"
 }

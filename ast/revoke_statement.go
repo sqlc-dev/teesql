@@ -2,6 +2,7 @@ package ast
 
 // RevokeStatement represents a REVOKE statement
 type RevokeStatement struct {
+	Fragment
 	Permissions          []*Permission
 	Principals           []*SecurityPrincipal
 	GrantOptionFor       bool

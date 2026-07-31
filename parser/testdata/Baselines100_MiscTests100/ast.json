@@ -1,24 +1,56 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 224,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 33,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "UpdateStatement",
+          "StartOffset": 0,
+          "FragmentLength": 33,
+          "StartLine": 1,
+          "StartColumn": 1,
           "UpdateSpecification": {
             "$type": "UpdateSpecification",
+            "StartOffset": 0,
+            "FragmentLength": 32,
+            "StartLine": 1,
+            "StartColumn": 1,
             "SetClauses": [
               {
                 "$type": "AssignmentSetClause",
+                "StartOffset": 14,
+                "FragmentLength": 18,
+                "StartLine": 2,
+                "StartColumn": 5,
                 "Column": {
                   "$type": "ColumnReferenceExpression",
+                  "StartOffset": 14,
+                  "FragmentLength": 8,
+                  "StartLine": 2,
+                  "StartColumn": 5,
                   "ColumnType": "PseudoColumnRowGuid"
                 },
                 "NewValue": {
                   "$type": "FunctionCall",
+                  "StartOffset": 25,
+                  "FragmentLength": 7,
+                  "StartLine": 2,
+                  "StartColumn": 16,
                   "FunctionName": {
                     "$type": "Identifier",
+                    "StartOffset": 25,
+                    "FragmentLength": 5,
+                    "StartLine": 2,
+                    "StartColumn": 16,
                     "Value": "newid",
                     "QuoteType": "NotQuoted"
                   },
@@ -30,10 +62,22 @@
             ],
             "Target": {
               "$type": "NamedTableReference",
+              "StartOffset": 7,
+              "FragmentLength": 2,
+              "StartLine": 1,
+              "StartColumn": 8,
               "SchemaObject": {
                 "$type": "SchemaObjectName",
+                "StartOffset": 7,
+                "FragmentLength": 2,
+                "StartLine": 1,
+                "StartColumn": 8,
                 "BaseIdentifier": {
                   "$type": "Identifier",
+                  "StartOffset": 7,
+                  "FragmentLength": 2,
+                  "StartLine": 1,
+                  "StartColumn": 8,
                   "Value": "t2",
                   "QuoteType": "NotQuoted"
                 },
@@ -52,26 +96,58 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 39,
+      "FragmentLength": 118,
+      "StartLine": 6,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "SelectStatement",
+          "StartOffset": 39,
+          "FragmentLength": 118,
+          "StartLine": 6,
+          "StartColumn": 1,
           "QueryExpression": {
             "$type": "QuerySpecification",
+            "StartOffset": 39,
+            "FragmentLength": 16,
+            "StartLine": 6,
+            "StartColumn": 1,
             "UniqueRowFilter": "NotSpecified",
             "SelectElements": [
               {
-                "$type": "SelectStarExpression"
+                "$type": "SelectStarExpression",
+                "StartOffset": 46,
+                "FragmentLength": 1,
+                "StartLine": 6,
+                "StartColumn": 8
               }
             ],
             "FromClause": {
               "$type": "FromClause",
+              "StartOffset": 48,
+              "FragmentLength": 7,
+              "StartLine": 7,
+              "StartColumn": 1,
               "TableReferences": [
                 {
                   "$type": "NamedTableReference",
+                  "StartOffset": 53,
+                  "FragmentLength": 2,
+                  "StartLine": 7,
+                  "StartColumn": 6,
                   "SchemaObject": {
                     "$type": "SchemaObjectName",
+                    "StartOffset": 53,
+                    "FragmentLength": 2,
+                    "StartLine": 7,
+                    "StartColumn": 6,
                     "BaseIdentifier": {
                       "$type": "Identifier",
+                      "StartOffset": 53,
+                      "FragmentLength": 2,
+                      "StartLine": 7,
+                      "StartColumn": 6,
                       "Value": "t1",
                       "QuoteType": "NotQuoted"
                     },
@@ -90,15 +166,31 @@
           "OptimizerHints": [
             {
               "$type": "OptimizeForOptimizerHint",
+              "StartOffset": 78,
+              "FragmentLength": 21,
+              "StartLine": 8,
+              "StartColumn": 23,
               "Pairs": [
                 {
                   "$type": "VariableValuePair",
+                  "StartOffset": 78,
+                  "FragmentLength": 8,
+                  "StartLine": 8,
+                  "StartColumn": 23,
                   "Variable": {
                     "$type": "VariableReference",
+                    "StartOffset": 78,
+                    "FragmentLength": 3,
+                    "StartLine": 8,
+                    "StartColumn": 23,
                     "Name": "@v1"
                   },
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 84,
+                    "FragmentLength": 2,
+                    "StartLine": 8,
+                    "StartColumn": 29,
                     "LiteralType": "Integer",
                     "Value": "20"
                   },
@@ -106,12 +198,24 @@
                 },
                 {
                   "$type": "VariableValuePair",
+                  "StartOffset": 88,
+                  "FragmentLength": 10,
+                  "StartLine": 8,
+                  "StartColumn": 33,
                   "Variable": {
                     "$type": "VariableReference",
+                    "StartOffset": 88,
+                    "FragmentLength": 3,
+                    "StartLine": 8,
+                    "StartColumn": 33,
                     "Name": "@v2"
                   },
                   "Value": {
                     "$type": "NullLiteral",
+                    "StartOffset": 94,
+                    "FragmentLength": 4,
+                    "StartLine": 8,
+                    "StartColumn": 39,
                     "LiteralType": "Null",
                     "Value": "NULL"
                   },
@@ -123,15 +227,31 @@
             },
             {
               "$type": "OptimizeForOptimizerHint",
+              "StartOffset": 115,
+              "FragmentLength": 12,
+              "StartLine": 8,
+              "StartColumn": 60,
               "Pairs": [
                 {
                   "$type": "VariableValuePair",
+                  "StartOffset": 115,
+                  "FragmentLength": 11,
+                  "StartLine": 8,
+                  "StartColumn": 60,
                   "Variable": {
                     "$type": "VariableReference",
+                    "StartOffset": 115,
+                    "FragmentLength": 3,
+                    "StartLine": 8,
+                    "StartColumn": 60,
                     "Name": "@v3"
                   },
                   "Value": {
                     "$type": "StringLiteral",
+                    "StartOffset": 121,
+                    "FragmentLength": 5,
+                    "StartLine": 8,
+                    "StartColumn": 66,
                     "LiteralType": "String",
                     "IsNational": false,
                     "IsLargeObject": false,
@@ -145,11 +265,23 @@
             },
             {
               "$type": "OptimizeForOptimizerHint",
+              "StartOffset": 143,
+              "FragmentLength": 12,
+              "StartLine": 8,
+              "StartColumn": 88,
               "Pairs": [
                 {
                   "$type": "VariableValuePair",
+                  "StartOffset": 143,
+                  "FragmentLength": 11,
+                  "StartLine": 8,
+                  "StartColumn": 88,
                   "Variable": {
                     "$type": "VariableReference",
+                    "StartOffset": 143,
+                    "FragmentLength": 3,
+                    "StartLine": 8,
+                    "StartColumn": 88,
                     "Name": "@v4"
                   },
                   "IsForUnknown": true
@@ -164,18 +296,34 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 163,
+      "FragmentLength": 61,
+      "StartLine": 12,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "DbccStatement",
+          "StartOffset": 163,
+          "FragmentLength": 61,
+          "StartLine": 12,
+          "StartColumn": 1,
           "Command": "CheckDB",
           "ParenthesisRequired": false,
           "Options": [
             {
               "$type": "DbccOption",
+              "StartOffset": 185,
+              "FragmentLength": 13,
+              "StartLine": 13,
+              "StartColumn": 10,
               "OptionKind": "AllErrorMessages"
             },
             {
               "$type": "DbccOption",
+              "StartOffset": 200,
+              "FragmentLength": 23,
+              "StartLine": 13,
+              "StartColumn": 25,
               "OptionKind": "ExtendedLogicalChecks"
             }
           ],

@@ -1,21 +1,45 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 123,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 123,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterIndexStatement",
+          "StartOffset": 0,
+          "FragmentLength": 50,
+          "StartLine": 1,
+          "StartColumn": 1,
           "All": true,
           "AlterIndexType": "Rebuild",
           "Partition": {
             "$type": "PartitionSpecifier",
+            "StartOffset": 46,
+            "FragmentLength": 3,
+            "StartLine": 2,
+            "StartColumn": 31,
             "All": true
           },
           "OnName": {
             "$type": "SchemaObjectName",
+            "StartOffset": 23,
+            "FragmentLength": 2,
+            "StartLine": 2,
+            "StartColumn": 8,
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 23,
+              "FragmentLength": 2,
+              "StartLine": 2,
+              "StartColumn": 8,
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -29,16 +53,32 @@
         },
         {
           "$type": "AlterIndexStatement",
+          "StartOffset": 52,
+          "FragmentLength": 71,
+          "StartLine": 4,
+          "StartColumn": 1,
           "All": true,
           "AlterIndexType": "Rebuild",
           "Partition": {
             "$type": "PartitionSpecifier",
+            "StartOffset": 98,
+            "FragmentLength": 3,
+            "StartLine": 5,
+            "StartColumn": 31,
             "All": true
           },
           "OnName": {
             "$type": "SchemaObjectName",
+            "StartOffset": 75,
+            "FragmentLength": 2,
+            "StartLine": 5,
+            "StartColumn": 8,
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 75,
+              "FragmentLength": 2,
+              "StartLine": 5,
+              "StartColumn": 8,
               "Value": "t1",
               "QuoteType": "NotQuoted"
             },
@@ -52,6 +92,10 @@
           "IndexOptions": [
             {
               "$type": "IndexStateOption",
+              "StartOffset": 107,
+              "FragmentLength": 14,
+              "StartLine": 5,
+              "StartColumn": 40,
               "OptionState": "On",
               "OptionKind": "PadIndex"
             }

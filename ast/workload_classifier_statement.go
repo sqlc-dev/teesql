@@ -3,6 +3,7 @@ package ast
 
 // CreateWorkloadClassifierStatement represents a CREATE WORKLOAD CLASSIFIER statement.
 type CreateWorkloadClassifierStatement struct {
+	Fragment
 	ClassifierName *Identifier
 	Options        []WorkloadClassifierOption
 }
@@ -18,6 +19,7 @@ type WorkloadClassifierOption interface {
 
 // ClassifierWorkloadGroupOption represents the WORKLOAD_GROUP option.
 type ClassifierWorkloadGroupOption struct {
+	Fragment
 	WorkloadGroupName *StringLiteral
 	OptionType        string
 }
@@ -27,6 +29,7 @@ func (o *ClassifierWorkloadGroupOption) workloadClassifierOption() {}
 
 // ClassifierMemberNameOption represents the MEMBERNAME option.
 type ClassifierMemberNameOption struct {
+	Fragment
 	MemberName *StringLiteral
 	OptionType string
 }
@@ -36,6 +39,7 @@ func (o *ClassifierMemberNameOption) workloadClassifierOption() {}
 
 // ClassifierWlmContextOption represents the WLM_CONTEXT option.
 type ClassifierWlmContextOption struct {
+	Fragment
 	WlmContext *StringLiteral
 	OptionType string
 }
@@ -45,6 +49,7 @@ func (o *ClassifierWlmContextOption) workloadClassifierOption() {}
 
 // WlmTimeLiteral represents a time literal for WLM START_TIME/END_TIME options.
 type WlmTimeLiteral struct {
+	Fragment
 	TimeString *StringLiteral
 }
 
@@ -52,6 +57,7 @@ func (t *WlmTimeLiteral) node() {}
 
 // ClassifierStartTimeOption represents the START_TIME option.
 type ClassifierStartTimeOption struct {
+	Fragment
 	Time       *WlmTimeLiteral
 	OptionType string
 }
@@ -61,6 +67,7 @@ func (o *ClassifierStartTimeOption) workloadClassifierOption() {}
 
 // ClassifierEndTimeOption represents the END_TIME option.
 type ClassifierEndTimeOption struct {
+	Fragment
 	Time       *WlmTimeLiteral
 	OptionType string
 }
@@ -70,6 +77,7 @@ func (o *ClassifierEndTimeOption) workloadClassifierOption() {}
 
 // ClassifierWlmLabelOption represents the WLM_LABEL option.
 type ClassifierWlmLabelOption struct {
+	Fragment
 	WlmLabel   *StringLiteral
 	OptionType string
 }
@@ -79,6 +87,7 @@ func (o *ClassifierWlmLabelOption) workloadClassifierOption() {}
 
 // ClassifierImportanceOption represents the IMPORTANCE option.
 type ClassifierImportanceOption struct {
+	Fragment
 	Importance string
 	OptionType string
 }

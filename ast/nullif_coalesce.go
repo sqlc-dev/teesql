@@ -2,6 +2,7 @@ package ast
 
 // NullIfExpression represents a NULLIF(expr1, expr2) expression.
 type NullIfExpression struct {
+	Fragment
 	FirstExpression  ScalarExpression
 	SecondExpression ScalarExpression
 }
@@ -11,6 +12,7 @@ func (*NullIfExpression) scalarExpression() {}
 
 // CoalesceExpression represents a COALESCE(expr1, expr2, ...) expression.
 type CoalesceExpression struct {
+	Fragment
 	Expressions []ScalarExpression
 }
 
@@ -19,6 +21,7 @@ func (*CoalesceExpression) scalarExpression() {}
 
 // ParameterlessCall represents a parameterless function call like USER, CURRENT_USER, etc.
 type ParameterlessCall struct {
+	Fragment
 	ParameterlessCallType string
 	Collation             *Identifier
 }

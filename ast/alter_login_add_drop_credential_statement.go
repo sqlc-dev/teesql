@@ -2,6 +2,7 @@ package ast
 
 // AlterLoginAddDropCredentialStatement represents an ALTER LOGIN ADD/DROP CREDENTIAL statement.
 type AlterLoginAddDropCredentialStatement struct {
+	Fragment
 	Name           *Identifier
 	CredentialName *Identifier
 	IsAdd          bool

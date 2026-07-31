@@ -2,6 +2,7 @@ package ast
 
 // SetRowCountStatement represents SET ROWCOUNT statement
 type SetRowCountStatement struct {
+	Fragment
 	NumberRows ScalarExpression
 }
 

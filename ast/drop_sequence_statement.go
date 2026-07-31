@@ -2,6 +2,7 @@ package ast
 
 // DropSequenceStatement represents a DROP SEQUENCE statement.
 type DropSequenceStatement struct {
+	Fragment
 	Objects    []*SchemaObjectName
 	IsIfExists bool
 }

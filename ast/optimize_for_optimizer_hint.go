@@ -2,6 +2,7 @@ package ast
 
 // OptimizeForOptimizerHint represents an OPTIMIZE FOR hint.
 type OptimizeForOptimizerHint struct {
+	Fragment
 	Pairs        []*VariableValuePair `json:"Pairs,omitempty"`
 	IsForUnknown bool                 `json:"IsForUnknown,omitempty"`
 	HintKind     string               `json:"HintKind,omitempty"`

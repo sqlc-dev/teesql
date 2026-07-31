@@ -1,18 +1,38 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 1644,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 36,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 0,
+          "FragmentLength": 36,
+          "StartLine": 1,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "Action",
           "Action": {
             "$type": "AlterAvailabilityGroupAction",
+            "StartOffset": 32,
+            "FragmentLength": 4,
+            "StartLine": 1,
+            "StartColumn": 33,
             "ActionType": "Join"
           },
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 25,
+            "FragmentLength": 6,
+            "StartLine": 1,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           }
@@ -21,23 +41,43 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 40,
+      "FragmentLength": 53,
+      "StartLine": 3,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 40,
+          "FragmentLength": 53,
+          "StartLine": 3,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "AddDatabase",
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 65,
+            "FragmentLength": 6,
+            "StartLine": 3,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           },
           "Databases": [
             {
               "$type": "Identifier",
+              "StartOffset": 85,
+              "FragmentLength": 3,
+              "StartLine": 3,
+              "StartColumn": 46,
               "Value": "db1",
               "QuoteType": "NotQuoted"
             },
             {
               "$type": "Identifier",
+              "StartOffset": 90,
+              "FragmentLength": 3,
+              "StartLine": 3,
+              "StartColumn": 51,
               "Value": "db2",
               "QuoteType": "NotQuoted"
             }
@@ -47,28 +87,52 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 97,
+      "FragmentLength": 61,
+      "StartLine": 5,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 97,
+          "FragmentLength": 61,
+          "StartLine": 5,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "RemoveDatabase",
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 122,
+            "FragmentLength": 6,
+            "StartLine": 5,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           },
           "Databases": [
             {
               "$type": "Identifier",
+              "StartOffset": 145,
+              "FragmentLength": 3,
+              "StartLine": 5,
+              "StartColumn": 49,
               "Value": "db1",
               "QuoteType": "NotQuoted"
             },
             {
               "$type": "Identifier",
+              "StartOffset": 150,
+              "FragmentLength": 3,
+              "StartLine": 5,
+              "StartColumn": 54,
               "Value": "db2",
               "QuoteType": "NotQuoted"
             },
             {
               "$type": "Identifier",
+              "StartOffset": 155,
+              "FragmentLength": 3,
+              "StartLine": 5,
+              "StartColumn": 59,
               "Value": "db3",
               "QuoteType": "NotQuoted"
             }
@@ -78,20 +142,40 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 162,
+      "FragmentLength": 635,
+      "StartLine": 7,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 162,
+          "FragmentLength": 635,
+          "StartLine": 7,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "AddReplica",
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 187,
+            "FragmentLength": 6,
+            "StartLine": 7,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           },
           "Replicas": [
             {
               "$type": "AvailabilityReplica",
+              "StartOffset": 209,
+              "FragmentLength": 193,
+              "StartLine": 7,
+              "StartColumn": 48,
               "ServerName": {
                 "$type": "StringLiteral",
+                "StartOffset": 209,
+                "FragmentLength": 9,
+                "StartLine": 7,
+                "StartColumn": 48,
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -100,18 +184,34 @@
               "Options": [
                 {
                   "$type": "AvailabilityModeReplicaOption",
+                  "StartOffset": 244,
+                  "FragmentLength": 18,
+                  "StartLine": 7,
+                  "StartColumn": 83,
                   "Value": "SynchronousCommit",
                   "OptionKind": "AvailabilityMode"
                 },
                 {
                   "$type": "FailoverModeReplicaOption",
+                  "StartOffset": 280,
+                  "FragmentLength": 9,
+                  "StartLine": 7,
+                  "StartColumn": 119,
                   "Value": "Automatic",
                   "OptionKind": "FailoverMode"
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 306,
+                  "FragmentLength": 15,
+                  "StartLine": 7,
+                  "StartColumn": 145,
                   "Value": {
                     "$type": "StringLiteral",
+                    "StartOffset": 306,
+                    "FragmentLength": 15,
+                    "StartLine": 7,
+                    "StartColumn": 145,
                     "LiteralType": "String",
                     "IsNational": false,
                     "IsLargeObject": false,
@@ -121,13 +221,25 @@
                 },
                 {
                   "$type": "SecondaryRoleReplicaOption",
+                  "StartOffset": 359,
+                  "FragmentLength": 3,
+                  "StartLine": 7,
+                  "StartColumn": 198,
                   "AllowConnections": "No",
                   "OptionKind": "SecondaryRole"
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 382,
+                  "FragmentLength": 2,
+                  "StartLine": 7,
+                  "StartColumn": 221,
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 382,
+                    "FragmentLength": 2,
+                    "StartLine": 7,
+                    "StartColumn": 221,
                     "LiteralType": "Integer",
                     "Value": "10"
                   },
@@ -135,8 +247,16 @@
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 400,
+                  "FragmentLength": 1,
+                  "StartLine": 7,
+                  "StartColumn": 239,
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 400,
+                    "FragmentLength": 1,
+                    "StartLine": 7,
+                    "StartColumn": 239,
                     "LiteralType": "Integer",
                     "Value": "1"
                   },
@@ -146,8 +266,16 @@
             },
             {
               "$type": "AvailabilityReplica",
+              "StartOffset": 404,
+              "FragmentLength": 197,
+              "StartLine": 8,
+              "StartColumn": 1,
               "ServerName": {
                 "$type": "StringLiteral",
+                "StartOffset": 404,
+                "FragmentLength": 9,
+                "StartLine": 8,
+                "StartColumn": 1,
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -156,13 +284,25 @@
               "Options": [
                 {
                   "$type": "FailoverModeReplicaOption",
+                  "StartOffset": 435,
+                  "FragmentLength": 6,
+                  "StartLine": 8,
+                  "StartColumn": 32,
                   "Value": "Manual",
                   "OptionKind": "FailoverMode"
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 457,
+                  "FragmentLength": 1,
+                  "StartLine": 8,
+                  "StartColumn": 54,
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 457,
+                    "FragmentLength": 1,
+                    "StartLine": 8,
+                    "StartColumn": 54,
                     "LiteralType": "Integer",
                     "Value": "1"
                   },
@@ -170,8 +310,16 @@
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 475,
+                  "FragmentLength": 15,
+                  "StartLine": 8,
+                  "StartColumn": 72,
                   "Value": {
                     "$type": "StringLiteral",
+                    "StartOffset": 475,
+                    "FragmentLength": 15,
+                    "StartLine": 8,
+                    "StartColumn": 72,
                     "LiteralType": "String",
                     "IsNational": false,
                     "IsLargeObject": false,
@@ -181,18 +329,34 @@
                 },
                 {
                   "$type": "PrimaryRoleReplicaOption",
+                  "StartOffset": 526,
+                  "FragmentLength": 11,
+                  "StartLine": 8,
+                  "StartColumn": 123,
                   "AllowConnections": "ReadWrite",
                   "OptionKind": "PrimaryRole"
                 },
                 {
                   "$type": "AvailabilityModeReplicaOption",
+                  "StartOffset": 559,
+                  "FragmentLength": 19,
+                  "StartLine": 8,
+                  "StartColumn": 156,
                   "Value": "AsynchronousCommit",
                   "OptionKind": "AvailabilityMode"
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 598,
+                  "FragmentLength": 2,
+                  "StartLine": 8,
+                  "StartColumn": 195,
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 598,
+                    "FragmentLength": 2,
+                    "StartLine": 8,
+                    "StartColumn": 195,
                     "LiteralType": "Integer",
                     "Value": "10"
                   },
@@ -202,8 +366,16 @@
             },
             {
               "$type": "AvailabilityReplica",
+              "StartOffset": 603,
+              "FragmentLength": 194,
+              "StartLine": 9,
+              "StartColumn": 1,
               "ServerName": {
                 "$type": "StringLiteral",
+                "StartOffset": 603,
+                "FragmentLength": 9,
+                "StartLine": 9,
+                "StartColumn": 1,
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -212,18 +384,34 @@
               "Options": [
                 {
                   "$type": "AvailabilityModeReplicaOption",
+                  "StartOffset": 638,
+                  "FragmentLength": 18,
+                  "StartLine": 9,
+                  "StartColumn": 36,
                   "Value": "SynchronousCommit",
                   "OptionKind": "AvailabilityMode"
                 },
                 {
                   "$type": "FailoverModeReplicaOption",
+                  "StartOffset": 674,
+                  "FragmentLength": 9,
+                  "StartLine": 9,
+                  "StartColumn": 72,
                   "Value": "Automatic",
                   "OptionKind": "FailoverMode"
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 700,
+                  "FragmentLength": 15,
+                  "StartLine": 9,
+                  "StartColumn": 98,
                   "Value": {
                     "$type": "StringLiteral",
+                    "StartOffset": 700,
+                    "FragmentLength": 15,
+                    "StartLine": 9,
+                    "StartColumn": 98,
                     "LiteralType": "String",
                     "IsNational": false,
                     "IsLargeObject": false,
@@ -233,13 +421,25 @@
                 },
                 {
                   "$type": "SecondaryRoleReplicaOption",
+                  "StartOffset": 753,
+                  "FragmentLength": 4,
+                  "StartLine": 9,
+                  "StartColumn": 151,
                   "AllowConnections": "All",
                   "OptionKind": "SecondaryRole"
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 777,
+                  "FragmentLength": 2,
+                  "StartLine": 9,
+                  "StartColumn": 175,
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 777,
+                    "FragmentLength": 2,
+                    "StartLine": 9,
+                    "StartColumn": 175,
                     "LiteralType": "Integer",
                     "Value": "10"
                   },
@@ -247,8 +447,16 @@
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 795,
+                  "FragmentLength": 1,
+                  "StartLine": 9,
+                  "StartColumn": 193,
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 795,
+                    "FragmentLength": 1,
+                    "StartLine": 9,
+                    "StartColumn": 193,
                     "LiteralType": "Integer",
                     "Value": "1"
                   },
@@ -262,20 +470,40 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 801,
+      "FragmentLength": 436,
+      "StartLine": 11,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 801,
+          "FragmentLength": 436,
+          "StartLine": 11,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "ModifyReplica",
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 826,
+            "FragmentLength": 6,
+            "StartLine": 11,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           },
           "Replicas": [
             {
               "$type": "AvailabilityReplica",
+              "StartOffset": 851,
+              "FragmentLength": 194,
+              "StartLine": 11,
+              "StartColumn": 51,
               "ServerName": {
                 "$type": "StringLiteral",
+                "StartOffset": 851,
+                "FragmentLength": 9,
+                "StartLine": 11,
+                "StartColumn": 51,
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -284,18 +512,34 @@
               "Options": [
                 {
                   "$type": "AvailabilityModeReplicaOption",
+                  "StartOffset": 886,
+                  "FragmentLength": 18,
+                  "StartLine": 11,
+                  "StartColumn": 86,
                   "Value": "SynchronousCommit",
                   "OptionKind": "AvailabilityMode"
                 },
                 {
                   "$type": "FailoverModeReplicaOption",
+                  "StartOffset": 922,
+                  "FragmentLength": 9,
+                  "StartLine": 11,
+                  "StartColumn": 122,
                   "Value": "Automatic",
                   "OptionKind": "FailoverMode"
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 948,
+                  "FragmentLength": 15,
+                  "StartLine": 11,
+                  "StartColumn": 148,
                   "Value": {
                     "$type": "StringLiteral",
+                    "StartOffset": 948,
+                    "FragmentLength": 15,
+                    "StartLine": 11,
+                    "StartColumn": 148,
                     "LiteralType": "String",
                     "IsNational": false,
                     "IsLargeObject": false,
@@ -305,13 +549,25 @@
                 },
                 {
                   "$type": "SecondaryRoleReplicaOption",
+                  "StartOffset": 1001,
+                  "FragmentLength": 4,
+                  "StartLine": 11,
+                  "StartColumn": 201,
                   "AllowConnections": "All",
                   "OptionKind": "SecondaryRole"
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 1025,
+                  "FragmentLength": 2,
+                  "StartLine": 11,
+                  "StartColumn": 225,
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 1025,
+                    "FragmentLength": 2,
+                    "StartLine": 11,
+                    "StartColumn": 225,
                     "LiteralType": "Integer",
                     "Value": "10"
                   },
@@ -319,8 +575,16 @@
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 1043,
+                  "FragmentLength": 1,
+                  "StartLine": 11,
+                  "StartColumn": 243,
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 1043,
+                    "FragmentLength": 1,
+                    "StartLine": 11,
+                    "StartColumn": 243,
                     "LiteralType": "Integer",
                     "Value": "1"
                   },
@@ -330,8 +594,16 @@
             },
             {
               "$type": "AvailabilityReplica",
+              "StartOffset": 1047,
+              "FragmentLength": 190,
+              "StartLine": 12,
+              "StartColumn": 1,
               "ServerName": {
                 "$type": "StringLiteral",
+                "StartOffset": 1047,
+                "FragmentLength": 9,
+                "StartLine": 12,
+                "StartColumn": 1,
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -340,13 +612,25 @@
               "Options": [
                 {
                   "$type": "FailoverModeReplicaOption",
+                  "StartOffset": 1078,
+                  "FragmentLength": 6,
+                  "StartLine": 12,
+                  "StartColumn": 32,
                   "Value": "Manual",
                   "OptionKind": "FailoverMode"
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 1100,
+                  "FragmentLength": 1,
+                  "StartLine": 12,
+                  "StartColumn": 54,
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 1100,
+                    "FragmentLength": 1,
+                    "StartLine": 12,
+                    "StartColumn": 54,
                     "LiteralType": "Integer",
                     "Value": "1"
                   },
@@ -354,8 +638,16 @@
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 1118,
+                  "FragmentLength": 15,
+                  "StartLine": 12,
+                  "StartColumn": 72,
                   "Value": {
                     "$type": "StringLiteral",
+                    "StartOffset": 1118,
+                    "FragmentLength": 15,
+                    "StartLine": 12,
+                    "StartColumn": 72,
                     "LiteralType": "String",
                     "IsNational": false,
                     "IsLargeObject": false,
@@ -365,18 +657,34 @@
                 },
                 {
                   "$type": "PrimaryRoleReplicaOption",
+                  "StartOffset": 1169,
+                  "FragmentLength": 4,
+                  "StartLine": 12,
+                  "StartColumn": 123,
                   "AllowConnections": "All",
                   "OptionKind": "PrimaryRole"
                 },
                 {
                   "$type": "AvailabilityModeReplicaOption",
+                  "StartOffset": 1195,
+                  "FragmentLength": 19,
+                  "StartLine": 12,
+                  "StartColumn": 149,
                   "Value": "AsynchronousCommit",
                   "OptionKind": "AvailabilityMode"
                 },
                 {
                   "$type": "LiteralReplicaOption",
+                  "StartOffset": 1234,
+                  "FragmentLength": 2,
+                  "StartLine": 12,
+                  "StartColumn": 188,
                   "Value": {
                     "$type": "IntegerLiteral",
+                    "StartOffset": 1234,
+                    "FragmentLength": 2,
+                    "StartLine": 12,
+                    "StartColumn": 188,
                     "LiteralType": "Integer",
                     "Value": "10"
                   },
@@ -390,20 +698,40 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 1241,
+      "FragmentLength": 70,
+      "StartLine": 14,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 1241,
+          "FragmentLength": 70,
+          "StartLine": 14,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "RemoveReplica",
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 1266,
+            "FragmentLength": 6,
+            "StartLine": 14,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           },
           "Replicas": [
             {
               "$type": "AvailabilityReplica",
+              "StartOffset": 1291,
+              "FragmentLength": 9,
+              "StartLine": 14,
+              "StartColumn": 51,
               "ServerName": {
                 "$type": "StringLiteral",
+                "StartOffset": 1291,
+                "FragmentLength": 9,
+                "StartLine": 14,
+                "StartColumn": 51,
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -412,8 +740,16 @@
             },
             {
               "$type": "AvailabilityReplica",
+              "StartOffset": 1302,
+              "FragmentLength": 9,
+              "StartLine": 14,
+              "StartColumn": 62,
               "ServerName": {
                 "$type": "StringLiteral",
+                "StartOffset": 1302,
+                "FragmentLength": 9,
+                "StartLine": 14,
+                "StartColumn": 62,
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -426,20 +762,40 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 1315,
+      "FragmentLength": 64,
+      "StartLine": 16,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 1315,
+          "FragmentLength": 64,
+          "StartLine": 16,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "Set",
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 1340,
+            "FragmentLength": 6,
+            "StartLine": 16,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           },
           "Options": [
             {
               "$type": "LiteralAvailabilityGroupOption",
+              "StartOffset": 1377,
+              "FragmentLength": 1,
+              "StartLine": 16,
+              "StartColumn": 63,
               "Value": {
                 "$type": "IntegerLiteral",
+                "StartOffset": 1377,
+                "FragmentLength": 1,
+                "StartLine": 16,
+                "StartColumn": 63,
                 "LiteralType": "Integer",
                 "Value": "5"
               },
@@ -451,16 +807,32 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 1383,
+      "FragmentLength": 40,
+      "StartLine": 18,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 1383,
+          "FragmentLength": 40,
+          "StartLine": 18,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "Action",
           "Action": {
             "$type": "AlterAvailabilityGroupFailoverAction",
+            "StartOffset": 1415,
+            "FragmentLength": 8,
+            "StartLine": 18,
+            "StartColumn": 33,
             "ActionType": "Failover"
           },
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 1408,
+            "FragmentLength": 6,
+            "StartLine": 18,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           }
@@ -469,18 +841,38 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 1427,
+      "FragmentLength": 63,
+      "StartLine": 20,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 1427,
+          "FragmentLength": 63,
+          "StartLine": 20,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "Action",
           "Action": {
             "$type": "AlterAvailabilityGroupFailoverAction",
+            "StartOffset": 1459,
+            "FragmentLength": 31,
+            "StartLine": 20,
+            "StartColumn": 33,
             "Options": [
               {
                 "$type": "AlterAvailabilityGroupFailoverOption",
+                "StartOffset": 1480,
+                "FragmentLength": 9,
+                "StartLine": 20,
+                "StartColumn": 54,
                 "OptionKind": "Target",
                 "Value": {
                   "$type": "StringLiteral",
+                  "StartOffset": 1480,
+                  "FragmentLength": 9,
+                  "StartLine": 20,
+                  "StartColumn": 54,
                   "LiteralType": "String",
                   "IsNational": false,
                   "IsLargeObject": false,
@@ -492,6 +884,10 @@
           },
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 1452,
+            "FragmentLength": 6,
+            "StartLine": 20,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           }
@@ -500,16 +896,32 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 1494,
+      "FragmentLength": 62,
+      "StartLine": 22,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 1494,
+          "FragmentLength": 62,
+          "StartLine": 22,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "Action",
           "Action": {
             "$type": "AlterAvailabilityGroupAction",
+            "StartOffset": 1526,
+            "FragmentLength": 30,
+            "StartLine": 22,
+            "StartColumn": 33,
             "ActionType": "ForceFailoverAllowDataLoss"
           },
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 1519,
+            "FragmentLength": 6,
+            "StartLine": 22,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           }
@@ -518,16 +930,32 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 1560,
+      "FragmentLength": 38,
+      "StartLine": 24,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 1560,
+          "FragmentLength": 38,
+          "StartLine": 24,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "Action",
           "Action": {
             "$type": "AlterAvailabilityGroupAction",
+            "StartOffset": 1592,
+            "FragmentLength": 6,
+            "StartLine": 24,
+            "StartColumn": 33,
             "ActionType": "Online"
           },
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 1585,
+            "FragmentLength": 6,
+            "StartLine": 24,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           }
@@ -536,16 +964,32 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 1602,
+      "FragmentLength": 39,
+      "StartLine": 26,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterAvailabilityGroupStatement",
+          "StartOffset": 1602,
+          "FragmentLength": 39,
+          "StartLine": 26,
+          "StartColumn": 1,
           "AlterAvailabilityGroupStatementType": "Action",
           "Action": {
             "$type": "AlterAvailabilityGroupAction",
+            "StartOffset": 1634,
+            "FragmentLength": 7,
+            "StartLine": 26,
+            "StartColumn": 33,
             "ActionType": "Offline"
           },
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 1627,
+            "FragmentLength": 6,
+            "StartLine": 26,
+            "StartColumn": 26,
             "Value": "group1",
             "QuoteType": "NotQuoted"
           }

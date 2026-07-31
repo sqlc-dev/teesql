@@ -2,8 +2,9 @@ package ast
 
 // CreateSchemaStatement represents a CREATE SCHEMA statement.
 type CreateSchemaStatement struct {
-	Name          *Identifier   `json:"Name,omitempty"`
-	Owner         *Identifier   `json:"Owner,omitempty"`
+	Fragment
+	Name          *Identifier    `json:"Name,omitempty"`
+	Owner         *Identifier    `json:"Owner,omitempty"`
 	StatementList *StatementList `json:"StatementList,omitempty"`
 }
 

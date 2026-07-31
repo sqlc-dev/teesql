@@ -2,6 +2,7 @@ package ast
 
 // FullTextPredicate represents CONTAINS or FREETEXT predicates in WHERE clauses
 type FullTextPredicate struct {
+	Fragment
 	FullTextFunctionType string                       `json:"FullTextFunctionType,omitempty"` // Contains, FreeText
 	Columns              []*ColumnReferenceExpression `json:"Columns,omitempty"`
 	Value                ScalarExpression             `json:"Value,omitempty"`

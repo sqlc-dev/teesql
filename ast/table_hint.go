@@ -7,6 +7,7 @@ type TableHintType interface {
 
 // TableHint represents a table hint.
 type TableHint struct {
+	Fragment
 	HintKind string `json:"HintKind,omitempty"`
 }
 
@@ -14,6 +15,7 @@ func (*TableHint) tableHint() {}
 
 // IndexTableHint represents an INDEX table hint with index values.
 type IndexTableHint struct {
+	Fragment
 	HintKind    string                         `json:"HintKind,omitempty"`
 	IndexValues []*IdentifierOrValueExpression `json:"IndexValues,omitempty"`
 }
@@ -22,6 +24,7 @@ func (*IndexTableHint) tableHint() {}
 
 // LiteralTableHint represents a table hint with a literal value (e.g., SPATIAL_WINDOW_MAX_CELLS = 512).
 type LiteralTableHint struct {
+	Fragment
 	HintKind string           `json:"HintKind,omitempty"`
 	Value    ScalarExpression `json:"Value,omitempty"`
 }
@@ -30,9 +33,10 @@ func (*LiteralTableHint) tableHint() {}
 
 // ForceSeekTableHint represents FORCESEEK table hint with optional index and column list.
 type ForceSeekTableHint struct {
-	HintKind     string                        `json:"HintKind,omitempty"`
-	IndexValue   *IdentifierOrValueExpression  `json:"IndexValue,omitempty"`
-	ColumnValues []*ColumnReferenceExpression  `json:"ColumnValues,omitempty"`
+	Fragment
+	HintKind     string                       `json:"HintKind,omitempty"`
+	IndexValue   *IdentifierOrValueExpression `json:"IndexValue,omitempty"`
+	ColumnValues []*ColumnReferenceExpression `json:"ColumnValues,omitempty"`
 }
 
 func (*ForceSeekTableHint) tableHint() {}

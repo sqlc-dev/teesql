@@ -8,6 +8,7 @@ type TableReference interface {
 
 // OdbcQualifiedJoinTableReference represents an ODBC qualified join syntax: { OJ ... }
 type OdbcQualifiedJoinTableReference struct {
+	Fragment
 	TableReference TableReference
 }
 

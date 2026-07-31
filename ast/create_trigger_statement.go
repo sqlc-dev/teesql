@@ -2,6 +2,7 @@ package ast
 
 // CreateTriggerStatement represents a CREATE TRIGGER statement
 type CreateTriggerStatement struct {
+	Fragment
 	Name                *SchemaObjectName
 	TriggerObject       *TriggerObject
 	TriggerType         string // "For", "After", "InsteadOf"
@@ -18,6 +19,7 @@ func (s *CreateTriggerStatement) node()      {}
 
 // CreateOrAlterTriggerStatement represents a CREATE OR ALTER TRIGGER statement
 type CreateOrAlterTriggerStatement struct {
+	Fragment
 	Name                *SchemaObjectName
 	TriggerObject       *TriggerObject
 	TriggerType         string // "For", "After", "InsteadOf"
@@ -34,6 +36,7 @@ func (s *CreateOrAlterTriggerStatement) node()      {}
 
 // EventTypeContainer represents an event type container
 type EventTypeContainer struct {
+	Fragment
 	EventType string `json:"EventType,omitempty"`
 }
 

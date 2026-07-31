@@ -2,6 +2,7 @@ package ast
 
 // SetCommandStatement represents a SET statement with commands (not variables)
 type SetCommandStatement struct {
+	Fragment
 	Commands []SetCommand
 }
 
@@ -16,6 +17,7 @@ type SetCommand interface {
 
 // SetFipsFlaggerCommand represents SET FIPS_FLAGGER command
 type SetFipsFlaggerCommand struct {
+	Fragment
 	ComplianceLevel string // "Off", "Entry", "Intermediate", "Full"
 }
 
@@ -24,6 +26,7 @@ func (s *SetFipsFlaggerCommand) setCommand() {}
 
 // GeneralSetCommand represents SET commands like LANGUAGE, DATEFORMAT, etc.
 type GeneralSetCommand struct {
+	Fragment
 	CommandType string           // "Language", "DateFormat", "DateFirst", "DeadlockPriority", "LockTimeout", "ContextInfo", "QueryGovernorCostLimit"
 	Parameter   ScalarExpression // The parameter value
 }
@@ -33,6 +36,7 @@ func (s *GeneralSetCommand) setCommand() {}
 
 // SetTransactionIsolationLevelStatement represents SET TRANSACTION ISOLATION LEVEL statement
 type SetTransactionIsolationLevelStatement struct {
+	Fragment
 	Level string // "ReadUncommitted", "ReadCommitted", "RepeatableRead", "Serializable", "Snapshot"
 }
 
@@ -41,6 +45,7 @@ func (s *SetTransactionIsolationLevelStatement) statement() {}
 
 // SetTextSizeStatement represents SET TEXTSIZE statement
 type SetTextSizeStatement struct {
+	Fragment
 	TextSize ScalarExpression
 }
 
@@ -49,6 +54,7 @@ func (s *SetTextSizeStatement) statement() {}
 
 // SetIdentityInsertStatement represents SET IDENTITY_INSERT statement
 type SetIdentityInsertStatement struct {
+	Fragment
 	Table *SchemaObjectName
 	IsOn  bool
 }
@@ -58,6 +64,7 @@ func (s *SetIdentityInsertStatement) statement() {}
 
 // SetErrorLevelStatement represents SET ERRLVL statement
 type SetErrorLevelStatement struct {
+	Fragment
 	Level ScalarExpression
 }
 

@@ -7,6 +7,7 @@ type CallTarget interface {
 
 // MultiPartIdentifierCallTarget represents a multi-part identifier call target.
 type MultiPartIdentifierCallTarget struct {
+	Fragment
 	MultiPartIdentifier *MultiPartIdentifier
 }
 
@@ -14,6 +15,7 @@ func (*MultiPartIdentifierCallTarget) callTarget() {}
 
 // ExpressionCallTarget represents an expression call target.
 type ExpressionCallTarget struct {
+	Fragment
 	Expression ScalarExpression
 }
 
@@ -21,6 +23,7 @@ func (*ExpressionCallTarget) callTarget() {}
 
 // UserDefinedTypeCallTarget represents a user-defined type call target.
 type UserDefinedTypeCallTarget struct {
+	Fragment
 	SchemaObjectName *SchemaObjectName
 }
 
@@ -28,6 +31,7 @@ func (*UserDefinedTypeCallTarget) callTarget() {}
 
 // OverClause represents an OVER clause for window functions.
 type OverClause struct {
+	Fragment
 	WindowName        *Identifier        `json:"WindowName,omitempty"`
 	Partitions        []ScalarExpression `json:"Partitions,omitempty"`
 	OrderByClause     *OrderByClause     `json:"OrderByClause,omitempty"`
@@ -36,6 +40,7 @@ type OverClause struct {
 
 // WindowFrameClause represents ROWS/RANGE frame specification in OVER clause
 type WindowFrameClause struct {
+	Fragment
 	WindowFrameType string           // "Rows", "Range"
 	Top             *WindowDelimiter // Top boundary
 	Bottom          *WindowDelimiter // Bottom boundary (for BETWEEN)
@@ -45,6 +50,7 @@ func (w *WindowFrameClause) node() {}
 
 // WindowDelimiter represents window frame boundary
 type WindowDelimiter struct {
+	Fragment
 	WindowDelimiterType string           // "CurrentRow", "UnboundedPreceding", "UnboundedFollowing", "ValuePreceding", "ValueFollowing"
 	OffsetValue         ScalarExpression // For ValuePreceding/ValueFollowing
 }
@@ -53,6 +59,7 @@ func (w *WindowDelimiter) node() {}
 
 // WithinGroupClause represents a WITHIN GROUP clause for ordered set aggregate functions.
 type WithinGroupClause struct {
+	Fragment
 	OrderByClause *OrderByClause `json:"OrderByClause,omitempty"`
 	HasGraphPath  bool           `json:"HasGraphPath,omitempty"`
 }
@@ -61,6 +68,7 @@ func (*WithinGroupClause) node() {}
 
 // JsonKeyValue represents a key-value pair in JSON_OBJECT function
 type JsonKeyValue struct {
+	Fragment
 	JsonKeyName ScalarExpression `json:"JsonKeyName,omitempty"`
 	JsonValue   ScalarExpression `json:"JsonValue,omitempty"`
 }
@@ -69,6 +77,7 @@ func (*JsonKeyValue) node() {}
 
 // FunctionCall represents a function call.
 type FunctionCall struct {
+	Fragment
 	CallTarget         CallTarget         `json:"CallTarget,omitempty"`
 	FunctionName       *Identifier        `json:"FunctionName,omitempty"`
 	Parameters         []ScalarExpression `json:"Parameters,omitempty"`
@@ -79,7 +88,7 @@ type FunctionCall struct {
 	WithArrayWrapper   bool               `json:"WithArrayWrapper,omitempty"`
 	TrimOptions        *Identifier        `json:"TrimOptions,omitempty"` // For TRIM(LEADING/TRAILING/BOTH chars FROM string)
 	Collation          *Identifier        `json:"Collation,omitempty"`
-	JsonParameters     []*JsonKeyValue    `json:"JsonParameters,omitempty"`  // For JSON_OBJECT function key:value pairs
+	JsonParameters     []*JsonKeyValue    `json:"JsonParameters,omitempty"`     // For JSON_OBJECT function key:value pairs
 	AbsentOrNullOnNull []*Identifier      `json:"AbsentOrNullOnNull,omitempty"` // For JSON_OBJECT/JSON_ARRAY NULL ON NULL or ABSENT ON NULL
 }
 
@@ -88,9 +97,10 @@ func (*FunctionCall) scalarExpression() {}
 
 // CastCall represents a CAST expression: CAST(expression AS data_type)
 type CastCall struct {
-	DataType   DataTypeReference `json:"DataType,omitempty"`
-	Parameter  ScalarExpression  `json:"Parameter,omitempty"`
-	Collation  *Identifier       `json:"Collation,omitempty"`
+	Fragment
+	DataType  DataTypeReference `json:"DataType,omitempty"`
+	Parameter ScalarExpression  `json:"Parameter,omitempty"`
+	Collation *Identifier       `json:"Collation,omitempty"`
 }
 
 func (*CastCall) node()             {}
@@ -98,6 +108,7 @@ func (*CastCall) scalarExpression() {}
 
 // ConvertCall represents a CONVERT expression: CONVERT(data_type, expression [, style])
 type ConvertCall struct {
+	Fragment
 	DataType  DataTypeReference `json:"DataType,omitempty"`
 	Parameter ScalarExpression  `json:"Parameter,omitempty"`
 	Style     ScalarExpression  `json:"Style,omitempty"`
@@ -109,9 +120,10 @@ func (*ConvertCall) scalarExpression() {}
 
 // TryCastCall represents a TRY_CAST expression
 type TryCastCall struct {
-	DataType   DataTypeReference `json:"DataType,omitempty"`
-	Parameter  ScalarExpression  `json:"Parameter,omitempty"`
-	Collation  *Identifier       `json:"Collation,omitempty"`
+	Fragment
+	DataType  DataTypeReference `json:"DataType,omitempty"`
+	Parameter ScalarExpression  `json:"Parameter,omitempty"`
+	Collation *Identifier       `json:"Collation,omitempty"`
 }
 
 func (*TryCastCall) node()             {}
@@ -119,6 +131,7 @@ func (*TryCastCall) scalarExpression() {}
 
 // TryConvertCall represents a TRY_CONVERT expression
 type TryConvertCall struct {
+	Fragment
 	DataType  DataTypeReference `json:"DataType,omitempty"`
 	Parameter ScalarExpression  `json:"Parameter,omitempty"`
 	Style     ScalarExpression  `json:"Style,omitempty"`
@@ -130,6 +143,7 @@ func (*TryConvertCall) scalarExpression() {}
 
 // IdentityFunctionCall represents an IDENTITY function call: IDENTITY(data_type [, seed, increment])
 type IdentityFunctionCall struct {
+	Fragment
 	DataType  DataTypeReference `json:"DataType,omitempty"`
 	Seed      ScalarExpression  `json:"Seed,omitempty"`
 	Increment ScalarExpression  `json:"Increment,omitempty"`

@@ -2,6 +2,7 @@ package ast
 
 // CreateCredentialStatement represents a CREATE CREDENTIAL statement.
 type CreateCredentialStatement struct {
+	Fragment
 	Name                      *Identifier
 	Identity                  ScalarExpression
 	Secret                    ScalarExpression

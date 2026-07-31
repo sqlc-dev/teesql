@@ -2,7 +2,8 @@ package ast
 
 // SelectScalarExpression represents a scalar expression in a select list.
 type SelectScalarExpression struct {
-	Expression ScalarExpression            `json:"Expression,omitempty"`
+	Fragment
+	Expression ScalarExpression             `json:"Expression,omitempty"`
 	ColumnName *IdentifierOrValueExpression `json:"ColumnName,omitempty"`
 }
 

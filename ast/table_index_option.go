@@ -2,6 +2,7 @@ package ast
 
 // TableIndexOption represents a table index option in CREATE TABLE WITH
 type TableIndexOption struct {
+	Fragment
 	Value      TableIndexType
 	OptionKind string // "LockEscalation" (incorrect but matches expected output)
 }
@@ -17,6 +18,7 @@ type TableIndexType interface {
 
 // TableClusteredIndexType represents a clustered index type
 type TableClusteredIndexType struct {
+	Fragment
 	Columns        []*ColumnWithSortOrder
 	ColumnStore    bool
 	OrderedColumns []*ColumnReferenceExpression // For COLUMNSTORE INDEX ORDER(columns)
@@ -26,7 +28,9 @@ func (t *TableClusteredIndexType) node()           {}
 func (t *TableClusteredIndexType) tableIndexType() {}
 
 // TableNonClusteredIndexType represents HEAP (non-clustered)
-type TableNonClusteredIndexType struct{}
+type TableNonClusteredIndexType struct {
+	Fragment
+}
 
 func (t *TableNonClusteredIndexType) node()           {}
 func (t *TableNonClusteredIndexType) tableIndexType() {}

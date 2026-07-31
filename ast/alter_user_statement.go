@@ -2,6 +2,7 @@ package ast
 
 // AlterUserStatement represents an ALTER USER statement.
 type AlterUserStatement struct {
+	Fragment
 	Name        *Identifier  `json:"Name,omitempty"`
 	UserOptions []UserOption `json:"UserOptions,omitempty"`
 }

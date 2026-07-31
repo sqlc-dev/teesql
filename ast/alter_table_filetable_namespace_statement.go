@@ -2,6 +2,7 @@ package ast
 
 // AlterTableFileTableNamespaceStatement represents ALTER TABLE ... ENABLE/DISABLE FILETABLE_NAMESPACE
 type AlterTableFileTableNamespaceStatement struct {
+	Fragment
 	SchemaObjectName *SchemaObjectName `json:"SchemaObjectName,omitempty"`
 	IsEnable         bool              `json:"IsEnable,omitempty"`
 }

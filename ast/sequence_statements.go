@@ -3,6 +3,7 @@ package ast
 
 // SequenceOption represents a sequence option without a value.
 type SequenceOption struct {
+	Fragment
 	OptionKind string
 	NoValue    bool
 }
@@ -11,6 +12,7 @@ func (o *SequenceOption) node() {}
 
 // ScalarExpressionSequenceOption represents a sequence option with a value.
 type ScalarExpressionSequenceOption struct {
+	Fragment
 	OptionKind  string
 	OptionValue ScalarExpression
 	NoValue     bool
@@ -20,6 +22,7 @@ func (o *ScalarExpressionSequenceOption) node() {}
 
 // DataTypeSequenceOption represents a sequence option with a data type (AS clause).
 type DataTypeSequenceOption struct {
+	Fragment
 	OptionKind string
 	DataType   DataTypeReference
 	NoValue    bool
@@ -29,6 +32,7 @@ func (o *DataTypeSequenceOption) node() {}
 
 // CreateSequenceStatement represents a CREATE SEQUENCE statement.
 type CreateSequenceStatement struct {
+	Fragment
 	Name            *SchemaObjectName
 	SequenceOptions []interface{} // Can be SequenceOption or ScalarExpressionSequenceOption
 }
@@ -38,6 +42,7 @@ func (s *CreateSequenceStatement) node()      {}
 
 // AlterSequenceStatement represents an ALTER SEQUENCE statement.
 type AlterSequenceStatement struct {
+	Fragment
 	Name            *SchemaObjectName
 	SequenceOptions []interface{} // Can be SequenceOption or ScalarExpressionSequenceOption
 }

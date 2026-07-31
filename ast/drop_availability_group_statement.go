@@ -2,6 +2,7 @@ package ast
 
 // DropAvailabilityGroupStatement represents a DROP AVAILABILITY GROUP statement.
 type DropAvailabilityGroupStatement struct {
+	Fragment
 	Name       *Identifier
 	IsIfExists bool
 }

@@ -94,6 +94,16 @@ class AstToJsonConverter
             ["$type"] = node.GetType().Name
         };
 
+        // Emit positional information for fragments that have real tokens.
+        // Synthesized fragments (no source tokens) have StartOffset == -1.
+        if (node.StartOffset >= 0)
+        {
+            result["StartOffset"] = node.StartOffset;
+            result["FragmentLength"] = node.FragmentLength;
+            result["StartLine"] = node.StartLine;
+            result["StartColumn"] = node.StartColumn;
+        }
+
         var type = node.GetType();
         var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
 

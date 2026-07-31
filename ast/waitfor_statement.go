@@ -2,6 +2,7 @@ package ast
 
 // WaitForStatement represents a WAITFOR [DELAY|TIME] statement.
 type WaitForStatement struct {
+	Fragment
 	WaitForOption string           `json:"WaitForOption"`
 	Parameter     ScalarExpression `json:"Parameter,omitempty"`
 	Timeout       ScalarExpression `json:"Timeout,omitempty"`

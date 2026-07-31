@@ -2,6 +2,7 @@ package ast
 
 // TryCatchStatement represents a BEGIN TRY...END TRY BEGIN CATCH...END CATCH block.
 type TryCatchStatement struct {
+	Fragment
 	TryStatements   *StatementList `json:"TryStatements,omitempty"`
 	CatchStatements *StatementList `json:"CatchStatements,omitempty"`
 }

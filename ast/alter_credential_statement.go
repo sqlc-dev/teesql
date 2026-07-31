@@ -2,6 +2,7 @@ package ast
 
 // AlterCredentialStatement represents an ALTER CREDENTIAL statement.
 type AlterCredentialStatement struct {
+	Fragment
 	Name             *Identifier
 	Identity         ScalarExpression
 	Secret           ScalarExpression

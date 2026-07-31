@@ -19,6 +19,24 @@ type testMetadata struct {
 // Usage: go test ./parser/... -check-todo   # run todo tests and auto-update metadata.json for passing tests
 var checkTodoTests = flag.Bool("check-todo", false, "run todo tests and auto-update metadata.json for passing tests")
 
+// stripPositions removes position fields from a decoded JSON tree in place.
+func stripPositions(v any) {
+	switch t := v.(type) {
+	case map[string]any:
+		delete(t, "StartOffset")
+		delete(t, "FragmentLength")
+		delete(t, "StartLine")
+		delete(t, "StartColumn")
+		for _, c := range t {
+			stripPositions(c)
+		}
+	case []any:
+		for _, c := range t {
+			stripPositions(c)
+		}
+	}
+}
+
 func TestParse(t *testing.T) {
 	entries, err := os.ReadDir("testdata")
 	if err != nil {
@@ -92,6 +110,16 @@ func TestParse(t *testing.T) {
 			}
 			if err := json.Unmarshal(expectedJSON, &expectedObj); err != nil {
 				t.Fatalf("failed to unmarshal expected JSON: %v", err)
+			}
+
+			// Some golden files predate positional information and cannot be
+			// regenerated with TsqlAstParser (their SQL is rejected by the
+			// official parser). When the expected root node carries no
+			// StartOffset, compare without position fields.
+			if root, ok := expectedObj.(map[string]any); ok {
+				if _, hasPos := root["StartOffset"]; !hasPos {
+					stripPositions(gotObj)
+				}
 			}
 
 			// Re-marshal for consistent formatting

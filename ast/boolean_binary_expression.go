@@ -2,6 +2,7 @@ package ast
 
 // BooleanBinaryExpression represents a binary boolean expression (AND, OR).
 type BooleanBinaryExpression struct {
+	Fragment
 	BinaryExpressionType string            `json:"BinaryExpressionType,omitempty"`
 	FirstExpression      BooleanExpression `json:"FirstExpression,omitempty"`
 	SecondExpression     BooleanExpression `json:"SecondExpression,omitempty"`

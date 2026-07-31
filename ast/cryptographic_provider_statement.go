@@ -2,6 +2,7 @@ package ast
 
 // CreateCryptographicProviderStatement represents CREATE CRYPTOGRAPHIC PROVIDER statement
 type CreateCryptographicProviderStatement struct {
+	Fragment
 	Name *Identifier
 	File ScalarExpression
 }
@@ -11,6 +12,7 @@ func (s *CreateCryptographicProviderStatement) statement() {}
 
 // AlterCryptographicProviderStatement represents ALTER CRYPTOGRAPHIC PROVIDER statement
 type AlterCryptographicProviderStatement struct {
+	Fragment
 	Name   *Identifier
 	Option string // "None", "Enable", "Disable"
 	File   ScalarExpression
@@ -21,6 +23,7 @@ func (s *AlterCryptographicProviderStatement) statement() {}
 
 // DropCryptographicProviderStatement represents DROP CRYPTOGRAPHIC PROVIDER statement
 type DropCryptographicProviderStatement struct {
+	Fragment
 	Name       *Identifier
 	IsIfExists bool
 }

@@ -2,6 +2,7 @@ package ast
 
 // AlterSchemaStatement represents an ALTER SCHEMA statement.
 type AlterSchemaStatement struct {
+	Fragment
 	Name       *Identifier
 	ObjectName *SchemaObjectName
 	ObjectKind string

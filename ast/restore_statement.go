@@ -2,6 +2,7 @@ package ast
 
 // RestoreStatement represents a RESTORE DATABASE statement
 type RestoreStatement struct {
+	Fragment
 	Kind         string // "Database", "Log", "Filegroup", "File", "Page", "HeaderOnly", etc.
 	DatabaseName *IdentifierOrValueExpression
 	Files        []*BackupRestoreFileInfo
@@ -14,6 +15,7 @@ func (s *RestoreStatement) node()      {}
 
 // DeviceInfo represents a backup device
 type DeviceInfo struct {
+	Fragment
 	LogicalDevice      *IdentifierOrValueExpression
 	PhysicalDevice     ScalarExpression
 	DeviceType         string // "None", "Disk", "Tape", "Pipe", "VirtualDevice", "Database", "URL"
@@ -27,6 +29,7 @@ type RestoreOption interface {
 
 // FileStreamRestoreOption represents a FILESTREAM restore option
 type FileStreamRestoreOption struct {
+	Fragment
 	OptionKind       string
 	FileStreamOption *FileStreamDatabaseOption
 }
@@ -35,8 +38,9 @@ func (o *FileStreamRestoreOption) restoreOptionNode() {}
 
 // FileStreamDatabaseOption represents a FILESTREAM database option
 type FileStreamDatabaseOption struct {
+	Fragment
 	OptionKind          string
-	NonTransactedAccess string           // "Off", "ReadOnly", "Full", or "" if not specified
+	NonTransactedAccess string // "Off", "ReadOnly", "Full", or "" if not specified
 	DirectoryName       ScalarExpression
 }
 
@@ -46,6 +50,7 @@ func (f *FileStreamDatabaseOption) createDatabaseOption() {}
 
 // GeneralSetCommandRestoreOption represents a general restore option
 type GeneralSetCommandRestoreOption struct {
+	Fragment
 	OptionKind  string
 	OptionValue ScalarExpression
 }
@@ -54,6 +59,7 @@ func (o *GeneralSetCommandRestoreOption) restoreOptionNode() {}
 
 // MoveRestoreOption represents a MOVE restore option
 type MoveRestoreOption struct {
+	Fragment
 	OptionKind      string
 	LogicalFileName ScalarExpression
 	OSFileName      ScalarExpression
@@ -63,6 +69,7 @@ func (o *MoveRestoreOption) restoreOptionNode() {}
 
 // ScalarExpressionRestoreOption represents a scalar expression restore option
 type ScalarExpressionRestoreOption struct {
+	Fragment
 	OptionKind string
 	Value      ScalarExpression
 }
@@ -71,6 +78,7 @@ func (o *ScalarExpressionRestoreOption) restoreOptionNode() {}
 
 // SimpleRestoreOption represents a simple restore option with just an option kind
 type SimpleRestoreOption struct {
+	Fragment
 	OptionKind string
 }
 
@@ -78,6 +86,7 @@ func (o *SimpleRestoreOption) restoreOptionNode() {}
 
 // StopRestoreOption represents a STOPATMARK or STOPBEFOREMARK option
 type StopRestoreOption struct {
+	Fragment
 	OptionKind string
 	Mark       ScalarExpression
 	After      ScalarExpression
@@ -88,6 +97,7 @@ func (o *StopRestoreOption) restoreOptionNode() {}
 
 // BackupRestoreFileInfo represents file information for backup/restore
 type BackupRestoreFileInfo struct {
+	Fragment
 	Items    []ScalarExpression
 	ItemKind string // "Files", "FileGroups", "Page", "Read-Write"
 }

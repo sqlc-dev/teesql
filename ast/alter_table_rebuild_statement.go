@@ -2,6 +2,7 @@ package ast
 
 // AlterTableRebuildStatement represents ALTER TABLE ... REBUILD statement
 type AlterTableRebuildStatement struct {
+	Fragment
 	SchemaObjectName *SchemaObjectName
 	Partition        *PartitionSpecifier
 	IndexOptions     []IndexOption

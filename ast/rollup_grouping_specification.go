@@ -2,6 +2,7 @@ package ast
 
 // RollupGroupingSpecification represents GROUP BY ROLLUP (...) syntax.
 type RollupGroupingSpecification struct {
+	Fragment
 	Arguments []GroupingSpecification `json:"Arguments,omitempty"`
 }
 
@@ -10,6 +11,7 @@ func (*RollupGroupingSpecification) groupingSpecification() {}
 
 // CubeGroupingSpecification represents GROUP BY CUBE (...) syntax.
 type CubeGroupingSpecification struct {
+	Fragment
 	Arguments []GroupingSpecification `json:"Arguments,omitempty"`
 }
 
@@ -18,6 +20,7 @@ func (*CubeGroupingSpecification) groupingSpecification() {}
 
 // CompositeGroupingSpecification represents a parenthesized group of columns like (c2, c3).
 type CompositeGroupingSpecification struct {
+	Fragment
 	Items []GroupingSpecification `json:"Items,omitempty"`
 }
 
@@ -25,13 +28,16 @@ func (*CompositeGroupingSpecification) node()                  {}
 func (*CompositeGroupingSpecification) groupingSpecification() {}
 
 // GrandTotalGroupingSpecification represents empty parentheses () which means grand total.
-type GrandTotalGroupingSpecification struct{}
+type GrandTotalGroupingSpecification struct {
+	Fragment
+}
 
 func (*GrandTotalGroupingSpecification) node()                  {}
 func (*GrandTotalGroupingSpecification) groupingSpecification() {}
 
 // GroupingSetsGroupingSpecification represents GROUP BY GROUPING SETS (...) syntax.
 type GroupingSetsGroupingSpecification struct {
+	Fragment
 	Arguments []GroupingSpecification `json:"Arguments,omitempty"`
 }
 

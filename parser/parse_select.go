@@ -9,6 +9,8 @@ import (
 )
 
 func (p *Parser) parsePrintStatement() (*ast.PrintStatement, error) {
+	astStart := p.curTok
+
 	// Consume PRINT
 	p.nextToken()
 
@@ -23,10 +25,12 @@ func (p *Parser) parsePrintStatement() (*ast.PrintStatement, error) {
 		p.nextToken()
 	}
 
-	return &ast.PrintStatement{Expression: expr}, nil
+	return spanned(p, &ast.PrintStatement{Expression: expr}, astStart), nil
 }
 
 func (p *Parser) parseThrowStatement() (*ast.ThrowStatement, error) {
+	astStart := p.curTok
+
 	// Consume THROW
 	p.nextToken()
 
@@ -35,7 +39,7 @@ func (p *Parser) parseThrowStatement() (*ast.ThrowStatement, error) {
 	// THROW can be used without arguments (re-throw)
 	if p.curTok.Type == TokenSemicolon || p.curTok.Type == TokenEOF ||
 		p.curTok.Type == TokenSelect || p.curTok.Type == TokenPrint || p.curTok.Type == TokenThrow {
-		return stmt, nil
+		return spanned(p, stmt, astStart), nil
 	}
 
 	// Parse error number
@@ -76,10 +80,12 @@ func (p *Parser) parseThrowStatement() (*ast.ThrowStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
+	astStart := p.curTok
+
 	stmt := &ast.SelectStatement{}
 
 	// Check for parenthesized WITH expression: (WITH ... SELECT ...)
@@ -98,7 +104,7 @@ func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
 
 		// Return the SelectStatement with its WithCtesAndXmlNamespaces
 		if selStmt, ok := withStmt.(*ast.SelectStatement); ok {
-			return selStmt, nil
+			return spanned(p, selStmt, astStart), nil
 		}
 		return nil, fmt.Errorf("expected SELECT statement after WITH, got %T", withStmt)
 	}
@@ -126,15 +132,19 @@ func (p *Parser) parseSelectStatement() (*ast.SelectStatement, error) {
 		p.nextToken()
 	}
 
-	return stmt, nil
+	return spanned(p, stmt, astStart), nil
 }
 
 func (p *Parser) parseQueryExpression() (ast.QueryExpression, error) {
+	astStart := p.curTok
+
 	qe, _, _, err := p.parseQueryExpressionWithInto()
-	return qe, err
+	return spanned(p, qe, astStart), err
 }
 
 func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.SchemaObjectName, *ast.Identifier, error) {
+	astStart := p.curTok
+
 	// Parse primary query expression (could be SELECT or parenthesized)
 	left, into, on, err := p.parsePrimaryQueryExpression()
 	if err != nil {
@@ -230,10 +240,16 @@ func (p *Parser) parseQueryExpressionWithInto() (ast.QueryExpression, *ast.Schem
 		}
 	}
 
+	if s, ok := any(left).(spannable); ok {
+		p.spanFrom(astStart, s)
+	}
+
 	return left, into, on, nil
 }
 
 func (p *Parser) parsePrimaryQueryExpression() (ast.QueryExpression, *ast.SchemaObjectName, *ast.Identifier, error) {
+	astStart := p.curTok
+
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
 		qe, into, on, err := p.parseQueryExpressionWithInto()
@@ -244,15 +260,29 @@ func (p *Parser) parsePrimaryQueryExpression() (ast.QueryExpression, *ast.Schema
 			return nil, nil, nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume )
-		return &ast.QueryParenthesisExpression{QueryExpression: qe}, into, on, nil
+		return spanned(p, &ast.QueryParenthesisExpression{QueryExpression: qe}, astStart), into, on, nil
 	}
 
-	return p.parseQuerySpecificationWithInto()
+	qe, into, on, err := p.parseQuerySpecificationWithInto()
+	if err == nil {
+		if s, ok := any(qe).(spannable); ok {
+			p.spanFrom(astStart, s)
+		}
+	}
+	return qe, into, on, err
 }
 
 // parseRestOfBinaryQueryExpression parses binary query operations (UNION/INTERSECT/EXCEPT)
 // starting with a left operand that's already been parsed.
 func (p *Parser) parseRestOfBinaryQueryExpression(left ast.QueryExpression) (ast.QueryExpression, error) {
+	astStart := p.curTok
+	// The binary expression starts where its (already-parsed) left operand
+	// starts, not at the operator token.
+	leftStartsEarlier := false
+	if l, ok := any(left).(spannable); ok && l.Frag().HasSpan() {
+		leftStartsEarlier = true
+	}
+
 	// Check for binary operations (UNION, EXCEPT, INTERSECT)
 	for p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect {
 		var opType string
@@ -285,11 +315,19 @@ func (p *Parser) parseRestOfBinaryQueryExpression(left ast.QueryExpression) (ast
 			FirstQueryExpression:      left,
 			SecondQueryExpression:     right,
 		}
+		if leftStartsEarlier {
+			p.spanFromChild(bqe, bqe.FirstQueryExpression)
+		}
 
 		left = bqe
 	}
 
-	return left, nil
+	if leftStartsEarlier {
+		if l, ok := any(left).(spannable); ok && l.Frag().HasSpan() {
+			return left, nil
+		}
+	}
+	return spanned(p, left, astStart), nil
 }
 
 func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *ast.SchemaObjectName, *ast.Identifier, error) {
@@ -366,6 +404,8 @@ func (p *Parser) parseQuerySpecificationWithInto() (*ast.QuerySpecification, *as
 }
 
 func (p *Parser) parseQuerySpecificationCore() (*ast.QuerySpecification, error) {
+	astStart := p.curTok
+
 	qs := &ast.QuerySpecification{
 		UniqueRowFilter: "NotSpecified",
 	}
@@ -401,10 +441,12 @@ func (p *Parser) parseQuerySpecificationCore() (*ast.QuerySpecification, error) 
 	}
 	qs.SelectElements = elements
 
-	return qs, nil
+	return spanned(p, qs, astStart), nil
 }
 
 func (p *Parser) parseTopRowFilter() (*ast.TopRowFilter, error) {
+	astStart := p.curTok
+
 	// Consume TOP
 	p.nextToken()
 
@@ -412,6 +454,7 @@ func (p *Parser) parseTopRowFilter() (*ast.TopRowFilter, error) {
 
 	// Check for parenthesized expression
 	if p.curTok.Type == TokenLParen {
+		parenStart := p.curTok
 		p.nextToken() // consume (
 
 		// Check for subquery (SELECT ...) or parenthesized query expression starting with (
@@ -424,18 +467,22 @@ func (p *Parser) parseTopRowFilter() (*ast.TopRowFilter, error) {
 				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 			}
 			p.nextToken()
-			top.Expression = &ast.ScalarSubquery{QueryExpression: qe}
+			ss := &ast.ScalarSubquery{QueryExpression: qe}
+			p.spanFrom(parenStart, ss)
+			top.Expression = ss
 		} else {
 			expr, err := p.parseScalarExpression()
 			if err != nil {
 				return nil, err
 			}
 			// Wrap in ParenthesisExpression
-			top.Expression = &ast.ParenthesisExpression{Expression: expr}
+			pe := &ast.ParenthesisExpression{Expression: expr}
 			if p.curTok.Type != TokenRParen {
 				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 			}
 			p.nextToken() // consume )
+			p.spanFrom(parenStart, pe)
+			top.Expression = pe
 		}
 	} else {
 		// Parse literal expression
@@ -461,7 +508,7 @@ func (p *Parser) parseTopRowFilter() (*ast.TopRowFilter, error) {
 		}
 	}
 
-	return top, nil
+	return spanned(p, top, astStart), nil
 }
 
 func (p *Parser) parseSelectElements() ([]ast.SelectElement, error) {
@@ -482,24 +529,25 @@ func (p *Parser) parseSelectElements() ([]ast.SelectElement, error) {
 
 	return elements, nil
 }
-
-
 func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
+	astStart := p.curTok
+
 	// Check for *
 	if p.curTok.Type == TokenStar {
 		p.nextToken()
-		return &ast.SelectStarExpression{}, nil
+		return spanned(p, &ast.SelectStarExpression{}, astStart), nil
 	}
 
 	// Check for variable assignment: @var = expr or @var ||= expr
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 		varName := p.curTok.Literal
+		varNameTok := p.curTok
 		p.nextToken() // consume variable
 
 		// Check if this is an assignment
 		if p.isCompoundAssignment() {
 			ssv := &ast.SelectSetVariable{
-				Variable:       &ast.VariableReference{Name: varName},
+				Variable:       p.varRefFromToken(varNameTok),
 				AssignmentKind: p.getAssignmentKind(),
 			}
 			p.nextToken() // consume assignment operator
@@ -509,15 +557,17 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 				return nil, err
 			}
 			ssv.Expression = expr
-			return ssv, nil
+			return spanned(p, ssv, astStart), nil
 		}
 
 		// Not an assignment, treat as regular scalar expression starting with variable
 		var varExpr ast.ScalarExpression
 		if strings.HasPrefix(varName, "@@") {
-			varExpr = &ast.GlobalVariableExpression{Name: varName}
+			gve := &ast.GlobalVariableExpression{Name: varName}
+			p.tokSpan(gve, varNameTok)
+			varExpr = gve
 		} else {
-			varExpr = &ast.VariableReference{Name: varName}
+			varExpr = p.varRefFromToken(varNameTok)
 		}
 
 		// Handle postfix operations (method calls, property access)
@@ -594,7 +644,7 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 				}
 			}
 		}
-		return sse, nil
+		return spanned(p, sse, astStart), nil
 	}
 
 	// Check for equals-style alias: column1 = expr, [column1] = expr, 'string' = expr, N'string' = expr
@@ -635,10 +685,10 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 				return nil, err
 			}
 
-			return &ast.SelectScalarExpression{
+			return spanned(p, &ast.SelectScalarExpression{
 				Expression: expr,
 				ColumnName: columnName,
-			}, nil
+			}, astStart), nil
 		}
 	}
 
@@ -655,9 +705,9 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		if colRef, ok := expr.(*ast.ColumnReferenceExpression); ok {
 			p.nextToken() // consume .
 			p.nextToken() // consume *
-			return &ast.SelectStarExpression{
+			return spanned(p, &ast.SelectStarExpression{
 				Qualifier: colRef.MultiPartIdentifier,
-			}, nil
+			}, astStart), nil
 		}
 	}
 
@@ -669,8 +719,10 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		switch e := expr.(type) {
 		case *ast.FunctionCall:
 			e.Collation = collation
+			p.respanEnd(e)
 		case *ast.ColumnReferenceExpression:
 			e.Collation = collation
+			p.respanEnd(e)
 		}
 	}
 
@@ -735,10 +787,29 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		}
 	}
 
-	return sse, nil
+	// When the expression's recorded span is pinned and starts after the
+	// element's first token (e.g. a leading dot excluded by ScriptDom),
+	// the select element inherits the later start.
+	if es, ok := expr.(spannable); ok && es.Frag().Pinned() && sse.ColumnName == nil {
+		esf := es.Frag()
+		if esf.HasSpan() {
+			su, sl, sc := p.srcMap.at(astStart.Pos)
+			_ = sl
+			_ = sc
+			if esf.StartOffset > su {
+				p.spanFromChild(sse, expr)
+				sse.Pin()
+				return sse, nil
+			}
+		}
+	}
+
+	return spanned(p, sse, astStart), nil
 }
 
 func (p *Parser) parseIdentifier() *ast.Identifier {
+	astStart := p.curTok
+
 	literal := p.curTok.Literal
 	quoteType := "NotQuoted"
 
@@ -756,12 +827,9 @@ func (p *Parser) parseIdentifier() *ast.Identifier {
 		literal = strings.ReplaceAll(literal, "\"\"", "\"")
 	}
 
-	id := &ast.Identifier{
-		Value:     literal,
-		QuoteType: quoteType,
-	}
+	id := p.spanIdent(literal, quoteType)
 	p.nextToken()
-	return id
+	return spanned(p, id, astStart)
 }
 
 // isKeywordAsIdentifier returns true if the current token is a keyword that can be used as an identifier
@@ -784,13 +852,18 @@ func (p *Parser) isKeywordAsIdentifier() bool {
 }
 
 func (p *Parser) parseScalarExpression() (ast.ScalarExpression, error) {
-	return p.parseBitwiseXorExpression()
+	astStart := p.curTok
+
+	spanV1, spanErr1 := p.parseBitwiseXorExpression()
+	return spanned(p, spanV1, astStart), spanErr1
 }
 
 // In T-SQL, bitwise operator precedence from lowest to highest is: ^ (XOR), | (OR), & (AND)
 // This is different from C where it's: | (OR), ^ (XOR), & (AND)
 
 func (p *Parser) parseBitwiseXorExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	left, err := p.parseBitwiseOrExpression()
 	if err != nil {
 		return nil, err
@@ -811,10 +884,12 @@ func (p *Parser) parseBitwiseXorExpression() (ast.ScalarExpression, error) {
 		}
 	}
 
-	return left, nil
+	return spanned(p, left, astStart), nil
 }
 
 func (p *Parser) parseBitwiseOrExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	left, err := p.parseBitwiseAndExpression()
 	if err != nil {
 		return nil, err
@@ -835,10 +910,12 @@ func (p *Parser) parseBitwiseOrExpression() (ast.ScalarExpression, error) {
 		}
 	}
 
-	return left, nil
+	return spanned(p, left, astStart), nil
 }
 
 func (p *Parser) parseBitwiseAndExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	left, err := p.parseShiftExpression()
 	if err != nil {
 		return nil, err
@@ -859,10 +936,12 @@ func (p *Parser) parseBitwiseAndExpression() (ast.ScalarExpression, error) {
 		}
 	}
 
-	return left, nil
+	return spanned(p, left, astStart), nil
 }
 
 func (p *Parser) parseShiftExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	left, err := p.parseAdditiveExpression()
 	if err != nil {
 		return nil, err
@@ -889,10 +968,12 @@ func (p *Parser) parseShiftExpression() (ast.ScalarExpression, error) {
 		}
 	}
 
-	return left, nil
+	return spanned(p, left, astStart), nil
 }
 
 func (p *Parser) parseAdditiveExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	left, err := p.parseMultiplicativeExpression()
 	if err != nil {
 		return nil, err
@@ -922,10 +1003,12 @@ func (p *Parser) parseAdditiveExpression() (ast.ScalarExpression, error) {
 		}
 	}
 
-	return left, nil
+	return spanned(p, left, astStart), nil
 }
 
 func (p *Parser) parseMultiplicativeExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	left, err := p.parsePostfixExpression()
 	if err != nil {
 		return nil, err
@@ -955,11 +1038,13 @@ func (p *Parser) parseMultiplicativeExpression() (ast.ScalarExpression, error) {
 		}
 	}
 
-	return left, nil
+	return spanned(p, left, astStart), nil
 }
 
 // parsePostfixExpression handles postfix operators like AT TIME ZONE
 func (p *Parser) parsePostfixExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	expr, err := p.parsePrimaryExpression()
 	if err != nil {
 		return nil, err
@@ -983,7 +1068,7 @@ func (p *Parser) parsePostfixExpression() (ast.ScalarExpression, error) {
 				quoteType = "SquareBracket"
 				name = name[1 : len(name)-1]
 			}
-			methodName := &ast.Identifier{Value: name, QuoteType: quoteType}
+			methodName := p.spanIdent(name, quoteType)
 			p.nextToken()
 
 			if p.curTok.Type == TokenLParen {
@@ -1028,15 +1113,18 @@ func (p *Parser) parsePostfixExpression() (ast.ScalarExpression, error) {
 					fc.OverClause = overClause
 				}
 
+				p.spanFromChild(fc, expr)
 				expr = fc
 			} else {
 				// It's a property access: expr.prop
-				expr = &ast.UserDefinedTypePropertyAccess{
+				propAccess := &ast.UserDefinedTypePropertyAccess{
 					CallTarget: &ast.ExpressionCallTarget{
 						Expression: expr,
 					},
 					PropertyName: methodName,
 				}
+				p.spanFromChild(propAccess, expr)
+				expr = propAccess
 			}
 			continue
 		}
@@ -1066,7 +1154,7 @@ func (p *Parser) parsePostfixExpression() (ast.ScalarExpression, error) {
 		break
 	}
 
-	return expr, nil
+	return spanned(p, expr, astStart), nil
 }
 
 // handlePostfixOperations handles method calls and property access on an existing expression
@@ -1089,7 +1177,7 @@ func (p *Parser) handlePostfixOperations(expr ast.ScalarExpression) (ast.ScalarE
 				quoteType = "SquareBracket"
 				name = name[1 : len(name)-1]
 			}
-			methodName := &ast.Identifier{Value: name, QuoteType: quoteType}
+			methodName := p.spanIdent(name, quoteType)
 			p.nextToken()
 
 			if p.curTok.Type == TokenLParen {
@@ -1134,15 +1222,18 @@ func (p *Parser) handlePostfixOperations(expr ast.ScalarExpression) (ast.ScalarE
 					fc.OverClause = overClause
 				}
 
+				p.spanFromChild(fc, expr)
 				expr = fc
 			} else {
 				// It's a property access: expr.prop
-				expr = &ast.UserDefinedTypePropertyAccess{
+				propAccess := &ast.UserDefinedTypePropertyAccess{
 					CallTarget: &ast.ExpressionCallTarget{
 						Expression: expr,
 					},
 					PropertyName: methodName,
 				}
+				p.spanFromChild(propAccess, expr)
+				expr = propAccess
 			}
 			continue
 		}
@@ -1155,29 +1246,31 @@ func (p *Parser) handlePostfixOperations(expr ast.ScalarExpression) (ast.ScalarE
 }
 
 func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	switch p.curTok.Type {
 	case TokenNull:
 		val := p.curTok.Literal
 		p.nextToken()
-		return &ast.NullLiteral{LiteralType: "Null", Value: val}, nil
+		return spanned(p, &ast.NullLiteral{LiteralType: "Null", Value: val}, astStart), nil
 	case TokenDefault:
 		val := p.curTok.Literal
 		p.nextToken()
-		return &ast.DefaultLiteral{LiteralType: "Default", Value: val}, nil
+		return spanned(p, &ast.DefaultLiteral{LiteralType: "Default", Value: val}, astStart), nil
 	case TokenMinus:
 		p.nextToken()
 		expr, err := p.parsePrimaryExpression()
 		if err != nil {
 			return nil, err
 		}
-		return &ast.UnaryExpression{UnaryExpressionType: "Negative", Expression: expr}, nil
+		return spanned(p, &ast.UnaryExpression{UnaryExpressionType: "Negative", Expression: expr}, astStart), nil
 	case TokenPlus:
 		p.nextToken()
 		expr, err := p.parsePrimaryExpression()
 		if err != nil {
 			return nil, err
 		}
-		return &ast.UnaryExpression{UnaryExpressionType: "Positive", Expression: expr}, nil
+		return spanned(p, &ast.UnaryExpression{UnaryExpressionType: "Positive", Expression: expr}, astStart), nil
 	case TokenError:
 		// Handle ~ (bitwise NOT) operator
 		if p.curTok.Literal == "~" {
@@ -1186,21 +1279,23 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.UnaryExpression{UnaryExpressionType: "BitwiseNot", Expression: expr}, nil
+			return spanned(p, &ast.UnaryExpression{UnaryExpressionType: "BitwiseNot", Expression: expr}, astStart), nil
 		}
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	case TokenLeft:
 		// LEFT can be a function name (string function)
 		if p.peekTok.Type == TokenLParen {
 			p.nextToken() // consume LEFT
-			return p.parseLeftFunctionCall()
+			spanV2, spanErr2 := p.parseLeftFunctionCall()
+			return spanned(p, spanV2, astStart), spanErr2
 		}
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	case TokenRight:
 		// RIGHT can be a function name (string function)
 		if p.peekTok.Type == TokenLParen {
 			p.nextToken() // consume RIGHT
-			return p.parseRightFunctionCall()
+			spanV3, spanErr3 := p.parseRightFunctionCall()
+			return spanned(p, spanV3, astStart), spanErr3
 		}
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	case TokenIdent:
@@ -1208,85 +1303,94 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		if strings.HasPrefix(p.curTok.Literal, "@@") {
 			name := p.curTok.Literal
 			p.nextToken()
-			return &ast.GlobalVariableExpression{Name: name}, nil
+			return spanned(p, &ast.GlobalVariableExpression{Name: name}, astStart), nil
 		}
 		// Check if it's a variable reference (starts with @)
 		if strings.HasPrefix(p.curTok.Literal, "@") {
-			name := p.curTok.Literal
+			nameTok := p.curTok
 			p.nextToken()
-			return &ast.VariableReference{Name: name}, nil
+			return spanned(p, p.varRefFromToken(nameTok), astStart), nil
 		}
 		// Check for N-prefixed national string (N'...')
 		if strings.ToUpper(p.curTok.Literal) == "N" && p.peekTok.Type == TokenString {
 			p.nextToken() // consume N
-			return p.parseNationalStringLiteral()
+			spanV4, spanErr4 := p.parseNationalStringLiteral()
+			return spanned(p, spanV4, astStart), spanErr4
 		}
 		// Check for CAST/CONVERT special functions
 		upper := strings.ToUpper(p.curTok.Literal)
 		if upper == "CAST" && p.peekTok.Type == TokenLParen {
-			return p.parseCastCall()
+			spanV5, spanErr5 := p.parseCastCall()
+			return spanned(p, spanV5, astStart), spanErr5
 		}
 		if upper == "CONVERT" && p.peekTok.Type == TokenLParen {
-			return p.parseConvertCall()
+			spanV6, spanErr6 := p.parseConvertCall()
+			return spanned(p, spanV6, astStart), spanErr6
 		}
 		if upper == "TRY_CAST" && p.peekTok.Type == TokenLParen {
-			return p.parseTryCastCall()
+			spanV7, spanErr7 := p.parseTryCastCall()
+			return spanned(p, spanV7, astStart), spanErr7
 		}
 		if upper == "TRY_CONVERT" && p.peekTok.Type == TokenLParen {
-			return p.parseTryConvertCall()
+			spanV8, spanErr8 := p.parseTryConvertCall()
+			return spanned(p, spanV8, astStart), spanErr8
 		}
 		if upper == "NULLIF" && p.peekTok.Type == TokenLParen {
-			return p.parseNullIfExpression()
+			spanV9, spanErr9 := p.parseNullIfExpression()
+			return spanned(p, spanV9, astStart), spanErr9
 		}
 		if upper == "COALESCE" && p.peekTok.Type == TokenLParen {
-			return p.parseCoalesceExpression()
+			spanV10, spanErr10 := p.parseCoalesceExpression()
+			return spanned(p, spanV10, astStart), spanErr10
 		}
 		if upper == "IDENTITY" && p.peekTok.Type == TokenLParen {
-			return p.parseIdentityFunctionCall()
+			spanV11, spanErr11 := p.parseIdentityFunctionCall()
+			return spanned(p, spanV11, astStart), spanErr11
 		}
 		if upper == "IDENTITYCOL" {
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{ColumnType: "IdentityCol"}, nil
+			return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "IdentityCol"}, astStart), nil
 		}
 		if upper == "ROWGUIDCOL" {
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{ColumnType: "RowGuidCol"}, nil
+			return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "RowGuidCol"}, astStart), nil
 		}
 		if upper == "$ACTION" {
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnAction"}, nil
+			return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnAction"}, astStart), nil
 		}
 		if upper == "$IDENTITY" {
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnIdentity"}, nil
+			return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnIdentity"}, astStart), nil
 		}
 		if upper == "$ROWGUID" {
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnRowGuid"}, nil
+			return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnRowGuid"}, astStart), nil
 		}
 		if upper == "$CUID" {
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"}, nil
+			return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnCuid"}, astStart), nil
 		}
 		if upper == "$NODE_ID" {
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphNodeId"}, nil
+			return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphNodeId"}, astStart), nil
 		}
 		if upper == "$EDGE_ID" {
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphEdgeId"}, nil
+			return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphEdgeId"}, astStart), nil
 		}
 		if upper == "$FROM_ID" {
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphFromId"}, nil
+			return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphFromId"}, astStart), nil
 		}
 		if upper == "$TO_ID" {
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphToId"}, nil
+			return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "PseudoColumnGraphToId"}, astStart), nil
 		}
 		// Check for NEXT VALUE FOR sequence expression
 		if upper == "NEXT" && strings.ToUpper(p.peekTok.Literal) == "VALUE" {
-			return p.parseNextValueForExpression()
+			spanV12, spanErr12 := p.parseNextValueForExpression()
+			return spanned(p, spanV12, astStart), spanErr12
 		}
 		// Check for parameterless calls (USER, CURRENT_USER, etc.) without parentheses
 		if p.peekTok.Type != TokenLParen {
@@ -1299,41 +1403,45 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 					p.nextToken() // consume COLLATE
 					call.Collation = p.parseIdentifier()
 				}
-				return call, nil
+				return spanned(p, call, astStart), nil
 			}
 		}
-		return p.parseColumnReferenceOrFunctionCall()
+		spanV13, spanErr13 := p.parseColumnReferenceOrFunctionCall()
+		return spanned(p, spanV13, astStart), spanErr13
 	case TokenNumber:
 		val := p.curTok.Literal
 		p.nextToken()
 		// Check if it's scientific notation (real literal)
 		if strings.ContainsAny(val, "eE") {
-			return &ast.RealLiteral{LiteralType: "Real", Value: val}, nil
+			return spanned(p, &ast.RealLiteral{LiteralType: "Real", Value: val}, astStart), nil
 		}
 		// Check if it's a decimal number
 		if strings.Contains(val, ".") {
-			return &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, nil
+			return spanned(p, &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, astStart), nil
 		}
 		// Large numbers beyond INT range should be NumericLiteral
 		// INT range is -2,147,483,648 to 2,147,483,647
 		if len(val) > 10 || (len(val) == 10 && val > "2147483647") {
-			return &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, nil
+			return spanned(p, &ast.NumericLiteral{LiteralType: "Numeric", Value: val}, astStart), nil
 		}
-		return &ast.IntegerLiteral{LiteralType: "Integer", Value: val}, nil
+		return spanned(p, &ast.IntegerLiteral{LiteralType: "Integer", Value: val}, astStart), nil
 	case TokenMoney:
 		val := p.curTok.Literal
 		p.nextToken()
-		return &ast.MoneyLiteral{LiteralType: "Money", Value: val}, nil
+		return spanned(p, &ast.MoneyLiteral{LiteralType: "Money", Value: val}, astStart), nil
 	case TokenBinary:
 		val := p.curTok.Literal
 		p.nextToken()
-		return &ast.BinaryLiteral{LiteralType: "Binary", Value: val, IsLargeObject: false}, nil
+		return spanned(p, &ast.BinaryLiteral{LiteralType: "Binary", Value: val, IsLargeObject: false}, astStart), nil
 	case TokenString:
-		return p.parseStringLiteral()
+		spanV14, spanErr14 := p.parseStringLiteral()
+		return spanned(p, spanV14, astStart), spanErr14
 	case TokenNationalString:
-		return p.parseNationalStringFromToken()
+		spanV15, spanErr15 := p.parseNationalStringFromToken()
+		return spanned(p, spanV15, astStart), spanErr15
 	case TokenLBrace:
-		return p.parseOdbcLiteral()
+		spanV16, spanErr16 := p.parseOdbcLiteral()
+		return spanned(p, spanV16, astStart), spanErr16
 	case TokenLParen:
 		// Parenthesized expression or scalar subquery
 		p.nextToken()
@@ -1353,7 +1461,7 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 				p.nextToken() // consume COLLATE
 				ss.Collation = p.parseIdentifier()
 			}
-			return ss, nil
+			return spanned(p, ss, astStart), nil
 		}
 		expr, err := p.parseScalarExpression()
 		if err != nil {
@@ -1367,6 +1475,11 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			// Convert the scalar subquery to a query parenthesis expression
 			if ss, ok := expr.(*ast.ScalarSubquery); ok {
 				qpe := &ast.QueryParenthesisExpression{QueryExpression: ss.QueryExpression}
+				// The parenthesis expression keeps the subquery's span
+				// (including the parens).
+				if ss.Frag().HasSpan() {
+					*qpe.Frag() = *ss.Frag()
+				}
 				qe, err := p.parseRestOfBinaryQueryExpression(qpe)
 				if err != nil {
 					return nil, err
@@ -1381,7 +1494,7 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 					p.nextToken() // consume COLLATE
 					ss.Collation = p.parseIdentifier()
 				}
-				return ss, nil
+				return spanned(p, ss, astStart), nil
 			}
 		}
 		if p.curTok.Type != TokenRParen {
@@ -1389,20 +1502,24 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 		}
 		p.nextToken()
 		// Check for property access after parenthesized expression: (c1).SomeProperty
-		return p.parsePostExpressionAccess(&ast.ParenthesisExpression{Expression: expr})
+		spanV17, spanErr17 := p.parsePostExpressionAccess(spanned(p, &ast.ParenthesisExpression{Expression: expr}, astStart))
+		return spanned(p, spanV17, astStart), spanErr17
 	case TokenCase:
-		return p.parseCaseExpression()
+		spanV18, spanErr18 := p.parseCaseExpression()
+		return spanned(p, spanV18, astStart), spanErr18
 	case TokenStar:
 		// Wildcard column reference (e.g., * in count(*))
 		p.nextToken()
-		return &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}, nil
+		return spanned(p, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}, astStart), nil
 	case TokenDot:
 		// Multi-part identifier starting with empty parts (e.g., ..t1.c1)
-		return p.parseColumnReferenceWithLeadingDots()
+		spanV19, spanErr19 := p.parseColumnReferenceWithLeadingDots()
+		return spanned(p, spanV19, astStart), spanErr19
 	case TokenMaster, TokenDatabase, TokenKey, TokenTable, TokenIndex,
 		TokenSchema, TokenView, TokenTime:
 		// Keywords that can be used as identifiers in column/table references
-		return p.parseColumnReferenceOrFunctionCall()
+		spanV20, spanErr20 := p.parseColumnReferenceOrFunctionCall()
+		return spanned(p, spanV20, astStart), spanErr20
 	case TokenUser:
 		// USER without parentheses is a ParameterlessCall
 		if p.peekTok.Type != TokenLParen && p.peekTok.Type != TokenDot {
@@ -1413,30 +1530,38 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 				p.nextToken() // consume COLLATE
 				call.Collation = p.parseIdentifier()
 			}
-			return call, nil
+			return spanned(p, call, astStart), nil
 		}
-		return p.parseColumnReferenceOrFunctionCall()
+		spanV21, spanErr21 := p.parseColumnReferenceOrFunctionCall()
+		return spanned(p, spanV21, astStart), spanErr21
 	default:
 		return nil, fmt.Errorf("unexpected token in expression: %s", p.curTok.Literal)
 	}
 }
 
 func (p *Parser) parseCaseExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume CASE
 
 	// Check if it's a searched CASE (CASE WHEN ...) or simple CASE (CASE expr WHEN ...)
 	if p.curTok.Type == TokenWhen {
 		// Searched CASE expression
-		return p.parseSearchedCaseExpression()
+		spanV22, spanErr22 := p.parseSearchedCaseExpression()
+		return spanned(p, spanV22, astStart), spanErr22
 	}
 	// Simple CASE expression
-	return p.parseSimpleCaseExpression()
+	spanV23, spanErr23 := p.parseSimpleCaseExpression()
+	return spanned(p, spanV23, astStart), spanErr23
 }
 
 func (p *Parser) parseSearchedCaseExpression() (*ast.SearchedCaseExpression, error) {
+	astStart := p.curTok
+
 	expr := &ast.SearchedCaseExpression{}
 
 	for p.curTok.Type == TokenWhen {
+		whenTok := p.curTok
 		p.nextToken() // consume WHEN
 
 		when, err := p.parseBooleanExpression()
@@ -1454,10 +1579,12 @@ func (p *Parser) parseSearchedCaseExpression() (*ast.SearchedCaseExpression, err
 			return nil, err
 		}
 
-		expr.WhenClauses = append(expr.WhenClauses, &ast.SearchedWhenClause{
+		wc := &ast.SearchedWhenClause{
 			WhenExpression: when,
 			ThenExpression: then,
-		})
+		}
+		p.spanFrom(whenTok, wc)
+		expr.WhenClauses = append(expr.WhenClauses, wc)
 	}
 
 	// Optional ELSE
@@ -1481,10 +1608,12 @@ func (p *Parser) parseSearchedCaseExpression() (*ast.SearchedCaseExpression, err
 		expr.Collation = p.parseIdentifier()
 	}
 
-	return expr, nil
+	return spanned(p, expr, astStart), nil
 }
 
 func (p *Parser) parseSimpleCaseExpression() (*ast.SimpleCaseExpression, error) {
+	astStart := p.curTok
+
 	expr := &ast.SimpleCaseExpression{}
 
 	// Parse input expression
@@ -1495,6 +1624,7 @@ func (p *Parser) parseSimpleCaseExpression() (*ast.SimpleCaseExpression, error) 
 	expr.InputExpression = input
 
 	for p.curTok.Type == TokenWhen {
+		whenTok := p.curTok
 		p.nextToken() // consume WHEN
 
 		when, err := p.parseScalarExpression()
@@ -1512,10 +1642,12 @@ func (p *Parser) parseSimpleCaseExpression() (*ast.SimpleCaseExpression, error) 
 			return nil, err
 		}
 
-		expr.WhenClauses = append(expr.WhenClauses, &ast.SimpleWhenClause{
+		wc := &ast.SimpleWhenClause{
 			WhenExpression: when,
 			ThenExpression: then,
-		})
+		}
+		p.spanFrom(whenTok, wc)
+		expr.WhenClauses = append(expr.WhenClauses, wc)
 	}
 
 	// Optional ELSE
@@ -1539,11 +1671,13 @@ func (p *Parser) parseSimpleCaseExpression() (*ast.SimpleCaseExpression, error) 
 		expr.Collation = p.parseIdentifier()
 	}
 
-	return expr, nil
+	return spanned(p, expr, astStart), nil
 }
 
 // parseNextValueForExpression parses NEXT VALUE FOR sequence_name [OVER (...)]
 func (p *Parser) parseNextValueForExpression() (*ast.NextValueForExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume NEXT
 	p.nextToken() // consume VALUE
 
@@ -1571,10 +1705,12 @@ func (p *Parser) parseNextValueForExpression() (*ast.NextValueForExpression, err
 		expr.OverClause = overClause
 	}
 
-	return expr, nil
+	return spanned(p, expr, astStart), nil
 }
 
 func (p *Parser) parseOdbcLiteral() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	// Consume {
 	p.nextToken()
 
@@ -1584,7 +1720,8 @@ func (p *Parser) parseOdbcLiteral() (ast.ScalarExpression, error) {
 	// { FN function_name(...) } - ODBC scalar function
 	if keyword == "FN" {
 		p.nextToken() // consume FN
-		return p.parseOdbcFunctionCall()
+		spanV24, spanErr24 := p.parseOdbcFunctionCall()
+		return spanned(p, spanV24, astStart), spanErr24
 	}
 
 	// Determine the ODBC literal type
@@ -1644,20 +1781,22 @@ func (p *Parser) parseOdbcLiteral() (ast.ScalarExpression, error) {
 	}
 	p.nextToken()
 
-	return &ast.OdbcLiteral{
+	return spanned(p, &ast.OdbcLiteral{
 		LiteralType:     "Odbc",
 		OdbcLiteralType: odbcType,
 		IsNational:      isNational,
 		Value:           value,
-	}, nil
+	}, astStart), nil
 }
 
 func (p *Parser) parseOdbcFunctionCall() (*ast.OdbcFunctionCall, error) {
+	astStart := p.curTok
+
 	// Parse function name
 	name := p.parseIdentifier()
 
 	call := &ast.OdbcFunctionCall{
-		Name: name,
+		Name: unspan(name),
 	}
 
 	// Check for parentheses (parameters)
@@ -1725,10 +1864,12 @@ func (p *Parser) parseOdbcFunctionCall() (*ast.OdbcFunctionCall, error) {
 	}
 	p.nextToken()
 
-	return call, nil
+	return spanned(p, call, astStart), nil
 }
 
 func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
+	astStart := p.curTok
+
 	raw := p.curTok.Literal
 	isNational := false
 
@@ -1747,20 +1888,20 @@ func (p *Parser) parseStringLiteral() (*ast.StringLiteral, error) {
 		inner := raw[1 : len(raw)-1]
 		// Replace escaped quotes
 		value := strings.ReplaceAll(inner, "''", "'")
-		return &ast.StringLiteral{
+		return spanned(p, &ast.StringLiteral{
 			LiteralType:   "String",
 			IsNational:    isNational,
 			IsLargeObject: false,
 			Value:         value,
-		}, nil
+		}, astStart), nil
 	}
 
-	return &ast.StringLiteral{
+	return spanned(p, &ast.StringLiteral{
 		LiteralType:   "String",
 		IsNational:    isNational,
 		IsLargeObject: false,
 		Value:         raw,
-	}, nil
+	}, astStart), nil
 }
 
 // parseStringLiteralValue creates a StringLiteral from the current token without consuming it
@@ -1772,23 +1913,15 @@ func (p *Parser) parseStringLiteralValue() *ast.StringLiteral {
 		inner := raw[1 : len(raw)-1]
 		// Replace escaped quotes
 		value := strings.ReplaceAll(inner, "''", "'")
-		return &ast.StringLiteral{
-			LiteralType:   "String",
-			IsNational:    false,
-			IsLargeObject: false,
-			Value:         value,
-		}
+		return p.strLit(value, false)
 	}
 
-	return &ast.StringLiteral{
-		LiteralType:   "String",
-		IsNational:    false,
-		IsLargeObject: false,
-		Value:         raw,
-	}
+	return p.strLit(raw, false)
 }
 
 func (p *Parser) parseNationalStringLiteral() (*ast.StringLiteral, error) {
+	astStart := p.curTok
+
 	raw := p.curTok.Literal
 	p.nextToken()
 
@@ -1797,23 +1930,25 @@ func (p *Parser) parseNationalStringLiteral() (*ast.StringLiteral, error) {
 		inner := raw[1 : len(raw)-1]
 		// Replace escaped quotes
 		value := strings.ReplaceAll(inner, "''", "'")
-		return &ast.StringLiteral{
+		return spanned(p, &ast.StringLiteral{
 			LiteralType:   "String",
 			IsNational:    true,
 			IsLargeObject: false,
 			Value:         value,
-		}, nil
+		}, astStart), nil
 	}
 
-	return &ast.StringLiteral{
+	return spanned(p, &ast.StringLiteral{
 		LiteralType:   "String",
 		IsNational:    true,
 		IsLargeObject: false,
 		Value:         raw,
-	}, nil
+	}, astStart), nil
 }
 
 func (p *Parser) parseNationalStringFromToken() (*ast.StringLiteral, error) {
+	astStart := p.curTok
+
 	// Token is N'...' combined - strip the N prefix and quotes
 	raw := p.curTok.Literal
 	p.nextToken()
@@ -1823,20 +1958,20 @@ func (p *Parser) parseNationalStringFromToken() (*ast.StringLiteral, error) {
 		inner := raw[2 : len(raw)-1]
 		// Replace escaped quotes
 		value := strings.ReplaceAll(inner, "''", "'")
-		return &ast.StringLiteral{
+		return spanned(p, &ast.StringLiteral{
 			LiteralType:   "String",
 			IsNational:    true,
 			IsLargeObject: false,
 			Value:         value,
-		}, nil
+		}, astStart), nil
 	}
 
-	return &ast.StringLiteral{
+	return spanned(p, &ast.StringLiteral{
 		LiteralType:   "String",
 		IsNational:    true,
 		IsLargeObject: false,
 		Value:         raw,
-	}, nil
+	}, astStart), nil
 }
 
 func (p *Parser) isIdentifierToken() bool {
@@ -1851,12 +1986,14 @@ func (p *Parser) isIdentifierToken() bool {
 }
 
 func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	// Check for graph pseudo columns at the start
 	upper := strings.ToUpper(p.curTok.Literal)
 	pseudoType := getPseudoColumnType(upper)
 	if pseudoType != "" && p.peekTok.Type != TokenDot {
 		p.nextToken()
-		return &ast.ColumnReferenceExpression{ColumnType: pseudoType}, nil
+		return spanned(p, &ast.ColumnReferenceExpression{ColumnType: pseudoType}, astStart), nil
 	}
 
 	var identifiers []*ast.Identifier
@@ -1901,10 +2038,7 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			break
 		}
 
-		id := &ast.Identifier{
-			Value:     literal,
-			QuoteType: quoteType,
-		}
+		id := p.spanIdent(literal, quoteType)
 		identifiers = append(identifiers, id)
 		p.nextToken()
 
@@ -1920,7 +2054,7 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 
 		// Handle consecutive dots (empty parts in multi-part identifier)
 		for p.curTok.Type == TokenDot {
-			identifiers = append(identifiers, &ast.Identifier{Value: "", QuoteType: "NotQuoted"})
+			identifiers = append(identifiers, p.spanIdent("", "NotQuoted"))
 			p.nextToken() // consume dot
 		}
 	}
@@ -1972,12 +2106,13 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			}
 			p.nextToken() // consume )
 
-			return pfc, nil
+			return spanned(p, pfc, astStart), nil
 		}
 	}
 
 	// Check for :: (user-defined type method call or property access): a.b::func() or a::prop
 	if p.curTok.Type == TokenColonColon && len(identifiers) > 0 {
+		colonTok := p.curTok
 		p.nextToken() // consume ::
 
 		// Parse function/property name - can be regular identifier or bracket-quoted
@@ -1991,7 +2126,7 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			quoteType = "SquareBracket"
 			nameValue = nameValue[1 : len(nameValue)-1]
 		}
-		name := &ast.Identifier{Value: nameValue, QuoteType: quoteType}
+		name := p.spanIdent(nameValue, quoteType)
 		p.nextToken()
 
 		// Build SchemaObjectName from identifiers (filter out empty identifiers from leading dots)
@@ -2003,18 +2138,25 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 		}
 		schemaObjName := identifiersToSchemaObjectName(nonEmptyIdents)
 
+		// ScriptDom spans the call target through the :: token.
+		udtTarget := &ast.UserDefinedTypeCallTarget{SchemaObjectName: schemaObjName}
+		if len(nonEmptyIdents) > 0 {
+			p.spanChildToToken(udtTarget, nonEmptyIdents[0], colonTok)
+		} else if len(identifiers) > 0 {
+			p.spanChildToToken(udtTarget, identifiers[0], colonTok)
+		}
+
 		// If followed by ( it's a method call, otherwise property access
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 
 			fc := &ast.FunctionCall{
-				CallTarget: &ast.UserDefinedTypeCallTarget{
-					SchemaObjectName: schemaObjName,
-				},
+				CallTarget:       udtTarget,
 				FunctionName:     name,
 				UniqueRowFilter:  "NotSpecified",
 				WithArrayWrapper: false,
 			}
+			fcStartTarget := udtTarget
 
 			// Parse parameters
 			if p.curTok.Type != TokenRParen {
@@ -2038,52 +2180,61 @@ func (p *Parser) parseColumnReferenceOrFunctionCall() (ast.ScalarExpression, err
 			}
 			p.nextToken()
 
+			p.spanFromChild(fc, fcStartTarget)
+			fc.Pin()
+
 			// Check for OVER clause or property access after method call
-			return p.parsePostExpressionAccess(fc)
+			spanV25, spanErr25 := p.parsePostExpressionAccess(fc)
+			return spanned(p, spanV25, astStart), spanErr25
 		}
 
 		// Property access: t::a
 		propAccess := &ast.UserDefinedTypePropertyAccess{
-			CallTarget: &ast.UserDefinedTypeCallTarget{
-				SchemaObjectName: schemaObjName,
-			},
+			CallTarget:   udtTarget,
 			PropertyName: name,
 		}
+		p.spanFromChild(propAccess, udtTarget)
+		propAccess.Pin()
 
 		// Check for COLLATE clause
 		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
 			p.nextToken() // consume COLLATE
 			propAccess.Collation = p.parseIdentifier()
+			p.spanFromChild(propAccess, udtTarget)
 		}
 
 		// Check for chained property access
-		return p.parsePostExpressionAccess(propAccess)
+		spanV26, spanErr26 := p.parsePostExpressionAccess(propAccess)
+		return spanned(p, spanV26, astStart), spanErr26
 	}
 
 	// If followed by ( it's a function call
 	if p.curTok.Type == TokenLParen {
-		return p.parseFunctionCallFromIdentifiers(identifiers)
+		spanV27, spanErr27 := p.parseFunctionCallFromIdentifiers(identifiers)
+		return spanned(p, spanV27, astStart), spanErr27
 	}
 
 	// If we have identifiers, build a column reference with them
 	if len(identifiers) > 0 {
-		return &ast.ColumnReferenceExpression{
+		return spanned(p, &ast.ColumnReferenceExpression{
 			ColumnType: colType,
 			MultiPartIdentifier: &ast.MultiPartIdentifier{
 				Count:       len(identifiers),
 				Identifiers: identifiers,
 			},
-		}, nil
+		}, astStart), nil
 	}
 
 	// No identifiers means just IDENTITYCOL or ROWGUIDCOL (already handled in parsePrimaryExpression)
 	// but handle the case anyway
-	return &ast.ColumnReferenceExpression{
+	return spanned(p, &ast.ColumnReferenceExpression{
 		ColumnType: colType,
-	}, nil
+	}, astStart), nil
 }
 
 func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) {
+	astStart := p.curTok
+
 	var expr ast.ScalarExpression
 	var err error
 
@@ -2097,19 +2248,21 @@ func (p *Parser) parseColumnReference() (*ast.ColumnReferenceExpression, error) 
 		return nil, err
 	}
 	if colRef, ok := expr.(*ast.ColumnReferenceExpression); ok {
-		return colRef, nil
+		return spanned(p, colRef, astStart), nil
 	}
 	// If we got a function call, wrap it in a column reference (shouldn't happen in this context)
 	return nil, fmt.Errorf("expected column reference, got function call")
 }
 
 func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	// Handle multi-part identifiers starting with dots like ..t1.c1 or .db..t1.c1
 	var identifiers []*ast.Identifier
 
 	// Add empty identifiers for leading dots
 	for p.curTok.Type == TokenDot {
-		identifiers = append(identifiers, &ast.Identifier{Value: "", QuoteType: "NotQuoted"})
+		identifiers = append(identifiers, p.spanIdent("", "NotQuoted"))
 		p.nextToken() // consume dot
 	}
 
@@ -2126,13 +2279,13 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 				colType = "RowGuidCol"
 			}
 			p.nextToken()
-			return &ast.ColumnReferenceExpression{
+			return spanned(p, &ast.ColumnReferenceExpression{
 				ColumnType: colType,
 				MultiPartIdentifier: &ast.MultiPartIdentifier{
 					Count:       len(identifiers),
 					Identifiers: identifiers,
 				},
-			}, nil
+			}, astStart), nil
 		}
 		// Handle bracketed identifiers
 		if len(literal) >= 2 && literal[0] == '[' && literal[len(literal)-1] == ']' {
@@ -2140,10 +2293,7 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 			literal = literal[1 : len(literal)-1]
 		}
 
-		id := &ast.Identifier{
-			Value:     literal,
-			QuoteType: quoteType,
-		}
+		id := p.spanIdent(literal, quoteType)
 		identifiers = append(identifiers, id)
 		p.nextToken()
 
@@ -2161,6 +2311,7 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 
 	// Check for :: (user-defined type method call or property access): .t::func() or .t::prop
 	if p.curTok.Type == TokenColonColon && len(identifiers) > 0 {
+		colonTok := p.curTok
 		p.nextToken() // consume ::
 
 		// Parse function/property name - can be regular identifier or bracket-quoted
@@ -2174,7 +2325,7 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 			quoteType = "SquareBracket"
 			nameValue = nameValue[1 : len(nameValue)-1]
 		}
-		name := &ast.Identifier{Value: nameValue, QuoteType: quoteType}
+		name := p.spanIdent(nameValue, quoteType)
 		p.nextToken()
 
 		// Build SchemaObjectName from identifiers (filter out empty identifiers from leading dots)
@@ -2186,18 +2337,25 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 		}
 		schemaObjName := identifiersToSchemaObjectName(nonEmptyIdents)
 
+		// ScriptDom spans the call target through the :: token.
+		udtTarget := &ast.UserDefinedTypeCallTarget{SchemaObjectName: schemaObjName}
+		if len(nonEmptyIdents) > 0 {
+			p.spanChildToToken(udtTarget, nonEmptyIdents[0], colonTok)
+		} else if len(identifiers) > 0 {
+			p.spanChildToToken(udtTarget, identifiers[0], colonTok)
+		}
+
 		// If followed by ( it's a method call, otherwise property access
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 
 			fc := &ast.FunctionCall{
-				CallTarget: &ast.UserDefinedTypeCallTarget{
-					SchemaObjectName: schemaObjName,
-				},
+				CallTarget:       udtTarget,
 				FunctionName:     name,
 				UniqueRowFilter:  "NotSpecified",
 				WithArrayWrapper: false,
 			}
+			fcStartTarget := udtTarget
 
 			// Parse parameters
 			if p.curTok.Type != TokenRParen {
@@ -2221,57 +2379,84 @@ func (p *Parser) parseColumnReferenceWithLeadingDots() (ast.ScalarExpression, er
 			}
 			p.nextToken()
 
+			p.spanFromChild(fc, fcStartTarget)
+			fc.Pin()
+
 			// Check for OVER clause or property access after method call
-			return p.parsePostExpressionAccess(fc)
+			spanV28, spanErr28 := p.parsePostExpressionAccess(fc)
+			return spanned(p, spanV28, astStart), spanErr28
 		}
 
 		// Property access: .t::a
 		propAccess := &ast.UserDefinedTypePropertyAccess{
-			CallTarget: &ast.UserDefinedTypeCallTarget{
-				SchemaObjectName: schemaObjName,
-			},
+			CallTarget:   udtTarget,
 			PropertyName: name,
 		}
+		p.spanFromChild(propAccess, udtTarget)
+		propAccess.Pin()
 
 		// Check for COLLATE clause
 		if strings.ToUpper(p.curTok.Literal) == "COLLATE" {
 			p.nextToken() // consume COLLATE
 			propAccess.Collation = p.parseIdentifier()
+			p.spanFromChild(propAccess, udtTarget)
 		}
 
 		// Check for chained property access
-		return p.parsePostExpressionAccess(propAccess)
+		spanV29, spanErr29 := p.parsePostExpressionAccess(propAccess)
+		return spanned(p, spanV29, astStart), spanErr29
 	}
 
 	// Check if this is a function call
 	if p.curTok.Type == TokenLParen && len(identifiers) > 1 {
-		return p.parseFunctionCallFromIdentifiers(identifiers)
+		spanV30, spanErr30 := p.parseFunctionCallFromIdentifiers(identifiers)
+		return spanned(p, spanV30, astStart), spanErr30
 	}
 
-	return &ast.ColumnReferenceExpression{
+	return spanned(p, &ast.ColumnReferenceExpression{
 		ColumnType: "Regular",
 		MultiPartIdentifier: &ast.MultiPartIdentifier{
 			Count:       len(identifiers),
 			Identifiers: identifiers,
 		},
-	}, nil
+	}, astStart), nil
 }
 
 func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier) (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	// Check for special functions that need custom handling
 	if len(identifiers) == 1 {
+		// copyNameSpan gives the synthesized function-name identifier the
+		// span of the original name token.
+		copyNameSpan := func(v any) {
+			fc, ok := v.(*ast.FunctionCall)
+			if ok && fc != nil && fc.FunctionName != nil && identifiers[0].Frag().HasSpan() {
+				f := identifiers[0].Frag()
+				fc.FunctionName.SetSpan(f.StartOffset, f.FragmentLength, f.StartLine, f.StartColumn)
+			}
+		}
 		funcName := strings.ToUpper(identifiers[0].Value)
 		switch funcName {
 		case "IIF":
-			return p.parseIIfCall()
+			spanV31, spanErr31 := p.parseIIfCall()
+			return spanned(p, spanV31, astStart), spanErr31
 		case "PARSE":
-			return p.parseParseCall(false)
+			spanV32, spanErr32 := p.parseParseCall(false)
+			copyNameSpan(spanV32)
+			return spanned(p, spanV32, astStart), spanErr32
 		case "TRY_PARSE":
-			return p.parseParseCall(true)
+			spanV33, spanErr33 := p.parseParseCall(true)
+			copyNameSpan(spanV33)
+			return spanned(p, spanV33, astStart), spanErr33
 		case "JSON_OBJECT":
-			return p.parseJsonObjectCall()
+			spanV34, spanErr34 := p.parseJsonObjectCall()
+			copyNameSpan(spanV34)
+			return spanned(p, spanV34, astStart), spanErr34
 		case "JSON_ARRAY":
-			return p.parseJsonArrayCall()
+			spanV35, spanErr35 := p.parseJsonArrayCall()
+			copyNameSpan(spanV35)
+			return spanned(p, spanV35, astStart), spanErr35
 		}
 	}
 
@@ -2347,13 +2532,22 @@ func (p *Parser) parseFunctionCallFromIdentifiers(identifiers []*ast.Identifier)
 	}
 	p.nextToken()
 
+	// Span the call from its first identifier through the closing paren so
+	// wrappers built by parsePostExpressionAccess see the full extent.
+	if len(identifiers) > 0 {
+		p.spanFromChild(fc, identifiers[0])
+	}
+
 	// Check for OVER clause or property access after function call
-	return p.parsePostExpressionAccess(fc)
+	spanV36, spanErr36 := p.parsePostExpressionAccess(fc)
+	return spanned(p, spanV36, astStart), spanErr36
 }
 
 // parsePostExpressionAccess handles chained property access (.PropertyName), COLLATE clauses, and OVER clauses
 // after an expression (function call, parenthesized expression, or property access).
 func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	// Loop to handle chained property access like .SomeProperty.AnotherProperty
 	for {
 		// Check for .PropertyName pattern (property access)
@@ -2363,7 +2557,7 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 			if p.curTok.Type != TokenIdent {
 				return nil, fmt.Errorf("expected property name after ., got %s", p.curTok.Literal)
 			}
-			propName := &ast.Identifier{Value: p.curTok.Literal, QuoteType: "NotQuoted"}
+			propName := p.spanIdent(p.curTok.Literal, "NotQuoted")
 			p.nextToken()
 
 			// Check if it's a method call: .method()
@@ -2401,6 +2595,7 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 				}
 				p.nextToken()
 
+				p.spanFromChild(fc, expr)
 				expr = fc
 				continue
 			}
@@ -2419,12 +2614,14 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 				propAccess.Collation = p.parseIdentifier()
 			}
 
+			p.spanFromChild(propAccess, expr)
 			expr = propAccess
 			continue
 		}
 
 		// Check for WITHIN GROUP clause for function calls (e.g., PERCENTILE_CONT)
 		if fc, ok := expr.(*ast.FunctionCall); ok && strings.ToUpper(p.curTok.Literal) == "WITHIN" {
+			withinTok := p.curTok
 			p.nextToken() // consume WITHIN
 			if strings.ToUpper(p.curTok.Literal) == "GROUP" {
 				p.nextToken() // consume GROUP
@@ -2458,6 +2655,7 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 			}
 			p.nextToken() // consume )
 
+			p.spanFrom(withinTok, withinGroup)
 			fc.WithinGroupClause = withinGroup
 			continue // continue to check for more clauses like OVER
 		}
@@ -2467,17 +2665,11 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 			upperLit := strings.ToUpper(p.curTok.Literal)
 			if upperLit == "RESPECT" || upperLit == "IGNORE" {
 				// Parse RESPECT NULLS or IGNORE NULLS
-				firstIdent := &ast.Identifier{
-					Value:     strings.ToUpper(p.curTok.Literal),
-					QuoteType: "NotQuoted",
-				}
+				firstIdent := &ast.Identifier{Value: strings.ToUpper(p.curTok.Literal), QuoteType: "NotQuoted"}
 				p.nextToken() // consume RESPECT/IGNORE
 
 				if strings.ToUpper(p.curTok.Literal) == "NULLS" {
-					secondIdent := &ast.Identifier{
-						Value:     strings.ToUpper(p.curTok.Literal),
-						QuoteType: "NotQuoted",
-					}
+					secondIdent := &ast.Identifier{Value: strings.ToUpper(p.curTok.Literal), QuoteType: "NotQuoted"}
 					p.nextToken() // consume NULLS
 					fc.IgnoreRespectNulls = []*ast.Identifier{firstIdent, secondIdent}
 				}
@@ -2504,10 +2696,12 @@ func (p *Parser) parsePostExpressionAccess(expr ast.ScalarExpression) (ast.Scala
 		break
 	}
 
-	return expr, nil
+	return spanned(p, expr, astStart), nil
 }
 
 func (p *Parser) parseFromClause() (*ast.FromClause, error) {
+	astStart := p.curTok
+
 	// Consume FROM
 	if p.curTok.Type != TokenFrom {
 		return nil, fmt.Errorf("expected FROM, got %s", p.curTok.Literal)
@@ -2521,7 +2715,7 @@ func (p *Parser) parseFromClause() (*ast.FromClause, error) {
 		ref, err := p.parseTableReference()
 		if err != nil {
 			// Lenient: if we can't parse a table reference, return what we have
-			return fc, nil
+			return spanned(p, fc, astStart), nil
 		}
 		fc.TableReferences = append(fc.TableReferences, ref)
 
@@ -2531,10 +2725,12 @@ func (p *Parser) parseFromClause() (*ast.FromClause, error) {
 		p.nextToken() // consume comma
 	}
 
-	return fc, nil
+	return spanned(p, fc, astStart), nil
 }
 
 func (p *Parser) parseTableReference() (ast.TableReference, error) {
+	astStart := p.curTok
+
 	// Parse the base table reference
 	baseRef, err := p.parseSingleTableReference()
 	if err != nil {
@@ -2732,7 +2928,7 @@ func (p *Parser) parseTableReference() (ast.TableReference, error) {
 		}
 	}
 
-	return left, nil
+	return spanned(p, left, astStart), nil
 }
 
 // isJoinKeyword returns true if the current token starts a join clause
@@ -2796,66 +2992,79 @@ func (p *Parser) parseJoinTypeAndHint() (joinType, joinHint string) {
 }
 
 func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
+	astStart := p.curTok
+
 	// Check for derived table (parenthesized query)
 	if p.curTok.Type == TokenLParen {
-		return p.parseDerivedTableReference()
+		spanV37, spanErr37 := p.parseDerivedTableReference()
+		return spanned(p, spanV37, astStart), spanErr37
 	}
 
 	// Check for ODBC outer join escape sequence: { OJ ... }
 	if p.curTok.Type == TokenLBrace {
-		return p.parseOdbcQualifiedJoinTableReference()
+		spanV38, spanErr38 := p.parseOdbcQualifiedJoinTableReference()
+		return spanned(p, spanV38, astStart), spanErr38
 	}
 
 	// Check for built-in function table reference (::fn_name(...))
 	if p.curTok.Type == TokenColonColon {
-		return p.parseBuiltInFunctionTableReference()
+		spanV39, spanErr39 := p.parseBuiltInFunctionTableReference()
+		return spanned(p, spanV39, astStart), spanErr39
 	}
 
 	// Check for OPENROWSET
 	if p.curTok.Type == TokenOpenRowset {
-		return p.parseOpenRowset()
+		spanV40, spanErr40 := p.parseOpenRowset()
+		return spanned(p, spanV40, astStart), spanErr40
 	}
 
 	// Check for OPENDATASOURCE
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OPENDATASOURCE" {
-		return p.parseAdHocTableReference()
+		spanV41, spanErr41 := p.parseAdHocTableReference()
+		return spanned(p, spanV41, astStart), spanErr41
 	}
 
 	// Check for PREDICT
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PREDICT" {
-		return p.parsePredictTableReference()
+		spanV42, spanErr42 := p.parsePredictTableReference()
+		return spanned(p, spanV42, astStart), spanErr42
 	}
 
 	// Check for CHANGETABLE
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "CHANGETABLE" {
-		return p.parseChangeTableReference()
+		spanV43, spanErr43 := p.parseChangeTableReference()
+		return spanned(p, spanV43, astStart), spanErr43
 	}
 
 	// Check for OPENXML
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OPENXML" {
-		return p.parseOpenXmlTableReference()
+		spanV44, spanErr44 := p.parseOpenXmlTableReference()
+		return spanned(p, spanV44, astStart), spanErr44
 	}
 
 	// Check for OPENQUERY
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "OPENQUERY" {
-		return p.parseOpenQueryTableReference()
+		spanV45, spanErr45 := p.parseOpenQueryTableReference()
+		return spanned(p, spanV45, astStart), spanErr45
 	}
 
 	// Check for full-text table functions (CONTAINSTABLE, FREETEXTTABLE)
 	if p.curTok.Type == TokenIdent {
 		upper := strings.ToUpper(p.curTok.Literal)
 		if upper == "CONTAINSTABLE" || upper == "FREETEXTTABLE" {
-			return p.parseFullTextTableReference(upper)
+			spanV46, spanErr46 := p.parseFullTextTableReference(upper)
+			return spanned(p, spanV46, astStart), spanErr46
 		}
 		// Check for semantic table functions
 		if upper == "SEMANTICKEYPHRASETABLE" || upper == "SEMANTICSIMILARITYTABLE" || upper == "SEMANTICSIMILARITYDETAILSTABLE" {
-			return p.parseSemanticTableReference(upper)
+			spanV47, spanErr47 := p.parseSemanticTableReference(upper)
+			return spanned(p, spanV47, astStart), spanErr47
 		}
 	}
 
 	// Check for variable table reference or variable method call
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-		name := p.curTok.Literal
+		nameTok := p.curTok
 		p.nextToken()
 
 		// Check for method call: @var.method(...)
@@ -2902,19 +3111,19 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 				p.nextToken() // consume )
 			}
 
-			return &ast.VariableMethodCallTableReference{
-				Variable:   &ast.VariableReference{Name: name},
+			return spanned(p, &ast.VariableMethodCallTableReference{
+				Variable:   p.varRefFromToken(nameTok),
 				MethodName: methodName,
 				Parameters: params,
 				Alias:      alias,
 				Columns:    columns,
 				ForPath:    false,
-			}, nil
+			}, astStart), nil
 		}
 
 		// Parse optional alias for variable table reference
 		varRef := &ast.VariableTableReference{
-			Variable: &ast.VariableReference{Name: name},
+			Variable: p.varRefFromToken(nameTok),
 			ForPath:  false,
 		}
 		if p.curTok.Type == TokenAs {
@@ -2933,7 +3142,7 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 				varRef.Alias = p.parseIdentifier()
 			}
 		}
-		return varRef, nil
+		return spanned(p, varRef, astStart), nil
 	}
 
 	// Check for table-valued function (identifier followed by parentheses that's not a table hint)
@@ -2985,17 +3194,18 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 		if son.Count == 1 && son.BaseIdentifier != nil {
 			upper := strings.ToUpper(son.BaseIdentifier.Value)
 			if upper == "STRING_SPLIT" || upper == "GENERATE_SERIES" {
-				return &ast.GlobalFunctionTableReference{
+				return spanned(p, &ast.GlobalFunctionTableReference{
 					Name:       son.BaseIdentifier,
 					Parameters: params,
 					Alias:      alias,
 					Columns:    columns,
 					ForPath:    false,
-				}, nil
+				}, astStart), nil
 			}
 			// Handle OPENJSON specially
 			if upper == "OPENJSON" {
-				return p.parseOpenJsonTableReference(params, alias)
+				spanV48, spanErr48 := p.parseOpenJsonTableReference(params, alias)
+				return spanned(p, spanV48, astStart), spanErr48
 			}
 		}
 
@@ -3006,15 +3216,18 @@ func (p *Parser) parseSingleTableReference() (ast.TableReference, error) {
 			Columns:      columns,
 			ForPath:      false,
 		}
-		return ref, nil
+		return spanned(p, ref, astStart), nil
 	}
 
 	// It's a regular named table reference
-	return p.parseNamedTableReferenceWithName(son)
+	spanV49, spanErr49 := p.parseNamedTableReferenceWithName(son)
+	return spanned(p, spanV49, astStart), spanErr49
 }
 
 // parseOpenJsonTableReference parses OPENJSON function with optional WITH clause
 func (p *Parser) parseOpenJsonTableReference(params []ast.ScalarExpression, alias *ast.Identifier) (ast.TableReference, error) {
+	astStart := p.curTok
+
 	ref := &ast.OpenJsonTableReference{
 		ForPath: false,
 		Alias:   alias,
@@ -3074,11 +3287,13 @@ func (p *Parser) parseOpenJsonTableReference(params []ast.ScalarExpression, alia
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseSchemaDeclarationItemOpenjson parses a column definition in OPENJSON WITH clause
 func (p *Parser) parseSchemaDeclarationItemOpenjson() (*ast.SchemaDeclarationItemOpenjson, error) {
+	astStart := p.curTok
+
 	item := &ast.SchemaDeclarationItemOpenjson{
 		ColumnDefinition: &ast.ColumnDefinitionBase{},
 	}
@@ -3098,6 +3313,8 @@ func (p *Parser) parseSchemaDeclarationItemOpenjson() (*ast.SchemaDeclarationIte
 		p.nextToken() // consume COLLATE
 		item.ColumnDefinition.Collation = p.parseIdentifier()
 	}
+	// ScriptDom spans the column definition over name, type and collation.
+	p.spanFrom(astStart, item.ColumnDefinition)
 
 	// Parse optional path mapping (string literal) or AS JSON
 	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
@@ -3107,6 +3324,10 @@ func (p *Parser) parseSchemaDeclarationItemOpenjson() (*ast.SchemaDeclarationIte
 		}
 		item.Mapping = mapping
 	}
+
+	// ScriptDom's item span excludes a trailing AS JSON.
+	p.spanFrom(astStart, item)
+	item.Pin()
 
 	// Parse optional AS JSON
 	if p.curTok.Type == TokenAs {
@@ -3122,6 +3343,8 @@ func (p *Parser) parseSchemaDeclarationItemOpenjson() (*ast.SchemaDeclarationIte
 
 // parseOdbcQualifiedJoinTableReference parses ODBC outer join escape sequence: { OJ ... }
 func (p *Parser) parseOdbcQualifiedJoinTableReference() (ast.TableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume {
 
 	// Expect OJ keyword
@@ -3142,34 +3365,43 @@ func (p *Parser) parseOdbcQualifiedJoinTableReference() (ast.TableReference, err
 	}
 	p.nextToken() // consume }
 
-	return &ast.OdbcQualifiedJoinTableReference{
+	return spanned(p, &ast.OdbcQualifiedJoinTableReference{
 		TableReference: innerRef,
-	}, nil
+	}, astStart), nil
 }
 
 // parseDerivedTableReference parses a derived table (parenthesized query) like (SELECT ...) AS alias
 // or an inline derived table (VALUES clause) like (VALUES (...), (...)) AS alias(cols)
 // or a data modification table reference (DML with OUTPUT) like (INSERT ... OUTPUT ...) AS alias
 func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
+	p.parenQueryDepth++
+	defer func() { p.parenQueryDepth-- }()
+	astStart := p.curTok
+
 	p.nextToken() // consume (
 
 	// Check for VALUES clause (inline derived table)
 	if strings.ToUpper(p.curTok.Literal) == "VALUES" {
-		return p.parseInlineDerivedTable()
+		spanV50, spanErr50 := p.parseInlineDerivedTable()
+		return spanned(p, spanV50, astStart), spanErr50
 	}
 
 	// Check for DML statements (INSERT, UPDATE, DELETE, MERGE) as table sources
 	if p.curTok.Type == TokenInsert {
-		return p.parseDataModificationTableReference("INSERT")
+		spanV51, spanErr51 := p.parseDataModificationTableReference("INSERT")
+		return spanned(p, spanV51, astStart), spanErr51
 	}
 	if p.curTok.Type == TokenUpdate {
-		return p.parseDataModificationTableReference("UPDATE")
+		spanV52, spanErr52 := p.parseDataModificationTableReference("UPDATE")
+		return spanned(p, spanV52, astStart), spanErr52
 	}
 	if p.curTok.Type == TokenDelete {
-		return p.parseDataModificationTableReference("DELETE")
+		spanV53, spanErr53 := p.parseDataModificationTableReference("DELETE")
+		return spanned(p, spanV53, astStart), spanErr53
 	}
 	if strings.ToUpper(p.curTok.Literal) == "MERGE" {
-		return p.parseDataModificationTableReference("MERGE")
+		spanV54, spanErr54 := p.parseDataModificationTableReference("MERGE")
+		return spanned(p, spanV54, astStart), spanErr54
 	}
 
 	// Check if this is a query (starts with SELECT, WITH, or another parenthesis for nested query)
@@ -3184,10 +3416,10 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 			return nil, fmt.Errorf("expected ) after parenthesized table reference, got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume )
-		return &ast.JoinParenthesisTableReference{
+		return spanned(p, &ast.JoinParenthesisTableReference{
 			Join:    tableRef,
 			ForPath: false,
-		}, nil
+		}, astStart), nil
 	}
 
 	// Handle nested parenthesis specially
@@ -3209,6 +3441,12 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 				p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect) {
 				// Convert to QueryParenthesisExpression and continue with query expression parsing
 				qe := &ast.QueryParenthesisExpression{QueryExpression: ref.QueryExpression}
+				// The parenthesis expression covers the same source extent
+				// as the derived table it was parsed as.
+				if ref.HasSpan() {
+					qe.SetSpan(ref.StartOffset, ref.FragmentLength, ref.StartLine, ref.StartColumn)
+					qe.Pin()
+				}
 
 				// Check for binary operations (UNION, EXCEPT, INTERSECT)
 				if p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect {
@@ -3242,7 +3480,7 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 						}
 					}
 
-					return result, nil
+					return spanned(p, result, astStart), nil
 				}
 
 				// Just closing paren - expect ) and return as QueryDerivedTable
@@ -3268,7 +3506,7 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 					}
 				}
 
-				return result, nil
+				return spanned(p, result, astStart), nil
 			}
 
 			// Otherwise, this is a derived table that may be followed by JOINs
@@ -3410,10 +3648,10 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 		}
 		p.nextToken() // consume )
 
-		return &ast.JoinParenthesisTableReference{
+		return spanned(p, &ast.JoinParenthesisTableReference{
 			Join:    tableRef,
 			ForPath: false,
-		}, nil
+		}, astStart), nil
 	}
 
 	// Parse the query expression (for SELECT or WITH)
@@ -3596,10 +3834,10 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 		}
 		p.nextToken() // consume )
 
-		return &ast.JoinParenthesisTableReference{
+		return spanned(p, &ast.JoinParenthesisTableReference{
 			Join:    tableRef,
 			ForPath: false,
-		}, nil
+		}, astStart), nil
 	}
 
 	p.nextToken() // consume )
@@ -3649,12 +3887,14 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 		p.nextToken() // consume )
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseDataModificationTableReference parses a DML statement used as a table source
 // This is called after ( is consumed and the DML keyword is the current token
 func (p *Parser) parseDataModificationTableReference(dmlType string) (*ast.DataModificationTableReference, error) {
+	astStart := p.curTok
+
 	ref := &ast.DataModificationTableReference{
 		ForPath: false,
 	}
@@ -3712,12 +3952,14 @@ func (p *Parser) parseDataModificationTableReference(dmlType string) (*ast.DataM
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseInlineDerivedTable parses a VALUES clause used as a table source
 // Called after ( is consumed and VALUES is the current token
 func (p *Parser) parseInlineDerivedTable() (*ast.InlineDerivedTable, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume VALUES
 
 	ref := &ast.InlineDerivedTable{
@@ -3729,6 +3971,7 @@ func (p *Parser) parseInlineDerivedTable() (*ast.InlineDerivedTable, error) {
 		if p.curTok.Type != TokenLParen {
 			break
 		}
+		rowTok := p.curTok
 		p.nextToken() // consume (
 
 		row := &ast.RowValue{}
@@ -3747,6 +3990,7 @@ func (p *Parser) parseInlineDerivedTable() (*ast.InlineDerivedTable, error) {
 		if p.curTok.Type == TokenRParen {
 			p.nextToken() // consume )
 		}
+		p.spanFrom(rowTok, row)
 		ref.RowValues = append(ref.RowValues, row)
 
 		if p.curTok.Type == TokenComma {
@@ -3792,10 +4036,12 @@ func (p *Parser) parseInlineDerivedTable() (*ast.InlineDerivedTable, error) {
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
+	astStart := p.curTok
+
 	ref := &ast.NamedTableReference{
 		ForPath: false,
 	}
@@ -3839,11 +4085,15 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 
 	// Check for naked HOLDLOCK/NOWAIT before alias: table HOLDLOCK, table2
 	if p.curTok.Type == TokenHoldlock {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		hlHint2 := &ast.TableHint{HintKind: "HoldLock"}
+		p.tokSpan(hlHint2, p.curTok)
+		ref.TableHints = append(ref.TableHints, hlHint2)
 		p.nextToken()
 	}
 	if p.curTok.Type == TokenNowait {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		nwHint2 := &ast.TableHint{HintKind: "Nowait"}
+		p.tokSpan(nwHint2, p.curTok)
+		ref.TableHints = append(ref.TableHints, nwHint2)
 		p.nextToken()
 	}
 
@@ -3870,6 +4120,9 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	// Check for old-style hints AFTER alias: table alias (1) or table alias (nolock)
 	// peekIsOldStyleIndexHint is safe to use here since we're after the alias
 	if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+		lparenTok := p.curTok
+		oldNumeric := !p.peekIsTableHint() && p.peekIsOldStyleIndexHint()
+		nHintsBefore := len(ref.TableHints)
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			hint, err := p.parseTableHint()
@@ -3891,15 +4144,26 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 		if p.curTok.Type == TokenRParen {
 			p.nextToken()
 		}
+		// ScriptDom spans an old-style numeric index hint over the
+		// enclosing parentheses.
+		if oldNumeric && len(ref.TableHints) == nHintsBefore+1 {
+			if h, ok := ref.TableHints[nHintsBefore].(spannable); ok {
+				p.spanFrom(lparenTok, h)
+			}
+		}
 	}
 
 	// Check for naked HOLDLOCK/NOWAIT after alias: table alias HOLDLOCK
 	if p.curTok.Type == TokenHoldlock {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		hlHint := &ast.TableHint{HintKind: "HoldLock"}
+		p.tokSpan(hlHint, p.curTok)
+		ref.TableHints = append(ref.TableHints, hlHint)
 		p.nextToken()
 	}
 	if p.curTok.Type == TokenNowait {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		nwHint := &ast.TableHint{HintKind: "Nowait"}
+		p.tokSpan(nwHint, p.curTok)
+		ref.TableHints = append(ref.TableHints, nwHint)
 		p.nextToken()
 	}
 
@@ -3908,6 +4172,9 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 		p.nextToken() // consume WITH
 		// In WITH context, numbers are valid index hints: WITH (0)
 		if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+			lparenTok2 := p.curTok
+			oldNumeric2 := !p.peekIsTableHint() && p.peekIsOldStyleIndexHint()
+			nHintsBefore2 := len(ref.TableHints)
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
@@ -3929,14 +4196,23 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
+			// ScriptDom spans an old-style numeric index hint over the
+			// enclosing parentheses.
+			if oldNumeric2 && len(ref.TableHints) == nHintsBefore2+1 {
+				if h, ok := ref.TableHints[nHintsBefore2].(spannable); ok {
+					p.spanFrom(lparenTok2, h)
+				}
+			}
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseNamedTableReferenceWithName parses a named table reference when the schema object name has already been parsed
 func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*ast.NamedTableReference, error) {
+	astStart := p.curTok
+
 	ref := &ast.NamedTableReference{
 		SchemaObject: son,
 		ForPath:      false,
@@ -3998,11 +4274,15 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 
 	// Check for naked HOLDLOCK/NOWAIT before alias: table HOLDLOCK, table2
 	if p.curTok.Type == TokenHoldlock {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		hlHint2 := &ast.TableHint{HintKind: "HoldLock"}
+		p.tokSpan(hlHint2, p.curTok)
+		ref.TableHints = append(ref.TableHints, hlHint2)
 		p.nextToken()
 	}
 	if p.curTok.Type == TokenNowait {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		nwHint2 := &ast.TableHint{HintKind: "Nowait"}
+		p.tokSpan(nwHint2, p.curTok)
+		ref.TableHints = append(ref.TableHints, nwHint2)
 		p.nextToken()
 	}
 
@@ -4028,6 +4308,9 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 	// Check for old-style hints AFTER alias: table alias (1) or table alias (nolock)
 	// peekIsOldStyleIndexHint is safe to use here since we're after the alias
 	if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+		lparenTok := p.curTok
+		oldNumeric := !p.peekIsTableHint() && p.peekIsOldStyleIndexHint()
+		nHintsBefore := len(ref.TableHints)
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			hint, err := p.parseTableHint()
@@ -4049,15 +4332,26 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		if p.curTok.Type == TokenRParen {
 			p.nextToken()
 		}
+		// ScriptDom spans an old-style numeric index hint over the
+		// enclosing parentheses.
+		if oldNumeric && len(ref.TableHints) == nHintsBefore+1 {
+			if h, ok := ref.TableHints[nHintsBefore].(spannable); ok {
+				p.spanFrom(lparenTok, h)
+			}
+		}
 	}
 
 	// Check for naked HOLDLOCK/NOWAIT after alias: table alias HOLDLOCK
 	if p.curTok.Type == TokenHoldlock {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		hlHint := &ast.TableHint{HintKind: "HoldLock"}
+		p.tokSpan(hlHint, p.curTok)
+		ref.TableHints = append(ref.TableHints, hlHint)
 		p.nextToken()
 	}
 	if p.curTok.Type == TokenNowait {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		nwHint := &ast.TableHint{HintKind: "Nowait"}
+		p.tokSpan(nwHint, p.curTok)
+		ref.TableHints = append(ref.TableHints, nwHint)
 		p.nextToken()
 	}
 
@@ -4100,6 +4394,9 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		p.nextToken() // consume WITH
 		// In WITH context, numbers are valid index hints: WITH (0)
 		if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+			lparenTok2 := p.curTok
+			oldNumeric2 := !p.peekIsTableHint() && p.peekIsOldStyleIndexHint()
+			nHintsBefore2 := len(ref.TableHints)
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
@@ -4121,14 +4418,24 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
 			}
+			// ScriptDom spans an old-style numeric index hint over the
+			// enclosing parentheses.
+			if oldNumeric2 && len(ref.TableHints) == nHintsBefore2+1 {
+				if h, ok := ref.TableHints[nHintsBefore2].(spannable); ok {
+					p.spanFrom(lparenTok2, h)
+				}
+			}
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseTemporalClause parses a FOR SYSTEM_TIME clause for temporal tables
 func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
+	astStart := p.curTok
+	entryEnd := p.prevEndByte
+
 	clause := &ast.TemporalClause{}
 
 	p.nextToken() // consume FOR
@@ -4149,6 +4456,8 @@ func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
 			return nil, err
 		}
 		clause.StartTime = startTime
+		p.spanFromChild(clause, startTime)
+		clause.Pin()
 
 	case "BETWEEN":
 		// BETWEEN <start> AND <end>
@@ -4168,6 +4477,8 @@ func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
 			return nil, err
 		}
 		clause.EndTime = endTime
+		p.spanFromChild(clause, startTime)
+		clause.Pin()
 
 	case "FROM":
 		// FROM <start> TO <end>
@@ -4187,6 +4498,8 @@ func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
 			return nil, err
 		}
 		clause.EndTime = endTime
+		p.spanFromChild(clause, startTime)
+		clause.Pin()
 
 	case "CONTAINED":
 		// CONTAINED IN (<start>, <end>)
@@ -4214,42 +4527,62 @@ func (p *Parser) parseTemporalClause() (*ast.TemporalClause, error) {
 			return nil, err
 		}
 		clause.EndTime = endTime
+		p.spanFromChild(clause, startTime)
+		clause.Pin()
 		if p.curTok.Type != TokenRParen {
 			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
+		// ScriptDom ends the enclosing table reference, FROM clause and
+		// query specification before this closing parenthesis, so do not
+		// let it advance the recorded end position.
+		savedEnd := p.prevEndByte
 		p.nextToken() // consume )
+		p.prevEndByte = savedEnd
 
 	case "ALL":
-		// ALL
+		// ALL has no source position in ScriptDom, and the enclosing table
+		// reference, FROM clause and query specification end before the
+		// whole FOR SYSTEM_TIME ALL clause.
 		p.nextToken() // consume ALL
 		clause.TemporalClauseType = "TemporalAll"
+		p.prevEndByte = entryEnd
 
 	default:
 		return nil, fmt.Errorf("unexpected temporal clause type: %s", p.curTok.Literal)
 	}
 
-	return clause, nil
+	if clause.Pinned() {
+		return clause, nil
+	}
+	if clause.TemporalClauseType == "TemporalAll" {
+		return clause, nil
+	}
+	return spanned(p, clause, astStart), nil
 }
 
 // parseTemporalTimeValue parses a time value in a temporal clause (string literal or variable)
 func (p *Parser) parseTemporalTimeValue() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
 		lit, err := p.parseStringLiteral()
 		if err != nil {
 			return nil, err
 		}
-		return lit, nil
+		return spanned(p, lit, astStart), nil
 	}
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
-		varRef := &ast.VariableReference{Name: p.curTok.Literal}
+		varRef := p.spanVarRef(p.curTok.Literal)
 		p.nextToken()
-		return varRef, nil
+		return spanned(p, varRef, astStart), nil
 	}
 	return nil, fmt.Errorf("expected string literal or variable for temporal time, got %s", p.curTok.Literal)
 }
 
 // parseFullTextTableReference parses CONTAINSTABLE or FREETEXTTABLE
 func (p *Parser) parseFullTextTableReference(funcType string) (*ast.FullTextTableReference, error) {
+	astStart := p.curTok
+
 	ref := &ast.FullTextTableReference{
 		ForPath: false,
 	}
@@ -4281,14 +4614,18 @@ func (p *Parser) parseFullTextTableReference(funcType string) (*ast.FullTextTabl
 
 	// Parse column specification - could be *, (columns), or PROPERTY(column, 'property')
 	if p.curTok.Type == TokenStar {
-		ref.Columns = []*ast.ColumnReferenceExpression{{ColumnType: "Wildcard"}}
+		starCol := &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}
+		p.tokSpan(starCol, p.curTok)
+		ref.Columns = []*ast.ColumnReferenceExpression{starCol}
 		p.nextToken()
 	} else if p.curTok.Type == TokenLParen {
 		// Column list
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			if p.curTok.Type == TokenStar {
-				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				starCol := &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}
+				p.tokSpan(starCol, p.curTok)
+				ref.Columns = append(ref.Columns, starCol)
 				p.nextToken()
 			} else {
 				col := p.parseIdentifier()
@@ -4408,11 +4745,13 @@ func (p *Parser) parseFullTextTableReference(funcType string) (*ast.FullTextTabl
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseSemanticTableReference parses SEMANTICKEYPHRASETABLE, SEMANTICSIMILARITYTABLE, or SEMANTICSIMILARITYDETAILSTABLE
 func (p *Parser) parseSemanticTableReference(funcType string) (*ast.SemanticTableReference, error) {
+	astStart := p.curTok
+
 	ref := &ast.SemanticTableReference{
 		ForPath: false,
 	}
@@ -4447,24 +4786,31 @@ func (p *Parser) parseSemanticTableReference(funcType string) (*ast.SemanticTabl
 
 	// Parse column specification - could be *, (columns), or single column
 	if p.curTok.Type == TokenStar {
-		ref.Columns = []*ast.ColumnReferenceExpression{{ColumnType: "Wildcard"}}
+		wc := &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}
+		p.tokSpan(wc, p.curTok)
+		ref.Columns = []*ast.ColumnReferenceExpression{wc}
 		p.nextToken()
 	} else if p.curTok.Type == TokenLParen {
 		// Column list
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			if p.curTok.Type == TokenStar {
-				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				wc := &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}
+				p.tokSpan(wc, p.curTok)
+				ref.Columns = append(ref.Columns, wc)
 				p.nextToken()
 			} else {
+				colTok := p.curTok
 				col := p.parseIdentifier()
-				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{
+				colRef := &ast.ColumnReferenceExpression{
 					ColumnType: "Regular",
 					MultiPartIdentifier: &ast.MultiPartIdentifier{
 						Identifiers: []*ast.Identifier{col},
 						Count:       1,
 					},
-				})
+				}
+				p.spanFrom(colTok, colRef)
+				ref.Columns = append(ref.Columns, colRef)
 			}
 			if p.curTok.Type == TokenComma {
 				p.nextToken()
@@ -4542,38 +4888,40 @@ func (p *Parser) parseSemanticTableReference(funcType string) (*ast.SemanticTabl
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseSimpleExpression parses a simple expression (including unary minus for negative numbers)
 func (p *Parser) parseSimpleExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	if p.curTok.Type == TokenMinus {
 		p.nextToken() // consume -
 		expr, err := p.parsePrimaryExpression()
 		if err != nil {
 			return nil, err
 		}
-		return &ast.UnaryExpression{
+		return spanned(p, &ast.UnaryExpression{
 			UnaryExpressionType: "Negative",
 			Expression:          expr,
-		}, nil
+		}, astStart), nil
 	}
-	return p.parsePrimaryExpression()
+	spanV55, spanErr55 := p.parsePrimaryExpression()
+	return spanned(p, spanV55, astStart), spanErr55
 }
 
 // parseTableHint parses a single table hint
 func (p *Parser) parseTableHint() (ast.TableHintType, error) {
+	astStart := p.curTok
+
 	// Handle old-style numeric index hint (just a number like "0" or "1")
 	if p.curTok.Type == TokenNumber {
 		hint := &ast.IndexTableHint{
 			HintKind: "Index",
 			IndexValues: []*ast.IdentifierOrValueExpression{
 				{
-					Value: p.curTok.Literal,
-					ValueExpression: &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					},
+					Value:           p.curTok.Literal,
+					ValueExpression: p.intLitFromToken(p.curTok),
 				},
 			},
 		}
@@ -4583,27 +4931,21 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 			p.nextToken()
 			if p.curTok.Type == TokenNumber {
 				hint.IndexValues = append(hint.IndexValues, &ast.IdentifierOrValueExpression{
-					Value: p.curTok.Literal,
-					ValueExpression: &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					},
+					Value:           p.curTok.Literal,
+					ValueExpression: p.intLitFromToken(p.curTok),
 				})
 				p.nextToken()
 			} else if p.curTok.Type == TokenIdent {
 				hint.IndexValues = append(hint.IndexValues, &ast.IdentifierOrValueExpression{
-					Value: p.curTok.Literal,
-					Identifier: &ast.Identifier{
-						Value:     p.curTok.Literal,
-						QuoteType: "NotQuoted",
-					},
+					Value:      p.curTok.Literal,
+					Identifier: p.spanIdent(p.curTok.Literal, "NotQuoted"),
 				})
 				p.nextToken()
 			} else {
 				break
 			}
 		}
-		return hint, nil
+		return spanned(p, hint, astStart), nil
 	}
 
 	hintName := strings.ToUpper(p.curTok.Literal)
@@ -4620,27 +4962,21 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 			var iov *ast.IdentifierOrValueExpression
 			if p.curTok.Type == TokenNumber {
 				iov = &ast.IdentifierOrValueExpression{
-					Value: p.curTok.Literal,
-					ValueExpression: &ast.IntegerLiteral{
-						LiteralType: "Integer",
-						Value:       p.curTok.Literal,
-					},
+					Value:           p.curTok.Literal,
+					ValueExpression: p.intLitFromToken(p.curTok),
 				}
 				p.nextToken()
 			} else if p.curTok.Type == TokenIdent {
 				iov = &ast.IdentifierOrValueExpression{
-					Value: p.curTok.Literal,
-					Identifier: &ast.Identifier{
-						Value:     p.curTok.Literal,
-						QuoteType: "NotQuoted",
-					},
+					Value:      p.curTok.Literal,
+					Identifier: p.spanIdent(p.curTok.Literal, "NotQuoted"),
 				}
 				p.nextToken()
 			}
 			if iov != nil {
 				hint.IndexValues = append(hint.IndexValues, iov)
 			}
-			return hint, nil
+			return spanned(p, hint, astStart), nil
 		}
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
@@ -4648,20 +4984,14 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 				var iov *ast.IdentifierOrValueExpression
 				if p.curTok.Type == TokenNumber {
 					iov = &ast.IdentifierOrValueExpression{
-						Value: p.curTok.Literal,
-						ValueExpression: &ast.IntegerLiteral{
-							LiteralType: "Integer",
-							Value:       p.curTok.Literal,
-						},
+						Value:           p.curTok.Literal,
+						ValueExpression: p.intLitFromToken(p.curTok),
 					}
 					p.nextToken()
 				} else if p.curTok.Type == TokenIdent {
 					iov = &ast.IdentifierOrValueExpression{
-						Value: p.curTok.Literal,
-						Identifier: &ast.Identifier{
-							Value:     p.curTok.Literal,
-							QuoteType: "NotQuoted",
-						},
+						Value:      p.curTok.Literal,
+						Identifier: p.spanIdent(p.curTok.Literal, "NotQuoted"),
 					}
 					p.nextToken()
 				}
@@ -4678,7 +5008,7 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 				p.nextToken()
 			}
 		}
-		return hint, nil
+		return spanned(p, hint, astStart), nil
 	}
 
 	// SPATIAL_WINDOW_MAX_CELLS hint with value
@@ -4690,13 +5020,10 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 			p.nextToken() // consume =
 		}
 		if p.curTok.Type == TokenNumber {
-			hint.Value = &ast.IntegerLiteral{
-				LiteralType: "Integer",
-				Value:       p.curTok.Literal,
-			}
+			hint.Value = p.intLitFromToken(p.curTok)
 			p.nextToken()
 		}
-		return hint, nil
+		return spanned(p, hint, astStart), nil
 	}
 
 	// FORCESEEK hint with optional index and column list
@@ -4706,26 +5033,20 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 		}
 		// Check for optional parenthesis with index and columns
 		if p.curTok.Type != TokenLParen {
-			return hint, nil
+			return spanned(p, hint, astStart), nil
 		}
 		p.nextToken() // consume (
 		// Parse index value (identifier or number)
 		if p.curTok.Type == TokenNumber {
 			hint.IndexValue = &ast.IdentifierOrValueExpression{
-				Value: p.curTok.Literal,
-				ValueExpression: &ast.IntegerLiteral{
-					LiteralType: "Integer",
-					Value:       p.curTok.Literal,
-				},
+				Value:           p.curTok.Literal,
+				ValueExpression: p.intLitFromToken(p.curTok),
 			}
 			p.nextToken()
 		} else if p.curTok.Type == TokenIdent {
 			hint.IndexValue = &ast.IdentifierOrValueExpression{
-				Value: p.curTok.Literal,
-				Identifier: &ast.Identifier{
-					Value:     p.curTok.Literal,
-					QuoteType: "NotQuoted",
-				},
+				Value:      p.curTok.Literal,
+				Identifier: p.spanIdent(p.curTok.Literal, "NotQuoted"),
 			}
 			p.nextToken()
 		}
@@ -4751,7 +5072,7 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 		if p.curTok.Type == TokenRParen {
 			p.nextToken()
 		}
-		return hint, nil
+		return spanned(p, hint, astStart), nil
 	}
 
 	// Map hint names to HintKind
@@ -4760,9 +5081,9 @@ func (p *Parser) parseTableHint() (ast.TableHintType, error) {
 		return nil, nil // Unknown hint
 	}
 
-	return &ast.TableHint{
+	return spanned(p, &ast.TableHint{
 		HintKind: hintKind,
-	}, nil
+	}, astStart), nil
 }
 
 // getTableHintKind maps SQL hint names to their AST HintKind values
@@ -4864,16 +5185,15 @@ func (p *Parser) peekIsOldStyleIndexHint() bool {
 }
 
 func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
+	astStart := p.curTok
+
 	var identifiers []*ast.Identifier
 
 	for {
 		// Handle empty parts (e.g., myDb..table means myDb.<empty>.table)
 		if p.curTok.Type == TokenDot {
 			// Add an empty identifier for the missing part
-			identifiers = append(identifiers, &ast.Identifier{
-				Value:     "",
-				QuoteType: "NotQuoted",
-			})
+			identifiers = append(identifiers, p.spanIdent("", "NotQuoted"))
 			p.nextToken() // consume dot
 			continue
 		}
@@ -4932,7 +5252,7 @@ func (p *Parser) parseSchemaObjectName() (*ast.SchemaObjectName, error) {
 		son.BaseIdentifier = identifiers[0]
 	}
 
-	return son, nil
+	return spanned(p, son, astStart), nil
 }
 
 func (p *Parser) parseOptionClause() ([]ast.OptimizerHintBase, error) {
@@ -4975,6 +5295,8 @@ func (p *Parser) parseOptionClause() ([]ast.OptimizerHintBase, error) {
 }
 
 func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
+	astStart := p.curTok
+
 	// Handle both identifiers and keywords that can appear as optimizer hints
 	// USE is a keyword (TokenUse), so we need to handle it specially
 	if p.curTok.Type == TokenUse {
@@ -4985,13 +5307,15 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.LiteralOptimizerHint{HintKind: "UsePlan", Value: value}, nil
+			h := &ast.LiteralOptimizerHint{HintKind: "UsePlan", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "HINT" {
 			p.nextToken() // consume HINT
 			return p.parseUseHintList()
 		}
-		return &ast.OptimizerHint{HintKind: "Use"}, nil
+		return p.optHint("Use", astStart), nil
 	}
 
 	// Handle keyword tokens that can be optimizer hints (ORDER, GROUP, MAXDOP, etc.)
@@ -5011,7 +5335,7 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 				p.nextToken()
 			}
 		}
-		return &ast.OptimizerHint{HintKind: hintKind}, nil
+		return p.optHint(hintKind, astStart), nil
 	}
 
 	// Handle MAXDOP keyword
@@ -5023,9 +5347,11 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.LiteralOptimizerHint{HintKind: "MaxDop", Value: value}, nil
+			h := &ast.LiteralOptimizerHint{HintKind: "MaxDop", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
-		return &ast.OptimizerHint{HintKind: "MaxDop"}, nil
+		return p.optHint("MaxDop", astStart), nil
 	}
 
 	// Handle TABLE HINT optimizer hint
@@ -5033,9 +5359,10 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		p.nextToken() // consume TABLE
 		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "HINT" {
 			p.nextToken() // consume HINT
-			return p.parseTableHintsOptimizerHint()
+			spanV57, spanErr57 := p.parseTableHintsOptimizerHint()
+			return spanned(p, spanV57, astStart), spanErr57
 		}
-		return &ast.OptimizerHint{HintKind: "Table"}, nil
+		return p.optHint("Table", astStart), nil
 	}
 
 	// Handle FAST keyword
@@ -5047,9 +5374,11 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}, nil
+			h := &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
-		return &ast.OptimizerHint{HintKind: "Fast"}, nil
+		return p.optHint("Fast", astStart), nil
 	}
 
 	if p.curTok.Type != TokenIdent && p.curTok.Type != TokenLabel {
@@ -5067,12 +5396,12 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			subUpper := strings.ToUpper(p.curTok.Literal)
 			p.nextToken()
 			if subUpper == "SIMPLE" {
-				return &ast.OptimizerHint{HintKind: "ParameterizationSimple"}, nil
+				return p.optHint("ParameterizationSimple", astStart), nil
 			} else if subUpper == "FORCED" {
-				return &ast.OptimizerHint{HintKind: "ParameterizationForced"}, nil
+				return p.optHint("ParameterizationForced", astStart), nil
 			}
 		}
-		return &ast.OptimizerHint{HintKind: "Parameterization"}, nil
+		return p.optHint("Parameterization", astStart), nil
 
 	case "MAXRECURSION":
 		p.nextToken() // consume MAXRECURSION
@@ -5080,7 +5409,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &ast.LiteralOptimizerHint{HintKind: "MaxRecursion", Value: value}, nil
+		h := &ast.LiteralOptimizerHint{HintKind: "MaxRecursion", Value: value}
+		p.spanFromChild(h, value)
+		return h, nil
 
 	case "OPTIMIZE":
 		p.nextToken() // consume OPTIMIZE
@@ -5091,24 +5422,27 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 				return p.parseOptimizeForHint()
 			} else if subUpper == "CORRELATED" {
 				p.nextToken() // consume CORRELATED
-				if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNION" {
+				hintTok := astStart
+				if strings.ToUpper(p.curTok.Literal) == "UNION" {
+					// ScriptDom positions this hint on the UNION token.
+					hintTok = p.curTok
 					p.nextToken() // consume UNION
-					if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "ALL" {
+					if strings.ToUpper(p.curTok.Literal) == "ALL" {
 						p.nextToken() // consume ALL
 					}
 				}
-				return &ast.OptimizerHint{HintKind: "OptimizeCorrelatedUnionAll"}, nil
+				return p.optHint("OptimizeCorrelatedUnionAll", hintTok), nil
 			}
 		}
-		return &ast.OptimizerHint{HintKind: "Optimize"}, nil
+		return p.optHint("Optimize", astStart), nil
 
 	case "CHECKCONSTRAINTS":
 		p.nextToken() // consume CHECKCONSTRAINTS
 		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "PLAN" {
 			p.nextToken() // consume PLAN
-			return &ast.OptimizerHint{HintKind: "CheckConstraintsPlan"}, nil
+			return p.optHint("CheckConstraintsPlan", astStart), nil
 		}
-		return &ast.OptimizerHint{HintKind: "CheckConstraints"}, nil
+		return p.optHint("CheckConstraints", astStart), nil
 
 	case "LABEL":
 		p.nextToken() // consume LABEL
@@ -5118,9 +5452,11 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.LiteralOptimizerHint{HintKind: "Label", Value: value}, nil
+			h := &ast.LiteralOptimizerHint{HintKind: "Label", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
-		return &ast.OptimizerHint{HintKind: "Label"}, nil
+		return p.optHint("Label", astStart), nil
 
 	case "MAX_GRANT_PERCENT":
 		p.nextToken() // consume MAX_GRANT_PERCENT
@@ -5130,9 +5466,11 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.LiteralOptimizerHint{HintKind: "MaxGrantPercent", Value: value}, nil
+			h := &ast.LiteralOptimizerHint{HintKind: "MaxGrantPercent", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
-		return &ast.OptimizerHint{HintKind: "MaxGrantPercent"}, nil
+		return p.optHint("MaxGrantPercent", astStart), nil
 
 	case "MIN_GRANT_PERCENT":
 		p.nextToken() // consume MIN_GRANT_PERCENT
@@ -5142,9 +5480,11 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.LiteralOptimizerHint{HintKind: "MinGrantPercent", Value: value}, nil
+			h := &ast.LiteralOptimizerHint{HintKind: "MinGrantPercent", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
-		return &ast.OptimizerHint{HintKind: "MinGrantPercent"}, nil
+		return p.optHint("MinGrantPercent", astStart), nil
 
 	case "FAST":
 		p.nextToken() // consume FAST
@@ -5154,13 +5494,15 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}, nil
+			h := &ast.LiteralOptimizerHint{HintKind: "Fast", Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
-		return &ast.OptimizerHint{HintKind: "Fast"}, nil
+		return p.optHint("Fast", astStart), nil
 
 	case "NO_PERFORMANCE_SPOOL":
 		p.nextToken() // consume NO_PERFORMANCE_SPOOL
-		return &ast.OptimizerHint{HintKind: "NoPerformanceSpool"}, nil
+		return p.optHint("NoPerformanceSpool", astStart), nil
 
 	default:
 		// Handle generic hints
@@ -5190,7 +5532,9 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}, nil
+			h := &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
 
 		// Check if this is a literal hint (LABEL = value, etc.)
@@ -5200,13 +5544,17 @@ func (p *Parser) parseOptimizerHint() (ast.OptimizerHintBase, error) {
 			if err != nil {
 				return nil, err
 			}
-			return &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}, nil
+			h := &ast.LiteralOptimizerHint{HintKind: hintKind, Value: value}
+			p.spanFromChild(h, value)
+			return h, nil
 		}
-		return &ast.OptimizerHint{HintKind: hintKind}, nil
+		return p.optHint(hintKind, astStart), nil
 	}
 }
 
 func (p *Parser) parseUseHintList() (ast.OptimizerHintBase, error) {
+	astStart := p.curTok
+
 	hint := &ast.UseHintList{
 		HintKind: "Unspecified",
 	}
@@ -5241,10 +5589,12 @@ func (p *Parser) parseUseHintList() (ast.OptimizerHintBase, error) {
 		p.nextToken()
 	}
 
-	return hint, nil
+	return spanned(p, hint, astStart), nil
 }
 
 func (p *Parser) parseTableHintsOptimizerHint() (ast.OptimizerHintBase, error) {
+	astStart := p.curTok
+
 	hint := &ast.TableHintsOptimizerHint{
 		HintKind: "TableHints",
 	}
@@ -5288,10 +5638,12 @@ func (p *Parser) parseTableHintsOptimizerHint() (ast.OptimizerHintBase, error) {
 		p.nextToken()
 	}
 
-	return hint, nil
+	return spanned(p, hint, astStart), nil
 }
 
 func (p *Parser) parseOptimizeForHint() (ast.OptimizerHintBase, error) {
+	astStart := p.curTok
+
 	hint := &ast.OptimizeForOptimizerHint{
 		HintKind:     "OptimizeFor",
 		IsForUnknown: false,
@@ -5301,7 +5653,7 @@ func (p *Parser) parseOptimizeForHint() (ast.OptimizerHintBase, error) {
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNKNOWN" {
 		p.nextToken()
 		hint.IsForUnknown = true
-		return hint, nil
+		return spanned(p, hint, astStart), nil
 	}
 
 	// Expect (
@@ -5309,6 +5661,10 @@ func (p *Parser) parseOptimizeForHint() (ast.OptimizerHintBase, error) {
 		return nil, fmt.Errorf("expected ( after OPTIMIZE FOR, got %s", p.curTok.Literal)
 	}
 	p.nextToken()
+
+	// ScriptDom spans this hint from the first pair through the closing
+	// paren, excluding "OPTIMIZE FOR (".
+	astStart = p.curTok
 
 	// Parse variable-value pairs
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
@@ -5331,19 +5687,19 @@ func (p *Parser) parseOptimizeForHint() (ast.OptimizerHintBase, error) {
 		p.nextToken()
 	}
 
-	return hint, nil
+	return spanned(p, hint, astStart), nil
 }
 
 func (p *Parser) parseVariableValuePair() (*ast.VariableValuePair, error) {
+	astStart := p.curTok
+
 	// Expect @variable (variables are TokenIdent starting with @)
 	if p.curTok.Type != TokenIdent || !strings.HasPrefix(p.curTok.Literal, "@") {
 		return nil, nil
 	}
 
 	pair := &ast.VariableValuePair{
-		Variable: &ast.VariableReference{
-			Name: p.curTok.Literal,
-		},
+		Variable:     p.spanVarRef(p.curTok.Literal),
 		IsForUnknown: false,
 	}
 	p.nextToken()
@@ -5354,7 +5710,7 @@ func (p *Parser) parseVariableValuePair() (*ast.VariableValuePair, error) {
 		if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNKNOWN" {
 			p.nextToken()
 			pair.IsForUnknown = true
-			return pair, nil
+			return spanned(p, pair, astStart), nil
 		}
 		return nil, fmt.Errorf("expected = after variable, got %s", p.curTok.Literal)
 	}
@@ -5367,7 +5723,7 @@ func (p *Parser) parseVariableValuePair() (*ast.VariableValuePair, error) {
 	}
 	pair.Value = value
 
-	return pair, nil
+	return spanned(p, pair, astStart), nil
 }
 
 // convertHintKind converts hint identifiers to their canonical names
@@ -5375,37 +5731,37 @@ func convertHintKind(hint string) string {
 	// Map common hint names
 	hintMap := map[string]string{
 		"IGNORE_NONCLUSTERED_COLUMNSTORE_INDEX": "IgnoreNonClusteredColumnStoreIndex",
-		"LABEL":                        "Label",
-		"MAX_GRANT_PERCENT":            "MaxGrantPercent",
-		"MIN_GRANT_PERCENT":            "MinGrantPercent",
-		"NO_PERFORMANCE_SPOOL":         "NoPerformanceSpool",
-		"PARAMETERIZATION":             "Parameterization",
-		"RECOMPILE":                    "Recompile",
-		"MAXRECURSION":                 "MaxRecursion",
-		"KEEPFIXED":                    "KeepFixed",
-		"KEEP":                         "Keep",
-		"EXPAND":                       "Expand",
-		"VIEWS":                        "Views",
-		"BYPASS":                       "Bypass",
-		"OPTIMIZER_QUEUE":              "OptimizerQueue",
-		"USEPLAN":                      "UsePlan",
-		"SHRINKDB":                     "ShrinkDB",
-		"ALTERCOLUMN":                  "AlterColumn",
-		"HASH":                         "Hash",
-		"ORDER":                        "Order",
-		"GROUP":                        "Group",
-		"MERGE":                        "Merge",
-		"CONCAT":                       "Concat",
-		"UNION":                        "Union",
-		"LOOP":                         "Loop",
-		"JOIN":                         "Join",
-		"FAST":                         "Fast",
-		"FORCE":                        "Force",
-		"ROBUST":                       "Robust",
-		"PLAN":                         "Plan",
-		"USE":                          "Use",
-		"SIMPLE":                       "Simple",
-		"FORCED":                       "Forced",
+		"LABEL":                                 "Label",
+		"MAX_GRANT_PERCENT":                     "MaxGrantPercent",
+		"MIN_GRANT_PERCENT":                     "MinGrantPercent",
+		"NO_PERFORMANCE_SPOOL":                  "NoPerformanceSpool",
+		"PARAMETERIZATION":                      "Parameterization",
+		"RECOMPILE":                             "Recompile",
+		"MAXRECURSION":                          "MaxRecursion",
+		"KEEPFIXED":                             "KeepFixed",
+		"KEEP":                                  "Keep",
+		"EXPAND":                                "Expand",
+		"VIEWS":                                 "Views",
+		"BYPASS":                                "Bypass",
+		"OPTIMIZER_QUEUE":                       "OptimizerQueue",
+		"USEPLAN":                               "UsePlan",
+		"SHRINKDB":                              "ShrinkDB",
+		"ALTERCOLUMN":                           "AlterColumn",
+		"HASH":                                  "Hash",
+		"ORDER":                                 "Order",
+		"GROUP":                                 "Group",
+		"MERGE":                                 "Merge",
+		"CONCAT":                                "Concat",
+		"UNION":                                 "Union",
+		"LOOP":                                  "Loop",
+		"JOIN":                                  "Join",
+		"FAST":                                  "Fast",
+		"FORCE":                                 "Force",
+		"ROBUST":                                "Robust",
+		"PLAN":                                  "Plan",
+		"USE":                                   "Use",
+		"SIMPLE":                                "Simple",
+		"FORCED":                                "Forced",
 	}
 	upper := strings.ToUpper(hint)
 	if mapped, ok := hintMap[upper]; ok {
@@ -5420,6 +5776,8 @@ func isSecondHintWordToken(t TokenType) bool {
 }
 
 func (p *Parser) parseWhereClause() (*ast.WhereClause, error) {
+	astStart := p.curTok
+
 	// Consume WHERE
 	p.nextToken()
 
@@ -5428,10 +5786,12 @@ func (p *Parser) parseWhereClause() (*ast.WhereClause, error) {
 		return nil, err
 	}
 
-	return &ast.WhereClause{SearchCondition: condition}, nil
+	return spanned(p, &ast.WhereClause{SearchCondition: condition}, astStart), nil
 }
 
 func (p *Parser) parseGroupByClause() (*ast.GroupByClause, error) {
+	astStart := p.curTok
+
 	// Consume GROUP
 	p.nextToken()
 
@@ -5477,25 +5837,30 @@ func (p *Parser) parseGroupByClause() (*ast.GroupByClause, error) {
 		}
 	}
 
-	return gbc, nil
+	return spanned(p, gbc, astStart), nil
 }
 
 // parseGroupingSpecification parses a single grouping specification
 func (p *Parser) parseGroupingSpecification() (ast.GroupingSpecification, error) {
+	astStart := p.curTok
+
 	// Check for ROLLUP (...)
 	if p.curTok.Type == TokenRollup {
-		return p.parseRollupGroupingSpecification()
+		spanV59, spanErr59 := p.parseRollupGroupingSpecification()
+		return spanned(p, spanV59, astStart), spanErr59
 	}
 
 	// Check for CUBE (...)
 	if p.curTok.Type == TokenCube {
-		return p.parseCubeGroupingSpecification()
+		spanV60, spanErr60 := p.parseCubeGroupingSpecification()
+		return spanned(p, spanV60, astStart), spanErr60
 	}
 
 	// Check for GROUPING SETS (...)
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "GROUPING" &&
 		p.peekTok.Type == TokenIdent && strings.ToUpper(p.peekTok.Literal) == "SETS" {
-		return p.parseGroupingSetsGroupingSpecification()
+		spanV61, spanErr61 := p.parseGroupingSetsGroupingSpecification()
+		return spanned(p, spanV61, astStart), spanErr61
 	}
 
 	// Check for grand total () or composite grouping (c1, c2, ...)
@@ -5504,9 +5869,10 @@ func (p *Parser) parseGroupingSpecification() (ast.GroupingSpecification, error)
 		if p.peekTok.Type == TokenRParen {
 			p.nextToken() // consume (
 			p.nextToken() // consume )
-			return &ast.GrandTotalGroupingSpecification{}, nil
+			return spanned(p, &ast.GrandTotalGroupingSpecification{}, astStart), nil
 		}
-		return p.parseCompositeGroupingSpecification()
+		spanV62, spanErr62 := p.parseCompositeGroupingSpecification()
+		return spanned(p, spanV62, astStart), spanErr62
 	}
 
 	// Regular expression grouping
@@ -5534,11 +5900,13 @@ func (p *Parser) parseGroupingSpecification() (ast.GroupingSpecification, error)
 		}
 	}
 
-	return spec, nil
+	return spanned(p, spec, astStart), nil
 }
 
 // parseRollupGroupingSpecification parses ROLLUP (c1, c2, ...)
 func (p *Parser) parseRollupGroupingSpecification() (*ast.RollupGroupingSpecification, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume ROLLUP
 
 	if p.curTok.Type != TokenLParen {
@@ -5565,11 +5933,13 @@ func (p *Parser) parseRollupGroupingSpecification() (*ast.RollupGroupingSpecific
 		p.nextToken() // consume )
 	}
 
-	return spec, nil
+	return spanned(p, spec, astStart), nil
 }
 
 // parseCubeGroupingSpecification parses CUBE (c1, c2, ...)
 func (p *Parser) parseCubeGroupingSpecification() (*ast.CubeGroupingSpecification, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume CUBE
 
 	if p.curTok.Type != TokenLParen {
@@ -5596,11 +5966,13 @@ func (p *Parser) parseCubeGroupingSpecification() (*ast.CubeGroupingSpecificatio
 		p.nextToken() // consume )
 	}
 
-	return spec, nil
+	return spanned(p, spec, astStart), nil
 }
 
 // parseGroupingSetsGroupingSpecification parses GROUPING SETS (...)
 func (p *Parser) parseGroupingSetsGroupingSpecification() (*ast.GroupingSetsGroupingSpecification, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume GROUPING
 	p.nextToken() // consume SETS
 
@@ -5628,20 +6000,24 @@ func (p *Parser) parseGroupingSetsGroupingSpecification() (*ast.GroupingSetsGrou
 		p.nextToken() // consume )
 	}
 
-	return spec, nil
+	return spanned(p, spec, astStart), nil
 }
 
 // parseGroupingSetsArgument parses an argument inside GROUPING SETS which can be
 // CUBE(...), ROLLUP(...), a column, or a parenthesized group
 func (p *Parser) parseGroupingSetsArgument() (ast.GroupingSpecification, error) {
+	astStart := p.curTok
+
 	// Check for CUBE
 	if p.curTok.Type == TokenCube {
-		return p.parseCubeGroupingSpecification()
+		spanV63, spanErr63 := p.parseCubeGroupingSpecification()
+		return spanned(p, spanV63, astStart), spanErr63
 	}
 
 	// Check for ROLLUP
 	if p.curTok.Type == TokenRollup {
-		return p.parseRollupGroupingSpecification()
+		spanV64, spanErr64 := p.parseRollupGroupingSpecification()
+		return spanned(p, spanV64, astStart), spanErr64
 	}
 
 	// Check for parenthesized group
@@ -5650,9 +6026,10 @@ func (p *Parser) parseGroupingSetsArgument() (ast.GroupingSpecification, error) 
 		if p.peekTok.Type == TokenRParen {
 			p.nextToken() // consume (
 			p.nextToken() // consume )
-			return &ast.GrandTotalGroupingSpecification{}, nil
+			return spanned(p, &ast.GrandTotalGroupingSpecification{}, astStart), nil
 		}
-		return p.parseGroupingSetsCompositeArgument()
+		spanV65, spanErr65 := p.parseGroupingSetsCompositeArgument()
+		return spanned(p, spanV65, astStart), spanErr65
 	}
 
 	// Regular expression (column reference or literal)
@@ -5661,16 +6038,20 @@ func (p *Parser) parseGroupingSetsArgument() (ast.GroupingSpecification, error) 
 		return nil, err
 	}
 
-	return &ast.ExpressionGroupingSpecification{
+	return spanned(p, &ast.ExpressionGroupingSpecification{
 		Expression:             expr,
 		DistributedAggregation: false,
-	}, nil
+	}, astStart), nil
 }
 
 // parseGroupingSetsCompositeArgument parses a parenthesized group inside GROUPING SETS
 // which can contain CUBE, ROLLUP, columns, or a mix
 func (p *Parser) parseGroupingSetsCompositeArgument() (ast.GroupingSpecification, error) {
+	astStart := p.curTok
+	_ = astStart
+
 	p.nextToken() // consume (
+	firstItemTok := p.curTok
 
 	// Check what's inside - might be CUBE, ROLLUP, or columns
 	var items []ast.GroupingSpecification
@@ -5715,19 +6096,28 @@ func (p *Parser) parseGroupingSetsCompositeArgument() (ast.GroupingSpecification
 		p.nextToken() // consume comma
 	}
 
+	// ScriptDom spans a composite inside GROUPING SETS over its contents,
+	// excluding the enclosing parentheses.
+	cgs := &ast.CompositeGroupingSpecification{Items: items}
+	p.spanFrom(firstItemTok, cgs)
+	cgs.Pin()
+
 	if p.curTok.Type == TokenRParen {
 		p.nextToken() // consume )
 	}
 
-	return &ast.CompositeGroupingSpecification{Items: items}, nil
+	return cgs, nil
 }
 
 // parseGroupingSpecificationArgument parses an argument inside ROLLUP/CUBE which can be
 // an expression or a composite grouping like (c2, c3)
 func (p *Parser) parseGroupingSpecificationArgument() (ast.GroupingSpecification, error) {
+	astStart := p.curTok
+
 	// Check for composite grouping (c1, c2)
 	if p.curTok.Type == TokenLParen {
-		return p.parseCompositeGroupingSpecification()
+		spanV66, spanErr66 := p.parseCompositeGroupingSpecification()
+		return spanned(p, spanV66, astStart), spanErr66
 	}
 
 	// Regular expression
@@ -5736,14 +6126,16 @@ func (p *Parser) parseGroupingSpecificationArgument() (ast.GroupingSpecification
 		return nil, err
 	}
 
-	return &ast.ExpressionGroupingSpecification{
+	return spanned(p, &ast.ExpressionGroupingSpecification{
 		Expression:             expr,
 		DistributedAggregation: false,
-	}, nil
+	}, astStart), nil
 }
 
 // parseCompositeGroupingSpecification parses (c1, c2, ...)
 func (p *Parser) parseCompositeGroupingSpecification() (*ast.CompositeGroupingSpecification, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume (
 
 	spec := &ast.CompositeGroupingSpecification{}
@@ -5769,10 +6161,12 @@ func (p *Parser) parseCompositeGroupingSpecification() (*ast.CompositeGroupingSp
 		p.nextToken() // consume )
 	}
 
-	return spec, nil
+	return spanned(p, spec, astStart), nil
 }
 
 func (p *Parser) parseHavingClause() (*ast.HavingClause, error) {
+	astStart := p.curTok
+
 	// Consume HAVING
 	p.nextToken()
 
@@ -5781,10 +6175,12 @@ func (p *Parser) parseHavingClause() (*ast.HavingClause, error) {
 		return nil, err
 	}
 
-	return &ast.HavingClause{SearchCondition: condition}, nil
+	return spanned(p, &ast.HavingClause{SearchCondition: condition}, astStart), nil
 }
 
 func (p *Parser) parseOrderByClause() (*ast.OrderByClause, error) {
+	astStart := p.curTok
+
 	// Consume ORDER
 	p.nextToken()
 
@@ -5816,6 +6212,8 @@ func (p *Parser) parseOrderByClause() (*ast.OrderByClause, error) {
 			p.nextToken()
 		}
 
+		p.spanFromChild(elem, expr)
+
 		obc.OrderByElements = append(obc.OrderByElements, elem)
 
 		if p.curTok.Type != TokenComma {
@@ -5824,11 +6222,13 @@ func (p *Parser) parseOrderByClause() (*ast.OrderByClause, error) {
 		p.nextToken() // consume comma
 	}
 
-	return obc, nil
+	return spanned(p, obc, astStart), nil
 }
 
 // parseOffsetClause parses OFFSET n ROWS FETCH NEXT/FIRST m ROWS ONLY
 func (p *Parser) parseOffsetClause() (*ast.OffsetClause, error) {
+	astStart := p.curTok
+
 	// Consume OFFSET
 	p.nextToken()
 
@@ -5876,14 +6276,19 @@ func (p *Parser) parseOffsetClause() (*ast.OffsetClause, error) {
 		}
 	}
 
-	return oc, nil
+	return spanned(p, oc, astStart), nil
 }
 
 func (p *Parser) parseBooleanExpression() (ast.BooleanExpression, error) {
-	return p.parseBooleanOrExpression()
+	astStart := p.curTok
+
+	spanV67, spanErr67 := p.parseBooleanOrExpression()
+	return spanned(p, spanV67, astStart), spanErr67
 }
 
 func (p *Parser) parseBooleanOrExpression() (ast.BooleanExpression, error) {
+	astStart := p.curTok
+
 	left, err := p.parseBooleanAndExpression()
 	if err != nil {
 		return nil, err
@@ -5902,12 +6307,17 @@ func (p *Parser) parseBooleanOrExpression() (ast.BooleanExpression, error) {
 			FirstExpression:      left,
 			SecondExpression:     right,
 		}
+		if bbe, ok := left.(*ast.BooleanBinaryExpression); ok {
+			p.pinBinaryFromPinnedChild(bbe)
+		}
 	}
 
-	return left, nil
+	return spanned(p, left, astStart), nil
 }
 
 func (p *Parser) parseBooleanAndExpression() (ast.BooleanExpression, error) {
+	astStart := p.curTok
+
 	left, err := p.parseBooleanPrimaryExpression()
 	if err != nil {
 		return nil, err
@@ -5926,12 +6336,17 @@ func (p *Parser) parseBooleanAndExpression() (ast.BooleanExpression, error) {
 			FirstExpression:      left,
 			SecondExpression:     right,
 		}
+		if bbe, ok := left.(*ast.BooleanBinaryExpression); ok {
+			p.pinBinaryFromPinnedChild(bbe)
+		}
 	}
 
-	return left, nil
+	return spanned(p, left, astStart), nil
 }
 
 func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) {
+	astStart := p.curTok
+
 	// Check for NOT before other predicates (NOT EXISTS, NOT MATCH, etc.)
 	if p.curTok.Type == TokenNot {
 		p.nextToken() // consume NOT
@@ -5939,23 +6354,26 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		if err != nil {
 			return nil, err
 		}
-		return &ast.BooleanNotExpression{Expression: inner}, nil
+		return spanned(p, &ast.BooleanNotExpression{Expression: inner}, astStart), nil
 	}
 
 	// Check for CONTAINS/FREETEXT predicates
 	if p.curTok.Type == TokenIdent {
 		upper := strings.ToUpper(p.curTok.Literal)
 		if upper == "CONTAINS" || upper == "FREETEXT" {
-			return p.parseFullTextPredicate(upper)
+			spanV68, spanErr68 := p.parseFullTextPredicate(upper)
+			return spanned(p, spanV68, astStart), spanErr68
 		}
 		if upper == "EXISTS" {
-			return p.parseExistsPredicate()
+			spanV69, spanErr69 := p.parseExistsPredicate()
+			return spanned(p, spanV69, astStart), spanErr69
 		}
 		if upper == "MATCH" {
 			return p.parseGraphMatchPredicate()
 		}
 		if upper == "TSEQUAL" {
-			return p.parseTSEqualPredicate()
+			spanV70, spanErr70 := p.parseTSEqualPredicate()
+			return spanned(p, spanV70, astStart), spanErr70
 		}
 		if upper == "NOT" {
 			// Handle NOT followed by MATCH, EXISTS, etc.
@@ -5964,7 +6382,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			if err != nil {
 				return nil, err
 			}
-			return &ast.BooleanNotExpression{Expression: inner}, nil
+			return spanned(p, &ast.BooleanNotExpression{Expression: inner}, astStart), nil
 		}
 	}
 
@@ -5981,7 +6399,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		}
 		p.nextToken() // consume )
 
-		return &ast.UpdateCall{Identifier: ident}, nil
+		return spanned(p, &ast.UpdateCall{Identifier: ident}, astStart), nil
 	}
 
 	// Check for parenthesized expression - could be boolean or scalar subquery
@@ -5989,6 +6407,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		// Peek ahead to see if it's a subquery (SELECT)
 		if p.peekTok.Type == TokenSelect {
 			// Parse as scalar subquery that will be used in a comparison
+			lparenTok := p.curTok
 			p.nextToken() // consume (
 			qe, err := p.parseQueryExpression()
 			if err != nil {
@@ -6000,10 +6419,14 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			p.nextToken() // consume )
 
 			subquery := &ast.ScalarSubquery{QueryExpression: qe}
+			// ScriptDom spans the subquery over its parentheses.
+			p.spanFrom(lparenTok, subquery)
+			subquery.Pin()
 
 			// Now check for comparison operators
 			if p.isComparisonOperator() {
-				return p.parseComparisonAfterLeft(subquery)
+				spanV71, spanErr71 := p.parseComparisonAfterLeft(subquery)
+				return spanned(p, spanV71, astStart), spanErr71
 			}
 			// If no comparison, this might be used in other contexts
 			// For now, treat it as an error if used standalone
@@ -6031,15 +6454,18 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 
 			// Wrap the scalar in a ParenthesisExpression
 			parenExpr := &ast.ParenthesisExpression{Expression: placeholder.Scalar}
+			p.spanFrom(astStart, parenExpr)
 
 			// Check for comparison operators after the parenthesized expression
 			if p.isComparisonOperator() {
-				return p.parseComparisonAfterLeft(parenExpr)
+				spanV72, spanErr72 := p.parseComparisonAfterLeft(parenExpr)
+				return spanned(p, spanV72, astStart), spanErr72
 			}
 
 			// Check for IS NULL / IS NOT NULL
 			if p.curTok.Type == TokenIs {
-				return p.parseIsNullAfterLeft(parenExpr)
+				spanV73, spanErr73 := p.parseIsNullAfterLeft(parenExpr)
+				return spanned(p, spanV73, astStart), spanErr73
 			}
 
 			// Check for NOT before IN/LIKE/BETWEEN
@@ -6050,13 +6476,16 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			}
 
 			if p.curTok.Type == TokenIn {
-				return p.parseInExpressionAfterLeft(parenExpr, notDefined)
+				spanV74, spanErr74 := p.parseInExpressionAfterLeft(parenExpr, notDefined)
+				return spanned(p, spanV74, astStart), spanErr74
 			}
 			if p.curTok.Type == TokenLike {
-				return p.parseLikeExpressionAfterLeft(parenExpr, notDefined)
+				spanV75, spanErr75 := p.parseLikeExpressionAfterLeft(parenExpr, notDefined)
+				return spanned(p, spanV75, astStart), spanErr75
 			}
 			if p.curTok.Type == TokenBetween {
-				return p.parseBetweenExpressionAfterLeft(parenExpr, notDefined)
+				spanV76, spanErr76 := p.parseBetweenExpressionAfterLeft(parenExpr, notDefined)
+				return spanned(p, spanV76, astStart), spanErr76
 			}
 
 			if notDefined {
@@ -6072,7 +6501,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		}
 		p.nextToken() // consume )
 
-		return &ast.BooleanParenthesisExpression{Expression: inner}, nil
+		return spanned(p, &ast.BooleanParenthesisExpression{Expression: inner}, astStart), nil
 	}
 
 	// Parse left scalar expression
@@ -6111,10 +6540,10 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 				p.nextToken() // consume NULL
 				// IS NOT DISTINCT FROM NULL = IS NULL (IsNot: false)
 				// IS DISTINCT FROM NULL = IS NOT NULL (IsNot: true)
-				return &ast.BooleanIsNullExpression{
+				return spanned(p, &ast.BooleanIsNullExpression{
 					IsNot:      !isNot,
 					Expression: left,
-				}, nil
+				}, astStart), nil
 			}
 
 			// Check for SOME/ANY/ALL (subquery)
@@ -6129,6 +6558,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 				if p.curTok.Type != TokenLParen {
 					return nil, fmt.Errorf("expected ( after %s, got %s", upperLit, p.curTok.Literal)
 				}
+				subqLParen := p.curTok
 				p.nextToken() // consume (
 
 				subqueryExpr, err := p.parseQueryExpression()
@@ -6146,12 +6576,14 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 					compType = "IsNotDistinctFrom"
 				}
 
-				return &ast.SubqueryComparisonPredicate{
+				subq := &ast.ScalarSubquery{QueryExpression: subqueryExpr}
+				p.spanFrom(subqLParen, subq)
+				return spanned(p, &ast.SubqueryComparisonPredicate{
 					Expression:                      left,
 					ComparisonType:                  compType,
-					Subquery:                        &ast.ScalarSubquery{QueryExpression: subqueryExpr},
+					Subquery:                        subq,
 					SubqueryComparisonPredicateType: predicateType,
-				}, nil
+				}, astStart), nil
 			}
 
 			// Parse the second expression
@@ -6160,11 +6592,11 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 				return nil, err
 			}
 
-			return &ast.DistinctPredicate{
+			return spanned(p, &ast.DistinctPredicate{
 				FirstExpression:  left,
 				SecondExpression: secondExpr,
 				IsNot:            isNot,
-			}, nil
+			}, astStart), nil
 		}
 
 		if p.curTok.Type != TokenNull {
@@ -6172,10 +6604,10 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		}
 		p.nextToken() // consume NULL
 
-		return &ast.BooleanIsNullExpression{
+		return spanned(p, &ast.BooleanIsNullExpression{
 			IsNot:      isNot,
 			Expression: left,
-		}, nil
+		}, astStart), nil
 	}
 
 	// Check for IN expression
@@ -6185,6 +6617,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		if p.curTok.Type != TokenLParen {
 			return nil, fmt.Errorf("expected ( after IN, got %s", p.curTok.Literal)
 		}
+		inLParen := p.curTok
 		p.nextToken() // consume (
 
 		// Check if it's a subquery or value list
@@ -6197,11 +6630,14 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 			}
 			p.nextToken() // consume )
-			return &ast.BooleanInExpression{
+			inExpr := &ast.BooleanInExpression{
 				Expression: left,
 				NotDefined: notDefined,
 				Subquery:   subquery,
-			}, nil
+			}
+			// The synthesized ScalarSubquery spans the parentheses.
+			p.spanFrom(inLParen, &inExpr.SubqueryFragment)
+			return spanned(p, inExpr, astStart), nil
 		}
 
 		// Parse value list
@@ -6221,11 +6657,11 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume )
-		return &ast.BooleanInExpression{
+		return spanned(p, &ast.BooleanInExpression{
 			Expression: left,
 			NotDefined: notDefined,
 			Values:     values,
-		}, nil
+		}, astStart), nil
 	}
 
 	// Check for LIKE expression
@@ -6264,13 +6700,13 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 			}
 		}
 
-		return &ast.BooleanLikeExpression{
+		return spanned(p, &ast.BooleanLikeExpression{
 			FirstExpression:  left,
 			SecondExpression: pattern,
 			EscapeExpression: escapeExpr,
 			NotDefined:       notDefined,
 			OdbcEscape:       odbcEscape,
-		}, nil
+		}, astStart), nil
 	}
 
 	// Check for BETWEEN expression
@@ -6296,12 +6732,12 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		if notDefined {
 			ternaryType = "NotBetween"
 		}
-		return &ast.BooleanTernaryExpression{
+		return spanned(p, &ast.BooleanTernaryExpression{
 			TernaryExpressionType: ternaryType,
 			FirstExpression:       left,
 			SecondExpression:      low,
 			ThirdExpression:       high,
-		}, nil
+		}, astStart), nil
 	}
 
 	// If we saw NOT but didn't get IN/LIKE/BETWEEN, error
@@ -6345,7 +6781,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		// We're at ) without a comparison operator - this happens when parsing
 		// a parenthesized scalar expression like (XACT_STATE()) in a boolean context.
 		// Return a special marker that the caller can handle.
-		return &ast.BooleanScalarPlaceholder{Scalar: left}, nil
+		return spanned(p, &ast.BooleanScalarPlaceholder{Scalar: left}, astStart), nil
 	default:
 		return nil, fmt.Errorf("expected comparison operator, got %s", p.curTok.Literal)
 	}
@@ -6357,11 +6793,11 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		return nil, err
 	}
 
-	return &ast.BooleanComparisonExpression{
+	return spanned(p, &ast.BooleanComparisonExpression{
 		ComparisonType:   compType,
 		FirstExpression:  left,
 		SecondExpression: right,
-	}, nil
+	}, astStart), nil
 }
 
 // isComparisonOperator checks if the current token is a comparison operator
@@ -6386,6 +6822,8 @@ func (p *Parser) isComparisonOperator() bool {
 
 // parseComparisonAfterLeft parses a comparison expression after the left operand is already parsed
 func (p *Parser) parseComparisonAfterLeft(left ast.ScalarExpression) (ast.BooleanExpression, error) {
+	astStart := p.curTok
+
 	var compType string
 	switch p.curTok.Type {
 	case TokenEquals:
@@ -6428,20 +6866,23 @@ func (p *Parser) parseComparisonAfterLeft(left ast.ScalarExpression) (ast.Boolea
 		return nil, err
 	}
 
-	return &ast.BooleanComparisonExpression{
+	return spanned(p, &ast.BooleanComparisonExpression{
 		ComparisonType:   compType,
 		FirstExpression:  left,
 		SecondExpression: right,
-	}, nil
+	}, astStart), nil
 }
 
 // parseInExpressionAfterLeft parses an IN expression after the left operand is already parsed
 func (p *Parser) parseInExpressionAfterLeft(left ast.ScalarExpression, notDefined bool) (ast.BooleanExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume IN
 
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after IN, got %s", p.curTok.Literal)
 	}
+	inLParen := p.curTok
 	p.nextToken() // consume (
 
 	// Check if it's a subquery or value list
@@ -6454,11 +6895,14 @@ func (p *Parser) parseInExpressionAfterLeft(left ast.ScalarExpression, notDefine
 			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume )
-		return &ast.BooleanInExpression{
+		inExpr := &ast.BooleanInExpression{
 			Expression: left,
 			NotDefined: notDefined,
 			Subquery:   subquery,
-		}, nil
+		}
+		// The synthesized ScalarSubquery spans the parentheses.
+		p.spanFrom(inLParen, &inExpr.SubqueryFragment)
+		return spanned(p, inExpr, astStart), nil
 	}
 
 	// Parse value list
@@ -6478,15 +6922,17 @@ func (p *Parser) parseInExpressionAfterLeft(left ast.ScalarExpression, notDefine
 		return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 	}
 	p.nextToken() // consume )
-	return &ast.BooleanInExpression{
+	return spanned(p, &ast.BooleanInExpression{
 		Expression: left,
 		NotDefined: notDefined,
 		Values:     values,
-	}, nil
+	}, astStart), nil
 }
 
 // parseLikeExpressionAfterLeft parses a LIKE expression after the left operand is already parsed
 func (p *Parser) parseLikeExpressionAfterLeft(left ast.ScalarExpression, notDefined bool) (ast.BooleanExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume LIKE
 
 	pattern, err := p.parseScalarExpression()
@@ -6521,17 +6967,19 @@ func (p *Parser) parseLikeExpressionAfterLeft(left ast.ScalarExpression, notDefi
 		}
 	}
 
-	return &ast.BooleanLikeExpression{
+	return spanned(p, &ast.BooleanLikeExpression{
 		FirstExpression:  left,
 		SecondExpression: pattern,
 		EscapeExpression: escapeExpr,
 		NotDefined:       notDefined,
 		OdbcEscape:       odbcEscape,
-	}, nil
+	}, astStart), nil
 }
 
 // parseBetweenExpressionAfterLeft parses a BETWEEN expression after the left operand is already parsed
 func (p *Parser) parseBetweenExpressionAfterLeft(left ast.ScalarExpression, notDefined bool) (ast.BooleanExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume BETWEEN
 
 	low, err := p.parseScalarExpression()
@@ -6553,12 +7001,12 @@ func (p *Parser) parseBetweenExpressionAfterLeft(left ast.ScalarExpression, notD
 	if notDefined {
 		ternaryType = "NotBetween"
 	}
-	return &ast.BooleanTernaryExpression{
+	return spanned(p, &ast.BooleanTernaryExpression{
 		TernaryExpressionType: ternaryType,
 		FirstExpression:       left,
 		SecondExpression:      low,
 		ThirdExpression:       high,
-	}, nil
+	}, astStart), nil
 }
 
 // finishParenthesizedBooleanExpression finishes parsing a parenthesized boolean expression
@@ -6600,6 +7048,8 @@ func (p *Parser) finishParenthesizedBooleanExpression(inner ast.BooleanExpressio
 
 // parseIsNullAfterLeft parses IS NULL / IS NOT NULL / IS [NOT] DISTINCT FROM after the left operand is already parsed
 func (p *Parser) parseIsNullAfterLeft(left ast.ScalarExpression) (ast.BooleanExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume IS
 
 	isNot := false
@@ -6621,10 +7071,10 @@ func (p *Parser) parseIsNullAfterLeft(left ast.ScalarExpression) (ast.BooleanExp
 			p.nextToken() // consume NULL
 			// IS NOT DISTINCT FROM NULL = IS NULL (IsNot: false)
 			// IS DISTINCT FROM NULL = IS NOT NULL (IsNot: true)
-			return &ast.BooleanIsNullExpression{
+			return spanned(p, &ast.BooleanIsNullExpression{
 				IsNot:      !isNot,
 				Expression: left,
-			}, nil
+			}, astStart), nil
 		}
 
 		// Parse the second expression
@@ -6633,11 +7083,11 @@ func (p *Parser) parseIsNullAfterLeft(left ast.ScalarExpression) (ast.BooleanExp
 			return nil, err
 		}
 
-		return &ast.DistinctPredicate{
+		return spanned(p, &ast.DistinctPredicate{
 			FirstExpression:  left,
 			SecondExpression: secondExpr,
 			IsNot:            isNot,
-		}, nil
+		}, astStart), nil
 	}
 
 	if p.curTok.Type != TokenNull {
@@ -6645,10 +7095,10 @@ func (p *Parser) parseIsNullAfterLeft(left ast.ScalarExpression) (ast.BooleanExp
 	}
 	p.nextToken() // consume NULL
 
-	return &ast.BooleanIsNullExpression{
+	return spanned(p, &ast.BooleanIsNullExpression{
 		IsNot:      isNot,
 		Expression: left,
-	}, nil
+	}, astStart), nil
 }
 
 // identifiersToSchemaObjectName converts a slice of identifiers to a SchemaObjectName.
@@ -6684,9 +7134,10 @@ func identifiersToSchemaObjectName(identifiers []*ast.Identifier) *ast.SchemaObj
 
 // ======================= New Statement Parsing Functions =======================
 
-
 // parseCastCall parses a CAST expression: CAST(expression AS data_type)
 func (p *Parser) parseCastCall() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume CAST
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after CAST, got %s", p.curTok.Literal)
@@ -6728,11 +7179,13 @@ func (p *Parser) parseCastCall() (ast.ScalarExpression, error) {
 		cast.Collation = p.parseIdentifier()
 	}
 
-	return cast, nil
+	return spanned(p, cast, astStart), nil
 }
 
 // parseConvertCall parses a CONVERT expression: CONVERT(data_type, expression [, style])
 func (p *Parser) parseConvertCall() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume CONVERT
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after CONVERT, got %s", p.curTok.Literal)
@@ -6784,11 +7237,13 @@ func (p *Parser) parseConvertCall() (ast.ScalarExpression, error) {
 		convert.Collation = p.parseIdentifier()
 	}
 
-	return convert, nil
+	return spanned(p, convert, astStart), nil
 }
 
 // parseTryCastCall parses a TRY_CAST expression
 func (p *Parser) parseTryCastCall() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume TRY_CAST
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after TRY_CAST, got %s", p.curTok.Literal)
@@ -6830,11 +7285,13 @@ func (p *Parser) parseTryCastCall() (ast.ScalarExpression, error) {
 		cast.Collation = p.parseIdentifier()
 	}
 
-	return cast, nil
+	return spanned(p, cast, astStart), nil
 }
 
 // parseTryConvertCall parses a TRY_CONVERT expression
 func (p *Parser) parseTryConvertCall() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume TRY_CONVERT
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after TRY_CONVERT, got %s", p.curTok.Literal)
@@ -6886,11 +7343,13 @@ func (p *Parser) parseTryConvertCall() (ast.ScalarExpression, error) {
 		convert.Collation = p.parseIdentifier()
 	}
 
-	return convert, nil
+	return spanned(p, convert, astStart), nil
 }
 
 // parseNullIfExpression parses a NULLIF(expr1, expr2) expression
 func (p *Parser) parseNullIfExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume NULLIF
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after NULLIF, got %s", p.curTok.Literal)
@@ -6921,14 +7380,16 @@ func (p *Parser) parseNullIfExpression() (ast.ScalarExpression, error) {
 	}
 	p.nextToken() // consume )
 
-	return &ast.NullIfExpression{
+	return spanned(p, &ast.NullIfExpression{
 		FirstExpression:  first,
 		SecondExpression: second,
-	}, nil
+	}, astStart), nil
 }
 
 // parseCoalesceExpression parses a COALESCE(expr1, expr2, ...) expression
 func (p *Parser) parseCoalesceExpression() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume COALESCE
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after COALESCE, got %s", p.curTok.Literal)
@@ -6958,13 +7419,15 @@ func (p *Parser) parseCoalesceExpression() (ast.ScalarExpression, error) {
 	}
 	p.nextToken() // consume )
 
-	return &ast.CoalesceExpression{
+	return spanned(p, &ast.CoalesceExpression{
 		Expressions: expressions,
-	}, nil
+	}, astStart), nil
 }
 
 // parseIdentityFunctionCall parses an IDENTITY function call: IDENTITY(data_type [, seed, increment])
 func (p *Parser) parseIdentityFunctionCall() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume IDENTITY
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after IDENTITY, got %s", p.curTok.Literal)
@@ -7009,11 +7472,13 @@ func (p *Parser) parseIdentityFunctionCall() (ast.ScalarExpression, error) {
 	}
 	p.nextToken() // consume )
 
-	return identity, nil
+	return spanned(p, identity, astStart), nil
 }
 
 // parseLeftFunctionCall parses LEFT(string, count)
 func (p *Parser) parseLeftFunctionCall() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	// Already consumed LEFT, now on (
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after LEFT, got %s", p.curTok.Literal)
@@ -7042,11 +7507,13 @@ func (p *Parser) parseLeftFunctionCall() (ast.ScalarExpression, error) {
 	}
 	p.nextToken() // consume )
 
-	return &ast.LeftFunctionCall{Parameters: params}, nil
+	return spanned(p, &ast.LeftFunctionCall{Parameters: params}, astStart), nil
 }
 
 // parseRightFunctionCall parses RIGHT(string, count)
 func (p *Parser) parseRightFunctionCall() (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	// Already consumed RIGHT, now on (
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after RIGHT, got %s", p.curTok.Literal)
@@ -7075,12 +7542,14 @@ func (p *Parser) parseRightFunctionCall() (ast.ScalarExpression, error) {
 	}
 	p.nextToken() // consume )
 
-	return &ast.RightFunctionCall{Parameters: params}, nil
+	return spanned(p, &ast.RightFunctionCall{Parameters: params}, astStart), nil
 }
 
 // parsePredictTableReference parses PREDICT(...) in FROM clause
 // PREDICT(MODEL = expression, DATA = table AS alias, RUNTIME=ident) WITH (columns) AS alias
 func (p *Parser) parsePredictTableReference() (*ast.PredictTableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume PREDICT
 
 	ref := &ast.PredictTableReference{
@@ -7106,6 +7575,7 @@ func (p *Parser) parsePredictTableReference() (*ast.PredictTableReference, error
 			// MODEL can be a subquery or variable
 			if p.curTok.Type == TokenLParen {
 				// Subquery
+				parenTok := p.curTok
 				p.nextToken() // consume (
 				qe, err := p.parseQueryExpression()
 				if err != nil {
@@ -7115,10 +7585,12 @@ func (p *Parser) parsePredictTableReference() (*ast.PredictTableReference, error
 					return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 				}
 				p.nextToken() // consume )
-				ref.ModelVariable = &ast.ScalarSubquery{QueryExpression: qe}
+				ss := &ast.ScalarSubquery{QueryExpression: qe}
+				p.spanFrom(parenTok, ss)
+				ref.ModelVariable = ss
 			} else if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 				// Variable
-				ref.ModelVariable = &ast.VariableReference{Name: p.curTok.Literal}
+				ref.ModelVariable = p.spanVarRef(p.curTok.Literal)
 				p.nextToken()
 			}
 		case "DATA":
@@ -7191,11 +7663,13 @@ func (p *Parser) parsePredictTableReference() (*ast.PredictTableReference, error
 		ref.Alias = p.parseIdentifier()
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseForClause parses FOR BROWSE, FOR XML, FOR UPDATE, FOR READ ONLY clauses.
 func (p *Parser) parseForClause() (ast.ForClause, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume FOR
 
 	keyword := strings.ToUpper(p.curTok.Literal)
@@ -7203,14 +7677,19 @@ func (p *Parser) parseForClause() (ast.ForClause, error) {
 	switch keyword {
 	case "BROWSE":
 		p.nextToken() // consume BROWSE
-		return &ast.BrowseForClause{}, nil
+		return spanned(p, &ast.BrowseForClause{}, astStart), nil
 
 	case "READ":
 		p.nextToken() // consume READ
 		if strings.ToUpper(p.curTok.Literal) == "ONLY" {
+			// ScriptDom spans FOR READ ONLY on the ONLY token.
+			roClause := &ast.ReadOnlyForClause{}
+			p.tokSpan(roClause, p.curTok)
+			roClause.Pin()
 			p.nextToken() // consume ONLY
+			return roClause, nil
 		}
-		return &ast.ReadOnlyForClause{}, nil
+		return spanned(p, &ast.ReadOnlyForClause{}, astStart), nil
 
 	case "UPDATE":
 		p.nextToken() // consume UPDATE
@@ -7234,15 +7713,25 @@ func (p *Parser) parseForClause() (ast.ForClause, error) {
 				p.nextToken() // consume comma
 			}
 		}
-		return clause, nil
+		return spanned(p, clause, astStart), nil
 
 	case "XML":
 		p.nextToken() // consume XML
-		return p.parseXmlForClause()
+		optStartTok := p.curTok
+		spanV77, spanErr77 := p.parseXmlForClause()
+		if p.parenQueryDepth > 0 && spanErr77 == nil {
+			// Inside a parenthesized query ScriptDom's clause span omits
+			// the FOR XML keywords.
+			p.spanFrom(optStartTok, spanV77)
+			spanV77.Pin()
+			return spanV77, nil
+		}
+		return spanned(p, spanV77, astStart), spanErr77
 
 	case "JSON":
 		p.nextToken() // consume JSON
-		return p.parseJsonForClause()
+		spanV78, spanErr78 := p.parseJsonForClause()
+		return spanned(p, spanV78, astStart), spanErr78
 
 	default:
 		return nil, fmt.Errorf("unexpected token after FOR: %s", p.curTok.Literal)
@@ -7251,6 +7740,8 @@ func (p *Parser) parseForClause() (ast.ForClause, error) {
 
 // parseXmlForClause parses FOR XML options.
 func (p *Parser) parseXmlForClause() (*ast.XmlForClause, error) {
+	astStart := p.curTok
+
 	clause := &ast.XmlForClause{}
 
 	// Parse XML options separated by commas
@@ -7267,11 +7758,13 @@ func (p *Parser) parseXmlForClause() (*ast.XmlForClause, error) {
 		p.nextToken() // consume comma
 	}
 
-	return clause, nil
+	return spanned(p, clause, astStart), nil
 }
 
 // parseXmlForClauseOption parses a single XML FOR clause option.
 func (p *Parser) parseXmlForClauseOption() (*ast.XmlForClauseOption, error) {
+	astStart := p.curTok
+
 	option := &ast.XmlForClauseOption{}
 
 	keyword := strings.ToUpper(p.curTok.Literal)
@@ -7309,13 +7802,16 @@ func (p *Parser) parseXmlForClauseOption() (*ast.XmlForClauseOption, error) {
 			}
 		}
 	case "ELEMENTS":
-		// Check for XSINIL or ABSENT
+		// Check for XSINIL or ABSENT; ScriptDom spans these forms on the
+		// trailing keyword only.
 		nextKeyword := strings.ToUpper(p.curTok.Literal)
 		if nextKeyword == "XSINIL" {
 			option.OptionKind = "ElementsXsiNil"
+			astStart = p.curTok
 			p.nextToken() // consume XSINIL
 		} else if nextKeyword == "ABSENT" {
 			option.OptionKind = "ElementsAbsent"
+			astStart = p.curTok
 			p.nextToken() // consume ABSENT
 		} else {
 			option.OptionKind = "Elements"
@@ -7351,20 +7847,23 @@ func (p *Parser) parseXmlForClauseOption() (*ast.XmlForClauseOption, error) {
 	case "TYPE":
 		option.OptionKind = "Type"
 	case "BINARY":
-		// BINARY BASE64
+		// BINARY BASE64 - ScriptDom spans this option on BASE64 only.
 		if strings.ToUpper(p.curTok.Literal) == "BASE64" {
 			option.OptionKind = "BinaryBase64"
+			astStart = p.curTok
 			p.nextToken() // consume BASE64
 		}
 	default:
 		option.OptionKind = keyword
 	}
 
-	return option, nil
+	return spanned(p, option, astStart), nil
 }
 
 // parseJsonForClause parses FOR JSON options.
 func (p *Parser) parseJsonForClause() (*ast.JsonForClause, error) {
+	astStart := p.curTok
+
 	clause := &ast.JsonForClause{}
 
 	// Parse JSON options separated by commas
@@ -7381,11 +7880,13 @@ func (p *Parser) parseJsonForClause() (*ast.JsonForClause, error) {
 		p.nextToken() // consume comma
 	}
 
-	return clause, nil
+	return spanned(p, clause, astStart), nil
 }
 
 // parseJsonForClauseOption parses a single JSON FOR clause option.
 func (p *Parser) parseJsonForClauseOption() (*ast.JsonForClauseOption, error) {
+	astStart := p.curTok
+
 	option := &ast.JsonForClauseOption{}
 
 	keyword := strings.ToUpper(p.curTok.Literal)
@@ -7417,7 +7918,7 @@ func (p *Parser) parseJsonForClauseOption() (*ast.JsonForClauseOption, error) {
 		option.OptionKind = keyword
 	}
 
-	return option, nil
+	return spanned(p, option, astStart), nil
 }
 
 // getPseudoColumnType returns the ColumnType for pseudo columns like $identity, $action, etc.
@@ -7467,6 +7968,8 @@ func getParameterlessCallType(value string) string {
 
 // parseFullTextPredicate parses CONTAINS or FREETEXT predicates
 func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate, error) {
+	astStart := p.curTok
+
 	// Convert to PascalCase: "CONTAINS" -> "Contains", "FREETEXT" -> "FreeText"
 	pascalType := strings.ToUpper(funcType[:1]) + strings.ToLower(funcType[1:])
 	if funcType == "FREETEXT" {
@@ -7491,43 +7994,56 @@ func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			if p.curTok.Type == TokenStar {
-				pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				starCol := &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}
+				p.tokSpan(starCol, p.curTok)
+				pred.Columns = append(pred.Columns, starCol)
 				p.nextToken()
 			} else {
+				colTok := p.curTok
 				col := p.parseIdentifier()
 				// Check for pseudo column
 				pseudoType := getPseudoColumnType(col.Value)
 				if pseudoType != "" && p.curTok.Type != TokenDot {
 					// Standalone pseudo column like $identity
-					pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+					pseudoCol := &ast.ColumnReferenceExpression{
 						ColumnType: pseudoType,
-					})
+					}
+					p.tokSpan(pseudoCol, colTok)
+					pred.Columns = append(pred.Columns, pseudoCol)
 				} else if p.curTok.Type == TokenDot {
 					// Check for table.column or table.*
 					p.nextToken() // consume .
 					if p.curTok.Type == TokenStar {
 						// table.*
 						p.nextToken() // consume *
-						pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+						wcCol := &ast.ColumnReferenceExpression{
 							ColumnType: "Wildcard",
 							MultiPartIdentifier: &ast.MultiPartIdentifier{
 								Identifiers: []*ast.Identifier{col},
 								Count:       1,
 							},
-						})
+						}
+						// Spans table.* including the star.
+						p.spanFrom(colTok, wcCol)
+						wcCol.Pin()
+						pred.Columns = append(pred.Columns, wcCol)
 					} else {
 						// table.column or table.$identity
 						col2 := p.parseIdentifier()
 						pseudoType2 := getPseudoColumnType(col2.Value)
 						if pseudoType2 != "" {
 							// table.$identity - pseudo column with table prefix
-							pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
+							psCol := &ast.ColumnReferenceExpression{
 								ColumnType: pseudoType2,
 								MultiPartIdentifier: &ast.MultiPartIdentifier{
 									Identifiers: []*ast.Identifier{col},
 									Count:       1,
 								},
-							})
+							}
+							// Spans through the pseudo column name.
+							p.spanFrom(colTok, psCol)
+							psCol.Pin()
+							pred.Columns = append(pred.Columns, psCol)
 						} else {
 							pred.Columns = append(pred.Columns, &ast.ColumnReferenceExpression{
 								ColumnType: "Regular",
@@ -7595,40 +8111,51 @@ func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate
 		p.nextToken() // consume )
 	} else {
 		// Single column or table.column or table.*
+		singleColTok := p.curTok
 		col := p.parseIdentifier()
 		// Check for pseudo column
 		pseudoType := getPseudoColumnType(col.Value)
 		if pseudoType != "" && p.curTok.Type != TokenDot {
 			// Standalone pseudo column like $identity
-			pred.Columns = []*ast.ColumnReferenceExpression{{
+			psCol := &ast.ColumnReferenceExpression{
 				ColumnType: pseudoType,
-			}}
+			}
+			p.tokSpan(psCol, singleColTok)
+			pred.Columns = []*ast.ColumnReferenceExpression{psCol}
 		} else if p.curTok.Type == TokenDot {
 			// Check for table.column or table.*
 			p.nextToken() // consume .
 			if p.curTok.Type == TokenStar {
 				// table.*
 				p.nextToken() // consume *
-				pred.Columns = []*ast.ColumnReferenceExpression{{
+				wcCol := &ast.ColumnReferenceExpression{
 					ColumnType: "Wildcard",
 					MultiPartIdentifier: &ast.MultiPartIdentifier{
 						Identifiers: []*ast.Identifier{col},
 						Count:       1,
 					},
-				}}
+				}
+				// Spans table.* including the star.
+				p.spanFrom(singleColTok, wcCol)
+				wcCol.Pin()
+				pred.Columns = []*ast.ColumnReferenceExpression{wcCol}
 			} else {
 				// table.column or table.$identity
 				col2 := p.parseIdentifier()
 				pseudoType2 := getPseudoColumnType(col2.Value)
 				if pseudoType2 != "" {
 					// table.$identity - pseudo column with table prefix
-					pred.Columns = []*ast.ColumnReferenceExpression{{
+					psCol2 := &ast.ColumnReferenceExpression{
 						ColumnType: pseudoType2,
 						MultiPartIdentifier: &ast.MultiPartIdentifier{
 							Identifiers: []*ast.Identifier{col},
 							Count:       1,
 						},
-					}}
+					}
+					// Spans through the pseudo column name.
+					p.spanFrom(singleColTok, psCol2)
+					psCol2.Pin()
+					pred.Columns = []*ast.ColumnReferenceExpression{psCol2}
 				} else {
 					pred.Columns = []*ast.ColumnReferenceExpression{{
 						ColumnType: "Regular",
@@ -7682,11 +8209,13 @@ func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate
 	}
 	p.nextToken() // consume )
 
-	return pred, nil
+	return spanned(p, pred, astStart), nil
 }
 
 // parseTSEqualPredicate parses TSEQUAL(expr1, expr2)
 func (p *Parser) parseTSEqualPredicate() (*ast.TSEqualCall, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume TSEQUAL
 
 	if p.curTok.Type != TokenLParen {
@@ -7718,19 +8247,23 @@ func (p *Parser) parseTSEqualPredicate() (*ast.TSEqualCall, error) {
 	}
 	p.nextToken() // consume )
 
-	return &ast.TSEqualCall{
+	return spanned(p, &ast.TSEqualCall{
 		FirstExpression:  first,
 		SecondExpression: second,
-	}, nil
+	}, astStart), nil
 }
 
 // parseExistsPredicate parses EXISTS (subquery)
 func (p *Parser) parseExistsPredicate() (*ast.ExistsPredicate, error) {
+	astStart := p.curTok
+	_ = astStart
+
 	p.nextToken() // consume EXISTS
 
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after EXISTS, got %s", p.curTok.Literal)
 	}
+	lparenTok := p.curTok
 	p.nextToken() // consume (
 
 	// Parse subquery
@@ -7744,11 +8277,18 @@ func (p *Parser) parseExistsPredicate() (*ast.ExistsPredicate, error) {
 	}
 	p.nextToken() // consume )
 
-	return &ast.ExistsPredicate{Subquery: subquery}, nil
+	// ScriptDom spans the predicate over the parenthesized subquery,
+	// excluding the EXISTS keyword itself.
+	pred := &ast.ExistsPredicate{Subquery: subquery}
+	p.spanFrom(lparenTok, pred)
+	pred.Pin()
+	return pred, nil
 }
 
 // parseIIfCall parses IIF(condition, true_value, false_value)
 func (p *Parser) parseIIfCall() (*ast.IIfCall, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume (
 
 	// Parse boolean predicate
@@ -7784,15 +8324,17 @@ func (p *Parser) parseIIfCall() (*ast.IIfCall, error) {
 	}
 	p.nextToken() // consume )
 
-	return &ast.IIfCall{
+	return spanned(p, &ast.IIfCall{
 		Predicate:      pred,
 		ThenExpression: thenExpr,
 		ElseExpression: elseExpr,
-	}, nil
+	}, astStart), nil
 }
 
 // parseParseCall parses PARSE(string AS type [USING culture]) or TRY_PARSE(string AS type [USING culture])
 func (p *Parser) parseParseCall(isTry bool) (ast.ScalarExpression, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume (
 
 	// Parse string value expression
@@ -7830,23 +8372,25 @@ func (p *Parser) parseParseCall(isTry bool) (ast.ScalarExpression, error) {
 	p.nextToken() // consume )
 
 	if isTry {
-		return &ast.TryParseCall{
+		return spanned(p, &ast.TryParseCall{
 			StringValue: strVal,
 			DataType:    dataType,
 			Culture:     culture,
-		}, nil
+		}, astStart), nil
 	}
-	return &ast.ParseCall{
+	return spanned(p, &ast.ParseCall{
 		StringValue: strVal,
 		DataType:    dataType,
 		Culture:     culture,
-	}, nil
+	}, astStart), nil
 }
 
 // parseJsonObjectCall parses JSON_OBJECT('key':value, 'key2':value2, ... [NULL|ABSENT ON NULL])
 func (p *Parser) parseJsonObjectCall() (*ast.FunctionCall, error) {
+	astStart := p.curTok
+
 	fc := &ast.FunctionCall{
-		FunctionName:     &ast.Identifier{Value: "JSON_OBJECT", QuoteType: "NotQuoted"},
+		FunctionName:     p.spanIdent("JSON_OBJECT", "NotQuoted"),
 		UniqueRowFilter:  "NotSpecified",
 		WithArrayWrapper: false,
 	}
@@ -7884,10 +8428,13 @@ func (p *Parser) parseJsonObjectCall() (*ast.FunctionCall, error) {
 				return nil, err
 			}
 
-			fc.JsonParameters = append(fc.JsonParameters, &ast.JsonKeyValue{
+			jkv := &ast.JsonKeyValue{
 				JsonKeyName: keyExpr,
 				JsonValue:   valueExpr,
-			})
+			}
+			// The key-value pair spans from key through value.
+			p.spanFromChild(jkv, keyExpr)
+			fc.JsonParameters = append(fc.JsonParameters, jkv)
 		} else {
 			// Just a regular parameter without colon (shouldn't happen for JSON_OBJECT)
 			fc.Parameters = append(fc.Parameters, keyExpr)
@@ -7917,13 +8464,15 @@ func (p *Parser) parseJsonObjectCall() (*ast.FunctionCall, error) {
 	}
 	p.nextToken() // consume )
 
-	return fc, nil
+	return spanned(p, fc, astStart), nil
 }
 
 // parseJsonArrayCall parses JSON_ARRAY(value1, value2, ... [NULL|ABSENT ON NULL])
 func (p *Parser) parseJsonArrayCall() (*ast.FunctionCall, error) {
+	astStart := p.curTok
+
 	fc := &ast.FunctionCall{
-		FunctionName:     &ast.Identifier{Value: "JSON_ARRAY", QuoteType: "NotQuoted"},
+		FunctionName:     p.spanIdent("JSON_ARRAY", "NotQuoted"),
 		UniqueRowFilter:  "NotSpecified",
 		WithArrayWrapper: false,
 	}
@@ -7976,7 +8525,7 @@ func (p *Parser) parseJsonArrayCall() (*ast.FunctionCall, error) {
 	}
 	p.nextToken() // consume )
 
-	return fc, nil
+	return spanned(p, fc, astStart), nil
 }
 
 // peekIsOnNull checks if the next tokens are "ON NULL"
@@ -7988,6 +8537,8 @@ func (p *Parser) peekIsOnNull() bool {
 
 // parseChangeTableReference parses CHANGETABLE(CHANGES ...) or CHANGETABLE(VERSION ...)
 func (p *Parser) parseChangeTableReference() (ast.TableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume CHANGETABLE
 
 	if p.curTok.Type != TokenLParen {
@@ -7997,9 +8548,11 @@ func (p *Parser) parseChangeTableReference() (ast.TableReference, error) {
 
 	upper := strings.ToUpper(p.curTok.Literal)
 	if upper == "CHANGES" {
-		return p.parseChangeTableChangesReference()
+		spanV79, spanErr79 := p.parseChangeTableChangesReference()
+		return spanned(p, spanV79, astStart), spanErr79
 	} else if upper == "VERSION" {
-		return p.parseChangeTableVersionReference()
+		spanV80, spanErr80 := p.parseChangeTableVersionReference()
+		return spanned(p, spanV80, astStart), spanErr80
 	}
 
 	return nil, fmt.Errorf("expected CHANGES or VERSION after CHANGETABLE(, got %s", p.curTok.Literal)
@@ -8007,6 +8560,8 @@ func (p *Parser) parseChangeTableReference() (ast.TableReference, error) {
 
 // parseChangeTableChangesReference parses CHANGETABLE(CHANGES table, version [, FORCESEEK])
 func (p *Parser) parseChangeTableChangesReference() (*ast.ChangeTableChangesTableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume CHANGES
 
 	ref := &ast.ChangeTableChangesTableReference{
@@ -8071,11 +8626,13 @@ func (p *Parser) parseChangeTableChangesReference() (*ast.ChangeTableChangesTabl
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseChangeTableVersionReference parses CHANGETABLE(VERSION table, (cols), (vals) [, FORCESEEK])
 func (p *Parser) parseChangeTableVersionReference() (*ast.ChangeTableVersionTableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume VERSION
 
 	ref := &ast.ChangeTableVersionTableReference{
@@ -8177,12 +8734,14 @@ func (p *Parser) parseChangeTableVersionReference() (*ast.ChangeTableVersionTabl
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseOverClause parses an OVER clause after a function call
 // Handles both: OVER Win1 and OVER (PARTITION BY c1 ORDER BY c2 ROWS ...)
 func (p *Parser) parseOverClause() (*ast.OverClause, error) {
+	astStart := p.curTok
+
 	// Current token should be OVER, consume it
 	p.nextToken() // consume OVER
 
@@ -8193,7 +8752,7 @@ func (p *Parser) parseOverClause() (*ast.OverClause, error) {
 		// It's OVER WindowName
 		if p.curTok.Type == TokenIdent || p.curTok.Type == TokenLBracket {
 			overClause.WindowName = p.parseIdentifier()
-			return overClause, nil
+			return spanned(p, overClause, astStart), nil
 		}
 		return nil, fmt.Errorf("expected ( or window name after OVER, got %s", p.curTok.Literal)
 	}
@@ -8261,11 +8820,13 @@ func (p *Parser) parseOverClause() (*ast.OverClause, error) {
 	}
 	p.nextToken() // consume )
 
-	return overClause, nil
+	return spanned(p, overClause, astStart), nil
 }
 
 // parseWindowFrameClause parses ROWS/RANGE ... BETWEEN ... AND ...
 func (p *Parser) parseWindowFrameClause() (*ast.WindowFrameClause, error) {
+	astStart := p.curTok
+
 	frame := &ast.WindowFrameClause{}
 
 	// Parse ROWS or RANGE
@@ -8307,11 +8868,25 @@ func (p *Parser) parseWindowFrameClause() (*ast.WindowFrameClause, error) {
 		frame.Top = top
 	}
 
+	spanned(p, frame, astStart)
+	// The frame clause ends where its last delimiter ends (a CURRENT ROW
+	// delimiter ends at CURRENT, excluding ROW).
+	last := frame.Bottom
+	if last == nil {
+		last = frame.Top
+	}
+	if last != nil && last.Frag().HasSpan() && frame.Frag().HasSpan() {
+		if e := last.Frag().EndOffset(); e < frame.Frag().EndOffset() {
+			frame.Frag().FragmentLength = e - frame.Frag().StartOffset
+		}
+	}
 	return frame, nil
 }
 
 // parseWindowDelimiter parses UNBOUNDED PRECEDING/FOLLOWING, CURRENT ROW, n PRECEDING/FOLLOWING
 func (p *Parser) parseWindowDelimiter() (*ast.WindowDelimiter, error) {
+	astStart := p.curTok
+
 	delim := &ast.WindowDelimiter{}
 
 	upperLit := strings.ToUpper(p.curTok.Literal)
@@ -8323,6 +8898,9 @@ func (p *Parser) parseWindowDelimiter() (*ast.WindowDelimiter, error) {
 		}
 		p.nextToken() // consume ROW
 		delim.WindowDelimiterType = "CurrentRow"
+		// ScriptDom positions CURRENT ROW on the CURRENT keyword alone.
+		p.tokSpan(delim, astStart)
+		return delim, nil
 	} else if upperLit == "UNBOUNDED" {
 		p.nextToken() // consume UNBOUNDED
 		upperDir := strings.ToUpper(p.curTok.Literal)
@@ -8353,17 +8931,21 @@ func (p *Parser) parseWindowDelimiter() (*ast.WindowDelimiter, error) {
 		p.nextToken()
 	}
 
-	return delim, nil
+	return spanned(p, delim, astStart), nil
 }
 
 // parseWindowClause parses WINDOW Win1 AS (...), Win2 AS (...)
 func (p *Parser) parseWindowClause() (*ast.WindowClause, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume WINDOW
 
 	clause := &ast.WindowClause{}
+	firstDefTok := p.curTok
 
 	for {
 		def := &ast.WindowDefinition{}
+		defStartTok := p.curTok
 
 		// Parse window name
 		def.WindowName = p.parseIdentifier()
@@ -8434,6 +9016,8 @@ func (p *Parser) parseWindowClause() (*ast.WindowClause, error) {
 		}
 		p.nextToken() // consume )
 
+		// The definition spans the name through the closing parenthesis.
+		p.spanFrom(defStartTok, def)
 		clause.WindowDefinition = append(clause.WindowDefinition, def)
 
 		// Check for comma (more window definitions)
@@ -8443,12 +9027,19 @@ func (p *Parser) parseWindowClause() (*ast.WindowClause, error) {
 		p.nextToken() // consume ,
 	}
 
+	// ScriptDom spans the WINDOW clause over its definitions, excluding
+	// the WINDOW keyword itself.
+	p.spanFrom(firstDefTok, clause)
+	clause.Pin()
+	_ = astStart
 	return clause, nil
 }
 
 // parsePivotedTableReference parses PIVOT clause
 // Syntax: table PIVOT (aggregate_func(columns) FOR pivot_column IN (value1, value2, ...)) AS alias
 func (p *Parser) parsePivotedTableReference(tableRef ast.TableReference) (*ast.PivotedTableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume PIVOT
 
 	if p.curTok.Type != TokenLParen {
@@ -8555,11 +9146,19 @@ func (p *Parser) parsePivotedTableReference(tableRef ast.TableReference) (*ast.P
 		pivoted.Alias = p.parseIdentifier()
 	}
 
-	return pivoted, nil
+	// ScriptDom spans the pivoted reference from its base table.
+	if ts, ok := tableRef.(spannable); ok && ts.Frag().HasSpan() {
+		p.spanFromChild(pivoted, tableRef)
+		pivoted.Pin()
+		return pivoted, nil
+	}
+	return spanned(p, pivoted, astStart), nil
 }
 
 // parseUnpivotedTableReference parses UNPIVOT clause
 func (p *Parser) parseUnpivotedTableReference(tableRef ast.TableReference) (*ast.UnpivotedTableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume UNPIVOT
 
 	if p.curTok.Type != TokenLParen {
@@ -8630,12 +9229,14 @@ func (p *Parser) parseUnpivotedTableReference(tableRef ast.TableReference) (*ast
 		unpivoted.Alias = p.parseIdentifier()
 	}
 
-	return unpivoted, nil
+	return spanned(p, unpivoted, astStart), nil
 }
 
 // parseTableSampleClause parses a TABLESAMPLE clause
 // Syntax: TABLESAMPLE [SYSTEM] (expression [PERCENT | ROWS]) [REPEATABLE (seed)]
 func (p *Parser) parseTableSampleClause() (*ast.TableSampleClause, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume TABLESAMPLE
 
 	clause := &ast.TableSampleClause{
@@ -8699,12 +9300,14 @@ func (p *Parser) parseTableSampleClause() (*ast.TableSampleClause, error) {
 		p.nextToken() // consume )
 	}
 
-	return clause, nil
+	return spanned(p, clause, astStart), nil
 }
 
 // parseBuiltInFunctionTableReference parses a built-in function table reference
 // Syntax: ::function_name(parameters) [AS alias [(column_list)]]
 func (p *Parser) parseBuiltInFunctionTableReference() (*ast.BuiltInFunctionTableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume ::
 
 	ref := &ast.BuiltInFunctionTableReference{
@@ -8770,11 +9373,13 @@ func (p *Parser) parseBuiltInFunctionTableReference() (*ast.BuiltInFunctionTable
 		}
 	}
 
-	return ref, nil
+	return spanned(p, ref, astStart), nil
 }
 
 // parseAdHocTableReference parses OPENDATASOURCE('provider', 'connstr').'object'
 func (p *Parser) parseAdHocTableReference() (*ast.AdHocTableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume OPENDATASOURCE
 
 	if p.curTok.Type != TokenLParen {
@@ -8816,6 +9421,10 @@ func (p *Parser) parseAdHocTableReference() (*ast.AdHocTableReference, error) {
 		ProviderName: providerName,
 		InitString:   initString,
 	}
+	// ScriptDom spans the data source from the OPENDATASOURCE keyword
+	// through the closing parenthesis.
+	p.spanFrom(astStart, dataSource)
+	dataSource.Pin()
 
 	// Expect dot followed by object
 	if p.curTok.Type != TokenDot {
@@ -8825,6 +9434,7 @@ func (p *Parser) parseAdHocTableReference() (*ast.AdHocTableReference, error) {
 
 	// Parse the object - could be a string or schema object name
 	var obj *ast.SchemaObjectNameOrValueExpression
+	objTok := p.curTok
 	if p.curTok.Type == TokenString {
 		expr, err := p.parseScalarExpression()
 		if err != nil {
@@ -8842,6 +9452,7 @@ func (p *Parser) parseAdHocTableReference() (*ast.AdHocTableReference, error) {
 			SchemaObjectName: son,
 		}
 	}
+	p.spanFrom(objTok, obj)
 
 	result := &ast.AdHocTableReference{
 		DataSource: dataSource,
@@ -8863,10 +9474,12 @@ func (p *Parser) parseAdHocTableReference() (*ast.AdHocTableReference, error) {
 		}
 	}
 
-	return result, nil
+	return spanned(p, result, astStart), nil
 }
 
 func (p *Parser) parseOpenXmlTableReference() (*ast.OpenXmlTableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume OPENXML
 
 	if p.curTok.Type != TokenLParen {
@@ -8962,10 +9575,12 @@ func (p *Parser) parseOpenXmlTableReference() (*ast.OpenXmlTableReference, error
 		}
 	}
 
-	return result, nil
+	return spanned(p, result, astStart), nil
 }
 
 func (p *Parser) parseSchemaDeclarationItem() (*ast.SchemaDeclarationItem, error) {
+	astStart := p.curTok
+
 	// Parse column name
 	colName := p.parseIdentifier()
 
@@ -8994,10 +9609,12 @@ func (p *Parser) parseSchemaDeclarationItem() (*ast.SchemaDeclarationItem, error
 		item.Mapping = mapping
 	}
 
-	return item, nil
+	return spanned(p, item, astStart), nil
 }
 
 func (p *Parser) parseOpenQueryTableReference() (*ast.OpenQueryTableReference, error) {
+	astStart := p.curTok
+
 	p.nextToken() // consume OPENQUERY
 
 	if p.curTok.Type != TokenLParen {
@@ -9044,5 +9661,5 @@ func (p *Parser) parseOpenQueryTableReference() (*ast.OpenQueryTableReference, e
 		}
 	}
 
-	return result, nil
+	return spanned(p, result, astStart), nil
 }

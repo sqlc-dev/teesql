@@ -2,6 +2,7 @@ package ast
 
 // DenyStatement represents a DENY statement
 type DenyStatement struct {
+	Fragment
 	Permissions          []*Permission
 	Principals           []*SecurityPrincipal
 	CascadeOption        bool

@@ -2,6 +2,7 @@ package ast
 
 // DropServerRoleStatement represents a DROP SERVER ROLE statement.
 type DropServerRoleStatement struct {
+	Fragment
 	Name       *Identifier
 	IsIfExists bool
 }

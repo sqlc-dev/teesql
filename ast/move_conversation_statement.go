@@ -1,6 +1,7 @@
 package ast
 
 type MoveConversationStatement struct {
+	Fragment
 	Conversation ScalarExpression `json:"Conversation,omitempty"`
 	Group        ScalarExpression `json:"Group,omitempty"`
 }

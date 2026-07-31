@@ -2,6 +2,7 @@ package ast
 
 // BooleanLikeExpression represents a LIKE expression.
 type BooleanLikeExpression struct {
+	Fragment
 	FirstExpression  ScalarExpression
 	SecondExpression ScalarExpression
 	EscapeExpression ScalarExpression

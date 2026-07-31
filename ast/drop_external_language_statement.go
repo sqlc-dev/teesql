@@ -2,6 +2,7 @@ package ast
 
 // DropExternalLanguageStatement represents a DROP EXTERNAL LANGUAGE statement.
 type DropExternalLanguageStatement struct {
+	Fragment
 	Name          *Identifier
 	Authorization *Identifier
 	IsIfExists    bool

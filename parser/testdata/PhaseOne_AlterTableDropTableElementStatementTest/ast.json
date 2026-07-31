@@ -1,36 +1,77 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 42,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 42,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "AlterTableDropTableElementStatement",
+          "StartOffset": 0,
+          "FragmentLength": 42,
+          "StartLine": 1,
+          "StartColumn": 1,
           "AlterTableDropTableElements": [
             {
               "$type": "AlterTableDropTableElement",
-              "IsIfExists": false,
+              "StartOffset": 40,
+              "FragmentLength": 2,
+              "StartLine": 1,
+              "StartColumn": 41,
+              "TableElementType": "Column",
               "Name": {
                 "$type": "Identifier",
-                "QuoteType": "NotQuoted",
-                "Value": "c1"
+                "StartOffset": 40,
+                "FragmentLength": 2,
+                "StartLine": 1,
+                "StartColumn": 41,
+                "Value": "c1",
+                "QuoteType": "NotQuoted"
               },
-              "TableElementType": "Column"
+              "IsIfExists": false
             }
           ],
           "SchemaObjectName": {
             "$type": "SchemaObjectName",
-            "BaseIdentifier": {
-              "$type": "Identifier",
-              "QuoteType": "NotQuoted",
-              "Value": "t1"
-            },
-            "Count": 3,
+            "StartOffset": 12,
+            "FragmentLength": 15,
+            "StartLine": 1,
+            "StartColumn": 13,
             "DatabaseIdentifier": {
               "$type": "Identifier",
-              "QuoteType": "SquareBracket",
-              "Value": "master"
+              "StartOffset": 12,
+              "FragmentLength": 8,
+              "StartLine": 1,
+              "StartColumn": 13,
+              "Value": "master",
+              "QuoteType": "SquareBracket"
             },
+            "SchemaIdentifier": {
+              "$type": "Identifier",
+              "StartOffset": 21,
+              "FragmentLength": 3,
+              "StartLine": 1,
+              "StartColumn": 22,
+              "Value": "dbo",
+              "QuoteType": "NotQuoted"
+            },
+            "BaseIdentifier": {
+              "$type": "Identifier",
+              "StartOffset": 25,
+              "FragmentLength": 2,
+              "StartLine": 1,
+              "StartColumn": 26,
+              "Value": "t1",
+              "QuoteType": "NotQuoted"
+            },
+            "Count": 3,
             "Identifiers": [
               {
                 "$ref": "Identifier"
@@ -41,12 +82,7 @@
               {
                 "$ref": "Identifier"
               }
-            ],
-            "SchemaIdentifier": {
-              "$type": "Identifier",
-              "QuoteType": "NotQuoted",
-              "Value": "dbo"
-            }
+            ]
           }
         }
       ]

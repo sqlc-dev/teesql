@@ -1,30 +1,66 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 196,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 194,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "WhileStatement",
+          "StartOffset": 0,
+          "FragmentLength": 57,
+          "StartLine": 1,
+          "StartColumn": 1,
           "Predicate": {
             "$type": "BooleanComparisonExpression",
+            "StartOffset": 6,
+            "FragmentLength": 7,
+            "StartLine": 1,
+            "StartColumn": 7,
             "ComparisonType": "GreaterThan",
             "FirstExpression": {
               "$type": "VariableReference",
+              "StartOffset": 6,
+              "FragmentLength": 2,
+              "StartLine": 1,
+              "StartColumn": 7,
               "Name": "@a"
             },
             "SecondExpression": {
               "$type": "IntegerLiteral",
+              "StartOffset": 11,
+              "FragmentLength": 2,
+              "StartLine": 1,
+              "StartColumn": 12,
               "LiteralType": "Integer",
               "Value": "10"
             }
           },
           "Statement": {
             "$type": "CreateTableStatement",
+            "StartOffset": 18,
+            "FragmentLength": 39,
+            "StartLine": 2,
+            "StartColumn": 5,
             "SchemaObjectName": {
               "$type": "SchemaObjectName",
+              "StartOffset": 31,
+              "FragmentLength": 2,
+              "StartLine": 2,
+              "StartColumn": 18,
               "BaseIdentifier": {
                 "$type": "Identifier",
+                "StartOffset": 31,
+                "FragmentLength": 2,
+                "StartLine": 2,
+                "StartColumn": 18,
                 "Value": "t1",
                 "QuoteType": "NotQuoted"
               },
@@ -40,25 +76,49 @@
             "AsNode": false,
             "Definition": {
               "$type": "TableDefinition",
+              "StartOffset": 44,
+              "FragmentLength": 6,
+              "StartLine": 3,
+              "StartColumn": 9,
               "ColumnDefinitions": [
                 {
                   "$type": "ColumnDefinition",
+                  "StartOffset": 44,
+                  "FragmentLength": 6,
+                  "StartLine": 3,
+                  "StartColumn": 9,
                   "IsPersisted": false,
                   "IsRowGuidCol": false,
                   "IsHidden": false,
                   "IsMasked": false,
                   "ColumnIdentifier": {
                     "$type": "Identifier",
+                    "StartOffset": 44,
+                    "FragmentLength": 2,
+                    "StartLine": 3,
+                    "StartColumn": 9,
                     "Value": "c1",
                     "QuoteType": "NotQuoted"
                   },
                   "DataType": {
                     "$type": "SqlDataTypeReference",
+                    "StartOffset": 47,
+                    "FragmentLength": 3,
+                    "StartLine": 3,
+                    "StartColumn": 12,
                     "SqlDataTypeOption": "Int",
                     "Name": {
                       "$type": "SchemaObjectName",
+                      "StartOffset": 47,
+                      "FragmentLength": 3,
+                      "StartLine": 3,
+                      "StartColumn": 12,
                       "BaseIdentifier": {
                         "$type": "Identifier",
+                        "StartOffset": 47,
+                        "FragmentLength": 3,
+                        "StartLine": 3,
+                        "StartColumn": 12,
                         "Value": "INT",
                         "QuoteType": "NotQuoted"
                       },
@@ -77,65 +137,133 @@
         },
         {
           "$type": "WhileStatement",
+          "StartOffset": 59,
+          "FragmentLength": 135,
+          "StartLine": 6,
+          "StartColumn": 1,
           "Predicate": {
             "$type": "BooleanComparisonExpression",
+            "StartOffset": 65,
+            "FragmentLength": 7,
+            "StartLine": 6,
+            "StartColumn": 7,
             "ComparisonType": "GreaterThan",
             "FirstExpression": {
               "$type": "VariableReference",
+              "StartOffset": 65,
+              "FragmentLength": 2,
+              "StartLine": 6,
+              "StartColumn": 7,
               "Name": "@a"
             },
             "SecondExpression": {
               "$type": "IntegerLiteral",
+              "StartOffset": 70,
+              "FragmentLength": 2,
+              "StartLine": 6,
+              "StartColumn": 12,
               "LiteralType": "Integer",
               "Value": "10"
             }
           },
           "Statement": {
             "$type": "BeginEndBlockStatement",
+            "StartOffset": 77,
+            "FragmentLength": 117,
+            "StartLine": 7,
+            "StartColumn": 5,
             "StatementList": {
               "$type": "StatementList",
               "Statements": [
                 {
                   "$type": "IfStatement",
+                  "StartOffset": 91,
+                  "FragmentLength": 95,
+                  "StartLine": 8,
+                  "StartColumn": 9,
                   "Predicate": {
                     "$type": "BooleanParenthesisExpression",
+                    "StartOffset": 94,
+                    "FragmentLength": 9,
+                    "StartLine": 8,
+                    "StartColumn": 12,
                     "Expression": {
                       "$type": "BooleanComparisonExpression",
+                      "StartOffset": 95,
+                      "FragmentLength": 7,
+                      "StartLine": 8,
+                      "StartColumn": 13,
                       "ComparisonType": "GreaterThan",
                       "FirstExpression": {
                         "$type": "VariableReference",
+                        "StartOffset": 95,
+                        "FragmentLength": 2,
+                        "StartLine": 8,
+                        "StartColumn": 13,
                         "Name": "@b"
                       },
                       "SecondExpression": {
                         "$type": "IntegerLiteral",
+                        "StartOffset": 100,
+                        "FragmentLength": 2,
+                        "StartLine": 8,
+                        "StartColumn": 18,
                         "LiteralType": "Integer",
                         "Value": "10"
                       }
                     }
                   },
                   "ThenStatement": {
-                    "$type": "BreakStatement"
+                    "$type": "BreakStatement",
+                    "StartOffset": 116,
+                    "FragmentLength": 6,
+                    "StartLine": 9,
+                    "StartColumn": 13
                   },
                   "ElseStatement": {
                     "$type": "IfStatement",
+                    "StartOffset": 148,
+                    "FragmentLength": 38,
+                    "StartLine": 11,
+                    "StartColumn": 13,
                     "Predicate": {
                       "$type": "BooleanParenthesisExpression",
+                      "StartOffset": 151,
+                      "FragmentLength": 9,
+                      "StartLine": 11,
+                      "StartColumn": 16,
                       "Expression": {
                         "$type": "BooleanComparisonExpression",
+                        "StartOffset": 152,
+                        "FragmentLength": 7,
+                        "StartLine": 11,
+                        "StartColumn": 17,
                         "ComparisonType": "Equals",
                         "FirstExpression": {
                           "$type": "VariableReference",
+                          "StartOffset": 152,
+                          "FragmentLength": 2,
+                          "StartLine": 11,
+                          "StartColumn": 17,
                           "Name": "@c"
                         },
                         "SecondExpression": {
                           "$type": "IntegerLiteral",
+                          "StartOffset": 157,
+                          "FragmentLength": 2,
+                          "StartLine": 11,
+                          "StartColumn": 22,
                           "LiteralType": "Integer",
                           "Value": "20"
                         }
                       }
                     },
                     "ThenStatement": {
-                      "$type": "ContinueStatement"
+                      "$type": "ContinueStatement",
+                      "StartOffset": 177,
+                      "FragmentLength": 9,
+                      "StartLine": 12,
+                      "StartColumn": 17
                     }
                   }
                 }

@@ -2,6 +2,7 @@ package ast
 
 // AlterAuthorizationStatement represents an ALTER AUTHORIZATION statement
 type AlterAuthorizationStatement struct {
+	Fragment
 	SecurityTargetObject *SecurityTargetObject
 	ToSchemaOwner        bool
 	PrincipalName        *Identifier

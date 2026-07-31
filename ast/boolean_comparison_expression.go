@@ -2,6 +2,7 @@ package ast
 
 // BooleanComparisonExpression represents a comparison expression.
 type BooleanComparisonExpression struct {
+	Fragment
 	ComparisonType   string           `json:"ComparisonType,omitempty"`
 	FirstExpression  ScalarExpression `json:"FirstExpression,omitempty"`
 	SecondExpression ScalarExpression `json:"SecondExpression,omitempty"`

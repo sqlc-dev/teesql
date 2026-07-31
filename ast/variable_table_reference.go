@@ -2,6 +2,7 @@ package ast
 
 // VariableTableReference represents a table variable reference (@var).
 type VariableTableReference struct {
+	Fragment
 	Variable *VariableReference `json:"Variable,omitempty"`
 	Alias    *Identifier        `json:"Alias,omitempty"`
 	ForPath  bool               `json:"ForPath"`

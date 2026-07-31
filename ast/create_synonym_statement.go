@@ -2,6 +2,7 @@ package ast
 
 // CreateSynonymStatement represents CREATE SYNONYM.
 type CreateSynonymStatement struct {
+	Fragment
 	Name    *SchemaObjectName
 	ForName *SchemaObjectName
 }

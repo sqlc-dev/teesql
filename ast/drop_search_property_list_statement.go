@@ -2,6 +2,7 @@ package ast
 
 // DropSearchPropertyListStatement represents a DROP SEARCH PROPERTY LIST statement.
 type DropSearchPropertyListStatement struct {
+	Fragment
 	Name       *Identifier
 	IsIfExists bool
 }

@@ -2,6 +2,7 @@ package ast
 
 // AlterTableTriggerModificationStatement represents ALTER TABLE ... ENABLE/DISABLE TRIGGER
 type AlterTableTriggerModificationStatement struct {
+	Fragment
 	SchemaObjectName   *SchemaObjectName
 	TriggerEnforcement string // "Enable" or "Disable"
 	All                bool

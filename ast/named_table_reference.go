@@ -2,6 +2,7 @@ package ast
 
 // NamedTableReference represents a named table reference.
 type NamedTableReference struct {
+	Fragment
 	SchemaObject      *SchemaObjectName  `json:"SchemaObject,omitempty"`
 	TableSampleClause *TableSampleClause `json:"TableSampleClause,omitempty"`
 	TemporalClause    *TemporalClause    `json:"TemporalClause,omitempty"`
@@ -15,6 +16,7 @@ func (*NamedTableReference) tableReference() {}
 
 // TemporalClause represents a FOR SYSTEM_TIME clause for temporal tables.
 type TemporalClause struct {
+	Fragment
 	TemporalClauseType string           `json:"TemporalClauseType,omitempty"`
 	StartTime          ScalarExpression `json:"StartTime,omitempty"`
 	EndTime            ScalarExpression `json:"EndTime,omitempty"`

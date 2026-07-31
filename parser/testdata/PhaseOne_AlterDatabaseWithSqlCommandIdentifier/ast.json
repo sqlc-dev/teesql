@@ -1,13 +1,44 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 44,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 44,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
-          "$type": "AlterDatabaseSetStatement",
-          "UseCurrent": false,
-          "WithManualCutover": false
+          "$type": "AlterDatabaseAddFileGroupStatement",
+          "StartOffset": 0,
+          "FragmentLength": 44,
+          "StartLine": 1,
+          "StartColumn": 1,
+          "FileGroup": {
+            "$type": "Identifier",
+            "StartOffset": 39,
+            "FragmentLength": 5,
+            "StartLine": 1,
+            "StartColumn": 40,
+            "Value": "fg1",
+            "QuoteType": "SquareBracket"
+          },
+          "ContainsFileStream": false,
+          "ContainsMemoryOptimizedData": false,
+          "DatabaseName": {
+            "$type": "SqlCommandIdentifier",
+            "StartOffset": 15,
+            "FragmentLength": 9,
+            "StartLine": 1,
+            "StartColumn": 16,
+            "Value": "$(tempdb)",
+            "QuoteType": "NotQuoted"
+          },
+          "UseCurrent": false
         }
       ]
     }

@@ -2,6 +2,7 @@ package ast
 
 // AlterTableAlterColumnStatement represents ALTER TABLE ... ALTER COLUMN statement
 type AlterTableAlterColumnStatement struct {
+	Fragment
 	SchemaObjectName            *SchemaObjectName
 	ColumnIdentifier            *Identifier
 	DataType                    DataTypeReference

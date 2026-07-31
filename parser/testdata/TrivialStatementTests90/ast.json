@@ -1,13 +1,29 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 425,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 66,
+      "FragmentLength": 158,
+      "StartLine": 3,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "CloseSymmetricKeyStatement",
+          "StartOffset": 66,
+          "FragmentLength": 24,
+          "StartLine": 3,
+          "StartColumn": 1,
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 86,
+            "FragmentLength": 4,
+            "StartLine": 3,
+            "StartColumn": 21,
             "Value": "key1",
             "QuoteType": "NotQuoted"
           },
@@ -15,15 +31,31 @@
         },
         {
           "$type": "CloseSymmetricKeyStatement",
+          "StartOffset": 91,
+          "FragmentLength": 24,
+          "StartLine": 4,
+          "StartColumn": 1,
           "All": true
         },
         {
-          "$type": "CloseMasterKeyStatement"
+          "$type": "CloseMasterKeyStatement",
+          "StartOffset": 136,
+          "FragmentLength": 16,
+          "StartLine": 7,
+          "StartColumn": 1
         },
         {
           "$type": "OpenMasterKeyStatement",
+          "StartOffset": 173,
+          "FragmentLength": 51,
+          "StartLine": 10,
+          "StartColumn": 1,
           "Password": {
             "$type": "StringLiteral",
+            "StartOffset": 214,
+            "FragmentLength": 10,
+            "StartLine": 10,
+            "StartColumn": 42,
             "LiteralType": "String",
             "IsNational": false,
             "IsLargeObject": false,
@@ -34,22 +66,46 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 246,
+      "FragmentLength": 36,
+      "StartLine": 13,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "KillStatsJobStatement",
+          "StartOffset": 246,
+          "FragmentLength": 17,
+          "StartLine": 13,
+          "StartColumn": 1,
           "JobId": {
             "$type": "IntegerLiteral",
+            "StartOffset": 261,
+            "FragmentLength": 2,
+            "StartLine": 13,
+            "StartColumn": 16,
             "LiteralType": "Integer",
             "Value": "12"
           }
         },
         {
           "$type": "KillStatsJobStatement",
+          "StartOffset": 264,
+          "FragmentLength": 18,
+          "StartLine": 14,
+          "StartColumn": 1,
           "JobId": {
             "$type": "UnaryExpression",
+            "StartOffset": 279,
+            "FragmentLength": 3,
+            "StartLine": 14,
+            "StartColumn": 16,
             "UnaryExpressionType": "Negative",
             "Expression": {
               "$type": "IntegerLiteral",
+              "StartOffset": 280,
+              "FragmentLength": 2,
+              "StartLine": 14,
+              "StartColumn": 17,
               "LiteralType": "Integer",
               "Value": "12"
             }
@@ -59,11 +115,23 @@
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 326,
+      "FragmentLength": 80,
+      "StartLine": 17,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "KillQueryNotificationSubscriptionStatement",
+          "StartOffset": 326,
+          "FragmentLength": 39,
+          "StartLine": 17,
+          "StartColumn": 1,
           "SubscriptionId": {
             "$type": "IntegerLiteral",
+            "StartOffset": 363,
+            "FragmentLength": 2,
+            "StartLine": 17,
+            "StartColumn": 38,
             "LiteralType": "Integer",
             "Value": "12"
           },
@@ -71,17 +139,33 @@
         },
         {
           "$type": "KillQueryNotificationSubscriptionStatement",
+          "StartOffset": 366,
+          "FragmentLength": 40,
+          "StartLine": 18,
+          "StartColumn": 1,
           "All": true
         }
       ]
     },
     {
       "$type": "TSqlBatch",
+      "StartOffset": 410,
+      "FragmentLength": 13,
+      "StartLine": 20,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "CheckpointStatement",
+          "StartOffset": 410,
+          "FragmentLength": 13,
+          "StartLine": 20,
+          "StartColumn": 1,
           "Duration": {
             "$type": "IntegerLiteral",
+            "StartOffset": 421,
+            "FragmentLength": 2,
+            "StartLine": 20,
+            "StartColumn": 12,
             "LiteralType": "Integer",
             "Value": "12"
           }

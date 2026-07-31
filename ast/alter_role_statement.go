@@ -2,6 +2,7 @@ package ast
 
 // AlterRoleStatement represents an ALTER ROLE statement
 type AlterRoleStatement struct {
+	Fragment
 	Name   *Identifier
 	Action AlterRoleAction
 }
@@ -17,6 +18,7 @@ type AlterRoleAction interface {
 
 // AddMemberAlterRoleAction represents ADD MEMBER action
 type AddMemberAlterRoleAction struct {
+	Fragment
 	Member *Identifier
 }
 
@@ -25,6 +27,7 @@ func (a *AddMemberAlterRoleAction) alterRoleAction() {}
 
 // DropMemberAlterRoleAction represents DROP MEMBER action
 type DropMemberAlterRoleAction struct {
+	Fragment
 	Member *Identifier
 }
 
@@ -33,6 +36,7 @@ func (d *DropMemberAlterRoleAction) alterRoleAction() {}
 
 // RenameAlterRoleAction represents WITH NAME = action
 type RenameAlterRoleAction struct {
+	Fragment
 	NewName *Identifier
 }
 

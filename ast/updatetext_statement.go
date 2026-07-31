@@ -2,6 +2,7 @@ package ast
 
 // UpdateTextStatement represents UPDATETEXT statement.
 type UpdateTextStatement struct {
+	Fragment
 	Bulk            bool
 	Column          *ColumnReferenceExpression
 	TextId          ScalarExpression

@@ -1,21 +1,45 @@
 {
   "$type": "TSqlScript",
+  "StartOffset": 0,
+  "FragmentLength": 7252,
+  "StartLine": 1,
+  "StartColumn": 1,
   "Batches": [
     {
       "$type": "TSqlBatch",
+      "StartOffset": 0,
+      "FragmentLength": 7252,
+      "StartLine": 1,
+      "StartColumn": 1,
       "Statements": [
         {
           "$type": "CreateColumnMasterKeyStatement",
+          "StartOffset": 0,
+          "FragmentLength": 178,
+          "StartLine": 1,
+          "StartColumn": 1,
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 25,
+            "FragmentLength": 4,
+            "StartLine": 1,
+            "StartColumn": 26,
             "Value": "CMK1",
             "QuoteType": "NotQuoted"
           },
           "Parameters": [
             {
               "$type": "ColumnMasterKeyStoreProviderNameParameter",
+              "StartOffset": 68,
+              "FragmentLength": 25,
+              "StartLine": 3,
+              "StartColumn": 32,
               "Name": {
                 "$type": "StringLiteral",
+                "StartOffset": 68,
+                "FragmentLength": 25,
+                "StartLine": 3,
+                "StartColumn": 32,
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -25,8 +49,16 @@
             },
             {
               "$type": "ColumnMasterKeyPathParameter",
+              "StartOffset": 111,
+              "FragmentLength": 64,
+              "StartLine": 4,
+              "StartColumn": 17,
               "Path": {
                 "$type": "StringLiteral",
+                "StartOffset": 111,
+                "FragmentLength": 64,
+                "StartLine": 4,
+                "StartColumn": 17,
                 "LiteralType": "String",
                 "IsNational": false,
                 "IsLargeObject": false,
@@ -38,8 +70,16 @@
         },
         {
           "$type": "DropColumnMasterKeyStatement",
+          "StartOffset": 180,
+          "FragmentLength": 28,
+          "StartLine": 7,
+          "StartColumn": 1,
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 203,
+            "FragmentLength": 4,
+            "StartLine": 7,
+            "StartColumn": 24,
             "Value": "CMK1",
             "QuoteType": "NotQuoted"
           },
@@ -47,19 +87,39 @@
         },
         {
           "$type": "CreateColumnEncryptionKeyStatement",
+          "StartOffset": 210,
+          "FragmentLength": 1402,
+          "StartLine": 9,
+          "StartColumn": 1,
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 239,
+            "FragmentLength": 11,
+            "StartLine": 9,
+            "StartColumn": 30,
             "Value": "OneValueCEK",
             "QuoteType": "NotQuoted"
           },
           "ColumnEncryptionKeyValues": [
             {
               "$type": "ColumnEncryptionKeyValue",
+              "StartOffset": 270,
+              "FragmentLength": 1339,
+              "StartLine": 12,
+              "StartColumn": 6,
               "Parameters": [
                 {
                   "$type": "ColumnMasterKeyNameParameter",
+                  "StartOffset": 270,
+                  "FragmentLength": 25,
+                  "StartLine": 12,
+                  "StartColumn": 6,
                   "Name": {
                     "$type": "Identifier",
+                    "StartOffset": 290,
+                    "FragmentLength": 5,
+                    "StartLine": 12,
+                    "StartColumn": 26,
                     "Value": "MyCMK",
                     "QuoteType": "NotQuoted"
                   },
@@ -67,8 +127,16 @@
                 },
                 {
                   "$type": "ColumnEncryptionAlgorithmNameParameter",
+                  "StartOffset": 302,
+                  "FragmentLength": 22,
+                  "StartLine": 13,
+                  "StartColumn": 6,
                   "Algorithm": {
                     "$type": "StringLiteral",
+                    "StartOffset": 314,
+                    "FragmentLength": 10,
+                    "StartLine": 13,
+                    "StartColumn": 18,
                     "LiteralType": "String",
                     "IsNational": false,
                     "IsLargeObject": false,
@@ -78,8 +146,16 @@
                 },
                 {
                   "$type": "EncryptedValueParameter",
+                  "StartOffset": 331,
+                  "FragmentLength": 1278,
+                  "StartLine": 14,
+                  "StartColumn": 6,
                   "Value": {
                     "$type": "BinaryLiteral",
+                    "StartOffset": 349,
+                    "FragmentLength": 1260,
+                    "StartLine": 14,
+                    "StartColumn": 24,
                     "LiteralType": "Binary",
                     "IsLargeObject": false,
                     "Value": "0x01700000016C006F00630061006C006D0061006300680069006E0065002F006D0079002F003200660061006600640038003100320031003400340034006500620031006100320065003000360039003300340038006100350064003400300032003300380065006600620063006300610031006300284FC4316518CF3328A6D9304F65DD2CE387B79D95D077B4156E9ED8683FC0E09FA848275C685373228762B02DF2522AFF6D661782607B4A2275F2F922A5324B392C9D498E4ECFC61B79F0553EE8FB2E5A8635C4DBC0224D5A7F1B136C182DCDE32A00451F1A7AC6B4492067FD0FAC7D3D6F4AB7FC0E86614455DBB2AB37013E0A5B8B5089B180CA36D8B06CDB15E95A7D06E25AACB645D42C85B0B7EA2962BD3080B9A7CDB805C6279FE7DD6941E7EA4C2139E0D4101D8D7891076E70D433A214E82D9030CF1F40C503103075DEEB3D64537D15D244F503C2750CF940B71967F51095BFA51A85D2F764C78704CAB6F015EA87753355367C5C9F66E465C0C66BADEDFDF76FB7E5C21A0D89A2FCCA8595471F8918B1387E055FA0B816E74201CD5C50129D29C015895CD073925B6EA87CAF4A4FAF018C06A3856F5DFB724F42807543F777D82B809232B465D983E6F19DFB572BEA7B61C50154605452A891190FB5A0C4E464862CF5EFAD5E7D91F7D65AA1A78F688E69A1EB098AB42E95C674E234173CD7E0925541AD5AE7CED9A3D12FDFE6EB8EA4F8AAD2629D4F5A18BA3DDCC9CF7F352A892D4BEBDC4A1303F9C683DACD51A237E34B045EBE579A381E26B40DCFBF49EFFA6F65D17F37C6DBA54AA99A65D5573D4EB5BA038E024910A4D36B79A1D4E3C70349DADFF08FD8B4DEE77FDB57F01CB276ED5E676F1EC973154F86"
@@ -92,19 +168,39 @@
         },
         {
           "$type": "CreateColumnEncryptionKeyStatement",
+          "StartOffset": 1614,
+          "FragmentLength": 2742,
+          "StartLine": 17,
+          "StartColumn": 1,
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 1643,
+            "FragmentLength": 11,
+            "StartLine": 17,
+            "StartColumn": 30,
             "Value": "TwoValueCEK",
             "QuoteType": "NotQuoted"
           },
           "ColumnEncryptionKeyValues": [
             {
               "$type": "ColumnEncryptionKeyValue",
+              "StartOffset": 1674,
+              "FragmentLength": 1334,
+              "StartLine": 20,
+              "StartColumn": 6,
               "Parameters": [
                 {
                   "$type": "ColumnMasterKeyNameParameter",
+                  "StartOffset": 1674,
+                  "FragmentLength": 24,
+                  "StartLine": 20,
+                  "StartColumn": 6,
                   "Name": {
                     "$type": "Identifier",
+                    "StartOffset": 1694,
+                    "FragmentLength": 4,
+                    "StartLine": 20,
+                    "StartColumn": 26,
                     "Value": "CMK1",
                     "QuoteType": "NotQuoted"
                   },
@@ -112,8 +208,16 @@
                 },
                 {
                   "$type": "ColumnEncryptionAlgorithmNameParameter",
+                  "StartOffset": 1705,
+                  "FragmentLength": 22,
+                  "StartLine": 21,
+                  "StartColumn": 6,
                   "Algorithm": {
                     "$type": "StringLiteral",
+                    "StartOffset": 1717,
+                    "FragmentLength": 10,
+                    "StartLine": 21,
+                    "StartColumn": 18,
                     "LiteralType": "String",
                     "IsNational": false,
                     "IsLargeObject": false,
@@ -123,8 +227,16 @@
                 },
                 {
                   "$type": "EncryptedValueParameter",
+                  "StartOffset": 1734,
+                  "FragmentLength": 1274,
+                  "StartLine": 22,
+                  "StartColumn": 6,
                   "Value": {
                     "$type": "BinaryLiteral",
+                    "StartOffset": 1752,
+                    "FragmentLength": 1256,
+                    "StartLine": 22,
+                    "StartColumn": 24,
                     "LiteralType": "Binary",
                     "IsLargeObject": false,
                     "Value": "0x016E000001630075007200720065006E00740075007300650072002F006D0079002F0037006300380061003100310033003400320037003800620037003000630038003100390062003900630039003400360061006600340039006500610030003200650038006200650038003400340065006C33A82ECF04A7185824B4545457AC5244CD9C219E64067B9520C0081B8399B58C2863F7494ABE3694BD87D55FFD7576FFDC47C28F94ECC99577DF4FB8FA19AA95764FEF889CDE0F176DA5897B74382FBB22756CE2921050A09201A0EB6AF3D6091014C30146EA62635EE8CBF0A8074DEDFF125CEA80D1C0F5E8C58750A07D270E2A8BF824EE4C0C156366BF26D38CCE49EBDD5639A2DF029A7DBAE5A5D111F2F2FA3246DF8C2FA83C1E542C10570FADA98F6B29478DC58CE5CBDD407CCEFCDB97814525F6F32BECA266014AC346AC39C4F185C6C0F0A24FEC4DFA015649624692DE7865B9827BA22C3B574C9FD169F822B609F902288C5880EB25F14BD990D871B1BC4BA3A5B237AF76D26354773FA2A25CF4511AF58C911E601CFCB1905128C997844EED056C2AE7F0B48700AB41307E470FF9520997D0EB0D887DE11AFE574FFE845B7DC6C03FEEE8D467236368FC0CB2FDBD54DADC65B10B3DE6C80DF8B7B3F8F3CE5BE914713EE7B1FA5B7A578359592B8A5FDFDDE5FF9F392BC87C3CD02FBA94582AC063BBB9FFAC803FD489E16BEB28C4E3374A8478C737236A0B232F5A9DDE4D119573F1AEAE94B2192B81575AD6F57E670C1B2AB91045124DFDAEC2898F3F0112026DFC93BF9391D667D1AD7ED7D4E6BB119BBCEF1D1ADA589DD3E1082C3DAD13223BE438EB9574DA04E9D8A06320CAC6D3EC21D5D1C2A0AA484C7C"
@@ -135,11 +247,23 @@
             },
             {
               "$type": "ColumnEncryptionKeyValue",
+              "StartOffset": 3019,
+              "FragmentLength": 1334,
+              "StartLine": 25,
+              "StartColumn": 6,
               "Parameters": [
                 {
                   "$type": "ColumnMasterKeyNameParameter",
+                  "StartOffset": 3019,
+                  "FragmentLength": 24,
+                  "StartLine": 25,
+                  "StartColumn": 6,
                   "Name": {
                     "$type": "Identifier",
+                    "StartOffset": 3039,
+                    "FragmentLength": 4,
+                    "StartLine": 25,
+                    "StartColumn": 26,
                     "Value": "CMK2",
                     "QuoteType": "NotQuoted"
                   },
@@ -147,8 +271,16 @@
                 },
                 {
                   "$type": "ColumnEncryptionAlgorithmNameParameter",
+                  "StartOffset": 3050,
+                  "FragmentLength": 22,
+                  "StartLine": 26,
+                  "StartColumn": 6,
                   "Algorithm": {
                     "$type": "StringLiteral",
+                    "StartOffset": 3062,
+                    "FragmentLength": 10,
+                    "StartLine": 26,
+                    "StartColumn": 18,
                     "LiteralType": "String",
                     "IsNational": false,
                     "IsLargeObject": false,
@@ -158,8 +290,16 @@
                 },
                 {
                   "$type": "EncryptedValueParameter",
+                  "StartOffset": 3079,
+                  "FragmentLength": 1274,
+                  "StartLine": 27,
+                  "StartColumn": 6,
                   "Value": {
                     "$type": "BinaryLiteral",
+                    "StartOffset": 3097,
+                    "FragmentLength": 1256,
+                    "StartLine": 27,
+                    "StartColumn": 24,
                     "LiteralType": "Binary",
                     "IsLargeObject": false,
                     "Value": "0x016E000001630075007200720065006E00740075007300650072002F006D0079002F0064006500650063006200660034006100340031003000380034006200350033003200360066003200630062006200350030003600380065003900620061003000320030003600610037003800310066001DDA6134C3B73A90D349C8905782DD819B428162CF5B051639BA46EC69A7C8C8F81591A92C395711493B25DCBCCC57836E5B9F17A0713E840721D098F3F8E023ABCDFE2F6D8CC4339FC8F88630ED9EBADA5CA8EEAFA84164C1095B12AE161EABC1DF778C07F07D413AF1ED900F578FC00894BEE705EAC60F4A5090BBE09885D2EFE1C915F7B4C581D9CE3FDAB78ACF4829F85752E9FC985DEB8773889EE4A1945BD554724803A6F5DC0A2CD5EFE001ABED8D61E8449E4FAA9E4DD392DA8D292ECC6EB149E843E395CDE0F98D04940A28C4B05F747149B34A0BAEC04FFF3E304C84AF1FF81225E615B5F94E334378A0A888EF88F4E79F66CB377E3C21964AACB5049C08435FE84EEEF39D20A665C17E04898914A85B3DE23D56575EBC682D154F4F15C37723E04974DB370180A9A579BC84F6BC9B5E7C223E5CBEE721E57EE07EFDCC0A3257BBEBF9ADFFB00DBF7EF682EC1C4C47451438F90B4CF8DA709940F72CFDC91C6EB4E37B4ED7E2385B1FF71B28A1D2669FBEB18EA89F9D391D2FDDEA0ED362E6A591AC64EF4AE31CA8766C259ECB77D01A7F5C36B8418F91C1BEADDD4491C80F0016B66421B4B788C55127135DA2FA625FB7FD195FB40D90A6C67328602ECAF3EC4F5894BFD84A99EB4753BE0D22E0D4DE6A0ADFEDC80EB1B556749B4A8AD00E73B329C95827AB91C0256347E85E3C5FD6726D0E1FE82C925D3DF4A9"
@@ -172,20 +312,40 @@
         },
         {
           "$type": "AlterColumnEncryptionKeyStatement",
+          "StartOffset": 4358,
+          "FragmentLength": 1394,
+          "StartLine": 30,
+          "StartColumn": 1,
           "AlterType": "Add",
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 4386,
+            "FragmentLength": 11,
+            "StartLine": 30,
+            "StartColumn": 29,
             "Value": "OneValueCEK",
             "QuoteType": "NotQuoted"
           },
           "ColumnEncryptionKeyValues": [
             {
               "$type": "ColumnEncryptionKeyValue",
+              "StartOffset": 4415,
+              "FragmentLength": 1334,
+              "StartLine": 33,
+              "StartColumn": 6,
               "Parameters": [
                 {
                   "$type": "ColumnMasterKeyNameParameter",
+                  "StartOffset": 4415,
+                  "FragmentLength": 24,
+                  "StartLine": 33,
+                  "StartColumn": 6,
                   "Name": {
                     "$type": "Identifier",
+                    "StartOffset": 4435,
+                    "FragmentLength": 4,
+                    "StartLine": 33,
+                    "StartColumn": 26,
                     "Value": "CMK2",
                     "QuoteType": "NotQuoted"
                   },
@@ -193,8 +353,16 @@
                 },
                 {
                   "$type": "ColumnEncryptionAlgorithmNameParameter",
+                  "StartOffset": 4446,
+                  "FragmentLength": 22,
+                  "StartLine": 34,
+                  "StartColumn": 6,
                   "Algorithm": {
                     "$type": "StringLiteral",
+                    "StartOffset": 4458,
+                    "FragmentLength": 10,
+                    "StartLine": 34,
+                    "StartColumn": 18,
                     "LiteralType": "String",
                     "IsNational": false,
                     "IsLargeObject": false,
@@ -204,8 +372,16 @@
                 },
                 {
                   "$type": "EncryptedValueParameter",
+                  "StartOffset": 4475,
+                  "FragmentLength": 1274,
+                  "StartLine": 35,
+                  "StartColumn": 6,
                   "Value": {
                     "$type": "BinaryLiteral",
+                    "StartOffset": 4493,
+                    "FragmentLength": 1256,
+                    "StartLine": 35,
+                    "StartColumn": 24,
                     "LiteralType": "Binary",
                     "IsLargeObject": false,
                     "Value": "0x016E000001630075007200720065006E00740075007300650072002F006D0079002F0064006500650063006200660034006100340031003000380034006200350033003200360066003200630062006200350030003600380065003900620061003000320030003600610037003800310066001DDA6134C3B73A90D349C8905782DD819B428162CF5B051639BA46EC69A7C8C8F81591A92C395711493B25DCBCCC57836E5B9F17A0713E840721D098F3F8E023ABCDFE2F6D8CC4339FC8F88630ED9EBADA5CA8EEAFA84164C1095B12AE161EABC1DF778C07F07D413AF1ED900F578FC00894BEE705EAC60F4A5090BBE09885D2EFE1C915F7B4C581D9CE3FDAB78ACF4829F85752E9FC985DEB8773889EE4A1945BD554724803A6F5DC0A2CD5EFE001ABED8D61E8449E4FAA9E4DD392DA8D292ECC6EB149E843E395CDE0F98D04940A28C4B05F747149B34A0BAEC04FFF3E304C84AF1FF81225E615B5F94E334378A0A888EF88F4E79F66CB377E3C21964AACB5049C08435FE84EEEF39D20A665C17E04898914A85B3DE23D56575EBC682D154F4F15C37723E04974DB370180A9A579BC84F6BC9B5E7C223E5CBEE721E57EE07EFDCC0A3257BBEBF9ADFFB00DBF7EF682EC1C4C47451438F90B4CF8DA709940F72CFDC91C6EB4E37B4ED7E2385B1FF71B28A1D2669FBEB18EA89F9D391D2FDDEA0ED362E6A591AC64EF4AE31CA8766C259ECB77D01A7F5C36B8418F91C1BEADDD4491C80F0016B66421B4B788C55127135DA2FA625FB7FD195FB40D90A6C67328602ECAF3EC4F5894BFD84A99EB4753BE0D22E0D4DE6A0ADFEDC80EB1B556749B4A8AD00E73B329C95827AB91C0256347E85E3C5FD6726D0E1FE82C925D3DF4A9"
@@ -218,20 +394,40 @@
         },
         {
           "$type": "AlterColumnEncryptionKeyStatement",
+          "StartOffset": 5754,
+          "FragmentLength": 85,
+          "StartLine": 38,
+          "StartColumn": 1,
           "AlterType": "Drop",
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 5782,
+            "FragmentLength": 11,
+            "StartLine": 38,
+            "StartColumn": 29,
             "Value": "OneValueCEK",
             "QuoteType": "NotQuoted"
           },
           "ColumnEncryptionKeyValues": [
             {
               "$type": "ColumnEncryptionKeyValue",
+              "StartOffset": 5812,
+              "FragmentLength": 24,
+              "StartLine": 41,
+              "StartColumn": 6,
               "Parameters": [
                 {
                   "$type": "ColumnMasterKeyNameParameter",
+                  "StartOffset": 5812,
+                  "FragmentLength": 24,
+                  "StartLine": 41,
+                  "StartColumn": 6,
                   "Name": {
                     "$type": "Identifier",
+                    "StartOffset": 5832,
+                    "FragmentLength": 4,
+                    "StartLine": 41,
+                    "StartColumn": 26,
                     "Value": "CMK2",
                     "QuoteType": "NotQuoted"
                   },
@@ -243,8 +439,16 @@
         },
         {
           "$type": "DropColumnEncryptionKeyStatement",
+          "StartOffset": 5841,
+          "FragmentLength": 39,
+          "StartLine": 44,
+          "StartColumn": 1,
           "Name": {
             "$type": "Identifier",
+            "StartOffset": 5868,
+            "FragmentLength": 11,
+            "StartLine": 44,
+            "StartColumn": 28,
             "Value": "OneValueCEK",
             "QuoteType": "NotQuoted"
           },
@@ -252,10 +456,22 @@
         },
         {
           "$type": "CreateTableStatement",
+          "StartOffset": 5882,
+          "FragmentLength": 698,
+          "StartLine": 46,
+          "StartColumn": 1,
           "SchemaObjectName": {
             "$type": "SchemaObjectName",
+            "StartOffset": 5895,
+            "FragmentLength": 9,
+            "StartLine": 46,
+            "StartColumn": 14,
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 5895,
+              "FragmentLength": 9,
+              "StartLine": 46,
+              "StartColumn": 14,
               "Value": "Customers",
               "QuoteType": "NotQuoted"
             },
@@ -271,32 +487,60 @@
           "AsNode": false,
           "Definition": {
             "$type": "TableDefinition",
+            "StartOffset": 5911,
+            "FragmentLength": 666,
+            "StartLine": 47,
+            "StartColumn": 5,
             "ColumnDefinitions": [
               {
                 "$type": "ColumnDefinition",
+                "StartOffset": 5911,
+                "FragmentLength": 22,
+                "StartLine": 47,
+                "StartColumn": 5,
                 "IsPersisted": false,
                 "IsRowGuidCol": false,
                 "IsHidden": false,
                 "IsMasked": false,
                 "ColumnIdentifier": {
                   "$type": "Identifier",
+                  "StartOffset": 5911,
+                  "FragmentLength": 8,
+                  "StartLine": 47,
+                  "StartColumn": 5,
                   "Value": "CustName",
                   "QuoteType": "NotQuoted"
                 },
                 "DataType": {
                   "$type": "SqlDataTypeReference",
+                  "StartOffset": 5920,
+                  "FragmentLength": 13,
+                  "StartLine": 47,
+                  "StartColumn": 14,
                   "SqlDataTypeOption": "NVarChar",
                   "Parameters": [
                     {
                       "$type": "IntegerLiteral",
+                      "StartOffset": 5930,
+                      "FragmentLength": 2,
+                      "StartLine": 47,
+                      "StartColumn": 24,
                       "LiteralType": "Integer",
                       "Value": "60"
                     }
                   ],
                   "Name": {
                     "$type": "SchemaObjectName",
+                    "StartOffset": 5920,
+                    "FragmentLength": 8,
+                    "StartLine": 47,
+                    "StartColumn": 14,
                     "BaseIdentifier": {
                       "$type": "Identifier",
+                      "StartOffset": 5920,
+                      "FragmentLength": 8,
+                      "StartLine": 47,
+                      "StartColumn": 14,
                       "Value": "NVARCHAR",
                       "QuoteType": "NotQuoted"
                     },
@@ -311,16 +555,32 @@
               },
               {
                 "$type": "ColumnDefinition",
+                "StartOffset": 5939,
+                "FragmentLength": 163,
+                "StartLine": 48,
+                "StartColumn": 5,
                 "IsPersisted": false,
                 "IsRowGuidCol": false,
                 "IsHidden": false,
                 "Encryption": {
                   "$type": "ColumnEncryptionDefinition",
+                  "StartOffset": 6013,
+                  "FragmentLength": 89,
+                  "StartLine": 49,
+                  "StartColumn": 6,
                   "Parameters": [
                     {
                       "$type": "ColumnEncryptionKeyNameParameter",
+                      "StartOffset": 6013,
+                      "FragmentLength": 21,
+                      "StartLine": 49,
+                      "StartColumn": 6,
                       "Name": {
                         "$type": "Identifier",
+                        "StartOffset": 6037,
+                        "FragmentLength": 11,
+                        "StartLine": 49,
+                        "StartColumn": 30,
                         "Value": "TwoValueCEK",
                         "QuoteType": "NotQuoted"
                       },
@@ -328,13 +588,25 @@
                     },
                     {
                       "$type": "ColumnEncryptionTypeParameter",
+                      "StartOffset": 6055,
+                      "FragmentLength": 15,
+                      "StartLine": 50,
+                      "StartColumn": 6,
                       "EncryptionType": "Deterministic",
                       "ParameterKind": "EncryptionType"
                     },
                     {
                       "$type": "ColumnEncryptionAlgorithmParameter",
+                      "StartOffset": 6093,
+                      "FragmentLength": 9,
+                      "StartLine": 51,
+                      "StartColumn": 6,
                       "EncryptionAlgorithm": {
                         "$type": "StringLiteral",
+                        "StartOffset": 6105,
+                        "FragmentLength": 31,
+                        "StartLine": 51,
+                        "StartColumn": 18,
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -347,23 +619,43 @@
                 "IsMasked": false,
                 "ColumnIdentifier": {
                   "$type": "Identifier",
+                  "StartOffset": 5939,
+                  "FragmentLength": 3,
+                  "StartLine": 48,
+                  "StartColumn": 5,
                   "Value": "SSN",
                   "QuoteType": "NotQuoted"
                 },
                 "DataType": {
                   "$type": "SqlDataTypeReference",
+                  "StartOffset": 5948,
+                  "FragmentLength": 12,
+                  "StartLine": 48,
+                  "StartColumn": 14,
                   "SqlDataTypeOption": "VarChar",
                   "Parameters": [
                     {
                       "$type": "IntegerLiteral",
+                      "StartOffset": 5957,
+                      "FragmentLength": 2,
+                      "StartLine": 48,
+                      "StartColumn": 23,
                       "LiteralType": "Integer",
                       "Value": "11"
                     }
                   ],
                   "Name": {
                     "$type": "SchemaObjectName",
+                    "StartOffset": 5948,
+                    "FragmentLength": 7,
+                    "StartLine": 48,
+                    "StartColumn": 14,
                     "BaseIdentifier": {
                       "$type": "Identifier",
+                      "StartOffset": 5948,
+                      "FragmentLength": 7,
+                      "StartLine": 48,
+                      "StartColumn": 14,
                       "Value": "VARCHAR",
                       "QuoteType": "NotQuoted"
                     },
@@ -377,17 +669,29 @@
                 },
                 "Collation": {
                   "$type": "Identifier",
+                  "StartOffset": 5970,
+                  "FragmentLength": 19,
+                  "StartLine": 48,
+                  "StartColumn": 36,
                   "Value": "Latin1_General_BIN2",
                   "QuoteType": "NotQuoted"
                 }
               },
               {
                 "$type": "ColumnDefinition",
+                "StartOffset": 6148,
+                "FragmentLength": 27,
+                "StartLine": 53,
+                "StartColumn": 5,
                 "IsPersisted": false,
                 "IsRowGuidCol": false,
                 "Constraints": [
                   {
                     "$type": "NullableConstraintDefinition",
+                    "StartOffset": 6171,
+                    "FragmentLength": 4,
+                    "StartLine": 53,
+                    "StartColumn": 28,
                     "Nullable": true
                   }
                 ],
@@ -395,16 +699,32 @@
                 "IsMasked": false,
                 "ColumnIdentifier": {
                   "$type": "Identifier",
+                  "StartOffset": 6148,
+                  "FragmentLength": 3,
+                  "StartLine": 53,
+                  "StartColumn": 5,
                   "Value": "Age",
                   "QuoteType": "NotQuoted"
                 },
                 "DataType": {
                   "$type": "SqlDataTypeReference",
+                  "StartOffset": 6157,
+                  "FragmentLength": 3,
+                  "StartLine": 53,
+                  "StartColumn": 14,
                   "SqlDataTypeOption": "Int",
                   "Name": {
                     "$type": "SchemaObjectName",
+                    "StartOffset": 6157,
+                    "FragmentLength": 3,
+                    "StartLine": 53,
+                    "StartColumn": 14,
                     "BaseIdentifier": {
                       "$type": "Identifier",
+                      "StartOffset": 6157,
+                      "FragmentLength": 3,
+                      "StartLine": 53,
+                      "StartColumn": 14,
                       "Value": "INT",
                       "QuoteType": "NotQuoted"
                     },
@@ -419,16 +739,32 @@
               },
               {
                 "$type": "ColumnDefinition",
+                "StartOffset": 6181,
+                "FragmentLength": 131,
+                "StartLine": 54,
+                "StartColumn": 5,
                 "IsPersisted": false,
                 "IsRowGuidCol": false,
                 "IsHidden": false,
                 "Encryption": {
                   "$type": "ColumnEncryptionDefinition",
+                  "StartOffset": 6226,
+                  "FragmentLength": 86,
+                  "StartLine": 55,
+                  "StartColumn": 6,
                   "Parameters": [
                     {
                       "$type": "ColumnEncryptionKeyNameParameter",
+                      "StartOffset": 6226,
+                      "FragmentLength": 21,
+                      "StartLine": 55,
+                      "StartColumn": 6,
                       "Name": {
                         "$type": "Identifier",
+                        "StartOffset": 6250,
+                        "FragmentLength": 11,
+                        "StartLine": 55,
+                        "StartColumn": 30,
                         "Value": "TwoValueCEK",
                         "QuoteType": "NotQuoted"
                       },
@@ -436,13 +772,25 @@
                     },
                     {
                       "$type": "ColumnEncryptionTypeParameter",
+                      "StartOffset": 6268,
+                      "FragmentLength": 15,
+                      "StartLine": 56,
+                      "StartColumn": 6,
                       "EncryptionType": "Randomized",
                       "ParameterKind": "EncryptionType"
                     },
                     {
                       "$type": "ColumnEncryptionAlgorithmParameter",
+                      "StartOffset": 6303,
+                      "FragmentLength": 9,
+                      "StartLine": 57,
+                      "StartColumn": 6,
                       "EncryptionAlgorithm": {
                         "$type": "StringLiteral",
+                        "StartOffset": 6315,
+                        "FragmentLength": 31,
+                        "StartLine": 57,
+                        "StartColumn": 18,
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -455,23 +803,43 @@
                 "IsMasked": false,
                 "ColumnIdentifier": {
                   "$type": "Identifier",
+                  "StartOffset": 6181,
+                  "FragmentLength": 5,
+                  "StartLine": 54,
+                  "StartColumn": 5,
                   "Value": "ACTNO",
                   "QuoteType": "NotQuoted"
                 },
                 "DataType": {
                   "$type": "SqlDataTypeReference",
+                  "StartOffset": 6190,
+                  "FragmentLength": 12,
+                  "StartLine": 54,
+                  "StartColumn": 14,
                   "SqlDataTypeOption": "VarChar",
                   "Parameters": [
                     {
                       "$type": "IntegerLiteral",
+                      "StartOffset": 6199,
+                      "FragmentLength": 2,
+                      "StartLine": 54,
+                      "StartColumn": 23,
                       "LiteralType": "Integer",
                       "Value": "11"
                     }
                   ],
                   "Name": {
                     "$type": "SchemaObjectName",
+                    "StartOffset": 6190,
+                    "FragmentLength": 7,
+                    "StartLine": 54,
+                    "StartColumn": 14,
                     "BaseIdentifier": {
                       "$type": "Identifier",
+                      "StartOffset": 6190,
+                      "FragmentLength": 7,
+                      "StartLine": 54,
+                      "StartColumn": 14,
                       "Value": "VARCHAR",
                       "QuoteType": "NotQuoted"
                     },
@@ -486,27 +854,51 @@
               },
               {
                 "$type": "ColumnDefinition",
+                "StartOffset": 6379,
+                "FragmentLength": 198,
+                "StartLine": 59,
+                "StartColumn": 5,
                 "IsPersisted": false,
                 "IsRowGuidCol": false,
                 "Constraints": [
                   {
                     "$type": "NullableConstraintDefinition",
+                    "StartOffset": 6573,
+                    "FragmentLength": 4,
+                    "StartLine": 63,
+                    "StartColumn": 28,
                     "Nullable": true
                   }
                 ],
                 "StorageOptions": {
                   "$type": "ColumnStorageOptions",
+                  "StartOffset": 6392,
+                  "FragmentLength": 6,
+                  "StartLine": 59,
+                  "StartColumn": 18,
                   "IsFileStream": false,
                   "SparseOption": "Sparse"
                 },
                 "IsHidden": false,
                 "Encryption": {
                   "$type": "ColumnEncryptionDefinition",
+                  "StartOffset": 6422,
+                  "FragmentLength": 89,
+                  "StartLine": 60,
+                  "StartColumn": 6,
                   "Parameters": [
                     {
                       "$type": "ColumnEncryptionKeyNameParameter",
+                      "StartOffset": 6422,
+                      "FragmentLength": 21,
+                      "StartLine": 60,
+                      "StartColumn": 6,
                       "Name": {
                         "$type": "Identifier",
+                        "StartOffset": 6446,
+                        "FragmentLength": 11,
+                        "StartLine": 60,
+                        "StartColumn": 30,
                         "Value": "OneValueCEK",
                         "QuoteType": "NotQuoted"
                       },
@@ -514,13 +906,25 @@
                     },
                     {
                       "$type": "ColumnEncryptionTypeParameter",
+                      "StartOffset": 6464,
+                      "FragmentLength": 15,
+                      "StartLine": 61,
+                      "StartColumn": 6,
                       "EncryptionType": "Deterministic",
                       "ParameterKind": "EncryptionType"
                     },
                     {
                       "$type": "ColumnEncryptionAlgorithmParameter",
+                      "StartOffset": 6502,
+                      "FragmentLength": 9,
+                      "StartLine": 62,
+                      "StartColumn": 6,
                       "EncryptionAlgorithm": {
                         "$type": "StringLiteral",
+                        "StartOffset": 6514,
+                        "FragmentLength": 31,
+                        "StartLine": 62,
+                        "StartColumn": 18,
                         "LiteralType": "String",
                         "IsNational": false,
                         "IsLargeObject": false,
@@ -533,16 +937,32 @@
                 "IsMasked": false,
                 "ColumnIdentifier": {
                   "$type": "Identifier",
+                  "StartOffset": 6379,
+                  "FragmentLength": 2,
+                  "StartLine": 59,
+                  "StartColumn": 5,
                   "Value": "c2",
                   "QuoteType": "NotQuoted"
                 },
                 "DataType": {
                   "$type": "SqlDataTypeReference",
+                  "StartOffset": 6388,
+                  "FragmentLength": 3,
+                  "StartLine": 59,
+                  "StartColumn": 14,
                   "SqlDataTypeOption": "Int",
                   "Name": {
                     "$type": "SchemaObjectName",
+                    "StartOffset": 6388,
+                    "FragmentLength": 3,
+                    "StartLine": 59,
+                    "StartColumn": 14,
                     "BaseIdentifier": {
                       "$type": "Identifier",
+                      "StartOffset": 6388,
+                      "FragmentLength": 3,
+                      "StartLine": 59,
+                      "StartColumn": 14,
                       "Value": "INT",
                       "QuoteType": "NotQuoted"
                     },
@@ -560,25 +980,49 @@
         },
         {
           "$type": "AlterTableAlterColumnStatement",
+          "StartOffset": 6582,
+          "FragmentLength": 242,
+          "StartLine": 66,
+          "StartColumn": 1,
           "ColumnIdentifier": {
             "$type": "Identifier",
+            "StartOffset": 6617,
+            "FragmentLength": 3,
+            "StartLine": 66,
+            "StartColumn": 36,
             "Value": "SSN",
             "QuoteType": "NotQuoted"
           },
           "DataType": {
             "$type": "SqlDataTypeReference",
+            "StartOffset": 6621,
+            "FragmentLength": 12,
+            "StartLine": 66,
+            "StartColumn": 40,
             "SqlDataTypeOption": "VarChar",
             "Parameters": [
               {
                 "$type": "IntegerLiteral",
+                "StartOffset": 6630,
+                "FragmentLength": 2,
+                "StartLine": 66,
+                "StartColumn": 49,
                 "LiteralType": "Integer",
                 "Value": "11"
               }
             ],
             "Name": {
               "$type": "SchemaObjectName",
+              "StartOffset": 6621,
+              "FragmentLength": 7,
+              "StartLine": 66,
+              "StartColumn": 40,
               "BaseIdentifier": {
                 "$type": "Identifier",
+                "StartOffset": 6621,
+                "FragmentLength": 7,
+                "StartLine": 66,
+                "StartColumn": 40,
                 "Value": "VARCHAR",
                 "QuoteType": "NotQuoted"
               },
@@ -594,11 +1038,23 @@
           "IsHidden": false,
           "Encryption": {
             "$type": "ColumnEncryptionDefinition",
+            "StartOffset": 6685,
+            "FragmentLength": 89,
+            "StartLine": 67,
+            "StartColumn": 6,
             "Parameters": [
               {
                 "$type": "ColumnEncryptionKeyNameParameter",
+                "StartOffset": 6685,
+                "FragmentLength": 21,
+                "StartLine": 67,
+                "StartColumn": 6,
                 "Name": {
                   "$type": "Identifier",
+                  "StartOffset": 6709,
+                  "FragmentLength": 11,
+                  "StartLine": 67,
+                  "StartColumn": 30,
                   "Value": "TwoValueCEK",
                   "QuoteType": "NotQuoted"
                 },
@@ -606,13 +1062,25 @@
               },
               {
                 "$type": "ColumnEncryptionTypeParameter",
+                "StartOffset": 6727,
+                "FragmentLength": 15,
+                "StartLine": 68,
+                "StartColumn": 6,
                 "EncryptionType": "Deterministic",
                 "ParameterKind": "EncryptionType"
               },
               {
                 "$type": "ColumnEncryptionAlgorithmParameter",
+                "StartOffset": 6765,
+                "FragmentLength": 9,
+                "StartLine": 69,
+                "StartColumn": 6,
                 "EncryptionAlgorithm": {
                   "$type": "StringLiteral",
+                  "StartOffset": 6777,
+                  "FragmentLength": 31,
+                  "StartLine": 69,
+                  "StartColumn": 18,
                   "LiteralType": "String",
                   "IsNational": false,
                   "IsLargeObject": false,
@@ -624,14 +1092,26 @@
           },
           "Collation": {
             "$type": "Identifier",
+            "StartOffset": 6642,
+            "FragmentLength": 19,
+            "StartLine": 66,
+            "StartColumn": 61,
             "Value": "Latin1_General_BIN2",
             "QuoteType": "NotQuoted"
           },
           "IsMasked": false,
           "SchemaObjectName": {
             "$type": "SchemaObjectName",
+            "StartOffset": 6594,
+            "FragmentLength": 9,
+            "StartLine": 66,
+            "StartColumn": 13,
             "BaseIdentifier": {
               "$type": "Identifier",
+              "StartOffset": 6594,
+              "FragmentLength": 9,
+              "StartLine": 66,
+              "StartColumn": 13,
               "Value": "Customers",
               "QuoteType": "NotQuoted"
             },
@@ -645,33 +1125,61 @@
         },
         {
           "$type": "GrantStatement",
+          "StartOffset": 6826,
+          "FragmentLength": 45,
+          "StartLine": 72,
+          "StartColumn": 1,
           "WithGrantOption": false,
           "Permissions": [
             {
               "$type": "Permission",
+              "StartOffset": 6832,
+              "FragmentLength": 27,
+              "StartLine": 72,
+              "StartColumn": 7,
               "Identifiers": [
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6832,
+                  "FragmentLength": 5,
+                  "StartLine": 72,
+                  "StartColumn": 7,
                   "Value": "ALTER",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6838,
+                  "FragmentLength": 3,
+                  "StartLine": 72,
+                  "StartColumn": 13,
                   "Value": "ANY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6842,
+                  "FragmentLength": 6,
+                  "StartLine": 72,
+                  "StartColumn": 17,
                   "Value": "COLUMN",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6849,
+                  "FragmentLength": 6,
+                  "StartLine": 72,
+                  "StartColumn": 24,
                   "Value": "MASTER",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6856,
+                  "FragmentLength": 3,
+                  "StartLine": 72,
+                  "StartColumn": 31,
                   "Value": "KEY",
                   "QuoteType": "NotQuoted"
                 }
@@ -681,9 +1189,17 @@
           "Principals": [
             {
               "$type": "SecurityPrincipal",
+              "StartOffset": 6863,
+              "FragmentLength": 7,
+              "StartLine": 72,
+              "StartColumn": 38,
               "PrincipalType": "Identifier",
               "Identifier": {
                 "$type": "Identifier",
+                "StartOffset": 6863,
+                "FragmentLength": 7,
+                "StartLine": 72,
+                "StartColumn": 38,
                 "Value": "guest",
                 "QuoteType": "SquareBracket"
               }
@@ -692,33 +1208,61 @@
         },
         {
           "$type": "GrantStatement",
+          "StartOffset": 6873,
+          "FragmentLength": 49,
+          "StartLine": 74,
+          "StartColumn": 1,
           "WithGrantOption": false,
           "Permissions": [
             {
               "$type": "Permission",
+              "StartOffset": 6879,
+              "FragmentLength": 31,
+              "StartLine": 74,
+              "StartColumn": 7,
               "Identifiers": [
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6879,
+                  "FragmentLength": 5,
+                  "StartLine": 74,
+                  "StartColumn": 7,
                   "Value": "ALTER",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6885,
+                  "FragmentLength": 3,
+                  "StartLine": 74,
+                  "StartColumn": 13,
                   "Value": "ANY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6889,
+                  "FragmentLength": 6,
+                  "StartLine": 74,
+                  "StartColumn": 17,
                   "Value": "COLUMN",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6896,
+                  "FragmentLength": 10,
+                  "StartLine": 74,
+                  "StartColumn": 24,
                   "Value": "ENCRYPTION",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6907,
+                  "FragmentLength": 3,
+                  "StartLine": 74,
+                  "StartColumn": 35,
                   "Value": "KEY",
                   "QuoteType": "NotQuoted"
                 }
@@ -728,9 +1272,17 @@
           "Principals": [
             {
               "$type": "SecurityPrincipal",
+              "StartOffset": 6914,
+              "FragmentLength": 7,
+              "StartLine": 74,
+              "StartColumn": 42,
               "PrincipalType": "Identifier",
               "Identifier": {
                 "$type": "Identifier",
+                "StartOffset": 6914,
+                "FragmentLength": 7,
+                "StartLine": 74,
+                "StartColumn": 42,
                 "Value": "guest",
                 "QuoteType": "SquareBracket"
               }
@@ -739,38 +1291,70 @@
         },
         {
           "$type": "GrantStatement",
+          "StartOffset": 6924,
+          "FragmentLength": 55,
+          "StartLine": 76,
+          "StartColumn": 1,
           "WithGrantOption": false,
           "Permissions": [
             {
               "$type": "Permission",
+              "StartOffset": 6930,
+              "FragmentLength": 37,
+              "StartLine": 76,
+              "StartColumn": 7,
               "Identifiers": [
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6930,
+                  "FragmentLength": 4,
+                  "StartLine": 76,
+                  "StartColumn": 7,
                   "Value": "VIEW",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6935,
+                  "FragmentLength": 3,
+                  "StartLine": 76,
+                  "StartColumn": 12,
                   "Value": "ANY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6939,
+                  "FragmentLength": 6,
+                  "StartLine": 76,
+                  "StartColumn": 16,
                   "Value": "COLUMN",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6946,
+                  "FragmentLength": 6,
+                  "StartLine": 76,
+                  "StartColumn": 23,
                   "Value": "MASTER",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6953,
+                  "FragmentLength": 3,
+                  "StartLine": 76,
+                  "StartColumn": 30,
                   "Value": "KEY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6957,
+                  "FragmentLength": 10,
+                  "StartLine": 76,
+                  "StartColumn": 34,
                   "Value": "DEFINITION",
                   "QuoteType": "NotQuoted"
                 }
@@ -780,9 +1364,17 @@
           "Principals": [
             {
               "$type": "SecurityPrincipal",
+              "StartOffset": 6971,
+              "FragmentLength": 7,
+              "StartLine": 76,
+              "StartColumn": 48,
               "PrincipalType": "Identifier",
               "Identifier": {
                 "$type": "Identifier",
+                "StartOffset": 6971,
+                "FragmentLength": 7,
+                "StartLine": 76,
+                "StartColumn": 48,
                 "Value": "guest",
                 "QuoteType": "SquareBracket"
               }
@@ -791,38 +1383,70 @@
         },
         {
           "$type": "GrantStatement",
+          "StartOffset": 6981,
+          "FragmentLength": 59,
+          "StartLine": 78,
+          "StartColumn": 1,
           "WithGrantOption": false,
           "Permissions": [
             {
               "$type": "Permission",
+              "StartOffset": 6987,
+              "FragmentLength": 41,
+              "StartLine": 78,
+              "StartColumn": 7,
               "Identifiers": [
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6987,
+                  "FragmentLength": 4,
+                  "StartLine": 78,
+                  "StartColumn": 7,
                   "Value": "VIEW",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6992,
+                  "FragmentLength": 3,
+                  "StartLine": 78,
+                  "StartColumn": 12,
                   "Value": "ANY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 6996,
+                  "FragmentLength": 6,
+                  "StartLine": 78,
+                  "StartColumn": 16,
                   "Value": "COLUMN",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7003,
+                  "FragmentLength": 10,
+                  "StartLine": 78,
+                  "StartColumn": 23,
                   "Value": "ENCRYPTION",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7014,
+                  "FragmentLength": 3,
+                  "StartLine": 78,
+                  "StartColumn": 34,
                   "Value": "KEY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7018,
+                  "FragmentLength": 10,
+                  "StartLine": 78,
+                  "StartColumn": 38,
                   "Value": "DEFINITION",
                   "QuoteType": "NotQuoted"
                 }
@@ -832,9 +1456,17 @@
           "Principals": [
             {
               "$type": "SecurityPrincipal",
+              "StartOffset": 7032,
+              "FragmentLength": 7,
+              "StartLine": 78,
+              "StartColumn": 52,
               "PrincipalType": "Identifier",
               "Identifier": {
                 "$type": "Identifier",
+                "StartOffset": 7032,
+                "FragmentLength": 7,
+                "StartLine": 78,
+                "StartColumn": 52,
                 "Value": "guest",
                 "QuoteType": "SquareBracket"
               }
@@ -843,33 +1475,61 @@
         },
         {
           "$type": "DenyStatement",
+          "StartOffset": 7042,
+          "FragmentLength": 44,
+          "StartLine": 80,
+          "StartColumn": 1,
           "CascadeOption": false,
           "Permissions": [
             {
               "$type": "Permission",
+              "StartOffset": 7047,
+              "FragmentLength": 27,
+              "StartLine": 80,
+              "StartColumn": 6,
               "Identifiers": [
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7047,
+                  "FragmentLength": 5,
+                  "StartLine": 80,
+                  "StartColumn": 6,
                   "Value": "ALTER",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7053,
+                  "FragmentLength": 3,
+                  "StartLine": 80,
+                  "StartColumn": 12,
                   "Value": "ANY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7057,
+                  "FragmentLength": 6,
+                  "StartLine": 80,
+                  "StartColumn": 16,
                   "Value": "COLUMN",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7064,
+                  "FragmentLength": 6,
+                  "StartLine": 80,
+                  "StartColumn": 23,
                   "Value": "MASTER",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7071,
+                  "FragmentLength": 3,
+                  "StartLine": 80,
+                  "StartColumn": 30,
                   "Value": "KEY",
                   "QuoteType": "NotQuoted"
                 }
@@ -879,9 +1539,17 @@
           "Principals": [
             {
               "$type": "SecurityPrincipal",
+              "StartOffset": 7078,
+              "FragmentLength": 7,
+              "StartLine": 80,
+              "StartColumn": 37,
               "PrincipalType": "Identifier",
               "Identifier": {
                 "$type": "Identifier",
+                "StartOffset": 7078,
+                "FragmentLength": 7,
+                "StartLine": 80,
+                "StartColumn": 37,
                 "Value": "guest",
                 "QuoteType": "SquareBracket"
               }
@@ -890,33 +1558,61 @@
         },
         {
           "$type": "DenyStatement",
+          "StartOffset": 7088,
+          "FragmentLength": 48,
+          "StartLine": 82,
+          "StartColumn": 1,
           "CascadeOption": false,
           "Permissions": [
             {
               "$type": "Permission",
+              "StartOffset": 7093,
+              "FragmentLength": 31,
+              "StartLine": 82,
+              "StartColumn": 6,
               "Identifiers": [
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7093,
+                  "FragmentLength": 5,
+                  "StartLine": 82,
+                  "StartColumn": 6,
                   "Value": "ALTER",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7099,
+                  "FragmentLength": 3,
+                  "StartLine": 82,
+                  "StartColumn": 12,
                   "Value": "ANY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7103,
+                  "FragmentLength": 6,
+                  "StartLine": 82,
+                  "StartColumn": 16,
                   "Value": "COLUMN",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7110,
+                  "FragmentLength": 10,
+                  "StartLine": 82,
+                  "StartColumn": 23,
                   "Value": "ENCRYPTION",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7121,
+                  "FragmentLength": 3,
+                  "StartLine": 82,
+                  "StartColumn": 34,
                   "Value": "KEY",
                   "QuoteType": "NotQuoted"
                 }
@@ -926,9 +1622,17 @@
           "Principals": [
             {
               "$type": "SecurityPrincipal",
+              "StartOffset": 7128,
+              "FragmentLength": 7,
+              "StartLine": 82,
+              "StartColumn": 41,
               "PrincipalType": "Identifier",
               "Identifier": {
                 "$type": "Identifier",
+                "StartOffset": 7128,
+                "FragmentLength": 7,
+                "StartLine": 82,
+                "StartColumn": 41,
                 "Value": "guest",
                 "QuoteType": "SquareBracket"
               }
@@ -937,38 +1641,70 @@
         },
         {
           "$type": "DenyStatement",
+          "StartOffset": 7138,
+          "FragmentLength": 54,
+          "StartLine": 84,
+          "StartColumn": 1,
           "CascadeOption": false,
           "Permissions": [
             {
               "$type": "Permission",
+              "StartOffset": 7143,
+              "FragmentLength": 37,
+              "StartLine": 84,
+              "StartColumn": 6,
               "Identifiers": [
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7143,
+                  "FragmentLength": 4,
+                  "StartLine": 84,
+                  "StartColumn": 6,
                   "Value": "VIEW",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7148,
+                  "FragmentLength": 3,
+                  "StartLine": 84,
+                  "StartColumn": 11,
                   "Value": "ANY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7152,
+                  "FragmentLength": 6,
+                  "StartLine": 84,
+                  "StartColumn": 15,
                   "Value": "COLUMN",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7159,
+                  "FragmentLength": 6,
+                  "StartLine": 84,
+                  "StartColumn": 22,
                   "Value": "MASTER",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7166,
+                  "FragmentLength": 3,
+                  "StartLine": 84,
+                  "StartColumn": 29,
                   "Value": "KEY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7170,
+                  "FragmentLength": 10,
+                  "StartLine": 84,
+                  "StartColumn": 33,
                   "Value": "DEFINITION",
                   "QuoteType": "NotQuoted"
                 }
@@ -978,9 +1714,17 @@
           "Principals": [
             {
               "$type": "SecurityPrincipal",
+              "StartOffset": 7184,
+              "FragmentLength": 7,
+              "StartLine": 84,
+              "StartColumn": 47,
               "PrincipalType": "Identifier",
               "Identifier": {
                 "$type": "Identifier",
+                "StartOffset": 7184,
+                "FragmentLength": 7,
+                "StartLine": 84,
+                "StartColumn": 47,
                 "Value": "guest",
                 "QuoteType": "SquareBracket"
               }
@@ -989,38 +1733,70 @@
         },
         {
           "$type": "DenyStatement",
+          "StartOffset": 7194,
+          "FragmentLength": 58,
+          "StartLine": 86,
+          "StartColumn": 1,
           "CascadeOption": false,
           "Permissions": [
             {
               "$type": "Permission",
+              "StartOffset": 7199,
+              "FragmentLength": 41,
+              "StartLine": 86,
+              "StartColumn": 6,
               "Identifiers": [
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7199,
+                  "FragmentLength": 4,
+                  "StartLine": 86,
+                  "StartColumn": 6,
                   "Value": "VIEW",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7204,
+                  "FragmentLength": 3,
+                  "StartLine": 86,
+                  "StartColumn": 11,
                   "Value": "ANY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7208,
+                  "FragmentLength": 6,
+                  "StartLine": 86,
+                  "StartColumn": 15,
                   "Value": "COLUMN",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7215,
+                  "FragmentLength": 10,
+                  "StartLine": 86,
+                  "StartColumn": 22,
                   "Value": "ENCRYPTION",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7226,
+                  "FragmentLength": 3,
+                  "StartLine": 86,
+                  "StartColumn": 33,
                   "Value": "KEY",
                   "QuoteType": "NotQuoted"
                 },
                 {
                   "$type": "Identifier",
+                  "StartOffset": 7230,
+                  "FragmentLength": 10,
+                  "StartLine": 86,
+                  "StartColumn": 37,
                   "Value": "DEFINITION",
                   "QuoteType": "NotQuoted"
                 }
@@ -1030,9 +1806,17 @@
           "Principals": [
             {
               "$type": "SecurityPrincipal",
+              "StartOffset": 7244,
+              "FragmentLength": 7,
+              "StartLine": 86,
+              "StartColumn": 51,
               "PrincipalType": "Identifier",
               "Identifier": {
                 "$type": "Identifier",
+                "StartOffset": 7244,
+                "FragmentLength": 7,
+                "StartLine": 86,
+                "StartColumn": 51,
                 "Value": "guest",
                 "QuoteType": "SquareBracket"
               }
