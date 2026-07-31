@@ -15885,6 +15885,9 @@ func (p *Parser) parseEndConversationStatement() (*ast.EndConversationStatement,
 
 	stmt := &ast.EndConversationStatement{}
 
+	// ScriptDom spans END CONVERSATION statements from the handle value.
+	handleTok := p.curTok
+
 	// Parse the conversation handle expression
 	expr, err := p.parseScalarExpression()
 	if err != nil {
@@ -15938,7 +15941,10 @@ func (p *Parser) parseEndConversationStatement() (*ast.EndConversationStatement,
 		p.nextToken()
 	}
 
-	return spanned(p, stmt, astStart), nil
+	p.spanFrom(handleTok, stmt)
+	stmt.Frag().Pin()
+	_ = astStart
+	return stmt, nil
 }
 
 // parseCreateWorkloadGroupStatement parses CREATE WORKLOAD GROUP statement.

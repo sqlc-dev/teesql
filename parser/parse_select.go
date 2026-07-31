@@ -276,6 +276,12 @@ func (p *Parser) parsePrimaryQueryExpression() (ast.QueryExpression, *ast.Schema
 // starting with a left operand that's already been parsed.
 func (p *Parser) parseRestOfBinaryQueryExpression(left ast.QueryExpression) (ast.QueryExpression, error) {
 	astStart := p.curTok
+	// The binary expression starts where its (already-parsed) left operand
+	// starts, not at the operator token.
+	leftStartsEarlier := false
+	if l, ok := any(left).(spannable); ok && l.Frag().HasSpan() {
+		leftStartsEarlier = true
+	}
 
 	// Check for binary operations (UNION, EXCEPT, INTERSECT)
 	for p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect {
@@ -309,10 +315,18 @@ func (p *Parser) parseRestOfBinaryQueryExpression(left ast.QueryExpression) (ast
 			FirstQueryExpression:      left,
 			SecondQueryExpression:     right,
 		}
+		if leftStartsEarlier {
+			p.spanFromChild(bqe, bqe.FirstQueryExpression)
+		}
 
 		left = bqe
 	}
 
+	if leftStartsEarlier {
+		if l, ok := any(left).(spannable); ok && l.Frag().HasSpan() {
+			return left, nil
+		}
+	}
 	return spanned(p, left, astStart), nil
 }
 
@@ -1442,6 +1456,11 @@ func (p *Parser) parsePrimaryExpression() (ast.ScalarExpression, error) {
 			// Convert the scalar subquery to a query parenthesis expression
 			if ss, ok := expr.(*ast.ScalarSubquery); ok {
 				qpe := &ast.QueryParenthesisExpression{QueryExpression: ss.QueryExpression}
+				// The parenthesis expression keeps the subquery's span
+				// (including the parens).
+				if ss.Frag().HasSpan() {
+					*qpe.Frag() = *ss.Frag()
+				}
 				qe, err := p.parseRestOfBinaryQueryExpression(qpe)
 				if err != nil {
 					return nil, err
