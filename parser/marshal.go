@@ -13894,6 +13894,7 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 				upperOpt := strings.ToUpper(p.curTok.Literal)
 				switch upperOpt {
 				case "INLINE":
+					inlineTok := p.curTok
 					p.nextToken() // consume INLINE
 					// Expect = ON|OFF
 					if p.curTok.Type == TokenEquals {
@@ -13905,10 +13906,12 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 						state = "Off"
 					}
 					p.nextToken() // consume ON/OFF
-					stmt.Options = append(stmt.Options, &ast.InlineFunctionOption{
+					inlineOpt := &ast.InlineFunctionOption{
 						OptionKind:  "Inline",
 						OptionState: state,
-					})
+					}
+					p.spanFrom(inlineTok, inlineOpt)
+					stmt.Options = append(stmt.Options, inlineOpt)
 				case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION", "CALLED":
 					optNameTok2 := p.curTok
 					optKind := capitalizeFirst(strings.ToLower(p.curTok.Literal))
@@ -13967,6 +13970,13 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 		stmtList, err := p.parseFunctionStatementList()
 		if err != nil {
 			return nil, err
+		}
+		// A function body's final statement excludes its trailing semicolon.
+		if n := len(stmtList.Statements); n > 0 {
+			if s, ok := any(stmtList.Statements[n-1]).(spannable); ok {
+				p.trimTrailingSemicolon(s)
+				s.Frag().Pin()
+			}
 		}
 		spanStatementList(stmtList)
 		stmt.StatementList = stmtList
@@ -15173,6 +15183,7 @@ func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
 		upperOpt := strings.ToUpper(p.curTok.Literal)
 		switch upperOpt {
 		case "INLINE":
+			inlineTok := p.curTok
 			p.nextToken() // consume INLINE
 			// Expect = ON|OFF
 			if p.curTok.Type == TokenEquals {
@@ -15184,10 +15195,12 @@ func (p *Parser) parseFunctionOptions(stmt *ast.CreateFunctionStatement) {
 				state = "Off"
 			}
 			p.nextToken() // consume ON/OFF
-			stmt.Options = append(stmt.Options, &ast.InlineFunctionOption{
+			inlineOpt := &ast.InlineFunctionOption{
 				OptionKind:  "Inline",
 				OptionState: state,
-			})
+			}
+			p.spanFrom(inlineTok, inlineOpt)
+			stmt.Options = append(stmt.Options, inlineOpt)
 		case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION":
 			var optKind string
 			switch upperOpt {
@@ -15403,6 +15416,7 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 			upperOpt := strings.ToUpper(p.curTok.Literal)
 			switch upperOpt {
 			case "INLINE":
+				inlineTok := p.curTok
 				p.nextToken() // consume INLINE
 				// Expect = ON|OFF
 				if p.curTok.Type == TokenEquals {
@@ -15414,10 +15428,12 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 					state = "Off"
 				}
 				p.nextToken() // consume ON/OFF
-				stmt.Options = append(stmt.Options, &ast.InlineFunctionOption{
+				inlineOpt := &ast.InlineFunctionOption{
 					OptionKind:  "Inline",
 					OptionState: state,
-				})
+				}
+				p.spanFrom(inlineTok, inlineOpt)
+				stmt.Options = append(stmt.Options, inlineOpt)
 			case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION", "CALLED":
 				var optKind string
 				switch strings.ToUpper(p.curTok.Literal) {
@@ -15520,6 +15536,13 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 	if err != nil {
 		p.skipToEndOfStatement()
 		return spanned(p, stmt, astStart), nil
+	}
+	// A function body's final statement excludes its trailing semicolon.
+	if n := len(stmtList.Statements); n > 0 {
+		if s, ok := any(stmtList.Statements[n-1]).(spannable); ok {
+			p.trimTrailingSemicolon(s)
+			s.Frag().Pin()
+		}
 	}
 	spanStatementList(stmtList)
 	stmt.StatementList = stmtList
