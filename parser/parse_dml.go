@@ -572,6 +572,7 @@ func (p *Parser) parseOpenRowsetCosmos() (*ast.OpenRowsetCosmos, error) {
 			break
 		}
 
+		cosmosOptTok := p.curTok
 		p.nextToken() // consume option name
 
 		if p.curTok.Type != TokenEquals {
@@ -604,6 +605,8 @@ func (p *Parser) parseOpenRowsetCosmos() (*ast.OpenRowsetCosmos, error) {
 			Value:      value,
 			OptionKind: optionKind,
 		}
+		// ScriptDom spans the option from its keyword through the value.
+		p.spanFrom(cosmosOptTok, opt)
 		result.Options = append(result.Options, opt)
 
 		if p.curTok.Type == TokenComma {
@@ -946,8 +949,9 @@ func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
 
 	// Handle ORDER option
 	if upper == "ORDER" {
+		orderTok := p.curTok
 		p.nextToken()
-		spanV87, spanErr87 := p.parseOpenRowsetOrderOption()
+		spanV87, spanErr87 := p.parseOpenRowsetOrderOption(orderTok)
 		return spanned(p, spanV87, astStart), spanErr87
 	}
 
@@ -1034,8 +1038,9 @@ func (p *Parser) getOpenRowsetOptionKind(name string) string {
 	return name
 }
 
-func (p *Parser) parseOpenRowsetOrderOption() (*ast.OrderBulkInsertOption, error) {
-	astStart := p.curTok
+func (p *Parser) parseOpenRowsetOrderOption(orderTok Token) (*ast.OrderBulkInsertOption, error) {
+	astStart := orderTok
+	_ = astStart
 
 	result := &ast.OrderBulkInsertOption{
 		OptionKind: "Order",
@@ -1084,13 +1089,18 @@ func (p *Parser) parseOpenRowsetOrderOption() (*ast.OrderBulkInsertOption, error
 	}
 	p.nextToken()
 
+	// ScriptDom's span for this option ends at the closing parenthesis,
+	// excluding a trailing UNIQUE keyword.
+	p.spanFrom(astStart, result)
+	result.Pin()
+
 	// Check for UNIQUE
 	if p.curTok.Type == TokenIdent && strings.ToUpper(p.curTok.Literal) == "UNIQUE" {
 		result.IsUnique = true
 		p.nextToken()
 	}
 
-	return spanned(p, result, astStart), nil
+	return result, nil
 }
 
 func (p *Parser) parseFunctionParameters() ([]ast.ScalarExpression, error) {
