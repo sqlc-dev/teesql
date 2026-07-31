@@ -12358,6 +12358,7 @@ func (p *Parser) parseCreateSpatialIndexStatement() (*ast.CreateSpatialIndexStat
 		}
 
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF && p.curTok.Type != TokenSemicolon {
+			optTok := p.curTok
 			optName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume option name
 
@@ -12383,12 +12384,13 @@ func (p *Parser) parseCreateSpatialIndexStatement() (*ast.CreateSpatialIndexStat
 				}
 				p.nextToken() // consume compression level
 
-				opt := &ast.SpatialIndexRegularOption{
-					Option: &ast.DataCompressionOption{
-						CompressionLevel: compressionLevel,
-						OptionKind:       "DataCompression",
-					},
+				dcOpt := &ast.DataCompressionOption{
+					CompressionLevel: compressionLevel,
+					OptionKind:       "DataCompression",
 				}
+				opt := &ast.SpatialIndexRegularOption{Option: dcOpt}
+				p.spanFrom(optTok, dcOpt)
+				p.spanFrom(optTok, opt)
 				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, opt)
 
 			case "BOUNDING_BOX":
@@ -12404,38 +12406,43 @@ func (p *Parser) parseCreateSpatialIndexStatement() (*ast.CreateSpatialIndexStat
 				cellsOpt := &ast.CellsPerObjectSpatialIndexOption{
 					Value: expr,
 				}
+				p.spanFrom(optTok, cellsOpt)
+				cellsOpt.Pin()
 				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, cellsOpt)
 
 			case "PAD_INDEX", "SORT_IN_TEMPDB", "ALLOW_ROW_LOCKS", "ALLOW_PAGE_LOCKS", "DROP_EXISTING", "ONLINE", "STATISTICS_NORECOMPUTE", "STATISTICS_INCREMENTAL":
 				optState := strings.ToUpper(p.curTok.Literal)
 				p.nextToken() // consume ON/OFF
-				opt := &ast.SpatialIndexRegularOption{
-					Option: &ast.IndexStateOption{
-						OptionKind:  p.getIndexOptionKind(optName),
-						OptionState: p.capitalizeFirst(strings.ToLower(optState)),
-					},
+				stOpt := &ast.IndexStateOption{
+					OptionKind:  p.getIndexOptionKind(optName),
+					OptionState: p.capitalizeFirst(strings.ToLower(optState)),
 				}
+				opt := &ast.SpatialIndexRegularOption{Option: stOpt}
+				p.spanFrom(optTok, stOpt)
+				p.spanFrom(optTok, opt)
 				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, opt)
 
 			case "MAXDOP", "FILLFACTOR":
 				expr, _ := p.parseScalarExpression()
-				opt := &ast.SpatialIndexRegularOption{
-					Option: &ast.IndexExpressionOption{
-						OptionKind: p.getIndexOptionKind(optName),
-						Expression: expr,
-					},
+				exOpt := &ast.IndexExpressionOption{
+					OptionKind: p.getIndexOptionKind(optName),
+					Expression: expr,
 				}
+				opt := &ast.SpatialIndexRegularOption{Option: exOpt}
+				p.spanFrom(optTok, exOpt)
+				p.spanFrom(optTok, opt)
 				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, opt)
 
 			case "IGNORE_DUP_KEY":
 				optState := strings.ToUpper(p.curTok.Literal)
 				p.nextToken() // consume ON/OFF
-				opt := &ast.SpatialIndexRegularOption{
-					Option: &ast.IgnoreDupKeyIndexOption{
-						OptionKind:  "IgnoreDupKey",
-						OptionState: p.capitalizeFirst(strings.ToLower(optState)),
-					},
+				idkOpt := &ast.IgnoreDupKeyIndexOption{
+					OptionKind:  "IgnoreDupKey",
+					OptionState: p.capitalizeFirst(strings.ToLower(optState)),
 				}
+				opt := &ast.SpatialIndexRegularOption{Option: idkOpt}
+				p.spanFrom(optTok, idkOpt)
+				p.spanFrom(optTok, opt)
 				stmt.SpatialIndexOptions = append(stmt.SpatialIndexOptions, opt)
 
 			default:
@@ -12473,6 +12480,8 @@ func (p *Parser) parseBoundingBoxOption() *ast.BoundingBoxSpatialIndexOption {
 		p.nextToken() // consume (
 	}
 
+	var bbStartTok Token
+	haveBBStart := false
 	for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 		param := &ast.BoundingBoxParameter{Parameter: "None"}
 
@@ -12505,6 +12514,10 @@ func (p *Parser) parseBoundingBoxOption() *ast.BoundingBoxSpatialIndexOption {
 			}
 		}
 
+		if !haveBBStart {
+			bbStartTok = p.curTok
+			haveBBStart = true
+		}
 		param.Value, _ = p.parseScalarExpression()
 		opt.BoundingBoxParameters = append(opt.BoundingBoxParameters, param)
 
@@ -12517,6 +12530,13 @@ func (p *Parser) parseBoundingBoxOption() *ast.BoundingBoxSpatialIndexOption {
 		p.nextToken() // consume )
 	}
 
+	// ScriptDom spans the bounding box option from the first parameter value
+	// through the closing parenthesis.
+	if haveBBStart {
+		p.spanFrom(bbStartTok, opt)
+		opt.Pin()
+		return opt
+	}
 	return spanned(p, opt, astStart)
 }
 
@@ -12585,10 +12605,16 @@ func (p *Parser) parseGridsOption() *ast.GridsSpatialIndexOption {
 	}
 
 	if p.curTok.Type == TokenRParen {
+		// ScriptDom spans the GRIDS option on the closing parenthesis only.
+		p.tokSpan(opt, p.curTok)
+		opt.Pin()
 		p.nextToken() // consume )
 	}
 
-	return spanned(p, opt, astStart)
+	if !opt.HasSpan() {
+		return spanned(p, opt, astStart)
+	}
+	return opt
 }
 
 func (p *Parser) parseCreateAsymmetricKeyStatement() (*ast.CreateAsymmetricKeyStatement, error) {
@@ -14235,6 +14261,7 @@ func (p *Parser) parseCreateAssemblyStatement() (*ast.CreateAssemblyStatement, e
 		p.nextToken() // consume WITH
 		// Parse PERMISSION_SET = value
 		if strings.ToUpper(p.curTok.Literal) == "PERMISSION_SET" {
+			permTok := p.curTok
 			p.nextToken() // consume PERMISSION_SET
 			if p.curTok.Type == TokenEquals {
 				p.nextToken() // consume =
@@ -14251,6 +14278,7 @@ func (p *Parser) parseCreateAssemblyStatement() (*ast.CreateAssemblyStatement, e
 				option.PermissionSetOption = "Unsafe"
 			}
 			p.nextToken()
+			p.spanFrom(permTok, option)
 			stmt.Options = append(stmt.Options, option)
 		}
 	}
@@ -15951,17 +15979,20 @@ func (p *Parser) parseEnableDisableTriggerStatement(enforcement string) (*ast.En
 
 	// Check for ALL SERVER or DATABASE or table name
 	stmt.TriggerObject = &ast.TriggerObject{}
+	scopeTok := p.curTok
 
 	if strings.ToUpper(p.curTok.Literal) == "ALL" {
 		p.nextToken()
 		if strings.ToUpper(p.curTok.Literal) == "SERVER" {
 			stmt.TriggerObject.TriggerScope = "AllServer"
 			p.nextToken()
+			p.spanFrom(scopeTok, stmt.TriggerObject)
 		} else {
 			return nil, fmt.Errorf("expected SERVER after ALL, got %s", p.curTok.Literal)
 		}
 	} else if strings.ToUpper(p.curTok.Literal) == "DATABASE" {
 		stmt.TriggerObject.TriggerScope = "Database"
+		p.tokSpan(stmt.TriggerObject, scopeTok)
 		p.nextToken()
 	} else {
 		// Parse table name

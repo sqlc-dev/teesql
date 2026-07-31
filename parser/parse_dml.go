@@ -973,7 +973,11 @@ func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
 					QuoteType:   "NotQuoted",
 					Value:       p.curTok.Literal,
 				}
-				p.tokSpan(idLit, p.curTok)
+				// ScriptDom synthesizes the IdentifierLiteral for
+				// HEADER_ROW = TRUE without source position info.
+				if optionKind != "HeaderRow" {
+					p.tokSpan(idLit, p.curTok)
+				}
 				value = idLit
 				p.nextToken()
 			} else {

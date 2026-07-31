@@ -11595,7 +11595,7 @@ func availabilityGroupActionToJSON(action ast.AvailabilityGroupAction) jsonNode 
 				if opt.Value != nil {
 					optNode["Value"] = scalarExpressionToJSON(opt.Value)
 				}
-				opts[i] = optNode
+				opts[i] = addSpan(optNode, opt.Frag())
 			}
 			node["Options"] = opts
 		}
@@ -17654,14 +17654,7 @@ func dropEventNotificationStatementToJSON(s *ast.DropEventNotificationStatement)
 		node["Notifications"] = notifications
 	}
 	if s.Scope != nil {
-		scope := jsonNode{
-			"$type":  "EventNotificationObjectScope",
-			"Target": s.Scope.Target,
-		}
-		if s.Scope.QueueName != nil {
-			scope["QueueName"] = schemaObjectNameToJSON(s.Scope.QueueName)
-		}
-		node["Scope"] = scope
+		node["Scope"] = eventNotificationObjectScopeToJSON(s.Scope)
 	}
 	return addSpan(node, frag(s))
 }

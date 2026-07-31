@@ -3265,6 +3265,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+					subOptTok := p.curTok
 					subOptName := strings.ToUpper(p.curTok.Literal)
 					p.nextToken() // consume option name
 					if p.curTok.Type == TokenEquals {
@@ -3274,25 +3275,33 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 					p.nextToken() // consume value
 					switch subOptName {
 					case "CREATE_INDEX":
-						opt.Options = append(opt.Options, &ast.AutomaticTuningCreateIndexOption{
+						ciOpt := &ast.AutomaticTuningCreateIndexOption{
 							OptionKind: "Create_Index",
 							Value:      subOptValue,
-						})
+						}
+						p.spanFrom(subOptTok, ciOpt)
+						opt.Options = append(opt.Options, ciOpt)
 					case "DROP_INDEX":
-						opt.Options = append(opt.Options, &ast.AutomaticTuningDropIndexOption{
+						diOpt := &ast.AutomaticTuningDropIndexOption{
 							OptionKind: "Drop_Index",
 							Value:      subOptValue,
-						})
+						}
+						p.spanFrom(subOptTok, diOpt)
+						opt.Options = append(opt.Options, diOpt)
 					case "FORCE_LAST_GOOD_PLAN":
-						opt.Options = append(opt.Options, &ast.AutomaticTuningForceLastGoodPlanOption{
+						flOpt := &ast.AutomaticTuningForceLastGoodPlanOption{
 							OptionKind: "Force_Last_Good_Plan",
 							Value:      subOptValue,
-						})
+						}
+						p.spanFrom(subOptTok, flOpt)
+						opt.Options = append(opt.Options, flOpt)
 					case "MAINTAIN_INDEX":
-						opt.Options = append(opt.Options, &ast.AutomaticTuningMaintainIndexOption{
+						miOpt := &ast.AutomaticTuningMaintainIndexOption{
 							OptionKind: "Maintain_Index",
 							Value:      subOptValue,
-						})
+						}
+						p.spanFrom(subOptTok, miOpt)
+						opt.Options = append(opt.Options, miOpt)
 					}
 					if p.curTok.Type == TokenComma {
 						p.nextToken()
@@ -5704,11 +5713,14 @@ func (p *Parser) parseDropClusteredConstraintOptions() ([]ast.DropClusteredConst
 			} else {
 				return nil, fmt.Errorf("expected ON or OFF after ONLINE =, got %s", p.curTok.Literal)
 			}
+			stateTok := p.curTok
 			p.nextToken() // consume ON/OFF
-			options = append(options, &ast.DropClusteredConstraintStateOption{
+			stOpt := &ast.DropClusteredConstraintStateOption{
 				OptionKind:  "Online",
 				OptionState: optionState,
-			})
+			}
+			p.tokSpan(stOpt, stateTok)
+			options = append(options, stOpt)
 
 		case "MOVE":
 			p.nextToken() // consume MOVE
@@ -5735,10 +5747,12 @@ func (p *Parser) parseDropClusteredConstraintOptions() ([]ast.DropClusteredConst
 			if p.curTok.Type != TokenNumber {
 				return nil, fmt.Errorf("expected number after MAXDOP =, got %s", p.curTok.Literal)
 			}
-			options = append(options, &ast.DropClusteredConstraintValueOption{
+			mdOpt := &ast.DropClusteredConstraintValueOption{
 				OptionKind:  "MaxDop",
 				OptionValue: p.intLitFromToken(p.curTok),
-			})
+			}
+			p.tokSpan(mdOpt, p.curTok)
+			options = append(options, mdOpt)
 			p.nextToken() // consume number
 
 		case "WAIT_AT_LOW_PRIORITY":
@@ -5786,6 +5800,7 @@ func (p *Parser) parseWaitAtLowPriorityOption() (*ast.DropClusteredConstraintWai
 
 		switch optionName {
 		case "MAX_DURATION":
+			maxDurTok := p.curTok
 			p.nextToken() // consume MAX_DURATION
 			if p.curTok.Type != TokenEquals {
 				return nil, fmt.Errorf("expected = after MAX_DURATION, got %s", p.curTok.Literal)
@@ -5811,10 +5826,12 @@ func (p *Parser) parseWaitAtLowPriorityOption() (*ast.DropClusteredConstraintWai
 				p.nextToken() // consume unit
 			}
 			// If no unit is specified, leave Unit empty
+			p.spanFrom(maxDurTok, maxDuration)
 
 			opt.Options = append(opt.Options, maxDuration)
 
 		case "ABORT_AFTER_WAIT":
+			abortTok := p.curTok
 			p.nextToken() // consume ABORT_AFTER_WAIT
 			if p.curTok.Type != TokenEquals {
 				return nil, fmt.Errorf("expected = after ABORT_AFTER_WAIT, got %s", p.curTok.Literal)
@@ -5836,6 +5853,7 @@ func (p *Parser) parseWaitAtLowPriorityOption() (*ast.DropClusteredConstraintWai
 				return nil, fmt.Errorf("expected NONE, SELF, or BLOCKERS after ABORT_AFTER_WAIT =, got %s", p.curTok.Literal)
 			}
 			p.nextToken() // consume abort value
+			p.spanFrom(abortTok, abortOpt)
 
 			opt.Options = append(opt.Options, abortOpt)
 
@@ -9118,6 +9136,7 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 					stmt.Options = append(stmt.Options, opt)
 
 				case "VISIBILITY":
+					visTok := p.curTok
 					p.nextToken() // consume VISIBILITY
 					if p.curTok.Type == TokenEquals {
 						p.nextToken()
@@ -9132,16 +9151,20 @@ func (p *Parser) parseAlterAssemblyStatement() (*ast.AlterAssemblyStatement, err
 						opt.OptionState = "Off"
 					}
 					p.nextToken()
+					p.spanFrom(visTok, opt)
 					stmt.Options = append(stmt.Options, opt)
 
 				case "UNCHECKED":
+					uncheckedTok := p.curTok
 					p.nextToken() // consume UNCHECKED
 					if strings.ToUpper(p.curTok.Literal) == "DATA" {
 						p.nextToken() // consume DATA
 					}
-					stmt.Options = append(stmt.Options, &ast.AssemblyOption{
+					ucOpt := &ast.AssemblyOption{
 						OptionKind: "UncheckedData",
-					})
+					}
+					p.spanFrom(uncheckedTok, ucOpt)
+					stmt.Options = append(stmt.Options, ucOpt)
 
 				default:
 					break withLoop
@@ -12225,10 +12248,13 @@ func (p *Parser) parseSignatureCryptoMechanism() (*ast.CryptoMechanism, error) {
 
 	upper := strings.ToUpper(p.curTok.Literal)
 
+	// ScriptDom spans the crypto mechanism from the key/certificate name (or
+	// the password value) rather than from the mechanism keyword.
 	switch upper {
 	case "CERTIFICATE":
 		crypto.CryptoMechanismType = "Certificate"
 		p.nextToken()
+		astStart = p.curTok
 		crypto.Identifier = p.parseIdentifier()
 	case "ASYMMETRIC":
 		p.nextToken() // consume ASYMMETRIC
@@ -12237,12 +12263,14 @@ func (p *Parser) parseSignatureCryptoMechanism() (*ast.CryptoMechanism, error) {
 		}
 		p.nextToken() // consume KEY
 		crypto.CryptoMechanismType = "AsymmetricKey"
+		astStart = p.curTok
 		crypto.Identifier = p.parseIdentifier()
 	case "PASSWORD":
 		crypto.CryptoMechanismType = "Password"
 		p.nextToken() // consume PASSWORD
 		if p.curTok.Type == TokenEquals {
 			p.nextToken() // consume =
+			astStart = p.curTok
 			val, err := p.parseScalarExpression()
 			if err != nil {
 				return nil, err
@@ -12293,6 +12321,7 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 	stmt.Name = p.parseIdentifier()
 
 	// Parse action: ADD or DROP
+	actionTok := p.curTok
 	actionType := strings.ToUpper(p.curTok.Literal)
 	p.nextToken() // consume ADD or DROP
 
@@ -12364,6 +12393,7 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 				}
 			}
 		}
+		p.spanFrom(actionTok, addAction)
 		stmt.Action = addAction
 
 	case "DROP":
@@ -12377,6 +12407,7 @@ func (p *Parser) parseAlterSearchPropertyListStatement() (*ast.AlterSearchProper
 			dropAction.PropertyName = p.strLit(value, false)
 			p.nextToken()
 		}
+		p.spanFrom(actionTok, dropAction)
 		stmt.Action = dropAction
 	}
 
@@ -13028,13 +13059,16 @@ func (p *Parser) parseAlterAvailabilityGroupStatement() (*ast.AlterAvailabilityG
 	stmt.Name = p.parseIdentifier()
 
 	// Determine the action type
+	actionTok := p.curTok
 	actionKeyword := strings.ToUpper(p.curTok.Literal)
 	p.nextToken()
 
 	switch actionKeyword {
 	case "JOIN":
 		stmt.StatementType = "Action"
-		stmt.Action = &ast.AlterAvailabilityGroupAction{ActionType: "Join"}
+		joinAct := &ast.AlterAvailabilityGroupAction{ActionType: "Join"}
+		p.tokSpan(joinAct, actionTok)
+		stmt.Action = joinAct
 	case "ADD":
 		// ADD DATABASE or ADD REPLICA
 		nextKeyword := strings.ToUpper(p.curTok.Literal)
@@ -13126,14 +13160,17 @@ func (p *Parser) parseAlterAvailabilityGroupStatement() (*ast.AlterAvailabilityG
 						p.nextToken()
 					}
 					if optName == "TARGET" {
+						valTok := p.curTok
 						val, err := p.parseScalarExpression()
 						if err != nil {
 							return nil, err
 						}
-						action.Options = append(action.Options, &ast.AlterAvailabilityGroupFailoverOption{
+						fopt := &ast.AlterAvailabilityGroupFailoverOption{
 							OptionKind: "Target",
 							Value:      val,
-						})
+						}
+						p.spanFrom(valTok, fopt)
+						action.Options = append(action.Options, fopt)
 					} else {
 						// Skip unknown options
 						if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
@@ -13149,16 +13186,23 @@ func (p *Parser) parseAlterAvailabilityGroupStatement() (*ast.AlterAvailabilityG
 				}
 			}
 		}
+		p.spanFrom(actionTok, action)
 		stmt.Action = action
 	case "FORCE_FAILOVER_ALLOW_DATA_LOSS":
 		stmt.StatementType = "Action"
-		stmt.Action = &ast.AlterAvailabilityGroupAction{ActionType: "ForceFailoverAllowDataLoss"}
+		ffAct := &ast.AlterAvailabilityGroupAction{ActionType: "ForceFailoverAllowDataLoss"}
+		p.tokSpan(ffAct, actionTok)
+		stmt.Action = ffAct
 	case "ONLINE":
 		stmt.StatementType = "Action"
-		stmt.Action = &ast.AlterAvailabilityGroupAction{ActionType: "Online"}
+		onAct := &ast.AlterAvailabilityGroupAction{ActionType: "Online"}
+		p.tokSpan(onAct, actionTok)
+		stmt.Action = onAct
 	case "OFFLINE":
 		stmt.StatementType = "Action"
-		stmt.Action = &ast.AlterAvailabilityGroupAction{ActionType: "Offline"}
+		offAct := &ast.AlterAvailabilityGroupAction{ActionType: "Offline"}
+		p.tokSpan(offAct, actionTok)
+		stmt.Action = offAct
 	}
 
 	p.skipToEndOfStatement()
@@ -13183,6 +13227,7 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 	var replicas []*ast.AvailabilityReplica
 	for {
 		replica := &ast.AvailabilityReplica{}
+		replicaStart := p.curTok
 
 		// Parse server name (string literal)
 		if p.curTok.Type == TokenString {
@@ -13204,6 +13249,7 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 
 					switch optName {
 					case "AVAILABILITY_MODE":
+						valTok := p.curTok
 						modeStr := strings.ToUpper(p.curTok.Literal)
 						p.nextToken()
 						// Handle SYNCHRONOUS_COMMIT or ASYNCHRONOUS_COMMIT
@@ -13220,11 +13266,14 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 						default:
 							mode = modeStr
 						}
-						replica.Options = append(replica.Options, &ast.AvailabilityModeReplicaOption{
+						amo := &ast.AvailabilityModeReplicaOption{
 							OptionKind: "AvailabilityMode",
 							Value:      mode,
-						})
+						}
+						p.spanFrom(valTok, amo)
+						replica.Options = append(replica.Options, amo)
 					case "FAILOVER_MODE":
+						valTok := p.curTok
 						modeStr := strings.ToUpper(p.curTok.Literal)
 						p.nextToken()
 						var mode string
@@ -13236,10 +13285,12 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 						default:
 							mode = modeStr
 						}
-						replica.Options = append(replica.Options, &ast.FailoverModeReplicaOption{
+						fmo := &ast.FailoverModeReplicaOption{
 							OptionKind: "FailoverMode",
 							Value:      mode,
-						})
+						}
+						p.tokSpan(fmo, valTok)
+						replica.Options = append(replica.Options, fmo)
 					case "ENDPOINT_URL":
 						val, _ := p.parseScalarExpression()
 						replica.Options = append(replica.Options, &ast.LiteralReplicaOption{
@@ -13261,6 +13312,8 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 					case "PRIMARY_ROLE":
 						if p.curTok.Type == TokenLParen {
 							p.nextToken() // consume (
+							var pro *ast.PrimaryRoleReplicaOption
+							var proTok Token
 							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 								innerOpt := strings.ToUpper(p.curTok.Literal)
 								p.nextToken()
@@ -13268,6 +13321,7 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 									p.nextToken()
 								}
 								if innerOpt == "ALLOW_CONNECTIONS" {
+									proTok = p.curTok
 									connMode := strings.ToUpper(p.curTok.Literal)
 									p.nextToken()
 									var mode string
@@ -13279,10 +13333,11 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 									default:
 										mode = connMode
 									}
-									replica.Options = append(replica.Options, &ast.PrimaryRoleReplicaOption{
+									pro = &ast.PrimaryRoleReplicaOption{
 										OptionKind:       "PrimaryRole",
 										AllowConnections: mode,
-									})
+									}
+									replica.Options = append(replica.Options, pro)
 								}
 								if p.curTok.Type == TokenComma {
 									p.nextToken()
@@ -13291,10 +13346,17 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 							if p.curTok.Type == TokenRParen {
 								p.nextToken()
 							}
+							if pro != nil {
+								// ScriptDom spans the connection mode value
+								// through the role's closing parenthesis.
+								p.spanFrom(proTok, pro)
+							}
 						}
 					case "SECONDARY_ROLE":
 						if p.curTok.Type == TokenLParen {
 							p.nextToken() // consume (
+							var sro *ast.SecondaryRoleReplicaOption
+							var sroTok Token
 							for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 								innerOpt := strings.ToUpper(p.curTok.Literal)
 								p.nextToken()
@@ -13302,6 +13364,7 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 									p.nextToken()
 								}
 								if innerOpt == "ALLOW_CONNECTIONS" {
+									sroTok = p.curTok
 									connMode := strings.ToUpper(p.curTok.Literal)
 									p.nextToken()
 									var mode string
@@ -13315,10 +13378,11 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 									default:
 										mode = connMode
 									}
-									replica.Options = append(replica.Options, &ast.SecondaryRoleReplicaOption{
+									sro = &ast.SecondaryRoleReplicaOption{
 										OptionKind:       "SecondaryRole",
 										AllowConnections: mode,
-									})
+									}
+									replica.Options = append(replica.Options, sro)
 								}
 								if p.curTok.Type == TokenComma {
 									p.nextToken()
@@ -13326,6 +13390,11 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 							}
 							if p.curTok.Type == TokenRParen {
 								p.nextToken()
+							}
+							if sro != nil {
+								// ScriptDom spans the connection mode value
+								// through the role's closing parenthesis.
+								p.spanFrom(sroTok, sro)
 							}
 						}
 					default:
@@ -13344,6 +13413,7 @@ func (p *Parser) parseAvailabilityReplicas() []*ast.AvailabilityReplica {
 				}
 			}
 		}
+		p.spanFrom(replicaStart, replica)
 
 		replicas = append(replicas, replica)
 
