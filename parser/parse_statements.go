@@ -16545,6 +16545,7 @@ func (p *Parser) parseDbccStatement() (*ast.DbccStatement, error) {
 			// Parse literals/parameters
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				lit := &ast.DbccNamedLiteral{}
+				litStartTok := p.curTok
 
 				// Check for named parameter (name = value)
 				if p.peekTok.Type == TokenEquals {
@@ -16559,8 +16560,9 @@ func (p *Parser) parseDbccStatement() (*ast.DbccStatement, error) {
 					break
 				}
 				lit.Value = val
-				// ScriptDom positions dbcc literals on their value.
-				p.spanFromChild(lit, val)
+				// ScriptDom spans named dbcc literals from the name through
+				// the value; unnamed ones on the value alone.
+				p.spanFrom(litStartTok, lit)
 				stmt.Literals = append(stmt.Literals, lit)
 
 				if p.curTok.Type == TokenComma {

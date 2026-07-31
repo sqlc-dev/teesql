@@ -5959,8 +5959,10 @@ func (p *Parser) parseGroupingSetsArgument() (ast.GroupingSpecification, error) 
 // which can contain CUBE, ROLLUP, columns, or a mix
 func (p *Parser) parseGroupingSetsCompositeArgument() (ast.GroupingSpecification, error) {
 	astStart := p.curTok
+	_ = astStart
 
 	p.nextToken() // consume (
+	firstItemTok := p.curTok
 
 	// Check what's inside - might be CUBE, ROLLUP, or columns
 	var items []ast.GroupingSpecification
@@ -6005,11 +6007,17 @@ func (p *Parser) parseGroupingSetsCompositeArgument() (ast.GroupingSpecification
 		p.nextToken() // consume comma
 	}
 
+	// ScriptDom spans a composite inside GROUPING SETS over its contents,
+	// excluding the enclosing parentheses.
+	cgs := &ast.CompositeGroupingSpecification{Items: items}
+	p.spanFrom(firstItemTok, cgs)
+	cgs.Pin()
+
 	if p.curTok.Type == TokenRParen {
 		p.nextToken() // consume )
 	}
 
-	return spanned(p, &ast.CompositeGroupingSpecification{Items: items}, astStart), nil
+	return cgs, nil
 }
 
 // parseGroupingSpecificationArgument parses an argument inside ROLLUP/CUBE which can be
@@ -7573,7 +7581,12 @@ func (p *Parser) parseForClause() (ast.ForClause, error) {
 	case "READ":
 		p.nextToken() // consume READ
 		if strings.ToUpper(p.curTok.Literal) == "ONLY" {
+			// ScriptDom spans FOR READ ONLY on the ONLY token.
+			roClause := &ast.ReadOnlyForClause{}
+			p.tokSpan(roClause, p.curTok)
+			roClause.Pin()
 			p.nextToken() // consume ONLY
+			return roClause, nil
 		}
 		return spanned(p, &ast.ReadOnlyForClause{}, astStart), nil
 
@@ -7680,13 +7693,16 @@ func (p *Parser) parseXmlForClauseOption() (*ast.XmlForClauseOption, error) {
 			}
 		}
 	case "ELEMENTS":
-		// Check for XSINIL or ABSENT
+		// Check for XSINIL or ABSENT; ScriptDom spans these forms on the
+		// trailing keyword only.
 		nextKeyword := strings.ToUpper(p.curTok.Literal)
 		if nextKeyword == "XSINIL" {
 			option.OptionKind = "ElementsXsiNil"
+			astStart = p.curTok
 			p.nextToken() // consume XSINIL
 		} else if nextKeyword == "ABSENT" {
 			option.OptionKind = "ElementsAbsent"
+			astStart = p.curTok
 			p.nextToken() // consume ABSENT
 		} else {
 			option.OptionKind = "Elements"
@@ -7722,9 +7738,10 @@ func (p *Parser) parseXmlForClauseOption() (*ast.XmlForClauseOption, error) {
 	case "TYPE":
 		option.OptionKind = "Type"
 	case "BINARY":
-		// BINARY BASE64
+		// BINARY BASE64 - ScriptDom spans this option on BASE64 only.
 		if strings.ToUpper(p.curTok.Literal) == "BASE64" {
 			option.OptionKind = "BinaryBase64"
+			astStart = p.curTok
 			p.nextToken() // consume BASE64
 		}
 	default:
@@ -8784,9 +8801,11 @@ func (p *Parser) parseWindowClause() (*ast.WindowClause, error) {
 	p.nextToken() // consume WINDOW
 
 	clause := &ast.WindowClause{}
+	firstDefTok := p.curTok
 
 	for {
 		def := &ast.WindowDefinition{}
+		defStartTok := p.curTok
 
 		// Parse window name
 		def.WindowName = p.parseIdentifier()
@@ -8857,6 +8876,8 @@ func (p *Parser) parseWindowClause() (*ast.WindowClause, error) {
 		}
 		p.nextToken() // consume )
 
+		// The definition spans the name through the closing parenthesis.
+		p.spanFrom(defStartTok, def)
 		clause.WindowDefinition = append(clause.WindowDefinition, def)
 
 		// Check for comma (more window definitions)
@@ -8866,7 +8887,12 @@ func (p *Parser) parseWindowClause() (*ast.WindowClause, error) {
 		p.nextToken() // consume ,
 	}
 
-	return spanned(p, clause, astStart), nil
+	// ScriptDom spans the WINDOW clause over its definitions, excluding
+	// the WINDOW keyword itself.
+	p.spanFrom(firstDefTok, clause)
+	clause.Pin()
+	_ = astStart
+	return clause, nil
 }
 
 // parsePivotedTableReference parses PIVOT clause
