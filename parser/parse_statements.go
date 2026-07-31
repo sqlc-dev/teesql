@@ -13802,6 +13802,8 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpClearPort"}
 						if p.curTok.Type == TokenNumber {
 							opt.Value = p.intLitFromToken(p.curTok)
+							// ScriptDom positions this option on its value.
+							p.tokSpan(opt, p.curTok)
 							p.nextToken()
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
@@ -13809,6 +13811,8 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 						opt := &ast.LiteralEndpointProtocolOption{Kind: "HttpSslPort"}
 						if p.curTok.Type == TokenNumber {
 							opt.Value = p.intLitFromToken(p.curTok)
+							// ScriptDom positions this option on its value.
+							p.tokSpan(opt, p.curTok)
 							p.nextToken()
 						}
 						stmt.ProtocolOptions = append(stmt.ProtocolOptions, opt)
@@ -13840,6 +13844,8 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 						}
 						if p.curTok.Type == TokenNumber {
 							opt.Value = p.intLitFromToken(p.curTok)
+							// ScriptDom positions this option on its value.
+							p.tokSpan(opt, p.curTok)
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
 							opt.Value = p.parseStringLiteralValue()

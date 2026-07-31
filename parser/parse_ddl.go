@@ -9331,6 +9331,8 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 						}
 						if p.curTok.Type == TokenNumber {
 							opt.Value = p.intLitFromToken(p.curTok)
+							// ScriptDom positions this option on its value.
+							p.tokSpan(opt, p.curTok)
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
 							opt.Value = p.strLit(p.curTok.Literal, false)
@@ -9524,9 +9526,9 @@ func (p *Parser) parseIPv4Address() *ast.IPv4 {
 // parseSoapWebMethod parses a SOAP WEBMETHOD option.
 // actionUpper is "Add", "Alter", "Drop", or empty string (for CREATE ENDPOINT without action).
 func (p *Parser) parseSoapWebMethod(actionUpper string) *ast.SoapMethod {
-	astStart := p.curTok
-
 	p.nextToken() // consume WEBMETHOD
+	// ScriptDom spans the method from its alias string.
+	astStart := p.curTok
 	method := &ast.SoapMethod{
 		Format: "NotSpecified",
 		Schema: "NotSpecified",
