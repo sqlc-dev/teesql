@@ -563,7 +563,9 @@ func (p *Parser) parseSelectElement() (ast.SelectElement, error) {
 		// Not an assignment, treat as regular scalar expression starting with variable
 		var varExpr ast.ScalarExpression
 		if strings.HasPrefix(varName, "@@") {
-			varExpr = &ast.GlobalVariableExpression{Name: varName}
+			gve := &ast.GlobalVariableExpression{Name: varName}
+			p.tokSpan(gve, varNameTok)
+			varExpr = gve
 		} else {
 			varExpr = p.varRefFromToken(varNameTok)
 		}
@@ -3290,6 +3292,8 @@ func (p *Parser) parseSchemaDeclarationItemOpenjson() (*ast.SchemaDeclarationIte
 		p.nextToken() // consume COLLATE
 		item.ColumnDefinition.Collation = p.parseIdentifier()
 	}
+	// ScriptDom spans the column definition over name, type and collation.
+	p.spanFrom(astStart, item.ColumnDefinition)
 
 	// Parse optional path mapping (string literal) or AS JSON
 	if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
@@ -3300,6 +3304,10 @@ func (p *Parser) parseSchemaDeclarationItemOpenjson() (*ast.SchemaDeclarationIte
 		item.Mapping = mapping
 	}
 
+	// ScriptDom's item span excludes a trailing AS JSON.
+	p.spanFrom(astStart, item)
+	item.Pin()
+
 	// Parse optional AS JSON
 	if p.curTok.Type == TokenAs {
 		p.nextToken() // consume AS
@@ -3309,7 +3317,7 @@ func (p *Parser) parseSchemaDeclarationItemOpenjson() (*ast.SchemaDeclarationIte
 		}
 	}
 
-	return spanned(p, item, astStart), nil
+	return item, nil
 }
 
 // parseOdbcQualifiedJoinTableReference parses ODBC outer join escape sequence: { OJ ... }

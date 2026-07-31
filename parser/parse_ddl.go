@@ -10416,19 +10416,34 @@ func (p *Parser) parseAlterFulltextStopListStatement() (*ast.AlterFullTextStopLi
 	}
 
 	// Check for ALL
+	wordTok := p.curTok
+	haveWord := false
 	if strings.ToUpper(p.curTok.Literal) == "ALL" {
 		action.IsAll = true
 		p.nextToken() // consume ALL
 	} else if p.curTok.Type == TokenString || p.curTok.Type == TokenNationalString {
 		// Parse stopword
+		haveWord = true
 		strLit, _ := p.parseStringLiteral()
 		action.StopWord = strLit
 	}
 
 	// Parse LANGUAGE term
+	haveLang := false
+	langTok := p.curTok
 	if p.curTok.Type == TokenLanguage || strings.ToUpper(p.curTok.Literal) == "LANGUAGE" {
 		p.nextToken() // consume LANGUAGE
+		langTok = p.curTok
+		haveLang = true
 		action.LanguageTerm, _ = p.parseIdentifierOrValueExpression()
+	}
+
+	// ScriptDom spans the action from the stopword through the language
+	// term; the bare ALL form has no source position.
+	if haveWord {
+		p.spanFrom(wordTok, action)
+	} else if haveLang {
+		p.spanFrom(langTok, action)
 	}
 
 	stmt.Action = action
@@ -13813,7 +13828,14 @@ func (p *Parser) parseAlterColumnEncryptionKeyStatement() (ast.Statement, error)
 		p.nextToken() // consume (
 
 		// Parse parameters
+		var firstParamTok Token
+		haveParam := false
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			paramTok := p.curTok
+			if !haveParam {
+				firstParamTok = p.curTok
+				haveParam = true
+			}
 			paramName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume parameter name
 
@@ -13823,22 +13845,28 @@ func (p *Parser) parseAlterColumnEncryptionKeyStatement() (ast.Statement, error)
 
 			switch paramName {
 			case "COLUMN_MASTER_KEY":
-				value.Parameters = append(value.Parameters, &ast.ColumnMasterKeyNameParameter{
+				cmkParam := &ast.ColumnMasterKeyNameParameter{
 					Name:          p.parseIdentifier(),
 					ParameterKind: "ColumnMasterKeyName",
-				})
+				}
+				p.spanFrom(paramTok, cmkParam)
+				value.Parameters = append(value.Parameters, cmkParam)
 			case "ALGORITHM":
 				expr, _ := p.parseScalarExpression()
-				value.Parameters = append(value.Parameters, &ast.ColumnEncryptionAlgorithmNameParameter{
+				algParam := &ast.ColumnEncryptionAlgorithmNameParameter{
 					Algorithm:     expr,
 					ParameterKind: "EncryptionAlgorithmName",
-				})
+				}
+				p.spanFrom(paramTok, algParam)
+				value.Parameters = append(value.Parameters, algParam)
 			case "ENCRYPTED_VALUE":
 				expr, _ := p.parseScalarExpression()
-				value.Parameters = append(value.Parameters, &ast.EncryptedValueParameter{
+				evParam := &ast.EncryptedValueParameter{
 					Value:         expr,
 					ParameterKind: "EncryptedValue",
-				})
+				}
+				p.spanFrom(paramTok, evParam)
+				value.Parameters = append(value.Parameters, evParam)
 			default:
 				// Skip unknown parameter
 				p.nextToken()
@@ -13848,6 +13876,11 @@ func (p *Parser) parseAlterColumnEncryptionKeyStatement() (ast.Statement, error)
 			if p.curTok.Type == TokenComma {
 				p.nextToken()
 			}
+		}
+		if haveParam {
+			// ScriptDom spans the value over its parameters, excluding
+			// the enclosing parentheses.
+			p.spanFrom(firstParamTok, value)
 		}
 
 		// Consume closing )

@@ -2168,11 +2168,11 @@ func scalarExpressionToJSON(expr ast.ScalarExpression) jsonNode {
 		if len(e.JsonParameters) > 0 {
 			params := make([]jsonNode, len(e.JsonParameters))
 			for i, kv := range e.JsonParameters {
-				params[i] = jsonNode{
+				params[i] = addSpan(jsonNode{
 					"$type":       "JsonKeyValue",
 					"JsonKeyName": scalarExpressionToJSON(kv.JsonKeyName),
 					"JsonValue":   scalarExpressionToJSON(kv.JsonValue),
-				}
+				}, kv.Frag())
 			}
 			node["JsonParameters"] = params
 		}
@@ -2922,12 +2922,12 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 					if item.ColumnDefinition.Collation != nil {
 						colDef["Collation"] = identifierToJSON(item.ColumnDefinition.Collation)
 					}
-					itemNode["ColumnDefinition"] = colDef
+					itemNode["ColumnDefinition"] = addSpan(colDef, item.ColumnDefinition.Frag())
 				}
 				if item.Mapping != nil {
 					itemNode["Mapping"] = scalarExpressionToJSON(item.Mapping)
 				}
-				items[i] = itemNode
+				items[i] = addSpan(itemNode, item.Frag())
 			}
 			node["SchemaDeclarationItems"] = items
 		}

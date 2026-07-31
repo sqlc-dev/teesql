@@ -3624,7 +3624,14 @@ func (p *Parser) parseCreateColumnEncryptionKeyStatement() (*ast.CreateColumnEnc
 			p.nextToken() // consume (
 
 			// Parse parameters
+			var firstParamTok Token
+			haveParam := false
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				paramTok := p.curTok
+				if !haveParam {
+					firstParamTok = p.curTok
+					haveParam = true
+				}
 				paramName := strings.ToUpper(p.curTok.Literal)
 				p.nextToken() // consume parameter name
 
@@ -3634,22 +3641,28 @@ func (p *Parser) parseCreateColumnEncryptionKeyStatement() (*ast.CreateColumnEnc
 
 				switch paramName {
 				case "COLUMN_MASTER_KEY":
-					value.Parameters = append(value.Parameters, &ast.ColumnMasterKeyNameParameter{
+					cmkParam := &ast.ColumnMasterKeyNameParameter{
 						Name:          p.parseIdentifier(),
 						ParameterKind: "ColumnMasterKeyName",
-					})
+					}
+					p.spanFrom(paramTok, cmkParam)
+					value.Parameters = append(value.Parameters, cmkParam)
 				case "ALGORITHM":
 					expr, _ := p.parseScalarExpression()
-					value.Parameters = append(value.Parameters, &ast.ColumnEncryptionAlgorithmNameParameter{
+					algParam := &ast.ColumnEncryptionAlgorithmNameParameter{
 						Algorithm:     expr,
 						ParameterKind: "EncryptionAlgorithmName",
-					})
+					}
+					p.spanFrom(paramTok, algParam)
+					value.Parameters = append(value.Parameters, algParam)
 				case "ENCRYPTED_VALUE":
 					expr, _ := p.parseScalarExpression()
-					value.Parameters = append(value.Parameters, &ast.EncryptedValueParameter{
+					evParam := &ast.EncryptedValueParameter{
 						Value:         expr,
 						ParameterKind: "EncryptedValue",
-					})
+					}
+					p.spanFrom(paramTok, evParam)
+					value.Parameters = append(value.Parameters, evParam)
 				default:
 					// Skip unknown parameter
 					p.nextToken()
@@ -3659,6 +3672,11 @@ func (p *Parser) parseCreateColumnEncryptionKeyStatement() (*ast.CreateColumnEnc
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
 				}
+			}
+			if haveParam {
+				// ScriptDom spans the value over its parameters, excluding
+				// the enclosing parentheses.
+				p.spanFrom(firstParamTok, value)
 			}
 
 			// Consume closing )
@@ -13677,6 +13695,7 @@ func (p *Parser) parseRouteOptions() []*ast.RouteOption {
 	var options []*ast.RouteOption
 
 	for p.curTok.Type != TokenSemicolon && p.curTok.Type != TokenEOF {
+		routeOptTok := p.curTok
 		optionName := strings.ToUpper(p.curTok.Literal)
 		p.nextToken() // consume option name
 
@@ -13723,10 +13742,12 @@ func (p *Parser) parseRouteOptions() []*ast.RouteOption {
 		}
 
 		if literal != nil {
-			options = append(options, &ast.RouteOption{
+			rOpt := &ast.RouteOption{
 				OptionKind: optionKind,
 				Literal:    literal,
-			})
+			}
+			p.spanFrom(routeOptTok, rOpt)
+			options = append(options, rOpt)
 		}
 
 		// Skip comma if present

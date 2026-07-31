@@ -2664,11 +2664,13 @@ func (p *Parser) parseIdentifierOrValueExpression() (*ast.IdentifierOrValueExpre
 	} else if p.curTok.Type == TokenBinary {
 		// Binary/hex literal
 		result.Value = p.curTok.Literal
-		result.ValueExpression = &ast.BinaryLiteral{
+		bl := &ast.BinaryLiteral{
 			LiteralType:   "Binary",
 			IsLargeObject: false,
 			Value:         p.curTok.Literal,
 		}
+		p.tokSpan(bl, p.curTok)
+		result.ValueExpression = bl
 		p.nextToken()
 	} else if p.curTok.Type == TokenIdent {
 		// Identifier - use parseIdentifier to handle bracketed identifiers properly
