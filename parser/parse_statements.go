@@ -5075,11 +5075,15 @@ func (p *Parser) parseProcedureParameters() ([]*ast.ProcedureParameter, error) {
 				if colRef.MultiPartIdentifier != nil && colRef.MultiPartIdentifier.Count == 1 &&
 					len(colRef.MultiPartIdentifier.Identifiers) == 1 {
 					ident := colRef.MultiPartIdentifier.Identifiers[0]
-					val = &ast.IdentifierLiteral{
+					idLit := &ast.IdentifierLiteral{
 						LiteralType: "Identifier",
 						QuoteType:   ident.QuoteType,
 						Value:       ident.Value,
 					}
+					if ident.Frag().HasSpan() {
+						*idLit.Frag() = *ident.Frag()
+					}
+					val = idLit
 				}
 			}
 			param.Value = val
@@ -5753,25 +5757,42 @@ func (p *Parser) parseExecuteStatement() (ast.Statement, error) {
 				upperLit = strings.ToUpper(p.curTok.Literal)
 				if upperLit == "NONE" {
 					opt.ResultSetsOptionKind = "None"
+					// ScriptDom positions the option on the value token.
+					p.tokSpan(opt, p.curTok)
 					p.nextToken()
 				} else if upperLit == "UNDEFINED" {
 					opt.ResultSetsOptionKind = "Undefined"
+					p.tokSpan(opt, p.curTok)
 					p.nextToken()
 				} else if p.curTok.Type == TokenLParen {
 					opt.ResultSetsOptionKind = "ResultSetsDefined"
 					p.nextToken() // consume (
+					firstDefTok := p.curTok
 					opt.Definitions = p.parseResultSetDefinitions()
 					if p.curTok.Type == TokenRParen {
 						p.nextToken() // consume )
+					}
+					// The defined form spans the definitions through the
+					// closing paren (starting where the first definition
+					// starts, inside any nested paren).
+					if len(opt.Definitions) > 0 {
+						if fd, ok := any(opt.Definitions[0]).(spannable); ok && fd.Frag().HasSpan() {
+							p.spanFromChild(opt, opt.Definitions[0])
+						}
+					}
+					if !opt.Frag().HasSpan() {
+						p.spanFrom(firstDefTok, opt)
 					}
 				}
 
 				stmt.Options = append(stmt.Options, opt)
 			} else if upperLit == "RECOMPILE" {
-				p.nextToken() // consume RECOMPILE
-				stmt.Options = append(stmt.Options, &ast.ExecuteOption{
+				recompileOpt := &ast.ExecuteOption{
 					OptionKind: "Recompile",
-				})
+				}
+				p.tokSpan(recompileOpt, p.curTok)
+				p.nextToken() // consume RECOMPILE
+				stmt.Options = append(stmt.Options, recompileOpt)
 			} else {
 				break
 			}
@@ -5809,14 +5830,18 @@ func (p *Parser) parseResultSetDefinitions() []ast.ResultSetDefinitionType {
 					ResultSetType: "Object",
 					Name:          name,
 				}
+				// ScriptDom positions the definition on the object name.
+				p.spanFromChild(def, name)
 				definitions = append(definitions, def)
 			} else if upperLit == "FOR" {
 				p.nextToken() // consume FOR
-				if strings.ToUpper(p.curTok.Literal) == "XML" {
-					p.nextToken() // consume XML
-				}
 				def := &ast.ResultSetDefinition{
 					ResultSetType: "ForXml",
+				}
+				if strings.ToUpper(p.curTok.Literal) == "XML" {
+					// ScriptDom positions the FOR XML form on the XML token.
+					p.tokSpan(def, p.curTok)
+					p.nextToken() // consume XML
 				}
 				definitions = append(definitions, def)
 			} else if upperLit == "TYPE" {
@@ -5826,16 +5851,21 @@ func (p *Parser) parseResultSetDefinitions() []ast.ResultSetDefinitionType {
 					ResultSetType: "Type",
 					Name:          name,
 				}
+				p.spanFromChild(def, name)
 				definitions = append(definitions, def)
 			}
 		} else if p.curTok.Type == TokenLParen {
 			// Inline column definitions: (col1 int, col2 varchar(50), ...)
 			p.nextToken() // consume (
+			// ScriptDom spans the definition from the first column through
+			// the closing paren (excluding the opening paren).
+			inlineDefTok := p.curTok
 			def := &ast.InlineResultSetDefinition{
 				ResultSetType: "Inline",
 			}
 
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				rcdTok := p.curTok
 				colDef := &ast.ResultColumnDefinition{
 					ColumnDefinition: &ast.ColumnDefinitionBase{},
 				}
@@ -5845,6 +5875,8 @@ func (p *Parser) parseResultSetDefinitions() []ast.ResultSetDefinitionType {
 
 				// Parse data type
 				colDef.ColumnDefinition.DataType, _ = p.parseDataType()
+				// The base definition covers name and type only.
+				p.spanFrom(rcdTok, colDef.ColumnDefinition)
 
 				// Check for NULL/NOT NULL
 				if strings.ToUpper(p.curTok.Literal) == "NOT" {
@@ -5862,6 +5894,7 @@ func (p *Parser) parseResultSetDefinitions() []ast.ResultSetDefinitionType {
 					p.spanFrom(ncTok2, colDef.Nullable)
 				}
 
+				p.spanFrom(rcdTok, colDef)
 				def.ResultColumnDefinitions = append(def.ResultColumnDefinitions, colDef)
 
 				if p.curTok.Type == TokenComma {
@@ -5875,6 +5908,7 @@ func (p *Parser) parseResultSetDefinitions() []ast.ResultSetDefinitionType {
 				p.nextToken() // consume )
 			}
 
+			p.spanFrom(inlineDefTok, def)
 			definitions = append(definitions, def)
 		} else {
 			break
@@ -7631,9 +7665,11 @@ func (p *Parser) parseReceiveStatement() (*ast.ReceiveStatement, error) {
 		if p.curTok.Type != TokenIdent || len(p.curTok.Literal) == 0 || p.curTok.Literal[0] != '@' {
 			return nil, fmt.Errorf("expected @variable after INTO, got %s", p.curTok.Literal)
 		}
-		stmt.Into = &ast.VariableTableReference{
+		vtr := &ast.VariableTableReference{
 			Variable: p.spanVarRef(p.curTok.Literal),
 		}
+		p.tokSpan(vtr, p.curTok)
+		stmt.Into = vtr
 		p.nextToken()
 	}
 

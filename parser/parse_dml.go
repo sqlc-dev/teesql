@@ -968,11 +968,13 @@ func (p *Parser) parseOpenRowsetBulkOption() (ast.BulkInsertOption, error) {
 			upperVal := strings.ToUpper(p.curTok.Literal)
 			if upperVal == "TRUE" || upperVal == "FALSE" || upperVal == "RAW" ||
 				upperVal == "ACP" || upperVal == "WIDECHAR" || upperVal == "CHAR" {
-				value = &ast.IdentifierLiteral{
+				idLit := &ast.IdentifierLiteral{
 					LiteralType: "Identifier",
 					QuoteType:   "NotQuoted",
 					Value:       p.curTok.Literal,
 				}
+				p.tokSpan(idLit, p.curTok)
+				value = idLit
 				p.nextToken()
 			} else {
 				var err error
@@ -1686,11 +1688,13 @@ func (p *Parser) parseExecuteParameter() (*ast.ExecuteParameter, error) {
 				if strings.HasPrefix(p.curTok.Literal, "[") {
 					quoteType = "SquareBracket"
 				}
-				param.ParameterValue = &ast.IdentifierLiteral{
+				pidLit := &ast.IdentifierLiteral{
 					LiteralType: "Identifier",
 					QuoteType:   quoteType,
 					Value:       p.curTok.Literal,
 				}
+				p.tokSpan(pidLit, p.curTok)
+				param.ParameterValue = pidLit
 				p.nextToken()
 			} else {
 				// Regular value expression
@@ -3048,10 +3052,12 @@ func (p *Parser) parseOutputClause() (*ast.OutputClause, *ast.OutputIntoClause, 
 		if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
 			nameTok := p.curTok
 			p.nextToken()
-			intoTable = &ast.VariableTableReference{
+			vtr := &ast.VariableTableReference{
 				Variable: p.varRefFromToken(nameTok),
 				ForPath:  false,
 			}
+			p.tokSpan(vtr, nameTok)
+			intoTable = vtr
 		} else {
 			son, err := p.parseSchemaObjectName()
 			if err != nil {

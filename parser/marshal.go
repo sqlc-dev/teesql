@@ -5280,13 +5280,13 @@ func resultColumnDefinitionToJSON(col *ast.ResultColumnDefinition) jsonNode {
 		if col.ColumnDefinition.DataType != nil {
 			colDefNode["DataType"] = dataTypeReferenceToJSON(col.ColumnDefinition.DataType)
 		}
-		node["ColumnDefinition"] = colDefNode
+		node["ColumnDefinition"] = addSpan(colDefNode, frag(col.ColumnDefinition))
 	}
 	if col.Nullable != nil {
-		node["Nullable"] = jsonNode{
+		node["Nullable"] = addSpan(jsonNode{
 			"$type":    "NullableConstraintDefinition",
 			"Nullable": col.Nullable.Nullable,
-		}
+		}, frag(col.Nullable))
 	}
 	return addSpan(node, frag(col))
 }
@@ -11365,7 +11365,7 @@ func variableTableReferenceToJSON(v *ast.VariableTableReference) jsonNode {
 		if v.Variable.Name != "" {
 			varNode["Name"] = v.Variable.Name
 		}
-		node["Variable"] = varNode
+		node["Variable"] = addSpan(varNode, frag(v.Variable))
 	}
 	if v.Alias != nil {
 		node["Alias"] = identifierToJSON(v.Alias)
