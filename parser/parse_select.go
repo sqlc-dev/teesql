@@ -4083,11 +4083,15 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 
 	// Check for naked HOLDLOCK/NOWAIT before alias: table HOLDLOCK, table2
 	if p.curTok.Type == TokenHoldlock {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		hlHint2 := &ast.TableHint{HintKind: "HoldLock"}
+		p.tokSpan(hlHint2, p.curTok)
+		ref.TableHints = append(ref.TableHints, hlHint2)
 		p.nextToken()
 	}
 	if p.curTok.Type == TokenNowait {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		nwHint2 := &ast.TableHint{HintKind: "Nowait"}
+		p.tokSpan(nwHint2, p.curTok)
+		ref.TableHints = append(ref.TableHints, nwHint2)
 		p.nextToken()
 	}
 
@@ -4114,6 +4118,9 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 	// Check for old-style hints AFTER alias: table alias (1) or table alias (nolock)
 	// peekIsOldStyleIndexHint is safe to use here since we're after the alias
 	if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+		lparenTok := p.curTok
+		oldNumeric := !p.peekIsTableHint() && p.peekIsOldStyleIndexHint()
+		nHintsBefore := len(ref.TableHints)
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			hint, err := p.parseTableHint()
@@ -4135,15 +4142,26 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 		if p.curTok.Type == TokenRParen {
 			p.nextToken()
 		}
+		// ScriptDom spans an old-style numeric index hint over the
+		// enclosing parentheses.
+		if oldNumeric && len(ref.TableHints) == nHintsBefore+1 {
+			if h, ok := ref.TableHints[nHintsBefore].(spannable); ok {
+				p.spanFrom(lparenTok, h)
+			}
+		}
 	}
 
 	// Check for naked HOLDLOCK/NOWAIT after alias: table alias HOLDLOCK
 	if p.curTok.Type == TokenHoldlock {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		hlHint := &ast.TableHint{HintKind: "HoldLock"}
+		p.tokSpan(hlHint, p.curTok)
+		ref.TableHints = append(ref.TableHints, hlHint)
 		p.nextToken()
 	}
 	if p.curTok.Type == TokenNowait {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		nwHint := &ast.TableHint{HintKind: "Nowait"}
+		p.tokSpan(nwHint, p.curTok)
+		ref.TableHints = append(ref.TableHints, nwHint)
 		p.nextToken()
 	}
 
@@ -4152,6 +4170,9 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 		p.nextToken() // consume WITH
 		// In WITH context, numbers are valid index hints: WITH (0)
 		if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+			lparenTok2 := p.curTok
+			oldNumeric2 := !p.peekIsTableHint() && p.peekIsOldStyleIndexHint()
+			nHintsBefore2 := len(ref.TableHints)
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
@@ -4172,6 +4193,13 @@ func (p *Parser) parseNamedTableReference() (*ast.NamedTableReference, error) {
 			}
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
+			}
+			// ScriptDom spans an old-style numeric index hint over the
+			// enclosing parentheses.
+			if oldNumeric2 && len(ref.TableHints) == nHintsBefore2+1 {
+				if h, ok := ref.TableHints[nHintsBefore2].(spannable); ok {
+					p.spanFrom(lparenTok2, h)
+				}
 			}
 		}
 	}
@@ -4244,11 +4272,15 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 
 	// Check for naked HOLDLOCK/NOWAIT before alias: table HOLDLOCK, table2
 	if p.curTok.Type == TokenHoldlock {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		hlHint2 := &ast.TableHint{HintKind: "HoldLock"}
+		p.tokSpan(hlHint2, p.curTok)
+		ref.TableHints = append(ref.TableHints, hlHint2)
 		p.nextToken()
 	}
 	if p.curTok.Type == TokenNowait {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		nwHint2 := &ast.TableHint{HintKind: "Nowait"}
+		p.tokSpan(nwHint2, p.curTok)
+		ref.TableHints = append(ref.TableHints, nwHint2)
 		p.nextToken()
 	}
 
@@ -4274,6 +4306,9 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 	// Check for old-style hints AFTER alias: table alias (1) or table alias (nolock)
 	// peekIsOldStyleIndexHint is safe to use here since we're after the alias
 	if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+		lparenTok := p.curTok
+		oldNumeric := !p.peekIsTableHint() && p.peekIsOldStyleIndexHint()
+		nHintsBefore := len(ref.TableHints)
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			hint, err := p.parseTableHint()
@@ -4295,15 +4330,26 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		if p.curTok.Type == TokenRParen {
 			p.nextToken()
 		}
+		// ScriptDom spans an old-style numeric index hint over the
+		// enclosing parentheses.
+		if oldNumeric && len(ref.TableHints) == nHintsBefore+1 {
+			if h, ok := ref.TableHints[nHintsBefore].(spannable); ok {
+				p.spanFrom(lparenTok, h)
+			}
+		}
 	}
 
 	// Check for naked HOLDLOCK/NOWAIT after alias: table alias HOLDLOCK
 	if p.curTok.Type == TokenHoldlock {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "HoldLock"})
+		hlHint := &ast.TableHint{HintKind: "HoldLock"}
+		p.tokSpan(hlHint, p.curTok)
+		ref.TableHints = append(ref.TableHints, hlHint)
 		p.nextToken()
 	}
 	if p.curTok.Type == TokenNowait {
-		ref.TableHints = append(ref.TableHints, &ast.TableHint{HintKind: "Nowait"})
+		nwHint := &ast.TableHint{HintKind: "Nowait"}
+		p.tokSpan(nwHint, p.curTok)
+		ref.TableHints = append(ref.TableHints, nwHint)
 		p.nextToken()
 	}
 
@@ -4346,6 +4392,9 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 		p.nextToken() // consume WITH
 		// In WITH context, numbers are valid index hints: WITH (0)
 		if p.curTok.Type == TokenLParen && (p.peekIsTableHint() || p.peekIsOldStyleIndexHint()) {
+			lparenTok2 := p.curTok
+			oldNumeric2 := !p.peekIsTableHint() && p.peekIsOldStyleIndexHint()
+			nHintsBefore2 := len(ref.TableHints)
 			p.nextToken() // consume (
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 				hint, err := p.parseTableHint()
@@ -4366,6 +4415,13 @@ func (p *Parser) parseNamedTableReferenceWithName(son *ast.SchemaObjectName) (*a
 			}
 			if p.curTok.Type == TokenRParen {
 				p.nextToken()
+			}
+			// ScriptDom spans an old-style numeric index hint over the
+			// enclosing parentheses.
+			if oldNumeric2 && len(ref.TableHints) == nHintsBefore2+1 {
+				if h, ok := ref.TableHints[nHintsBefore2].(spannable); ok {
+					p.spanFrom(lparenTok2, h)
+				}
 			}
 		}
 	}

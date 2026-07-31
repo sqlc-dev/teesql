@@ -37,6 +37,10 @@ func newSourceMap(input string) *sourceMap {
 		if r == '\n' {
 			line++
 			col = 1
+		} else if r == '\r' && (i+1 >= n || input[i+1] != '\n') {
+			// A lone carriage return also starts a new line in ScriptDom.
+			line++
+			col = 1
 		} else {
 			col += w
 		}
