@@ -259,7 +259,7 @@ func (p *Parser) strLit(value string, isNational bool) *ast.StringLiteral {
 // earlier token, keeping the current end.
 func (p *Parser) respanStart(n spannable, start Token) {
 	f := n.Frag()
-	if !f.HasSpan() {
+	if !f.HasSpan() || f.Pinned() {
 		return
 	}
 	su, sl, sc := p.srcMap.at(start.Pos)

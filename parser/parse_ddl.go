@@ -3381,7 +3381,6 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 		case "PAGE_VERIFY":
 			// PAGE_VERIFY CHECKSUM | NONE | TORN_PAGE_DETECTION
 			verifyValue := strings.ToUpper(p.curTok.Literal)
-			p.nextToken()
 			value := "None"
 			switch verifyValue {
 			case "CHECKSUM":
@@ -3393,6 +3392,10 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				OptionKind: "PageVerify",
 				Value:      value,
 			}
+			// ScriptDom positions this option on the value token.
+			p.tokSpan(opt, p.curTok)
+			opt.Frag().Pin()
+			p.nextToken()
 			stmt.Options = append(stmt.Options, opt)
 		case "PARTNER":
 			opt, err := p.parsePartnerDatabaseOption()
@@ -3409,11 +3412,14 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 		case "PARAMETERIZATION":
 			// PARAMETERIZATION SIMPLE | FORCED
 			paramValue := strings.ToUpper(p.curTok.Literal)
-			p.nextToken()
 			opt := &ast.ParameterizationDatabaseOption{
 				OptionKind: "Parameterization",
 				IsSimple:   paramValue == "SIMPLE",
 			}
+			// ScriptDom positions this option on the value token.
+			p.tokSpan(opt, p.curTok)
+			opt.Frag().Pin()
+			p.nextToken()
 			stmt.Options = append(stmt.Options, opt)
 		case "CONTAINMENT":
 			// CONTAINMENT = NONE | PARTIAL
@@ -4133,12 +4139,11 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 
 // parsePartnerDatabaseOption parses PARTNER database mirroring option
 func (p *Parser) parsePartnerDatabaseOption() (*ast.PartnerDatabaseOption, error) {
-	astStart := p.curTok
-
 	opt := &ast.PartnerDatabaseOption{
 		OptionKind: "Partner",
 	}
 
+	// ScriptDom positions partner options on their value token alone.
 	// Check if next token is = (PARTNER = 'server')
 	if p.curTok.Type == TokenEquals {
 		p.nextToken() // consume =
@@ -4148,25 +4153,33 @@ func (p *Parser) parsePartnerDatabaseOption() (*ast.PartnerDatabaseOption, error
 		}
 		opt.PartnerServer = server
 		opt.PartnerOption = "PartnerServer"
-		return spanned(p, opt, astStart), nil
+		p.spanFromChild(opt, server)
+		opt.Frag().Pin()
+		return opt, nil
 	}
 
 	// Otherwise, parse partner action
+	actionTok := p.curTok
 	action := strings.ToUpper(p.curTok.Literal)
 	p.nextToken()
 
 	switch action {
 	case "FAILOVER":
 		opt.PartnerOption = "Failover"
+		p.tokSpan(opt, actionTok)
 	case "FORCE_SERVICE_ALLOW_DATA_LOSS":
 		opt.PartnerOption = "ForceServiceAllowDataLoss"
+		p.tokSpan(opt, actionTok)
 	case "RESUME":
 		opt.PartnerOption = "Resume"
+		p.tokSpan(opt, actionTok)
 	case "SUSPEND":
 		opt.PartnerOption = "Suspend"
+		p.tokSpan(opt, actionTok)
 	case "SAFETY":
 		// SAFETY FULL or SAFETY OFF
 		safetyVal := strings.ToUpper(p.curTok.Literal)
+		p.tokSpan(opt, p.curTok)
 		p.nextToken()
 		if safetyVal == "FULL" {
 			opt.PartnerOption = "SafetyFull"
@@ -4181,21 +4194,23 @@ func (p *Parser) parsePartnerDatabaseOption() (*ast.PartnerDatabaseOption, error
 			return nil, err
 		}
 		opt.Timeout = val
+		p.spanFromChild(opt, val)
 	default:
 		opt.PartnerOption = capitalizeFirst(strings.ToLower(action))
+		p.tokSpan(opt, actionTok)
 	}
 
-	return spanned(p, opt, astStart), nil
+	opt.Frag().Pin()
+	return opt, nil
 }
 
 // parseWitnessDatabaseOption parses WITNESS database mirroring option
 func (p *Parser) parseWitnessDatabaseOption() (*ast.WitnessDatabaseOption, error) {
-	astStart := p.curTok
-
 	opt := &ast.WitnessDatabaseOption{
 		OptionKind: "Witness",
 	}
 
+	// ScriptDom positions witness options on their value token alone.
 	// Check if next token is = (WITNESS = 'server')
 	if p.curTok.Type == TokenEquals {
 		p.nextToken() // consume =
@@ -4204,16 +4219,20 @@ func (p *Parser) parseWitnessDatabaseOption() (*ast.WitnessDatabaseOption, error
 			return nil, err
 		}
 		opt.WitnessServer = server
-		return spanned(p, opt, astStart), nil
+		p.spanFromChild(opt, server)
+		opt.Frag().Pin()
+		return opt, nil
 	}
 
 	// Check for WITNESS OFF
 	if strings.ToUpper(p.curTok.Literal) == "OFF" {
 		opt.IsOff = true
+		p.tokSpan(opt, p.curTok)
+		opt.Frag().Pin()
 		p.nextToken()
 	}
 
-	return spanned(p, opt, astStart), nil
+	return opt, nil
 }
 
 func (p *Parser) parseAlterDatabaseAddStatement(dbName *ast.Identifier) (ast.Statement, error) {
