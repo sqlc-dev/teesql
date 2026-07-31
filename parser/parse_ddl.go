@@ -3193,7 +3193,6 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 		case "RECOVERY":
 			// Expect FULL, BULK_LOGGED, or SIMPLE
 			recoveryType := strings.ToUpper(p.curTok.Literal)
-			p.nextToken()
 			recoveryValue := "Full"
 			switch recoveryType {
 			case "BULK_LOGGED":
@@ -3202,6 +3201,10 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				recoveryValue = "Simple"
 			}
 			opt := &ast.RecoveryDatabaseOption{OptionKind: "Recovery", Value: recoveryValue}
+			// ScriptDom positions this option on the value token.
+			p.tokSpan(opt, p.curTok)
+			opt.Frag().Pin()
+			p.nextToken()
 			stmt.Options = append(stmt.Options, opt)
 		case "CURSOR_CLOSE_ON_COMMIT":
 			// Expects ON/OFF
@@ -3215,11 +3218,14 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 		case "CURSOR_DEFAULT":
 			// Expects LOCAL or GLOBAL
 			cursorValue := strings.ToUpper(p.curTok.Literal)
-			p.nextToken()
 			opt := &ast.CursorDefaultDatabaseOption{
 				OptionKind: "CursorDefault",
 				IsLocal:    cursorValue == "LOCAL",
 			}
+			// ScriptDom positions this option on the value token.
+			p.tokSpan(opt, p.curTok)
+			opt.Frag().Pin()
+			p.nextToken()
 			stmt.Options = append(stmt.Options, opt)
 		case "ACCELERATED_DATABASE_RECOVERY":
 			// Expect = for this option
@@ -7609,10 +7615,12 @@ func (p *Parser) parseAlterTableSetStatement(tableName *ast.SchemaObjectName) (*
 				OptionKind: "FileTableDirectory",
 			}
 			if strings.ToUpper(p.curTok.Literal) == "NULL" {
-				opt.Value = &ast.NullLiteral{
+				nl := &ast.NullLiteral{
 					LiteralType: "Null",
 					Value:       "NULL",
 				}
+				p.tokSpan(nl, p.curTok)
+				opt.Value = nl
 				p.nextToken()
 			} else if p.curTok.Type == TokenString {
 				value := p.curTok.Literal

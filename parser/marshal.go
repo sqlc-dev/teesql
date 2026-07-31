@@ -6083,10 +6083,12 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 							OptionKind: "FileTableDirectory",
 						}
 						if strings.ToUpper(p.curTok.Literal) == "NULL" {
-							opt.Value = &ast.NullLiteral{
+							nl := &ast.NullLiteral{
 								LiteralType: "Null",
 								Value:       "NULL",
 							}
+							p.tokSpan(nl, p.curTok)
+							opt.Value = nl
 							p.nextToken()
 						} else if p.curTok.Type == TokenString {
 							value := p.curTok.Literal
@@ -6100,6 +6102,8 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 							opt.Value = p.strLit(value, false)
 							p.nextToken()
 						}
+						// ScriptDom positions this option on its value.
+						p.spanFromChild(opt, opt.Value)
 						stmt.Options = append(stmt.Options, opt)
 					} else if optionName == "FILETABLE_COLLATE_FILENAME" {
 						if p.curTok.Type == TokenEquals {
@@ -6397,6 +6401,7 @@ func (p *Parser) parseRemoteDataArchiveTableOption(isAlterTable bool) (ast.Table
 	}
 
 	// Parse ON, OFF, or OFF_WITHOUT_DATA_RECOVERY
+	rdaStateTok := p.curTok
 	rdaOption := "Enable"
 	stateUpper := strings.ToUpper(p.curTok.Literal)
 	if stateUpper == "ON" {
@@ -6459,9 +6464,41 @@ func (p *Parser) parseRemoteDataArchiveTableOption(isAlterTable bool) (ast.Table
 			}
 		}
 
+		var rparenTok Token
+		hasRParen := false
 		if p.curTok.Type == TokenRParen {
+			rparenTok = p.curTok
+			hasRParen = true
 			p.nextToken() // consume )
 		}
+		if isAlterTable {
+			// ALTER TABLE SET form: spans from the ON/OFF state through the
+			// closing paren.
+			alterOpt := &ast.RemoteDataArchiveAlterTableOption{
+				RdaTableOption:             rdaOption,
+				MigrationState:             migrationState,
+				IsMigrationStateSpecified:  isMigrationStateSpecified,
+				FilterPredicate:            filterPredicate,
+				IsFilterPredicateSpecified: isFilterPredicateSpecified,
+				OptionKind:                 "RemoteDataArchive",
+			}
+			p.spanFrom(rdaStateTok, alterOpt)
+			alterOpt.Frag().Pin()
+			return alterOpt, nil
+		}
+		// CREATE TABLE form: ScriptDom positions the option on the closing
+		// paren alone.
+		createOpt := &ast.RemoteDataArchiveTableOption{
+			RdaTableOption:  rdaOption,
+			MigrationState:  migrationState,
+			FilterPredicate: filterPredicate,
+			OptionKind:      "RemoteDataArchive",
+		}
+		if hasRParen {
+			p.tokSpan(createOpt, rparenTok)
+			createOpt.Frag().Pin()
+		}
+		return createOpt, nil
 	}
 
 	if isAlterTable {
