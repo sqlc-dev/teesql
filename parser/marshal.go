@@ -3194,7 +3194,7 @@ func tableReferenceToJSON(ref ast.TableReference) jsonNode {
 			if r.Object.ValueExpression != nil {
 				objNode["ValueExpression"] = scalarExpressionToJSON(r.Object.ValueExpression)
 			}
-			node["Object"] = objNode
+			node["Object"] = addSpan(objNode, r.Object.Frag())
 		}
 		if r.Alias != nil {
 			node["Alias"] = identifierToJSON(r.Alias)
@@ -7986,6 +7986,8 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "REFERENCES" {
 			// Parse inline REFERENCES constraint (shorthand for FOREIGN KEY)
+			referencesTok := p.curTok
+			hadConstraintName := constraintName != nil
 			p.nextToken() // consume REFERENCES
 			constraint := &ast.ForeignKeyConstraintDefinition{
 				ConstraintIdentifier: constraintName,
@@ -8041,6 +8043,12 @@ func (p *Parser) parseColumnDefinition() (*ast.ColumnDefinition, error) {
 				} else {
 					break
 				}
+			}
+			// ScriptDom spans the constraint from the REFERENCES keyword
+			// (or the CONSTRAINT keyword when named).
+			p.spanFrom(referencesTok, constraint)
+			if hadConstraintName {
+				p.respanStart(constraint, constraintTok)
 			}
 			col.Constraints = append(col.Constraints, constraint)
 		} else if upperLit == "CONSTRAINT" {

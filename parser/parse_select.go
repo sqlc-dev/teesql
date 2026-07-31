@@ -4612,14 +4612,18 @@ func (p *Parser) parseFullTextTableReference(funcType string) (*ast.FullTextTabl
 
 	// Parse column specification - could be *, (columns), or PROPERTY(column, 'property')
 	if p.curTok.Type == TokenStar {
-		ref.Columns = []*ast.ColumnReferenceExpression{{ColumnType: "Wildcard"}}
+		starCol := &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}
+		p.tokSpan(starCol, p.curTok)
+		ref.Columns = []*ast.ColumnReferenceExpression{starCol}
 		p.nextToken()
 	} else if p.curTok.Type == TokenLParen {
 		// Column list
 		p.nextToken() // consume (
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 			if p.curTok.Type == TokenStar {
-				ref.Columns = append(ref.Columns, &ast.ColumnReferenceExpression{ColumnType: "Wildcard"})
+				starCol := &ast.ColumnReferenceExpression{ColumnType: "Wildcard"}
+				p.tokSpan(starCol, p.curTok)
+				ref.Columns = append(ref.Columns, starCol)
 				p.nextToken()
 			} else {
 				col := p.parseIdentifier()
@@ -9358,6 +9362,10 @@ func (p *Parser) parseAdHocTableReference() (*ast.AdHocTableReference, error) {
 		ProviderName: providerName,
 		InitString:   initString,
 	}
+	// ScriptDom spans the data source from the OPENDATASOURCE keyword
+	// through the closing parenthesis.
+	p.spanFrom(astStart, dataSource)
+	dataSource.Pin()
 
 	// Expect dot followed by object
 	if p.curTok.Type != TokenDot {
@@ -9367,6 +9375,7 @@ func (p *Parser) parseAdHocTableReference() (*ast.AdHocTableReference, error) {
 
 	// Parse the object - could be a string or schema object name
 	var obj *ast.SchemaObjectNameOrValueExpression
+	objTok := p.curTok
 	if p.curTok.Type == TokenString {
 		expr, err := p.parseScalarExpression()
 		if err != nil {
@@ -9384,6 +9393,7 @@ func (p *Parser) parseAdHocTableReference() (*ast.AdHocTableReference, error) {
 			SchemaObjectName: son,
 		}
 	}
+	p.spanFrom(objTok, obj)
 
 	result := &ast.AdHocTableReference{
 		DataSource: dataSource,
