@@ -7465,7 +7465,7 @@ func (p *Parser) parseLabelOrError() (ast.Statement, error) {
 	// Check for implicit procedure execution (identifier followed by parameters)
 	// This happens at batch start where you can call a stored procedure without EXEC
 	if p.isImplicitExecuteParameter() {
-		spanV331, spanErr331 := p.parseImplicitExecuteStatement(label)
+		spanV331, spanErr331 := p.parseImplicitExecuteStatement(label, astStart)
 		return spanned(p, spanV331, astStart), spanErr331
 	}
 
@@ -7500,13 +7500,14 @@ func (p *Parser) isImplicitExecuteParameter() bool {
 }
 
 // parseImplicitExecuteStatement parses an implicit EXEC statement (procedure call without EXEC keyword)
-func (p *Parser) parseImplicitExecuteStatement(procName string) (ast.Statement, error) {
-	astStart := p.curTok
+func (p *Parser) parseImplicitExecuteStatement(procName string, procTok Token) (ast.Statement, error) {
+	astStart := procTok
 
 	// Build the SchemaObjectName from the procedure name
 	// Use the same identifier pointer for both Identifiers array and BaseIdentifier
 	// so that JSON marshaling can use $ref
 	baseIdent := p.spanIdent(procName, "NotQuoted")
+	p.tokSpan(baseIdent, procTok)
 	son := &ast.SchemaObjectName{
 		Count:          1,
 		Identifiers:    []*ast.Identifier{baseIdent},
@@ -16526,7 +16527,10 @@ func (p *Parser) parseWorkloadClassifierOption() (ast.WorkloadClassifierOption, 
 			opt.Importance = importanceValue
 		}
 		p.nextToken()
-		return spanned(p, opt, astStart), nil
+		// ScriptDom spans this option on the IMPORTANCE keyword only.
+		p.tokSpan(opt, astStart)
+		opt.Pin()
+		return opt, nil
 
 	default:
 		// Skip unknown option
