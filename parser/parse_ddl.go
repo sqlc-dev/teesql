@@ -7849,7 +7849,7 @@ func (p *Parser) parseRetentionPeriodDefinition() (*ast.RetentionPeriodDefinitio
 		ret.IsInfinity = true
 		ret.Units = "Day" // Default unit for INFINITE
 		p.nextToken()
-		return spanned(p, ret, astStart), nil
+		return unspan(spanned(p, ret, astStart)), nil
 	}
 
 	// Parse numeric duration
@@ -7888,7 +7888,8 @@ func (p *Parser) parseRetentionPeriodDefinition() (*ast.RetentionPeriodDefinitio
 	}
 	p.nextToken()
 
-	return spanned(p, ret, astStart), nil
+	// ScriptDom emits retention period definitions without position info.
+	return unspan(spanned(p, ret, astStart)), nil
 }
 
 func (p *Parser) parseAlterRoleStatement() (*ast.AlterRoleStatement, error) {
@@ -8005,6 +8006,7 @@ func (p *Parser) parseAlterViewStatement() (*ast.AlterViewStatement, error) {
 				optionKind = p.curTok.Literal
 			}
 			opt := &ast.ViewStatementOption{OptionKind: optionKind}
+			p.tokSpan(opt, p.curTok)
 			stmt.ViewOptions = append(stmt.ViewOptions, opt)
 			p.nextToken()
 			if p.curTok.Type == TokenComma {

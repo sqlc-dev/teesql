@@ -5194,6 +5194,7 @@ func (p *Parser) parseCreateViewStatement() (*ast.CreateViewStatement, error) {
 				optionKind = p.curTok.Literal
 			}
 			opt := &ast.ViewStatementOption{OptionKind: optionKind}
+			p.tokSpan(opt, p.curTok)
 			stmt.ViewOptions = append(stmt.ViewOptions, opt)
 			p.nextToken()
 			if p.curTok.Type == TokenComma {
