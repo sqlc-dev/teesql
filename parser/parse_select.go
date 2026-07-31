@@ -3439,6 +3439,12 @@ func (p *Parser) parseDerivedTableReference() (ast.TableReference, error) {
 				p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect) {
 				// Convert to QueryParenthesisExpression and continue with query expression parsing
 				qe := &ast.QueryParenthesisExpression{QueryExpression: ref.QueryExpression}
+				// The parenthesis expression covers the same source extent
+				// as the derived table it was parsed as.
+				if ref.HasSpan() {
+					qe.SetSpan(ref.StartOffset, ref.FragmentLength, ref.StartLine, ref.StartColumn)
+					qe.Pin()
+				}
 
 				// Check for binary operations (UNION, EXCEPT, INTERSECT)
 				if p.curTok.Type == TokenUnion || p.curTok.Type == TokenExcept || p.curTok.Type == TokenIntersect {
