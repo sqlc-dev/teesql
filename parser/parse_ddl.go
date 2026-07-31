@@ -9252,6 +9252,7 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 
 		case "AFFINITY":
 			hasOptions = true
+			affinityTok := p.curTok
 			p.nextToken() // consume AFFINITY
 			if p.curTok.Type == TokenEquals {
 				p.nextToken() // consume =
@@ -9273,6 +9274,8 @@ func (p *Parser) parseAlterEndpointStatement() (*ast.AlterEndpointStatement, err
 					p.nextToken()
 				}
 			}
+			// The affinity clause spans AFFINITY through its value.
+			p.spanFrom(affinityTok, affinity)
 			stmt.Affinity = affinity
 
 		case "AS":
@@ -9777,6 +9780,7 @@ func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {
 		p.nextToken() // consume (
 		var contracts []*ast.ServiceContract
 		for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+			contractTok := p.curTok
 			action := "None"
 			upperLit := strings.ToUpper(p.curTok.Literal)
 			if upperLit == "ADD" {
@@ -9796,6 +9800,8 @@ func (p *Parser) parseAlterServiceStatement() (ast.Statement, error) {
 				Name:   p.parseIdentifier(),
 				Action: action,
 			}
+			// The contract spans the ADD/DROP CONTRACT keywords and name.
+			p.spanFrom(contractTok, contract)
 			contracts = append(contracts, contract)
 			if p.curTok.Type == TokenComma {
 				p.nextToken() // consume ,

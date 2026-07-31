@@ -13085,10 +13085,15 @@ func (p *Parser) parseCreateCertificateStatement() (*ast.CreateCertificateStatem
 					case "EXPIRY_DATE":
 						kind = "ExpiryDate"
 					}
-					stmt.CertificateOptions = append(stmt.CertificateOptions, &ast.CertificateOption{
+					certOpt := &ast.CertificateOption{
 						Kind:  kind,
 						Value: strLit,
-					})
+					}
+					// ScriptDom positions certificate options on the value.
+					if strLit != nil && strLit.Frag().HasSpan() {
+						*certOpt.Frag() = *strLit.Frag()
+					}
+					stmt.CertificateOptions = append(stmt.CertificateOptions, certOpt)
 				}
 				if p.curTok.Type == TokenComma {
 					p.nextToken()
@@ -13639,6 +13644,7 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 
 		case "AFFINITY":
 			hasOptions = true
+			affinityTok := p.curTok
 			p.nextToken() // consume AFFINITY
 			if p.curTok.Type == TokenEquals {
 				p.nextToken() // consume =
@@ -13659,6 +13665,8 @@ func (p *Parser) parseCreateEndpointStatement() (*ast.CreateEndpointStatement, e
 					p.nextToken()
 				}
 			}
+			// The affinity clause spans AFFINITY through its value.
+			p.spanFrom(affinityTok, affinity)
 			stmt.Affinity = affinity
 
 		case "AS":

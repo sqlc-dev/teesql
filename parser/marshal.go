@@ -20680,11 +20680,11 @@ func createCertificateStatementToJSON(s *ast.CreateCertificateStatement) jsonNod
 	if len(s.CertificateOptions) > 0 {
 		options := make([]jsonNode, len(s.CertificateOptions))
 		for i, opt := range s.CertificateOptions {
-			options[i] = jsonNode{
+			options[i] = addSpan(jsonNode{
 				"$type": "CertificateOption",
 				"Kind":  opt.Kind,
 				"Value": stringLiteralToJSON(opt.Value),
-			}
+			}, frag(opt))
 		}
 		node["CertificateOptions"] = options
 	}
