@@ -6100,7 +6100,7 @@ func (p *Parser) parseCreateTableOptions(stmt *ast.CreateTableStatement) (*ast.C
 						if strings.ToUpper(p.curTok.Literal) == "NULL" {
 							nl := &ast.NullLiteral{
 								LiteralType: "Null",
-								Value:       "NULL",
+								Value:       p.curTok.Literal, // preserve original case
 							}
 							p.tokSpan(nl, p.curTok)
 							opt.Value = nl
@@ -13927,15 +13927,25 @@ func (p *Parser) parseAlterFunctionStatement() (*ast.AlterFunctionStatement, err
 		// For inline table-valued functions, parse RETURN SELECT...
 		if strings.ToUpper(p.curTok.Literal) == "RETURN" {
 			p.nextToken()
+			retLParen := p.curTok
+			hasParen := p.curTok.Type == TokenLParen
 			// Parse the SELECT statement
 			selectStmt, err := p.parseStatement()
 			if err != nil {
 				return nil, err
 			}
 			if sel, ok := selectStmt.(*ast.SelectStatement); ok {
-				stmt.ReturnType = &ast.SelectFunctionReturnType{
+				sfrt := &ast.SelectFunctionReturnType{
 					SelectStatement: sel,
 				}
+				if hasParen && sel.HasSpan() && sel.WithCtesAndXmlNamespaces != nil {
+					// A WITH-prefixed select inside RETURN ( ... ) keeps
+					// the parentheses on the return type only.
+					sfrt.SetSpan(sel.StartOffset, sel.FragmentLength, sel.StartLine, sel.StartColumn)
+					sfrt.Pin()
+					p.shrinkParenSelect(sel, retLParen)
+				}
+				stmt.ReturnType = sfrt
 			}
 		}
 	} else {
@@ -15143,14 +15153,24 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 		} else if strings.ToUpper(p.curTok.Literal) == "RETURN" {
 			// Inline table-valued function: RETURN SELECT...
 			p.nextToken()
+			retLParen := p.curTok
+			hasParen := p.curTok.Type == TokenLParen
 			selectStmt, err := p.parseStatement()
 			if err != nil {
 				return nil, err
 			}
 			if sel, ok := selectStmt.(*ast.SelectStatement); ok {
-				stmt.ReturnType = &ast.SelectFunctionReturnType{
+				sfrt := &ast.SelectFunctionReturnType{
 					SelectStatement: sel,
 				}
+				if hasParen && sel.HasSpan() && sel.WithCtesAndXmlNamespaces != nil {
+					// A WITH-prefixed select inside RETURN ( ... ) keeps
+					// the parentheses on the return type only.
+					sfrt.SetSpan(sel.StartOffset, sel.FragmentLength, sel.StartLine, sel.StartColumn)
+					sfrt.Pin()
+					p.shrinkParenSelect(sel, retLParen)
+				}
+				stmt.ReturnType = sfrt
 			}
 		} else {
 			// Multi-statement table-valued function: BEGIN ... END

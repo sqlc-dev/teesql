@@ -319,6 +319,42 @@ func (p *Parser) trimTrailingSemicolon(n spannable) {
 	}
 }
 
+// shrinkParenSelect adjusts the span of a parenthesized SELECT used as an
+// inline function return body: ScriptDom spans the SelectStatement over the
+// content between the parentheses, while the enclosing return type keeps the
+// parenthesized extent.
+func (p *Parser) shrinkParenSelect(sel *ast.SelectStatement, lparenTok Token) {
+	isWS := func(b byte) bool { return b == ' ' || b == '\t' || b == '\r' || b == '\n' }
+	input := p.lexer.input
+	b := lparenTok.Pos + 1
+	for b < len(input) && isWS(input[b]) {
+		b++
+	}
+	e := p.prevEndByte
+	for e > b && isWS(input[e-1]) {
+		e--
+	}
+	if e > b && input[e-1] == ';' {
+		e--
+		for e > b && isWS(input[e-1]) {
+			e--
+		}
+	}
+	if e > b && input[e-1] == ')' {
+		e--
+		for e > b && isWS(input[e-1]) {
+			e--
+		}
+	}
+	if e <= b {
+		return
+	}
+	su, sl, sc := p.srcMap.at(b)
+	eu, _, _ := p.srcMap.at(e)
+	sel.SetSpan(su, eu-su, sl, sc)
+	sel.Pin()
+}
+
 func (p *Parser) parseScript() (*ast.Script, error) {
 	script := &ast.Script{}
 
@@ -383,7 +419,8 @@ func (p *Parser) parseStatement() (ast.Statement, error) {
 	// ScriptDom includes a statement's terminating semicolon in its span.
 	// Most parse functions consume it themselves; consume it here for the
 	// ones that do not, so every statement span covers its terminator.
-	if p.curTok.Type == TokenSemicolon {
+	// Repeated semicolons (;;) also belong to the statement.
+	for p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
 	return spanned(p, stmt, astStart), nil
