@@ -7221,11 +7221,13 @@ func (p *Parser) parseUpdateTextStatement() (*ast.UpdateTextStatement, error) {
 		}
 		// Parse timestamp value (binary literal)
 		if p.curTok.Type == TokenBinary {
-			stmt.Timestamp = &ast.BinaryLiteral{
+			tsLit := &ast.BinaryLiteral{
 				LiteralType:   "Binary",
 				Value:         p.curTok.Literal,
 				IsLargeObject: false,
 			}
+			p.tokSpan(tsLit, p.curTok)
+			stmt.Timestamp = tsLit
 			p.nextToken()
 		}
 	}

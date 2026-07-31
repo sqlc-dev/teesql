@@ -13118,12 +13118,15 @@ func (p *Parser) parseCreateUserStatement() (*ast.CreateUserStatement, error) {
 		stmt.UserLoginOption = loginOption
 	} else if strings.ToUpper(p.curTok.Literal) == "WITHOUT" {
 		p.nextToken() // consume WITHOUT
-		if p.curTok.Type == TokenLogin {
-			p.nextToken() // consume LOGIN
-		}
-		stmt.UserLoginOption = &ast.UserLoginOption{
+		wlOpt := &ast.UserLoginOption{
 			UserLoginOptionType: "WithoutLogin",
 		}
+		if p.curTok.Type == TokenLogin {
+			// ScriptDom positions WITHOUT LOGIN on the LOGIN keyword.
+			p.tokSpan(wlOpt, p.curTok)
+			p.nextToken() // consume LOGIN
+		}
+		stmt.UserLoginOption = wlOpt
 	}
 
 	// Parse WITH options

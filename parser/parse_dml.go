@@ -1619,11 +1619,10 @@ func (p *Parser) parseExecuteContextForSpec() (*ast.ExecuteContext, error) {
 		return nil, fmt.Errorf("expected USER, LOGIN, CALLER, OWNER, or SELF after AS, got %s", p.curTok.Literal)
 	}
 
-	// ScriptDom positions the context on its principal expression when
-	// present, otherwise on the kind keyword.
-	if pr, ok := ctx.Principal.(spannable); ok && pr.Frag().HasSpan() {
-		*ctx.Frag() = *pr.Frag()
-	} else {
+	// In the EXECUTE specification form, ScriptDom spans the context from
+	// the kind keyword through the principal.
+	p.spanFrom(kindTok, ctx)
+	if !ctx.Frag().HasSpan() {
 		p.tokSpan(ctx, kindTok)
 	}
 	_ = astStart
