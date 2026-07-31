@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf16"
+	"unicode/utf8"
 )
 
 // TokenType represents the type of a token.
@@ -567,19 +568,11 @@ func decodeRuneAt(s string, pos int) (rune, int) {
 	if b < 0x80 {
 		return rune(b), 1
 	}
-	// 2-byte sequence
-	if b&0xE0 == 0xC0 && pos+1 < len(s) {
-		return rune(b&0x1F)<<6 | rune(s[pos+1]&0x3F), 2
-	}
-	// 3-byte sequence
-	if b&0xF0 == 0xE0 && pos+2 < len(s) {
-		return rune(b&0x0F)<<12 | rune(s[pos+1]&0x3F)<<6 | rune(s[pos+2]&0x3F), 3
-	}
-	// 4-byte sequence
-	if b&0xF8 == 0xF0 && pos+3 < len(s) {
-		return rune(b&0x07)<<18 | rune(s[pos+1]&0x3F)<<12 | rune(s[pos+2]&0x3F)<<6 | rune(s[pos+3]&0x3F), 4
-	}
-	return rune(b), 1
+	// Validate multi-byte sequences properly so that each invalid byte
+	// decodes to a single replacement character, matching how .NET decodes
+	// malformed input (ScriptDom's offsets count those replacements).
+	r, size := utf8.DecodeRuneInString(s[pos:])
+	return r, size
 }
 
 // skipWhitespaceChar advances past one whitespace character (which may be multi-byte).

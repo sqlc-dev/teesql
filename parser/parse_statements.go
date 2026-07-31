@@ -1066,6 +1066,7 @@ func (p *Parser) parseDataTypeReference() (ast.DataTypeReference, error) {
 			sqlOption = "Float"
 			isKnownType = true
 			p.nextToken() // consume PRECISION
+			p.respanEnd(baseName.BaseIdentifier)
 		}
 	}
 
