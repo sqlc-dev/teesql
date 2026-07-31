@@ -3672,6 +3672,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 
 	// Parse optional termination clause: WITH NO_WAIT | WITH ROLLBACK AFTER N [SECONDS] | WITH ROLLBACK IMMEDIATE
 	if p.curTok.Type == TokenWith || strings.ToUpper(p.curTok.Literal) == "WITH" {
+		termWithTok := p.curTok
 		p.nextToken() // consume WITH
 		term := &ast.AlterDatabaseTermination{}
 		termKeyword := strings.ToUpper(p.curTok.Literal)
@@ -3698,6 +3699,7 @@ func (p *Parser) parseAlterDatabaseSetStatement(dbName *ast.Identifier) (*ast.Al
 				p.nextToken()
 			}
 		}
+		p.spanFrom(termWithTok, term)
 		stmt.Termination = term
 	}
 
@@ -3936,19 +3938,24 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 		p.nextToken() // consume ON/OFF
 	} else if strings.ToUpper(p.curTok.Literal) == "CLEAR" {
 		p.nextToken() // consume CLEAR
+		// ScriptDom's span for QUERY_STORE CLEAR [ALL] excludes the ALL
+		// keyword.
+		spanned(p, opt, astStart)
 		if strings.ToUpper(p.curTok.Literal) == "ALL" {
 			opt.ClearAll = true
 			p.nextToken() // consume ALL
 		} else {
 			opt.Clear = true
 		}
-		return spanned(p, opt, astStart), nil
+		return opt, nil
 	}
 
 	// Parse options if we have (
 	if p.curTok.Type == TokenLParen {
 		p.nextToken() // consume (
 		for {
+			qsOptTok := p.curTok
+			nQsBefore := len(opt.Options)
 			optName := strings.ToUpper(p.curTok.Literal)
 			p.nextToken() // consume option name
 
@@ -3971,6 +3978,8 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 				case "OFF":
 					stateOpt.Value = "Off"
 				}
+				// ScriptDom positions this option on the keyword alone.
+				p.tokSpan(stateOpt, qsOptTok)
 				opt.Options = append(opt.Options, stateOpt)
 			case "OPERATION_MODE":
 				val := strings.ToUpper(p.curTok.Literal)
@@ -3987,6 +3996,7 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 				case "OFF":
 					stateOpt.Value = "Off"
 				}
+				p.tokSpan(stateOpt, qsOptTok)
 				opt.Options = append(opt.Options, stateOpt)
 			case "QUERY_CAPTURE_MODE":
 				val := strings.ToUpper(p.curTok.Literal)
@@ -3995,6 +4005,13 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 					OptionKind: "Query_Capture_Mode",
 					Value:      val,
 				}
+				// ScriptDom spans keyword-through-value only for the ALL
+				// keyword form; identifier values leave the keyword alone.
+				if val == "ALL" {
+					p.spanFrom(qsOptTok, captureOpt)
+				} else {
+					p.tokSpan(captureOpt, qsOptTok)
+				}
 				opt.Options = append(opt.Options, captureOpt)
 			case "SIZE_BASED_CLEANUP_MODE":
 				val := strings.ToUpper(p.curTok.Literal)
@@ -4002,6 +4019,11 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 				cleanupOpt := &ast.QueryStoreSizeCleanupPolicyOption{
 					OptionKind: "Size_Based_Cleanup_Mode",
 					Value:      val,
+				}
+				if val == "OFF" {
+					p.spanFrom(qsOptTok, cleanupOpt)
+				} else {
+					p.tokSpan(cleanupOpt, qsOptTok)
 				}
 				opt.Options = append(opt.Options, cleanupOpt)
 			case "FLUSH_INTERVAL_SECONDS", "DATA_FLUSH_INTERVAL_SECONDS":
@@ -4085,6 +4107,12 @@ func (p *Parser) parseQueryStoreOption() (*ast.QueryStoreDatabaseOption, error) 
 				// Skip unknown option
 				if p.curTok.Type != TokenComma && p.curTok.Type != TokenRParen {
 					p.nextToken()
+				}
+			}
+
+			for _, o := range opt.Options[nQsBefore:] {
+				if s, ok := any(o).(spannable); ok && !s.Frag().HasSpan() {
+					p.spanFrom(qsOptTok, s)
 				}
 			}
 

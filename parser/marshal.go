@@ -1176,7 +1176,7 @@ func alterDatabaseSetStatementToJSON(s *ast.AlterDatabaseSetStatement) jsonNode 
 		if s.Termination.RollbackAfter != nil {
 			termNode["RollbackAfter"] = scalarExpressionToJSON(s.Termination.RollbackAfter)
 		}
-		node["Termination"] = termNode
+		node["Termination"] = addSpan(termNode, frag(s.Termination))
 	}
 	if len(s.Options) > 0 {
 		opts := make([]jsonNode, len(s.Options))
