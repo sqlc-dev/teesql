@@ -7,6 +7,9 @@ type BooleanInExpression struct {
 	NotDefined bool
 	Values     []ScalarExpression
 	Subquery   QueryExpression
+	// SubqueryFragment carries the source span of the parenthesized
+	// subquery, which ScriptDom records on its synthesized ScalarSubquery.
+	SubqueryFragment Fragment
 }
 
 func (b *BooleanInExpression) node()              {}

@@ -6617,6 +6617,7 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 		if p.curTok.Type != TokenLParen {
 			return nil, fmt.Errorf("expected ( after IN, got %s", p.curTok.Literal)
 		}
+		inLParen := p.curTok
 		p.nextToken() // consume (
 
 		// Check if it's a subquery or value list
@@ -6629,11 +6630,14 @@ func (p *Parser) parseBooleanPrimaryExpression() (ast.BooleanExpression, error) 
 				return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 			}
 			p.nextToken() // consume )
-			return spanned(p, &ast.BooleanInExpression{
+			inExpr := &ast.BooleanInExpression{
 				Expression: left,
 				NotDefined: notDefined,
 				Subquery:   subquery,
-			}, astStart), nil
+			}
+			// The synthesized ScalarSubquery spans the parentheses.
+			p.spanFrom(inLParen, &inExpr.SubqueryFragment)
+			return spanned(p, inExpr, astStart), nil
 		}
 
 		// Parse value list
@@ -6878,6 +6882,7 @@ func (p *Parser) parseInExpressionAfterLeft(left ast.ScalarExpression, notDefine
 	if p.curTok.Type != TokenLParen {
 		return nil, fmt.Errorf("expected ( after IN, got %s", p.curTok.Literal)
 	}
+	inLParen := p.curTok
 	p.nextToken() // consume (
 
 	// Check if it's a subquery or value list
@@ -6890,11 +6895,14 @@ func (p *Parser) parseInExpressionAfterLeft(left ast.ScalarExpression, notDefine
 			return nil, fmt.Errorf("expected ), got %s", p.curTok.Literal)
 		}
 		p.nextToken() // consume )
-		return spanned(p, &ast.BooleanInExpression{
+		inExpr := &ast.BooleanInExpression{
 			Expression: left,
 			NotDefined: notDefined,
 			Subquery:   subquery,
-		}, astStart), nil
+		}
+		// The synthesized ScalarSubquery spans the parentheses.
+		p.spanFrom(inLParen, &inExpr.SubqueryFragment)
+		return spanned(p, inExpr, astStart), nil
 	}
 
 	// Parse value list
@@ -8103,40 +8111,51 @@ func (p *Parser) parseFullTextPredicate(funcType string) (*ast.FullTextPredicate
 		p.nextToken() // consume )
 	} else {
 		// Single column or table.column or table.*
+		singleColTok := p.curTok
 		col := p.parseIdentifier()
 		// Check for pseudo column
 		pseudoType := getPseudoColumnType(col.Value)
 		if pseudoType != "" && p.curTok.Type != TokenDot {
 			// Standalone pseudo column like $identity
-			pred.Columns = []*ast.ColumnReferenceExpression{{
+			psCol := &ast.ColumnReferenceExpression{
 				ColumnType: pseudoType,
-			}}
+			}
+			p.tokSpan(psCol, singleColTok)
+			pred.Columns = []*ast.ColumnReferenceExpression{psCol}
 		} else if p.curTok.Type == TokenDot {
 			// Check for table.column or table.*
 			p.nextToken() // consume .
 			if p.curTok.Type == TokenStar {
 				// table.*
 				p.nextToken() // consume *
-				pred.Columns = []*ast.ColumnReferenceExpression{{
+				wcCol := &ast.ColumnReferenceExpression{
 					ColumnType: "Wildcard",
 					MultiPartIdentifier: &ast.MultiPartIdentifier{
 						Identifiers: []*ast.Identifier{col},
 						Count:       1,
 					},
-				}}
+				}
+				// Spans table.* including the star.
+				p.spanFrom(singleColTok, wcCol)
+				wcCol.Pin()
+				pred.Columns = []*ast.ColumnReferenceExpression{wcCol}
 			} else {
 				// table.column or table.$identity
 				col2 := p.parseIdentifier()
 				pseudoType2 := getPseudoColumnType(col2.Value)
 				if pseudoType2 != "" {
 					// table.$identity - pseudo column with table prefix
-					pred.Columns = []*ast.ColumnReferenceExpression{{
+					psCol2 := &ast.ColumnReferenceExpression{
 						ColumnType: pseudoType2,
 						MultiPartIdentifier: &ast.MultiPartIdentifier{
 							Identifiers: []*ast.Identifier{col},
 							Count:       1,
 						},
-					}}
+					}
+					// Spans through the pseudo column name.
+					p.spanFrom(singleColTok, psCol2)
+					psCol2.Pin()
+					pred.Columns = []*ast.ColumnReferenceExpression{psCol2}
 				} else {
 					pred.Columns = []*ast.ColumnReferenceExpression{{
 						ColumnType: "Regular",
