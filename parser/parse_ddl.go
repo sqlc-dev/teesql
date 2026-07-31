@@ -4818,6 +4818,7 @@ func (p *Parser) parseAlterServerConfigurationSetSoftNumaStatement() (*ast.Alter
 	stmt := &ast.AlterServerConfigurationSetSoftNumaStatement{}
 
 	// Parse ON or OFF
+	stateTok := p.curTok
 	optionState := strings.ToUpper(p.curTok.Literal)
 	if optionState != "ON" && optionState != "OFF" {
 		return nil, fmt.Errorf("expected ON or OFF after SOFTNUMA, got %s", p.curTok.Literal)
@@ -4830,6 +4831,8 @@ func (p *Parser) parseAlterServerConfigurationSetSoftNumaStatement() (*ast.Alter
 			OptionState: capitalizeFirst(optionState),
 		},
 	}
+	p.tokSpan(option, stateTok)
+	p.tokSpan(option.OptionValue, stateTok)
 	stmt.Options = append(stmt.Options, option)
 
 	// Skip optional semicolon
@@ -4855,6 +4858,7 @@ func (p *Parser) parseAlterServerConfigurationSetExternalAuthenticationStatement
 	stmt := &ast.AlterServerConfigurationSetExternalAuthenticationStatement{}
 
 	// Parse ON or OFF
+	stateTok := p.curTok
 	optionState := strings.ToUpper(p.curTok.Literal)
 	if optionState != "ON" && optionState != "OFF" {
 		return nil, fmt.Errorf("expected ON or OFF after AUTHENTICATION, got %s", p.curTok.Literal)
@@ -4867,6 +4871,8 @@ func (p *Parser) parseAlterServerConfigurationSetExternalAuthenticationStatement
 			OptionState: capitalizeFirst(optionState),
 		},
 	}
+	p.tokSpan(containerOption, stateTok)
+	p.tokSpan(containerOption.OptionValue, stateTok)
 
 	// Check for suboptions in parentheses (only for ON)
 	if optionState == "ON" && p.curTok.Type == TokenLParen {
@@ -4899,9 +4905,17 @@ func (p *Parser) parseAlterServerConfigurationSetExternalAuthenticationStatement
 				if err != nil {
 					return nil, err
 				}
-				suboption.OptionValue = &ast.LiteralOptionValue{
+				lov := &ast.LiteralOptionValue{
 					Value: strLit,
 				}
+				if strLit.HasSpan() {
+					lov.SetSpan(strLit.StartOffset, strLit.FragmentLength, strLit.StartLine, strLit.StartColumn)
+					suboption.SetSpan(strLit.StartOffset, strLit.FragmentLength, strLit.StartLine, strLit.StartColumn)
+					// ScriptDom extends the container option through the last
+					// valued suboption (excluding the closing parenthesis).
+					p.spanFrom(stateTok, containerOption)
+				}
+				suboption.OptionValue = lov
 			default:
 				return nil, fmt.Errorf("unexpected option in EXTERNAL AUTHENTICATION: %s", p.curTok.Literal)
 			}

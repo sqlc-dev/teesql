@@ -15475,6 +15475,7 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 				p.spanFrom(inlineTok, inlineOpt)
 				stmt.Options = append(stmt.Options, inlineOpt)
 			case "ENCRYPTION", "SCHEMABINDING", "NATIVE_COMPILATION", "CALLED":
+				optNameTok := p.curTok
 				var optKind string
 				switch strings.ToUpper(p.curTok.Literal) {
 				case "ENCRYPTION":
@@ -15488,14 +15489,24 @@ func (p *Parser) parseCreateOrAlterFunctionStatement() (*ast.CreateOrAlterFuncti
 				}
 				p.nextToken()
 				// Handle CALLED ON NULL INPUT - skip additional tokens
+				var inputTok Token
 				if optKind == "CalledOnNullInput" {
 					for strings.ToUpper(p.curTok.Literal) == "ON" || strings.ToUpper(p.curTok.Literal) == "NULL" || strings.ToUpper(p.curTok.Literal) == "INPUT" {
+						if strings.ToUpper(p.curTok.Literal) == "INPUT" {
+							inputTok = p.curTok
+						}
 						p.nextToken()
 					}
 				}
-				stmt.Options = append(stmt.Options, &ast.FunctionOption{
-					OptionKind: optKind,
-				})
+				fo := &ast.FunctionOption{OptionKind: optKind}
+				// ScriptDom spans CALLED ON NULL INPUT on the INPUT keyword,
+				// other options on their keyword.
+				if inputTok.Literal != "" {
+					p.tokSpan(fo, inputTok)
+				} else {
+					p.tokSpan(fo, optNameTok)
+				}
+				stmt.Options = append(stmt.Options, fo)
 			case "RETURNS":
 				// Handle RETURNS NULL ON NULL INPUT
 				var inputTok Token

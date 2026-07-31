@@ -3157,6 +3157,7 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 		// Parse comma-separated replica definitions
 		for {
 			replica := &ast.AvailabilityReplica{}
+			replicaStart := p.curTok
 
 			// Parse server name (string literal)
 			if p.curTok.Type == TokenString {
@@ -3178,6 +3179,7 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 
 						switch optName {
 						case "AVAILABILITY_MODE":
+							valTok := p.curTok
 							modeStr := strings.ToUpper(p.curTok.Literal)
 							p.nextToken()
 							// Handle SYNCHRONOUS_COMMIT or ASYNCHRONOUS_COMMIT
@@ -3194,11 +3196,14 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 							default:
 								mode = modeStr
 							}
-							replica.Options = append(replica.Options, &ast.AvailabilityModeReplicaOption{
+							amo := &ast.AvailabilityModeReplicaOption{
 								OptionKind: "AvailabilityMode",
 								Value:      mode,
-							})
+							}
+							p.spanFrom(valTok, amo)
+							replica.Options = append(replica.Options, amo)
 						case "FAILOVER_MODE":
+							valTok := p.curTok
 							modeStr := strings.ToUpper(p.curTok.Literal)
 							p.nextToken()
 							var mode string
@@ -3210,10 +3215,12 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 							default:
 								mode = modeStr
 							}
-							replica.Options = append(replica.Options, &ast.FailoverModeReplicaOption{
+							fmo := &ast.FailoverModeReplicaOption{
 								OptionKind: "FailoverMode",
 								Value:      mode,
-							})
+							}
+							p.tokSpan(fmo, valTok)
+							replica.Options = append(replica.Options, fmo)
 						case "ENDPOINT_URL":
 							val, err := p.parseScalarExpression()
 							if err != nil {
@@ -3245,6 +3252,8 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 							// Parse (ALLOW_CONNECTIONS = ...)
 							if p.curTok.Type == TokenLParen {
 								p.nextToken() // consume (
+								var pro *ast.PrimaryRoleReplicaOption
+								var proTok Token
 								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 									innerOpt := strings.ToUpper(p.curTok.Literal)
 									p.nextToken()
@@ -3252,6 +3261,7 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 										p.nextToken()
 									}
 									if innerOpt == "ALLOW_CONNECTIONS" {
+										proTok = p.curTok
 										connMode := strings.ToUpper(p.curTok.Literal)
 										p.nextToken()
 										var mode string
@@ -3263,10 +3273,11 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 										default:
 											mode = connMode
 										}
-										replica.Options = append(replica.Options, &ast.PrimaryRoleReplicaOption{
+										pro = &ast.PrimaryRoleReplicaOption{
 											OptionKind:       "PrimaryRole",
 											AllowConnections: mode,
-										})
+										}
+										replica.Options = append(replica.Options, pro)
 									}
 									if p.curTok.Type == TokenComma {
 										p.nextToken()
@@ -3275,11 +3286,18 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 								if p.curTok.Type == TokenRParen {
 									p.nextToken()
 								}
+								if pro != nil {
+									// ScriptDom spans the connection mode value
+									// through the role's closing parenthesis.
+									p.spanFrom(proTok, pro)
+								}
 							}
 						case "SECONDARY_ROLE":
 							// Parse (ALLOW_CONNECTIONS = ...)
 							if p.curTok.Type == TokenLParen {
 								p.nextToken() // consume (
+								var sro *ast.SecondaryRoleReplicaOption
+								var sroTok Token
 								for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 									innerOpt := strings.ToUpper(p.curTok.Literal)
 									p.nextToken()
@@ -3287,6 +3305,7 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 										p.nextToken()
 									}
 									if innerOpt == "ALLOW_CONNECTIONS" {
+										sroTok = p.curTok
 										connMode := strings.ToUpper(p.curTok.Literal)
 										p.nextToken()
 										var mode string
@@ -3300,10 +3319,11 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 										default:
 											mode = connMode
 										}
-										replica.Options = append(replica.Options, &ast.SecondaryRoleReplicaOption{
+										sro = &ast.SecondaryRoleReplicaOption{
 											OptionKind:       "SecondaryRole",
 											AllowConnections: mode,
-										})
+										}
+										replica.Options = append(replica.Options, sro)
 									}
 									if p.curTok.Type == TokenComma {
 										p.nextToken()
@@ -3311,6 +3331,11 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 								}
 								if p.curTok.Type == TokenRParen {
 									p.nextToken()
+								}
+								if sro != nil {
+									// ScriptDom spans the connection mode value
+									// through the role's closing parenthesis.
+									p.spanFrom(sroTok, sro)
 								}
 							}
 						default:
@@ -3330,6 +3355,7 @@ func (p *Parser) parseCreateAvailabilityGroupStatement() (*ast.CreateAvailabilit
 				}
 			}
 
+			p.spanFrom(replicaStart, replica)
 			stmt.Replicas = append(stmt.Replicas, replica)
 
 			if p.curTok.Type == TokenComma {
@@ -6202,11 +6228,16 @@ func (p *Parser) parseSaveTransactionStatement() (*ast.SaveTransactionStatement,
 		p.nextToken()
 	} else if p.curTok.Type == TokenNumber || p.curTok.Type == TokenMinus {
 		// Legacy name format: [-]number:dotted.identifier
+		nameStartTok := p.curTok
 		name := p.parseLegacyTransactionName()
-		stmt.Name = &ast.IdentifierOrValueExpression{
+		ident := p.spanIdent(name, "NotQuoted")
+		p.spanFrom(nameStartTok, ident)
+		iove := &ast.IdentifierOrValueExpression{
 			Value:      name,
-			Identifier: p.spanIdent(name, "NotQuoted"),
+			Identifier: ident,
 		}
+		p.spanFrom(nameStartTok, iove)
+		stmt.Name = iove
 	}
 
 	// Skip optional semicolon
@@ -12864,6 +12895,7 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 	var options []ast.KeyOption
 
 	for {
+		keyOptTok := p.curTok
 		optName := strings.ToUpper(p.curTok.Literal)
 		switch optName {
 		case "PROVIDER_KEY_NAME":
@@ -12876,6 +12908,7 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 				KeyName:    keyName,
 				OptionKind: "ProviderKeyName",
 			}
+			p.spanFrom(keyOptTok, opt)
 			options = append(options, opt)
 
 		case "ALGORITHM":
@@ -12889,6 +12922,7 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 				Algorithm:  algo,
 				OptionKind: "Algorithm",
 			}
+			p.spanFrom(keyOptTok, opt)
 			options = append(options, opt)
 
 		case "CREATION_DISPOSITION":
@@ -12902,6 +12936,7 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 				IsCreateNew: disposition == "CREATE_NEW",
 				OptionKind:  "CreationDisposition",
 			}
+			p.spanFrom(keyOptTok, opt)
 			options = append(options, opt)
 
 		case "KEY_SOURCE":
@@ -12914,6 +12949,7 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 				PassPhrase: passPhrase,
 				OptionKind: "KeySource",
 			}
+			p.spanFrom(keyOptTok, opt)
 			options = append(options, opt)
 
 		case "IDENTITY_VALUE":
@@ -12926,6 +12962,7 @@ func (p *Parser) parseSymmetricKeyOptions() ([]ast.KeyOption, error) {
 				IdentityPhrase: identityPhrase,
 				OptionKind:     "IdentityValue",
 			}
+			p.spanFrom(keyOptTok, opt)
 			options = append(options, opt)
 
 		default:
@@ -14878,16 +14915,24 @@ func (p *Parser) parseRemoteServiceBindingOptions() []ast.RemoteServiceBindingOp
 				p.nextToken() // consume =
 			}
 			optState := "Off"
+			valTok := p.curTok
+			hasVal := false
 			if strings.ToUpper(p.curTok.Literal) == "ON" {
 				optState = "On"
+				hasVal = true
 				p.nextToken()
 			} else if strings.ToUpper(p.curTok.Literal) == "OFF" {
 				optState = "Off"
+				hasVal = true
 				p.nextToken()
 			}
 			opt := &ast.OnOffRemoteServiceBindingOption{
 				OptionKind:  "Anonymous",
 				OptionState: optState,
+			}
+			if hasVal {
+				// ScriptDom spans this option on its ON/OFF value.
+				p.tokSpan(opt, valTok)
 			}
 			options = append(options, opt)
 		} else if p.curTok.Type == TokenComma {
@@ -16670,7 +16715,10 @@ func (p *Parser) parseBrokerPriorityParameters() []*ast.BrokerPriorityParameter 
 			p.nextToken() // consume ANY
 		} else {
 			param.IsDefaultOrAny = "None"
+			valTok := p.curTok
 			param.ParameterValue, _ = p.parseIdentifierOrValueExpression()
+			// ScriptDom spans the parameter on its value only.
+			p.spanFrom(valTok, param)
 		}
 
 		params = append(params, param)
