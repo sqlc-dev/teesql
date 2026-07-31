@@ -7726,6 +7726,9 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 			// Check for parenthesized list: FILE = ('f1', 'f2')
 			if p.curTok.Type == TokenLParen {
 				p.nextToken()
+				// ScriptDom spans the file info from the first item through
+				// the closing paren.
+				firstItemTok := p.curTok
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 					expr, err := p.parsePrimaryExpression()
 					if err != nil {
@@ -7741,6 +7744,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 				if p.curTok.Type == TokenRParen {
 					p.nextToken()
 				}
+				p.spanFrom(firstItemTok, fileInfo)
 			} else {
 				expr, err := p.parsePrimaryExpression()
 				if err != nil {
@@ -7750,6 +7754,7 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 			}
 			files = append(files, fileInfo)
 		} else if upperLiteral == "FILEGROUP" {
+			fgKwTok := p.curTok
 			p.nextToken()
 			if p.curTok.Type != TokenEquals {
 				return nil, fmt.Errorf("expected = after FILEGROUP, got %s", p.curTok.Literal)
@@ -7761,6 +7766,9 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 			// Check for parenthesized list: FILEGROUP = ('fg1', 'fg2')
 			if p.curTok.Type == TokenLParen {
 				p.nextToken()
+				// ScriptDom spans the file info from the first item through
+				// the closing paren.
+				firstItemTok := p.curTok
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
 					expr, err := p.parsePrimaryExpression()
 					if err != nil {
@@ -7776,12 +7784,15 @@ func (p *Parser) parseBackupStatement() (ast.Statement, error) {
 				if p.curTok.Type == TokenRParen {
 					p.nextToken()
 				}
+				p.spanFrom(firstItemTok, fileInfo)
 			} else {
 				expr, err := p.parsePrimaryExpression()
 				if err != nil {
 					return nil, err
 				}
 				fileInfo.Items = append(fileInfo.Items, expr)
+				// Single filegroup form spans from the FILEGROUP keyword.
+				p.spanFrom(fgKwTok, fileInfo)
 			}
 			files = append(files, fileInfo)
 		} else {
@@ -15471,9 +15482,11 @@ func (p *Parser) parseCursorId() *ast.CursorId {
 	}
 
 	// Parse cursor name or variable
+	nameTok := p.curTok
 	cursorId.Name = &ast.IdentifierOrValueExpression{
 		Value: p.curTok.Literal,
 	}
+	p.tokSpan(cursorId.Name, nameTok)
 
 	// Check if it's a variable
 	if p.curTok.Type == TokenIdent && strings.HasPrefix(p.curTok.Literal, "@") {
@@ -15490,7 +15503,11 @@ func (p *Parser) parseCursorId() *ast.CursorId {
 	}
 	p.nextToken()
 
-	return spanned(p, cursorId, astStart)
+	// ScriptDom positions the cursor id on the name token alone.
+	p.tokSpan(cursorId, nameTok)
+	cursorId.Frag().Pin()
+	_ = astStart
+	return cursorId
 }
 
 // parseOpenCursorStatement parses OPEN cursor_name.
@@ -15583,6 +15600,8 @@ func (p *Parser) parseFetchCursorStatement() (*ast.FetchCursorStatement, error) 
 			Orientation: "Absolute",
 			RowOffset:   offset,
 		}
+		// ScriptDom positions the fetch type on the offset value.
+		p.spanFromChild(stmt.FetchType, offset)
 	case "RELATIVE":
 		p.nextToken() // consume RELATIVE
 		offset, err := p.parseScalarExpression()
@@ -15593,6 +15612,7 @@ func (p *Parser) parseFetchCursorStatement() (*ast.FetchCursorStatement, error) 
 			Orientation: "Relative",
 			RowOffset:   offset,
 		}
+		p.spanFromChild(stmt.FetchType, offset)
 	}
 
 	// Check for FROM keyword

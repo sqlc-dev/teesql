@@ -1980,6 +1980,7 @@ func (p *Parser) parseSetClause() (ast.SetClause, error) {
 			UniqueRowFilter:  "NotSpecified",
 			WithArrayWrapper: false,
 		}
+		p.spanFrom(astStart, fc)
 
 		return spanned(p, &ast.FunctionCallSetClause{MutatorFunction: fc}, astStart), nil
 	}
