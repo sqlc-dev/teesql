@@ -666,10 +666,24 @@ func (p *Parser) spanDeviceInfo(d *ast.DeviceInfo, start Token) {
 // starts at that operand's start rather than its own first token, and is
 // itself pinned so enclosing calls keep the narrowed start.
 func (p *Parser) pinBinaryFromPinnedChild(b *ast.BooleanBinaryExpression) {
-	fs, ok := any(b.FirstExpression).(spannable)
-	if !ok || !fs.Frag().Pinned() || !fs.Frag().HasSpan() {
+	fs, fok := any(b.FirstExpression).(spannable)
+	ss, sok := any(b.SecondExpression).(spannable)
+	firstPinned := fok && fs.Frag().Pinned() && fs.Frag().HasSpan()
+	secondPinned := sok && ss.Frag().Pinned() && ss.Frag().HasSpan()
+	if !firstPinned && !secondPinned {
+		return
+	}
+	if !fok || !fs.Frag().HasSpan() {
 		return
 	}
 	p.spanFromChild(b, b.FirstExpression)
+	// A pinned second operand also bounds the end of the binary span
+	// (e.g. a SHORTEST_PATH predicate whose trailing parentheses are
+	// excluded from its fragment).
+	if secondPinned {
+		if end := ss.Frag().EndOffset(); end < b.Frag().EndOffset() && end > b.Frag().StartOffset {
+			b.Frag().FragmentLength = end - b.Frag().StartOffset
+		}
+	}
 	b.Frag().Pin()
 }

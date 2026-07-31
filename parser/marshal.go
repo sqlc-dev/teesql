@@ -3770,7 +3770,7 @@ func graphMatchExpressionToJSONWithContext(expr ast.GraphMatchExpression, ctx *g
 			node["RecursiveQuantifier"] = graphRecursiveMatchQuantifierToJSON(e.RecursiveQuantifier)
 		}
 		node["AnchorOnLeft"] = e.AnchorOnLeft
-		return node
+		return addSpan(node, e.Frag())
 	case *ast.GraphMatchLastNodePredicate:
 		node := jsonNode{
 			"$type": "GraphMatchLastNodePredicate",
@@ -3781,7 +3781,7 @@ func graphMatchExpressionToJSONWithContext(expr ast.GraphMatchExpression, ctx *g
 		if e.RightExpression != nil {
 			node["RightExpression"] = graphMatchNodeExpressionToJSONWithContext(e.RightExpression, ctx)
 		}
-		return node
+		return addSpan(node, e.Frag())
 	default:
 		return jsonNode{"$type": "UnknownGraphMatchExpression"}
 	}
@@ -6941,11 +6941,13 @@ func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, e
 				if err != nil {
 					return nil, err
 				}
-				result = &ast.BooleanBinaryExpression{
+				gbbe := &ast.BooleanBinaryExpression{
 					BinaryExpressionType: "And",
 					FirstExpression:      result.(ast.BooleanExpression),
 					SecondExpression:     next,
 				}
+				p.pinBinaryFromPinnedChild(gbbe)
+				result = gbbe
 				continue
 			} else if strings.ToUpper(p.curTok.Literal) == "LAST_NODE" {
 				next, leftNode, err := p.parseGraphMatchLastNodeComparison()
@@ -6959,11 +6961,13 @@ func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, e
 						return nil, err
 					}
 				}
-				result = &ast.BooleanBinaryExpression{
+				gbbe2 := &ast.BooleanBinaryExpression{
 					BinaryExpressionType: "And",
 					FirstExpression:      result.(ast.BooleanExpression),
 					SecondExpression:     next.(ast.BooleanExpression),
 				}
+				p.pinBinaryFromPinnedChild(gbbe2)
+				result = gbbe2
 				continue
 			}
 		}
@@ -6975,15 +6979,29 @@ func (p *Parser) parseGraphMatchChainedExpression() (ast.GraphMatchExpression, e
 		}
 
 		// Wrap in BooleanBinaryExpression with And
-		result = &ast.BooleanBinaryExpression{
+		gbbe3 := &ast.BooleanBinaryExpression{
 			BinaryExpressionType: "And",
 			FirstExpression:      result.(ast.BooleanExpression),
 			SecondExpression:     next,
 		}
+		p.pinBinaryFromPinnedChild(gbbe3)
+		result = gbbe3
 		rightNode = nextRightNode
 	}
 
-	return spanned(p, result, astStart), nil
+	res := spanned(p, result, astStart)
+	// When the last operand's fragment is pinned short of the consumed
+	// tokens (SHORTEST_PATH / LAST_NODE trailing parentheses), the binary
+	// chain's fragment ends with it.
+	if bbe, ok := any(res).(*ast.BooleanBinaryExpression); ok && bbe.Frag().HasSpan() {
+		if ss, ok2 := any(bbe.SecondExpression).(spannable); ok2 && ss.Frag().Pinned() && ss.Frag().HasSpan() {
+			if end := ss.Frag().EndOffset(); end < bbe.Frag().EndOffset() && end > bbe.Frag().StartOffset {
+				bbe.Frag().FragmentLength = end - bbe.Frag().StartOffset
+			}
+			bbe.Frag().Pin()
+		}
+	}
+	return res, nil
 }
 
 // parseGraphMatchShortestPath parses SHORTEST_PATH(pattern+) or SHORTEST_PATH(pattern{min,max})
@@ -7024,6 +7042,14 @@ func (p *Parser) parseGraphMatchShortestPath() (*ast.GraphMatchRecursivePredicat
 			// For right anchor, the composite doesn't have a right node set explicitly
 			// Clear it as it's implicit (next iteration's left node or the terminal OuterNodeExpression)
 			comp.RightNode = nil
+			// Without a right node, ScriptDom's composite fragment ends at
+			// the edge identifier.
+			if comp.Edge != nil && comp.Edge.HasSpan() && comp.HasSpan() {
+				if end := comp.Edge.EndOffset(); end > comp.StartOffset && end < comp.EndOffset() {
+					comp.FragmentLength = end - comp.StartOffset
+					comp.Pin()
+				}
+			}
 			pred.Expression = append(pred.Expression, comp)
 
 			// Check for continuation within the recursive pattern
@@ -7044,11 +7070,14 @@ func (p *Parser) parseGraphMatchShortestPath() (*ast.GraphMatchRecursivePredicat
 		} else if p.curTok.Type == TokenLBrace {
 			pred.RecursiveQuantifier.IsPlusSign = false
 			p.nextToken() // consume {
+			quantTok := p.curTok
 			pred.RecursiveQuantifier.LowerLimit, _ = p.parseScalarExpression()
 			if p.curTok.Type == TokenComma {
 				p.nextToken() // consume ,
 				pred.RecursiveQuantifier.UpperLimit, _ = p.parseScalarExpression()
 			}
+			// The quantifier spans its limits, excluding the braces.
+			p.spanFrom(quantTok, pred.RecursiveQuantifier)
 			if p.curTok.Type == TokenRBrace {
 				p.nextToken() // consume }
 			}
@@ -7056,6 +7085,15 @@ func (p *Parser) parseGraphMatchShortestPath() (*ast.GraphMatchRecursivePredicat
 
 		// Parse outer node (anchor on right)
 		pred.OuterNodeExpression = p.parseGraphMatchNodeExpr()
+		// Spans SHORTEST_PATH through the anchor node, excluding the
+		// closing parenthesis.
+		p.spanFrom(astStart, pred)
+		if one := pred.OuterNodeExpression; one != nil && one.Frag().Pinned() && one.HasSpan() {
+			if end := one.EndOffset(); end < pred.EndOffset() && end > pred.StartOffset {
+				pred.FragmentLength = end - pred.StartOffset
+			}
+		}
+		pred.Pin()
 	} else {
 		// Anchor on left: N (pattern)+
 		pred.AnchorOnLeft = true
@@ -7086,6 +7124,12 @@ func (p *Parser) parseGraphMatchShortestPath() (*ast.GraphMatchRecursivePredicat
 			}
 		}
 
+		// ScriptDom spans the predicate from SHORTEST_PATH through the
+		// last pattern element, excluding the closing parentheses and
+		// quantifier (but including bounded quantifier limits).
+		p.spanFrom(astStart, pred)
+		pred.Pin()
+
 		if p.curTok.Type == TokenRParen {
 			p.nextToken() // consume )
 		}
@@ -7098,10 +7142,20 @@ func (p *Parser) parseGraphMatchShortestPath() (*ast.GraphMatchRecursivePredicat
 		} else if p.curTok.Type == TokenLBrace {
 			pred.RecursiveQuantifier.IsPlusSign = false
 			p.nextToken() // consume {
+			quantTok := p.curTok
 			pred.RecursiveQuantifier.LowerLimit, _ = p.parseScalarExpression()
 			if p.curTok.Type == TokenComma {
 				p.nextToken() // consume ,
 				pred.RecursiveQuantifier.UpperLimit, _ = p.parseScalarExpression()
+			}
+			// The quantifier spans its limits, excluding the braces.
+			p.spanFrom(quantTok, pred.RecursiveQuantifier)
+			// A bounded quantifier extends the predicate's fragment
+			// through its upper limit.
+			if q := pred.RecursiveQuantifier; q.HasSpan() && pred.HasSpan() {
+				if end := q.EndOffset(); end > pred.EndOffset() {
+					pred.FragmentLength = end - pred.StartOffset
+				}
 			}
 			if p.curTok.Type == TokenRBrace {
 				p.nextToken() // consume }
@@ -7129,6 +7183,10 @@ func (p *Parser) parseGraphMatchNodeExpr() *ast.GraphMatchNodeExpression {
 		if p.curTok.Type == TokenLParen {
 			p.nextToken() // consume (
 			node.Node = p.parseIdentifier()
+			// ScriptDom's node expression span excludes the closing
+			// parenthesis of LAST_NODE(x).
+			p.spanFrom(astStart, node)
+			node.Pin()
 			if p.curTok.Type == TokenRParen {
 				p.nextToken() // consume )
 			}
@@ -7153,10 +7211,18 @@ func (p *Parser) parseGraphMatchLastNodeComparison() (ast.GraphMatchExpression, 
 		right := p.parseGraphMatchNodeExpr()
 
 		// Return a predicate expression
-		return &ast.GraphMatchLastNodePredicate{
+		lnPred := &ast.GraphMatchLastNodePredicate{
 			LeftExpression:  left,
 			RightExpression: right,
-		}, nil, nil
+		}
+		// Spans from the left node through the right node's end
+		// (excluding a trailing parenthesis when the right node is a
+		// pinned LAST_NODE expression).
+		if left.HasSpan() && right.HasSpan() {
+			lnPred.SetSpan(left.StartOffset, right.EndOffset()-left.StartOffset, left.StartLine, left.StartColumn)
+			lnPred.Pin()
+		}
+		return lnPred, nil, nil
 	}
 
 	// Not a comparison - this LAST_NODE is part of a pattern like LAST_NODE(N) - (E) -> N2
@@ -7246,11 +7312,16 @@ func (p *Parser) parseGraphMatchSingleComposite(leftNode *ast.GraphMatchNodeExpr
 			if p.curTok.Type == TokenLParen {
 				p.nextToken() // consume (
 				rightNode.Node = p.parseIdentifier()
+				// ScriptDom's span excludes the closing parenthesis.
+				p.spanFrom(rightNodeTok, rightNode)
+				rightNode.Pin()
 				if p.curTok.Type == TokenRParen {
 					p.nextToken() // consume )
 				}
 			}
-			p.spanFrom(rightNodeTok, rightNode)
+			if !rightNode.HasSpan() {
+				p.spanFrom(rightNodeTok, rightNode)
+			}
 		} else {
 			rightNode.Node = p.parseIdentifier()
 			if rightNode.Node != nil && rightNode.Node.Frag().HasSpan() {
@@ -7263,6 +7334,14 @@ func (p *Parser) parseGraphMatchSingleComposite(leftNode *ast.GraphMatchNodeExpr
 	// The composite spans from its left node through its right node.
 	if composite.LeftNode != nil && composite.LeftNode.Frag().HasSpan() {
 		p.spanFromChild(composite, composite.LeftNode)
+		// A pinned right node (LAST_NODE without its closing paren)
+		// bounds the composite's end too.
+		if rn := composite.RightNode; rn != nil && rn.Frag().Pinned() && rn.HasSpan() {
+			if end := rn.EndOffset(); end < composite.EndOffset() && end > composite.StartOffset {
+				composite.FragmentLength = end - composite.StartOffset
+				composite.Pin()
+			}
+		}
 	}
 
 	return composite, rightNode, nil
