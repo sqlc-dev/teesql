@@ -44,6 +44,10 @@ type Parser struct {
 	// semicolon out of a sub-statement's span (e.g. the SELECT body of
 	// CREATE VIEW, whose semicolon belongs to the outer statement only).
 	endBeforeSemiByte int
+	// lastSemiEndByte is the byte offset one past the most recently
+	// consumed semicolon token, used to verify that a span actually ends
+	// with that semicolon before trimming it.
+	lastSemiEndByte int
 }
 
 func newParser(input string) *Parser {
@@ -60,6 +64,7 @@ func newParser(input string) *Parser {
 func (p *Parser) nextToken() {
 	if p.curTok.Type == TokenSemicolon {
 		p.endBeforeSemiByte = p.prevEndByte
+		p.lastSemiEndByte = p.curTok.Pos + len(p.curTok.Literal)
 	}
 	if p.curTok.Type != TokenEOF {
 		if end := p.curTok.Pos + len(p.curTok.Literal); end > p.prevEndByte {
@@ -302,6 +307,10 @@ func (p *Parser) identFromToken(tok Token) *ast.Identifier {
 func (p *Parser) trimTrailingSemicolon(n spannable) {
 	f := n.Frag()
 	if !f.HasSpan() {
+		return
+	}
+	semiEnd, _, _ := p.srcMap.at(p.lastSemiEndByte)
+	if f.EndOffset() != semiEnd {
 		return
 	}
 	eu, _, _ := p.srcMap.at(p.endBeforeSemiByte)

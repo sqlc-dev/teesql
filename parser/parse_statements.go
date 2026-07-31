@@ -2327,12 +2327,14 @@ func (p *Parser) parseBeginAtomicBlockStatement() (*ast.BeginEndAtomicBlockState
 		p.nextToken()
 	}
 
-	// Skip optional semicolon
+	spanned(p, stmt, astStart)
+
+	// Skip optional semicolon (excluded from the block's span)
 	if p.curTok.Type == TokenSemicolon {
 		p.nextToken()
 	}
 
-	return spanned(p, stmt, astStart), nil
+	return stmt, nil
 }
 
 func (p *Parser) parseBeginTransactionStatementContinued(distributed bool) (*ast.BeginTransactionStatement, error) {

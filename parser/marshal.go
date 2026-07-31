@@ -14894,6 +14894,7 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 
 			// Parse column definitions
 			for p.curTok.Type != TokenRParen && p.curTok.Type != TokenEOF {
+				colDefTok := p.curTok
 				colDef := &ast.ColumnDefinition{
 					IsPersisted:  false,
 					IsRowGuidCol: false,
@@ -14915,38 +14916,48 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 
 				// Parse column constraints (PRIMARY KEY, NOT NULL, NULL, etc.)
 				for p.curTok.Type != TokenRParen && p.curTok.Type != TokenComma && p.curTok.Type != TokenEOF {
+					constrTok := p.curTok
 					upperLit := strings.ToUpper(p.curTok.Literal)
 					if upperLit == "PRIMARY" {
 						p.nextToken() // consume PRIMARY
 						if strings.ToUpper(p.curTok.Literal) == "KEY" {
 							p.nextToken() // consume KEY
 						}
-						colDef.Constraints = append(colDef.Constraints, &ast.UniqueConstraintDefinition{
+						pkc := &ast.UniqueConstraintDefinition{
 							IsPrimaryKey: true,
-						})
+						}
+						p.spanFrom(constrTok, pkc)
+						colDef.Constraints = append(colDef.Constraints, pkc)
 					} else if upperLit == "NOT" {
 						p.nextToken() // consume NOT
 						if p.curTok.Type == TokenNull {
 							p.nextToken() // consume NULL
-							colDef.Constraints = append(colDef.Constraints, &ast.NullableConstraintDefinition{
+							nc := &ast.NullableConstraintDefinition{
 								Nullable: false,
-							})
+							}
+							p.spanFrom(constrTok, nc)
+							colDef.Constraints = append(colDef.Constraints, nc)
 						}
 					} else if p.curTok.Type == TokenNull {
 						p.nextToken() // consume NULL
-						colDef.Constraints = append(colDef.Constraints, &ast.NullableConstraintDefinition{
+						nc := &ast.NullableConstraintDefinition{
 							Nullable: true,
-						})
+						}
+						p.spanFrom(constrTok, nc)
+						colDef.Constraints = append(colDef.Constraints, nc)
 					} else if upperLit == "UNIQUE" {
 						p.nextToken() // consume UNIQUE
-						colDef.Constraints = append(colDef.Constraints, &ast.UniqueConstraintDefinition{
+						uc := &ast.UniqueConstraintDefinition{
 							IsPrimaryKey: false,
-						})
+						}
+						p.spanFrom(constrTok, uc)
+						colDef.Constraints = append(colDef.Constraints, uc)
 					} else {
 						break
 					}
 				}
 
+				p.spanFrom(colDefTok, colDef)
 				tableReturnType.DeclareTableVariableBody.Definition.ColumnDefinitions = append(
 					tableReturnType.DeclareTableVariableBody.Definition.ColumnDefinitions,
 					colDef,
@@ -15073,6 +15084,14 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 				p.skipToEndOfStatement()
 				return spanned(p, stmt, astStart), nil
 			}
+			// A function body's final statement excludes its trailing
+			// semicolon, which belongs to the CREATE FUNCTION statement.
+			if n := len(stmtList.Statements); n > 0 {
+				if s, ok := any(stmtList.Statements[n-1]).(spannable); ok {
+					p.trimTrailingSemicolon(s)
+					s.Frag().Pin()
+				}
+			}
 			spanStatementList(stmtList)
 			stmt.StatementList = stmtList
 		}
@@ -15122,6 +15141,14 @@ func (p *Parser) parseCreateFunctionStatement() (*ast.CreateFunctionStatement, e
 			if err != nil {
 				p.skipToEndOfStatement()
 				return spanned(p, stmt, astStart), nil
+			}
+			// A function body's final statement excludes its trailing
+			// semicolon, which belongs to the CREATE FUNCTION statement.
+			if n := len(stmtList.Statements); n > 0 {
+				if s, ok := any(stmtList.Statements[n-1]).(spannable); ok {
+					p.trimTrailingSemicolon(s)
+					s.Frag().Pin()
+				}
 			}
 			spanStatementList(stmtList)
 			stmt.StatementList = stmtList
